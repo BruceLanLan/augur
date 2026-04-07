@@ -167,6 +167,37 @@ buffett-oracle-analyzer/
 
 ---
 
+## 📋 版本更新日志
+
+### v1.0（当前版本）
+
+**发布日期**：2026年4月
+
+**核心功能**：
+- ✅ 12大分析模块完整覆盖
+- ✅ 巴菲特计分卡（12项标准，36分满分）
+- ✅ 8种估值模型（DCF/PEG/DDM/NAV/SOTP/相对估值/所有者盈余收益率/反向DCF）
+- ✅ 美股（SEC）、港股（披露易）、A股（巨潮资讯）多市场适配
+- ✅ 技术面分析（均线/RSI/MACD/布林带/斐波那契/筹码分析）
+- ✅ 电话会深度解读（最新+前2期追踪）
+- ✅ 风险矩阵 + 黑天鹅压力测试
+- ✅ 可执行投资决策（目标价/买入区间/止盈止损/仓位管理）
+
+**数据能力**：
+- ✅ Yahoo Finance API 实时行情、财务数据、技术指标、期权数据
+- ✅ `scripts/data_fetcher.py` 可执行脚本，支持美股/港股/A股
+- ✅ SEC EDGAR API（13F机构持仓）
+- ✅ Alpha Vantage 备用数据源
+- ✅ 文档化数据源集成方案（`docs/data-sources.md`）
+
+**分析案例**：
+- 宁德时代（300750.SZ）— A股案例
+- 腾讯控股（00700.HK）— 港股案例
+- Circle（CRCL）— 美股案例
+- Costco（COST）— 美股案例
+
+---
+
 ## Star History
 
 <a href="https://www.star-history.com/?repos=brucelanlan%2Fbuffett-oracle-analyzer&type=timeline&legend=top-left">
