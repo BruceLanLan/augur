@@ -125,9 +125,13 @@ buffett-oracle-analyzer/
 ├── example-prompts.md                 # 推荐提示词
 ├── evals.json                        # 评估测试用例
 │
+├── docs/                             # 数据源与工具
+│   └── data-sources.md               # API数据源集成方案
+│
 └── cases/                            # 分析案例库
     └── analysis-reports/
         ├── 宁德时代-300750-深度分析.md  # A股案例
+        ├── 腾讯-00700.HK-深度分析.md    # 港股案例
         ├── example-analysis-crcl.md    # Circle(CRCL)美股案例
         └── example-analysis-costco.md  # Costco美股案例
 ```
