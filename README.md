@@ -60,6 +60,15 @@
 
 将 `SKILL.md` 放入你的 skill 目录即可。
 
+### MiniMax
+
+```bash
+mkdir -p ~/.claude-minimax/skills
+ln -s /path/to/SKILL.md ~/.claude-minimax/skills/buffett-oracle-analyzer.md
+```
+
+然后使用 `/buffett-oracle-analyzer` 即可调用。
+
 ---
 
 ## 6步分析工作流
