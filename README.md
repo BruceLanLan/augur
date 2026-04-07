@@ -156,6 +156,16 @@ buffett-oracle-analyzer/
 
 ---
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=BruceLanLan%2Fbuffett-oracle-analyzer&type=timeline&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BruceLanLan/buffett-oracle-analyzer&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BruceLanLan/buffett-oracle-analyzer&type=timeline&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BruceLanLan/buffett-oracle-analyzer&type=timeline&legend=top-left" />
+ </picture>
+</a>
+
 ## ⚠️ 免责声明
 
 本项目仅供**教育和研究用途**，不构成投资建议。"巴菲特"视角是一个受沃伦·巴菲特公开表述的投资原则启发的分析框架——并不代表巴菲特本人对任何具体公司的观点。所有投资都有风险，请在做出投资决策前咨询合格的财务顾问。
