@@ -128,6 +128,9 @@ buffett-oracle-analyzer/
 ├── docs/                             # 数据源与工具
 │   └── data-sources.md               # API数据源集成方案
 │
+├── scripts/                          # 可执行脚本
+│   └── data_fetcher.py               # Yahoo Finance数据获取工具
+│
 └── cases/                            # 分析案例库
     └── analysis-reports/
         ├── 宁德时代-300750-深度分析.md  # A股案例
