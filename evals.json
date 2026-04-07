@@ -1,0 +1,59 @@
+{
+  "skill_name": "buffett-oracle-analyzer",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "用巴菲特神谕框架分析苹果(AAPL)",
+      "expected_output": "完整12模块报告：包含巴菲特裁决摘要、护城河5维度评分、所有者盈余计算、8种估值模型、巴菲特计分卡(36分制)、买入/卖出区间、仓位建议",
+      "assertions": [
+        {"type": "contains", "value": "巴菲特的裁决", "description": "报告开头应有巴菲特裁决摘要"},
+        {"type": "contains", "value": "护城河", "description": "应包含经济护城河分析"},
+        {"type": "contains", "value": "所有者盈余", "description": "应计算所有者盈余"},
+        {"type": "contains", "value": "计分卡", "description": "应包含巴菲特计分卡"},
+        {"type": "contains", "value": "买入", "description": "应包含买入区间建议"},
+        {"type": "contains", "value": "免责声明", "description": "应包含免责声明"}
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "分析腾讯(0700.HK)，重点看护城河是否还在",
+      "expected_output": "港股适配的分析报告：应使用HKFRS/IFRS准则、包含南向资金流分析、5维度护城河逐一评分、与竞对(字节跳动等)对比",
+      "assertions": [
+        {"type": "contains", "value": "网络效应", "description": "腾讯分析应涉及网络效应维度"},
+        {"type": "contains", "value": "转换成本", "description": "应评估转换成本维度"},
+        {"type": "contains", "value": "港股", "description": "应体现港股市场适配"},
+        {"type": "contains", "value": "计分卡", "description": "应包含巴菲特计分卡"}
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "巴菲特会怎么看Palantir？50倍P/S合理吗？请毫不留情地分析。",
+      "expected_output": "批判性分析：应明确指出高估值风险、计算安全边际缺失程度、用反向DCF揭示隐含增长预期、巴菲特计分卡中'安全边际'和'易于理解'项应得低分",
+      "assertions": [
+        {"type": "contains", "value": "安全边际", "description": "应讨论安全边际问题"},
+        {"type": "contains", "value": "反向DCF", "description": "应使用反向DCF揭示隐含增长预期"},
+        {"type": "contains", "value": "能力圈", "description": "应讨论Palantir是否在能力圈内"}
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "对比 MSFT 和 GOOGL，哪个更像巴菲特的菜？",
+      "expected_output": "对比分析：两家公司分别跑巴菲特计分卡，逐项对比得分，给出明确偏好及理由",
+      "assertions": [
+        {"type": "contains", "value": "计分卡", "description": "应包含两家公司的巴菲特计分卡"},
+        {"type": "contains", "value": "护城河", "description": "应对比两家护城河"},
+        {"type": "contains", "value": "所有者盈余", "description": "应计算并对比两家的所有者盈余"}
+      ]
+    },
+    {
+      "id": 5,
+      "prompt": "分析贵州茅台(600519)的巴菲特评分",
+      "expected_output": "A股适配分析：使用中国会计准则、包含北向资金数据、巴菲特计分卡应在'定价能力'和'品牌护城河'上高分",
+      "assertions": [
+        {"type": "contains", "value": "定价", "description": "茅台分析应讨论定价能力"},
+        {"type": "contains", "value": "A股", "description": "应体现A股市场适配"},
+        {"type": "contains", "value": "计分卡", "description": "应包含巴菲特计分卡"}
+      ]
+    }
+  ]
+}
