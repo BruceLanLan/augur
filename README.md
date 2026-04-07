@@ -123,9 +123,13 @@ buffett-oracle-analyzer/
 ├── buffett-principles.md              # 巴菲特投资原则
 ├── valuation-methods.md               # 8种估值方法
 ├── example-prompts.md                 # 推荐提示词
-├── example-analysis-costco.md         # Costco分析样例
-├── example-analysis-crcl.md          # Circle(CRCL)分析样例
-└── evals.json                        # 评估测试用例
+├── evals.json                        # 评估测试用例
+│
+└── cases/                            # 分析案例库
+    └── analysis-reports/
+        ├── 宁德时代-300750-深度分析.md  # A股案例
+        ├── example-analysis-crcl.md    # Circle(CRCL)美股案例
+        └── example-analysis-costco.md  # Costco美股案例
 ```
 
 ---
