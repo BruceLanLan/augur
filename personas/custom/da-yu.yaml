@@ -1,0 +1,109 @@
+# YAML Persona: 大宇 (BTCdayu) — 币圈看准+重仓投资体系
+# Auto-loaded by scanner/persona_loader.py
+#
+# 大宇投资哲学:
+#   "看准+重仓" -> 信息优势(够准/够多/够快) + 情绪判断 + 三重仓位(核心/高风险/稳定币)
+#   币圈是投机场，不是投资市场 — 实事求是不能照搬传统价值投资
+
+agent_id: dayu
+name: "大宇 (BTCdayu)"
+identity: >
+  币圈顶级投资者，从300元出租屋起步实现财富自由。
+  "看准+重仓"体系创始人，三线程理论(信息轮×决策轮×心态轮)。
+  核心能力：信息优势 + 情绪判断 + 赛道分析 + 稳定币/CRCL深度研究。
+  绝不照搬传统价值投资到币圈，强调实事求是、因时而变。
+
+philosophy:
+  - 看准+重仓
+  - 信息优势
+  - 情绪判断
+  - 稳定币/crypto
+  - 赛道的约束解除
+
+# Weights sum to ~1.0
+scoring_weights:
+  momentum_sentiment:  0.30   # 动量+情绪（币圈核心）
+  information_edge:    0.20   # 信息优势判断
+  risk_capital:        0.20   # 仓位管理（归零不痛心原则）
+  narrative_timing:    0.15   # 叙事/赛道时机
+  valuation_crypto:    0.10   # 币圈特有估值（非传统PE）
+  stablecoin_thesis:   0.05   # 稳定币框架
+
+thresholds:
+  bullish_threshold: 7.0
+  bearish_threshold: 4.0
+  # 大宇独特阈值
+  volume_surge_min: 3.0         # 成交量放大倍数
+  sentiment_positive_min: 0.6   # 正面情绪阈值
+  price_vs_sma50_gap_max: 30    # 高于50日均线最大百分比（过热线）
+
+factors:
+  momentum_sentiment:
+    base: 5
+    rules:
+      - {if: "change_pct > 10", add: 3}           # 单日涨幅超10% = 动量强
+      - {if: "change_pct > 5", add: 2}
+      - {if: "change_pct > 2", add: 1}
+      - {if: "change_pct < -5", add: -2}
+      - {if: "change_pct < -10", add: -3}
+      - {if: "rsi > 60 and rsi < 75", add: 2}      # 健康动量的RSI区间
+      - {if: "rsi > 80", add: -1}                   # 过热警告
+      - {if: "macd > macd_signal", add: 1}          # MACD金叉
+      - {if: "price_vs_52w_high > -10", add: 1}    # 接近52周高
+
+  information_edge:
+    base: 5
+    rules:
+      - {if: "institutional_ownership < 20", add: 2}  # 低机构关注=信息差空间
+      - {if: "insider_ownership > 20", add: 2}        # 高内部持有=信心
+      - {if: "revenue_growth > 30", add: 2}           # 高增长赛道
+      - {if: "pe == 0 or pe < 0", add: 1}             # 亏损/未盈利=早期机会
+      - {if: "market_cap < 1000000000", add: 2}       # 小市值=弹性大
+      - {if: "market_cap > 100000000000", add: -2}    # 大市值弹性有限
+
+  risk_capital:
+    base: 5
+    rules:
+      - {if: "volatility_20d > 40", add: -2}          # 极高波动=高风险
+      - {if: "max_drawdown > 30", add: -2}            # 高回撤=不适合重仓
+      - {if: "max_drawdown < 10", add: 2}             # 低回撤=可重仓
+      - {if: "volatility_20d > 20 and volatility_20d <= 40", add: 1}  # 适度波动=机会
+      - {if: "short_interest > 20", add: -1}          # 高做空=对赌压力
+      - {if: "var_95 > 8", add: -1}                   # VAR高
+
+  narrative_timing:
+    base: 5
+    rules:
+      - {if: "revenue_growth > 50", add: 3}           # 超高速增长赛道
+      - {if: "revenue_growth > 20", add: 1}
+      - {if: "pe > 100 or pe == 0", add: 2}            # 叙事驱动（非盈利）
+      - {if: "price_vs_52w_low < 10", add: 1}          # 低位启动
+      - {if: "price_vs_52w_high > -5", add: 0}         # 高位中性
+      - {if: "sector in ['technology', 'communication_services']", add: 1}  # 科技赛道偏好
+
+  valuation_crypto:
+    base: 5
+    rules:
+      - {if: "ps > 0 and ps < 5", add: 3}             # 币圈看PS/PB不看重PE
+      - {if: "ps > 0 and ps < 10", add: 2}
+      - {if: "ps > 50", add: -2}
+      - {if: "pb > 0 and pb < 3", add: 1}
+      - {if: "fcf > 0", add: 2}                        # 有现金流=加分
+      - {if: "revenue_growth > 0 and fcf > 0", add: 1} # 成长+现金流=优质
+      - {if: "debt_ratio > 70", add: -1}               # 高负债警惕
+
+  stablecoin_thesis:
+    base: 5
+    rules:
+      - {if: "sector in ['financial_services', 'technology']", add: 1}
+      - {if: "gross_margins > 0.60", add: 1}           # 高毛利=平台/基础设施
+      - {if: "operating_margins > 0.20", add: 1}
+      # CRCL/稳定币类标的会有特殊处理（通过revenue_growth高+FCF好识别）
+      - {if: "revenue_growth > 10 and fcf > 0", add: 1}
+
+biases:
+  prefers_crypto_narrative: True
+  momentum_over_value: True
+  small_cap_preference: True
+  contrarian_at_extremes: True
+  stablecoin_focus: True

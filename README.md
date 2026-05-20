@@ -128,8 +128,14 @@ buffett-oracle-analyzer/
 ├── docs/                             # 数据源与工具
 │   └── data-sources.md               # API数据源集成方案
 │
+├── personas/                         # 投资人格库
+│   ├── da-yu.md                      # 大宇(BTCdayu)币圈投资人格
+│   └── custom/                       # 自定义YAML人格自动加载
+│       └── da-yu.yaml                # 大宇YAML格式自动加载人格
+│
 ├── scripts/                          # 可执行脚本
-│   └── data_fetcher.py               # Yahoo Finance数据获取工具
+│   ├── data_fetcher.py               # Yahoo Finance数据获取工具
+│   └── dayu.py                       # 大宇Agent完整版(备用)
 │
 └── cases/                            # 分析案例库
     └── analysis-reports/
@@ -168,6 +174,16 @@ buffett-oracle-analyzer/
 ---
 
 ## 📋 版本更新日志
+
+### v1.5 - 大宇投资人格加入 (2026-05-21)
+- 🆕 新增「大宇(BTCdayu)」币圈投资人格
+  - 看准+重仓体系（1.0求快 → 2.0求稳 → 3.0均衡）
+  - 信息优势判断框架（够准/够多/够快）
+  - 情绪/动量投机策略
+  - 三重仓位管理：核心(ETH/BTC) + 高风险(~10%) + 稳定币
+  - YAML格式自动加载（放入 personas/custom/ 即可）
+- 📘 添加大宇投资体系文档
+- 🔧 项目结构扩展，支持自定义YAML人格自动注册
 
 ### v1.0（当前版本）
 
