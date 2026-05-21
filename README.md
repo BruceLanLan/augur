@@ -10,7 +10,7 @@
 <h3 align="center">让13位投资大师为你决策 — 多智能体投资分析系统</h3>
 
 <p align="center">
-  <img src="docs/images/dashboard-preview.png" alt="Buffett Oracle Analyzer Dashboard Preview" width="100%"/>
+  <img src="docs/images/hero-banner.svg" alt="Buffett Oracle Analyzer" width="100%"/>
 </p>
 
 <p align="center">
@@ -220,7 +220,7 @@ Phase 4: 🚀 联合发布 → 双项目联动宣传
 
 ## 🏗️ 项目架构
 
-![Architecture Diagram](docs/images/architecture-preview.png)
+![Architecture Diagram](docs/images/architecture.svg)
 
 ```
 buffett-oracle-analyzer/
