@@ -41,6 +41,10 @@ class AgentRegistry:
         from scanner.personas.aschenbrenner import AschenbrennerAgent
         from scanner.personas.dayu import DayuAgent
         from scanner.personas.thiel import ThielAgent
+        from scanner.personas.duan_yongping import DuanYongpingAgent
+        from scanner.personas.zhang_lei import ZhangLeiAgent
+        from scanner.personas.li_lu import LiLuAgent
+        from scanner.personas.dan_bin import DanBinAgent
 
         agents = [
             BuffettAgent(), GrahamAgent(), LynchAgent(), DalioAgent(), MungerAgent(),
@@ -48,6 +52,7 @@ class AgentRegistry:
             AschenbrennerAgent(),
             DayuAgent(),
             ThielAgent(),
+            DuanYongpingAgent(), ZhangLeiAgent(), LiLuAgent(), DanBinAgent(),
         ]
         for agent in agents:
             self._agents[agent.agent_id] = agent

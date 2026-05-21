@@ -2,14 +2,19 @@
 {% block content %}
 <div class="container mt-4">
     <h1 class="text-center mb-4" style="color: #00ff00;">🤖 投资人人格系统</h1>
-    <p class="text-center text-muted mb-5">12位虚拟投资大师，多维度分析您的投资标的</p>
+    <p class="text-center text-muted mb-5">17位虚拟投资大师（含4位中国投资人），多维度分析您的投资标的</p>
     
     <div class="row">
         {% for persona in personas %}
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card bg-dark text-light h-100 border-secondary">
-                <div class="card-header" style="border-bottom: 2px solid #00ff00;">
-                    <h5 class="mb-0"><span class="badge bg-success me-2">AI</span>{{ persona.name }}</h5>
+                <div class="card-header" style="border-bottom: 2px solid #00ff88;">
+                    <h5 class="mb-0">
+                        <span class="badge bg-success me-2">Agent</span>{{ persona.name }}
+                        {% if "段永平" in persona.name or "张磊" in persona.name or "李录" in persona.name or "但斌" in persona.name %}
+                        <span class="badge bg-warning text-dark ms-1" style="font-size:0.65em;">🇨🇳 中国</span>
+                        {% endif %}
+                    </h5>
                     <small class="text-muted">{{ persona.style }}</small>
                 </div>
                 <div class="card-body">
