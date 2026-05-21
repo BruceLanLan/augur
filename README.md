@@ -6,11 +6,11 @@
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT"/>
 </p>
 
-<h1 align="center">🦉 Buffett Oracle Analyzer</h1>
-<h3 align="center">让13位投资大师为你决策 — 多智能体投资分析系统</h3>
+<h1 align="center">🦉 Augur</h1>
+<h3 align="center">多智能体投资分析系统 — 13位虚拟投资大师为你决策</h3>
 
 <p align="center">
-  <img src="docs/images/hero-banner.svg" alt="Buffett Oracle Analyzer" width="100%"/>
+  <img src="docs/images/hero-banner.svg" alt="Augur" width="100%"/>
 </p>
 
 <p align="center">
@@ -29,7 +29,7 @@
 
 > **Warren Buffett (沃伦·巴菲特)** 会买这只股票吗？**Ray Dalio (瑞·达利欧)** 怎么看当前宏观周期？**Cathie Wood (凯西·伍德)** 的颠覆性创新框架怎么说？
 >
-> 不用猜。Buffett Oracle Analyzer 用13位虚拟投资大师的独立Agent，对同一标的给出各自的评分、信号和理由，再用多Agent共识机制汇总，给你一份「投资大师天团」的集体判断。
+> 不用猜。augur 用13位虚拟投资大师的独立Agent，对同一标的给出各自的评分、信号和理由，再用多Agent共识机制汇总，给你一份「投资大师天团」的集体判断。
 
 ---
 
@@ -93,8 +93,8 @@
 ### 安装
 
 ```bash
-git clone https://github.com/BruceLanLan/buffett-oracle-analyzer.git
-cd buffett-oracle-analyzer
+git clone https://github.com/BruceLanLan/augur.git
+cd augur
 pip install -r requirements.txt
 ```
 
@@ -181,10 +181,10 @@ Bloomberg风格的暗色主题Web界面，内置FastAPI服务：
 
 ```bash
 # 一键安装
-hermes skills install https://github.com/BruceLanLan/buffett-oracle-analyzer
+hermes skills install https://github.com/BruceLanLan/augur
 
 # 在Hermes Web UI中
-/skill buffett-oracle
+/skill augur
 → "分析AAPL，使用巴菲特人格"
 → 返回13位Agent的共识分析结果
 ```
@@ -223,7 +223,7 @@ Phase 4: 🚀 联合发布 → 双项目联动宣传
 ![Architecture Diagram](docs/images/architecture.svg)
 
 ```
-buffett-oracle-analyzer/
+augur/
 │
 ├── scanner/                    # 分析引擎
 │   ├── personas/               # 13位投资人人格Agent

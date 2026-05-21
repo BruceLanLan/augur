@@ -301,4 +301,4 @@ Thiel在做投资决策时的10个核心问题：
 
 ---
 
-> *本文档基于Peter Thiel公开的投资哲学、著作和采访整理，供buffett-oracle-analyzer分析框架使用。*
+> *本文档基于Peter Thiel公开的投资哲学、著作和采访整理，供augur 分析框架使用。*
