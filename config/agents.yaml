@@ -16,10 +16,10 @@ per_agent:
   li_lu:         claude-sonnet-4-6   # 深度价值分析
 
   # ====== 中国投资人 (推荐使用中文优化模型) ======
-  duan_yongping: deepseek-v3         # 企业家视角，中文语境更准确
-  zhang_lei:     deepseek-v3         # 结构性机会，中国市场洞察
-  dan_bin:       kimi-latest         # 消费品牌，中国文化语境
-  dayu:          deepseek-v3         # 币圈叙事，中文社区信息差
+  duan_yongping: deepseek-v4         # 企业家视角，中文语境更准确
+  zhang_lei:     deepseek-v4         # 结构性机会，中国市场洞察
+  dan_bin:       kimi-k2             # 消费品牌，中国文化语境
+  dayu:          deepseek-v4         # 币圈叙事，中文社区信息差
 
   # ====== 成长/创新派 ======
   cathie_wood:   claude-sonnet-4-6   # 颠覆性技术分析
@@ -46,10 +46,9 @@ available_models:
     - gpt-4o
     - gpt-4o-mini
   deepseek:
-    - deepseek-v3                    # 中文理解优秀，价格极低
-    - deepseek-r1                    # 推理模型
+    - deepseek-v4                    # 中文理解优秀，价格极低，最新版本
   moonshot:
-    - kimi-latest                    # 中文消费品牌语境
+    - kimi-k2                        # 中文消费品牌语境，最新版本
   minimax:
     - minimax-01                     # 中文创意写作
   custom:

@@ -6,8 +6,8 @@ author: lanzhihao1986@gmail.com
 license: MIT
 platforms: [linux, macos, windows]
 model:
-  default: deepseek-v3
-  alternatives: [claude-sonnet-4-6, kimi-latest, minimax-01]
+  default: deepseek-v4
+  alternatives: [claude-sonnet-4-6, kimi-k2, minimax-01]
 metadata:
   augur:
     persona_id: duan_yongping

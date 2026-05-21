@@ -7,7 +7,7 @@ license: MIT
 platforms: [linux, macos, windows]
 model:
   default: claude-sonnet-4-6
-  alternatives: [deepseek-v3, gpt-4o]
+  alternatives: [deepseek-v4, gpt-4o]
 metadata:
   augur:
     persona_id: li_lu

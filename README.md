@@ -65,12 +65,12 @@
 | 9 | 🔬 **Philip Fisher** | `augur-fisher` | 成长股/闲聊法 | 研发>10%、毛利率>50% | claude-sonnet-4-6 |
 | 10 | 🥇 **ARPS** | `augur-arps` | Crypto/黄金宏观 | BTC相关性、黄金避险 | claude-sonnet-4-6 |
 | 11 | 🤖 **Leopold Aschenbrenner** | `augur-aschenbrenner` | AI地缘政治 | AI投入、算力需求 | claude-opus-4-7 |
-| 12 | ₿ **大宇 (BTCdayu)** | `augur-dayu` | 信息差/情绪动量 | 情绪动量>估值 | deepseek-v3 |
+| 12 | ₿🇨🇳 **大宇 (BTCdayu)** | `augur-dayu` | 信息差/情绪动量 | 情绪动量>估值 | deepseek-v4 |
 | 13 | 🏢 **Peter Thiel** | `augur-thiel` | 从0到1垄断 | 网络效应、技术壁垒 | claude-sonnet-4-6 |
-| 14 | 🎯 **段永平** 🇨🇳 | `augur-duan-yongping` | 本分·极度集中 | 商业模式清晰、管理层本分 | deepseek-v3 |
-| 15 | 🌏 **张磊 (高瓴)** 🇨🇳 | `augur-zhang-lei` | 长期结构性价值 | 营收增速>15%、结构性赛道 | deepseek-v3 |
+| 14 | 🎯 **段永平** 🇨🇳 | `augur-duan-yongping` | 本分·极度集中 | 商业模式清晰、管理层本分 | deepseek-v4 |
+| 15 | 🌏 **张磊 (高瓴)** 🇨🇳 | `augur-zhang-lei` | 长期结构性价值 | 营收增速>15%、结构性赛道 | deepseek-v4 |
 | 16 | 🏔️ **李录 (喜马拉雅)** 🇨🇳 | `augur-li-lu` | 深度价值·安全边际 | PE<25、ROE>12%、无高负债 | claude-sonnet-4-6 |
-| 17 | 🫖 **但斌 (东方港湾)** 🇨🇳 | `augur-dan-bin` | 品牌护城河·时代β | 毛利率>40%、定价权 | kimi-latest |
+| 17 | 🫖 **但斌 (东方港湾)** 🇨🇳 | `augur-dan-bin` | 品牌护城河·时代β | 毛利率>40%、定价权 | kimi-k2 |
 
 > 📖 每位投资人都有：完整人格文档（`personas/*.md`）· 独立 Skill（`skills/*/SKILL.md`）· Python分析引擎（`scanner/personas/*.py`）
 
@@ -226,13 +226,13 @@ python3 bots/telegram_bot.py
 ```yaml
 per_agent:
   buffett:       claude-sonnet-4-6   # 英文价值分析
-  duan_yongping: deepseek-v3         # 中文理解更准确
-  dan_bin:       kimi-latest         # 中国消费文化语境
+  duan_yongping: deepseek-v4         # 中文理解更准确
+  dan_bin:       kimi-k2             # 中国消费文化语境
   aschenbrenner: claude-opus-4-7     # AI地缘政治需最强推理
-  dayu:          deepseek-v3         # 币圈叙事，中文社区
+  dayu:          deepseek-v4         # 币圈叙事，中文社区
 ```
 
-支持所有主流模型：`claude-*` · `gpt-4o*` · `deepseek-v3/r1` · `kimi-latest` · `minimax-01` · 本地 Ollama
+支持所有主流模型：`claude-*` · `gpt-4o*` · `deepseek-v4` · `kimi-k2` · `minimax-01` · 本地 Ollama
 
 ---
 
