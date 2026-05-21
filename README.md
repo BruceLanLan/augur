@@ -330,6 +330,16 @@ Hermes Agent 负责**传递信息**，Augur 负责**解读信息**。一个传�
 
 ---
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=BruceLanLan%2Faugur&type=timeline&logscale=&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&legend=top-left" />
+ </picture>
+</a>
+
 ## 📄 License
 
 MIT License — 详见 [LICENSE](LICENSE)
