@@ -1,240 +1,300 @@
-# 🔮 巴菲特神谕分析师（Buffett Oracle Analyzer）
+<p align="center">
+  <img src="https://img.shields.io/badge/12-Investor%20Personas-brightgreen?style=for-the-badge" alt="12 Personas"/>
+  <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python" alt="Python"/>
+  <img src="https://img.shields.io/badge/FastAPI-Web%20UI-teal?style=for-the-badge&logo=fastapi" alt="FastAPI"/>
+  <img src="https://img.shields.io/badge/Hermes%20Web%20UI-Ready-purple?style=for-the-badge" alt="Hermes Ready"/>
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT"/>
+</p>
 
-### AI驱动的上市公司深度分析Skill — 融合巴菲特投资智慧与现代12模块分析框架
+<h1 align="center">🦉 Buffett Oracle Analyzer</h1>
+<h3 align="center">多智能体投资分析系统 — 12位虚拟投资大师 × AI智能分析 = 你的个人金融参谋</h3>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![覆盖市场](https://img.shields.io/badge/覆盖-美股%20%7C%20港股%20%7C%20A股-green.svg)](#多市场适配)
-
-> *"价格是你付出的，价值是你得到的。"* — 沃伦·巴菲特
+<p align="center">
+  <a href="#-核心功能">功能</a> ·
+  <a href="#-12位投资大师">投资人</a> ·
+  <a href="#-快速开始">开始使用</a> ·
+  <a href="#-web-ui">Web界面</a> ·
+  <a href="#-hermes-web-ui-整合">Hermes整合</a> ·
+  <a href="#-项目架构">架构</a> ·
+  <a href="#-路线图">路线图</a>
+</p>
 
 ---
 
-## 一句话介绍
+## 🌟 核心功能
 
-**给AI一个股票代码，它输出像巴菲特一样思考的深度投资分析报告。**
-
----
-
-## 这是什么？
-
-**巴菲特神谕分析师**是一个 [Claude AI Skill](https://docs.anthropic.com)，能够对任何上市公司（美股、港股、A股）进行全面的、机构级别的深度分析。
-
-给它一个公司名称或股票代码，它将输出：
-
-| 能力 | 细节 |
+| 功能 | 说明 |
 |------|------|
-| 📊 **12大分析模块** | 从商业模式到K线技术形态，全方位覆盖 |
-| 🏰 **护城河5维度评分** | 网络效应、转换成本、成本优势、无形资产、有效规模 |
-| 💰 **所有者盈余计算** | 巴菲特最推崇的盈利指标 |
-| 🧮 **8种估值模型** | DCF、相对估值、PEG、DDM、NAV、SOTP、所有者盈余收益率、反向DCF |
-| 📞 **电话会深度解读** | 最新一期 + 前两期对比 |
-| 📈 **技术面完整分析** | 均线系统、RSI/MACD/布林带、斐波那契、筹码分析 |
-| 🎯 **巴菲特计分卡** | 12项标准、36分满分评分体系 |
-| 🔴🟡🟢 **可执行决策** | 目标价(三情景)、买入区间、止盈/止损、仓位建议 |
+| 🤖 **12位投资大师人格** | 巴菲特、格雷厄姆、林奇、达利欧、芒格、索罗斯、马克斯、伍德、费雪、ARPS、阿申布伦纳、大宇 |
+| 🧬 **人格进化追踪** | 追踪每位投资人的持仓变化、风格漂移、关键事件，动态注入分析上下文 |
+| 📊 **多Agent共识机制** | 行业感知权重 + 市场机制路由 + 滚动IC动态权重 + 多样性相关性惩罚 |
+| 📈 **Web Dashboard** | Bloomberg风格的FastAPI界面，实时显示分析结果 |
+| 🔄 **Hermes Web UI整合** | 三方案支持：Skill模式 / 独立Web / PR整合 |
+| 📝 **YAML自定义人格** | 无需写代码，YAML文件即可创建新投资人人格 |
+| 🎯 **跨资产支持** | 股票、Crypto、宏观指标、稳定币全面覆盖 |
 
 ---
 
-## 快速开始
+## 🤖 12位投资大师
 
-### Claude.ai / Claude桌面端
+| # | 投资人 | 风格 | 核心指标 | 适合场景 |
+|---|--------|------|---------|---------|
+| 1 | 🏆 **Warren Buffett** | 护城河价值投资 | 毛利率>40%、ROE>15%、负债<50% | 蓝筹、消费、金融 |
+| 2 | 📊 **Benjamin Graham** | 深度价值/安全边际 | PE<15、PB<1.5、流动比>2 | 低估、破净、周期 |
+| 3 | 🚀 **Peter Lynch** | GARP成长 | PEG<1.5、营收增速>15%、PEG/FCF | 消费、成长、行业轮动 |
+| 4 | 🌐 **Ray Dalio** | 宏观/全天候 | 四象限分析、债务周期、风险平价 | 宏观对冲、地缘风险 |
+| 5 | 🧠 **Charlie Munger** | 格栅理论/多元思维 | ROE>20%、护城河+管理层、跨学科 | 跨学科、科技+传统 |
+| 6 | 🔄 **George Soros** | 反身性/宏观交易 | 反身性信号、趋势动量、宏观偏差 | 危机、货币、做空 |
+| 7 | 📉 **Howard Marks** | 周期/逆向投资 | 周期位置、市场情绪、估值分位 | 抄底、风险管理 |
+| 8 | 💡 **Cathie Wood** | 颠覆性创新 | 营收增速>30%、研发投入、TAM | 科技、生物、新能源 |
+| 9 | 🔬 **Philip Fisher** | 成长股/闲聊法 | 研发>10%、毛利率>50%、管理层 | 早期成长、细分龙头 |
+| 10 | 🥇 **ARPS** | Crypto/黄金宏观 | BTC相关性、黄金避险、美元强弱 | 数字资产、避险 |
+| 11 | 🤖 **Aschenbrenner** | AI地缘政治 | AI投入、算力需求、人才密度 | AI、算力、地缘政治 |
+| 12 | ₿ **大宇 (BTCdayu)** | 币圈看准+重仓 | 情绪动量>估值、信息差>基本面 | Crypto、Meme、新叙事 |
 
-1. 创建一个新的 **项目（Project）**
-2. 将 [`SKILL.md`](SKILL.md) 的内容复制到项目的 **自定义指令（Custom Instructions）** 中
-3. 开始对话：
+> 📖 每位投资人都有完整的人格文档（`personas/*.md`），YAML自定义人格（`personas/custom/*.yaml`），和Python分析Agent（`scanner/personas/*.py`）。
+
+---
+
+## 🧬 人格进化追踪
+
+投资人的判断不是静态的。系统追踪每位投资人的：
 
 ```
-分析英伟达(NVDA)
+巴菲特进化时间线
+1965 控股伯克希尔 → 1972 See‘s Candies(护城河) → 1988 可口可乐
+→ 2008 金融危机逆向投资 → 2016 苹果(接受科技) → 2025 CRCL(接受加密)
 ```
 
-### Claude Code / MiniMax
+| 投资人 | 关键事件 | 风格漂移 |
+|--------|---------|---------|
+| Buffett | 9个 (1965→2025) | 纯价值 → 价值+成长 → 接受加密 |
+| 大宇 | 8个 (2021→2026) | 技术分析 → 信息差 → 三重仓位 |
+| 更多 | 持续更新中... | |
 
+分析时自动注入当前状态上下文，让判断更接近真实。
+
+---
+
+## 🚀 快速开始
+
+### 安装
+
+```bash
+git clone https://github.com/BruceLanLan/buffett-oracle-analyzer.git
+cd buffett-oracle-analyzer
+pip install -r requirements.txt
 ```
-/oracle-investment-research
+
+### Web Dashboard
+
+```bash
+python3 -m dashboard.app
+# → 访问 http://localhost:8000
+```
+
+### 命令行分析
+
+```bash
+# 分析单一标的（所有12位Agent）
+python3 -c "
+from scanner.personas.registry import AgentRegistry
+from scanner.personas.base import MarketContext
+
+r = AgentRegistry()
+ctx = MarketContext(ticker='AAPL', price=180, pe=28, revenue_growth=0.08,
+                    gross_margins=0.45, roe=0.35, debt_ratio=45)
+
+for agent in r.get_all():
+    result = agent.analyze(ctx)
+    print(f'{agent.name:>25}: {result.signal.value.upper():>8} ({result.score:.1f}/10)')
+"
+```
+
+### 进化追踪
+
+```bash
+python3 -c "
+from personas.persona_evolution import PersonaEvolutionTracker
+t = PersonaEvolutionTracker()
+ctx = t.get_current_context('buffett')
+print('Latest events:', [e['event'] for e in ctx['latest_events']])
+print('Current biases:', ctx['current_biases'])
+"
+```
+
+### 自定义人格（YAML）
+
+在 `personas/custom/` 下创建 YAML 文件即可自动注册：
+
+```yaml
+agent_id: my_quant
+name: "我的量化策略"
+scoring_weights:
+  momentum: 0.50
+  value: 0.50
+factors:
+  momentum:
+    base: 5
+    rules:
+      - {if: "rsi > 60 and rsi < 75", add: 2}
+      - {if: "macd > macd_signal", add: 1}
 ```
 
 ---
 
-## 6步分析工作流
+## 📊 Web Dashboard
 
-| 步骤 | 环节 | 动作 |
-|------|------|------|
-| 1 | 🔍 信息采集 | 搜索最新财报、电话会、新闻、研报 |
-| 2 | 📋 基本面分析 | 业务+财务+管理层+竞争全面拆解 |
-| 3 | 🧮 估值建模 | 8种估值模型交叉验证 |
-| 4 | 📉 技术面研判 | K线形态+指标+支撑阻力位 |
-| 5 | ⚠️ 风险评估 | 多维风险矩阵+黑天鹅测试 |
-| 6 | 📄 输出报告 | 巴菲特计分卡+投资决策 |
-
----
-
-## 12大分析模块
-
-| # | 模块 | 覆盖内容 |
-|---|------|---------|
-| 1 | **公司概览** | 背景、里程碑、股权结构 |
-| 2 | **管理层评估** | 领导力、资本配置、利益绑定 |
-| 3 | **商业模式** | 收入模型、单位经济、产业链定位 |
-| 4 | **经济护城河** | 5维度评分 + 趋势 |
-| 5 | **财务深度** | 4季度趋势、三张表、所有者盈余 |
-| 6 | **电话会分析** | 最新+前2期对比、指引追踪 |
-| 7 | **多模型估值** | DCF/PEG/DDM/NAV等8种 |
-| 8 | **竞争与行业** | 份额、波特五力、颠覆风险 |
-| 9 | **技术面分析** | 均线、RSI/MACD、布林带、斐波那契 |
-| 10 | **增长与催化剂** | 驱动力、TAM、短期/长期催化剂 |
-| 11 | **风险矩阵** | 6维度评分 + 黑天鹅情景 |
-| 12 | **投资决策** | 评级、目标价、买卖策略、仓位管理 |
-
----
-
-## 输出示例
+Bloomberg风格的暗色主题Web界面，内置FastAPI服务：
 
 ```
-🔮 巴菲特的裁决
+📊 首页    - 市场总览
+🤖 人格页  - 12位投资人对比
+📈 分析页  - 单标的深度分析
+🔄 辩论页  - Agent间模拟辩论
+⚖️ 风险页  - Kelly仓位/Calmar比率
+```
 
-Costco 是当今最好的零售企业——把"低价执念"变成"会员费收费站"，
-创造可预测的、高质量的现金流。护城河宽广且加宽中。但52倍市盈率下，
-市场先生要你为卓越支付溢价。杰出的企业，但不是杰出的价格。
+![Dashboard Preview](https://img.shields.io/badge/UI-Bloomberg%20Style-00ff00?style=flat-square)
 
-巴菲特计分卡：31/36（A级 — 杰出公司）
-当前价格：$920 | 合理估值：$720-$780 | 买入区间：<$700
-分批建仓：首仓40%@$700 → 二仓30%@$650 → 三仓30%@$600
-结论：持有 — 等待市场先生给出更好的价格。
+*（实机截图即将上线）*
+
+---
+
+## 🔄 Hermes Web UI 整合
+
+本项目可无缝集成到 [Hermes Web UI](https://github.com/EKKOLearnAI/hermes-web-ui)：
+
+### 方案A：Skill模式（推荐，零配置）
+
+```bash
+# 一键安装
+hermes skills install https://github.com/BruceLanLan/buffett-oracle-analyzer
+
+# 在Hermes Web UI中
+/skill buffett-oracle
+→ "分析AAPL，使用巴菲特人格"
+→ 返回12位Agent的共识分析结果
+```
+
+### 方案B：独立FastAPI + iframe嵌入
+
+```bash
+# 启动独立服务
+python3 -m dashboard.app --port 8080 --cors
+
+# 在Hermes Web UI中通过iframe嵌入
+```
+
+### 方案C：原生PR整合（进行中）
+
+向 hermes-web-ui 提交PR，添加原生 "Investment Analysis" 页面：
+- 人格选择器（12位投资大师）
+- Agent评分雷达图
+- 多Agent对比视图
+- 历史追踪时间线
+- 一键导出分析报告
+
+### 整合路线图
+
+```
+Phase 1: ✅ Skill封装 → hermes skills install 一键安装
+Phase 2: 🔄 Web UI增强 → FastAPI完善 + CORS + REST API
+Phase 3: 📋 PR提交 → hermes-web-ui 原生页面
+Phase 4: 🚀 联合发布 → 双项目联动宣传
 ```
 
 ---
 
-## 多市场适配
-
-| 市场 | 数据来源 | 会计准则 | 特色数据 |
-|------|---------|---------|---------|
-| 🇺🇸 美股 | SEC(10-K/Q/8-K) | GAAP+Non-GAAP | 期权波动率、13F持仓 |
-| 🇭🇰 港股 | 披露易 | HKFRS/IFRS | 南北向资金、AH溢价 |
-| 🇨🇳 A股 | 巨潮资讯 | CAS | 北向资金、龙虎榜 |
-
----
-
-## 项目结构
+## 🏗️ 项目架构
 
 ```
 buffett-oracle-analyzer/
-├── SKILL.md                          # 核心Skill
-├── README.md                          # 本文件
-├── LICENSE                            # MIT协议
-├── buffett-principles.md              # 巴菲特投资原则
-├── valuation-methods.md               # 8种估值方法
-├── example-prompts.md                 # 推荐提示词
-├── evals.json                        # 评估测试用例
 │
-├── docs/                             # 数据源与工具
-│   └── data-sources.md               # API数据源集成方案
+├── scanner/                    # 分析引擎
+│   ├── personas/               # 12位投资人人格Agent
+│   │   ├── base.py             # Agent基类
+│   │   ├── buffett.py          # 巴菲特
+│   │   ├── graham.py           # 格雷厄姆
+│   │   ├── lynch.py            # 彼得·林奇
+│   │   ├── dalio.py            # 瑞·达利欧
+│   │   ├── munger.py           # 查理·芒格
+│   │   ├── soros.py            # 乔治·索罗斯
+│   │   ├── marks.py            # 霍华德·马克斯
+│   │   ├── cathie_wood.py      # 凯西·伍德
+│   │   ├── fisher.py           # 菲利普·费雪
+│   │   ├── arps.py             # ARPS Crypto/黄金
+│   │   ├── aschenbrenner.py    # 阿申布伦纳(AI)
+│   │   ├── dayu.py             # 大宇(币圈)
+│   │   └── registry.py         # Agent注册中心
+│   └── persona_loader.py       # YAML自定义人格加载
 │
-├── personas/                         # 投资人格库
-│   ├── da-yu.md                      # 大宇(BTCdayu)币圈投资人格
-│   └── custom/                       # 自定义YAML人格自动加载
-│       └── da-yu.yaml                # 大宇YAML格式自动加载人格
+├── personas/                   # 投资人文档
+│   ├── da-yu.md                # 大宇投资体系
+│   ├── ray-dalio.md            # 达利欧宏观框架
+│   ├── ... (12份文档)
+│   ├── custom/                 # YAML自定义人格
+│   └── evolution/              # 进化追踪数据
 │
-├── scripts/                          # 可执行脚本
-│   ├── data_fetcher.py               # Yahoo Finance数据获取工具
-│   └── dayu.py                       # 大宇Agent完整版(备用)
+├── dashboard/                  # Web UI
+│   ├── app.py                  # FastAPI应用
+│   └── templates/              # HTML模板
 │
-└── cases/                            # 分析案例库
-    └── analysis-reports/
-        ├── 宁德时代-300750-深度分析.md  # A股案例
-        ├── 腾讯-00700.HK-深度分析.md    # 港股案例
-        ├── example-analysis-crcl.md    # Circle(CRCL)美股案例
-        └── example-analysis-costco.md  # Costco美股案例
+├── docs/                       # 文档
+│   ├── hermes-web-ui-integration.md
+│   └── ...
+│
+├── SKILL.md                    # Hermes Agent Skill
+└── README.md                   # 本文件
 ```
 
 ---
 
-## 使用建议
+## 📋 版本日志
 
-| 提示词 | 产出 |
-|--------|------|
-| `分析 AAPL` | 完整12模块报告 |
-| `从巴菲特视角分析腾讯` | 港股深度分析 |
-| `CRCL值得投资吗？` | 毫不留情的批判性评估 |
-| `给5只股票打巴菲特计分卡` | 快速批量对比 |
-
----
-
-## 🚧 Roadmap
-
-未来计划添加的内容（按优先级）：
-
-| 优先级 | 内容 | 说明 |
-|--------|------|------|
-| **P1** | 彼得·蒂尔VC框架 | 早期投资/从0到1分析 |
-| **P1** | 林奇成长股框架 | 十倍股筛选逻辑 |
-| **P2** | 达利欧宏观框架 | 全天候/风险平价 |
-| **P2** | Crypto赛道模块 | Token经济模型、协议分析 |
-| **P2** | VC Term Sheet分析 | 条款评估、Cap Table |
-| **P3** | 更多市场支持 | 日本、欧洲、印度 |
+| 版本 | 日期 | 内容 |
+|------|------|------|
+| **v2.0** | 2026-05-21 | 🎉 12位完整投资人人格系统 + 完整扫描器基础设施 |
+| **v1.7** | 2026-05-21 | Web UI人格页面 + Hermes Web UI整合计划文档 |
+| **v1.6** | 2026-05-21 | 投资人进化追踪系统(PersonaEvolutionTracker) |
+| **v1.5** | 2026-05-21 | 大宇(BTCdayu)币圈投资人格 + YAML自动加载 |
+| **v1.1** | 2026-05 | 简化结构，回归单风格框架 |
+| **v1.0** | - | 初始版本：巴菲特单人格分析 |
 
 ---
 
-## 📋 版本更新日志
+## 🗺️ 路线图
 
-### v1.5 - 大宇投资人格加入 (2026-05-21)
-- 🆕 新增「大宇(BTCdayu)」币圈投资人格
-  - 看准+重仓体系（1.0求快 → 2.0求稳 → 3.0均衡）
-  - 信息优势判断框架（够准/够多/够快）
-  - 情绪/动量投机策略
-  - 三重仓位管理：核心(ETH/BTC) + 高风险(~10%) + 稳定币
-  - YAML格式自动加载（放入 personas/custom/ 即可）
-- 📘 添加大宇投资体系文档
-- 🔧 项目结构扩展，支持自定义YAML人格自动注册
-
-### v1.0（当前版本）
-
-**发布日期**：2026年4月
-
-**核心功能**：
-- ✅ 12大分析模块完整覆盖
-- ✅ 巴菲特计分卡（12项标准，36分满分）
-- ✅ 8种估值模型（DCF/PEG/DDM/NAV/SOTP/相对估值/所有者盈余收益率/反向DCF）
-- ✅ 美股（SEC）、港股（披露易）、A股（巨潮资讯）多市场适配
-- ✅ 技术面分析（均线/RSI/MACD/布林带/斐波那契/筹码分析）
-- ✅ 电话会深度解读（最新+前2期追踪）
-- ✅ 风险矩阵 + 黑天鹅压力测试
-- ✅ 可执行投资决策（目标价/买入区间/止盈止损/仓位管理）
-
-**数据能力**：
-- ✅ Yahoo Finance API 实时行情、财务数据、技术指标、期权数据
-- ✅ `scripts/data_fetcher.py` 可执行脚本，支持美股/港股/A股
-- ✅ SEC EDGAR API（13F机构持仓）
-- ✅ Alpha Vantage 备用数据源
-- ✅ 文档化数据源集成方案（`docs/data-sources.md`）
-
-**分析案例**：
-- 宁德时代（300750.SZ）— A股案例
-- 腾讯控股（00700.HK）— 港股案例
-- Circle（CRCL）— 美股案例
-- Costco（COST）— 美股案例
+- [x] **v1.0-v1.5**: 巴菲特 → 大宇人格加入
+- [x] **v1.6-v2.0**: 进化追踪 + 12位完整人格
+- [ ] **v2.1**: Web UI增强（REST API + CORS + 截图）
+- [ ] **v2.2**: Docker容器化 + 一键部署脚本
+- [ ] **v2.3**: Hermes Web UI PR整合
+- [ ] **v2.4**: 日频数据仓库 + 实时追踪仪表盘
+- [ ] **v3.0**: 私有人格功能逐步迭代回公共版本
 
 ---
 
-## Star History
+## 🤝 贡献指南
 
-<a href="https://www.star-history.com/?repos=brucelanlan%2Fbuffett-oracle-analyzer&type=timeline&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=brucelanlan/buffett-oracle-analyzer&type=timeline&theme=dark&logscale&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=brucelanlan/buffett-oracle-analyzer&type=timeline&logscale&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=brucelanlan/buffett-oracle-analyzer&type=timeline&logscale&legend=top-left" />
- </picture>
-</a>
+欢迎通过各种方式贡献：
 
-
-## ⚠️ 免责声明
-
-本项目仅供**教育和研究用途**，不构成投资建议。"巴菲特"视角是一个受沃伦·巴菲特公开表述的投资原则启发的分析框架——并不代表巴菲特本人对任何具体公司的观点。所有投资都有风险，请在做出投资决策前咨询合格的财务顾问。
+1. **新投资人人格**：在 `personas/custom/` 下添加 YAML 文件
+2. **算法优化**：改进 `scanner/personas/` 中的评分逻辑
+3. **Web UI增强**：完善 `dashboard/` 前端界面
+4. **文档**：完善 README 和人格文档
+5. **PR到Hermes Web UI**：帮助项目与 hermes-web-ui 整合
 
 ---
 
-## 许可协议
+## 📄 License
 
-MIT — 详见 [LICENSE](LICENSE)。
+MIT License - 详见 [LICENSE](LICENSE)
 
 ---
 
-*为相信"做足功课"的投资者而构建。*
+<p align="center">
+  <sub>Built with ❤️ by <a href="https://github.com/BruceLanLan">BruceLanLan</a></sub>
+  <br>
+  <sub>Special thanks to <a href="https://dayu.xyz">大宇(BTCdayu)</a> for investment philosophy framework</sub>
+</p>
