@@ -3,31 +3,27 @@
     <pattern id="bg-dots" width="20" height="20" patternUnits="userSpaceOnUse">
       <circle cx="10" cy="10" r="0.8" fill="#cbd5e1" opacity="0.3"/>
     </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#94a3b8"/>
+    </marker>
   </defs>
   <rect width="1000" height="360" fill="#f8f6f0"/>
   <rect width="1000" height="360" fill="url(#bg-dots)"/>
   <rect x="8" y="8" width="984" height="344" rx="10" fill="none" stroke="#1e293b" stroke-width="2"/>
+  <text x="500" y="36" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#0f172a">共识决策流程</text>
 
-  <text x="500" y="36" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#0f172a">🤖 共识决策流程</text>
-
-  <!-- Step 1: User Input -->
+  <!-- Step 1 -->
   <rect x="30" y="52" width="920" height="40" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
   <text x="50" y="77" font-family="Arial" font-size="11" font-weight="600" fill="#1e40af">用户输入</text>
   <text x="140" y="77" font-family="Arial" font-size="10" fill="#64748b">股票代码 / 分析问题 / 对话指令</text>
   <text x="850" y="77" font-family="Arial" font-size="8" fill="#94a3b8">步骤 1</text>
-
-  <!-- Arrow -->
   <line x1="500" y1="92" x2="500" y2="112" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
-  <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#94a3b8"/></marker></defs>
 
-  <!-- Step 2: 17 Agents Analysis -->
+  <!-- Step 2 -->
   <rect x="30" y="112" width="920" height="70" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
   <text x="50" y="137" font-family="Arial" font-size="11" font-weight="600" fill="#065f46">17位Agent并行分析</text>
   <text x="850" y="137" font-family="Arial" font-size="8" fill="#94a3b8">步骤 2</text>
-
-  <g transform="translate(50,148)">
-    <rect width="100" height="22" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#1e40af">Buffett</text>
-  </g>
+  <g transform="translate(50,148)"><rect width="100" height="22" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#1e40af">Buffett</text></g>
   <g transform="translate(158,148)"><rect width="100" height="22" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#1e40af">Graham</text></g>
   <g transform="translate(266,148)"><rect width="100" height="22" rx="4" fill="#dcfce7" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#166534">Dalio</text></g>
   <g transform="translate(374,148)"><rect width="100" height="22" rx="4" fill="#f3e8ff" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#4c1d95">Aschenbrenner</text></g>
@@ -35,46 +31,30 @@
   <g transform="translate(590,148)"><rect width="100" height="22" rx="4" fill="#fce7e7" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#991b1b">段永平</text></g>
   <g transform="translate(698,148)"><rect width="100" height="22" rx="4" fill="#fef3c7" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#92400e">Thiel</text></g>
   <g transform="translate(806,148)"><rect width="100" height="22" rx="4" fill="#f8fafc" stroke="#1e293b" stroke-width="0.8"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">+10 more</text></g>
-
-  <!-- Arrow -->
   <line x1="500" y1="182" x2="500" y2="200" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- Step 3: Consensus Engine -->
+  <!-- Step 3 -->
   <rect x="30" y="200" width="920" height="55" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
   <text x="50" y="225" font-family="Arial" font-size="11" font-weight="600" fill="#5b21b6">共识引擎</text>
   <text x="850" y="225" font-family="Arial" font-size="8" fill="#94a3b8">步骤 3</text>
-
-  <g transform="translate(50,235)">
-    <rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/>
-    <text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">行业权重</text>
-  </g>
+  <g transform="translate(50,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">行业权重</text></g>
   <g transform="translate(200,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">机制路由</text></g>
   <g transform="translate(350,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">滚动IC权重</text></g>
   <g transform="translate(500,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">多样性惩罚</text></g>
   <g transform="translate(650,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">Meta Model</text></g>
   <g transform="translate(800,235)"><rect width="130" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="65" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">卡尔马校准</text></g>
-
-  <!-- Arrow -->
   <line x1="500" y1="255" x2="500" y2="274" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- Step 4: Risk + Output -->
+  <!-- Step 4 -->
   <rect x="30" y="274" width="440" height="48" rx="6" fill="#fff" stroke="#d97706" stroke-width="1.5"/>
-  <text x="50" y="299" font-family="Arial" font-size="10" font-weight="600" fill="#92400e">🛡️ 风控裁决</text>
-  <text x="50" y="314" font-family="Arial" font-size="8" fill="#64748b">Kelly仓位 · Calmar · VaR · 熔断</text>
-
+  <text x="50" y="299" font-family="Arial" font-size="10" font-weight="600" fill="#92400e">风控裁决</text>
+  <text x="50" y="314" font-family="Arial" font-size="8" fill="#64748b">Kelly仓位 / Calmar / VaR / 熔断</text>
   <rect x="510" y="274" width="440" height="48" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
-  <text x="530" y="299" font-family="Arial" font-size="10" font-weight="600" fill="#065f46">📊 最终输出</text>
-  <text x="530" y="314" font-family="Arial" font-size="8" fill="#64748b">BULLISH/NEUTRAL/BEARISH · 评分 · 仓位建议 · 推理 · 分歧报告</text>
-
-  <!-- Output types -->
-  <circle cx="50" cy="342" r="3" fill="#22c55e"/>
-  <text x="60" y="346" font-family="Arial" font-size="8" fill="#64748b">Augur Dashboard</text>
-  <circle cx="230" cy="342" r="3" fill="#3b82f6"/>
-  <text x="240" y="346" font-family="Arial" font-size="8" fill="#64748b">Hermes Web UI</text>
-  <circle cx="430" cy="342" r="3" fill="#a855f7"/>
-  <text x="440" y="346" font-family="Arial" font-size="8" fill="#64748b">Skill对话</text>
-  <circle cx="600" cy="342" r="3" fill="#f59e0b"/>
-  <text x="610" y="346" font-family="Arial" font-size="8" fill="#64748b">Telegram/Slack</text>
-  <circle cx="810" cy="342" r="3" fill="#ef4444"/>
-  <text x="820" y="346" font-family="Arial" font-size="8" fill="#64748b">API</text>
+  <text x="530" y="299" font-family="Arial" font-size="10" font-weight="600" fill="#065f46">最终输出</text>
+  <text x="530" y="314" font-family="Arial" font-size="8" fill="#64748b">BULLISH/NEUTRAL/BEARISH / 评分 / 仓位建议</text>
+  <circle cx="50" cy="342" r="3" fill="#22c55e"/><text x="60" y="346" font-family="Arial" font-size="8" fill="#64748b">Augur Dashboard</text>
+  <circle cx="230" cy="342" r="3" fill="#3b82f6"/><text x="240" y="346" font-family="Arial" font-size="8" fill="#64748b">Hermes Web UI</text>
+  <circle cx="430" cy="342" r="3" fill="#a855f7"/><text x="440" y="346" font-family="Arial" font-size="8" fill="#64748b">Skill对话</text>
+  <circle cx="600" cy="342" r="3" fill="#f59e0b"/><text x="610" y="346" font-family="Arial" font-size="8" fill="#64748b">Telegram/Slack</text>
+  <circle cx="810" cy="342" r="3" fill="#ef4444"/><text x="820" y="346" font-family="Arial" font-size="8" fill="#64748b">API</text>
 </svg>
