@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+{% block title %}股票分析 — Augur{% endblock %}
+{% block extra_head %}
+<style>
+.signal-badge { font-size:1rem; padding:.4em .9em; border-radius:6px; font-weight:700; letter-spacing:.5px; }
+.badge-bullish { background:#00ff88; color:#0a0a0a; }
+.badge-neutral  { background:#f39c12; color:#0a0a0a; }
+.badge-bearish  { background:#e74c3c; color:#fff; }
+.badge-error    { background:#555; color:#ccc; }
+.score-bar-wrap { background:#1a1a1a; border-radius:4px; height:6px; overflow:hidden; }
+.score-bar      { height:100%; border-radius:4px; transition:width .6s ease; }
+.agent-card { transition:border-color .2s; cursor:default; }
+.agent-card:hover { border-color:#00ff88 !important; }
+.metric-row label { font-size:.78rem; color:#888; margin-bottom:2px; }
+.metric-row input, .metric-row select { font-size:.82rem; }
+#results { display:none; }
+#spinner { display:none; text-align:center; padding:3rem; }
+.findings-list li { font-size:.82rem; color:#b0f0c8; margin-bottom:4px; }
+.risks-list li { font-size:.82rem; color:#f0b0b0; margin-bottom:4px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2 style="color:#00ff88;">📊 股票分析</h2>
+  <p class="text-muted mb-4">输入标的代码，可选填财务指标，获得 17 位投资大师的共识判断</p>
+
+  <!-- Input card -->
+  <div class="card mb-4">
+    <div class="card-body">
+      <!-- Ticker row -->
+      <div class="row g-2 align-items-end mb-3">
+        <div class="col-md-4">
+          <label class="form-label text-muted" style="font-size:.8rem;">股票代码 *</label>
+          <input id="inp-ticker" type="text" class="form-control bg-dark text-light border-secondary"
+                 placeholder="AAPL / NVDA / 0700.HK"
+                 style="font-size:1.1rem; font-weight:600; text-transform:uppercase;">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label text-muted" style="font-size:.8rem;">价格 (USD)</label>
+          <input id="inp-price" type="number" min="0" step="0.01" class="form-control bg-dark text-light border-secondary" placeholder="0">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label text-muted" style="font-size:.8rem;">市值 (亿USD)</label>
+          <input id="inp-mktcap" type="number" min="0" class="form-control bg-dark text-light border-secondary" placeholder="0">
+        </div>
+        <div class="col-md-2">
+          <label class="form-label text-muted" style="font-size:.8rem;">行业</label>
+          <select id="inp-sector" class="form-select bg-dark text-light border-secondary">
+            <option value="">-- 选择行业 --</option>
+            <option>Technology</option><option>Consumer Cyclical</option><option>Consumer Defensive</option>
+            <option>Healthcare</option><option>Financials</option><option>Energy</option>
+            <option>Industrials</option><option>Materials</option><option>Real Estate</option>
+            <option>Communication Services</option><option>Utilities</option>
+          </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+          <button class="btn w-100" onclick="runAnalysis()"
+                  style="background:#00ff88; color:#0a0a0a; font-weight:700;">分析</button>
+        </div>
+      </div>
+
+      <!-- Quick tickers -->
+      <div class="mb-3">
+        <small class="text-muted me-2">快速选择：</small>
+        {% for t in quick_tickers %}
+        <button class="btn btn-sm me-1 mb-1" style="background:#1a3a2a; color:#00ff88; border:1px solid #1a4a2a;"
+                onclick="setTicker('{{ t }}')">{{ t }}</button>
+        {% endfor %}
+      </div>
+
+      <!-- Advanced metrics (collapsible) -->
+      <div>
+        <a class="text-muted" style="font-size:.82rem; cursor:pointer; text-decoration:none;"
+           data-bs-toggle="collapse" href="#advMetrics">
+          ▶ 高级财务指标（可选）
+        </a>
+        <div class="collapse mt-3" id="advMetrics">
+          <div class="row g-3 metric-row">
+            <div class="col-6 col-md-2"><label>PE 市盈率</label><input id="inp-pe" type="number" min="0" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>PB 市净率</label><input id="inp-pb" type="number" min="0" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>毛利率 %</label><input id="inp-gm" type="number" min="0" max="100" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>营业利润率 %</label><input id="inp-om" type="number" min="-100" max="100" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>ROE %</label><input id="inp-roe" type="number" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>资产负债率 %</label><input id="inp-debt" type="number" min="0" max="100" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>营收增速 %</label><input id="inp-revg" type="number" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>净利润增速 %</label><input id="inp-epsg" type="number" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>自由现金流 (亿)</label><input id="inp-fcf" type="number" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>机构持股 %</label><input id="inp-inst" type="number" min="0" max="100" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>内部人持股 %</label><input id="inp-ins" type="number" min="0" max="100" step="0.1" class="form-control bg-dark text-light border-secondary" placeholder="0"></div>
+            <div class="col-6 col-md-2"><label>流动比率</label><input id="inp-cr" type="number" min="0" step="0.01" class="form-control bg-dark text-light border-secondary" placeholder="1.5"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spinner -->
+  <div id="spinner">
+    <div class="spinner-border text-success" style="width:3rem; height:3rem;"></div>
+    <p class="text-muted mt-3">正在调用 17 位投资大师……</p>
+  </div>
+
+  <!-- Results -->
+  <div id="results">
+
+    <!-- Consensus banner -->
+    <div class="card mb-4" id="consensus-card" style="border-width:2px;">
+      <div class="card-body">
+        <div class="row align-items-center">
+          <div class="col-auto">
+            <div style="font-size:.75rem; color:#888; text-transform:uppercase; letter-spacing:1px;">共识信号</div>
+            <span id="cons-signal" class="signal-badge">—</span>
+          </div>
+          <div class="col-auto border-start ps-4" style="border-color:#1a3a2a !important;">
+            <div style="font-size:.75rem; color:#888;">综合评分</div>
+            <div id="cons-score" style="font-size:2rem; font-weight:700; color:#00ff88;">—</div>
+          </div>
+          <div class="col-auto border-start ps-4" style="border-color:#1a3a2a !important;">
+            <div style="font-size:.75rem; color:#888;">置信度</div>
+            <div id="cons-confidence" style="font-size:1.4rem; font-weight:600; color:#f39c12;">—</div>
+          </div>
+          <div class="col border-start ps-4" style="border-color:#1a3a2a !important;">
+            <div style="font-size:.75rem; color:#888; mb-1;">分析依据</div>
+            <div id="cons-reasoning" class="text-muted" style="font-size:.85rem;"></div>
+          </div>
+          <div class="col-auto text-end">
+            <div style="font-size:.75rem; color:#888;">建议仓位</div>
+            <div id="cons-position" style="font-size:1.4rem; font-weight:700; color:#00ff88;">—</div>
+          </div>
+        </div>
+
+        <hr style="border-color:#1a3a2a; margin:1rem 0;">
+
+        <div class="row g-3">
+          <div class="col-md-7">
+            <div style="font-size:.78rem; color:#888; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;">关键发现</div>
+            <ul class="findings-list ps-3" id="cons-findings"></ul>
+          </div>
+          <div class="col-md-5">
+            <div style="font-size:.78rem; color:#888; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;">主要风险</div>
+            <ul class="risks-list ps-3" id="cons-risks"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Score distribution chart + signal counts -->
+    <div class="row g-3 mb-4">
+      <div class="col-md-8">
+        <div class="card h-100">
+          <div class="card-body">
+            <div style="font-size:.8rem; color:#888; margin-bottom:8px;">评分分布</div>
+            <div class="chart-container" style="max-height:220px;">
+              <canvas id="scoreChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <div style="font-size:.8rem; color:#888; margin-bottom:12px;">信号分布</div>
+            <div class="d-flex flex-column gap-3 mt-2">
+              <div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span style="color:#00ff88; font-size:.85rem;">看多 BULLISH</span>
+                  <span id="cnt-bullish" style="color:#00ff88; font-weight:700;">0</span>
+                </div>
+                <div class="score-bar-wrap"><div id="bar-bullish" class="score-bar" style="background:#00ff88; width:0%"></div></div>
+              </div>
+              <div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span style="color:#f39c12; font-size:.85rem;">中性 NEUTRAL</span>
+                  <span id="cnt-neutral" style="color:#f39c12; font-weight:700;">0</span>
+                </div>
+                <div class="score-bar-wrap"><div id="bar-neutral" class="score-bar" style="background:#f39c12; width:0%"></div></div>
+              </div>
+              <div>
+                <div class="d-flex justify-content-between mb-1">
+                  <span style="color:#e74c3c; font-size:.85rem;">看空 BEARISH</span>
+                  <span id="cnt-bearish" style="color:#e74c3c; font-weight:700;">0</span>
+                </div>
+                <div class="score-bar-wrap"><div id="bar-bearish" class="score-bar" style="background:#e74c3c; width:0%"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Agent grid -->
+    <h5 class="mb-3" style="color:#00ff88;">各位投资大师评分</h5>
+    <div class="row g-3" id="agent-grid"></div>
+
+  </div><!-- /results -->
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+let scoreChart = null;
+
+// Pre-fill ticker from query string
+(function(){
+  const p = new URLSearchParams(window.location.search);
+  const t = p.get('ticker');
+  if (t) { document.getElementById('inp-ticker').value = t; runAnalysis(); }
+})();
+
+function setTicker(t) {
+  document.getElementById('inp-ticker').value = t;
+}
+
+function num(id, scale) {
+  const v = parseFloat(document.getElementById(id).value) || 0;
+  return scale ? v * scale : v;
+}
+
+function runAnalysis() {
+  const ticker = document.getElementById('inp-ticker').value.trim().toUpperCase();
+  if (!ticker) { alert('请输入股票代码'); return; }
+
+  const params = new URLSearchParams({
+    price: num('inp-price'),
+    market_cap: num('inp-mktcap', 1e8),
+    pe: num('inp-pe'),
+    pb: num('inp-pb'),
+    gross_margins: num('inp-gm') / 100,
+    operating_margins: num('inp-om') / 100,
+    roe: num('inp-roe') / 100,
+    debt_ratio: num('inp-debt'),
+    revenue_growth: num('inp-revg') / 100,
+    earnings_growth: num('inp-epsg') / 100,
+    fcf: num('inp-fcf', 1e8),
+    institutional_ownership: num('inp-inst') / 100,
+    insider_ownership: num('inp-ins') / 100,
+    current_ratio: parseFloat(document.getElementById('inp-cr').value) || 1.5,
+    sector: document.getElementById('inp-sector').value,
+  });
+
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('spinner').style.display = 'block';
+
+  fetch(`/api/analyze/${ticker}?${params}`)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('spinner').style.display = 'none';
+      renderResults(data);
+      document.getElementById('results').style.display = 'block';
+    })
+    .catch(err => {
+      document.getElementById('spinner').style.display = 'none';
+      alert('分析失败: ' + err);
+    });
+}
+
+function signalClass(s) {
+  if (!s) return 'badge-neutral';
+  const m = {'bullish':'badge-bullish','neutral':'badge-neutral','bearish':'badge-bearish','error':'badge-error'};
+  return m[s.toLowerCase()] || 'badge-neutral';
+}
+
+function signalLabel(s) {
+  const m = {'bullish':'看多 BULLISH','neutral':'中性 NEUTRAL','bearish':'看空 BEARISH','error':'错误 ERROR'};
+  return m[(s||'').toLowerCase()] || s;
+}
+
+function signalBorderColor(s) {
+  const m = {'bullish':'#00ff88','neutral':'#f39c12','bearish':'#e74c3c'};
+  return m[(s||'').toLowerCase()] || '#1a3a2a';
+}
+
+function renderResults(data) {
+  const cons = data.consensus;
+  const agents = data.agents || [];
+
+  // Consensus banner
+  const consCard = document.getElementById('consensus-card');
+  consCard.style.borderColor = signalBorderColor(cons.signal);
+
+  const sigEl = document.getElementById('cons-signal');
+  sigEl.className = 'signal-badge ' + signalClass(cons.signal);
+  sigEl.textContent = signalLabel(cons.signal);
+
+  document.getElementById('cons-score').textContent = (cons.score||0).toFixed(1) + ' / 10';
+  document.getElementById('cons-confidence').textContent = ((cons.confidence||0)*100).toFixed(0) + '%';
+  document.getElementById('cons-reasoning').textContent = cons.reasoning || '';
+
+  const posPct = cons.metadata && cons.metadata.position_sizing
+    ? (cons.metadata.position_sizing.position_pct || 0).toFixed(1) + '%'
+    : '—';
+  document.getElementById('cons-position').textContent = posPct;
+
+  // Findings & risks
+  const findEl = document.getElementById('cons-findings');
+  findEl.innerHTML = '';
+  (cons.key_findings || []).slice(0,6).forEach(f => {
+    const li = document.createElement('li'); li.textContent = f; findEl.appendChild(li);
+  });
+
+  const riskEl = document.getElementById('cons-risks');
+  riskEl.innerHTML = '';
+  (cons.risks || []).slice(0,4).forEach(r => {
+    const li = document.createElement('li'); li.textContent = r; riskEl.appendChild(li);
+  });
+
+  // Signal counts
+  let bull=0, neu=0, bear=0;
+  agents.forEach(a => {
+    const s = (a.signal||'').toLowerCase();
+    if (s==='bullish') bull++;
+    else if (s==='bearish') bear++;
+    else if (s==='neutral') neu++;
+  });
+  const total = agents.length || 1;
+  document.getElementById('cnt-bullish').textContent = bull;
+  document.getElementById('cnt-neutral').textContent = neu;
+  document.getElementById('cnt-bearish').textContent = bear;
+  document.getElementById('bar-bullish').style.width = (bull/total*100) + '%';
+  document.getElementById('bar-neutral').style.width  = (neu/total*100) + '%';
+  document.getElementById('bar-bearish').style.width  = (bear/total*100) + '%';
+
+  // Score distribution chart
+  const sortedAgents = [...agents].sort((a,b) => (b.score||0)-(a.score||0));
+  const labels = sortedAgents.map(a => a.agent_name.split(' ')[0]);
+  const scores = sortedAgents.map(a => +(a.score||0).toFixed(2));
+  const colors = sortedAgents.map(a => {
+    const s = (a.signal||'').toLowerCase();
+    return s==='bullish'?'rgba(0,255,136,0.8)':s==='bearish'?'rgba(231,76,60,0.8)':'rgba(243,156,18,0.8)';
+  });
+
+  if (scoreChart) scoreChart.destroy();
+  const ctx = document.getElementById('scoreChart').getContext('2d');
+  scoreChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data: scores,
+        backgroundColor: colors,
+        borderRadius: 4,
+        borderSkipped: false,
+      }]
+    },
+    options: {
+      plugins: { legend: { display:false } },
+      scales: {
+        x: { ticks: { color:'#666', font:{size:10} }, grid: { color:'#1a1a1a' } },
+        y: { min:0, max:10, ticks:{ color:'#666', stepSize:2 }, grid:{ color:'#1a1a1a' } }
+      },
+      animation: { duration: 600 },
+    }
+  });
+
+  // Agent grid
+  const grid = document.getElementById('agent-grid');
+  grid.innerHTML = '';
+  sortedAgents.forEach(a => {
+    const scoreWidth = ((a.score||0)/10*100).toFixed(0);
+    const scoreColor = (a.signal||'').toLowerCase()==='bullish' ? '#00ff88'
+      : (a.signal||'').toLowerCase()==='bearish' ? '#e74c3c' : '#f39c12';
+    const reasoning = (a.reasoning||'').replace(/#+\s*/g,'').replace(/\*\*/g,'').slice(0,200);
+
+    const col = document.createElement('div');
+    col.className = 'col-md-6 col-lg-4';
+    col.innerHTML = `
+      <div class="card agent-card h-100" style="border-color:#1a3a2a;">
+        <div class="card-header d-flex align-items-center justify-content-between py-2" style="border-bottom:1px solid #1a3a2a;">
+          <div>
+            <span class="fw-semibold" style="font-size:.88rem;">${a.agent_name}</span>
+          </div>
+          <span class="signal-badge ${signalClass(a.signal)}" style="font-size:.72rem; padding:.25em .6em;">${signalLabel(a.signal)}</span>
+        </div>
+        <div class="card-body py-2 px-3">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <div style="font-size:1.4rem; font-weight:700; color:${scoreColor}; min-width:40px;">${(a.score||0).toFixed(1)}</div>
+            <div class="flex-grow-1">
+              <div class="score-bar-wrap"><div class="score-bar" style="background:${scoreColor}; width:${scoreWidth}%"></div></div>
+              <div style="font-size:.7rem; color:#555; margin-top:2px;">置信度 ${((a.confidence||0)*100).toFixed(0)}%</div>
+            </div>
+          </div>
+          <p class="text-muted mb-0" style="font-size:.78rem; line-height:1.5;">${reasoning}${(a.reasoning||'').length>200?'…':''}</p>
+        </div>
+      </div>`;
+    grid.appendChild(col);
+  });
+}
+</script>
+{% endblock %}
