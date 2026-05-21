@@ -1,0 +1,117 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" width="1200" height="400">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#020617;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#22d3ee;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#34d399;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="400" fill="url(#bg)"/>
+  <!-- Grid pattern -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" stroke-width="0.3"/>
+  </pattern>
+  <rect width="1200" height="400" fill="url(#grid)"/>
+
+  <!-- Title -->
+  <text x="600" y="65" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="28" font-weight="bold" fill="#f8fafc">
+    🦉 Buffett Oracle Analyzer
+  </text>
+  <text x="600" y="95" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="14" fill="#94a3b8">
+    13位 AI 投资大师 · 多维度共识分析 · Bloomberg 风格仪表盘
+  </text>
+
+  <!-- Decorative line -->
+  <rect x="400" y="108" width="400" height="2" rx="1" fill="url(#accent)"/>
+
+  <!-- Agent boxes - Row 1 -->
+  <g transform="translate(30,130)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#22d3ee">Warren Buffett</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">沃伦·巴菲特 · 护城河</text>
+  </g>
+  <g transform="translate(200,130)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#22d3ee">Ben Graham</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">本杰明·格雷厄姆 · 安全边际</text>
+  </g>
+  <g transform="translate(370,130)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#22d3ee" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#22d3ee">Peter Lynch</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">彼得·林奇 · GARP成长</text>
+  </g>
+  <g transform="translate(540,130)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#34d399">Ray Dalio</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">瑞·达利欧 · 全天候</text>
+  </g>
+  <g transform="translate(710,130)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#34d399">Charlie Munger</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">查理·芒格 · 格栅理论</text>
+  </g>
+  <g transform="translate(880,130)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#34d399">George Soros</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">乔治·索罗斯 · 反身性</text>
+  </g>
+
+  <!-- Row 2 -->
+  <g transform="translate(30,200)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#34d399">Howard Marks</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">霍华德·马克斯 · 周期</text>
+  </g>
+  <g transform="translate(200,200)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#34d399">Cathie Wood</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">凯西·伍德 · 颠覆创新</text>
+  </g>
+  <g transform="translate(370,200)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#34d399" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#34d399">Philip Fisher</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">菲利普·费雪 · 成长股</text>
+  </g>
+  <g transform="translate(540,200)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#a78bfa" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#a78bfa">Aschenbrenner</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">阿申布伦纳 · AI地缘</text>
+  </g>
+  <g transform="translate(710,200)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#a78bfa" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#a78bfa">ARPS</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">Crypto / 黄金宏观</text>
+  </g>
+  <g transform="translate(880,200)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#fbbf24" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#fbbf24">大宇 (BTCdayu)</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">币圈 · 看准重仓</text>
+  </g>
+
+  <!-- Last row - Thiel alone centered -->
+  <g transform="translate(370,270)">
+    <rect width="160" height="55" rx="6" fill="#0f172a" stroke="#fb7185" stroke-width="1.2" opacity="0.9"/>
+    <text x="80" y="25" text-anchor="middle" font-family="Arial" font-size="12" font-weight="bold" fill="#fb7185">Peter Thiel</text>
+    <text x="80" y="40" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">彼得·蒂尔 · 从0到1</text>
+  </g>
+
+  <!-- Bottom text -->
+  <text x="600" y="360" text-anchor="middle" font-family="Arial" font-size="10" fill="#475569">
+    13 Agents · 加权共识 · YAML自定义 · Kelly风控 · Persona进化追踪 · Hermes Web UI整合
+  </text>
+
+  <!-- Status dots -->
+  <circle cx="560" cy="378" r="3" fill="#22d3ee" opacity="0.8">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <text x="570" y="382" font-family="Arial" font-size="9" fill="#64748b">System Ready</text>
+</svg>

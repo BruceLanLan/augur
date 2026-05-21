@@ -1,0 +1,178 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600" width="1000" height="600">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#020617;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#0f172a;stop-opacity:1"/>
+    </linearGradient>
+    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1e293b" stroke-width="0.3"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 Z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="600" fill="url(#bg)"/>
+  <rect width="1000" height="600" fill="url(#grid)"/>
+
+  <text x="500" y="30" text-anchor="middle" font-family="Arial" font-size="16" font-weight="bold" fill="#f8fafc">System Architecture</text>
+
+  <!-- Layer 1: UI -->
+  <rect x="30" y="45" width="940" height="80" rx="6" fill="none" stroke="#fbbf24" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="45" y="62" font-family="Arial" font-size="9" fill="#fbbf24">UI Layer</text>
+  
+  <rect x="50" y="70" width="200" height="45" rx="4" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+  <text x="150" y="90" text-anchor="middle" font-family="Arial" font-size="11" fill="#fbbf24">🌐 Hermes Web UI</text>
+  <text x="150" y="106" text-anchor="middle" font-family="Arial" font-size="7" fill="#94a3b8">Node.js · React · Socket.IO</text>
+
+  <rect x="300" y="70" width="220" height="45" rx="4" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+  <text x="410" y="90" text-anchor="middle" font-family="Arial" font-size="11" fill="#fbbf24">🦉 FastAPI Dashboard</text>
+  <text x="410" y="106" text-anchor="middle" font-family="Arial" font-size="7" fill="#94a3b8">Bloomberg Style · Live Charts</text>
+
+  <rect x="570" y="70" width="150" height="45" rx="4" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+  <text x="645" y="90" text-anchor="middle" font-family="Arial" font-size="11" fill="#fbbf24">💻 CLI</text>
+  <text x="645" y="106" text-anchor="middle" font-family="Arial" font-size="7" fill="#94a3b8">Scripts · Cron</text>
+
+  <rect x="770" y="70" width="180" height="45" rx="4" fill="#0f172a" stroke="#fbbf24" stroke-width="1"/>
+  <text x="860" y="90" text-anchor="middle" font-family="Arial" font-size="11" fill="#fbbf24">📱 Hermes Agent</text>
+  <text x="860" y="106" text-anchor="middle" font-family="Arial" font-size="7" fill="#94a3b8">Telegram · Discord · Slack</text>
+
+  <line x1="250" y1="92" x2="300" y2="92" stroke="#475569" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="520" y1="92" x2="570" y2="92" stroke="#475569" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Arrow UI → Engine -->
+  <line x1="500" y1="125" x2="500" y2="155" stroke="#475569" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arrow)"/>
+
+  <!-- Layer 2: Analysis Engine -->
+  <rect x="30" y="155" width="940" height="200" rx="6" fill="none" stroke="#22d3ee" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="45" y="172" font-family="Arial" font-size="9" fill="#22d3ee">Analysis Engine — 13 Investment Personas</text>
+
+  <!-- Row 1 of agents -->
+  <g transform="translate(45,180)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#22d3ee" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#22d3ee">Buffett</text>
+    <text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">护城河</text>
+  </g>
+  <g transform="translate(190,180)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#22d3ee" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#22d3ee">Graham</text>
+    <text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">安全边际</text>
+  </g>
+  <g transform="translate(335,180)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#22d3ee" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#22d3ee">Lynch</text>
+    <text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">GARP</text>
+  </g>
+  <g transform="translate(480,180)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#22d3ee" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#22d3ee">Dalio</text>
+    <text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">全天候</text>
+  </g>
+  <g transform="translate(625,180)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#22d3ee" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#22d3ee">Munger</text>
+    <text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">格栅理论</text>
+  </g>
+  <g transform="translate(770,180)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#22d3ee" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#22d3ee">Soros</text>
+    <text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">反身性</text>
+  </g>
+
+  <!-- Row 2 -->
+  <g transform="translate(45,230)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#34d399" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#34d399">Marks</text><text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">周期</text>
+  </g>
+  <g transform="translate(190,230)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#34d399" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#34d399">Cathie Wood</text><text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">颠覆创新</text>
+  </g>
+  <g transform="translate(335,230)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#34d399" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#34d399">Fisher</text><text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">成长股</text>
+  </g>
+  <g transform="translate(480,230)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#a78bfa" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#a78bfa">Aschenbrenner</text><text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">AI地缘</text>
+  </g>
+  <g transform="translate(625,230)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#a78bfa" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#a78bfa">ARPS</text><text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">Crypto/黄金</text>
+  </g>
+  <g transform="translate(770,230)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#fbbf24" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#fbbf24">大宇</text><text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">看准重仓</text>
+  </g>
+
+  <!-- Row 3 - just Thiel -->
+  <g transform="translate(335,280)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#fb7185" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#fb7185">Peter Thiel</text><text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">从0到1</text>
+  </g>
+  <g transform="translate(480,280)">
+    <rect width="135" height="40" rx="4" fill="#0f172a" stroke="#fbbf24" stroke-width="0.8"/>
+    <text x="67" y="22" text-anchor="middle" font-family="Arial" font-size="9" font-weight="bold" fill="#fbbf24">YAML自定义</text><text x="67" y="34" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">personas/custom/*</text>
+  </g>
+
+  <!-- Arrow Engine → Consensus -->
+  <line x1="500" y1="355" x2="500" y2="385" stroke="#475569" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arrow)"/>
+
+  <!-- Layer 3: Consensus -->
+  <rect x="30" y="385" width="940" height="90" rx="6" fill="none" stroke="#a78bfa" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="45" y="402" font-family="Arial" font-size="9" fill="#a78bfa">Consensus &amp; Risk Layer</text>
+
+  <g transform="translate(50,410)">
+    <rect width="210" height="55" rx="4" fill="#0f172a" stroke="#a78bfa" stroke-width="0.8"/>
+    <text x="105" y="23" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#a78bfa">⚖️ DecisionCoordinator</text>
+    <text x="105" y="38" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">行业权重 · 机制路由 · 滚动IC</text>
+    <text x="105" y="50" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">相关性惩罚 · Meta Model</text>
+  </g>
+  <g transform="translate(290,410)">
+    <rect width="210" height="55" rx="4" fill="#0f172a" stroke="#a78bfa" stroke-width="0.8"/>
+    <text x="105" y="23" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#a78bfa">🛡️ RiskManager</text>
+    <text x="105" y="38" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Kelly Sizer · Calmar Ratio</text>
+    <text x="105" y="50" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">VaR · 熔断惩罚 · Veto</text>
+  </g>
+  <g transform="translate(530,410)">
+    <rect width="210" height="55" rx="4" fill="#0f172a" stroke="#a78bfa" stroke-width="0.8"/>
+    <text x="105" y="23" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#a78bfa">📈 Optimization</text>
+    <text x="105" y="38" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Bayesian调参 · 多时间窗口</text>
+    <text x="105" y="50" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">相关性矩阵 · 预测追踪</text>
+  </g>
+  <g transform="translate(770,410)">
+    <rect width="180" height="55" rx="4" fill="#0f172a" stroke="#a78bfa" stroke-width="0.8"/>
+    <text x="90" y="23" text-anchor="middle" font-family="Arial" font-size="10" font-weight="bold" fill="#a78bfa">🧬 Evolution</text>
+    <text x="90" y="38" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">PersonaTracker</text>
+    <text x="90" y="50" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">风格漂移 · 事件时间线</text>
+  </g>
+
+  <!-- Arrow Consensus → Data -->
+  <line x1="500" y1="475" x2="500" y2="505" stroke="#475569" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arrow)"/>
+
+  <!-- Layer 4: Data -->
+  <rect x="30" y="505" width="940" height="55" rx="6" fill="none" stroke="#fbbf24" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="45" y="522" font-family="Arial" font-size="9" fill="#fbbf24">Data Sources</text>
+
+  <g transform="translate(50,530)">
+    <rect width="165" height="22" rx="3" fill="#0f172a" stroke="#fbbf24" stroke-width="0.6"/>
+    <text x="82" y="16" text-anchor="middle" font-family="Arial" font-size="8" fill="#fbbf24">📊 yfinance</text>
+  </g>
+  <g transform="translate(235,530)">
+    <rect width="165" height="22" rx="3" fill="#0f172a" stroke="#fbbf24" stroke-width="0.6"/>
+    <text x="82" y="16" text-anchor="middle" font-family="Arial" font-size="8" fill="#fbbf24">📈 宏观(SPY/VIX/TNX)</text>
+  </g>
+  <g transform="translate(420,530)">
+    <rect width="165" height="22" rx="3" fill="#0f172a" stroke="#fbbf24" stroke-width="0.6"/>
+    <text x="82" y="16" text-anchor="middle" font-family="Arial" font-size="8" fill="#fbbf24">💾 Parquet价格仓</text>
+  </g>
+  <g transform="translate(605,530)">
+    <rect width="165" height="22" rx="3" fill="#0f172a" stroke="#fbbf24" stroke-width="0.6"/>
+    <text x="82" y="16" text-anchor="middle" font-family="Arial" font-size="8" fill="#fbbf24">📋 PIT基本面(45d lag)</text>
+  </g>
+  <g transform="translate(790,530)">
+    <rect width="160" height="22" rx="3" fill="#0f172a" stroke="#fbbf24" stroke-width="0.6"/>
+    <text x="80" y="16" text-anchor="middle" font-family="Arial" font-size="8" fill="#fbbf24">📰 Evolution DB</text>
+  </g>
+
+  <text x="500" y="585" text-anchor="middle" font-family="Arial" font-size="9" fill="#475569">Data → Analysis → Consensus → Output</text>
+</svg>
