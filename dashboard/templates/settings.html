@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}设置 — Augur{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2 style="color:#00ff88;">⚙️ 设置</h2>
+  <p class="text-muted mb-5">系统配置与数据源管理</p>
+
+  <div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+      <div class="card py-5">
+        <div style="font-size:4rem;">🔧</div>
+        <h4 style="color:#00ff88;" class="mt-3">功能开发中</h4>
+        <p class="text-muted mt-2" style="max-width:400px; margin:auto;">
+          设置页面将支持 API Key 管理、Agent 权重调整、自定义 Watchlist，以及数据源配置。
+        </p>
+        <div class="mt-4 d-flex gap-3 justify-content-center flex-wrap">
+          <div class="card px-4 py-3" style="background:#111; min-width:140px;">
+            <div style="font-size:.72rem; color:#555; text-transform:uppercase; letter-spacing:.5px;">计划配置</div>
+            <div class="mt-2 text-start" style="font-size:.82rem; color:#aaa;">
+              <div class="mb-1">✓ Hermes API 地址</div>
+              <div class="mb-1">✓ Agent 权重覆盖</div>
+              <div class="mb-1">✓ SEC EDGAR User-Agent</div>
+              <div>✓ 主题 / 语言切换</div>
+            </div>
+          </div>
+        </div>
+        <div class="mt-4">
+          <a href="/" class="btn" style="background:#00ff88; color:#0a0a0a; font-weight:600;">
+            返回首页 →
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

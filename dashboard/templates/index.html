@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}🦉 Augur — 多智能体投资分析{% endblock %}
+{% block content %}
+<div class="container mt-4">
+
+  <!-- Hero -->
+  <div class="text-center mb-5">
+    <h1 style="font-size:2.5rem; color:#00ff88; font-weight:700; letter-spacing:-1px;">
+      🦉 Augur
+    </h1>
+    <p class="text-muted" style="font-size:1.15rem;">
+      {{ agent_count }} 位虚拟投资大师 · 多智能体共识分析
+    </p>
+    <div class="d-flex justify-content-center gap-2 mt-4" style="max-width:520px; margin:auto;">
+      <input id="hero-ticker" type="text" class="form-control form-control-lg bg-dark text-light border-secondary"
+             placeholder="输入股票代码，如 AAPL、NVDA、BRK.B"
+             style="border-color:#1a3a2a !important; font-size:1.1rem;"
+             onkeydown="if(event.key==='Enter') heroGo()">
+      <a id="hero-btn" href="/stocks" onclick="heroGo(); return false;"
+         class="btn btn-lg px-4" style="background:#00ff88; color:#0a0a0a; white-space:nowrap; font-weight:600;">
+        分析 →
+      </a>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div class="row g-3 mb-5 text-center">
+    {% for stat in stats %}
+    <div class="col-6 col-md-3">
+      <div class="card h-100 py-3">
+        <div style="font-size:1.8rem; color:#00ff88; font-weight:700;">{{ stat.value }}</div>
+        <div class="text-muted" style="font-size:0.8rem; margin-top:2px;">{{ stat.label }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Featured personas -->
+  <h5 class="mb-3" style="color:#00ff88;">精选投资人</h5>
+  <div class="row g-3 mb-5">
+    {% for p in featured %}
+    <div class="col-md-6 col-lg-3">
+      <div class="card h-100">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex align-items-center mb-2 gap-2">
+            <span style="font-size:1.6rem;">{{ p.avatar }}</span>
+            <div>
+              <div style="font-weight:600; font-size:0.9rem; color:#e0e0e0;">{{ p.name }}</div>
+              <div class="text-muted" style="font-size:0.7rem;">{{ p.style }}</div>
+            </div>
+          </div>
+          <p style="font-size:0.8rem; color:#aaa; flex:1;">{{ p.desc }}</p>
+          <span class="badge mt-2" style="background:#1a3a2a; color:#00ff88; width:fit-content;">{{ p.tag }}</span>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- How it works -->
+  <h5 class="mb-3" style="color:#00ff88;">工作原理</h5>
+  <div class="row g-3 mb-5">
+    <div class="col-md-4">
+      <div class="card text-center py-4 px-3">
+        <div style="font-size:2rem;">📊</div>
+        <h6 class="mt-2" style="color:#00ff88;">1. 输入标的</h6>
+        <p class="text-muted" style="font-size:0.82rem;">输入股票代码和基本财务指标（PE、毛利率、ROE等）</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center py-4 px-3">
+        <div style="font-size:2rem;">🤖</div>
+        <h6 class="mt-2" style="color:#00ff88;">2. 多Agent分析</h6>
+        <p class="text-muted" style="font-size:0.82rem;">{{ agent_count }} 位投资大师从各自视角独立分析，得出评分与信号</p>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="card text-center py-4 px-3">
+        <div style="font-size:2rem;">🎯</div>
+        <h6 class="mt-2" style="color:#00ff88;">3. 共识决策</h6>
+        <p class="text-muted" style="font-size:0.82rem;">行业加权、机制感知、多样性惩罚，形成最终共识信号与建仓比例</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+function heroGo() {
+  const t = document.getElementById('hero-ticker').value.trim().toUpperCase();
+  if (t) window.location.href = '/stocks?ticker=' + encodeURIComponent(t);
+  else window.location.href = '/stocks';
+}
+</script>
+{% endblock %}

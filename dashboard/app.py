@@ -77,10 +77,25 @@ def _persona_meta() -> List[Dict]:
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse("base.html", {
+    agent_count = len(get_registry().get_all())
+    stats = [
+        {"value": str(agent_count), "label": "虚拟投资大师"},
+        {"value": "5", "label": "SEC 13F 数据源"},
+        {"value": "17", "label": "维度权重系统"},
+        {"value": "实时", "label": "共识决策引擎"},
+    ]
+    featured = [
+        {"avatar": "🏦", "name": "Warren Buffett", "style": "价值 · 护城河", "desc": "寻找具有持久竞争优势的企业，以合理价格长期持有。FCF 和 ROE 是核心衡量标准。", "tag": "价值投资"},
+        {"avatar": "📐", "name": "Benjamin Graham", "style": "安全边际 · 烟蒂股", "desc": "只在具有显著安全边际时买入，PE<15、PB<1.5 是硬性门槛。", "tag": "深度价值"},
+        {"avatar": "🚀", "name": "Cathie Wood", "style": "颠覆性创新", "desc": "专注 AI、基因组、区块链等颠覆性技术，接受高估值换取指数级成长。", "tag": "成长投资"},
+        {"avatar": "🇨🇳", "name": "段永平", "style": "本分 · 极度集中", "desc": "「本分」哲学：只做正确的事，停止做错误的事。极度集中持仓，能力圈内重仓。", "tag": "中国价值"},
+    ]
+    return templates.TemplateResponse("index.html", {
         "request": request,
         "title": "Augur — 投资大师仪表盘",
-        "agent_count": len(get_registry().get_all()),
+        "agent_count": agent_count,
+        "stats": stats,
+        "featured": featured,
     })
 
 
@@ -90,6 +105,32 @@ async def personas_page(request: Request):
         "request": request,
         "personas": _persona_meta(),
         "title": "投资人人格系统",
+    })
+
+
+@app.get("/stocks", response_class=HTMLResponse)
+async def stocks_page(request: Request):
+    quick_tickers = ["AAPL", "NVDA", "MSFT", "GOOGL", "TSLA", "BRK.B", "META", "AMZN", "PDD", "BIDU"]
+    return templates.TemplateResponse("stocks.html", {
+        "request": request,
+        "title": "股票分析",
+        "quick_tickers": quick_tickers,
+    })
+
+
+@app.get("/signals", response_class=HTMLResponse)
+async def signals_page(request: Request):
+    return templates.TemplateResponse("signals.html", {
+        "request": request,
+        "title": "信号监控",
+    })
+
+
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request):
+    return templates.TemplateResponse("settings.html", {
+        "request": request,
+        "title": "设置",
     })
 
 
