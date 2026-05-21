@@ -1,6 +1,6 @@
 # Hermes Web UI 整合计划
 
-> 将 buffett-oracle-analyzer 的投资人人格分析系统作为 Hermes Web UI 的功能模块
+> 将 augur 的投资人人格分析系统作为 Hermes Web UI 的功能模块
 > 参考项目：https://github.com/EKKOLearnAI/hermes-web-ui
 
 ---
@@ -35,9 +35,9 @@
 **用户心智负担**: 最低
 
 直接通过 Hermes Agent 的 Skill 系统整合：
-1. buffett-oracle-analyzer 已自带 SKILL.md（已完善的 Hermes Skill 格式）
+1. augur 已自带 SKILL.md（已完善的 Hermes Skill 格式）
 2. 用户在 Hermes Web UI 中通过聊天调用：
-   - `/skill buffett-oracle` 加载技能
+   - `/skill augur` 加载技能
    - 或 `hermes skills install <url>` 安装
 3. 通过自然语言交互：`分析苹果AAPL，使用巴菲特人格`
 4. 所有 Agent 分析在后台运行，结果流式返回
@@ -49,7 +49,7 @@
 **工作量**: 中等
 **用户心智负担**: 中
 
-1. buffett-oracle-analyzer 已有 FastAPI dashboard（`dashboard/app.py`）
+1. augur 已有 FastAPI dashboard（`dashboard/app.py`）
 2. 完善为独立服务（添加 CORS、API 端点等）
 3. 在 Hermes Web UI 中通过 iframe 嵌入
 4. 需要 hermes-web-ui 支持 iframe 嵌入路由
@@ -76,11 +76,11 @@
 
 ```
 Phase 1: Skill 封装 ✅（已完成）
-  └─ buffett-oracle-analyzer/SKILL.md 已完善
+  └─ augur/SKILL.md 已完善
   
 Phase 2: Skill 发布
   ├─ 发布到 Hermes Skills Hub
-  └─ 用户：hermes skills install buffett-oracle
+  └─ 用户：hermes skills install augur
 
 Phase 3: 独立 Web UI 增强
   ├─ 完善 FastAPI dashboard（正在做）
@@ -97,7 +97,7 @@ Phase 4: PR 到 hermes-web-ui
 
 ## 四、关键 API 接口
 
-### buffett-oracle-analyzer API（FastAPI）
+### augur API（FastAPI）
 
 | 端点 | 方法 | 说明 |
 |------|------|------|
