@@ -14,7 +14,7 @@
 </p>
 
 <p align="center">
-  <em>17位AI投资大师（含4位中国投资人）· 多维度共识分析 · Bloomberg风格仪表盘 · 可部署到任意平台</em>
+  <em>17位AI投资大师（含5位中国投资人）· 多维度共识分析 · Bloomberg风格仪表盘 · 可部署到任意平台</em>
 </p>
 
 <p align="center">
