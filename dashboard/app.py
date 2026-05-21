@@ -27,7 +27,7 @@ except ImportError:
     print("Missing dependencies. Run: pip install fastapi uvicorn jinja2")
     sys.exit(1)
 
-from scanner.personas.registry import AgentRegistry
+from scanner.personas.registry import AgentRegistry, DecisionCoordinator
 from scanner.personas.base import MarketContext
 
 app = FastAPI(
@@ -40,6 +40,7 @@ TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
 _registry: Optional[AgentRegistry] = None
+_coordinator: Optional[DecisionCoordinator] = None
 
 
 def get_registry() -> AgentRegistry:
@@ -47,6 +48,13 @@ def get_registry() -> AgentRegistry:
     if _registry is None:
         _registry = AgentRegistry()
     return _registry
+
+
+def get_coordinator() -> DecisionCoordinator:
+    global _coordinator
+    if _coordinator is None:
+        _coordinator = DecisionCoordinator(get_registry())
+    return _coordinator
 
 
 def _persona_meta() -> List[Dict]:
@@ -142,53 +150,20 @@ async def analyze_ticker(
         industry=industry,
     )
 
-    registry = get_registry()
-    results = {}
-    for agent in registry.get_all():
-        try:
-            resp = agent.analyze(ctx)
-            results[agent.agent_id] = resp.to_dict()
-        except Exception as e:
-            results[agent.agent_id] = {
-                "agent_id": agent.agent_id,
-                "agent_name": agent.name,
-                "signal": "error",
-                "score": 0,
-                "confidence": 0,
-                "reasoning": f"分析失败: {e}",
-                "key_findings": [],
-                "risks": [],
-            }
-
-    # 计算共识
-    valid = [v for v in results.values() if v["signal"] not in ("error",)]
-    if valid:
-        avg_score = sum(v["score"] for v in valid) / len(valid)
-        signal_counts = {}
-        for v in valid:
-            signal_counts[v["signal"]] = signal_counts.get(v["signal"], 0) + 1
-        consensus_signal = max(signal_counts, key=signal_counts.get)
-    else:
-        avg_score = 0
-        consensus_signal = "neutral"
-
-    consensus = {
-        "agent_id": "consensus",
-        "agent_name": "多Agent共识",
-        "signal": consensus_signal,
-        "score": round(avg_score, 2),
-        "confidence": 0.8,
-        "reasoning": f"基于{len(valid)}个Agent的加权共识分析",
-        "key_findings": [],
-        "risks": [],
-    }
+    coord = get_coordinator()
+    agent_responses = coord.analyze_with_all(ctx)
+    consensus_resp = coord.get_consensus(
+        agent_responses,
+        ticker=ticker.upper(),
+        context=ctx,
+    )
 
     return {
         "ticker": ticker.upper(),
         "timestamp": __import__("datetime").datetime.utcnow().isoformat() + "Z",
-        "consensus": consensus,
-        "agents": list(results.values()),
-        "agent_count": len(results),
+        "consensus": consensus_resp.to_dict(),
+        "agents": [r.to_dict() for r in agent_responses.values()],
+        "agent_count": len(agent_responses),
     }
 
 
