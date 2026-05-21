@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}巴菲特神谕分析师{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        .navbar-brand {
+            font-weight: 700;
+            color: #00ff88 !important;
+        }
+        .nav-link {
+            color: #b0b0b0 !important;
+            transition: color 0.2s;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #00ff88 !important;
+        }
+        .navbar {
+            border-bottom: 1px solid #1a3a2a;
+            background-color: #0d0d0d !important;
+        }
+        .card {
+            border: 1px solid #1a3a2a;
+            background-color: #111111;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            border-color: #00ff88;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
+        }
+        .card-header {
+            border-bottom: 1px solid #1a3a2a;
+            background-color: #0d0d0d;
+        }
+        .card-footer {
+            border-top: 1px solid #1a3a2a;
+            background-color: #0d0d0d;
+        }
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.35em 0.65em;
+        }
+        .badge-buffett {
+            background-color: #00ff88;
+            color: #0a0a0a;
+        }
+        .badge-dayu {
+            background-color: #ff6b35;
+            color: #0a0a0a;
+        }
+        .badge-graham {
+            background-color: #4a90d9;
+            color: #0a0a0a;
+        }
+        .badge-lynch {
+            background-color: #e74c3c;
+            color: #0a0a0a;
+        }
+        .badge-dalio {
+            background-color: #f39c12;
+            color: #0a0a0a;
+        }
+        .badge-munger {
+            background-color: #9b59b6;
+            color: #e0e0e0;
+        }
+        .badge-soros {
+            background-color: #e74c3c;
+            color: #e0e0e0;
+        }
+        .badge-marks {
+            background-color: #1abc9c;
+            color: #0a0a0a;
+        }
+        .badge-wood {
+            background-color: #e91e63;
+            color: #e0e0e0;
+        }
+        .badge-fisher {
+            background-color: #3498db;
+            color: #0a0a0a;
+        }
+        .badge-aschenbrenner {
+            background-color: #8e44ad;
+            color: #e0e0e0;
+        }
+        .signal-buy {
+            color: #00ff88;
+        }
+        .signal-hold {
+            color: #f39c12;
+        }
+        .signal-sell {
+            color: #e74c3c;
+        }
+        .footer {
+            border-top: 1px solid #1a3a2a;
+            color: #555;
+            font-size: 0.8rem;
+        }
+        pre {
+            background-color: #0d0d0d;
+            border: 1px solid #1a3a2a;
+            border-radius: 8px;
+            padding: 1rem;
+            color: #c0c0c0;
+        }
+        .text-green {
+            color: #00ff88;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-height: 300px;
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="bi bi-graph-up-arrow"></i> 巴菲特神谕分析师
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/" id="nav-home">
+                            <i class="bi bi-house-fill"></i> 首页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/personas" id="nav-personas">
+                            <i class="bi bi-people-fill"></i> 人格系统
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/stocks" id="nav-stocks">
+                            <i class="bi bi-bar-chart-fill"></i> 股票分析
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/signals" id="nav-signals">
+                            <i class="bi bi-exclamation-triangle-fill"></i> 信号监控
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/settings" id="nav-settings">
+                            <i class="bi bi-gear-fill"></i> 设置
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">巴菲特神谕分析师 · 融合巴菲特投资哲学与现代多维分析框架</p>
+            <p class="mb-0 mt-1">
+                <i class="bi bi-info-circle"></i> 
+                本分析仅供教育和研究用途，不构成投资建议
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Highlight active nav item
+        document.addEventListener('DOMContentLoaded', function() {
+            const path = window.location.pathname;
+            document.querySelectorAll('.navbar-nav .nav-link').forEach(function(link) {
+                const href = link.getAttribute('href');
+                if (path === href || (path.startsWith(href) && href !== '/')) {
+                    link.classList.add('active');
+                } else if (href === '/' && path === '/') {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
