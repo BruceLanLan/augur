@@ -1,221 +1,80 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" width="1200" height="420">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" width="1000" height="360">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#040c1a"/>
-      <stop offset="100%" stop-color="#06101e"/>
-    </linearGradient>
-    <linearGradient id="arrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.8"/>
-    </linearGradient>
-    <linearGradient id="coordGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#0c2040"/>
-      <stop offset="100%" stop-color="#08162e"/>
-    </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <marker id="arrowHead" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M 0 1 L 9 5 L 0 9 Z" fill="#38bdf8" opacity="0.8"/>
-    </marker>
-    <marker id="arrowHeadOut" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
-      <path d="M 0 1 L 9 5 L 0 9 Z" fill="#34d399" opacity="0.9"/>
-    </marker>
-    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#0a1828" stroke-width="0.5"/>
+    <pattern id="bg-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="0.8" fill="#cbd5e1" opacity="0.3"/>
     </pattern>
   </defs>
+  <rect width="1000" height="360" fill="#f8f6f0"/>
+  <rect width="1000" height="360" fill="url(#bg-dots)"/>
+  <rect x="8" y="8" width="984" height="344" rx="10" fill="none" stroke="#1e293b" stroke-width="2"/>
 
-  <!-- Background -->
-  <rect width="1200" height="420" fill="url(#bg)"/>
-  <rect width="1200" height="420" fill="url(#grid)" opacity="0.5"/>
+  <text x="500" y="36" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#0f172a">🤖 共识决策流程</text>
 
-  <!-- Outer panel border -->
-  <rect x="6" y="6" width="1188" height="408" rx="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
-  <!-- Corner marks -->
-  <path d="M6,26 L6,6 L26,6" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-  <path d="M1194,26 L1194,6 L1174,6" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-  <path d="M6,394 L6,414 L26,414" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-  <path d="M1194,394 L1194,414 L1174,414" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+  <!-- Step 1: User Input -->
+  <rect x="30" y="52" width="920" height="40" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="50" y="77" font-family="Arial" font-size="11" font-weight="600" fill="#1e40af">用户输入</text>
+  <text x="140" y="77" font-family="Arial" font-size="10" fill="#64748b">股票代码 / 分析问题 / 对话指令</text>
+  <text x="850" y="77" font-family="Arial" font-size="8" fill="#94a3b8">步骤 1</text>
 
-  <!-- Title -->
-  <text x="600" y="38" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="15" font-weight="800" letter-spacing="2" fill="#94a3b8">多 Agent 共识机制 · DecisionCoordinator</text>
-  <line x1="30" y1="48" x2="1170" y2="48" stroke="#0e2240" stroke-width="1"/>
+  <!-- Arrow -->
+  <line x1="500" y1="92" x2="500" y2="112" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#94a3b8"/></marker></defs>
 
-  <!-- ═══ LEFT PANEL: 17 Agents ═══ -->
-  <rect x="20" y="58" width="290" height="340" rx="6" fill="#060e1c" stroke="#112038" stroke-width="1"/>
-  <text x="165" y="78" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="700" letter-spacing="1" fill="#38bdf8">17 AGENTS</text>
-  <line x1="30" y1="84" x2="300" y2="84" stroke="#0e2240" stroke-width="0.8"/>
+  <!-- Step 2: 17 Agents Analysis -->
+  <rect x="30" y="112" width="920" height="70" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+  <text x="50" y="137" font-family="Arial" font-size="11" font-weight="600" fill="#065f46">17位Agent并行分析</text>
+  <text x="850" y="137" font-family="Arial" font-size="8" fill="#94a3b8">步骤 2</text>
 
-  <!-- Agent mini-badges: 2 columns, 9 rows roughly -->
-  <!-- Col 1: x=30, Col 2: x=160 -->
-  <!-- Row height: ~30px, starting y=92 -->
+  <g transform="translate(50,148)">
+    <rect width="100" height="22" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#1e40af">Buffett</text>
+  </g>
+  <g transform="translate(158,148)"><rect width="100" height="22" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#1e40af">Graham</text></g>
+  <g transform="translate(266,148)"><rect width="100" height="22" rx="4" fill="#dcfce7" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#166534">Dalio</text></g>
+  <g transform="translate(374,148)"><rect width="100" height="22" rx="4" fill="#f3e8ff" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#4c1d95">Aschenbrenner</text></g>
+  <g transform="translate(482,148)"><rect width="100" height="22" rx="4" fill="#ffedd5" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#9a3412">大宇</text></g>
+  <g transform="translate(590,148)"><rect width="100" height="22" rx="4" fill="#fce7e7" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#991b1b">段永平</text></g>
+  <g transform="translate(698,148)"><rect width="100" height="22" rx="4" fill="#fef3c7" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#92400e">Thiel</text></g>
+  <g transform="translate(806,148)"><rect width="100" height="22" rx="4" fill="#f8fafc" stroke="#1e293b" stroke-width="0.8"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">+10 more</text></g>
 
-  <!-- Row 1 -->
-  <rect x="30" y="92" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="30" y="92" width="3" height="22" rx="1" fill="#38bdf8"/>
-  <text x="40" y="107" font-family="Arial,sans-serif" font-size="9" fill="#7dd3fc">Buffett</text>
+  <!-- Arrow -->
+  <line x1="500" y1="182" x2="500" y2="200" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <rect x="162" y="92" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="162" y="92" width="3" height="22" rx="1" fill="#38bdf8"/>
-  <text x="172" y="107" font-family="Arial,sans-serif" font-size="9" fill="#7dd3fc">Graham</text>
+  <!-- Step 3: Consensus Engine -->
+  <rect x="30" y="200" width="920" height="55" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="50" y="225" font-family="Arial" font-size="11" font-weight="600" fill="#5b21b6">共识引擎</text>
+  <text x="850" y="225" font-family="Arial" font-size="8" fill="#94a3b8">步骤 3</text>
 
-  <!-- Row 2 -->
-  <rect x="30" y="118" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="30" y="118" width="3" height="22" rx="1" fill="#22d3ee"/>
-  <text x="40" y="133" font-family="Arial,sans-serif" font-size="9" fill="#67e8f9">Lynch</text>
+  <g transform="translate(50,235)">
+    <rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/>
+    <text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">行业权重</text>
+  </g>
+  <g transform="translate(200,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">机制路由</text></g>
+  <g transform="translate(350,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">滚动IC权重</text></g>
+  <g transform="translate(500,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">多样性惩罚</text></g>
+  <g transform="translate(650,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">Meta Model</text></g>
+  <g transform="translate(800,235)"><rect width="130" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="65" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">卡尔马校准</text></g>
 
-  <rect x="162" y="118" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="162" y="118" width="3" height="22" rx="1" fill="#34d399"/>
-  <text x="172" y="133" font-family="Arial,sans-serif" font-size="9" fill="#6ee7b7">Dalio</text>
+  <!-- Arrow -->
+  <line x1="500" y1="255" x2="500" y2="274" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- Row 3 -->
-  <rect x="30" y="144" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="30" y="144" width="3" height="22" rx="1" fill="#34d399"/>
-  <text x="40" y="159" font-family="Arial,sans-serif" font-size="9" fill="#6ee7b7">Munger</text>
+  <!-- Step 4: Risk + Output -->
+  <rect x="30" y="274" width="440" height="48" rx="6" fill="#fff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="50" y="299" font-family="Arial" font-size="10" font-weight="600" fill="#92400e">🛡️ 风控裁决</text>
+  <text x="50" y="314" font-family="Arial" font-size="8" fill="#64748b">Kelly仓位 · Calmar · VaR · 熔断</text>
 
-  <rect x="162" y="144" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="162" y="144" width="3" height="22" rx="1" fill="#34d399"/>
-  <text x="172" y="159" font-family="Arial,sans-serif" font-size="9" fill="#6ee7b7">Soros</text>
+  <rect x="510" y="274" width="440" height="48" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+  <text x="530" y="299" font-family="Arial" font-size="10" font-weight="600" fill="#065f46">📊 最终输出</text>
+  <text x="530" y="314" font-family="Arial" font-size="8" fill="#64748b">BULLISH/NEUTRAL/BEARISH · 评分 · 仓位建议 · 推理 · 分歧报告</text>
 
-  <!-- Row 4 -->
-  <rect x="30" y="170" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="30" y="170" width="3" height="22" rx="1" fill="#34d399"/>
-  <text x="40" y="185" font-family="Arial,sans-serif" font-size="9" fill="#6ee7b7">Marks</text>
-
-  <rect x="162" y="170" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="162" y="170" width="3" height="22" rx="1" fill="#22d3ee"/>
-  <text x="172" y="185" font-family="Arial,sans-serif" font-size="9" fill="#67e8f9">Wood</text>
-
-  <!-- Row 5 -->
-  <rect x="30" y="196" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="30" y="196" width="3" height="22" rx="1" fill="#22d3ee"/>
-  <text x="40" y="211" font-family="Arial,sans-serif" font-size="9" fill="#67e8f9">Fisher</text>
-
-  <rect x="162" y="196" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="162" y="196" width="3" height="22" rx="1" fill="#a78bfa"/>
-  <text x="172" y="211" font-family="Arial,sans-serif" font-size="9" fill="#c4b5fd">Thiel</text>
-
-  <!-- Row 6 -->
-  <rect x="30" y="222" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="30" y="222" width="3" height="22" rx="1" fill="#a78bfa"/>
-  <text x="40" y="237" font-family="Arial,sans-serif" font-size="9" fill="#c4b5fd">Aschenbrenner</text>
-
-  <rect x="162" y="222" width="120" height="22" rx="3" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <rect x="162" y="222" width="3" height="22" rx="1" fill="#a78bfa"/>
-  <text x="172" y="237" font-family="Arial,sans-serif" font-size="9" fill="#c4b5fd">ARPS</text>
-
-  <!-- Row 7 -->
-  <rect x="30" y="248" width="120" height="22" rx="3" fill="#0a0514" stroke="#2a1040" stroke-width="0.8"/>
-  <rect x="30" y="248" width="3" height="22" rx="1" fill="#fbbf24"/>
-  <text x="40" y="263" font-family="Arial,sans-serif" font-size="9" fill="#fcd34d">大宇 (BTCdayu)</text>
-
-  <rect x="162" y="248" width="120" height="22" rx="3" fill="#0a0514" stroke="#2a1040" stroke-width="0.8"/>
-  <rect x="162" y="248" width="3" height="22" rx="1" fill="#f472b6"/>
-  <text x="172" y="263" font-family="Arial,sans-serif" font-size="9" fill="#f9a8d4">段永平</text>
-
-  <!-- Row 8 -->
-  <rect x="30" y="274" width="120" height="22" rx="3" fill="#0a0514" stroke="#2a1040" stroke-width="0.8"/>
-  <rect x="30" y="274" width="3" height="22" rx="1" fill="#f472b6"/>
-  <text x="40" y="289" font-family="Arial,sans-serif" font-size="9" fill="#f9a8d4">张磊 (高瓴)</text>
-
-  <rect x="162" y="274" width="120" height="22" rx="3" fill="#0a0514" stroke="#2a1040" stroke-width="0.8"/>
-  <rect x="162" y="274" width="3" height="22" rx="1" fill="#f472b6"/>
-  <text x="172" y="289" font-family="Arial,sans-serif" font-size="9" fill="#f9a8d4">李录 (喜马拉雅)</text>
-
-  <!-- Row 9 -->
-  <rect x="30" y="300" width="252" height="22" rx="3" fill="#0a0514" stroke="#2a1040" stroke-width="0.8"/>
-  <rect x="30" y="300" width="3" height="22" rx="1" fill="#f472b6"/>
-  <text x="40" y="315" font-family="Arial,sans-serif" font-size="9" fill="#f9a8d4">但斌 (东方港湾)</text>
-
-  <!-- ═══ ARROWS: left panel → coordinator ═══ -->
-  <!-- Multiple convergence arrows from right edge of left panel toward center box -->
-  <line x1="312" y1="130" x2="390" y2="210" stroke="url(#arrowGrad)" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
-  <line x1="312" y1="185" x2="390" y2="210" stroke="url(#arrowGrad)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.7"/>
-  <line x1="312" y1="235" x2="390" y2="215" stroke="url(#arrowGrad)" stroke-width="1.2" stroke-dasharray="4,3" opacity="0.6"/>
-  <line x1="312" y1="280" x2="390" y2="220" stroke="url(#arrowGrad)" stroke-width="1" stroke-dasharray="4,3" opacity="0.5"/>
-  <!-- Main convergence line with arrowhead -->
-  <line x1="390" y1="213" x2="430" y2="213" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrowHead)" opacity="0.85"/>
-
-  <!-- ═══ CENTER: DecisionCoordinator ═══ -->
-  <rect x="430" y="75" width="340" height="276" rx="8" fill="url(#coordGrad)" stroke="#1e4a80" stroke-width="2"/>
-  <rect x="430" y="75" width="340" height="36" rx="8" fill="#0d2040"/>
-  <rect x="430" y="99" width="340" height="12" fill="#0d2040"/>
-  <text x="600" y="99" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="800" letter-spacing="1" fill="#38bdf8">DecisionCoordinator</text>
-
-  <!-- 6 mechanism steps -->
-  <!-- Step 1 -->
-  <rect x="446" y="126" width="308" height="32" rx="4" fill="#081828" stroke="#153050" stroke-width="0.8"/>
-  <text x="458" y="142" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#38bdf8">①</text>
-  <text x="472" y="142" font-family="Arial,sans-serif" font-size="9" fill="#94a3b8">行业感知权重 — 科技股给 Aschenbrenner 更高权重</text>
-
-  <!-- Step 2 -->
-  <rect x="446" y="162" width="308" height="32" rx="4" fill="#081828" stroke="#153050" stroke-width="0.8"/>
-  <text x="458" y="178" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#22d3ee">②</text>
-  <text x="472" y="178" font-family="Arial,sans-serif" font-size="9" fill="#94a3b8">市场机制路由 — 熊市时 Marks/Dalio 权重提升</text>
-
-  <!-- Step 3 -->
-  <rect x="446" y="198" width="308" height="32" rx="4" fill="#081828" stroke="#153050" stroke-width="0.8"/>
-  <text x="458" y="214" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#34d399">③</text>
-  <text x="472" y="214" font-family="Arial,sans-serif" font-size="9" fill="#94a3b8">滚动 IC 权重 — 历史准确率高的 Agent 动态加权</text>
-
-  <!-- Step 4 -->
-  <rect x="446" y="234" width="308" height="32" rx="4" fill="#081828" stroke="#153050" stroke-width="0.8"/>
-  <text x="458" y="250" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#a78bfa">④</text>
-  <text x="472" y="250" font-family="Arial,sans-serif" font-size="9" fill="#94a3b8">多样性惩罚 — 观点相似的 Agent 减少冗余权重</text>
-
-  <!-- Step 5 -->
-  <rect x="446" y="270" width="308" height="32" rx="4" fill="#081828" stroke="#153050" stroke-width="0.8"/>
-  <text x="458" y="286" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#fbbf24">⑤</text>
-  <text x="472" y="286" font-family="Arial,sans-serif" font-size="9" fill="#94a3b8">Kelly 仓位建议 — 基于信号强度和置信度</text>
-
-  <!-- Step 6 -->
-  <rect x="446" y="306" width="308" height="32" rx="4" fill="#081828" stroke="#153050" stroke-width="0.8"/>
-  <text x="458" y="322" font-family="Arial,sans-serif" font-size="9" font-weight="700" fill="#fb7185">⑥</text>
-  <text x="472" y="322" font-family="Arial,sans-serif" font-size="9" fill="#94a3b8">风险管理否决 — 高负债+熊市信号时否决多头</text>
-
-  <!-- ═══ ARROW: coordinator → output ═══ -->
-  <line x1="772" y1="213" x2="820" y2="213" stroke="#34d399" stroke-width="2" marker-end="url(#arrowHeadOut)" opacity="0.9"/>
-
-  <!-- ═══ RIGHT PANEL: Output ═══ -->
-  <rect x="820" y="75" width="360" height="276" rx="8" fill="#060e1c" stroke="#1a3a5c" stroke-width="1.5"/>
-  <rect x="820" y="75" width="360" height="36" rx="8" fill="#091a2a"/>
-  <rect x="820" y="99" width="360" height="12" fill="#091a2a"/>
-  <text x="1000" y="99" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="800" letter-spacing="1" fill="#34d399">CONSENSUS OUTPUT</text>
-
-  <!-- Big signal badge -->
-  <rect x="840" y="120" width="320" height="58" rx="6" fill="#071a10" stroke="#134d28" stroke-width="1.5"/>
-  <text x="875" y="143" font-family="'Courier New',monospace" font-size="10" fill="#64748b">signal:</text>
-  <text x="940" y="148" font-family="'Helvetica Neue',Arial,sans-serif" font-size="20" font-weight="900" fill="#34d399" filter="url(#glow)">BULLISH</text>
-  <text x="875" y="168" font-family="'Courier New',monospace" font-size="10" fill="#64748b">confidence:</text>
-  <text x="975" y="168" font-family="'Courier New',monospace" font-size="10" fill="#86efac">87.3%</text>
-
-  <!-- Score bar -->
-  <rect x="840" y="186" width="320" height="40" rx="4" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <text x="855" y="203" font-family="'Courier New',monospace" font-size="9" fill="#64748b">score:</text>
-  <text x="900" y="207" font-family="'Helvetica Neue',Arial,sans-serif" font-size="16" font-weight="900" fill="#38bdf8">8.2</text>
-  <text x="930" y="203" font-family="'Courier New',monospace" font-size="9" fill="#334155">/ 10</text>
-  <!-- Score visual bar -->
-  <rect x="960" y="199" width="180" height="8" rx="4" fill="#0e1e38"/>
-  <rect x="960" y="199" width="147" height="8" rx="4" fill="#38bdf8" opacity="0.8"/>
-
-  <!-- Kelly position -->
-  <rect x="840" y="234" width="320" height="38" rx="4" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <text x="855" y="251" font-family="'Courier New',monospace" font-size="9" fill="#64748b">kelly_position:</text>
-  <text x="972" y="255" font-family="'Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="900" fill="#fbbf24">15.4%</text>
-  <text x="855" y="264" font-family="'Courier New',monospace" font-size="8" fill="#334155">建议仓位比例（基于信号强度与波动率）</text>
-
-  <!-- Agent breakdown -->
-  <rect x="840" y="280" width="320" height="58" rx="4" fill="#080f1f" stroke="#1a3050" stroke-width="0.8"/>
-  <text x="855" y="296" font-family="'Courier New',monospace" font-size="8" fill="#64748b">agent_signals:</text>
-  <!-- Mini signal bars -->
-  <text x="855" y="312" font-family="Arial,sans-serif" font-size="8" fill="#34d399">BULLISH ████████████ 11</text>
-  <text x="855" y="326" font-family="Arial,sans-serif" font-size="8" fill="#fbbf24">NEUTRAL ████ 4</text>
-  <text x="855" y="340" font-family="Arial,sans-serif" font-size="8" fill="#fb7185">BEARISH ██ 2</text>
-
-  <!-- ═══ FOOTER ═══ -->
-  <text x="600" y="390" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" fill="#334155" letter-spacing="1">
-    每次分析触发17位Agent独立评分 → 加权汇总 → 共识信号输出，全程 &lt; 5秒
-  </text>
+  <!-- Output types -->
+  <circle cx="50" cy="342" r="3" fill="#22c55e"/>
+  <text x="60" y="346" font-family="Arial" font-size="8" fill="#64748b">Augur Dashboard</text>
+  <circle cx="230" cy="342" r="3" fill="#3b82f6"/>
+  <text x="240" y="346" font-family="Arial" font-size="8" fill="#64748b">Hermes Web UI</text>
+  <circle cx="430" cy="342" r="3" fill="#a855f7"/>
+  <text x="440" y="346" font-family="Arial" font-size="8" fill="#64748b">Skill对话</text>
+  <circle cx="600" cy="342" r="3" fill="#f59e0b"/>
+  <text x="610" y="346" font-family="Arial" font-size="8" fill="#64748b">Telegram/Slack</text>
+  <circle cx="810" cy="342" r="3" fill="#ef4444"/>
+  <text x="820" y="346" font-family="Arial" font-size="8" fill="#64748b">API</text>
 </svg>

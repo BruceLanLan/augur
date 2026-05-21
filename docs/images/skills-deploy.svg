@@ -1,132 +1,92 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 340" width="1200" height="340">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" width="1000" height="380">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#040c1a"/>
-      <stop offset="100%" stop-color="#06101e"/>
-    </linearGradient>
-    <linearGradient id="skillGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#0d2240"/>
-      <stop offset="100%" stop-color="#081828"/>
-    </linearGradient>
-    <filter id="glow">
-      <feGaussianBlur stdDeviation="3" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <filter id="softglow">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
-      <path d="M 0 1 L 9 5 L 0 9 Z" fill="#38bdf8" opacity="0.7"/>
-    </marker>
-    <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
-      <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#0a1828" stroke-width="0.4"/>
+    <pattern id="bg-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="0.8" fill="#cbd5e1" opacity="0.3"/>
     </pattern>
   </defs>
+  <rect width="1000" height="380" fill="#f8f6f0"/>
+  <rect width="1000" height="380" fill="url(#bg-dots)"/>
+  <rect x="8" y="8" width="984" height="364" rx="10" fill="none" stroke="#1e293b" stroke-width="2"/>
 
-  <!-- Background -->
-  <rect width="1200" height="340" fill="url(#bg)"/>
-  <rect width="1200" height="340" fill="url(#grid)" opacity="0.6"/>
+  <text x="500" y="36" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#0f172a">🔌 一键部署到任意平台</text>
 
-  <!-- Outer border + corners -->
-  <rect x="6" y="6" width="1188" height="328" rx="4" fill="none" stroke="#1a3a5c" stroke-width="1.5"/>
-  <path d="M6,24 L6,6 L24,6" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-  <path d="M1194,24 L1194,6 L1176,6" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-  <path d="M6,316 L6,334 L24,334" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-  <path d="M1194,316 L1194,334 L1176,334" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+  <!-- Platform boxes -->
+  <g transform="translate(30,55)">
+    <rect width="280" height="55" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#1e40af">🦉 Augur Dashboard</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">内置 FastAPI · 浏览器访问 · 零配置启动</text>
+    <text x="250" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">✅ 内置</text>
+  </g>
 
-  <!-- Title -->
-  <text x="600" y="36" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="800" letter-spacing="2" fill="#94a3b8">SKILL 架构 · 一键部署到任意平台</text>
-  <line x1="30" y1="46" x2="1170" y2="46" stroke="#0e2240" stroke-width="1"/>
+  <g transform="translate(330,55)">
+    <rect width="280" height="55" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#065f46">🤖 Hermes Agent</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">对话式交互 · /skill augur 加载</text>
+    <text x="250" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">✅ 内置</text>
+  </g>
 
-  <!-- ═══ CENTER: The Skill Package ═══ -->
-  <!-- Glow halo behind skill box -->
-  <rect x="450" y="72" width="300" height="200" rx="20" fill="#38bdf8" opacity="0.04" filter="url(#softglow)"/>
+  <g transform="translate(630,55)">
+    <rect width="340" height="55" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#5b21b6">🌐 Hermes Web UI</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">聊天界面 · 会话管理 · 技能集成</text>
+    <text x="310" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#ca8a04">🔧 PR进行中</text>
+  </g>
 
-  <rect x="460" y="78" width="280" height="188" rx="10" fill="url(#skillGrad)" stroke="#2563eb" stroke-width="2.5"/>
-  <!-- Top bar -->
-  <rect x="460" y="78" width="280" height="38" rx="10" fill="#0e2a50"/>
-  <rect x="460" y="104" width="280" height="12" fill="#0e2a50"/>
+  <!-- Row 2 -->
+  <g transform="translate(30,125)">
+    <rect width="280" height="55" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#1e40af">💬 OpenClaude</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">独立Agent注册 · YAML配置</text>
+    <text x="250" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">✅ 支持</text>
+  </g>
 
-  <!-- Skill icon (owl emoji circle) -->
-  <circle cx="600" cy="107" r="18" fill="#0a1e38" stroke="#1e4a80" stroke-width="1.5"/>
-  <text x="600" y="113" text-anchor="middle" font-family="Arial,sans-serif" font-size="16">🦉</text>
+  <g transform="translate(330,125)">
+    <rect width="280" height="55" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#065f46">⌨️ Claude Code / Codex</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">终端集成 · --skill 参数加载</text>
+    <text x="250" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">✅ 支持</text>
+  </g>
 
-  <!-- Skill name -->
-  <text x="600" y="145" text-anchor="middle" font-family="'Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="900" fill="#38bdf8" filter="url(#glow)">augur-buffett</text>
-  <text x="600" y="162" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" fill="#64748b">skills/buffett/SKILL.md</text>
+  <g transform="translate(630,125)">
+    <rect width="340" height="55" rx="6" fill="#fff" stroke="#d97706" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#92400e">📱 Telegram / Slack / Discord</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">通过 Hermes Gateway 转接·实时对话</text>
+    <text x="310" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">✅ 支持</text>
+  </g>
 
-  <!-- Skill properties -->
-  <rect x="476" y="172" width="248" height="20" rx="3" fill="#081428" stroke="#0e2040" stroke-width="0.5"/>
-  <text x="490" y="186" font-family="'Courier New',monospace" font-size="8" fill="#334155">model:</text>
-  <text x="538" y="186" font-family="'Courier New',monospace" font-size="8" fill="#7dd3fc">claude-sonnet-4-6</text>
+  <!-- How it works section -->
+  <rect x="30" y="200" width="940" height="80" rx="6" fill="#fff" stroke="#1e293b" stroke-width="1.5"/>
+  <text x="50" y="222" font-family="Arial" font-size="11" font-weight="700" fill="#0f172a">工作原理</text>
 
-  <rect x="476" y="196" width="248" height="20" rx="3" fill="#081428" stroke="#0e2040" stroke-width="0.5"/>
-  <text x="490" y="210" font-family="'Courier New',monospace" font-size="8" fill="#334155">persona:</text>
-  <text x="546" y="210" font-family="'Courier New',monospace" font-size="8" fill="#7dd3fc">buffett</text>
+  <g transform="translate(50,235)">
+    <rect width="200" height="34" rx="4" fill="#f0f9ff" stroke="#2563eb" stroke-width="1"/>
+    <text x="100" y="16" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">📦 SKILL.md</text>
+    <text x="100" y="29" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">17个独立Skill文件</text>
+  </g>
+  <g transform="translate(280,235)">
+    <rect width="200" height="34" rx="4" fill="#f0fdf4" stroke="#059669" stroke-width="1"/>
+    <text x="100" y="16" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">🔄 hermes skills install</text>
+    <text x="100" y="29" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">一键安装到Hermes Agent</text>
+  </g>
+  <g transform="translate(510,235)">
+    <rect width="200" height="34" rx="4" fill="#fefce8" stroke="#d97706" stroke-width="1"/>
+    <text x="100" y="16" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#92400e">🤖 Agent激活</text>
+    <text x="100" y="29" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">/skill buffett 开始对话</text>
+  </g>
+  <g transform="translate(740,235)">
+    <rect width="200" height="34" rx="4" fill="#fdf2f8" stroke="#ec4899" stroke-width="1"/>
+    <text x="100" y="16" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#be185d">📊 获得分析</text>
+    <text x="100" y="29" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">评分 · 信号 · 推理 · 仓位</text>
+  </g>
 
-  <rect x="476" y="220" width="248" height="20" rx="3" fill="#081428" stroke="#0e2040" stroke-width="0.5"/>
-  <text x="490" y="234" font-family="'Courier New',monospace" font-size="8" fill="#334155">version:</text>
-  <text x="546" y="234" font-family="'Courier New',monospace" font-size="8" fill="#7dd3fc">2.0.0</text>
+  <!-- Arrow between steps -->
+  <line x1="250" y1="252" x2="278" y2="252" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="480" y1="252" x2="508" y2="252" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="710" y1="252" x2="738" y2="252" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+  <defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#94a3b8"/></marker></defs>
 
-  <rect x="476" y="244" width="248" height="14" rx="3" fill="#071020"/>
-  <text x="600" y="255" text-anchor="middle" font-family="'Courier New',monospace" font-size="7" fill="#1e3a5c">agentskills.io compatible</text>
-
-  <!-- ═══ ARROWS: outward to platforms ═══ -->
-  <!-- Left arrows: Hermes, Claude CLI -->
-  <!-- Right arrows: Telegram, Slack, WeChat, API -->
-
-  <!-- Left side arrows (going left) -->
-  <line x1="458" y1="148" x2="360" y2="148" stroke="#38bdf8" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" marker-end="url(#arr)"/>
-  <line x1="458" y1="188" x2="360" y2="240" stroke="#38bdf8" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.55" marker-end="url(#arr)"/>
-
-  <!-- Right side arrows (going right) -->
-  <line x1="742" y1="148" x2="840" y2="120" stroke="#34d399" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" marker-end="url(#arr)"/>
-  <line x1="742" y1="165" x2="840" y2="168" stroke="#34d399" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.7" marker-end="url(#arr)"/>
-  <line x1="742" y1="185" x2="840" y2="218" stroke="#34d399" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.6" marker-end="url(#arr)"/>
-  <line x1="742" y1="208" x2="840" y2="272" stroke="#34d399" stroke-width="1.2" stroke-dasharray="5,3" opacity="0.5" marker-end="url(#arr)"/>
-
-  <!-- ═══ LEFT PLATFORM BOXES ═══ -->
-
-  <!-- Hermes Web UI -->
-  <rect x="140" y="108" width="212" height="64" rx="6" fill="#080f1f" stroke="#1a3a6a" stroke-width="1.5"/>
-  <rect x="140" y="108" width="4" height="64" rx="2" fill="#38bdf8"/>
-  <text x="155" y="131" font-family="'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="700" fill="#38bdf8">Hermes Web UI</text>
-  <text x="155" y="149" font-family="Arial,sans-serif" font-size="9" fill="#64748b">/skill augur-buffett</text>
-  <text x="155" y="164" font-family="Arial,sans-serif" font-size="8" fill="#334155">群聊 · Agent 1-on-1 对话</text>
-
-  <!-- Claude Code -->
-  <rect x="140" y="200" width="212" height="64" rx="6" fill="#080f1f" stroke="#1a3a6a" stroke-width="1.5"/>
-  <rect x="140" y="200" width="4" height="64" rx="2" fill="#7dd3fc"/>
-  <text x="155" y="223" font-family="'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="700" fill="#7dd3fc">Claude / OpenClaw</text>
-  <text x="155" y="241" font-family="Arial,sans-serif" font-size="9" fill="#64748b">Skills API 直接调用</text>
-  <text x="155" y="256" font-family="Arial,sans-serif" font-size="8" fill="#334155">agentskills.io 兼容平台</text>
-
-  <!-- ═══ RIGHT PLATFORM BOXES ═══ -->
-
-  <!-- Telegram -->
-  <rect x="848" y="78" width="212" height="62" rx="6" fill="#080f1f" stroke="#1a3a6a" stroke-width="1.5"/>
-  <rect x="848" y="78" width="4" height="62" rx="2" fill="#34d399"/>
-  <text x="863" y="100" font-family="'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="700" fill="#34d399">Telegram Bot</text>
-  <text x="863" y="118" font-family="'Courier New',monospace" font-size="8" fill="#64748b">/analyze AAPL pe=32 gm=46</text>
-  <text x="863" y="133" font-family="Arial,sans-serif" font-size="8" fill="#334155">实时推送分析报告</text>
-
-  <!-- Slack -->
-  <rect x="848" y="150" width="212" height="62" rx="6" fill="#080f1f" stroke="#1a3a6a" stroke-width="1.5"/>
-  <rect x="848" y="150" width="4" height="62" rx="2" fill="#a78bfa"/>
-  <text x="863" y="172" font-family="'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="700" fill="#a78bfa">Slack App</text>
-  <text x="863" y="190" font-family="'Courier New',monospace" font-size="8" fill="#64748b">@augur analyze NVDA</text>
-  <text x="863" y="205" font-family="Arial,sans-serif" font-size="8" fill="#334155">团队协同投研工作台</text>
-
-  <!-- WeChat / API -->
-  <rect x="848" y="222" width="212" height="62" rx="6" fill="#080f1f" stroke="#1a3a6a" stroke-width="1.5"/>
-  <rect x="848" y="222" width="4" height="62" rx="2" fill="#fbbf24"/>
-  <text x="863" y="244" font-family="'Helvetica Neue',Arial,sans-serif" font-size="11" font-weight="700" fill="#fbbf24">FastAPI / CLI</text>
-  <text x="863" y="262" font-family="'Courier New',monospace" font-size="8" fill="#64748b">GET /api/analyze/TSLA</text>
-  <text x="863" y="277" font-family="Arial,sans-serif" font-size="8" fill="#334155">本地 · 微信 · 自定义集成</text>
-
-  <!-- ═══ FOOTER ═══ -->
-  <text x="600" y="316" text-anchor="middle" font-family="Arial,sans-serif" font-size="9" fill="#334155" letter-spacing="1">
-    每个 Skill 独立安装 · 支持 Claude / DeepSeek V4 / Kimi K2 / GPT-4o / 本地 Ollama
-  </text>
+  <!-- Footer examples -->
+  <text x="50" y="310" font-family="Arial" font-size="9" font-weight="600" fill="#0f172a">快速命令示例：</text>
+  <text x="50" y="330" font-family="Arial" font-size="8" fill="#475569">$ hermes skills install ./skills/buffett/SKILL.md  →  /skill buffett  →  "分析AAPL"</text>
+  <text x="50" y="348" font-family="Arial" font-size="8" fill="#475569">$ hermes skills install ./skills/dayu/SKILL.md     →  /skill dayu     →  "BTC怎么看？"</text>
 </svg>
