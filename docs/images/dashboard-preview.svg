@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 520" width="1000" height="520">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a0e1a;stop-opacity:1"/>
+      <stop offset="100%" style="stop-color:#111827;stop-opacity:1"/>
+    </linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="2" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="1000" height="520" fill="url(#bg)"/>
+  <pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse">
+    <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1e293b" stroke-width="0.3"/>
+  </pattern>
+  <rect width="1000" height="520" fill="url(#grid)"/>
+
+  <!-- Header bar -->
+  <rect x="0" y="0" width="1000" height="44" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="20" y="28" font-family="'Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="bold" fill="#00ff00">🦉 Augur</text>
+  <text x="90" y="28" font-family="Arial" font-size="10" fill="#64748b">多智能体投资分析系统</text>
+  <!-- Header nav pills -->
+  <rect x="300" y="12" width="60" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="0.5"/>
+  <text x="330" y="26" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">Dashboard</text>
+  <rect x="370" y="12" width="60" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="0.5"/>
+  <text x="400" y="26" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">Analysis</text>
+  <rect x="440" y="12" width="60" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="0.5"/>
+  <text x="470" y="26" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">Personas</text>
+  <rect x="510" y="12" width="60" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="0.5"/>
+  <text x="540" y="26" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">Risk</text>
+  <!-- Search bar -->
+  <rect x="760" y="12" width="220" height="20" rx="4" fill="#1e293b" stroke="#334155" stroke-width="0.5"/>
+  <text x="780" y="26" font-family="Arial" font-size="8" fill="#64748b">🔍 Search ticker...</text>
+
+  <!-- Status dot -->
+  <circle cx="660" cy="22" r="3" fill="#22d3ee" opacity="0.8">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <text x="670" y="26" font-family="Arial" font-size="8" fill="#64748b">13 Agents Ready</text>
+
+  <!-- Main content area -->
+  <rect x="15" y="55" width="320" height="215" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="30" y="75" font-family="Arial" font-size="11" font-weight="bold" fill="#e2e8f0">📊 市场总览</text>
+  <!-- Ticker cards -->
+  <g transform="translate(30,85)">
+    <rect width="290" height="35" rx="4" fill="#1e293b"/>
+    <text x="15" y="22" font-family="Arial" font-size="11" font-weight="bold" fill="#22d3ee">AAPL</text>
+    <text x="65" y="22" font-family="Arial" font-size="9" fill="#94a3b8">Apple Inc.</text>
+    <text x="230" y="22" text-anchor="end" font-family="Arial" font-size="11" fill="#34d399">+1.42%</text>
+  </g>
+  <g transform="translate(30,128)">
+    <rect width="290" height="35" rx="4" fill="#1e293b"/>
+    <text x="15" y="22" font-family="Arial" font-size="11" font-weight="bold" fill="#34d399">MSFT</text><text x="65" y="22" font-family="Arial" font-size="9" fill="#94a3b8">Microsoft Corp.</text><text x="230" y="22" text-anchor="end" font-family="Arial" font-size="11" fill="#34d399">+2.18%</text>
+  </g>
+  <g transform="translate(30,171)">
+    <rect width="290" height="35" rx="4" fill="#1e293b"/>
+    <text x="15" y="22" font-family="Arial" font-size="11" font-weight="bold" fill="#fbbf24">CRCL</text><text x="65" y="22" font-family="Arial" font-size="9" fill="#94a3b8">Circle Internet</text><text x="230" y="22" text-anchor="end" font-family="Arial" font-size="11" fill="#34d399">+5.37%</text>
+  </g>
+  <g transform="translate(30,214)">
+    <rect width="290" height="35" rx="4" fill="#1e293b"/>
+    <text x="15" y="22" font-family="Arial" font-size="11" font-weight="bold" fill="#fb7185">NVDA</text><text x="65" y="22" font-family="Arial" font-size="9" fill="#94a3b8">NVIDIA Corp.</text><text x="230" y="22" text-anchor="end" font-family="Arial" font-size="11" fill="#fb7185">-0.89%</text>
+  </g>
+
+  <!-- Consensus panel -->
+  <rect x="350" y="55" width="320" height="215" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="365" y="75" font-family="Arial" font-size="11" font-weight="bold" fill="#e2e8f0">🎯 AAPL 共识分析</text>
+  <text x="365" y="92" font-family="Arial" font-size="9" fill="#64748b">13位Agent · Consensus Score: 7.4/10</text>
+
+  <!-- Signal bar -->
+  <rect x="365" y="105" width="290" height="22" rx="4" fill="#1e293b"/>
+  <rect x="365" y="105" width="210" height="22" rx="4" fill="#34d399" opacity="0.6"/>
+  <text x="375" y="120" font-family="Arial" font-size="9" font-weight="bold" fill="#f8fafc">BULLISH</text>
+  <text x="610" y="120" text-anchor="end" font-family="Arial" font-size="9" fill="#94a3b8">72% 同意</text>
+
+  <!-- Agent breakdown -->
+  <g transform="translate(365,140)">
+    <text x="0" y="10" font-family="Arial" font-size="8" fill="#22d3ee">🟢 Buffett</text><text x="90" y="10" font-family="Arial" font-size="8" fill="#94a3b8">BULLISH 8.2/10</text>
+  </g>
+  <g transform="translate(365,158)">
+    <text x="0" y="10" font-family="Arial" font-size="8" fill="#22d3ee">🟢 Graham</text><text x="90" y="10" font-family="Arial" font-size="8" fill="#94a3b8">BULLISH 7.5/10</text>
+  </g>
+  <g transform="translate(365,176)">
+    <text x="0" y="10" font-family="Arial" font-size="8" fill="#34d399">🟢 Lynch</text><text x="90" y="10" font-family="Arial" font-size="8" fill="#94a3b8">BULLISH 7.8/10</text>
+  </g>
+  <g transform="translate(365,194)">
+    <text x="0" y="10" font-family="Arial" font-size="8" fill="#94a3b8">⚪ Munger</text><text x="90" y="10" font-family="Arial" font-size="8" fill="#94a3b8">NEUTRAL 5.5/10</text>
+  </g>
+  <g transform="translate(365,212)">
+    <text x="0" y="10" font-family="Arial" font-size="8" fill="#fb7185">🔴 Soros</text><text x="90" y="10" font-family="Arial" font-size="8" fill="#94a3b8">BEARISH 3.8/10</text>
+  </g>
+  <text x="365" y="240" font-family="Arial" font-size="8" fill="#64748b">+8 more agents...  Minority report: Soros/Marks caution on valuation</text>
+
+  <!-- Persona evolution panel -->
+  <rect x="685" y="55" width="300" height="215" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="700" y="75" font-family="Arial" font-size="11" font-weight="bold" fill="#e2e8f0">🧬 Persona Evolution</text>
+  <text x="700" y="92" font-family="Arial" font-size="8" fill="#64748b">Warren Buffett · Latest Events</text>
+
+  <g transform="translate(700,108)">
+    <rect width="270" height="18" rx="3" fill="#1e293b"/>
+    <circle cx="10" cy="9" r="4" fill="#22d3ee"/>
+    <text x="22" y="13" font-family="Arial" font-size="7" fill="#94a3b8">2025 · 建仓CRCL(稳定币) — 首次进入加密领域</text>
+  </g>
+  <g transform="translate(700,131)">
+    <rect width="270" height="18" rx="3" fill="#1e293b"/>
+    <circle cx="10" cy="9" r="4" fill="#34d399"/>
+    <text x="22" y="13" font-family="Arial" font-size="7" fill="#94a3b8">2023-2024 · 减持苹果、增持现金 — 防御策略</text>
+  </g>
+  <g transform="translate(700,154)">
+    <rect width="270" height="18" rx="3" fill="#1e293b"/>
+    <circle cx="10" cy="9" r="4" fill="#a78bfa"/>
+    <text x="22" y="13" font-family="Arial" font-size="7" fill="#94a3b8">2020 · 疫情抛售航空股 — 承认判断失误</text>
+  </g>
+  <g transform="translate(700,177)">
+    <rect width="270" height="18" rx="3" fill="#1e293b"/>
+    <circle cx="10" cy="9" r="4" fill="#fbbf24"/>
+    <text x="22" y="13" font-family="Arial" font-size="7" fill="#94a3b8">2016 · 建仓苹果 — 从拒绝科技到重仓</text>
+  </g>
+
+  <!-- Style shifts -->
+  <text x="700" y="212" font-family="Arial" font-size="9" font-weight="bold" fill="#e2e8f0">风格漂移</text>
+  <g transform="translate(700,220)">
+    <text x="0" y="10" font-family="Arial" font-size="7" fill="#64748b">纯价值 → 价值+成长 → 接受加密</text>
+  </g>
+
+  <!-- Risk panel -->
+  <rect x="15" y="280" width="970" height="100" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="30" y="300" font-family="Arial" font-size="11" font-weight="bold" fill="#e2e8f0">🛡️ 风险管理</text>
+
+  <!-- Kelly position -->
+  <g transform="translate(30,315)">
+    <text x="0" y="12" font-family="Arial" font-size="9" fill="#94a3b8">Kelly仓位: </text>
+    <text x="80" y="12" font-family="Arial" font-size="12" font-weight="bold" fill="#34d399">3.5%</text>
+    <text x="0" y="30" font-family="Arial" font-size="8" fill="#64748b">基于Calmar Ratio: 0.85 · VaR 95%: 4.2%</text>
+  </g>
+
+  <!-- Regime indicator -->
+  <g transform="translate(280,315)">
+    <text x="0" y="12" font-family="Arial" font-size="9" fill="#94a3b8">市场机制: </text>
+    <rect x="80" y="0" width="70" height="18" rx="9" fill="#22d3ee" opacity="0.2" stroke="#22d3ee" stroke-width="0.5"/>
+    <text x="115" y="12" text-anchor="middle" font-family="Arial" font-size="8" fill="#22d3ee">BULL LOW VOL</text>
+    <text x="0" y="30" font-family="Arial" font-size="8" fill="#64748b">VIX: 14.2 · SPY MA50: 5420</text>
+  </g>
+
+  <!-- Correlation radar -->
+  <g transform="translate(550,315)">
+    <text x="0" y="12" font-family="Arial" font-size="9" fill="#94a3b8">Agent相关性: </text>
+    <text x="0" y="30" font-family="Arial" font-size="8" fill="#64748b">最高相关: Graham↔Buffett(0.85) 最低: Soros↔Wood(0.12)</text>
+  </g>
+
+  <!-- Bottom status bar -->
+  <rect x="0" y="495" width="1000" height="25" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
+  <text x="15" y="511" font-family="Arial" font-size="8" fill="#475569">v3.0 · 13 Agents Active · Data: yfinance · Last updated: just now</text>
+  <text x="750" y="511" font-family="Arial" font-size="8" fill="#475569">🌐 Hermes Web UI Ready · 📡 API: /v1/analyze</text>
+</svg>
