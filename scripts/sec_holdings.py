@@ -9,9 +9,9 @@ Updates personas/evolution/ with accurate holdings data.
 Known CIK mappings:
   Berkshire Hathaway  : 0001067983
   ARK Investment Mgmt : 0001697748
-  Hillhouse (HHLR)    : 0001709323
-  Himalaya Capital    : 0001709323  (note: verify)
-  H&H International  : 0001810182  (段永平)
+  HHLR Advisors       : 0001762304  (张磊/Hillhouse; formerly Hillhouse Capital Advisors)
+  Himalaya Capital    : 0001709323  (李录/Li Lu; Seattle WA)
+  H&H International  : 0001810182  (段永平/Duan Yongping)
 """
 
 import json
@@ -24,6 +24,7 @@ import urllib.request
 import urllib.parse
 
 BASE_URL = "https://data.sec.gov"
+ARCHIVES_URL = "https://www.sec.gov/Archives/edgar/data"
 EDGAR_SEARCH = "https://efts.sec.gov/LATEST/search-index"
 
 # Known investor CIK numbers (verified from SEC EDGAR)
@@ -40,12 +41,12 @@ INVESTOR_CIKS = {
     },
     "zhang_lei": {
         "name": "张磊 / HHLR Advisors (Hillhouse)",
-        "cik": "0001709323",
+        "cik": "0001762304",
         "entity": "HHLR ADVISORS, LTD.",
     },
     "li_lu": {
         "name": "李录 / Himalaya Capital",
-        "cik": "0001709323",  # verify: may differ
+        "cik": "0001709323",
         "entity": "HIMALAYA CAPITAL MANAGEMENT, LLC",
     },
     "duan_yongping": {
@@ -56,7 +57,7 @@ INVESTOR_CIKS = {
 }
 
 HEADERS = {
-    "User-Agent": "Augur Investment Research augur@example.com",
+    "User-Agent": "Augur Investment Research lanzhihao1986@gmail.com",
     "Accept": "application/json",
 }
 
@@ -94,20 +95,26 @@ def get_latest_13f_accession(cik: str) -> Optional[str]:
 
 def get_holdings_from_13f(cik: str, accession: str) -> List[Dict]:
     """Parse holdings from a 13F filing accession number."""
+    import re as _re
     accession_fmt = accession.replace("-", "")
-    cik_pad = cik.lstrip("0").zfill(10)
+    cik_num = cik.lstrip("0")
+    base = f"{ARCHIVES_URL}/{cik_num}/{accession_fmt}"
 
-    # Try to get the index first
-    index_url = f"{BASE_URL}/Archives/edgar/data/{cik.lstrip('0')}/{accession_fmt}/{accession}-index.json"
-    index = _get(index_url)
-
+    # Fetch the htm index to discover the infotable XML filename
+    index_htm = f"{base}/{accession}-index.htm"
+    idx_req = urllib.request.Request(index_htm, headers={"User-Agent": HEADERS["User-Agent"]})
     infotable_url = None
-    if index:
-        for item in index.get("directory", {}).get("item", []):
-            name = item.get("name", "").lower()
-            if "infotable" in name and name.endswith(".xml"):
-                infotable_url = f"{BASE_URL}/Archives/edgar/data/{cik.lstrip('0')}/{accession_fmt}/{item['name']}"
+    try:
+        with urllib.request.urlopen(idx_req, timeout=15) as resp:
+            html = resp.read().decode(errors="replace")
+        # Find any .xml that is NOT primary_doc and NOT xslForm (rendered version)
+        for href in _re.findall(r'href="(/Archives/edgar/data/[^"]+\.xml)"', html, _re.IGNORECASE):
+            fname = href.split("/")[-1].lower()
+            if fname != "primary_doc.xml" and "xslform" not in href.lower():
+                infotable_url = f"https://www.sec.gov{href}"
                 break
+    except Exception as e:
+        print(f"  [WARN] Could not fetch filing index: {e}", file=sys.stderr)
 
     if not infotable_url:
         return []
