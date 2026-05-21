@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/13-Investor%20Personas-brightgreen?style=for-the-badge" alt="13 Personas"/>
+  <img src="https://img.shields.io/badge/17-Investor%20Personas-brightgreen?style=for-the-badge" alt="17 Personas"/>
   <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python" alt="Python"/>
   <img src="https://img.shields.io/badge/FastAPI-Web%20UI-teal?style=for-the-badge&logo=fastapi" alt="FastAPI"/>
   <img src="https://img.shields.io/badge/Hermes%20Web%20UI-Ready-purple?style=for-the-badge" alt="Hermes Ready"/>
@@ -7,20 +7,20 @@
 </p>
 
 <h1 align="center">🦉 Augur</h1>
-<h3 align="center">多智能体投资分析系统 — 13位虚拟投资大师为你决策</h3>
+<h3 align="center">多智能体投资分析系统 — 17位虚拟投资大师为你决策</h3>
 
 <p align="center">
   <img src="docs/images/hero-banner.svg" alt="Augur" width="100%"/>
 </p>
 
 <p align="center">
-  <em>13位AI投资大师 · 多维度共识分析 · Bloomberg风格仪表盘</em>
+  <em>17位AI投资大师（含4位中国投资人）· 多维度共识分析 · Bloomberg风格仪表盘</em>
 </p>
 
 <p align="center">
   <a href="#-核心功能">功能</a> ·
   <a href="#-为什么叫-augur">命名由来</a> ·
-  <a href="#-13位投资大师">投资人</a> ·
+  <a href="#-17位投资大师">投资人</a> ·
   <a href="#-快速开始">开始使用</a> ·
   <a href="#-web-dashboard">Web界面</a> ·
   <a href="#-hermes-web-ui-整合">Hermes整合</a> ·
@@ -30,7 +30,7 @@
 
 > **Warren Buffett (沃伦·巴菲特)** 会买这只股票吗？**Ray Dalio (瑞·达利欧)** 怎么看当前宏观周期？**Cathie Wood (凯西·伍德)** 的颠覆性创新框架怎么说？
 >
-> 不用猜。augur 用13位虚拟投资大师的独立Agent，对同一标的给出各自的评分、信号和理由，再用多Agent共识机制汇总，给你一份「投资大师天团」的集体判断。
+> 不用猜。augur 用**17位**虚拟投资大师的独立Agent（含段永平、张磊、李录、但斌等中国顶级投资人），对同一标的给出各自的评分、信号和理由，再用多Agent共识机制汇总，给你一份「投资大师天团」的集体判断。
 
 ---
 
@@ -38,7 +38,7 @@
 
 | 功能 | 说明 |
 |------|------|
-| 🧠 **13位投资大师人格** | 从价值投资到币圈博弈，每位大师都有独立的评分逻辑与分析框架 |
+| 🧠 **17位投资大师人格** | 从价值投资到币圈博弈、从美股到中国市场，每位大师都有独立的评分逻辑 |
 | 🔄 **多Agent共识机制** | 行业感知权重 + 市场机制路由 + 滚动IC动态权重 + 多样性相关性惩罚 |
 | 📈 **人格进化追踪** | 追踪每位大师的持仓变化与风格漂移，动态注入分析上下文 |
 | 🌐 **跨资产覆盖** | 股票、Crypto、宏观指标、稳定币 — 一个系统通吃 |
@@ -49,7 +49,7 @@
 
 ---
 
-## 🤖 13位投资大师
+## 🤖 17位投资大师
 
 | # | 投资人 | 风格 | 核心指标 | 适合场景 |
 |---|--------|------|---------|---------|
@@ -66,6 +66,10 @@
 | 11 | 🤖 **Leopold Aschenbrenner (利奥波德·阿申布伦纳)** | AI地缘政治 | AI投入、算力需求、人才密度 | AI、算力、地缘政治 |
 | 12 | ₿ **大宇 (BTCdayu)** | 币圈看准+重仓 | 情绪动量>估值、信息差>基本面 | Crypto、Meme、新叙事 |
 | 13 | 🏢 **Peter Thiel (彼得·蒂尔)** | 从0到1垄断 | 网络效应>0、高毛利率、技术壁垒 | 垄断型科技、零到一 |
+| 14 | 🎯 **段永平 (Duan Yongping)** 🇨🇳 | 本分·极度集中 | 商业模式清晰、管理层本分、FCF正向 | 消费电子、品质消费、平台 |
+| 15 | 🌏 **张磊 (Zhang Lei/高瓴)** 🇨🇳 | 长期结构性价值 | 营收增速>15%、结构性赛道、研究驱动 | 消费升级、科技平台、医疗 |
+| 16 | 🏔️ **李录 (Li Lu/喜马拉雅)** 🇨🇳 | 深度价值·安全边际 | PE<25、PB低估、ROE>12%、无高负债 | 低估蓝筹、亚洲价值、传统龙头 |
+| 17 | 🫖 **但斌 (Dan Bin/东方港湾)** 🇨🇳 | 品牌护城河·时代β | 毛利率>40%、定价权、消费品龙头 | 中国消费、白酒、互联网平台 |
 
 > 📖 每位投资人都有完整的人格文档（`personas/*.md`）、YAML自定义人格（`personas/custom/*.yaml`）、和Python分析Agent（`scanner/personas/*.py`）。
 
@@ -292,16 +296,20 @@ augur/
 - [x] **v1.0-v1.5**: 巴菲特 → 大宇人格加入
 - [x] **v1.6-v2.0**: 进化追踪 + 12位完整人格
 - [x] **v2.0.4**: Peter Thiel (彼得·蒂尔) 垄断框架加入
+- [x] **v1.0-v1.5**: 巴菲特 → 大宇人格加入
+- [x] **v1.6-v2.0**: 进化追踪 + 12位完整人格
+- [x] **v2.0.4**: Peter Thiel (彼得·蒂尔) 垄断框架加入
 - [x] **v3.0**: 正式更名为 Augur（先见之明）
-- [ ] **v2.1**: 持仓数据精准化(基于SEC 13F/公开财报)
-- [ ] **v2.2**: 新增中国投资人(段永平/张磊/李录/但斌)
-- [ ] **v2.3**: Hermes Web UI PR整合
-- [ ] **v2.4**: private版功能合并回public版
-- [ ] **v3.0**: Docker容器化 + 日频数据仓库
+- [x] **v3.1**: SEC EDGAR 13F 数据获取器（scripts/sec_holdings.py）
+- [x] **v3.2**: 4位中国投资人加入（段永平/张磊/李录/但斌）— 17位大师
+- [x] **v3.3**: FastAPI dashboard 完整实现（dashboard/app.py + CORS支持）
+- [ ] **v3.4**: Hermes Web UI 原生页面 PR（进行中）
+- [ ] **v4.0**: 日频SEC数据自动更新 + 持仓精准化
+- [ ] **v4.1**: Docker容器化 + 部署文档
 
 ## 🏛️ 为什么叫 Augur？
 
-> **Augur（奥格）** — 拉丁语，古罗马的占卜官。在古罗马，Augur 专门负责**解读征兆、预测未来**——从鸟群的轨迹、闪电的方向中，看见即将到来的变化。这正是这个系统要做的事：让13位投资大师帮你在市场变化之前看见先机。
+> **Augur（奥格）** — 拉丁语，古罗马的占卜官。在古罗马，Augur 专门负责**解读征兆、预测未来**——从鸟群的轨迹、闪电的方向中，看见即将到来的变化。这正是这个系统要做的事：让17位投资大师帮你在市场变化之前看见先机。
 
 ### 与 Hermes 的呼应
 
