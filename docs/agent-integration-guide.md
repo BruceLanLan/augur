@@ -125,9 +125,13 @@ hermes skills install ./SKILL.md --name augur
 1. 启动 Augur Dashboard（`python3 -m dashboard.app --port 8000 --cors`）
 2. 在 Hermes Web UI 中通过 iframe 嵌入 `http://localhost:8000`
 
-**方案 C：正式 PR 到 hermes-web-ui**
+**方案 C：Hermes Agent Skill 模式**
 
-在 hermes-web-ui 中添加原生 "Investment Analysis" 页面，复用其 React 组件栈展示 Agent 评分雷达图、多Agent对比、时间线等。参见 [docs/hermes-web-ui-integration.md](./hermes-web-ui-integration.md) 了解详细计划。
+直接通过 Skill 加载到任意 Hermes Agent 实例：
+```bash
+hermes skills install ./skills/buffett/SKILL.md
+# 然后通过 /skill buffett 在任何平台使用
+```
 
 ---
 

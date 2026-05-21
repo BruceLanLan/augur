@@ -29,7 +29,7 @@
     <rect width="340" height="55" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
     <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#5b21b6">Hermes Web UI</text>
     <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">聊天界面 / 会话管理 / 技能集成</text>
-    <text x="310" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#ca8a04">PR进行中</text>
+    <text x="310" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">Skill模式</text>
   </g>
 
   <!-- Row 2 -->
