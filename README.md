@@ -181,6 +181,10 @@ python3 -m dashboard.app --port 8000 --cors
 
 ## 🔌 整合到任意平台
 
+> 📖 **详细指南 → [docs/agent-integration-guide.md](docs/agent-integration-guide.md)**
+>
+> 包含 17位Agent × 7种平台形态的完整接入步骤、配置示例、架构概览与自定义接入说明。
+
 <p align="center">
   <img src="docs/images/skills-deploy.svg" alt="Skills Deploy" width="100%"/>
 </p>
