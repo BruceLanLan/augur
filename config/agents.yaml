@@ -1,0 +1,56 @@
+# Augur Agent 模型配置
+# 每个 Agent 可独立指定使用的 LLM 模型
+# 修改此文件后重启 dashboard 即可生效
+
+defaults:
+  model: claude-sonnet-4-6          # 全局默认模型
+  temperature: 0.3                   # 建议低温度，保持分析的一致性
+  max_tokens: 4096
+
+# 每个 Agent 的模型覆盖（优先级高于 defaults）
+per_agent:
+  # ====== 全球价值投资派 ======
+  buffett:       claude-sonnet-4-6   # 护城河分析需要强逻辑推理
+  graham:        claude-sonnet-4-6   # 量化严格，逻辑清晰
+  munger:        claude-sonnet-4-6   # 多维思维需要强推理
+  li_lu:         claude-sonnet-4-6   # 深度价值分析
+
+  # ====== 中国投资人 (推荐使用中文优化模型) ======
+  duan_yongping: deepseek-v3         # 企业家视角，中文语境更准确
+  zhang_lei:     deepseek-v3         # 结构性机会，中国市场洞察
+  dan_bin:       kimi-latest         # 消费品牌，中国文化语境
+  dayu:          deepseek-v3         # 币圈叙事，中文社区信息差
+
+  # ====== 成长/创新派 ======
+  cathie_wood:   claude-sonnet-4-6   # 颠覆性技术分析
+  fisher:        claude-sonnet-4-6   # 成长股闲聊法
+  aschenbrenner: claude-opus-4-7     # AI地缘政治需要最强推理能力
+  thiel:         claude-sonnet-4-6   # 垄断理论分析
+
+  # ====== 宏观/交易派 ======
+  dalio:         claude-sonnet-4-6   # 宏观四象限
+  soros:         claude-sonnet-4-6   # 反身性分析
+  marks:         claude-sonnet-4-6   # 周期判断
+
+  # ====== 特殊资产 ======
+  arps:          claude-sonnet-4-6   # Crypto+黄金宏观
+  lynch:         claude-sonnet-4-6   # GARP消费成长
+
+# 支持的模型列表
+available_models:
+  anthropic:
+    - claude-opus-4-7                # 最强推理，适合复杂分析
+    - claude-sonnet-4-6              # 性价比最佳（默认推荐）
+    - claude-haiku-4-5-20251001      # 快速响应，适合简单判断
+  openai:
+    - gpt-4o
+    - gpt-4o-mini
+  deepseek:
+    - deepseek-v3                    # 中文理解优秀，价格极低
+    - deepseek-r1                    # 推理模型
+  moonshot:
+    - kimi-latest                    # 中文消费品牌语境
+  minimax:
+    - minimax-01                     # 中文创意写作
+  custom:
+    - your-local-ollama-model        # 本地部署模型（需配置端点）
