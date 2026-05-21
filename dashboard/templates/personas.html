@@ -1,34 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
 <div class="container mt-4">
-    <h1 class="text-center mb-4" style="color: #00ff00;">🤖 投资人人格系统</h1>
-    <p class="text-center text-muted mb-5">17位虚拟投资大师（含4位中国投资人），多维度分析您的投资标的</p>
+    <h1 class="text-center mb-2">🤖 17位投资大师</h1>
+    <p class="text-center text-muted mb-4">点击头像可查看每位大师的详细投资体系与进化时间线</p>
     
     <div class="row">
         {% for persona in personas %}
         <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card bg-dark text-light h-100 border-secondary">
-                <div class="card-header" style="border-bottom: 2px solid #00ff88;">
-                    <h5 class="mb-0">
-                        <span class="badge bg-success me-2">Agent</span>{{ persona.name }}
-                        {% if "段永平" in persona.name or "张磊" in persona.name or "李录" in persona.name or "但斌" in persona.name %}
-                        <span class="badge bg-warning text-dark ms-1" style="font-size:0.65em;">🇨🇳 中国</span>
-                        {% endif %}
-                    </h5>
-                    <small class="text-muted">{{ persona.style }}</small>
+            <div class="card persona-card h-100">
+                <div class="card-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="/docs/images/avatars/{{ persona.id }}.svg" 
+                             alt="{{ persona.name }}" 
+                             class="persona-avatar"
+                             onerror="this.style.display='none'">
+                        <div>
+                            <h5 class="mb-0">{{ persona.name }}</h5>
+                            <small class="text-muted">{{ persona.style }}</small>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
-                    <p>{{ persona.description[:200] }}{% if persona.description|length > 200 %}...{% endif %}</p>
-                    <h6 class="mt-3" style="color: #00ff00;">🎯 适合场景：</h6>
-                    <ul>
-                        {% for scene in persona.scenarios %}
-                        <li><small>{{ scene }}</small></li>
+                    <div class="speech-bubble mb-3">
+                        <small>{{ persona.quote or "在别人恐惧时贪婪，在别人贪婪时恐惧。" }}</small>
+                    </div>
+                    <p>{{ persona.description[:180] }}{% if persona.description|length > 180 %}...{% endif %}</p>
+                    <h6 class="mt-3 fw-bold">🎯 适合场景：</h6>
+                    <ul class="list-unstyled">
+                        {% for scene in persona.scenarios[:3] %}
+                        <li><small>▸ {{ scene }}</small></li>
                         {% endfor %}
                     </ul>
                 </div>
                 <div class="card-footer d-flex justify-content-between align-items-center">
-                    <span class="badge bg-info">{{ persona.status }}</span>
-                    <small class="text-muted">权重: {{ persona.weight }}</small>
+                    <div>
+                        <span class="badge {% if persona.status == '已注册' %}bg-success{% else %}bg-secondary{% endif %} me-1">{{ persona.status }}</span>
+                        {% if persona.country %}
+                        <span class="badge bg-warning text-dark">{{ persona.country }}</span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">评分权重: {{ persona.weight }}</small>
                 </div>
             </div>
         </div>

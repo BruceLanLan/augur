@@ -1,0 +1,269 @@
+/* ============================================
+   Augur - Baoyu (宝玉) Comic Style Theme
+   Inspired by ligne-claire (clear line) aesthetic
+   ============================================ */
+
+/* --- Root variables --- */
+:root {
+    --baoyu-bg: #f5f0e8;
+    --baoyu-bg-card: #fafafa;
+    --baoyu-border: #2c1810;
+    --baoyu-border-light: #8b7355;
+    --baoyu-text: #2c1810;
+    --baoyu-text-muted: #6b5b4e;
+    --baoyu-accent-blue: #4a90d9;
+    --baoyu-accent-green: #4caf50;
+    --baoyu-accent-red: #e53935;
+    --baoyu-accent-yellow: #ffc107;
+    --baoyu-accent-purple: #9c27b0;
+    --baoyu-shadow: rgba(0,0,0,0.08);
+    --baoyu-font: 'Comic Neue', 'Segoe UI', 'Noto Sans SC', sans-serif;
+    --baoyu-border-radius: 12px;
+}
+
+/* --- Body --- */
+body.baoyu-theme {
+    background-color: var(--baoyu-bg);
+    color: var(--baoyu-text);
+    font-family: var(--baoyu-font);
+    background-image: 
+        radial-gradient(circle at 10% 20%, rgba(74,144,217,0.05) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(76,175,80,0.05) 0%, transparent 50%);
+}
+
+/* --- Navbar --- */
+body.baoyu-theme .navbar {
+    background-color: #fff !important;
+    border-bottom: 3px solid var(--baoyu-border);
+    box-shadow: none;
+}
+
+body.baoyu-theme .navbar-brand {
+    color: var(--baoyu-border) !important;
+    font-weight: 800;
+    font-size: 1.4rem;
+}
+
+body.baoyu-theme .nav-link {
+    color: var(--baoyu-text-muted) !important;
+    font-weight: 600;
+    border: 2px solid transparent;
+    border-radius: 20px;
+    margin: 0 2px;
+    padding: 6px 14px;
+    transition: all 0.2s;
+}
+
+body.baoyu-theme .nav-link:hover,
+body.baoyu-theme .nav-link.active {
+    color: var(--baoyu-border) !important;
+    border-color: var(--baoyu-border);
+    background-color: #fff;
+}
+
+/* --- Cards --- */
+body.baoyu-theme .card {
+    background-color: var(--baoyu-bg-card);
+    border: 2px solid var(--baoyu-border);
+    border-radius: var(--baoyu-border-radius);
+    box-shadow: 4px 4px 0 var(--baoyu-shadow);
+    color: var(--baoyu-text);
+}
+
+body.baoyu-theme .card-header {
+    background-color: transparent;
+    border-bottom: 2px dashed var(--baoyu-border-light);
+    font-weight: 700;
+    padding: 12px 16px;
+}
+
+body.baoyu-theme .card-footer {
+    background-color: transparent;
+    border-top: 2px dashed var(--baoyu-border-light);
+}
+
+/* --- Buttons --- */
+body.baoyu-theme .btn {
+    border: 2px solid var(--baoyu-border);
+    border-radius: 8px;
+    font-weight: 700;
+    transition: all 0.15s;
+    box-shadow: 2px 2px 0 rgba(0,0,0,0.1);
+}
+
+body.baoyu-theme .btn-primary {
+    background-color: var(--baoyu-accent-blue);
+    border-color: var(--baoyu-border);
+    color: #fff;
+}
+
+body.baoyu-theme .btn-primary:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+}
+
+body.baoyu-theme .btn-success {
+    background-color: var(--baoyu-accent-green);
+    border-color: var(--baoyu-border);
+    color: #fff;
+}
+
+body.baoyu-theme .btn-warning {
+    background-color: var(--baoyu-accent-yellow);
+    border-color: var(--baoyu-border);
+}
+
+body.baoyu-theme .btn-outline-light {
+    border-color: var(--baoyu-border-light);
+    color: var(--baoyu-text);
+}
+
+/* --- Tables --- */
+body.baoyu-theme .table {
+    color: var(--baoyu-text);
+    border-color: var(--baoyu-border-light);
+}
+
+body.baoyu-theme .table th {
+    border-bottom: 2px solid var(--baoyu-border);
+    font-weight: 700;
+}
+
+body.baoyu-theme .table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(74,144,217,0.05);
+}
+
+/* --- Badges --- */
+body.baoyu-theme .badge {
+    border: 1.5px solid var(--baoyu-border);
+    border-radius: 6px;
+    font-weight: 700;
+    padding: 4px 10px;
+}
+
+/* --- Alerts --- */
+body.baoyu-theme .alert {
+    border: 2px solid var(--baoyu-border);
+    border-radius: var(--baoyu-border-radius);
+    background-color: #fff;
+    color: var(--baoyu-text);
+}
+
+/* --- Persona cards (comic character style) --- */
+body.baoyu-theme .persona-card {
+    border: 3px solid var(--baoyu-border);
+    border-radius: 16px;
+    background-color: #fff;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+body.baoyu-theme .persona-card:hover {
+    transform: translateY(-4px);
+}
+
+body.baoyu-theme .persona-card .card-header {
+    border-bottom: 2px solid var(--baoyu-border);
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+body.baoyu-theme .persona-avatar {
+    width: 64px;
+    height: 64px;
+    border: 2px solid var(--baoyu-border);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* --- Comic speech bubbles --- */
+body.baoyu-theme .speech-bubble {
+    position: relative;
+    background: #fff;
+    border: 2px solid var(--baoyu-border);
+    border-radius: 16px;
+    padding: 12px 16px;
+    margin: 8px 0;
+}
+
+body.baoyu-theme .speech-bubble::before {
+    content: '';
+    position: absolute;
+    left: -12px;
+    top: 12px;
+    border: 6px solid transparent;
+    border-right-color: var(--baoyu-border);
+}
+
+body.baoyu-theme .speech-bubble::after {
+    content: '';
+    position: absolute;
+    left: -9px;
+    top: 13px;
+    border: 5px solid transparent;
+    border-right-color: #fff;
+}
+
+/* --- Forms --- */
+body.baoyu-theme .form-control,
+body.baoyu-theme .form-select {
+    border: 2px solid var(--baoyu-border);
+    border-radius: 8px;
+    background-color: #fff;
+    color: var(--baoyu-text);
+}
+
+body.baoyu-theme .form-control:focus,
+body.baoyu-theme .form-select:focus {
+    border-color: var(--baoyu-accent-blue);
+    box-shadow: 0 0 0 3px rgba(74,144,217,0.2);
+}
+
+/* --- Lists --- */
+body.baoyu-theme .list-group-item {
+    background-color: #fff;
+    border: 1.5px solid var(--baoyu-border-light);
+    color: var(--baoyu-text);
+}
+
+/* --- Progress bars --- */
+body.baoyu-theme .progress {
+    border: 1.5px solid var(--baoyu-border);
+    background-color: #e8e0d0;
+    height: 20px;
+    border-radius: 10px;
+}
+
+body.baoyu-theme .progress-bar {
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 11px;
+}
+
+/* --- Footer --- */
+body.baoyu-theme footer,
+body.baoyu-theme .footer {
+    border-top: 2px dashed var(--baoyu-border-light);
+    color: var(--baoyu-text-muted);
+}
+
+/* --- Ticker color coding --- */
+body.baoyu-theme .text-up { color: var(--baoyu-accent-green) !important; }
+body.baoyu-theme .text-down { color: var(--baoyu-accent-red) !important; }
+body.baoyu-theme .bg-signal-bullish { background-color: rgba(76,175,80,0.15); }
+body.baoyu-theme .bg-signal-bearish { background-color: rgba(229,57,53,0.15); }
+body.baoyu-theme .bg-signal-neutral { background-color: rgba(255,193,7,0.15); }
+
+/* --- Theme toggle --- */
+.theme-toggle {
+    cursor: pointer;
+    border: 2px solid var(--baoyu-border);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #fff;
+    color: var(--baoyu-border);
+}

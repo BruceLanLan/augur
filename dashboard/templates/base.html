@@ -6,6 +6,8 @@
     <title>{% block title %}🦉 Augur — 投资大师分析{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
+    <link href="/static/css/baoyu.css" rel="stylesheet">
     <style>
         body {
             background-color: #0a0a0a;
@@ -162,6 +164,7 @@
                     </li>
                 </ul>
             </div>
+            <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">🎨 宝玉风格</button>
         </div>
     </nav>
 
@@ -193,6 +196,22 @@
                     link.classList.add('active');
                 }
             });
+        });
+
+        // Baoyu theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('baoyu-theme');
+            const btn = document.querySelector('.theme-toggle');
+            btn.textContent = document.body.classList.contains('baoyu-theme') ? '🌙 暗色主题' : '🎨 宝玉风格';
+            localStorage.setItem('augur-theme', document.body.classList.contains('baoyu-theme') ? 'baoyu' : 'dark');
+        }
+
+        // Restore theme on load
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('augur-theme') === 'baoyu') {
+                document.body.classList.add('baoyu-theme');
+                document.querySelector('.theme-toggle').textContent = '🌙 暗色主题';
+            }
         });
     </script>
     {% block extra_scripts %}{% endblock %}

@@ -19,9 +19,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
     from fastapi import FastAPI, HTTPException, Request
-    from fastapi.responses import HTMLResponse, JSONResponse
+    from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
     from fastapi.templating import Jinja2Templates
     from fastapi.middleware.cors import CORSMiddleware
+    from fastapi.staticfiles import StaticFiles
     import uvicorn
 except ImportError:
     print("Missing dependencies. Run: pip install fastapi uvicorn jinja2")
@@ -38,6 +39,16 @@ app = FastAPI(
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+
+# Mount static files
+STATIC_DIR = Path(__file__).parent / "static"
+STATIC_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+# Mount docs/images for avatars
+IMAGES_DIR = Path(__file__).parent.parent / "docs" / "images"
+if IMAGES_DIR.exists():
+    app.mount("/docs/images", StaticFiles(directory=str(IMAGES_DIR)), name="images")
 
 _registry: Optional[AgentRegistry] = None
 _coordinator: Optional[DecisionCoordinator] = None
@@ -61,14 +72,19 @@ def _persona_meta() -> List[Dict]:
     registry = get_registry()
     meta = []
     for agent in registry.get_all():
+        chinese_investors = {"duan_yongping", "zhang_lei", "li_lu", "dan_bin", "dayu"}
+        country = "🇨🇳 中国" if agent.agent_id in chinese_investors else ""
         meta.append({
+            "id": agent.agent_id,
             "agent_id": agent.agent_id,
             "name": agent.name,
             "style": " · ".join(agent.philosophy[:2]) if agent.philosophy else "",
             "description": agent.identity.strip().replace("\n", " ").replace("  ", " "),
             "scenarios": agent.philosophy,
             "weight": f"{list(agent.scoring_weights.values())[0]:.0%}" if agent.scoring_weights else "均等",
-            "status": "Active",
+            "status": "已注册",
+            "country": country,
+            "quote": agent.philosophy[0] if agent.philosophy else "投资，就是投未来。",
         })
     return meta
 
