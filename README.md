@@ -181,6 +181,10 @@ python3 -m dashboard.app --port 8000 --cors
 
 ## 🔌 整合到任意平台
 
+<p align="center">
+  <img src="docs/images/skills-deploy.svg" alt="Skills Deploy" width="100%"/>
+</p>
+
 每位投资人都是一个独立的 Skill，遵循 [agentskills.io](https://agentskills.io) 标准，可部署到任意平台：
 
 ### Hermes Web UI / Claude / OpenClaw
@@ -233,6 +237,23 @@ per_agent:
 ```
 
 支持所有主流模型：`claude-*` · `gpt-4o*` · `deepseek-v4` · `kimi-k2` · `minimax-01` · 本地 Ollama
+
+---
+
+## 🧠 共识机制
+
+<p align="center">
+  <img src="docs/images/consensus-flow.svg" alt="Consensus Flow" width="100%"/>
+</p>
+
+17位Agent各自独立分析，通过6层加权机制汇总为最终共识信号：
+
+1. **行业感知权重** — 科技股给 Aschenbrenner/Wood 更高权重，消费股给 Buffett/Munger 更高权重
+2. **市场机制路由** — 熊市时 Marks/Dalio 权重提升，牛市时 Lynch/Fisher 权重提升
+3. **滚动 IC 权重** — 历史预测准确率高的 Agent 动态加权
+4. **多样性相关性惩罚** — 观点高度相似的 Agent 减少冗余权重
+5. **Kelly 仓位建议** — 基于共识信号和置信度给出建议仓位比例
+6. **风险管理否决层** — 高负债 + 熊市信号时可否决共识看多
 
 ---
 
@@ -303,6 +324,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v3.5** | 2026-05-22 | 🎨 全套配图重设计 — hero-banner对齐17位大师 + 共识流程图 + 部署图 |
 | **v3.4** | 2026-05-21 | 🔌 Skill封装 — 17个独立Agent Skill + 模型配置 + README全面升级 |
 | **v3.3** | 2026-05-21 | 📊 FastAPI dashboard 完整实现（首页/股票分析/人格/占位页） |
 | **v3.2** | 2026-05-21 | 🇨🇳 4位中国投资人加入（段永平/张磊/李录/但斌）— 17位大师 |
