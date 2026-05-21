@@ -291,7 +291,8 @@ class PersonaEvolutionTracker:
                     {"date": "2023-BONK", "event": "BONK一周5倍", "impact": "情绪投机的经典操作"},
                     {"date": "2023-进化", "event": "看准+重仓1.0→2.0", "impact": "小资金求快→大资金求稳"},
                     {"date": "2024", "event": "看准+重仓3.0", "impact": "均衡体系成熟:核心+高风险+稳定币"},
-                    {"date": "2025-2026", "event": "CRCL研究+AI赛道", "impact": "稳定币是美元第二增长曲线"},
+                    {"date": "2025-2026", "event": "深度研究AI产业链", "impact": "从GPU到HBM到光互联全覆盖"},
+                    {"date": "2026-05", "event": "写英伟达/海力士/高通深度研报", "impact": "AI投资重仓半导体基础设施"},
                 ],
                 "style_shifts": [
                     {"from": "纯技术分析", "to": "信息差+情绪判断", "reason": "技术分析方向错了"},

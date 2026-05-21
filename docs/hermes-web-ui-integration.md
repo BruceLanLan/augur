@@ -146,6 +146,38 @@ Daily Financial Terminal（日常金融终端）
 └── 社区技能插件
 ```
 
+## 六、未来工作计划（TODO — 下一个Agent注意）
+
+以下事项已记录到内存，但尚未完成，下一个接手的Agent请优先处理：
+
+### P0 — 持仓数据精准化
+当前所有12位投资人的 `current_portfolio_themes` 是通用描述，需要基于真实数据更新：
+- **Buffett**: 从 Berkshire Hathaway 最新的 SEC 13F filing 获取精确持仓（2026 Q1: 26只股票，$263B）
+- **Aschenbrenner**: 公开的AI持仓（英伟达、微软、ASML等）
+- **Cathie Wood**: ARK Invest 每日披露的持仓
+- **其他**: 参考各自最新的公开报告/13F
+
+### P1 — 新增投资人Personas
+| 优先级 | 投资人 | 风格 | 原因 |
+|--------|--------|------|------|
+| 🔴 | **段永平 (Duan Yongping)** | 价值+重仓+现金流 | 用户明确提及，大宇引用的偶像 |
+| 🟡 | 张磊（高瓴资本） | 长期结构性价值 | 中国顶级投资人 |
+| 🟡 | 李录（喜马拉雅资本） | 中国价值投资实践 | 巴菲特门徒，中国实践 |
+| 🟢 | 但斌（东方港湾） | 消费+科技成长 | 中国知名私募 |
+| 🟢 | Michael Burry | 深度价值+做空 | Scion Asset Management |
+| 🟢 | Bill Ackman | 积极主义投资 | Pershing Square |
+
+### P2 — Hermes Web UI PR整合
+- 联系 EKKOLearnAI 项目创始人（用户熟人）
+- 在 hermes-web-ui 中添加 Investment Analysis 原生页面
+- 后端通过 Hermes Agent Bridge 调用分析
+
+### P3 — 功能迭代
+- private版 (agent-personas-dev) 的算法/数据仓库逐步合并回 public 版
+- Docker 容器化
+- 日频数据仓库支持
+
 ---
 
 *最后更新: 2026-05-21*
+*注意: 以上内容已写入系统内存，切换Agent时请用 session_search("未来工作计划") 查看*
