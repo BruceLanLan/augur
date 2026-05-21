@@ -7,7 +7,7 @@ license: MIT
 platforms: [linux, macos, windows]
 model:
   default: claude-sonnet-4-6
-  alternatives: [gpt-4o, deepseek-v3, kimi-latest]
+  alternatives: [gpt-4o, deepseek-v4, kimi-k2]
 metadata:
   augur:
     persona_id: buffett
@@ -146,7 +146,7 @@ GET /api/analyze/AAPL?pe=32&gross_margins=0.46&roe=0.55&persona=buffett
 
 ```yaml
 per_agent:
-  buffett: deepseek-v3   # 切换为 DeepSeek
+  buffett: deepseek-v4   # 切换为 DeepSeek
 ```
 
-支持的模型：`claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-4o`, `deepseek-v3`, `kimi-latest`, `minimax-01`
+支持的模型：`claude-sonnet-4-6`, `claude-opus-4-7`, `gpt-4o`, `deepseek-v4`, `kimi-k2`, `minimax-01`
