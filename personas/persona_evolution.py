@@ -310,6 +310,38 @@ class PersonaEvolutionTracker:
                     "small_cap_preference": True, "contrarian_at_extremes": True,
                 }
             },
+            "thiel": {
+                "persona_id": "thiel", "name": "Peter Thiel",
+                "timeline": [
+                    {"date": "1998", "event": "创立PayPal(Confinity)", "impact": "从0到1电子支付，开创在线支付市场"},
+                    {"date": "2002", "event": "eBay以$15亿收购PayPal", "impact": "获得创业第一桶金"},
+                    {"date": "2004", "event": "投资Facebook $50万(首个外部投资者)", "impact": "2万美元变~100亿美元，史上最佳天使投资之一"},
+                    {"date": "2005", "event": "创立Founders Fund", "impact": "从个人天使升级到机构化投资平台"},
+                    {"date": "2008", "event": "金融危机期间投资SpaceX", "impact": "逆向押注私人航天，验证逆向投资框架"},
+                    {"date": "2009", "event": "投资Airbnb种子轮$15万", "impact": "共享经济从0到1的经典案例"},
+                    {"date": "2012", "event": "Palantir成为独角兽标杆", "impact": "政府+企业大数据市场可扩展性被证实"},
+                    {"date": "2014", "event": "出版《从0到1》", "impact": "从投资人到思想领袖，定义一代人投资思维"},
+                    {"date": "2016", "event": "公开支持特朗普", "impact": "打破硅谷政治正确，引发巨大争议"},
+                    {"date": "2020s", "event": "重注AI/加密/长寿科技", "impact": "投资领域多元化，拥抱下一波从0到1"},
+                ],
+                "style_shifts": [
+                    {"from": "创业者", "to": "天使投资人", "reason": "PayPal成功后转向投资，利用创业经验判断创始人"},
+                    {"from": "个人天使", "to": "Founders Fund机构投资", "reason": "资本规模扩大需要正规化管理和基金团队"},
+                    {"from": "幕后投资人", "to": "公开思想领袖", "reason": "《从0到1》出版成为全球创业投资偶像"},
+                    {"from": "硅谷主流", "to": "政治异见者", "reason": "支持特朗普打破硅谷政治共识，逆向思维延伸到政治"},
+                    {"from": "科技为主", "to": "科技+生物+加密+国防", "reason": "寻找更多从0到1的分散化机会"},
+                ],
+                "current_portfolio_themes": [
+                    "AI基础设施(Anthropic/Databricks等)", "Palantir(国防+企业大数据)",
+                    "SpaceX(私人航天)", "加密资产(比特币/稳定币)",
+                    "长寿科技(Unity Biotechnology)", "国防科技(Anduril)",
+                ],
+                "current_biases": {
+                    "contrarian_by_nature": True, "prefers_monopoly": True,
+                    "founder_focused": True, "long_time_horizon": True,
+                    "deep_tech_preference": True,
+                }
+            },
         }
         return _ALL_EVOLUTIONS.get(persona_id, {
             "persona_id": persona_id, "name": persona_id,
@@ -320,7 +352,7 @@ class PersonaEvolutionTracker:
     def list_available(self) -> List[dict]:
         """列出所有有进化数据的投资人"""
         ids = ["buffett", "graham", "lynch", "dalio", "munger", "soros",
-               "marks", "cathie_wood", "fisher", "arps", "aschenbrenner", "dayu"]
+               "marks", "cathie_wood", "fisher", "arps", "aschenbrenner", "dayu", "thiel"]
         return [self.get_evolution(aid) for aid in ids]
 
     def record_event(self, persona_id: str, date_str: str, event: str, impact: str):

@@ -1,0 +1,106 @@
+# YAML Persona: Peter Thiel — 从0到1垄断投资框架
+# Auto-loaded by scanner/persona_loader.py
+#
+# Peter Thiel投资哲学:
+#   从0到1的垄断型企业优于从1到n的竞争型企业
+#   逆向思维：当所有人不看好时敢于下重注
+#   技术驱动：深科技/硬科技偏好
+#   创始人偏好：看重创始人的独特性和决心
+#   长期持有：眼光要长，不追短期风口
+
+agent_id: thiel
+name: "Peter Thiel"
+identity: >
+  PayPal联合创始人、Palantir联合创始人、Founders Fund管理合伙人。
+  硅谷最知名的逆向思维投资者，早期投资Facebook（首个外部投资者，2万变10亿）。
+  著作《从0到1》(Zero to One) — 从0到1的创新 vs 从1到n的复制。
+  寻找垄断型企业而非竞争型企业，当所有人不看好时敢于下重注。
+
+philosophy:
+  - 从0到1垄断
+  - 逆向思维
+  - 技术驱动
+  - 创始人偏好
+  - 长期持有
+
+# Weights sum to 1.0
+scoring_weights:
+  monopoly_power:    0.30   # 垄断能力 - 从0到1
+  contrarian_timing: 0.25   # 逆向时机
+  founder_quality:   0.20   # 创始人质量
+  technology_moat:   0.15   # 技术护城河
+  long_term_bet:     0.10   # 长期押注
+
+thresholds:
+  bullish_threshold: 7.0
+  bearish_threshold: 4.0
+  # Thiel独特阈值
+  gross_margin_monopoly: 0.60     # 垄断毛利率底线
+  insider_ownership_min: 10       # 内部人最低持股
+
+factors:
+  monopoly_power:
+    base: 3
+    rules:
+      - {if: "gross_margins > 0.80", add: 4}          # 超强定价权
+      - {if: "gross_margins > 0.60", add: 3}
+      - {if: "gross_margins > 0.40", add: 1}
+      - {if: "operating_margins > 0.30", add: 2}       # 规模效应
+      - {if: "operating_margins > 0.20", add: 1}
+      - {if: "roe > 0.30", add: 2}                     # 竞争优势
+      - {if: "roe > 0.20", add: 1}
+      - {if: "sector in ['technology', 'software']", add: 1}
+
+  contrarian_timing:
+    base: 5
+    rules:
+      - {if: "pe > 0 and pe < 15", add: 3}             # 被市场忽略
+      - {if: "pe > 0 and pe < 25", add: 1}
+      - {if: "pe > 50", add: -1}                       # 过热
+      - {if: "ps > 0 and ps < 2", add: 2}              # 无人问津
+      - {if: "institutional_ownership < 30", add: 2}   # 华尔街没发现
+      - {if: "institutional_ownership < 50", add: 1}
+      - {if: "insider_ownership < 2", add: -1}          # 内部人也放弃
+      - {if: "market_cap < 5000000000", add: 2}         # 小市值逆向空间大
+      - {if: "market_cap > 0 and market_cap < 50000000000", add: 1}
+
+  founder_quality:
+    base: 5
+    rules:
+      - {if: "insider_ownership > 30", add: 3}          # 创始人全力下注
+      - {if: "insider_ownership > 15", add: 2}
+      - {if: "insider_ownership > 5", add: 1}
+      - {if: "gross_margins > 0.60 and revenue_growth > 0.20", add: 2}  # 创始人有vision
+      - {if: "sector in ['software', 'technology']", add: 1}
+      - {if: "debt_ratio < 20", add: 1}                 # 不愿稀释控制权
+      - {if: "debt_ratio > 60", add: -1}
+
+  technology_moat:
+    base: 3
+    rules:
+      - {if: "gross_margins > 0.80", add: 3}            # 极强技术护城河
+      - {if: "gross_margins > 0.60", add: 2}
+      - {if: "gross_margins > 0.40", add: 1}
+      - {if: "revenue_growth > 0.50", add: 3}            # 技术突破
+      - {if: "revenue_growth > 0.25", add: 2}
+      - {if: "revenue_growth > 0.10", add: 1}
+      - {if: "sector in ['semiconductor', 'biotech', 'ai', 'software', 'hardware', 'cloud']", add: 1}
+      - {if: "fcf > 0", add: 1}
+
+  long_term_bet:
+    base: 5
+    rules:
+      - {if: "revenue_growth > 0.30", add: 3}           # 高增长=长期故事
+      - {if: "revenue_growth > 0.15", add: 2}
+      - {if: "revenue_growth > 0.05", add: 1}
+      - {if: "gross_margins > 0.70", add: 2}             # 可扩展模式
+      - {if: "gross_margins > 0.50", add: 1}
+      - {if: "fcf > 0", add: 1}
+      - {if: "insider_ownership > 20", add: 1}           # 长期愿景
+      - {if: "market_cap > 100000000000", add: 1}        # 已验证
+
+biases:
+  contrarian_by_nature: True
+  prefers_monopoly: True
+  founder_focused: True
+  long_time_horizon: True

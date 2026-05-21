@@ -40,12 +40,14 @@ class AgentRegistry:
         from scanner.personas.arps import ArpsAgent
         from scanner.personas.aschenbrenner import AschenbrennerAgent
         from scanner.personas.dayu import DayuAgent
+        from scanner.personas.thiel import ThielAgent
 
         agents = [
             BuffettAgent(), GrahamAgent(), LynchAgent(), DalioAgent(), MungerAgent(),
             SorosAgent(), MarksAgent(), CathieWoodAgent(), FisherAgent(), ArpsAgent(),
             AschenbrennerAgent(),
-            DayuAgent()
+            DayuAgent(),
+            ThielAgent(),
         ]
         for agent in agents:
             self._agents[agent.agent_id] = agent
