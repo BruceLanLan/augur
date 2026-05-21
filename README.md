@@ -10,7 +10,7 @@
 <h3 align="center">多智能体投资分析系统 — 17位虚拟投资大师为你决策</h3>
 
 <p align="center">
-  <img src="docs/images/hero-banner.svg" alt="Augur" width="100%"/>
+  <img src="docs/images/hero-banner-baoyu.svg" alt="Augur" width="100%"/>
 </p>
 
 <p align="center">
@@ -259,6 +259,10 @@ per_agent:
 
 ## 🏗️ 项目架构
 
+<p align="center">
+  <img src="docs/images/architecture-baoyu.svg" alt="Augur Architecture" width="100%"/>
+</p>
+
 ```
 augur/
 │
@@ -324,7 +328,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
-| **v3.5** | 2026-05-22 | 🎨 全套配图重设计 — hero-banner对齐17位大师 + 共识流程图 + 部署图 |
+| **v3.5** | 2026-05-22 | 🎨 Baoyu漫画风格配图 — hero-banner-baoyu + architecture-baoyu + 17投资人漫画头像 |
 | **v3.4** | 2026-05-21 | 🔌 Skill封装 — 17个独立Agent Skill + 模型配置 + README全面升级 |
 | **v3.3** | 2026-05-21 | 📊 FastAPI dashboard 完整实现（首页/股票分析/人格/占位页） |
 | **v3.2** | 2026-05-21 | 🇨🇳 4位中国投资人加入（段永平/张磊/李录/但斌）— 17位大师 |

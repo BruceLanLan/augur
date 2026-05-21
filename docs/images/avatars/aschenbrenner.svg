@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <clipPath id="circle"><circle cx="60" cy="52" r="45"/></clipPath>
+  </defs>
+  <circle cx="60" cy="52" r="45" fill="#e9d5ff" stroke="#000" stroke-width="3"/>
+  <!-- Hair (young messy) -->
+  <path d="M32,38 Q35,16 60,14 Q85,16 88,38" fill="#4a3728" stroke="#000" stroke-width="2.5"/>
+  <path d="M32,38 L32,46" fill="none" stroke="#000" stroke-width="2"/>
+  <path d="M88,38 L88,46" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Messy hair tufts -->
+  <path d="M38,22 L36,16 L40,18" fill="none" stroke="#3a2718" stroke-width="2"/>
+  <path d="M80,22 L82,16 L78,18" fill="none" stroke="#3a2718" stroke-width="2"/>
+  <path d="M58,18 L55,12 L62,16" fill="none" stroke="#3a2718" stroke-width="2"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="52" rx="20" ry="24" fill="#f5d0a9" stroke="#000" stroke-width="2.5"/>
+  <!-- Eyebrows (young, expressive) -->
+  <path d="M44,40 Q52,36 56,40" fill="none" stroke="#4a3728" stroke-width="2.5"/>
+  <path d="M64,40 Q68,36 76,40" fill="none" stroke="#4a3728" stroke-width="2.5"/>
+  <!-- Eyes -->
+  <circle cx="50" cy="46" r="3.5" fill="#000"/>
+  <circle cx="70" cy="46" r="3.5" fill="#000"/>
+  <!-- Glasses (thin wire) -->
+  <circle cx="50" cy="46" r="8" fill="none" stroke="#000" stroke-width="1.8"/>
+  <circle cx="70" cy="46" r="8" fill="none" stroke="#000" stroke-width="1.8"/>
+  <line x1="58" y1="46" x2="62" y2="46" stroke="#000" stroke-width="1.8"/>
+  <!-- Nose -->
+  <path d="M58,52 Q60,56 62,52" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Smile -->
+  <path d="M48,62 Q60,68 72,62" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Hoodie (AI theme) -->
+  <rect x="28" y="72" width="64" height="28" rx="6" fill="#8b5cf6" stroke="#000" stroke-width="2.5"/>
+  <path d="M44,72 L60,84 L76,72" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- AI circuit pattern on hoodie -->
+  <path d="M32,88 Q36,82 40,88 Q44,94 48,88" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  <path d="M72,88 Q76,82 80,88 Q84,94 88,88" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  <!-- Name label -->
+  <rect x="5" y="98" width="110" height="18" rx="4" fill="#7c3aed" stroke="#000" stroke-width="2"/>
+  <text x="60" y="111" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="7" font-weight="bold" fill="#fff">Aschenbr.</text>
+</svg>

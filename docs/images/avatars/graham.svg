@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <clipPath id="circle"><circle cx="60" cy="52" r="45"/></clipPath>
+  </defs>
+  <circle cx="60" cy="52" r="45" fill="#bfdbfe" stroke="#000" stroke-width="3"/>
+  <!-- Hair (white, parted) -->
+  <path d="M35,30 Q60,18 85,30 Q80,25 60,24 Q40,25 35,30" fill="#f0f0f0" stroke="#000" stroke-width="2.5"/>
+  <path d="M35,30 L35,42" fill="none" stroke="#000" stroke-width="2"/>
+  <path d="M85,30 L85,42" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Part line -->
+  <line x1="60" y1="24" x2="60" y2="35" stroke="#000" stroke-width="1.5"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="50" rx="20" ry="24" fill="#f5d0a9" stroke="#000" stroke-width="2.5"/>
+  <!-- Old-style glasses (wire rim) -->
+  <circle cx="50" cy="46" r="9" fill="none" stroke="#000" stroke-width="1.8"/>
+  <circle cx="70" cy="46" r="9" fill="none" stroke="#000" stroke-width="1.8"/>
+  <line x1="59" y1="46" x2="61" y2="46" stroke="#000" stroke-width="1.5"/>
+  <!-- Eyes behind glasses -->
+  <circle cx="50" cy="46" r="2.5" fill="#000"/>
+  <circle cx="70" cy="46" r="2.5" fill="#000"/>
+  <!-- Eyebrows -->
+  <path d="M43,38 Q50,35 57,38" fill="none" stroke="#555" stroke-width="2"/>
+  <path d="M63,38 Q70,35 77,38" fill="none" stroke="#555" stroke-width="2"/>
+  <!-- Nose -->
+  <path d="M58,52 Q60,56 62,52" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Mustache -->
+  <path d="M44,60 Q60,64 76,60" fill="#e0d0c0" stroke="#000" stroke-width="1.8"/>
+  <!-- Mouth -->
+  <path d="M48,62 Q60,66 72,62" fill="none" stroke="#000" stroke-width="1.5"/>
+  <!-- Old-style suit -->
+  <rect x="28" y="72" width="64" height="28" rx="6" fill="#6b7280" stroke="#000" stroke-width="2.5"/>
+  <path d="M44,72 L60,84 L76,72" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Bow tie -->
+  <polygon points="52,84 60,88 52,92" fill="#8b0000" stroke="#000" stroke-width="1.2"/>
+  <polygon points="68,84 60,88 68,92" fill="#8b0000" stroke="#000" stroke-width="1.2"/>
+  <!-- Name label -->
+  <rect x="5" y="98" width="110" height="18" rx="4" fill="#2563eb" stroke="#000" stroke-width="2"/>
+  <text x="60" y="111" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="bold" fill="#fff">Graham</text>
+</svg>

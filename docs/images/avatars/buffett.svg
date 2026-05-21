@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <clipPath id="circle"><circle cx="60" cy="52" r="45"/></clipPath>
+  </defs>
+  <!-- Background circle -->
+  <circle cx="60" cy="52" r="45" fill="#bfdbfe" stroke="#000" stroke-width="3"/>
+  <!-- Hair (grey, balding) -->
+  <ellipse cx="60" cy="28" rx="28" ry="12" fill="#c0c0c0" stroke="#000" stroke-width="2.5"/>
+  <!-- Side hair -->
+  <path d="M34,35 Q32,45 36,52" fill="none" stroke="#000" stroke-width="2.5"/>
+  <path d="M86,35 Q88,45 84,52" fill="none" stroke="#000" stroke-width="2.5"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="50" rx="20" ry="24" fill="#f5d0a9" stroke="#000" stroke-width="2.5"/>
+  <!-- Eyebrows -->
+  <path d="M44,40 Q52,37 56,40" fill="none" stroke="#888" stroke-width="2.5"/>
+  <path d="M64,40 Q68,37 76,40" fill="none" stroke="#888" stroke-width="2.5"/>
+  <!-- Eyes -->
+  <circle cx="50" cy="46" r="3" fill="#000"/>
+  <circle cx="70" cy="46" r="3" fill="#000"/>
+  <!-- Glasses -->
+  <circle cx="50" cy="46" r="8" fill="none" stroke="#000" stroke-width="2"/>
+  <circle cx="70" cy="46" r="8" fill="none" stroke="#000" stroke-width="2"/>
+  <line x1="58" y1="46" x2="62" y2="46" stroke="#000" stroke-width="2"/>
+  <!-- Nose -->
+  <path d="M58,52 Q60,56 62,52" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Mouth (smile) -->
+  <path d="M50,62 Q60,68 70,62" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Suit (grey) -->
+  <rect x="28" y="72" width="64" height="28" rx="6" fill="#a0a0a0" stroke="#000" stroke-width="2.5"/>
+  <!-- Collar -->
+  <path d="M45,72 L60,82 L75,72" fill="none" stroke="#000" stroke-width="2"/>
+  <line x1="60" y1="72" x2="60" y2="82" stroke="#000" stroke-width="1.5"/>
+  <!-- Tie -->
+  <polygon points="56,82 64,82 62,98 58,98" fill="#c0392b" stroke="#000" stroke-width="1.5"/>
+  <!-- Name label -->
+  <rect x="5" y="98" width="110" height="18" rx="4" fill="#2563eb" stroke="#000" stroke-width="2"/>
+  <text x="60" y="111" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="bold" fill="#fff">Buffett</text>
+</svg>

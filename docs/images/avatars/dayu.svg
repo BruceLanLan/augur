@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <clipPath id="circle"><circle cx="60" cy="52" r="45"/></clipPath>
+  </defs>
+  <circle cx="60" cy="52" r="45" fill="#fef9c3" stroke="#000" stroke-width="3"/>
+  <!-- Hair (spiky, crypto energy) -->
+  <path d="M32,38 Q34,14 60,12 Q86,14 88,38" fill="#1a1a2e" stroke="#000" stroke-width="2.5"/>
+  <path d="M32,38 Q30,44 32,50" fill="none" stroke="#000" stroke-width="2"/>
+  <path d="M88,38 Q90,44 88,50" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Spiky hair -->
+  <path d="M40,20 L38,12 L44,18" fill="none" stroke="#1a1a2e" stroke-width="2.5"/>
+  <path d="M60,16 L58,8 L64,14" fill="none" stroke="#1a1a2e" stroke-width="2.5"/>
+  <path d="M80,20 L82,12 L76,18" fill="none" stroke="#1a1a2e" stroke-width="2.5"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="52" rx="20" ry="24" fill="#f5d0a9" stroke="#000" stroke-width="2.5"/>
+  <!-- Eyebrows -->
+  <path d="M44,40 Q52,36 56,40" fill="none" stroke="#1a1a2e" stroke-width="2.5"/>
+  <path d="M64,40 Q68,36 76,40" fill="none" stroke="#1a1a2e" stroke-width="2.5"/>
+  <!-- Eyes (sharp) -->
+  <circle cx="50" cy="46" r="3" fill="#000"/>
+  <circle cx="70" cy="46" r="3" fill="#000"/>
+  <!-- Nose -->
+  <path d="M58,52 Q60,56 62,52" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Grin -->
+  <path d="M46,62 Q60,72 74,62" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Crypto hoodie -->
+  <rect x="28" y="72" width="64" height="28" rx="6" fill="#eab308" stroke="#000" stroke-width="2.5"/>
+  <path d="M44,72 L60,84 L76,72" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- ₿ symbol -->
+  <text x="60" y="92" text-anchor="middle" font-family="Arial,sans-serif" font-size="12" font-weight="bold" fill="#ca8a04">₿</text>
+  <!-- Name label -->
+  <rect x="5" y="98" width="110" height="18" rx="4" fill="#eab308" stroke="#000" stroke-width="2"/>
+  <text x="60" y="111" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="bold" fill="#000">大宇</text>
+</svg>

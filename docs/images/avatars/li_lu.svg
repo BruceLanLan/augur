@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <clipPath id="circle"><circle cx="60" cy="52" r="45"/></clipPath>
+  </defs>
+  <circle cx="60" cy="52" r="45" fill="#bfdbfe" stroke="#000" stroke-width="3"/>
+  <!-- Hair (black, elegant) -->
+  <path d="M34,40 Q38,24 60,22 Q82,24 86,40" fill="#1a1a2e" stroke="#000" stroke-width="2.5"/>
+  <path d="M34,40 L34,46" fill="none" stroke="#000" stroke-width="2"/>
+  <path d="M86,40 L86,46" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="52" rx="20" ry="24" fill="#f0c898" stroke="#000" stroke-width="2.5"/>
+  <!-- Eyebrows -->
+  <path d="M44,40 Q52,37 56,40" fill="none" stroke="#1a1a2e" stroke-width="2.5"/>
+  <path d="M64,40 Q68,37 76,40" fill="none" stroke="#1a1a2e" stroke-width="2.5"/>
+  <!-- Eyes (gentle) -->
+  <circle cx="50" cy="46" r="2.5" fill="#000"/>
+  <circle cx="70" cy="46" r="2.5" fill="#000"/>
+  <!-- Round glasses -->
+  <circle cx="50" cy="46" r="9" fill="none" stroke="#000" stroke-width="1.8"/>
+  <circle cx="70" cy="46" r="9" fill="none" stroke="#000" stroke-width="1.8"/>
+  <line x1="59" y1="46" x2="61" y2="46" stroke="#000" stroke-width="1.8"/>
+  <!-- Nose -->
+  <path d="M58,52 Q60,57 62,52" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Gentle smile -->
+  <path d="M50,62 Q60,66 70,62" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Suit -->
+  <rect x="28" y="72" width="64" height="28" rx="6" fill="#2563eb" stroke="#000" stroke-width="2.5"/>
+  <path d="M44,72 L60,84 L76,72" fill="none" stroke="#000" stroke-width="2"/>
+  <line x1="60" y1="72" x2="60" y2="84" stroke="#000" stroke-width="1.5"/>
+  <polygon points="56,84 64,84 62,98 58,98" fill="#1d4ed8" stroke="#000" stroke-width="1.5"/>
+  <!-- Name label -->
+  <rect x="5" y="98" width="110" height="18" rx="4" fill="#2563eb" stroke="#000" stroke-width="2"/>
+  <text x="60" y="111" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="bold" fill="#fff">李录</text>
+</svg>

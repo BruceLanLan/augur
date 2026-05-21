@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <clipPath id="circle"><circle cx="60" cy="52" r="45"/></clipPath>
+  </defs>
+  <circle cx="60" cy="52" r="45" fill="#bbf7d0" stroke="#000" stroke-width="3"/>
+  <!-- Hair (brown, full) -->
+  <path d="M32,38 Q35,22 60,18 Q85,22 88,38 Q85,32 60,28 Q35,32 32,38" fill="#8B4513" stroke="#000" stroke-width="2.5"/>
+  <path d="M32,38 L32,48" fill="none" stroke="#000" stroke-width="2"/>
+  <path d="M88,38 L88,48" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="52" rx="20" ry="24" fill="#f5d0a9" stroke="#000" stroke-width="2.5"/>
+  <!-- Eyebrows -->
+  <path d="M44,42 Q52,39 56,42" fill="none" stroke="#6B3A2A" stroke-width="2.5"/>
+  <path d="M64,42 Q68,39 76,42" fill="none" stroke="#6B3A2A" stroke-width="2.5"/>
+  <!-- Eyes -->
+  <circle cx="50" cy="48" r="3" fill="#000"/>
+  <circle cx="70" cy="48" r="3" fill="#000"/>
+  <!-- Nose -->
+  <path d="M58,54 Q60,58 62,54" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Big smile -->
+  <path d="M46,62 Q60,72 74,62" fill="#e8a0a0" stroke="#000" stroke-width="2"/>
+  <!-- Casual jacket (green) -->
+  <rect x="28" y="74" width="64" height="26" rx="6" fill="#4ade80" stroke="#000" stroke-width="2.5"/>
+  <path d="M44,74 L60,84 L76,74" fill="none" stroke="#000" stroke-width="2"/>
+  <line x1="60" y1="74" x2="60" y2="84" stroke="#000" stroke-width="1.5"/>
+  <!-- Name label -->
+  <rect x="5" y="98" width="110" height="18" rx="4" fill="#22c55e" stroke="#000" stroke-width="2"/>
+  <text x="60" y="111" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="9" font-weight="bold" fill="#fff">Lynch</text>
+</svg>
