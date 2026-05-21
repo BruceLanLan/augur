@@ -356,6 +356,61 @@ name: "大宇 (BTCdayu)"
 
 ---
 
+## 🧬 人格进化追踪
+
+> 投资人的风格不是一成不变的——巴菲特从拒绝科技股到重仓苹果，大宇从纯技术分析到信息优势体系。**PersonaEvolutionTracker** 记录这些动态变化。
+
+### 核心概念
+
+投资人人格会随时间演化。追踪系统记录四个维度：
+
+| 维度 | 说明 | 示例 |
+|------|------|------|
+| ⏳ **时间线** | 重大决策/事件的时间节点 | 2016 建仓苹果、2022 FTX做空 |
+| 🔄 **风格漂移** | 投资哲学的根本转变 | 纯价值→价值+成长 |
+| 💼 **当前持仓主题** | 当下的配置重心 | 苹果(第一大持仓)、ETH(核心) |
+| 🧠 **当前偏见** | 活跃的策略倾向 | high_cash_position=True, momentum_over_value=True |
+
+### 使用方式
+
+```python
+from personas.persona_evolution import PersonaEvolutionTracker
+
+tracker = PersonaEvolutionTracker()
+
+# 获取完整进化历程
+buffett = tracker.get_evolution("buffett")
+dayu = tracker.get_evolution("dayu")
+
+# 记录新事件
+tracker.record_event("dayu", "2026-05", "以太坊ETF获批后加仓", "政策利好确认")
+
+# 记录风格转变
+tracker.record_style_shift("buffett", "美国为主", "加仓中国/新兴市场", "中国市场开放信号")
+
+# 获取当前上下文（分析时注入Agent）
+ctx = tracker.get_current_context("buffett")
+# 返回: current_biases, latest_events, style_evolution...
+```
+
+### 数据存储
+
+- 默认进化数据硬编码在 `persona_evolution.py` 的 `_get_default_evolution()` 中
+- 运行时新增/修改的数据持久化到 `personas/evolution/{persona_id}.json`
+- 若json存在则读取文件，否则回退到默认数据
+- **推荐做法**：重大人格变化时调用 `record_event()` 或 `record_style_shift()` 持久化记录
+
+### 在分析流程中注入
+
+在分析开始时调用 `get_current_context()`，将结果注入prompt上下文。这能让Agent「知道」该投资人当前处于哪个进化阶段，以及最近的判断偏向。例如：
+
+```python
+context = tracker.get_current_context("dayu")
+# Agent 据此知道: dayu 当前是看准+重仓3.0体系, momentum倾向, 关注CRCL+AI
+```
+
+---
+
 ## 重要免责声明
 
 在每份报告末尾务必包含：
