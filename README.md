@@ -10,6 +10,14 @@
 <h3 align="center">让13位投资大师为你决策 — 多智能体投资分析系统</h3>
 
 <p align="center">
+  <img src="docs/images/dashboard-preview.png" alt="Buffett Oracle Analyzer Dashboard Preview" width="100%"/>
+</p>
+
+<p align="center">
+  <em>13位AI投资大师 · 多维度共识分析 · Bloomberg风格仪表盘</em>
+</p>
+
+<p align="center">
   <a href="#-核心功能">功能</a> ·
   <a href="#-13位投资大师">投资人</a> ·
   <a href="#-快速开始">开始使用</a> ·
@@ -211,6 +219,8 @@ Phase 4: 🚀 联合发布 → 双项目联动宣传
 ---
 
 ## 🏗️ 项目架构
+
+![Architecture Diagram](docs/images/architecture-preview.png)
 
 ```
 buffett-oracle-analyzer/
