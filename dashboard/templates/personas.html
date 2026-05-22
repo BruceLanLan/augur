@@ -1,216 +1,181 @@
 {% extends "base.html" %}
-{% block title %}人格系统 — Augur{% endblock %}
+{% block title %}人格系统 - Augur{% endblock %}
 {% block extra_head %}
 <style>
-.persona-filter-bar {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    padding: 16px 0;
-    background: linear-gradient(to bottom, #0a0a0a 80%, transparent);
-}
-.persona-card-enhanced {
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-}
-.persona-card-enhanced:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 20px rgba(0,255,136,0.12);
-    border-color: #00ff88 !important;
-}
-.card-detail-section {
+.persona-detail {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.4s ease, padding 0.3s ease;
-    padding: 0 16px;
+    padding: 0 12px;
+    border-top: 0 solid var(--border-color);
 }
-.persona-card-enhanced.expanded .card-detail-section {
+.persona-row.expanded .persona-detail {
     max-height: 600px;
-    padding: 12px 16px;
+    padding: 12px;
+    border-top-width: 1px;
 }
-.expand-indicator {
-    transition: transform 0.3s ease;
-    color: #555;
-    font-size: 0.8rem;
+.persona-row.expanded {
+    background: var(--bg-card-hover);
 }
-.persona-card-enhanced.expanded .expand-indicator {
+.expand-icon {
+    transition: transform 0.3s;
+    color: var(--text-muted);
+}
+.persona-row.expanded .expand-icon {
     transform: rotate(180deg);
-    color: #00ff88;
+    color: var(--accent-orange);
 }
-.china-flag-indicator {
-    width: 18px;
-    height: 12px;
-    background: linear-gradient(180deg, #de2910 0%, #de2910 100%);
-    border-radius: 2px;
-    display: inline-block;
-    position: relative;
-    margin-left: 6px;
-    vertical-align: middle;
-}
-.china-flag-indicator::after {
-    content: "★";
-    position: absolute;
-    top: -1px;
-    left: 3px;
-    font-size: 8px;
-    color: #ffde00;
-    line-height: 12px;
-}
-.model-badge {
-    font-size: 0.68rem;
-    background: #1a2a3a;
-    color: #6ab7ff;
-    border: 1px solid #2a4a6a;
-    border-radius: 4px;
-    padding: 2px 6px;
-    white-space: nowrap;
-}
-.weight-item {
+.weight-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 0;
-    border-bottom: 1px solid #1a2a1a;
-    font-size: 0.78rem;
+    padding: 3px 0;
+    font-size: 0.75rem;
 }
-.weight-item:last-child {
-    border-bottom: none;
-}
-.weight-bar {
-    height: 4px;
+.weight-bar-bg {
+    width: 60px;
+    height: 3px;
+    background: var(--border-color);
     border-radius: 2px;
-    background: #00ff88;
-    transition: width 0.3s ease;
+    overflow: hidden;
+    margin-left: 8px;
+}
+.weight-bar-fill {
+    height: 100%;
+    background: var(--accent-orange);
+    border-radius: 2px;
 }
 </style>
 {% endblock %}
 {% block content %}
-<div class="container mt-4">
-    <h2 class="mb-2" style="color:#00ff88;">🤖 17位投资大师</h2>
-    <p class="text-muted mb-3">点击卡片查看每位大师的详细投资体系与评分权重</p>
 
-    <!-- Filter bar -->
-    <div class="persona-filter-bar mb-3">
-        <div class="row g-2 align-items-center">
-            <div class="col-md-6">
-                <input id="persona-filter" type="text" class="form-control filter-input"
-                       placeholder="搜索大师：名称、风格、ID..."
-                       oninput="filterPersonas()">
-            </div>
-            <div class="col-md-6 d-flex gap-2 flex-wrap">
-                <button class="btn btn-sm filter-tag active" data-filter="all" onclick="setFilter('all', this)">全部</button>
-                <button class="btn btn-sm filter-tag" data-filter="chinese" onclick="setFilter('chinese', this)">🇨🇳 中国投资人</button>
-                <button class="btn btn-sm filter-tag" data-filter="value" onclick="setFilter('value', this)">价值派</button>
-                <button class="btn btn-sm filter-tag" data-filter="growth" onclick="setFilter('growth', this)">成长派</button>
-            </div>
-        </div>
+<div class="flex items-center justify-between mb-16" style="flex-wrap:wrap; gap:12px;">
+    <div>
+        <h2 style="color:var(--accent-orange); margin:0;">人格系统</h2>
+        <p class="text-muted" style="font-size:0.82rem; margin:4px 0 0;">17位投资大师 - 点击行展开详情</p>
     </div>
+</div>
 
-    <!-- Card grid -->
-    <div class="row" id="persona-grid">
+<!-- Filter bar -->
+<div class="flex items-center gap-12 mb-16" style="flex-wrap:wrap;">
+    <input id="persona-filter" type="text" class="filter-input" style="max-width:280px;"
+           placeholder="搜索: 名称 / 风格 / ID"
+           oninput="filterPersonas()">
+    <div class="flex gap-8" style="flex-wrap:wrap;">
+        <button class="filter-tag active" data-filter="all" onclick="setFilter('all', this)">全部</button>
+        <button class="filter-tag" data-filter="chinese" onclick="setFilter('chinese', this)">&#x1F1E8;&#x1F1F3; 中国投资人</button>
+        <button class="filter-tag" data-filter="value" onclick="setFilter('value', this)">价值派</button>
+        <button class="filter-tag" data-filter="growth" onclick="setFilter('growth', this)">成长派</button>
+    </div>
+</div>
+
+<!-- Data Table -->
+<div class="card" style="padding:0; overflow:hidden;">
+    <table class="data-table" style="width:100%;">
+        <thead>
+            <tr>
+                <th style="width:40px;"></th>
+                <th>投资人</th>
+                <th>风格</th>
+                <th>模型</th>
+                <th>状态</th>
+                <th style="width:30px;"></th>
+            </tr>
+        </thead>
+    </table>
+    <div id="persona-list">
         {% for persona in personas %}
-        <div class="col-md-6 col-lg-4 mb-4 persona-col"
+        <div class="persona-row" onclick="toggleRow(this)"
              data-name="{{ persona.name|lower }}"
              data-style="{{ persona.style|lower }}"
              data-id="{{ persona.id }}"
              data-chinese="{{ 'true' if persona.is_chinese else 'false' }}">
-            <div class="card persona-card-enhanced h-100" style="border-color:#1a3a2a;" onclick="toggleExpand(this)">
-                <div class="card-header d-flex align-items-center justify-content-between py-2" style="border-bottom:1px solid #1a3a2a; background:transparent;">
-                    <div class="d-flex align-items-center gap-3">
-                        <img src="/docs/images/avatars/{{ persona.id }}.svg"
-                             alt="{{ persona.name }}"
-                             class="persona-avatar"
-                             style="width:50px; height:50px; border:2px solid #1a3a2a; border-radius:50%; object-fit:cover;"
-                             onerror="this.style.display='none'">
-                        <div>
-                            <h6 class="mb-0" style="color:#e0e0e0;">
-                                {{ persona.name }}
-                                {% if persona.is_chinese %}
-                                <span class="china-flag-indicator" title="中国投资人"></span>
-                                {% endif %}
-                            </h6>
-                            <small class="text-muted">{{ persona.style }}</small>
-                            {% if persona.model %}
-                            <div class="mt-1"><span class="model-badge">{{ persona.model }}</span></div>
-                            {% endif %}
-                        </div>
+            <div class="flex items-center gap-12" style="padding:10px 12px;">
+                <img src="/docs/images/avatars/{{ persona.id }}.svg"
+                     alt="{{ persona.name }}"
+                     class="persona-avatar-sm"
+                     onerror="this.style.display='none'">
+                <div style="flex:1; min-width:0;">
+                    <div class="flex items-center gap-8">
+                        <span style="font-weight:600; font-size:0.88rem;">{{ persona.name }}</span>
+                        {% if persona.is_chinese %}<span class="flag-cn"></span>{% endif %}
                     </div>
-                    <span class="expand-indicator"><i class="bi bi-chevron-down"></i></span>
+                    <div class="text-muted" style="font-size:0.72rem;">{{ persona.style }}</div>
                 </div>
-                <div class="card-body py-2 px-3">
-                    <div class="speech-bubble mb-2" style="background:#0d0d0d; border:1px solid #1a3a2a; border-radius:8px; padding:8px 12px;">
-                        <small style="color:#aaa; font-style:italic;">"{{ persona.quote }}"</small>
-                    </div>
-                    <p style="font-size:0.8rem; color:#999; margin-bottom:8px;">{{ persona.description[:150] }}{% if persona.description|length > 150 %}...{% endif %}</p>
-                    <div class="d-flex flex-wrap gap-1">
-                        {% for scene in persona.scenarios[:3] %}
-                        <span class="badge" style="background:#1a3a2a; color:#00ff88; font-size:0.68rem;">{{ scene[:20] }}{% if scene|length > 20 %}..{% endif %}</span>
-                        {% endfor %}
-                    </div>
+                <div style="min-width:100px;">
+                    {% if persona.model %}
+                    <span class="badge badge-dim">{{ persona.model }}</span>
+                    {% endif %}
                 </div>
-
-                <!-- Expandable detail section -->
-                <div class="card-detail-section">
-                    <hr style="border-color:#1a3a2a; margin:8px 0;">
-                    <h6 style="color:#00ff88; font-size:0.8rem; margin-bottom:8px;">📋 完整投资哲学</h6>
-                    <ul class="list-unstyled mb-3">
-                        {% for item in persona.scenarios %}
-                        <li style="font-size:0.78rem; color:#bbb; padding:3px 0;">
-                            <span style="color:#00ff88;">▸</span> {{ item }}
-                        </li>
-                        {% endfor %}
-                    </ul>
-
-                    {% if persona.scoring_weights %}
-                    <h6 style="color:#00ff88; font-size:0.8rem; margin-bottom:8px;">⚖️ 评分权重</h6>
-                    <div class="mb-3">
+                <div style="min-width:60px;">
+                    <span class="badge badge-green" style="font-size:0.65rem;">{{ persona.status }}</span>
+                </div>
+                <span class="expand-icon">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+                </span>
+            </div>
+            <div class="persona-detail">
+                <div class="grid-2" style="gap:16px; padding:8px 0;">
+                    <div>
+                        <div class="data-label mb-8">投资哲学</div>
+                        <ul style="list-style:none; padding:0; margin:0;">
+                            {% for item in persona.scenarios %}
+                            <li style="font-size:0.78rem; color:var(--text-secondary); padding:3px 0;">
+                                <span style="color:var(--accent-orange);">&triangleright;</span> {{ item }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div>
+                        {% if persona.scoring_weights %}
+                        <div class="data-label mb-8">评分权重</div>
                         {% for key, val in persona.scoring_weights.items() %}
-                        <div class="weight-item">
-                            <span style="color:#ccc;">{{ key }}</span>
-                            <div class="d-flex align-items-center gap-2">
-                                <div style="width:60px; height:4px; background:#1a1a1a; border-radius:2px; overflow:hidden;">
-                                    <div class="weight-bar" style="width:{{ (val * 100)|int }}%;"></div>
+                        <div class="weight-row">
+                            <span style="color:var(--text-secondary);">{{ key }}</span>
+                            <div class="flex items-center">
+                                <div class="weight-bar-bg">
+                                    <div class="weight-bar-fill" style="width:{{ (val * 100)|int }}%;"></div>
                                 </div>
-                                <span style="color:#00ff88; font-size:0.72rem; min-width:32px; text-align:right;">{{ "%.0f"|format(val * 100) }}%</span>
+                                <span class="text-mono" style="color:var(--accent-orange); font-size:0.7rem; min-width:28px; text-align:right;">{{ "%.0f"|format(val * 100) }}%</span>
                             </div>
                         </div>
                         {% endfor %}
-                    </div>
-                    {% endif %}
+                        {% endif %}
 
-                    <h6 style="color:#00ff88; font-size:0.8rem; margin-bottom:8px;">📝 详细描述</h6>
-                    <p style="font-size:0.76rem; color:#999; line-height:1.6;">{{ persona.description }}</p>
-
-                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2" style="border-top:1px solid #1a2a1a;">
-                        <span class="badge {% if persona.status == '已注册' %}bg-success{% else %}bg-secondary{% endif %}">{{ persona.status }}</span>
-                        <small class="text-muted">ID: {{ persona.id }}</small>
+                        <div class="data-label mb-8 mt-16">描述</div>
+                        <p style="font-size:0.76rem; color:var(--text-secondary); line-height:1.6; margin:0;">{{ persona.description }}</p>
                     </div>
+                </div>
+                <div class="flex items-center justify-between mt-8" style="padding-top:8px; border-top:1px solid var(--border-color);">
+                    <span class="text-muted text-mono" style="font-size:0.7rem;">ID: {{ persona.id }}</span>
+                    <span class="badge badge-dim" style="font-size:0.65rem;">{{ persona.quote[:60] }}{% if persona.quote|length > 60 %}...{% endif %}</span>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
+
 {% endblock %}
 {% block extra_scripts %}
 <script>
-let activeFilter = 'all';
+var activeFilter = 'all';
 
-function toggleExpand(card) {
-    card.classList.toggle('expanded');
+function toggleRow(row) {
+    row.classList.toggle('expanded');
 }
 
 function filterPersonas() {
-    const query = document.getElementById('persona-filter').value.toLowerCase().trim();
-    const cols = document.querySelectorAll('.persona-col');
-    cols.forEach(col => {
-        const name = col.dataset.name || '';
-        const style = col.dataset.style || '';
-        const id = col.dataset.id || '';
-        const isChinese = col.dataset.chinese === 'true';
+    var query = document.getElementById('persona-filter').value.toLowerCase().trim();
+    var rows = document.querySelectorAll('.persona-row');
+    rows.forEach(function(row) {
+        var name = row.dataset.name || '';
+        var style = row.dataset.style || '';
+        var id = row.dataset.id || '';
+        var isChinese = row.dataset.chinese === 'true';
 
-        let matchText = !query || name.includes(query) || style.includes(query) || id.includes(query);
-        let matchFilter = true;
+        var matchText = !query || name.includes(query) || style.includes(query) || id.includes(query);
+        var matchFilter = true;
 
         if (activeFilter === 'chinese') {
             matchFilter = isChinese;
@@ -220,13 +185,13 @@ function filterPersonas() {
             matchFilter = style.includes('成长') || style.includes('创新') || style.includes('颠覆') || style.includes('趋势');
         }
 
-        col.style.display = (matchText && matchFilter) ? '' : 'none';
+        row.style.display = (matchText && matchFilter) ? '' : 'none';
     });
 }
 
 function setFilter(filter, btn) {
     activeFilter = filter;
-    document.querySelectorAll('.filter-tag').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-tag').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
     filterPersonas();
 }

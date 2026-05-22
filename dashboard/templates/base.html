@@ -1,235 +1,139 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}🦉 Augur — 投资大师分析{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@400;700&display=swap" rel="stylesheet">
-    <link href="/static/css/baoyu.css" rel="stylesheet">
-    <style>
-        body {
-            background-color: #0a0a0a;
-            color: #e0e0e0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-        }
-        .navbar-brand {
-            font-weight: 700;
-            color: #00ff88 !important;
-        }
-        .nav-link {
-            color: #b0b0b0 !important;
-            transition: color 0.2s;
-        }
-        .nav-link:hover, .nav-link.active {
-            color: #00ff88 !important;
-        }
-        .navbar {
-            border-bottom: 1px solid #1a3a2a;
-            background-color: #0d0d0d !important;
-        }
-        .card {
-            border: 1px solid #1a3a2a;
-            background-color: #111111;
-            transition: border-color 0.3s, box-shadow 0.3s;
-        }
-        .card:hover {
-            border-color: #00ff88;
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.1);
-        }
-        .card-header {
-            border-bottom: 1px solid #1a3a2a;
-            background-color: #0d0d0d;
-        }
-        .card-footer {
-            border-top: 1px solid #1a3a2a;
-            background-color: #0d0d0d;
-        }
-        .badge {
-            font-size: 0.75rem;
-            padding: 0.35em 0.65em;
-        }
-        .badge-buffett {
-            background-color: #00ff88;
-            color: #0a0a0a;
-        }
-        .badge-dayu {
-            background-color: #ff6b35;
-            color: #0a0a0a;
-        }
-        .badge-graham {
-            background-color: #4a90d9;
-            color: #0a0a0a;
-        }
-        .badge-lynch {
-            background-color: #e74c3c;
-            color: #0a0a0a;
-        }
-        .badge-dalio {
-            background-color: #f39c12;
-            color: #0a0a0a;
-        }
-        .badge-munger {
-            background-color: #9b59b6;
-            color: #e0e0e0;
-        }
-        .badge-soros {
-            background-color: #e74c3c;
-            color: #e0e0e0;
-        }
-        .badge-marks {
-            background-color: #1abc9c;
-            color: #0a0a0a;
-        }
-        .badge-wood {
-            background-color: #e91e63;
-            color: #e0e0e0;
-        }
-        .badge-fisher {
-            background-color: #3498db;
-            color: #0a0a0a;
-        }
-        .badge-aschenbrenner {
-            background-color: #8e44ad;
-            color: #e0e0e0;
-        }
-        .signal-buy {
-            color: #00ff88;
-        }
-        .signal-hold {
-            color: #f39c12;
-        }
-        .signal-sell {
-            color: #e74c3c;
-        }
-        .footer {
-            border-top: 1px solid #1a3a2a;
-            color: #555;
-            font-size: 0.8rem;
-        }
-        pre {
-            background-color: #0d0d0d;
-            border: 1px solid #1a3a2a;
-            border-radius: 8px;
-            padding: 1rem;
-            color: #c0c0c0;
-        }
-        .text-green {
-            color: #00ff88;
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-height: 300px;
-        }
-    </style>
+    <title>{% block title %}Augur - 投资大师分析{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="/static/css/bloomberg.css" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">
-                🦉 Augur
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/" id="nav-home">
-                            <i class="bi bi-house-fill"></i> 首页
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/personas" id="nav-personas">
-                            <i class="bi bi-people-fill"></i> 人格系统
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/stocks" id="nav-stocks">
-                            <i class="bi bi-bar-chart-fill"></i> 股票分析
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/signals" id="nav-signals">
-                            <i class="bi bi-exclamation-triangle-fill"></i> 信号监控
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/settings" id="nav-settings">
-                            <i class="bi bi-gear-fill"></i> 设置
-                        </a>
-                    </li>
-                </ul>
+    <div class="app-layout">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <span class="logo-icon">&#x1F989;</span>
+                <span class="logo-text">Augur</span>
             </div>
-            <button class="theme-toggle" onclick="toggleTheme()" title="切换主题">🎨 宝玉风格</button>
-        </div>
-    </nav>
 
-    <main class="container mt-4">
-        {% block content %}{% endblock %}
-    </main>
+            <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="折叠侧边栏">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
 
-    <footer class="footer text-center py-3 mt-5">
-        <div class="container">
-            <p class="mb-0">🦉 Augur · 17位虚拟投资大师 · 多智能体共识分析</p>
-            <p class="mb-0 mt-1">
-                <i class="bi bi-info-circle"></i> 
-                本分析仅供教育和研究用途，不构成投资建议
-            </p>
-        </div>
-    </footer>
+            <nav class="sidebar-nav">
+                <!-- 分析 Group -->
+                <div class="nav-group">
+                    <div class="nav-group-label">分析</div>
+                    <a class="nav-item" href="/" data-page="home">
+                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                        <span>仪表盘</span>
+                    </a>
+                    <a class="nav-item" href="/stocks" data-page="stocks">
+                        <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
+                        <span>股票分析</span>
+                    </a>
+                    <a class="nav-item" href="/signals" data-page="signals">
+                        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span>信号监控</span>
+                    </a>
+                </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <!-- 投资人 Group -->
+                <div class="nav-group">
+                    <div class="nav-group-label">投资人</div>
+                    <a class="nav-item" href="/personas" data-page="personas">
+                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        <span>人格系统</span>
+                    </a>
+                </div>
+
+                <!-- 系统 Group -->
+                <div class="nav-group">
+                    <div class="nav-group-label">系统</div>
+                    <a class="nav-item" href="/settings" data-page="settings">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        <span>设置</span>
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator connected">
+                    <span class="status-dot"></span>
+                    <span class="status-text">系统就绪</span>
+                </div>
+                <div class="version-info">v4.4</div>
+            </div>
+        </aside>
+
+        <!-- Mobile backdrop -->
+        <div class="mobile-backdrop" id="backdrop" onclick="closeSidebar()"></div>
+
+        <!-- Mobile hamburger -->
+        <button class="hamburger-btn" onclick="openSidebar()">
+            <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </button>
+
+        <!-- Main content -->
+        <main class="app-main">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
     <!-- Toast container -->
     <div class="toast-container" id="toast-container"></div>
+
     <script>
-        // Highlight active nav item
-        document.addEventListener('DOMContentLoaded', function() {
-            const path = window.location.pathname;
-            document.querySelectorAll('.navbar-nav .nav-link').forEach(function(link) {
-                const href = link.getAttribute('href');
-                if (path === href || (path.startsWith(href) && href !== '/')) {
-                    link.classList.add('active');
-                } else if (href === '/' && path === '/') {
-                    link.classList.add('active');
-                }
-            });
-        });
+    // Sidebar toggle
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('collapsed');
+        localStorage.setItem('augur-sidebar', document.getElementById('sidebar').classList.contains('collapsed') ? 'collapsed' : 'expanded');
+    }
+    function openSidebar() {
+        document.getElementById('sidebar').classList.add('open');
+        document.getElementById('backdrop').classList.add('visible');
+    }
+    function closeSidebar() {
+        document.getElementById('sidebar').classList.remove('open');
+        document.getElementById('backdrop').classList.remove('visible');
+    }
 
-        // Toast notification utility
-        function showToast(message, type) {
-            type = type || 'success';
-            const container = document.getElementById('toast-container');
-            if (!container) return;
-            const toast = document.createElement('div');
-            toast.className = 'toast-notification' + (type === 'error' ? ' toast-error' : type === 'warning' ? ' toast-warning' : '');
-            toast.textContent = message;
-            container.appendChild(toast);
-            setTimeout(function() {
-                toast.classList.add('removing');
-                setTimeout(function() { toast.remove(); }, 300);
-            }, 3000);
+    // Restore sidebar state
+    document.addEventListener('DOMContentLoaded', function() {
+        if (localStorage.getItem('augur-sidebar') === 'collapsed') {
+            document.getElementById('sidebar').classList.add('collapsed');
         }
+    });
 
-        // Baoyu theme toggle
-        function toggleTheme() {
-            document.body.classList.toggle('baoyu-theme');
-            const btn = document.querySelector('.theme-toggle');
-            btn.textContent = document.body.classList.contains('baoyu-theme') ? '🌙 暗色主题' : '🎨 宝玉风格';
-            localStorage.setItem('augur-theme', document.body.classList.contains('baoyu-theme') ? 'baoyu' : 'dark');
-        }
-
-        // Restore theme on load
-        document.addEventListener('DOMContentLoaded', function() {
-            if (localStorage.getItem('augur-theme') === 'baoyu') {
-                document.body.classList.add('baoyu-theme');
-                document.querySelector('.theme-toggle').textContent = '🌙 暗色主题';
+    // Active nav highlight
+    document.addEventListener('DOMContentLoaded', function() {
+        var path = window.location.pathname;
+        document.querySelectorAll('.nav-item').forEach(function(item) {
+            var href = item.getAttribute('href');
+            if (path === href || (href !== '/' && path.startsWith(href))) {
+                item.classList.add('active');
+            } else if (href === '/' && path === '/') {
+                item.classList.add('active');
             }
         });
+    });
+
+    // Toast utility
+    function showToast(message, type) {
+        type = type || 'success';
+        var container = document.getElementById('toast-container');
+        if (!container) return;
+        var toast = document.createElement('div');
+        toast.className = 'toast-msg' + (type === 'error' ? ' toast-error' : type === 'warning' ? ' toast-warning' : '');
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(function() {
+            toast.classList.add('removing');
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 3000);
+    }
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>
