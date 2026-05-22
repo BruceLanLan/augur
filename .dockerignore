@@ -1,0 +1,15 @@
+.git
+.gitignore
+.agents/
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.pytest_cache
+.mypy_cache
+node_modules
+.env
+*.log
+tests/
+evals.json
+cases/

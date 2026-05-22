@@ -445,6 +445,42 @@ notifications:
 
 ---
 
+## 🐳 Docker 部署
+
+### 快速启动 (Dashboard + API)
+```bash
+docker compose up -d dashboard
+# → http://localhost:8000
+```
+
+### 启动 Telegram Bot
+```bash
+export TELEGRAM_TOKEN=your_token
+docker compose --profile telegram up -d
+```
+
+### 启动全部服务
+```bash
+docker compose --profile full --profile telegram --profile cron up -d
+```
+
+### 自定义配置
+```bash
+# 编辑 config/agents.yaml 修改模型配置
+# 编辑 .env 填入 Bot Token
+docker compose up -d --build
+```
+
+### Makefile 快捷命令
+```bash
+make docker-build    # 构建镜像
+make docker-up       # 启动 Dashboard
+make docker-down     # 停止所有服务
+make docker-full     # 启动全部服务 (含 Telegram + Cron)
+```
+
+---
+
 ## 🔗 MCP Server 集成
 
 Augur 提供标准 MCP (Model Context Protocol) Server，可供 Hermes、Claude Desktop 等 Agent 系统直接调用。
@@ -778,6 +814,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v5.0** | 2026-05-23 | 🐳 Docker 容器化 — Dockerfile + docker-compose 多服务编排 |
 | **v4.6** | 2026-05-23 | 📱 微信 (企业微信+Webhook) + 飞书 (Event+Webhook) Bot 多平台适配 |
 | **v4.5** | 2026-05-23 | 📊 信号监控页 + 自定义投资人 UI 创建器 + Watchlist API + requirements.txt |
 | **v4.4** | 2026-05-22 | 🎨 Dashboard UI 全面升级 - Bloomberg Terminal 风格 + Hermes 侧边栏布局 |
@@ -814,7 +851,7 @@ augur/
 - [x] **v4.4**: Bloomberg Terminal UI + Hermes 侧边栏布局 (纯CSS, 无Bootstrap)
 - [x] **v4.5**: 信号监控页 + 自定义投资人 UI 创建器 + Watchlist API + requirements.txt
 - [x] **v4.6**: WeChat/微信 + Lark/飞书 Bot 多平台适配
-- [ ] **v5.0**: Docker 容器化 + 一键部署文档
+- [x] **v5.0**: Docker 容器化 + docker-compose 多服务编排 + Makefile
 - [ ] **v5.1**: 历史回测系统 + Agent IC 实盘追踪
 
 ---
