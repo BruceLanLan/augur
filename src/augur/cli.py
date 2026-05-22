@@ -10,6 +10,7 @@ Commands:
   augur api [--port 8900]
   augur inject-soul
   augur telegram          - Start Telegram bot
+  augur slack             - Start Slack bot
   augur cron-run          - Run watchlist analysis once
   augur cron-start        - Start scheduler daemon
   augur watchlist-add     - Add ticker to watchlist
@@ -193,6 +194,16 @@ def telegram_cmd():
     """Start the Telegram bot"""
     from augur.bots.telegram_bot import run_telegram_bot
     run_telegram_bot()
+
+
+@main.command("slack")
+@click.option("--mode", type=click.Choice(["socket", "http"]), default="socket",
+              help="Mode: socket (dev) or http (production)")
+@click.option("--port", type=int, default=3000, help="Port for HTTP mode")
+def slack_cmd(mode, port):
+    """Start the Slack bot"""
+    from augur.bots.slack_bot import run_slack_bot
+    run_slack_bot(mode=mode, port=port)
 
 
 @main.command("cron-run")
