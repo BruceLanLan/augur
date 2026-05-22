@@ -14,6 +14,20 @@ metadata:
     style: 格栅理论 · 多元思维
     sectors: [Technology, Consumer Defensive, Financials]
     signal_thresholds: {bullish: 7.0, bearish: 4.0}
+    group_chat:
+      mention: ["munger", "芒格"]
+      room_role: multidisciplinary_thinker
+      auto_reply: true
+      intro: "多元思维格栅理论大师，逆向思考找盲点"
+    triggers:
+      - "/skill augur-munger"
+      - "@munger"
+      - "@芒格"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: munger
 ---
 
 # Charlie Munger — 投资分析 Agent

@@ -14,6 +14,20 @@ metadata:
     style: AI地缘政治 · 超级智能 · 算力军备竞赛
     sectors: [Technology, Semiconductors, Defense, Energy, Data Centers]
     signal_thresholds: {bullish: 7.0, bearish: 5.0}
+    group_chat:
+      mention: ["aschenbrenner", "leopold"]
+      room_role: ai_geopolitics
+      auto_reply: true
+      intro: "AI地缘政治分析师，追踪超级智能与算力军备竞赛"
+    triggers:
+      - "/skill augur-aschenbrenner"
+      - "@aschenbrenner"
+      - "@leopold"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: aschenbrenner
 ---
 
 # Leopold Aschenbrenner — 投资分析 Agent

@@ -15,6 +15,20 @@ metadata:
     nationality: CN
     sectors: [Consumer Defensive, Consumer Cyclical, Communication Services, Healthcare]
     signal_thresholds: {bullish: 6.5, bearish: 3.8}
+    group_chat:
+      mention: ["dan_bin", "但斌", "东方港湾"]
+      room_role: brand_moat
+      auto_reply: true
+      intro: "品牌护城河投资者，永不卖茅台的中国消费龙头猎手"
+    triggers:
+      - "/skill augur-dan-bin"
+      - "@dan_bin"
+      - "@但斌"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: dan_bin
 ---
 
 # 🇨🇳 但斌 — 投资分析 Agent

@@ -15,6 +15,20 @@ metadata:
     nationality: CN
     sectors: [Cryptocurrency, DeFi, NFT, Meme, Web3]
     signal_thresholds: {bullish: 6.0, bearish: 4.0}
+    group_chat:
+      mention: ["dayu", "大宇"]
+      room_role: crypto_momentum
+      auto_reply: true
+      intro: "信息差驱动的加密资产动量交易者"
+    triggers:
+      - "/skill augur-dayu"
+      - "@dayu"
+      - "@大宇"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: dayu
 ---
 
 # 🇨🇳 大宇 (BTCdayu) — 投资分析 Agent

@@ -14,6 +14,20 @@ metadata:
     style: GARP · PEG · 消费成长
     sectors: [Consumer Cyclical, Consumer Defensive, Retail, Healthcare]
     signal_thresholds: {bullish: 6.5, bearish: 4.0}
+    group_chat:
+      mention: ["lynch", "林奇"]
+      room_role: growth_at_reasonable_price
+      auto_reply: true
+      intro: "从日常生活中发现十倍股的GARP大师"
+    triggers:
+      - "/skill augur-lynch"
+      - "@lynch"
+      - "@林奇"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: lynch
 ---
 
 # Peter Lynch — 投资分析 Agent

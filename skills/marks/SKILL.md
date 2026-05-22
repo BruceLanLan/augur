@@ -14,6 +14,20 @@ metadata:
     style: 周期 · 逆向 · 风险控制
     sectors: [All, Credit, Distressed, Real Estate]
     signal_thresholds: {bullish: 6.0, bearish: 4.0}
+    group_chat:
+      mention: ["marks", "马克斯"]
+      room_role: cycle_analyst
+      auto_reply: true
+      intro: "周期定位大师，在别人恐惧时贪婪"
+    triggers:
+      - "/skill augur-marks"
+      - "@marks"
+      - "@马克斯"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: marks
 ---
 
 # Howard Marks — 投资分析 Agent

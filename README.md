@@ -100,8 +100,84 @@
 ```bash
 git clone https://github.com/BruceLanLan/augur.git
 cd augur
-pip install -r requirements.txt
+pip install -e .
+# 或从 PyPI (coming soon)
+# pip install augur-agents
 ```
+
+---
+
+## 🖥️ CLI 命令行
+
+```bash
+# 列出所有投资人
+augur list-personas
+
+# 单投资人分析
+augur analyze AAPL --persona buffett --pe 32 --roe 0.55 --gross-margins 0.46
+
+# 17位大师共识
+augur consensus AAPL --pe 32 --roe 0.55 --gross-margins 0.46
+
+# 启动 MCP Server (供 Hermes/Claude 等调用)
+augur mcp-server
+
+# 启动 REST API
+augur api --port 8900
+
+# 注入投资人灵魂到 Profile
+augur inject-soul --profile my-buffett --persona buffett --format hermes
+```
+
+---
+
+## 🔗 MCP Server 集成
+
+Augur 提供标准 MCP (Model Context Protocol) Server，可供 Hermes、Claude Desktop 等 Agent 系统直接调用。
+
+### 可用工具 (6 Tools)
+
+| 工具 | 说明 |
+|------|------|
+| `augur_analyze` | 单投资人分析指定标的 |
+| `augur_consensus` | 17位大师共识分析 |
+| `augur_list_personas` | 列出所有可用投资人 |
+| `augur_configure` | 运行时配置管理 |
+| `augur_create_persona` | 创建自定义投资人人格 |
+| `augur_debate` | 多Agent辩论模式 |
+
+### Hermes 配置 (~/.hermes/config.yaml)
+
+```yaml
+mcp_servers:
+  augur-agents:
+    command: augur
+    args: [mcp-server]
+    description: "17位投资大师分析系统"
+```
+
+### Claude Desktop 配置 (claude_desktop_config.json)
+
+```json
+{
+  "mcpServers": {
+    "augur-agents": {
+      "command": "augur",
+      "args": ["mcp-server"],
+      "description": "Multi-agent investment analysis with 17 investor personas"
+    }
+  }
+}
+```
+
+配置完成后，在 Hermes/Claude 对话中即可直接调用：
+```
+请用巴菲特框架分析 AAPL，PE=32，毛利率46%，ROE=55%
+```
+
+Agent 会自动调用 `augur_analyze` 工具完成分析。
+
+---
 
 ### Web Dashboard
 
@@ -270,28 +346,39 @@ per_agent:
 ```
 augur/
 │
-├── scanner/                    # 分析引擎
-│   ├── personas/               # 17位投资人人格 Agent
-│   │   ├── base.py             # Agent基类、MarketContext、AgentResponse
-│   │   ├── buffett.py          # Warren Buffett (沃伦·巴菲特)
-│   │   ├── graham.py           # Benjamin Graham (本杰明·格雷厄姆)
-│   │   ├── lynch.py            # Peter Lynch (彼得·林奇)
-│   │   ├── dalio.py            # Ray Dalio (瑞·达利欧)
-│   │   ├── munger.py           # Charlie Munger (查理·芒格)
-│   │   ├── soros.py            # George Soros (乔治·索罗斯)
-│   │   ├── marks.py            # Howard Marks (霍华德·马克斯)
-│   │   ├── cathie_wood.py      # Cathie Wood (凯西·伍德)
-│   │   ├── fisher.py           # Philip Fisher (菲利普·费雪)
-│   │   ├── arps.py             # ARPS (Crypto/黄金宏观)
-│   │   ├── aschenbrenner.py    # Leopold Aschenbrenner
-│   │   ├── dayu.py             # 大宇 (BTCdayu)
-│   │   ├── thiel.py            # Peter Thiel (彼得·蒂尔)
-│   │   ├── duan_yongping.py    # 段永平 (Duan Yongping) 🇨🇳
-│   │   ├── zhang_lei.py        # 张磊 (Zhang Lei/高瓴) 🇨🇳
-│   │   ├── li_lu.py            # 李录 (Li Lu/喜马拉雅) 🇨🇳
-│   │   ├── dan_bin.py          # 但斌 (Dan Bin/东方港湾) 🇨🇳
-│   │   └── registry.py         # Agent注册中心 + DecisionCoordinator
-│   └── persona_loader.py       # YAML自定义人格加载
+├── src/augur/                  # pip 包主模块 (augur-agents)
+│   ├── __init__.py             # 公共符号导出
+│   ├── cli.py                  # Click CLI: 6 commands
+│   ├── mcp_server.py           # MCP Server: 6 tools (stdio mode)
+│   ├── api.py                  # REST API (FastAPI)
+│   ├── config.py               # 运行时配置管理
+│   ├── registry.py             # AgentRegistry + DecisionCoordinator
+│   ├── coordinator.py          # 共识协调器
+│   ├── persona_loader.py       # YAML 自定义人格加载
+│   ├── soul.py                 # Soul Injector - 人格注入引擎
+│   └── personas/               # 17位投资人人格 Agent
+│       ├── base.py             # Agent基类、MarketContext、AgentResponse
+│       ├── buffett.py          # Warren Buffett (沃伦·巴菲特)
+│       ├── graham.py           # Benjamin Graham (本杰明·格雷厄姆)
+│       ├── lynch.py            # Peter Lynch (彼得·林奇)
+│       ├── dalio.py            # Ray Dalio (瑞·达利欧)
+│       ├── munger.py           # Charlie Munger (查理·芒格)
+│       ├── soros.py            # George Soros (乔治·索罗斯)
+│       ├── marks.py            # Howard Marks (霍华德·马克斯)
+│       ├── cathie_wood.py      # Cathie Wood (凯西·伍德)
+│       ├── fisher.py           # Philip Fisher (菲利普·费雪)
+│       ├── arps.py             # ARPS (Crypto/黄金宏观)
+│       ├── aschenbrenner.py    # Leopold Aschenbrenner
+│       ├── dayu.py             # 大宇 (BTCdayu)
+│       ├── thiel.py            # Peter Thiel (彼得·蒂尔)
+│       ├── duan_yongping.py    # 段永平 (Duan Yongping) 🇨🇳
+│       ├── zhang_lei.py        # 张磊 (Zhang Lei/高瓴) 🇨🇳
+│       ├── li_lu.py            # 李录 (Li Lu/喜马拉雅) 🇨🇳
+│       └── dan_bin.py          # 但斌 (Dan Bin/东方港湾) 🇨🇳
+│
+├── scanner/                    # 向后兼容 shim (导入重定向到 src/augur/)
+│   ├── personas/               # → augur.personas.*
+│   └── persona_loader.py       # → augur.persona_loader
 │
 ├── skills/                     # 独立 Skill 封装（agentskills.io 标准）
 │   ├── buffett/SKILL.md        # augur-buffett Skill
@@ -312,16 +399,13 @@ augur/
 │   ├── zhang-lei.md
 │   ├── li-lu.md
 │   ├── ... (17份)
-│   ├── custom/                 # YAML自定义人格
-│   └── evolution/              # 13F持仓数据缓存
-│
-├── scripts/
-│   └── sec_holdings.py         # SEC EDGAR 13F 实时数据获取
+│   └── custom/                 # YAML自定义人格
 │
 ├── dashboard/                  # Bloomberg风格 Web UI
 │   ├── app.py                  # FastAPI + 所有路由
 │   └── templates/              # 首页/股票分析/人格/占位页
 │
+├── pyproject.toml              # pip 包配置 (augur-agents)
 ├── SKILL.md                    # 主 Skill（17位大师统一调度）
 └── README.md                   # 本文件
 ```
@@ -332,6 +416,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v4.0** | 2026-05-22 | 🚀 pip 包化 — `augur-agents` PyPI 包 + CLI 6命令 + MCP Server 6工具 + 运行时配置管理 |
 | **v3.5** | 2026-05-22 | 🎨 Baoyu漫画风格配图 — hero-banner-baoyu + architecture-baoyu + 17投资人漫画头像 |
 | **v3.4** | 2026-05-21 | 🔌 Skill封装 — 17个独立Agent Skill + 模型配置 + README全面升级 |
 | **v3.3** | 2026-05-21 | 📊 FastAPI dashboard 完整实现（首页/股票分析/人格/占位页） |
@@ -354,9 +439,10 @@ augur/
 - [x] **v3.2**: 4位中国投资人（段永平/张磊/李录/但斌）
 - [x] **v3.3**: Bloomberg风格 Web Dashboard（全5页路由）
 - [x] **v3.4**: 17个独立 Skill 封装 + LLM 模型配置
-- [ ] **v4.0**: 日频 SEC 数据自动更新 + Telegram/Slack Bot
-- [ ] **v4.1**: 信号监控 Watchlist + 批量扫描 + 推送
-- [ ] **v4.2**: Docker 容器化 + 一键部署文档
+- [x] **v4.0**: pip 包化 `augur-agents` + CLI 6命令 + MCP Server + Soul Injector
+- [ ] **v4.1**: Group Chat 增强 + 多Agent实时辩论
+- [ ] **v4.2**: UI/UX 优化 + 产品体验完善
+- [ ] **v4.3**: Docker 容器化 + 一键部署文档
 - [ ] **v5.0**: 历史回测系统 + Agent IC 实盘追踪
 
 ---

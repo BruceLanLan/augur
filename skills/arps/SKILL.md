@@ -14,6 +14,19 @@ metadata:
     style: Crypto · 黄金 · 宏观避险
     sectors: [Cryptocurrency, Basic Materials, Macro, Fixed Income]
     signal_thresholds: {bullish: 6.0, bearish: 4.0}
+    group_chat:
+      mention: ["arps"]
+      room_role: crypto_macro
+      auto_reply: true
+      intro: "数字资产与黄金宏观联动分析师"
+    triggers:
+      - "/skill augur-arps"
+      - "@arps"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: arps
 ---
 
 # ARPS — 投资分析 Agent

@@ -14,6 +14,20 @@ metadata:
     style: 从0到1 · 垄断 · 秘密驱动
     sectors: [Technology, Financials, Defense, AI]
     signal_thresholds: {bullish: 7.0, bearish: 4.5}
+    group_chat:
+      mention: ["thiel", "蒂尔"]
+      room_role: monopoly_investor
+      auto_reply: true
+      intro: "从0到1垄断投资者，寻找拥有秘密的垄断企业"
+    triggers:
+      - "/skill augur-thiel"
+      - "@thiel"
+      - "@蒂尔"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: thiel
 ---
 
 # Peter Thiel — 投资分析 Agent

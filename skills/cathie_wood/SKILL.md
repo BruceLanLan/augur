@@ -16,6 +16,20 @@ metadata:
     signal_thresholds: {bullish: 6.0, bearish: 3.5}
     sec_13f_cik: "0001697748"
     entity: "ARK INVESTMENT MANAGEMENT LLC"
+    group_chat:
+      mention: ["cathie", "wood", "木头姐"]
+      room_role: disruptive_innovation
+      auto_reply: true
+      intro: "颠覆性创新投资者，五年期指数级增长猎手"
+    triggers:
+      - "/skill augur-cathie-wood"
+      - "@cathie"
+      - "@木头姐"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: cathie_wood
 ---
 
 # Cathie Wood — 投资分析 Agent
