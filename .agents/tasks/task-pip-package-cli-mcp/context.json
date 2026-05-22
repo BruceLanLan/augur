@@ -1,0 +1,26 @@
+{
+  "project_type": "Python multi-agent investment analysis system with FastAPI dashboard",
+  "language": "Python 3.8+",
+  "build_system": "pip (no pyproject.toml yet - creating one as part of this task)",
+  "test_framework": "No formal test framework yet - will add basic tests with pytest",
+  "build_command": "pip install -e .",
+  "test_command": "python -m pytest tests/ -v",
+  "verification_instructions": "1. pip install -e . (editable install), 2. augur --help (CLI works), 3. augur list-personas (shows 17+ personas), 4. python -c 'from augur.registry import AgentRegistry; r = AgentRegistry(); print(len(r.get_all()))' (imports work), 5. python -c 'from scanner.personas.registry import AgentRegistry' (backward compat shims work)",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e . (once pyproject.toml exists)",
+  "environment_constraints": "Python 3.9.25 available. pip available. No Docker needed for this task. Network access for pip install.",
+  "contribution_requirements": "No formal CONTRIBUTING.md. Code uses Chinese comments and docstrings. Maintain backward compatibility with scanner.* imports.",
+  "key_patterns": "1. All agents inherit BaseAgent and implement analyze(context: MarketContext) -> AgentResponse. 2. AgentRegistry auto-discovers all 17 hardcoded agents + YAML personas from personas/custom/. 3. DecisionCoordinator orchestrates multi-agent analysis and consensus. 4. scanner/__init__.py re-exports all public symbols. 5. dashboard/app.py uses 'from scanner.personas.registry import ...' and 'from scanner.personas.base import ...'",
+  "relevant_files": [
+    "scanner/personas/base.py",
+    "scanner/personas/registry.py",
+    "scanner/persona_loader.py",
+    "scanner/__init__.py",
+    "scanner/personas/__init__.py",
+    "dashboard/app.py",
+    "config/agents.yaml",
+    "personas/custom/da-yu.yaml",
+    "scanner/personas/buffett.py"
+  ],
+  "directory_structure": "scanner/ - analysis engine with personas/*.py (17 agents + base + registry), persona_loader.py. dashboard/ - FastAPI web app. config/ - agents.yaml model config. personas/ - markdown docs + custom/*.yaml. skills/ - SKILL.md files per agent. scripts/ - data fetchers."
+}

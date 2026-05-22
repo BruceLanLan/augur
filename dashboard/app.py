@@ -28,8 +28,12 @@ except ImportError:
     print("Missing dependencies. Run: pip install fastapi uvicorn jinja2")
     sys.exit(1)
 
-from scanner.personas.registry import AgentRegistry, DecisionCoordinator
-from scanner.personas.base import MarketContext
+try:
+    from augur.registry import AgentRegistry, DecisionCoordinator
+    from augur.personas.base import MarketContext
+except ImportError:
+    from scanner.personas.registry import AgentRegistry, DecisionCoordinator
+    from scanner.personas.base import MarketContext
 
 app = FastAPI(
     title="Augur — 多智能体投资分析",

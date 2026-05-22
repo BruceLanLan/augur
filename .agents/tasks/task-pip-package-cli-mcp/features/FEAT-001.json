@@ -1,0 +1,44 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Create src/augur/ package structure with pyproject.toml, move/refactor all core modules from scanner/ into src/augur/, create backward compatibility shims in scanner/, implement CLI with click, implement MCP server with mcp package, implement config management, update dashboard imports. This is the complete Phase 1 restructuring.",
+  "status": "in_progress",
+  "steps": [
+    "Step 1: Create pyproject.toml at repo root with package name 'augur-agents', src layout, entry points: augur=augur.cli:main, dependencies: click, fastapi, uvicorn, pyyaml, mcp (from anthropic). Python >= 3.8.",
+    "Step 2: Create src/augur/__init__.py that re-exports all public symbols (BaseAgent, MarketContext, AgentResponse, SignalType, DebateMessage, AgentRegistry, DecisionCoordinator, DebateProtocol).",
+    "Step 3: Create src/augur/personas/ directory. Copy all 17 agent files from scanner/personas/ (arps.py, aschenbrenner.py, buffett.py, cathie_wood.py, dalio.py, dan_bin.py, dayu.py, duan_yongping.py, fisher.py, graham.py, li_lu.py, lynch.py, marks.py, munger.py, soros.py, thiel.py, zhang_lei.py) plus base.py and __init__.py. Update internal imports from 'scanner.personas.base' to 'augur.personas.base' etc.",
+    "Step 4: Create src/augur/registry.py - refactored from scanner/personas/registry.py. Update all imports to use augur.personas.* instead of scanner.personas.*. Keep AgentRegistry, DecisionCoordinator, DebateProtocol, and all global convenience functions.",
+    "Step 5: Create src/augur/persona_loader.py - refactored from scanner/persona_loader.py. Update imports to use augur.personas.base.",
+    "Step 6: Create src/augur/coordinator.py - extract DecisionCoordinator from registry.py into its own module for cleaner architecture (re-export from registry.py for backward compat).",
+    "Step 7: Create src/augur/config.py - runtime config management. Load from ~/.augur/config.yaml if exists, else fallback to config/agents.yaml (relative to package root). Provide get_config(), set_config(key, value), save_config() API.",
+    "Step 8: Create src/augur/cli.py - Click-based CLI with commands: analyze (TICKER --persona PERSONA_ID --pe X --roe X ...), consensus (TICKER --pe X ...), list-personas, mcp-server, api (--port 8900), inject-soul (skeleton). Use augur.registry and augur.personas for analysis logic.",
+    "Step 9: Create src/augur/mcp_server.py - MCP Server using mcp package in stdio mode. 6 tools: augur_analyze, augur_consensus, augur_list_personas, augur_configure, augur_create_persona, augur_debate. Each tool calls into augur.registry/coordinator.",
+    "Step 10: Create src/augur/api.py - refactored REST API from dashboard/app.py. Import from augur.registry and augur.personas instead of scanner.*. Keep all existing routes.",
+    "Step 11: Create src/augur/soul.py - Soul injector skeleton (just the interface/class with NotImplementedError for Phase 2).",
+    "Step 12: Create backward compatibility shims in scanner/. Replace scanner/__init__.py to re-export from augur. Replace scanner/personas/__init__.py to re-export from augur.personas. Replace scanner/personas/base.py to import * from augur.personas.base. Replace scanner/personas/registry.py to import * from augur.registry. Replace scanner/persona_loader.py to import * from augur.persona_loader. For each of the 17 agent files in scanner/personas/*.py, replace with a shim that imports from augur.personas.<module>.",
+    "Step 13: Update dashboard/app.py to import from augur package (from augur.registry import AgentRegistry, DecisionCoordinator; from augur.personas.base import MarketContext). Keep backward compat - if augur import fails, fall back to scanner import.",
+    "Step 14: Create tests/test_imports.py - verify both augur.* and scanner.* imports work. Create tests/test_cli.py - verify CLI commands are registered and --help works. Create tests/test_registry.py - verify AgentRegistry loads all 17+ agents.",
+    "Step 15: Run pip install -e . and verify: augur --help works, augur list-personas shows agents, python -c 'from scanner.personas.registry import AgentRegistry' still works."
+  ],
+  "acceptance_criteria": [
+    "pyproject.toml exists at repo root with correct metadata and entry points",
+    "src/augur/ package exists with all modules (cli.py, mcp_server.py, api.py, config.py, registry.py, coordinator.py, persona_loader.py, soul.py, personas/)",
+    "All 17 agent classes are importable from augur.personas (e.g., from augur.personas.buffett import BuffettAgent)",
+    "CLI entry point 'augur' works: augur --help, augur list-personas, augur analyze AAPL --pe 32",
+    "MCP server module exists and can be imported without errors",
+    "Backward compatibility: 'from scanner.personas.registry import AgentRegistry' still works",
+    "Backward compatibility: 'from scanner.personas.base import MarketContext' still works",
+    "dashboard/app.py imports from augur package",
+    "AgentRegistry loads all 17+ agents (hardcoded + YAML)",
+    "Config module loads from config/agents.yaml correctly"
+  ],
+  "verification": [
+    "pip install -e /projects/sandbox/augur && augur --help",
+    "python3 -c \"from augur.registry import AgentRegistry; r = AgentRegistry(); assert len(r.get_all()) >= 17, f'Only {len(r.get_all())} agents'; print(f'OK: {len(r.get_all())} agents loaded')\"",
+    "python3 -c \"from scanner.personas.registry import AgentRegistry; from scanner.personas.base import MarketContext; print('Backward compat OK')\"",
+    "augur list-personas",
+    "python3 -m pytest /projects/sandbox/augur/tests/ -v"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
