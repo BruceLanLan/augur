@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Add Config REST API endpoints to dashboard/app.py and build a fully functional Settings page with model management UI",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In dashboard/app.py, add the following API endpoints using src/augur/config.py (get_config, set_config, save_config): GET /api/config (return full config), PUT /api/config (update full config, accept JSON body), GET /api/config/persona/{agent_id} (get model config for one persona), PUT /api/config/persona/{agent_id} (update model for one persona, accept JSON body with 'model' field), GET /api/models (return available_models from config), POST /api/custom-persona (accept YAML content, save to personas/custom/), GET /api/schema/persona (return persona YAML schema definition)",
     "Update dashboard/app.py settings_page route to pass personas list and available_models data to the template context",
@@ -24,5 +24,5 @@
     "python -c \"from augur.config import get_config; c = get_config(); print('Config OK:', 'per_agent' in c)\""
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 48 tests pass. jinja2 and httpx needed to be installed (not in pyproject.toml dependencies but available). TestClient works without async. Pydantic BaseModel imported from pydantic (already available via fastapi dependency)."
 }
