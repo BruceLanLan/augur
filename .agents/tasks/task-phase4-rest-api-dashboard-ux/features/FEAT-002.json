@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Enhance Dashboard UI/UX - improve personas page (card grid + avatars + expand + filter), index page (quick analysis widget + system status), stocks page polish, and comprehensive CSS improvements",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Rewrite dashboard/templates/personas.html: implement a card-based grid layout with improved styling. Each card shows: agent avatar (from /docs/images/avatars/{id}.svg), agent name, style keywords, philosophy summary, current model assignment, country flag for Chinese investors. Cards should be expandable (click to show full detail including all philosophy items and scoring weights). Add a search/filter bar at top that filters personas by name or style text. Use vanilla JS for expand/collapse and filter logic.",
     "Enhance dashboard/templates/index.html: add a 'Quick Analysis' widget section with a mini form (ticker input + analyze button) that calls /api/analyze/{ticker} and shows a compact consensus result (signal badge + score) inline without navigating away. Add a 'System Status' card showing agent count, config file status, and available model count. Keep the existing hero section and featured personas but improve spacing and responsiveness.",
@@ -24,5 +24,5 @@
     "python -c \"import pathlib; css = pathlib.Path('dashboard/static/css/baoyu.css').read_text(); assert '@media' in css; assert 'toast' in css; print('CSS OK')\""
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 48 tests pass. Enhanced _persona_meta() to include model, scoring_weights, and is_chinese fields (backward compatible - settings page still works fine since it overrides current_model separately). Toast utility added to base.html as showToast(message, type). CSS additions are additive and do not conflict with existing baoyu-theme styles."
 }
