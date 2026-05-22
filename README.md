@@ -640,6 +640,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v4.5** | 2026-05-23 | 📊 信号监控页 + 自定义投资人 UI 创建器 + Watchlist API + requirements.txt |
 | **v4.4** | 2026-05-22 | 🎨 Dashboard UI 全面升级 - Bloomberg Terminal 风格 + Hermes 侧边栏布局 |
 | **v4.3** | 2026-05-22 | 💬 Slack Bot (Socket Mode + HTTP) + Cron Slack 推送 |
 | **v4.2** | 2026-05-22 | 📱 Telegram Bot + Cron 定时共识分析 + Watchlist 管理 |
@@ -672,7 +673,8 @@ augur/
 - [x] **v4.2**: Telegram Bot + Cron 定时共识分析 + Watchlist 管理
 - [x] **v4.3**: Slack Bot (Socket Mode + HTTP Mode) + Cron Slack 推送
 - [x] **v4.4**: Bloomberg Terminal UI + Hermes 侧边栏布局 (纯CSS, 无Bootstrap)
-- [ ] **v4.5**: WeChat/微信 + Lark/飞书 Bot 多平台适配
+- [x] **v4.5**: 信号监控页 + 自定义投资人 UI 创建器 + Watchlist API + requirements.txt
+- [ ] **v4.6**: WeChat/微信 + Lark/飞书 Bot 多平台适配
 - [ ] **v5.0**: Docker 容器化 + 一键部署文档
 - [ ] **v5.1**: 历史回测系统 + Agent IC 实盘追踪
 

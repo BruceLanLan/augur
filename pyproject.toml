@@ -42,6 +42,9 @@ all = [
 [project.scripts]
 augur = "augur.cli:main"
 
+[project.entry-points."mcp"]
+augur-agents = "augur.mcp_server:create_server"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

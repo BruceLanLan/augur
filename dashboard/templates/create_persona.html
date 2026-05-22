@@ -1,0 +1,309 @@
+{% extends "base.html" %}
+{% block title %}创建自定义投资人 - Augur{% endblock %}
+{% block content %}
+
+<h2 style="color:var(--accent-orange); margin-bottom:4px;">创建自定义投资人</h2>
+<p class="text-muted" style="font-size:0.82rem; margin-bottom:20px;">无需编写 YAML，通过表单创建属于你的投资策略 Agent</p>
+
+<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start;">
+    <!-- Form Panel -->
+    <div class="card" style="padding:20px;">
+        <div class="data-label" style="margin-bottom:16px;">基本信息</div>
+
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:0.78rem; color:var(--text-secondary); margin-bottom:4px;">Agent ID <span style="color:var(--signal-sell);">*</span></label>
+            <input type="text" id="cp-agent-id" placeholder="my_strategy (小写字母、数字、下划线、连字符)"
+                   style="width:100%; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem;"
+                   oninput="updatePreview()">
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:0.78rem; color:var(--text-secondary); margin-bottom:4px;">显示名称 <span style="color:var(--signal-sell);">*</span></label>
+            <input type="text" id="cp-name" placeholder="我的量化策略"
+                   style="width:100%; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm); font-size:0.85rem;"
+                   oninput="updatePreview()">
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:0.78rem; color:var(--text-secondary); margin-bottom:4px;">人格身份描述 <span style="color:var(--signal-sell);">*</span></label>
+            <textarea id="cp-identity" rows="3" placeholder="描述这位投资人的身份、背景和核心理念..."
+                      style="width:100%; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm); font-size:0.85rem; resize:vertical;"
+                      oninput="updatePreview()"></textarea>
+        </div>
+
+        <div style="margin-bottom:12px;">
+            <label style="display:block; font-size:0.78rem; color:var(--text-secondary); margin-bottom:4px;">投资哲学 (逗号分隔)</label>
+            <input type="text" id="cp-philosophy" placeholder="价值投资, 长期持有, 安全边际"
+                   style="width:100%; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm); font-size:0.85rem;"
+                   oninput="updatePreview()">
+        </div>
+
+        <div class="data-label" style="margin:20px 0 12px;">评分权重</div>
+        <div id="weights-container">
+            <div class="weight-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+                <input type="text" class="weight-key" placeholder="维度 (如 value)" value="value"
+                       style="flex:1; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;"
+                       oninput="updatePreview()">
+                <input type="number" class="weight-val" placeholder="0.0-1.0" value="0.3" step="0.05" min="0" max="1"
+                       style="width:80px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;"
+                       oninput="updatePreview()">
+                <button onclick="removeWeightRow(this)" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1.1rem; padding:0 4px;">&times;</button>
+            </div>
+            <div class="weight-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+                <input type="text" class="weight-key" placeholder="维度" value="growth"
+                       style="flex:1; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;"
+                       oninput="updatePreview()">
+                <input type="number" class="weight-val" placeholder="0.0-1.0" value="0.3" step="0.05" min="0" max="1"
+                       style="width:80px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;"
+                       oninput="updatePreview()">
+                <button onclick="removeWeightRow(this)" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1.1rem; padding:0 4px;">&times;</button>
+            </div>
+            <div class="weight-row" style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+                <input type="text" class="weight-key" placeholder="维度" value="momentum"
+                       style="flex:1; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;"
+                       oninput="updatePreview()">
+                <input type="number" class="weight-val" placeholder="0.0-1.0" value="0.4" step="0.05" min="0" max="1"
+                       style="width:80px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;"
+                       oninput="updatePreview()">
+                <button onclick="removeWeightRow(this)" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1.1rem; padding:0 4px;">&times;</button>
+            </div>
+        </div>
+        <button onclick="addWeightRow()" style="background:var(--bg-primary); border:1px dashed var(--border-color); color:var(--text-secondary); padding:6px 12px; border-radius:var(--radius-sm); cursor:pointer; font-size:0.78rem; width:100%;">+ 添加维度</button>
+
+        <div class="data-label" style="margin:20px 0 12px;">评分规则 (factors)</div>
+        <div id="factors-container">
+            <div class="factor-row" style="margin-bottom:8px;">
+                <div style="display:flex; gap:8px; align-items:center;">
+                    <input type="text" class="factor-name" placeholder="因子名 (如 value)" value="value"
+                           style="width:100px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;"
+                           oninput="updatePreview()">
+                    <span class="text-muted" style="font-size:0.75rem;">base:</span>
+                    <input type="number" class="factor-base" placeholder="5" value="5"
+                           style="width:50px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;"
+                           oninput="updatePreview()">
+                    <button onclick="removeFactorRow(this)" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1.1rem; padding:0 4px;">&times;</button>
+                </div>
+                <div class="factor-rules" style="margin-left:20px; margin-top:4px;">
+                    <div style="display:flex; gap:6px; margin-bottom:4px; align-items:center;">
+                        <span class="text-muted" style="font-size:0.72rem; width:16px;">if:</span>
+                        <input type="text" class="rule-if" placeholder="pe < 15" value="pe < 15"
+                               style="flex:1; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.78rem;"
+                               oninput="updatePreview()">
+                        <span class="text-muted" style="font-size:0.72rem; width:28px;">add:</span>
+                        <input type="number" class="rule-add" placeholder="2" value="2"
+                               style="width:50px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.78rem;"
+                               oninput="updatePreview()">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button onclick="addFactorRow()" style="background:var(--bg-primary); border:1px dashed var(--border-color); color:var(--text-secondary); padding:6px 12px; border-radius:var(--radius-sm); cursor:pointer; font-size:0.78rem; width:100%;">+ 添加因子</button>
+
+        <div style="margin-top:24px;">
+            <button class="btn btn-primary" onclick="submitPersona()" id="submit-btn" style="width:100%; padding:10px;">
+                &#x2714; 注册投资人
+            </button>
+        </div>
+
+        <div id="submit-result" style="margin-top:12px; display:none;"></div>
+    </div>
+
+    <!-- Preview Panel -->
+    <div class="card" style="padding:20px; position:sticky; top:16px;">
+        <div class="data-label" style="margin-bottom:12px;">YAML 预览</div>
+        <pre id="yaml-preview" style="background:var(--bg-primary); border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:12px; font-family:var(--font-data); font-size:0.78rem; color:var(--text-secondary); overflow-x:auto; max-height:500px; overflow-y:auto; white-space:pre-wrap; word-break:break-all; margin:0;">agent_id: my_strategy
+name: "我的量化策略"
+identity: "描述投资人身份..."
+philosophy:
+  - "价值投资"
+  - "长期持有"
+scoring_weights:
+  value: 0.3
+  growth: 0.3
+  momentum: 0.4
+factors:
+  value:
+    base: 5
+    rules:
+      - {if: "pe < 15", add: 2}</pre>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function updatePreview() {
+    var agentId = document.getElementById('cp-agent-id').value.trim() || 'my_strategy';
+    var name = document.getElementById('cp-name').value.trim() || '我的量化策略';
+    var identity = document.getElementById('cp-identity').value.trim() || '描述投资人身份...';
+    var philosophy = document.getElementById('cp-philosophy').value.trim();
+
+    var yaml = 'agent_id: ' + agentId + '\n';
+    yaml += 'name: "' + name + '"\n';
+    yaml += 'identity: "' + identity.replace(/"/g, '\\"').replace(/\n/g, ' ') + '"\n';
+
+    if (philosophy) {
+        yaml += 'philosophy:\n';
+        var items = philosophy.split(',');
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i].trim();
+            if (item) yaml += '  - "' + item + '"\n';
+        }
+    }
+
+    // Scoring weights
+    var weightKeys = document.querySelectorAll('.weight-key');
+    var weightVals = document.querySelectorAll('.weight-val');
+    var hasWeights = false;
+    var weightsYaml = 'scoring_weights:\n';
+    for (var i = 0; i < weightKeys.length; i++) {
+        var k = weightKeys[i].value.trim();
+        var v = weightVals[i].value.trim();
+        if (k && v) {
+            weightsYaml += '  ' + k + ': ' + v + '\n';
+            hasWeights = true;
+        }
+    }
+    if (hasWeights) yaml += weightsYaml;
+
+    // Factors
+    var factorRows = document.querySelectorAll('.factor-row');
+    var hasFactors = false;
+    var factorsYaml = 'factors:\n';
+    for (var i = 0; i < factorRows.length; i++) {
+        var row = factorRows[i];
+        var fname = row.querySelector('.factor-name').value.trim();
+        var fbase = row.querySelector('.factor-base').value.trim();
+        if (!fname) continue;
+        hasFactors = true;
+        factorsYaml += '  ' + fname + ':\n';
+        factorsYaml += '    base: ' + (fbase || '5') + '\n';
+        var ruleIfs = row.querySelectorAll('.rule-if');
+        var ruleAdds = row.querySelectorAll('.rule-add');
+        if (ruleIfs.length > 0) {
+            factorsYaml += '    rules:\n';
+            for (var j = 0; j < ruleIfs.length; j++) {
+                var rif = ruleIfs[j].value.trim();
+                var radd = ruleAdds[j].value.trim();
+                if (rif && radd) {
+                    factorsYaml += '      - {if: "' + rif + '", add: ' + radd + '}\n';
+                }
+            }
+        }
+    }
+    if (hasFactors) yaml += factorsYaml;
+
+    document.getElementById('yaml-preview').textContent = yaml;
+}
+
+function addWeightRow() {
+    var container = document.getElementById('weights-container');
+    var div = document.createElement('div');
+    div.className = 'weight-row';
+    div.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+    div.innerHTML = '<input type="text" class="weight-key" placeholder="维度" style="flex:1; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;" oninput="updatePreview()">' +
+        '<input type="number" class="weight-val" placeholder="0.0-1.0" step="0.05" min="0" max="1" style="width:80px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;" oninput="updatePreview()">' +
+        '<button onclick="removeWeightRow(this)" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1.1rem; padding:0 4px;">&times;</button>';
+    container.appendChild(div);
+}
+
+function removeWeightRow(btn) {
+    btn.parentElement.remove();
+    updatePreview();
+}
+
+function addFactorRow() {
+    var container = document.getElementById('factors-container');
+    var div = document.createElement('div');
+    div.className = 'factor-row';
+    div.style.cssText = 'margin-bottom:8px;';
+    div.innerHTML = '<div style="display:flex; gap:8px; align-items:center;">' +
+        '<input type="text" class="factor-name" placeholder="因子名" style="width:100px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;" oninput="updatePreview()">' +
+        '<span class="text-muted" style="font-size:0.75rem;">base:</span>' +
+        '<input type="number" class="factor-base" placeholder="5" value="5" style="width:50px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;" oninput="updatePreview()">' +
+        '<button onclick="addRuleToFactor(this)" style="background:none; border:1px solid var(--border-color); color:var(--text-secondary); cursor:pointer; font-size:0.72rem; padding:4px 8px; border-radius:var(--radius-sm);">+规则</button>' +
+        '<button onclick="removeFactorRow(this)" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1.1rem; padding:0 4px;">&times;</button>' +
+        '</div>' +
+        '<div class="factor-rules" style="margin-left:20px; margin-top:4px;">' +
+        '<div style="display:flex; gap:6px; margin-bottom:4px; align-items:center;">' +
+        '<span class="text-muted" style="font-size:0.72rem; width:16px;">if:</span>' +
+        '<input type="text" class="rule-if" placeholder="condition" style="flex:1; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.78rem;" oninput="updatePreview()">' +
+        '<span class="text-muted" style="font-size:0.72rem; width:28px;">add:</span>' +
+        '<input type="number" class="rule-add" placeholder="2" value="2" style="width:50px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.78rem;" oninput="updatePreview()">' +
+        '</div>' +
+        '</div>';
+    container.appendChild(div);
+    updatePreview();
+}
+
+function removeFactorRow(btn) {
+    btn.closest('.factor-row').remove();
+    updatePreview();
+}
+
+function addRuleToFactor(btn) {
+    var factorRow = btn.closest('.factor-row');
+    var rulesContainer = factorRow.querySelector('.factor-rules');
+    var ruleDiv = document.createElement('div');
+    ruleDiv.style.cssText = 'display:flex; gap:6px; margin-bottom:4px; align-items:center;';
+    ruleDiv.innerHTML = '<span class="text-muted" style="font-size:0.72rem; width:16px;">if:</span>' +
+        '<input type="text" class="rule-if" placeholder="condition" style="flex:1; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.78rem;" oninput="updatePreview()">' +
+        '<span class="text-muted" style="font-size:0.72rem; width:28px;">add:</span>' +
+        '<input type="number" class="rule-add" placeholder="2" style="width:50px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.78rem;" oninput="updatePreview()">' +
+        '<button onclick="this.parentElement.remove(); updatePreview();" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:0.9rem; padding:0 2px;">&times;</button>';
+    rulesContainer.appendChild(ruleDiv);
+    updatePreview();
+}
+
+function submitPersona() {
+    var agentId = document.getElementById('cp-agent-id').value.trim();
+    var name = document.getElementById('cp-name').value.trim();
+    var identity = document.getElementById('cp-identity').value.trim();
+
+    if (!agentId) { showToast('请输入 Agent ID', 'warning'); return; }
+    if (!name) { showToast('请输入显示名称', 'warning'); return; }
+    if (!identity) { showToast('请输入人格描述', 'warning'); return; }
+    if (!/^[a-z0-9_-]+$/.test(agentId)) {
+        showToast('Agent ID 只能包含小写字母、数字、下划线和连字符', 'warning');
+        return;
+    }
+
+    var yamlContent = document.getElementById('yaml-preview').textContent;
+    var btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '注册中...';
+
+    fetch('/api/custom-persona', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ agent_id: agentId, yaml_content: yamlContent })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        btn.disabled = false;
+        btn.innerHTML = '&#x2714; 注册投资人';
+        if (data.status === 'ok') {
+            showToast('投资人 "' + name + '" 注册成功!');
+            var resultDiv = document.getElementById('submit-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<div style="background:var(--bg-primary); border:1px solid var(--signal-buy); border-radius:var(--radius-sm); padding:12px;">' +
+                '<div style="color:var(--signal-buy); font-weight:600; margin-bottom:4px;">&#x2713; 注册成功</div>' +
+                '<div style="font-size:0.78rem; color:var(--text-secondary);">Agent ID: <span style="font-family:var(--font-data); color:var(--text-primary);">' + agentId + '</span></div>' +
+                '<div style="font-size:0.78rem; color:var(--text-secondary);">保存路径: <span style="font-family:var(--font-data); color:var(--text-primary);">' + data.path + '</span></div>' +
+                '</div>';
+        } else {
+            showToast(data.detail || '注册失败', 'error');
+        }
+    })
+    .catch(function(e) {
+        btn.disabled = false;
+        btn.innerHTML = '&#x2714; 注册投资人';
+        showToast('注册失败: ' + e.message, 'error');
+    });
+}
+
+// Initialize preview on load
+document.addEventListener('DOMContentLoaded', updatePreview);
+</script>
+{% endblock %}

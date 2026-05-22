@@ -179,6 +179,14 @@ async def settings_page(request: Request):
     })
 
 
+@app.get("/create-persona", response_class=HTMLResponse)
+async def create_persona_page(request: Request):
+    return templates.TemplateResponse("create_persona.html", {
+        "request": request,
+        "title": "创建自定义投资人",
+    })
+
+
 # ============ API Routes ============
 
 @app.get("/api/personas")
@@ -367,6 +375,103 @@ async def api_persona_schema():
         },
         "required": ["agent_id", "name", "identity"],
     }
+
+
+# ============ Watchlist API Routes ============
+
+class WatchlistAddBody(BaseModel):
+    """Request body for adding ticker to watchlist."""
+    ticker: str
+    pe: Optional[float] = None
+    pb: Optional[float] = None
+    roe: Optional[float] = None
+    gross_margins: Optional[float] = None
+    revenue_growth: Optional[float] = None
+    debt_ratio: Optional[float] = None
+    fcf: Optional[float] = None
+    market_cap: Optional[float] = None
+    price: Optional[float] = None
+
+
+@app.get("/api/watchlist")
+async def api_get_watchlist():
+    """Get current watchlist from ~/.augur/watchlist.yaml"""
+    from augur.cron import load_watchlist
+    config = load_watchlist()
+    return {
+        "watchlist": config.get("watchlist", []),
+        "schedule": config.get("schedule", {}),
+    }
+
+
+@app.post("/api/watchlist/add")
+async def api_add_to_watchlist(body: WatchlistAddBody):
+    """Add ticker to watchlist"""
+    from augur.cron import add_to_watchlist
+    # Validate ticker
+    if not re.match(r'^[A-Za-z0-9.\-]+$', body.ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format")
+    metrics = {}
+    for field in ["pe", "pb", "roe", "gross_margins", "revenue_growth", "debt_ratio", "fcf", "market_cap", "price"]:
+        val = getattr(body, field, None)
+        if val is not None:
+            metrics[field] = val
+    config = add_to_watchlist(body.ticker.upper(), metrics if metrics else None)
+    return {"status": "ok", "ticker": body.ticker.upper(), "watchlist": config.get("watchlist", [])}
+
+
+@app.delete("/api/watchlist/{ticker}")
+async def api_remove_from_watchlist(ticker: str):
+    """Remove ticker from watchlist"""
+    from augur.cron import remove_from_watchlist
+    removed = remove_from_watchlist(ticker.upper())
+    if not removed:
+        raise HTTPException(status_code=404, detail=f"Ticker '{ticker.upper()}' not found in watchlist")
+    return {"status": "ok", "ticker": ticker.upper(), "message": "已从自选股移除"}
+
+
+@app.post("/api/watchlist/run")
+async def api_run_watchlist_analysis():
+    """Run consensus analysis on all watchlist tickers"""
+    from augur.cron import load_watchlist
+    from augur.personas.base import MarketContext
+
+    config = load_watchlist()
+    watchlist = config.get("watchlist", [])
+
+    if not watchlist:
+        return {"status": "empty", "message": "自选股列表为空", "results": []}
+
+    coordinator = get_coordinator()
+    all_results = []
+
+    for item in watchlist:
+        ticker = item.get("ticker", "")
+        if not ticker:
+            continue
+
+        ctx_kwargs = {"ticker": ticker.upper()}
+        for key in ["pe", "pb", "roe", "gross_margins", "revenue_growth",
+                    "debt_ratio", "fcf", "market_cap", "price"]:
+            if key in item:
+                ctx_kwargs[key] = item[key]
+
+        ctx = MarketContext(**ctx_kwargs)
+        results = coordinator.analyze_with_all(ctx)
+        consensus = coordinator.get_consensus(results, ticker=ticker, context=ctx)
+
+        all_results.append({
+            "ticker": ticker,
+            "signal": consensus.signal.value,
+            "score": round(consensus.score, 1),
+            "confidence": round(consensus.confidence, 2) if hasattr(consensus, 'confidence') else 0.0,
+            "agent_count": len(results),
+            "buy_count": sum(1 for r in results.values() if r.signal.value == "buy"),
+            "sell_count": sum(1 for r in results.values() if r.signal.value == "sell"),
+            "hold_count": sum(1 for r in results.values() if r.signal.value == "hold"),
+        })
+
+    return {"status": "ok", "results": all_results}
 
 
 @app.get("/health")
