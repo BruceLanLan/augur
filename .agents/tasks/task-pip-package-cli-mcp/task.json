@@ -1,7 +1,14 @@
 {
   "task_id": "task-pip-package-cli-mcp",
   "task_description": "Restructure Augur into a pip-installable package (augur-agents) with CLI entry point, MCP Server, and backward compatibility shims. Phase 1 of the Augur restructuring.",
-  "status": "in_progress",
+  "status": "completed",
   "feature_order": ["FEAT-001"],
-  "blocked_reason": null
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "pass",
+    "test_quality": "pass",
+    "docker_build": "skipped",
+    "summary": "pip install -e . succeeds, augur CLI works (--help, list-personas, analyze, consensus all verified), 41 tests pass, backward compatibility imports work (scanner.personas.* still importable), 17 agents load correctly."
+  }
 }
