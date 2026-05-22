@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  # Dashboard + API (默认)
+  dashboard:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - augur-config:/root/.augur
+      - ./config:/app/config
+    environment:
+      - AUGUR_CONFIG=/app/config/agents.yaml
+    command: ["python", "-m", "dashboard.app", "--port", "8000", "--cors"]
+    restart: unless-stopped
+
+  # REST API (独立端口)
+  api:
+    build: .
+    ports:
+      - "8900:8900"
+    volumes:
+      - augur-config:/root/.augur
+      - ./config:/app/config
+    command: ["augur", "api", "--port", "8900"]
+    restart: unless-stopped
+    profiles: ["full"]
+
+  # MCP Server (stdio, for integration)
+  mcp:
+    build: .
+    stdin_open: true
+    tty: true
+    volumes:
+      - augur-config:/root/.augur
+      - ./config:/app/config
+    command: ["augur", "mcp-server"]
+    profiles: ["mcp"]
+
+  # Telegram Bot
+  telegram:
+    build: .
+    volumes:
+      - augur-config:/root/.augur
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+    command: ["augur", "telegram"]
+    restart: unless-stopped
+    profiles: ["telegram"]
+
+  # Slack Bot
+  slack:
+    build: .
+    volumes:
+      - augur-config:/root/.augur
+    environment:
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
+    command: ["augur", "slack"]
+    restart: unless-stopped
+    profiles: ["slack"]
+
+  # WeChat Bot (企业微信)
+  wechat:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - augur-config:/root/.augur
+    environment:
+      - WECHAT_CORP_ID=${WECHAT_CORP_ID}
+      - WECHAT_CORP_SECRET=${WECHAT_CORP_SECRET}
+      - WECHAT_AGENT_ID=${WECHAT_AGENT_ID}
+      - WECHAT_TOKEN=${WECHAT_TOKEN}
+      - WECHAT_AES_KEY=${WECHAT_AES_KEY}
+    command: ["augur", "wechat", "--mode", "wecom", "--port", "8080"]
+    restart: unless-stopped
+    profiles: ["wechat"]
+
+  # Lark/飞书 Bot
+  lark:
+    build: .
+    ports:
+      - "9000:9000"
+    volumes:
+      - augur-config:/root/.augur
+    environment:
+      - LARK_APP_ID=${LARK_APP_ID}
+      - LARK_APP_SECRET=${LARK_APP_SECRET}
+      - LARK_VERIFICATION_TOKEN=${LARK_VERIFICATION_TOKEN}
+      - LARK_ENCRYPT_KEY=${LARK_ENCRYPT_KEY}
+    command: ["augur", "lark", "--mode", "event", "--port", "9000"]
+    restart: unless-stopped
+    profiles: ["lark"]
+
+  # Cron Scheduler (定时分析)
+  cron:
+    build: .
+    volumes:
+      - augur-config:/root/.augur
+      - ./config:/app/config
+    environment:
+      - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - WECHAT_WEBHOOK_URL=${WECHAT_WEBHOOK_URL}
+      - LARK_WEBHOOK_URL=${LARK_WEBHOOK_URL}
+    command: ["augur", "cron-start"]
+    restart: unless-stopped
+    profiles: ["cron"]
+
+volumes:
+  augur-config:
