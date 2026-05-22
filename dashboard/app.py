@@ -77,6 +77,9 @@ def get_coordinator() -> DecisionCoordinator:
 
 def _persona_meta() -> List[Dict]:
     registry = get_registry()
+    config = get_config()
+    per_agent = config.get("per_agent", {})
+    default_model = config.get("defaults", {}).get("model", "")
     meta = []
     for agent in registry.get_all():
         chinese_investors = {"duan_yongping", "zhang_lei", "li_lu", "dan_bin", "dayu"}
@@ -88,10 +91,13 @@ def _persona_meta() -> List[Dict]:
             "style": " · ".join(agent.philosophy[:2]) if agent.philosophy else "",
             "description": agent.identity.strip().replace("\n", " ").replace("  ", " "),
             "scenarios": agent.philosophy,
+            "scoring_weights": agent.scoring_weights if agent.scoring_weights else {},
             "weight": f"{list(agent.scoring_weights.values())[0]:.0%}" if agent.scoring_weights else "均等",
             "status": "已注册",
             "country": country,
+            "is_chinese": agent.agent_id in chinese_investors,
             "quote": agent.philosophy[0] if agent.philosophy else "投资，就是投未来。",
+            "model": per_agent.get(agent.agent_id, default_model),
         })
     return meta
 

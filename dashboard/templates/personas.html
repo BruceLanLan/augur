@@ -1,49 +1,234 @@
 {% extends "base.html" %}
+{% block title %}人格系统 — Augur{% endblock %}
+{% block extra_head %}
+<style>
+.persona-filter-bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding: 16px 0;
+    background: linear-gradient(to bottom, #0a0a0a 80%, transparent);
+}
+.persona-card-enhanced {
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.persona-card-enhanced:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 20px rgba(0,255,136,0.12);
+    border-color: #00ff88 !important;
+}
+.card-detail-section {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s ease;
+    padding: 0 16px;
+}
+.persona-card-enhanced.expanded .card-detail-section {
+    max-height: 600px;
+    padding: 12px 16px;
+}
+.expand-indicator {
+    transition: transform 0.3s ease;
+    color: #555;
+    font-size: 0.8rem;
+}
+.persona-card-enhanced.expanded .expand-indicator {
+    transform: rotate(180deg);
+    color: #00ff88;
+}
+.china-flag-indicator {
+    width: 18px;
+    height: 12px;
+    background: linear-gradient(180deg, #de2910 0%, #de2910 100%);
+    border-radius: 2px;
+    display: inline-block;
+    position: relative;
+    margin-left: 6px;
+    vertical-align: middle;
+}
+.china-flag-indicator::after {
+    content: "★";
+    position: absolute;
+    top: -1px;
+    left: 3px;
+    font-size: 8px;
+    color: #ffde00;
+    line-height: 12px;
+}
+.model-badge {
+    font-size: 0.68rem;
+    background: #1a2a3a;
+    color: #6ab7ff;
+    border: 1px solid #2a4a6a;
+    border-radius: 4px;
+    padding: 2px 6px;
+    white-space: nowrap;
+}
+.weight-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid #1a2a1a;
+    font-size: 0.78rem;
+}
+.weight-item:last-child {
+    border-bottom: none;
+}
+.weight-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: #00ff88;
+    transition: width 0.3s ease;
+}
+</style>
+{% endblock %}
 {% block content %}
 <div class="container mt-4">
-    <h1 class="text-center mb-2">🤖 17位投资大师</h1>
-    <p class="text-center text-muted mb-4">点击头像可查看每位大师的详细投资体系与进化时间线</p>
-    
-    <div class="row">
+    <h2 class="mb-2" style="color:#00ff88;">🤖 17位投资大师</h2>
+    <p class="text-muted mb-3">点击卡片查看每位大师的详细投资体系与评分权重</p>
+
+    <!-- Filter bar -->
+    <div class="persona-filter-bar mb-3">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <input id="persona-filter" type="text" class="form-control filter-input"
+                       placeholder="搜索大师：名称、风格、ID..."
+                       oninput="filterPersonas()">
+            </div>
+            <div class="col-md-6 d-flex gap-2 flex-wrap">
+                <button class="btn btn-sm filter-tag active" data-filter="all" onclick="setFilter('all', this)">全部</button>
+                <button class="btn btn-sm filter-tag" data-filter="chinese" onclick="setFilter('chinese', this)">🇨🇳 中国投资人</button>
+                <button class="btn btn-sm filter-tag" data-filter="value" onclick="setFilter('value', this)">价值派</button>
+                <button class="btn btn-sm filter-tag" data-filter="growth" onclick="setFilter('growth', this)">成长派</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card grid -->
+    <div class="row" id="persona-grid">
         {% for persona in personas %}
-        <div class="col-md-6 col-lg-4 mb-4">
-            <div class="card persona-card h-100">
-                <div class="card-header">
+        <div class="col-md-6 col-lg-4 mb-4 persona-col"
+             data-name="{{ persona.name|lower }}"
+             data-style="{{ persona.style|lower }}"
+             data-id="{{ persona.id }}"
+             data-chinese="{{ 'true' if persona.is_chinese else 'false' }}">
+            <div class="card persona-card-enhanced h-100" style="border-color:#1a3a2a;" onclick="toggleExpand(this)">
+                <div class="card-header d-flex align-items-center justify-content-between py-2" style="border-bottom:1px solid #1a3a2a; background:transparent;">
                     <div class="d-flex align-items-center gap-3">
-                        <img src="/docs/images/avatars/{{ persona.id }}.svg" 
-                             alt="{{ persona.name }}" 
+                        <img src="/docs/images/avatars/{{ persona.id }}.svg"
+                             alt="{{ persona.name }}"
                              class="persona-avatar"
+                             style="width:50px; height:50px; border:2px solid #1a3a2a; border-radius:50%; object-fit:cover;"
                              onerror="this.style.display='none'">
                         <div>
-                            <h5 class="mb-0">{{ persona.name }}</h5>
+                            <h6 class="mb-0" style="color:#e0e0e0;">
+                                {{ persona.name }}
+                                {% if persona.is_chinese %}
+                                <span class="china-flag-indicator" title="中国投资人"></span>
+                                {% endif %}
+                            </h6>
                             <small class="text-muted">{{ persona.style }}</small>
+                            {% if persona.model %}
+                            <div class="mt-1"><span class="model-badge">{{ persona.model }}</span></div>
+                            {% endif %}
                         </div>
                     </div>
+                    <span class="expand-indicator"><i class="bi bi-chevron-down"></i></span>
                 </div>
-                <div class="card-body">
-                    <div class="speech-bubble mb-3">
-                        <small>{{ persona.quote or "在别人恐惧时贪婪，在别人贪婪时恐惧。" }}</small>
+                <div class="card-body py-2 px-3">
+                    <div class="speech-bubble mb-2" style="background:#0d0d0d; border:1px solid #1a3a2a; border-radius:8px; padding:8px 12px;">
+                        <small style="color:#aaa; font-style:italic;">"{{ persona.quote }}"</small>
                     </div>
-                    <p>{{ persona.description[:180] }}{% if persona.description|length > 180 %}...{% endif %}</p>
-                    <h6 class="mt-3 fw-bold">🎯 适合场景：</h6>
-                    <ul class="list-unstyled">
+                    <p style="font-size:0.8rem; color:#999; margin-bottom:8px;">{{ persona.description[:150] }}{% if persona.description|length > 150 %}...{% endif %}</p>
+                    <div class="d-flex flex-wrap gap-1">
                         {% for scene in persona.scenarios[:3] %}
-                        <li><small>▸ {{ scene }}</small></li>
+                        <span class="badge" style="background:#1a3a2a; color:#00ff88; font-size:0.68rem;">{{ scene[:20] }}{% if scene|length > 20 %}..{% endif %}</span>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Expandable detail section -->
+                <div class="card-detail-section">
+                    <hr style="border-color:#1a3a2a; margin:8px 0;">
+                    <h6 style="color:#00ff88; font-size:0.8rem; margin-bottom:8px;">📋 完整投资哲学</h6>
+                    <ul class="list-unstyled mb-3">
+                        {% for item in persona.scenarios %}
+                        <li style="font-size:0.78rem; color:#bbb; padding:3px 0;">
+                            <span style="color:#00ff88;">▸</span> {{ item }}
+                        </li>
                         {% endfor %}
                     </ul>
-                </div>
-                <div class="card-footer d-flex justify-content-between align-items-center">
-                    <div>
-                        <span class="badge {% if persona.status == '已注册' %}bg-success{% else %}bg-secondary{% endif %} me-1">{{ persona.status }}</span>
-                        {% if persona.country %}
-                        <span class="badge bg-warning text-dark">{{ persona.country }}</span>
-                        {% endif %}
+
+                    {% if persona.scoring_weights %}
+                    <h6 style="color:#00ff88; font-size:0.8rem; margin-bottom:8px;">⚖️ 评分权重</h6>
+                    <div class="mb-3">
+                        {% for key, val in persona.scoring_weights.items() %}
+                        <div class="weight-item">
+                            <span style="color:#ccc;">{{ key }}</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width:60px; height:4px; background:#1a1a1a; border-radius:2px; overflow:hidden;">
+                                    <div class="weight-bar" style="width:{{ (val * 100)|int }}%;"></div>
+                                </div>
+                                <span style="color:#00ff88; font-size:0.72rem; min-width:32px; text-align:right;">{{ "%.0f"|format(val * 100) }}%</span>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
-                    <small class="text-muted">评分权重: {{ persona.weight }}</small>
+                    {% endif %}
+
+                    <h6 style="color:#00ff88; font-size:0.8rem; margin-bottom:8px;">📝 详细描述</h6>
+                    <p style="font-size:0.76rem; color:#999; line-height:1.6;">{{ persona.description }}</p>
+
+                    <div class="d-flex justify-content-between align-items-center mt-2 pt-2" style="border-top:1px solid #1a2a1a;">
+                        <span class="badge {% if persona.status == '已注册' %}bg-success{% else %}bg-secondary{% endif %}">{{ persona.status }}</span>
+                        <small class="text-muted">ID: {{ persona.id }}</small>
+                    </div>
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+let activeFilter = 'all';
+
+function toggleExpand(card) {
+    card.classList.toggle('expanded');
+}
+
+function filterPersonas() {
+    const query = document.getElementById('persona-filter').value.toLowerCase().trim();
+    const cols = document.querySelectorAll('.persona-col');
+    cols.forEach(col => {
+        const name = col.dataset.name || '';
+        const style = col.dataset.style || '';
+        const id = col.dataset.id || '';
+        const isChinese = col.dataset.chinese === 'true';
+
+        let matchText = !query || name.includes(query) || style.includes(query) || id.includes(query);
+        let matchFilter = true;
+
+        if (activeFilter === 'chinese') {
+            matchFilter = isChinese;
+        } else if (activeFilter === 'value') {
+            matchFilter = style.includes('价值') || style.includes('安全') || style.includes('护城河') || style.includes('本分');
+        } else if (activeFilter === 'growth') {
+            matchFilter = style.includes('成长') || style.includes('创新') || style.includes('颠覆') || style.includes('趋势');
+        }
+
+        col.style.display = (matchText && matchFilter) ? '' : 'none';
+    });
+}
+
+function setFilter(filter, btn) {
+    activeFilter = filter;
+    document.querySelectorAll('.filter-tag').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterPersonas();
+}
+</script>
 {% endblock %}
