@@ -2,29 +2,260 @@
 {% block title %}信号监控 - Augur{% endblock %}
 {% block content %}
 
-<h2 style="color:var(--accent-orange); margin-bottom:4px;">信号监控</h2>
-<p class="text-muted mb-24" style="font-size:0.82rem;">自选股实时信号追踪，多Agent共识预警</p>
-
-<div class="card" style="max-width:640px; margin:0 auto; text-align:center; padding:48px 24px;">
-    <div style="font-size:3rem; margin-bottom:16px;">&#x1F52D;</div>
-    <h3 style="color:var(--accent-orange); margin-bottom:8px;">功能开发中</h3>
-    <p class="text-muted" style="max-width:400px; margin:0 auto 24px; font-size:0.85rem;">
-        信号监控将支持自选股列表批量扫描、信号变化推送，以及实时联动。
-    </p>
-
-    <div class="card" style="display:inline-block; text-align:left; padding:16px 24px; background:var(--bg-primary);">
-        <div class="data-label mb-8">计划功能</div>
-        <div style="font-size:0.82rem; color:var(--text-secondary); line-height:2;">
-            <div>&#x2713; 自选股 Watchlist</div>
-            <div>&#x2713; 批量扫描 (cron)</div>
-            <div>&#x2713; 信号变化推送</div>
-            <div>&#x2713; 少数派报告提醒</div>
-        </div>
+<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+    <div>
+        <h2 style="color:var(--accent-orange); margin-bottom:4px;">信号监控</h2>
+        <p class="text-muted" style="font-size:0.82rem; margin:0;">自选股实时信号追踪，多Agent共识预警</p>
     </div>
-
-    <div style="margin-top:24px;">
-        <a href="/stocks" class="btn btn-primary">前往股票分析 &rarr;</a>
+    <div style="display:flex; align-items:center; gap:12px;">
+        <span id="refresh-indicator" class="text-muted" style="font-size:0.75rem;">
+            <span class="status-dot" style="background:var(--signal-buy); display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px;"></span>
+            自动刷新: 60s
+        </span>
+        <button class="btn btn-primary" onclick="runAllAnalysis()" id="run-all-btn">
+            &#x25B6; 运行全部分析
+        </button>
     </div>
 </div>
 
+<!-- Add Ticker Form -->
+<div class="card" style="margin-bottom:16px; padding:16px;">
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <div class="data-label" style="margin:0; white-space:nowrap;">添加自选股</div>
+        <input type="text" id="add-ticker-input" placeholder="股票代码 (如 AAPL)" 
+               style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:140px; text-transform:uppercase;"
+               onkeydown="if(event.key==='Enter')addTicker()">
+        <input type="number" id="add-pe-input" placeholder="PE" step="0.1"
+               style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:80px;">
+        <input type="number" id="add-roe-input" placeholder="ROE" step="0.01"
+               style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:80px;">
+        <input type="number" id="add-gm-input" placeholder="毛利率" step="0.01"
+               style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:90px;">
+        <button class="btn btn-primary" onclick="addTicker()" style="padding:6px 16px;">+ 添加</button>
+    </div>
+</div>
+
+<!-- Watchlist Table -->
+<div class="card" style="padding:0; overflow:hidden;">
+    <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+        <thead>
+            <tr style="background:var(--bg-primary); border-bottom:1px solid var(--border-color);">
+                <th style="padding:12px 16px; text-align:left; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">代码</th>
+                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">PE</th>
+                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">ROE</th>
+                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">毛利率</th>
+                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">信号</th>
+                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">评分</th>
+                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">多/空/持</th>
+                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">操作</th>
+            </tr>
+        </thead>
+        <tbody id="watchlist-body">
+            <tr>
+                <td colspan="8" style="padding:48px 16px; text-align:center; color:var(--text-muted);">
+                    加载中...
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Analysis Results -->
+<div id="analysis-results" style="margin-top:16px; display:none;">
+    <div class="card" style="padding:16px; border-left:3px solid var(--accent-orange);">
+        <div class="data-label" style="margin-bottom:8px;">最近分析结果</div>
+        <div id="results-content"></div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var watchlistData = [];
+var analysisResults = {};
+var autoRefreshTimer = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadWatchlist();
+    startAutoRefresh();
+});
+
+function startAutoRefresh() {
+    if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+    autoRefreshTimer = setInterval(loadWatchlist, 60000);
+}
+
+function loadWatchlist() {
+    fetch('/api/watchlist')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            watchlistData = data.watchlist || [];
+            renderWatchlist();
+        })
+        .catch(function(e) {
+            console.error('Failed to load watchlist:', e);
+        });
+}
+
+function renderWatchlist() {
+    var tbody = document.getElementById('watchlist-body');
+    if (watchlistData.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="padding:48px 16px; text-align:center; color:var(--text-muted);">' +
+            '<div style="font-size:2rem; margin-bottom:8px;">&#x1F4CB;</div>' +
+            '<div>自选股列表为空</div>' +
+            '<div style="font-size:0.78rem; margin-top:4px;">在上方输入股票代码添加</div>' +
+            '</td></tr>';
+        return;
+    }
+
+    var html = '';
+    for (var i = 0; i < watchlistData.length; i++) {
+        var item = watchlistData[i];
+        var ticker = item.ticker || '';
+        var result = analysisResults[ticker] || null;
+        var signalHtml = '<span style="color:var(--text-muted);">--</span>';
+        var scoreHtml = '<span style="color:var(--text-muted);">--</span>';
+        var votesHtml = '<span style="color:var(--text-muted);">--</span>';
+
+        if (result) {
+            var sigColor = result.signal === 'buy' ? 'var(--signal-buy)' :
+                           result.signal === 'sell' ? 'var(--signal-sell)' : 'var(--signal-neutral)';
+            var sigText = result.signal === 'buy' ? 'BUY' :
+                          result.signal === 'sell' ? 'SELL' : 'HOLD';
+            signalHtml = '<span style="color:' + sigColor + '; font-weight:600; font-family:var(--font-data);">' + sigText + '</span>';
+            scoreHtml = '<span style="color:' + sigColor + '; font-family:var(--font-data);">' + result.score + '/10</span>';
+            votesHtml = '<span style="font-family:var(--font-data);">' +
+                '<span style="color:var(--signal-buy);">' + result.buy_count + '</span>/' +
+                '<span style="color:var(--signal-sell);">' + result.sell_count + '</span>/' +
+                '<span style="color:var(--signal-neutral);">' + result.hold_count + '</span></span>';
+        }
+
+        html += '<tr style="border-bottom:1px solid var(--border-color); transition:background 0.2s;" onmouseover="this.style.background=\'var(--bg-card-hover)\'" onmouseout="this.style.background=\'transparent\'">' +
+            '<td style="padding:10px 16px; font-family:var(--font-data); font-weight:600; color:var(--accent-orange);">' + ticker + '</td>' +
+            '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.pe || '--') + '</td>' +
+            '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.roe ? (item.roe * 100).toFixed(0) + '%' : '--') + '</td>' +
+            '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.gross_margins ? (item.gross_margins * 100).toFixed(0) + '%' : '--') + '</td>' +
+            '<td style="padding:10px 16px; text-align:center;">' + signalHtml + '</td>' +
+            '<td style="padding:10px 16px; text-align:center;">' + scoreHtml + '</td>' +
+            '<td style="padding:10px 16px; text-align:center;">' + votesHtml + '</td>' +
+            '<td style="padding:10px 16px; text-align:center;">' +
+                '<button onclick="removeTicker(\'' + ticker + '\')" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1rem; padding:2px 6px;" title="移除">&times;</button>' +
+            '</td>' +
+            '</tr>';
+    }
+    tbody.innerHTML = html;
+}
+
+function addTicker() {
+    var ticker = document.getElementById('add-ticker-input').value.trim().toUpperCase();
+    if (!ticker) {
+        showToast('请输入股票代码', 'warning');
+        return;
+    }
+
+    var body = { ticker: ticker };
+    var pe = document.getElementById('add-pe-input').value;
+    var roe = document.getElementById('add-roe-input').value;
+    var gm = document.getElementById('add-gm-input').value;
+    if (pe) body.pe = parseFloat(pe);
+    if (roe) body.roe = parseFloat(roe);
+    if (gm) body.gross_margins = parseFloat(gm);
+
+    fetch('/api/watchlist/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status === 'ok') {
+            showToast(ticker + ' 已添加到自选股');
+            document.getElementById('add-ticker-input').value = '';
+            document.getElementById('add-pe-input').value = '';
+            document.getElementById('add-roe-input').value = '';
+            document.getElementById('add-gm-input').value = '';
+            loadWatchlist();
+        } else {
+            showToast(data.detail || '添加失败', 'error');
+        }
+    })
+    .catch(function(e) {
+        showToast('添加失败: ' + e.message, 'error');
+    });
+}
+
+function removeTicker(ticker) {
+    fetch('/api/watchlist/' + ticker, { method: 'DELETE' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status === 'ok') {
+                showToast(ticker + ' 已移除');
+                delete analysisResults[ticker];
+                loadWatchlist();
+            } else {
+                showToast(data.detail || '移除失败', 'error');
+            }
+        })
+        .catch(function(e) {
+            showToast('移除失败: ' + e.message, 'error');
+        });
+}
+
+function runAllAnalysis() {
+    var btn = document.getElementById('run-all-btn');
+    btn.disabled = true;
+    btn.textContent = '分析中...';
+
+    fetch('/api/watchlist/run', { method: 'POST' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            btn.innerHTML = '&#x25B6; 运行全部分析';
+
+            if (data.status === 'empty') {
+                showToast('自选股列表为空，请先添加', 'warning');
+                return;
+            }
+
+            if (data.results) {
+                analysisResults = {};
+                for (var i = 0; i < data.results.length; i++) {
+                    var r = data.results[i];
+                    analysisResults[r.ticker] = r;
+                }
+                renderWatchlist();
+                showResultsSummary(data.results);
+                showToast('分析完成 - ' + data.results.length + ' 只股票');
+            }
+        })
+        .catch(function(e) {
+            btn.disabled = false;
+            btn.innerHTML = '&#x25B6; 运行全部分析';
+            showToast('分析失败: ' + e.message, 'error');
+        });
+}
+
+function showResultsSummary(results) {
+    var container = document.getElementById('analysis-results');
+    var content = document.getElementById('results-content');
+    container.style.display = 'block';
+
+    var buyCount = 0, sellCount = 0, holdCount = 0;
+    for (var i = 0; i < results.length; i++) {
+        if (results[i].signal === 'buy') buyCount++;
+        else if (results[i].signal === 'sell') sellCount++;
+        else holdCount++;
+    }
+
+    var html = '<div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:12px;">' +
+        '<div><span style="color:var(--signal-buy); font-family:var(--font-data); font-size:1.2rem; font-weight:600;">' + buyCount + '</span> <span class="text-muted" style="font-size:0.78rem;">BUY</span></div>' +
+        '<div><span style="color:var(--signal-sell); font-family:var(--font-data); font-size:1.2rem; font-weight:600;">' + sellCount + '</span> <span class="text-muted" style="font-size:0.78rem;">SELL</span></div>' +
+        '<div><span style="color:var(--signal-neutral); font-family:var(--font-data); font-size:1.2rem; font-weight:600;">' + holdCount + '</span> <span class="text-muted" style="font-size:0.78rem;">HOLD</span></div>' +
+        '</div>';
+
+    html += '<div style="font-size:0.78rem; color:var(--text-secondary);">分析时间: ' + new Date().toLocaleString('zh-CN') + '</div>';
+    content.innerHTML = html;
+}
+</script>
 {% endblock %}
