@@ -9,14 +9,34 @@
 .badge-error    { background:#555; color:#ccc; }
 .score-bar-wrap { background:#1a1a1a; border-radius:4px; height:6px; overflow:hidden; }
 .score-bar      { height:100%; border-radius:4px; transition:width .6s ease; }
-.agent-card { transition:border-color .2s; cursor:default; }
-.agent-card:hover { border-color:#00ff88 !important; }
+.agent-card { transition: border-color .2s, transform .2s, box-shadow .2s; cursor:pointer; }
+.agent-card:hover { border-color:#00ff88 !important; transform:translateY(-2px); box-shadow:0 0 15px rgba(0,255,136,0.1); }
 .metric-row label { font-size:.78rem; color:#888; margin-bottom:2px; }
 .metric-row input, .metric-row select { font-size:.82rem; }
 #results { display:none; }
+#results.fade-in-up { display:block; animation: fadeInUp 0.5s ease forwards; }
 #spinner { display:none; text-align:center; padding:3rem; }
 .findings-list li { font-size:.82rem; color:#b0f0c8; margin-bottom:4px; }
 .risks-list li { font-size:.82rem; color:#f0b0b0; margin-bottom:4px; }
+.agent-reasoning { max-height: 60px; overflow: hidden; transition: max-height 0.4s ease; position: relative; }
+.agent-reasoning.expanded { max-height: 800px; }
+.agent-reasoning:not(.expanded)::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(transparent, #111111);
+}
+.expand-reasoning-btn { font-size:0.7rem; color:#00ff88; cursor:pointer; border:none; background:transparent; padding:2px 0; }
+.expand-reasoning-btn:hover { text-decoration:underline; }
+.copy-btn { border:1px solid #1a3a2a; background:transparent; color:#00ff88; border-radius:6px; padding:4px 12px; font-size:0.78rem; cursor:pointer; transition:all 0.2s; }
+.copy-btn:hover { background:#1a3a2a; }
+.copy-btn.copied { background:#00ff88; color:#0a0a0a; }
+@keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.loading-dots { animation: pulse 1.5s infinite; color:#00ff88; font-size:1.2rem; }
 </style>
 {% endblock %}
 {% block content %}
@@ -33,7 +53,8 @@
           <label class="form-label text-muted" style="font-size:.8rem;">股票代码 *</label>
           <input id="inp-ticker" type="text" class="form-control bg-dark text-light border-secondary"
                  placeholder="AAPL / NVDA / 0700.HK"
-                 style="font-size:1.1rem; font-weight:600; text-transform:uppercase;">
+                 style="font-size:1.1rem; font-weight:600; text-transform:uppercase;"
+                 onkeydown="if(event.key==='Enter') runAnalysis()">
         </div>
         <div class="col-md-2">
           <label class="form-label text-muted" style="font-size:.8rem;">价格 (USD)</label>
@@ -64,7 +85,7 @@
         <small class="text-muted me-2">快速选择：</small>
         {% for t in quick_tickers %}
         <button class="btn btn-sm me-1 mb-1" style="background:#1a3a2a; color:#00ff88; border:1px solid #1a4a2a;"
-                onclick="setTicker('{{ t }}')">{{ t }}</button>
+                onclick="setTickerAndRun('{{ t }}')">{{ t }}</button>
         {% endfor %}
       </div>
 
@@ -97,7 +118,7 @@
   <!-- Spinner -->
   <div id="spinner">
     <div class="spinner-border text-success" style="width:3rem; height:3rem;"></div>
-    <p class="text-muted mt-3">正在调用 17 位投资大师……</p>
+    <p class="loading-dots mt-3">正在调用 17 位投资大师</p>
   </div>
 
   <!-- Results -->
@@ -137,7 +158,10 @@
             <ul class="findings-list ps-3" id="cons-findings"></ul>
           </div>
           <div class="col-md-5">
-            <div style="font-size:.78rem; color:#888; margin-bottom:6px; text-transform:uppercase; letter-spacing:.5px;">主要风险</div>
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <div style="font-size:.78rem; color:#888; text-transform:uppercase; letter-spacing:.5px;">主要风险</div>
+              <button class="copy-btn" onclick="copyConsensus(this)"><i class="bi bi-clipboard"></i> 复制摘要</button>
+            </div>
             <ul class="risks-list ps-3" id="cons-risks"></ul>
           </div>
         </div>
@@ -199,6 +223,7 @@
 {% block extra_scripts %}
 <script>
 let scoreChart = null;
+let lastConsensusText = '';
 
 // Pre-fill ticker from query string
 (function(){
@@ -209,6 +234,11 @@ let scoreChart = null;
 
 function setTicker(t) {
   document.getElementById('inp-ticker').value = t;
+}
+
+function setTickerAndRun(t) {
+  document.getElementById('inp-ticker').value = t;
+  runAnalysis();
 }
 
 function num(id, scale) {
@@ -238,7 +268,9 @@ function runAnalysis() {
     sector: document.getElementById('inp-sector').value,
   });
 
-  document.getElementById('results').style.display = 'none';
+  const resultsEl = document.getElementById('results');
+  resultsEl.style.display = 'none';
+  resultsEl.classList.remove('fade-in-up');
   document.getElementById('spinner').style.display = 'block';
 
   fetch(`/api/analyze/${ticker}?${params}`)
@@ -246,7 +278,7 @@ function runAnalysis() {
     .then(data => {
       document.getElementById('spinner').style.display = 'none';
       renderResults(data);
-      document.getElementById('results').style.display = 'block';
+      resultsEl.classList.add('fade-in-up');
     })
     .catch(err => {
       document.getElementById('spinner').style.display = 'none';
@@ -270,9 +302,34 @@ function signalBorderColor(s) {
   return m[(s||'').toLowerCase()] || '#1a3a2a';
 }
 
+function copyConsensus(btn) {
+  if (lastConsensusText) {
+    navigator.clipboard.writeText(lastConsensusText).then(() => {
+      btn.classList.add('copied');
+      btn.innerHTML = '<i class="bi bi-check"></i> 已复制';
+      setTimeout(() => {
+        btn.classList.remove('copied');
+        btn.innerHTML = '<i class="bi bi-clipboard"></i> 复制摘要';
+      }, 2000);
+    });
+  }
+}
+
+function toggleReasoning(el) {
+  const reasoningDiv = el.previousElementSibling;
+  if (reasoningDiv) {
+    reasoningDiv.classList.toggle('expanded');
+    el.textContent = reasoningDiv.classList.contains('expanded') ? '收起 ▲' : '展开全文 ▼';
+  }
+}
+
 function renderResults(data) {
   const cons = data.consensus;
   const agents = data.agents || [];
+
+  // Build consensus text for copy
+  const ticker = data.ticker || '';
+  lastConsensusText = `${ticker} 共识分析:\n信号: ${signalLabel(cons.signal)}\n评分: ${(cons.score||0).toFixed(1)}/10\n置信度: ${((cons.confidence||0)*100).toFixed(0)}%\n${cons.reasoning || ''}`;
 
   // Consensus banner
   const consCard = document.getElementById('consensus-card');
@@ -352,14 +409,14 @@ function renderResults(data) {
     }
   });
 
-  // Agent grid
+  // Agent grid with expandable reasoning
   const grid = document.getElementById('agent-grid');
   grid.innerHTML = '';
   sortedAgents.forEach(a => {
     const scoreWidth = ((a.score||0)/10*100).toFixed(0);
     const scoreColor = (a.signal||'').toLowerCase()==='bullish' ? '#00ff88'
       : (a.signal||'').toLowerCase()==='bearish' ? '#e74c3c' : '#f39c12';
-    const reasoning = (a.reasoning||'').replace(/#+\s*/g,'').replace(/\*\*/g,'').slice(0,200);
+    const fullReasoning = (a.reasoning||'').replace(/#+\s*/g,'').replace(/\*\*/g,'');
 
     const col = document.createElement('div');
     col.className = 'col-md-6 col-lg-4';
@@ -379,7 +436,10 @@ function renderResults(data) {
               <div style="font-size:.7rem; color:#555; margin-top:2px;">置信度 ${((a.confidence||0)*100).toFixed(0)}%</div>
             </div>
           </div>
-          <p class="text-muted mb-0" style="font-size:.78rem; line-height:1.5;">${reasoning}${(a.reasoning||'').length>200?'…':''}</p>
+          <div class="agent-reasoning">
+            <p class="text-muted mb-0" style="font-size:.78rem; line-height:1.5;">${fullReasoning}</p>
+          </div>
+          ${fullReasoning.length > 150 ? '<button class="expand-reasoning-btn" onclick="toggleReasoning(this)">展开全文 ▼</button>' : ''}
         </div>
       </div>`;
     grid.appendChild(col);

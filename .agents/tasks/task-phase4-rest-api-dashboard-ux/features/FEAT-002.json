@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Enhance Dashboard UI/UX - improve personas page (card grid + avatars + expand + filter), index page (quick analysis widget + system status), stocks page polish, and comprehensive CSS improvements",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Rewrite dashboard/templates/personas.html: implement a card-based grid layout with improved styling. Each card shows: agent avatar (from /docs/images/avatars/{id}.svg), agent name, style keywords, philosophy summary, current model assignment, country flag for Chinese investors. Cards should be expandable (click to show full detail including all philosophy items and scoring weights). Add a search/filter bar at top that filters personas by name or style text. Use vanilla JS for expand/collapse and filter logic.",
     "Enhance dashboard/templates/index.html: add a 'Quick Analysis' widget section with a mini form (ticker input + analyze button) that calls /api/analyze/{ticker} and shows a compact consensus result (signal badge + score) inline without navigating away. Add a 'System Status' card showing agent count, config file status, and available model count. Keep the existing hero section and featured personas but improve spacing and responsiveness.",
