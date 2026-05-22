@@ -1,0 +1,7 @@
+{
+  "task_id": "task-phase4-rest-api-dashboard-ux",
+  "task_description": "Phase 4: Add Config REST API endpoints, build functional Settings page, enhance all dashboard pages (personas, index, stocks) with improved UI/UX, responsive CSS, and update README",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

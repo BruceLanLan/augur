@@ -1,0 +1,29 @@
+{
+  "project_type": "Python multi-agent investment analysis system with FastAPI dashboard",
+  "language": "Python 3.8+",
+  "build_system": "setuptools via pyproject.toml, pip install -e .",
+  "test_framework": "pytest with tests/ directory (test_imports.py, test_registry.py, test_cli.py)",
+  "build_command": "pip install -e . 2>/dev/null || true",
+  "test_command": "python -m pytest tests/ -v --tb=short",
+  "verification_instructions": "1. Run pytest tests/ to confirm all tests pass. 2. Check that dashboard app imports work: python -c 'from dashboard.app import app'",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e .",
+  "environment_constraints": "No Docker daemon available. Use AST/import validation. CDN resources (Bootstrap, Chart.js) are referenced via CDN links in templates.",
+  "contribution_requirements": "Commit directly to main branch. Keep backward compatibility. Chinese UI text where appropriate.",
+  "key_patterns": "Dashboard uses FastAPI + Jinja2 templates extending base.html. Bloomberg dark theme with #00ff88 accent. Vanilla JS with fetch() for API calls. Config managed via src/augur/config.py (get_config/set_config/save_config with YAML backend). All 17 agents registered in AgentRegistry. Avatar SVGs at docs/images/avatars/{agent_id}.svg.",
+  "relevant_files": [
+    "dashboard/app.py",
+    "dashboard/templates/base.html",
+    "dashboard/templates/settings.html",
+    "dashboard/templates/personas.html",
+    "dashboard/templates/stocks.html",
+    "dashboard/templates/index.html",
+    "dashboard/static/css/baoyu.css",
+    "src/augur/config.py",
+    "src/augur/api.py",
+    "config/agents.yaml",
+    "tests/test_registry.py",
+    "README.md"
+  ],
+  "directory_structure": "src/augur/ - pip package with CLI, MCP, API, config, personas. dashboard/ - FastAPI web app (app.py + templates/ + static/). config/ - agents.yaml model config. tests/ - pytest tests. docs/images/avatars/ - SVG avatars for each agent."
+}
