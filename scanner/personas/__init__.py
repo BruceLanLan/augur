@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-scanner.personas — Agent人格系统 package
+scanner.personas - Backward compatibility shim
 
-提供:
-  - 类型定义: SignalType, AgentResponse, MarketContext, DebateMessage
-  - 基类: BaseAgent
-  - 注册中心: AgentRegistry
-  - 协调器: DecisionCoordinator
-  - 辩论协议: DebateProtocol
-  - 11个具体Agent: BuffettAgent, GrahamAgent, LynchAgent, DalioAgent,
-                    MungerAgent, SorosAgent, MarksAgent, CathieWoodAgent,
-                    FisherAgent, ArpsAgent, AschenbrennerAgent
-  - 快捷函数: get_registry, get_coordinator, get_agent, analyze_with_agents
+All actual code is now in augur.personas.
+This module re-exports everything for backward compatibility.
 """
 
-from scanner.personas.base import (
+from augur.personas.base import (
     SignalType,
     AgentResponse,
     MarketContext,
@@ -22,7 +14,7 @@ from scanner.personas.base import (
     BaseAgent,
 )
 
-from scanner.personas.registry import (
+from augur.registry import (
     AgentRegistry,
     DecisionCoordinator,
     DebateProtocol,
@@ -32,28 +24,28 @@ from scanner.personas.registry import (
     analyze_with_agents,
 )
 
-from scanner.personas.buffett import BuffettAgent
-from scanner.personas.graham import GrahamAgent
-from scanner.personas.lynch import LynchAgent
-from scanner.personas.dalio import DalioAgent
-from scanner.personas.munger import MungerAgent
-from scanner.personas.soros import SorosAgent
-from scanner.personas.marks import MarksAgent
-from scanner.personas.cathie_wood import CathieWoodAgent
-from scanner.personas.fisher import FisherAgent
-from scanner.personas.arps import ArpsAgent
-from scanner.personas.aschenbrenner import AschenbrennerAgent
+from augur.personas.buffett import BuffettAgent
+from augur.personas.graham import GrahamAgent
+from augur.personas.lynch import LynchAgent
+from augur.personas.dalio import DalioAgent
+from augur.personas.munger import MungerAgent
+from augur.personas.soros import SorosAgent
+from augur.personas.marks import MarksAgent
+from augur.personas.cathie_wood import CathieWoodAgent
+from augur.personas.fisher import FisherAgent
+from augur.personas.arps import ArpsAgent
+from augur.personas.aschenbrenner import AschenbrennerAgent
 
 __all__ = [
-    # 类型
+    # Types
     "SignalType", "AgentResponse", "MarketContext", "DebateMessage",
-    # 基类
+    # Base class
     "BaseAgent",
-    # 注册中心 + 协调
+    # Registry + coordination
     "AgentRegistry", "DecisionCoordinator", "DebateProtocol",
-    # 快捷函数
+    # Convenience functions
     "get_registry", "get_coordinator", "get_agent", "analyze_with_agents",
-    # 具体Agent
+    # Concrete agents
     "BuffettAgent", "GrahamAgent", "LynchAgent", "DalioAgent",
     "MungerAgent", "SorosAgent", "MarksAgent", "CathieWoodAgent",
     "FisherAgent", "ArpsAgent", "AschenbrennerAgent",

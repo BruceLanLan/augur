@@ -1,24 +1,25 @@
 # -*- coding: utf-8 -*-
 """
-scanner — 多Agent分析引擎 (Personas Only)
+scanner - Backward compatibility shim
 
-仅包含 Agent Personas 系统，其他扫描模块按需扩展。
+All actual code is now in the augur package.
+This module re-exports everything for backward compatibility.
 """
 
-from scanner.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType, DebateMessage
-from scanner.personas.registry import AgentRegistry, DecisionCoordinator, DebateProtocol
-from scanner.personas.arps import ArpsAgent
-from scanner.personas.aschenbrenner import AschenbrennerAgent
-from scanner.personas.buffett import BuffettAgent
-from scanner.personas.cathie_wood import CathieWoodAgent
-from scanner.personas.dalio import DalioAgent
-from scanner.personas.dayu import DayuAgent
-from scanner.personas.fisher import FisherAgent
-from scanner.personas.graham import GrahamAgent
-from scanner.personas.lynch import LynchAgent
-from scanner.personas.marks import MarksAgent
-from scanner.personas.munger import MungerAgent
-from scanner.personas.soros import SorosAgent
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType, DebateMessage
+from augur.registry import AgentRegistry, DecisionCoordinator, DebateProtocol
+from augur.personas.arps import ArpsAgent
+from augur.personas.aschenbrenner import AschenbrennerAgent
+from augur.personas.buffett import BuffettAgent
+from augur.personas.cathie_wood import CathieWoodAgent
+from augur.personas.dalio import DalioAgent
+from augur.personas.dayu import DayuAgent
+from augur.personas.fisher import FisherAgent
+from augur.personas.graham import GrahamAgent
+from augur.personas.lynch import LynchAgent
+from augur.personas.marks import MarksAgent
+from augur.personas.munger import MungerAgent
+from augur.personas.soros import SorosAgent
 
 __all__ = [
     "BaseAgent", "MarketContext", "AgentResponse", "SignalType", "DebateMessage",

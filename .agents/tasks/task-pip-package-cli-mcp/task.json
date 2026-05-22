@@ -1,0 +1,7 @@
+{
+  "task_id": "task-pip-package-cli-mcp",
+  "task_description": "Restructure Augur into a pip-installable package (augur-agents) with CLI entry point, MCP Server, and backward compatibility shims. Phase 1 of the Augur restructuring.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001"],
+  "blocked_reason": null
+}
