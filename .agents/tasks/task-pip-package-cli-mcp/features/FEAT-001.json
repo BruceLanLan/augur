@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Create src/augur/ package structure with pyproject.toml, move/refactor all core modules from scanner/ into src/augur/, create backward compatibility shims in scanner/, implement CLI with click, implement MCP server with mcp package, implement config management, update dashboard imports. This is the complete Phase 1 restructuring.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Step 1: Create pyproject.toml at repo root with package name 'augur-agents', src layout, entry points: augur=augur.cli:main, dependencies: click, fastapi, uvicorn, pyyaml, mcp (from anthropic). Python >= 3.8.",
     "Step 2: Create src/augur/__init__.py that re-exports all public symbols (BaseAgent, MarketContext, AgentResponse, SignalType, DebateMessage, AgentRegistry, DecisionCoordinator, DebateProtocol).",
@@ -40,5 +40,5 @@
     "python3 -m pytest /projects/sandbox/augur/tests/ -v"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "mcp package requires Python 3.10+ so it is listed as an optional dependency. On Python 3.9, MCP server module is importable but create_server() raises ImportError with instructions. All 41 tests pass. The YAML custom personas (da-yu.yaml, thiel.yaml) share agent_ids with hardcoded agents so they overwrite them rather than adding new entries - total remains 17."
 }
