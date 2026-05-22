@@ -28,6 +28,12 @@ Configuration (~/.augur/watchlist.yaml):
       enabled: true
       channel: "#investment-signals"
       token: "xoxb-YOUR-BOT-TOKEN"
+    wechat:
+      enabled: true
+      webhook_url: "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx"
+    lark:
+      enabled: true
+      webhook_url: "https://open.feishu.cn/open-apis/bot/v2/hook/xxx"
     alert_threshold: 3
 
 CLI commands:
@@ -61,6 +67,14 @@ DEFAULT_CONFIG = {
             "enabled": False,
             "channel": "",
             "token": "",
+        },
+        "wechat": {
+            "enabled": False,
+            "webhook_url": "",
+        },
+        "lark": {
+            "enabled": False,
+            "webhook_url": "",
         },
         "alert_threshold": 3,
     },
@@ -208,6 +222,16 @@ def _send_notifications(config: dict, results: List[Dict[str, Any]]):
     if slack_config.get("enabled") and slack_config.get("channel") and slack_config.get("token"):
         _send_slack_notifications(slack_config, results, threshold)
 
+    # WeChat notifications
+    wechat_config = notifications.get("wechat", {})
+    if wechat_config.get("enabled") and wechat_config.get("webhook_url"):
+        _send_wechat_notification(wechat_config, results, threshold)
+
+    # Lark/Feishu notifications
+    lark_config = notifications.get("lark", {})
+    if lark_config.get("enabled") and lark_config.get("webhook_url"):
+        _send_lark_notification(lark_config, results, threshold)
+
 
 def _send_telegram_notifications(
     tg_config: dict, results: List[Dict[str, Any]], threshold: float
@@ -284,6 +308,54 @@ def _send_slack_notifications(
                 print(f"  Failed to send Slack notification for {ticker}: {e}")
         except Exception as e:
             print(f"  Failed to send Slack notification for {ticker}: {e}")
+
+
+def _send_wechat_notification(
+    wechat_config: dict, results: List[Dict[str, Any]], threshold: float
+):
+    """Send results to WeChat group via webhook."""
+    try:
+        from augur.bots.wechat_bot import WebhookBot, format_wechat_message
+    except ImportError:
+        print("Warning: wechat_bot module not available. Skipping WeChat notifications.")
+        return
+
+    webhook_url = wechat_config["webhook_url"]
+    bot = WebhookBot(webhook_url)
+
+    for analysis in results:
+        ticker = analysis["ticker"]
+        consensus = analysis["consensus"]
+        agent_results = analysis["results"]
+
+        try:
+            bot.send_consensus(ticker, consensus, agent_results)
+        except Exception as e:
+            print(f"  Failed to send WeChat notification for {ticker}: {e}")
+
+
+def _send_lark_notification(
+    lark_config: dict, results: List[Dict[str, Any]], threshold: float
+):
+    """Send results to Lark/Feishu group via webhook."""
+    try:
+        from augur.bots.lark_bot import LarkWebhookBot
+    except ImportError:
+        print("Warning: lark_bot module not available. Skipping Lark notifications.")
+        return
+
+    webhook_url = lark_config["webhook_url"]
+    bot = LarkWebhookBot(webhook_url)
+
+    for analysis in results:
+        ticker = analysis["ticker"]
+        consensus = analysis["consensus"]
+        agent_results = analysis["results"]
+
+        try:
+            bot.send_consensus(ticker, consensus, agent_results)
+        except Exception as e:
+            print(f"  Failed to send Lark notification for {ticker}: {e}")
 
 
 def start_scheduler():

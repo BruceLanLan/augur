@@ -135,6 +135,14 @@ augur telegram
 augur slack                    # Socket Mode (开发)
 augur slack --mode http --port 3000  # HTTP Mode (生产)
 
+# WeChat/微信 Bot
+augur wechat                   # 企业微信模式 (接收+发送)
+augur wechat --mode webhook    # Webhook 推送模式
+
+# Lark/飞书 Bot
+augur lark                     # Event 订阅模式
+augur lark --mode webhook      # Webhook 推送模式
+
 # Cron 定时分析
 augur cron-run             # 手动运行一次
 augur cron-start           # 启动定时守护进程
@@ -256,6 +264,122 @@ Slack Bot 使用 Block Kit 进行富文本输出，包含：
 
 ---
 
+## 📱 微信 Bot (WeChat/WeCom)
+
+Augur 支持通过企业微信进行实时分析，支持企业微信应用模式和 Webhook 推送模式。
+
+### 创建企业微信应用
+
+1. 登录 [企业微信管理后台](https://work.weixin.qq.com/)
+2. 应用管理 > 自建 > 创建应用
+3. 记录 Corp ID, Agent ID, Secret
+4. 设置接收消息的回调 URL
+5. 获取 Token 和 EncodingAESKey
+
+### 配置与启动
+
+```bash
+# 安装微信依赖
+pip install 'augur-agents[wechat]'
+
+# 企业微信模式 (接收+发送)
+export WECHAT_CORP_ID='your_corp_id'
+export WECHAT_CORP_SECRET='your_corp_secret'
+export WECHAT_AGENT_ID='your_agent_id'
+export WECHAT_TOKEN='your_token'
+export WECHAT_AES_KEY='your_aes_key'
+augur wechat --mode wecom --port 8080
+
+# Webhook 模式 (仅推送, 配合 Cron)
+export WECHAT_WEBHOOK_URL='https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx'
+augur wechat --mode webhook
+```
+
+### 可用命令 (群聊/私聊)
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `分析 TICKER [指标]` | 17位大师共识分析 | `分析 AAPL pe=32 roe=0.55` |
+| `@巴菲特 TICKER` | 向特定大师提问 | `@段永平 NVDA` |
+| `问 PERSONA TICKER` | 同上(英文ID) | `问 buffett AAPL` |
+| `投资人列表` | 列出所有投资大师 | `投资人列表` |
+| `帮助` | 显示帮助 | `帮助` |
+
+### Webhook 群机器人配置
+
+群机器人 Webhook 适合配合 Cron 定时推送:
+
+```yaml
+# ~/.augur/watchlist.yaml
+notifications:
+  wechat:
+    enabled: true
+    webhook_url: "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx"
+```
+
+---
+
+## 🐦 飞书 Bot (Lark/Feishu)
+
+Augur 支持通过飞书进行实时分析，支持事件订阅模式和 Webhook 推送模式。
+
+### 创建飞书应用
+
+1. 登录 [飞书开放平台](https://open.feishu.cn/)
+2. 创建企业自建应用
+3. 获取 App ID 和 App Secret
+4. 开启机器人能力
+5. 配置事件订阅 URL，订阅 `im.message.receive_v1`
+6. 获取 Verification Token 和 Encrypt Key
+
+### 配置与启动
+
+```bash
+# 安装飞书依赖
+pip install 'augur-agents[lark]'
+
+# Event 订阅模式 (接收+发送)
+export LARK_APP_ID='your_app_id'
+export LARK_APP_SECRET='your_app_secret'
+export LARK_VERIFICATION_TOKEN='your_token'
+export LARK_ENCRYPT_KEY='your_key'
+augur lark --mode event --port 9000
+
+# Webhook 模式 (仅推送)
+export LARK_WEBHOOK_URL='https://open.feishu.cn/open-apis/bot/v2/hook/xxx'
+augur lark --mode webhook
+```
+
+### 可用命令 (群聊/私聊)
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `分析 TICKER [指标]` | 17位大师共识分析 | `分析 AAPL pe=32 roe=0.55` |
+| `@巴菲特 TICKER` | 向特定大师提问 | `@张磊 PDD` |
+| `问 PERSONA TICKER` | 同上(英文ID) | `问 li_lu GOOGL` |
+| `投资人列表` | 列出所有投资大师 | `投资人列表` |
+| `帮助` | 显示帮助 | `帮助` |
+
+### 飞书卡片消息
+
+飞书 Bot 使用交互式卡片 (Interactive Card) 进行富文本输出:
+- Header: 信号颜色(绿/红/黄) + 标题
+- Fields: 信号/评分/置信度
+- Agent 明细列表
+- 关键发现与风险
+
+### Webhook 群机器人配置
+
+```yaml
+# ~/.augur/watchlist.yaml
+notifications:
+  lark:
+    enabled: true
+    webhook_url: "https://open.feishu.cn/open-apis/bot/v2/hook/xxx"
+```
+
+---
+
 ## ⏰ Cron 定时分析 + Watchlist
 
 ### Watchlist 管理
@@ -306,12 +430,18 @@ notifications:
     enabled: true
     channel: "#investment-signals"
     token: "xoxb-YOUR-BOT-TOKEN"
+  wechat:
+    enabled: true
+    webhook_url: "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx"
+  lark:
+    enabled: true
+    webhook_url: "https://open.feishu.cn/open-apis/bot/v2/hook/xxx"
   alert_threshold: 3      # 评分变化>3才推送
 ```
 
 ### Cron 定时触发
 
-使用 `augur cron-start` 启动守护进程，按配置的 cron 表达式自动执行分析并推送到 Telegram 和 Slack。
+使用 `augur cron-start` 启动守护进程，按配置的 cron 表达式自动执行分析并推送到 Telegram、Slack、微信和飞书。
 
 ---
 
@@ -511,15 +641,21 @@ augur slack
 # /augur-ask buffett analyze AAPL
 # 或 @augur analyze AAPL
 
-# === WeChat/微信 Bot (计划中 v4.4) ===
-# export WECHAT_APP_ID=your_app_id
-# export WECHAT_APP_SECRET=your_secret
-# augur wechat
+# === WeChat/微信 Bot (已完成 v4.6) ===
+export WECHAT_CORP_ID=your_corp_id
+export WECHAT_CORP_SECRET=your_corp_secret
+export WECHAT_AGENT_ID=your_agent_id
+export WECHAT_TOKEN=your_token
+export WECHAT_AES_KEY=your_aes_key
+augur wechat                   # 企业微信模式
+augur wechat --mode webhook    # Webhook 推送模式
 
-# === Lark/飞书 Bot (计划中 v4.4) ===
-# export LARK_APP_ID=your_app_id
-# export LARK_APP_SECRET=your_secret
-# augur lark
+# === Lark/飞书 Bot (已完成 v4.6) ===
+export LARK_APP_ID=your_app_id
+export LARK_APP_SECRET=your_app_secret
+export LARK_VERIFICATION_TOKEN=your_token
+augur lark                     # Event 订阅模式
+augur lark --mode webhook      # Webhook 推送模式
 ```
 
 ### 配置每位 Agent 的模型
@@ -579,7 +715,9 @@ augur/
 │   ├── bots/                   # 多平台 Bot 适配器
 │   │   ├── __init__.py
 │   │   ├── telegram_bot.py     # Telegram Bot (python-telegram-bot)
-│   │   └── slack_bot.py        # Slack Bot (slack-bolt, Socket + HTTP)
+│   │   ├── slack_bot.py        # Slack Bot (slack-bolt, Socket + HTTP)
+│   │   ├── wechat_bot.py       # WeChat/微信 Bot (wechatpy, 企业微信 + Webhook)
+│   │   └── lark_bot.py         # Lark/飞书 Bot (Event + Webhook)
 │   └── personas/               # 17位投资人人格 Agent
 │       ├── base.py             # Agent基类、MarketContext、AgentResponse
 │       ├── buffett.py          # Warren Buffett (沃伦·巴菲特)
@@ -640,6 +778,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v4.6** | 2026-05-23 | 📱 微信 (企业微信+Webhook) + 飞书 (Event+Webhook) Bot 多平台适配 |
 | **v4.5** | 2026-05-23 | 📊 信号监控页 + 自定义投资人 UI 创建器 + Watchlist API + requirements.txt |
 | **v4.4** | 2026-05-22 | 🎨 Dashboard UI 全面升级 - Bloomberg Terminal 风格 + Hermes 侧边栏布局 |
 | **v4.3** | 2026-05-22 | 💬 Slack Bot (Socket Mode + HTTP) + Cron Slack 推送 |
@@ -674,7 +813,7 @@ augur/
 - [x] **v4.3**: Slack Bot (Socket Mode + HTTP Mode) + Cron Slack 推送
 - [x] **v4.4**: Bloomberg Terminal UI + Hermes 侧边栏布局 (纯CSS, 无Bootstrap)
 - [x] **v4.5**: 信号监控页 + 自定义投资人 UI 创建器 + Watchlist API + requirements.txt
-- [ ] **v4.6**: WeChat/微信 + Lark/飞书 Bot 多平台适配
+- [x] **v4.6**: WeChat/微信 + Lark/飞书 Bot 多平台适配
 - [ ] **v5.0**: Docker 容器化 + 一键部署文档
 - [ ] **v5.1**: 历史回测系统 + Agent IC 实盘追踪
 
