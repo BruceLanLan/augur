@@ -11,6 +11,8 @@ Commands:
   augur inject-soul
   augur telegram          - Start Telegram bot
   augur slack             - Start Slack bot
+  augur wechat            - Start WeChat/WeCom bot
+  augur lark              - Start Lark/Feishu bot
   augur cron-run          - Run watchlist analysis once
   augur cron-start        - Start scheduler daemon
   augur watchlist-add     - Add ticker to watchlist
@@ -204,6 +206,26 @@ def slack_cmd(mode, port):
     """Start the Slack bot"""
     from augur.bots.slack_bot import run_slack_bot
     run_slack_bot(mode=mode, port=port)
+
+
+@main.command("wechat")
+@click.option("--mode", type=click.Choice(["wecom", "webhook"]), default="wecom",
+              help="Mode: wecom (enterprise) or webhook (push only)")
+@click.option("--port", type=int, default=8080, help="Port for WeCom callback server")
+def wechat_cmd(mode, port):
+    """Start the WeChat/WeCom bot"""
+    from augur.bots.wechat_bot import run_wechat_bot
+    run_wechat_bot(mode=mode, port=port)
+
+
+@main.command("lark")
+@click.option("--mode", type=click.Choice(["event", "webhook"]), default="event",
+              help="Mode: event (subscription) or webhook (push only)")
+@click.option("--port", type=int, default=9000, help="Port for event server")
+def lark_cmd(mode, port):
+    """Start the Lark/Feishu bot"""
+    from augur.bots.lark_bot import run_lark_bot
+    run_lark_bot(mode=mode, port_num=port)
 
 
 @main.command("cron-run")
