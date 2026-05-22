@@ -127,7 +127,118 @@ augur api --port 8900
 
 # 注入投资人灵魂到 Profile
 augur inject-soul --profile my-buffett --persona buffett --format hermes
+
+# Telegram Bot
+augur telegram
+
+# Cron 定时分析
+augur cron-run             # 手动运行一次
+augur cron-start           # 启动定时守护进程
+
+# Watchlist 管理
+augur watchlist-add AAPL --pe 32 --roe 0.55
+augur watchlist-show
 ```
+
+---
+
+## 📱 Telegram Bot
+
+Augur 支持通过 Telegram Bot 进行实时分析，随时随地获取17位大师的投资建议。
+
+### 创建 Bot
+
+1. 打开 Telegram，搜索 `@BotFather`
+2. 发送 `/newbot`，按提示创建 Bot
+3. 获得 Bot Token（格式如 `123456789:ABCdefGHI...`）
+
+### 配置与启动
+
+```bash
+# 安装 telegram 依赖
+pip install 'augur-agents[telegram]'
+
+# 设置 Token
+export TELEGRAM_TOKEN='your-bot-token-here'
+
+# 启动 Bot
+augur telegram
+```
+
+### Bot 可用命令
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `/analyze TICKER [指标]` | 17位大师共识分析 | `/analyze AAPL pe=32 roe=0.55` |
+| `/consensus TICKER` | 共识分析(同 /analyze) | `/consensus NVDA` |
+| `/ask PERSONA 问题` | 向特定大师提问 | `/ask buffett 分析AAPL` |
+| `/personas` | 列出所有投资大师 | `/personas` |
+| `/help` | 显示帮助 | `/help` |
+
+### 自然语言对话
+
+直接发送包含 `@人名` 的消息即可触发对应大师分析：
+
+```
+@巴菲特 分析AAPL
+@段永平 NVDA值得买吗？
+@张磊 PDD是时代级赛道吗？
+```
+
+---
+
+## ⏰ Cron 定时分析 + Watchlist
+
+### Watchlist 管理
+
+```bash
+# 添加自选股
+augur watchlist-add AAPL --pe 32 --roe 0.55 --gross-margins 0.46
+augur watchlist-add NVDA --pe 45 --roe 0.85
+augur watchlist-add TSLA --pe 85 --roe 0.12
+
+# 查看自选股
+augur watchlist-show
+
+# 手动触发一次分析
+augur cron-run
+
+# 启动定时守护进程
+augur cron-start
+```
+
+### 配置文件 (~/.augur/watchlist.yaml)
+
+```yaml
+watchlist:
+  - ticker: AAPL
+    pe: 32
+    roe: 0.55
+    gross_margins: 0.46
+  - ticker: NVDA
+    pe: 45
+    roe: 0.85
+    gross_margins: 0.75
+  - ticker: TSLA
+    pe: 85
+    roe: 0.12
+    gross_margins: 0.18
+
+schedule:
+  cron: "0 9 * * 1-5"   # 工作日 9:00 AM
+  timezone: "Asia/Shanghai"
+
+notifications:
+  telegram:
+    enabled: true
+    chat_id: "YOUR_CHAT_ID"
+    token: "YOUR_BOT_TOKEN"
+  alert_threshold: 3      # 评分变化>3才推送
+```
+
+### Cron 定时触发
+
+使用 `augur cron-start` 启动守护进程，按配置的 cron 表达式自动执行分析并推送到 Telegram。
 
 ---
 
@@ -305,20 +416,32 @@ hermes skills install https://github.com/BruceLanLan/augur/tree/main/skills/zhan
 "张磊视角评估 PDD，营收增速86%，这是时代级赛道吗？"
 ```
 
-### Telegram / Slack / 微信
+### Telegram / Slack / 微信 / 飞书
 
 ```bash
 # 启动 Augur API
 python3 -m dashboard.app --port 8000 --cors
 
-# 配置 Bot（以 Telegram 为例）
+# === Telegram Bot (已完成) ===
 export TELEGRAM_TOKEN=your_bot_token
-export AUGUR_API_URL=http://localhost:8000
-python3 bots/telegram_bot.py
-
+augur telegram
 # 用户在 Telegram 发送：
 # /analyze AAPL pe=32 gm=46 roe=55
 # /ask buffett 你觉得现在的苹果值得持有吗？
+
+# === Slack Bot (计划中) ===
+# export SLACK_BOT_TOKEN=xoxb-your-token
+# augur slack
+
+# === WeChat/微信 Bot (计划中) ===
+# export WECHAT_APP_ID=your_app_id
+# export WECHAT_APP_SECRET=your_secret
+# augur wechat
+
+# === Lark/飞书 Bot (计划中) ===
+# export LARK_APP_ID=your_app_id
+# export LARK_APP_SECRET=your_secret
+# augur lark
 ```
 
 ### 配置每位 Agent 的模型
@@ -366,7 +489,7 @@ augur/
 │
 ├── src/augur/                  # pip 包主模块 (augur-agents)
 │   ├── __init__.py             # 公共符号导出
-│   ├── cli.py                  # Click CLI: 6 commands
+│   ├── cli.py                  # Click CLI: 11 commands
 │   ├── mcp_server.py           # MCP Server: 6 tools (stdio mode)
 │   ├── api.py                  # REST API (FastAPI)
 │   ├── config.py               # 运行时配置管理
@@ -374,6 +497,10 @@ augur/
 │   ├── coordinator.py          # 共识协调器
 │   ├── persona_loader.py       # YAML 自定义人格加载
 │   ├── soul.py                 # Soul Injector - 人格注入引擎
+│   ├── cron.py                 # Cron 定时分析 + Watchlist 管理
+│   ├── bots/                   # 多平台 Bot 适配器
+│   │   ├── __init__.py
+│   │   └── telegram_bot.py     # Telegram Bot (python-telegram-bot)
 │   └── personas/               # 17位投资人人格 Agent
 │       ├── base.py             # Agent基类、MarketContext、AgentResponse
 │       ├── buffett.py          # Warren Buffett (沃伦·巴菲特)
@@ -434,6 +561,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v4.2** | 2026-05-22 | 📱 Telegram Bot + Cron 定时共识分析 + Watchlist 管理 |
 | **v4.1** | 2026-05-22 | 🎨 Config REST API + Dashboard UI/UX - 设置页完全可用(17投资人模型配置) + 人格页搜索/展开/头像 + 首页快速分析 + 股票页交互优化 + 响应式CSS |
 | **v4.0** | 2026-05-22 | 🚀 pip 包化 — `augur-agents` PyPI 包 + CLI 6命令 + MCP Server 6工具 + 运行时配置管理 |
 | **v3.5** | 2026-05-22 | 🎨 Baoyu漫画风格配图 — hero-banner-baoyu + architecture-baoyu + 17投资人漫画头像 |
@@ -460,9 +588,10 @@ augur/
 - [x] **v3.4**: 17个独立 Skill 封装 + LLM 模型配置
 - [x] **v4.0**: pip 包化 `augur-agents` + CLI 6命令 + MCP Server + Soul Injector
 - [x] **v4.1**: Config REST API + Dashboard UI/UX 全面优化
-- [x] **v4.2**: 设置页完全可用 + 人格页搜索展开 + 首页快速分析 + 响应式设计
-- [ ] **v4.3**: Docker 容器化 + 一键部署文档
-- [ ] **v5.0**: 历史回测系统 + Agent IC 实盘追踪
+- [x] **v4.2**: Telegram Bot + Cron 定时共识分析 + Watchlist 管理
+- [ ] **v4.3**: Slack / WeChat / Lark(飞书) Bot 多平台适配
+- [ ] **v5.0**: Docker 容器化 + 一键部署文档
+- [ ] **v5.1**: 历史回测系统 + Agent IC 实盘追踪
 
 ---
 
