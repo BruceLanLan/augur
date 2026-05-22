@@ -67,3 +67,96 @@ class TestConfigAPI:
         resp = client.get("/settings")
         assert resp.status_code == 200
         assert "模型配置" in resp.text
+
+
+class TestCustomPersonaAPI:
+    """Tests for POST /api/custom-persona endpoint."""
+
+    def test_create_custom_persona_valid(self):
+        """Valid agent_id and YAML content should succeed."""
+        from pathlib import Path
+        resp = client.post(
+            "/api/custom-persona",
+            json={
+                "agent_id": "test-agent-01",
+                "yaml_content": "name: Test Agent\nidentity: A test persona\n",
+            },
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] == "ok"
+        assert "test-agent-01.yaml" in data["path"]
+        # Clean up the created file
+        created_file = Path(data["path"])
+        if created_file.exists():
+            created_file.unlink()
+
+    def test_create_custom_persona_invalid_agent_id_with_slash(self):
+        """agent_id containing '/' should be rejected."""
+        resp = client.post(
+            "/api/custom-persona",
+            json={
+                "agent_id": "../../etc/malicious",
+                "yaml_content": "name: Evil\n",
+            },
+        )
+        assert resp.status_code == 400
+        assert "Invalid agent_id" in resp.json()["detail"]
+
+    def test_create_custom_persona_invalid_agent_id_with_dots(self):
+        """agent_id containing '..' should be rejected."""
+        resp = client.post(
+            "/api/custom-persona",
+            json={
+                "agent_id": "some..thing",
+                "yaml_content": "name: Evil\n",
+            },
+        )
+        assert resp.status_code == 400
+        assert "Invalid agent_id" in resp.json()["detail"]
+
+    def test_create_custom_persona_invalid_agent_id_uppercase(self):
+        """agent_id with uppercase letters should be rejected."""
+        resp = client.post(
+            "/api/custom-persona",
+            json={
+                "agent_id": "BadAgent",
+                "yaml_content": "name: Test\n",
+            },
+        )
+        assert resp.status_code == 400
+        assert "Invalid agent_id" in resp.json()["detail"]
+
+    def test_create_custom_persona_invalid_yaml(self):
+        """Invalid YAML content should return 400."""
+        resp = client.post(
+            "/api/custom-persona",
+            json={
+                "agent_id": "valid-id",
+                "yaml_content": "invalid: yaml: [unclosed bracket",
+            },
+        )
+        assert resp.status_code == 400
+        assert "Invalid YAML" in resp.json()["detail"]
+
+
+class TestPersonaConfigValidation:
+    """Tests for agent_id validation on PUT /api/config/persona/{id}."""
+
+    def test_put_nonexistent_persona_returns_404(self):
+        """PUT with an agent_id not in registry should return 404."""
+        resp = client.put(
+            "/api/config/persona/nonexistent-agent-xyz",
+            json={"model": "gpt-4o"},
+        )
+        assert resp.status_code == 404
+        assert "not found" in resp.json()["detail"]
+
+    def test_put_valid_persona_succeeds(self):
+        """PUT with a valid agent_id should succeed."""
+        resp = client.put(
+            "/api/config/persona/buffett",
+            json={"model": "gpt-4o"},
+        )
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "ok"

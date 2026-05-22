@@ -11,6 +11,8 @@ Usage:
 
 import sys
 import os
+import re
+import yaml
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import argparse
@@ -309,6 +311,9 @@ async def api_get_persona_config(agent_id: str):
 @app.put("/api/config/persona/{agent_id}")
 async def api_put_persona_config(agent_id: str, body: PersonaModelBody):
     """更新单个 Agent 的模型配置"""
+    agent = get_registry().get(agent_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Persona '{agent_id}' not found in registry")
     set_config(f"per_agent.{agent_id}", body.model)
     save_config()
     return {"status": "ok", "agent_id": agent_id, "model": body.model}
@@ -329,6 +334,17 @@ async def api_get_models():
 @app.post("/api/custom-persona")
 async def api_create_custom_persona(body: CustomPersonaBody):
     """保存自定义 Persona YAML 到 personas/custom/"""
+    # Validate agent_id: only allow lowercase alphanumeric, hyphens, underscores
+    if not re.match(r'^[a-z0-9_-]+$', body.agent_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid agent_id: only lowercase letters, digits, hyphens, and underscores are allowed"
+        )
+    # Validate YAML content is parseable
+    try:
+        yaml.safe_load(body.yaml_content)
+    except yaml.YAMLError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid YAML content: {e}")
     custom_dir = Path(__file__).parent.parent / "personas" / "custom"
     custom_dir.mkdir(parents=True, exist_ok=True)
     filepath = custom_dir / f"{body.agent_id}.yaml"
