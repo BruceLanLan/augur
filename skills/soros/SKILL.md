@@ -14,6 +14,20 @@ metadata:
     style: 反身性 · 宏观交易 · 危机
     sectors: [All, Macro, Currency, Commodities]
     signal_thresholds: {bullish: 6.0, bearish: 4.0}
+    group_chat:
+      mention: ["soros", "索罗斯"]
+      room_role: macro_trader
+      auto_reply: true
+      intro: "反身性理论大师，擅长危机交易与宏观偏差识别"
+    triggers:
+      - "/skill augur-soros"
+      - "@soros"
+      - "@索罗斯"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: soros
 ---
 
 # George Soros — 投资分析 Agent

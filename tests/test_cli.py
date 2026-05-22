@@ -49,9 +49,21 @@ class TestCLI:
         assert "--port" in result.output
 
     def test_inject_soul(self, runner):
-        result = runner.invoke(main, ["inject-soul"])
+        result = runner.invoke(main, ["inject-soul", "--help"])
         assert result.exit_code == 0
-        assert "Phase 2" in result.output
+        assert "--profile" in result.output
+        assert "--persona" in result.output
+
+    def test_inject_soul_runs(self, runner):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = runner.invoke(main, [
+                "inject-soul", "--profile", "test-profile",
+                "--persona", "buffett", "--output-dir", tmpdir,
+                "--format", "raw"
+            ])
+            assert result.exit_code == 0
+            assert "Soul injected" in result.output
 
     def test_analyze_single_persona(self, runner):
         result = runner.invoke(main, ["analyze", "AAPL", "--persona", "buffett", "--pe", "32"])

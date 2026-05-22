@@ -167,9 +167,20 @@ def api_cmd(port, host):
 
 
 @main.command("inject-soul")
-def inject_soul_cmd():
-    """Inject soul into personas (Phase 2)"""
-    click.echo("Coming in Phase 2")
+@click.option("--profile", "-p", required=True, help="Profile name to create")
+@click.option("--persona", required=True, help="Persona ID to inject (e.g. buffett, duan_yongping)")
+@click.option("--output-dir", "-o", default=None, help="Output directory (default: current dir)")
+@click.option("--format", "-f", "fmt", type=click.Choice(["hermes", "claude", "raw"]), default="hermes", help="Output format")
+def inject_soul_cmd(profile, persona, output_dir, fmt):
+    """Inject persona soul into a profile config file"""
+    from augur.soul import inject_soul
+
+    try:
+        result_path = inject_soul(profile, persona, format=fmt, output_dir=output_dir)
+        click.echo(f"Soul injected: {result_path}")
+    except ValueError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
 
 
 def _print_result(result):

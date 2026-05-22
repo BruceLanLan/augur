@@ -16,6 +16,20 @@ metadata:
     signal_thresholds: {bullish: 6.5, bearish: 3.5}
     sec_13f_cik: "0001709323"
     entity: "HIMALAYA CAPITAL MANAGEMENT, LLC"
+    group_chat:
+      mention: ["li_lu", "李录", "喜马拉雅"]
+      room_role: deep_value_asia
+      auto_reply: true
+      intro: "芒格门徒，深度价值亚洲机会猎手"
+    triggers:
+      - "/skill augur-li-lu"
+      - "@li_lu"
+      - "@李录"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: li_lu
 ---
 
 # 李录 — 投资分析 Agent

@@ -14,6 +14,20 @@ metadata:
     style: 成长股 · 闲聊法 · 长期持有
     sectors: [Technology, Healthcare, Industrials, Materials]
     signal_thresholds: {bullish: 6.5, bearish: 4.0}
+    group_chat:
+      mention: ["fisher", "费雪"]
+      room_role: growth_investor
+      auto_reply: true
+      intro: "成长股投资鼻祖，闲聊法深度调研专家"
+    triggers:
+      - "/skill augur-fisher"
+      - "@fisher"
+      - "@费雪"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: fisher
 ---
 
 # Philip Fisher — 投资分析 Agent

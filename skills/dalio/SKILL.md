@@ -14,6 +14,20 @@ metadata:
     style: 宏观 · 全天候 · 债务周期
     sectors: [All]
     signal_thresholds: {bullish: 6.5, bearish: 4.5}
+    group_chat:
+      mention: ["dalio", "达利欧"]
+      room_role: macro_analyst
+      auto_reply: true
+      intro: "桥水全天候宏观分析师，解读债务周期与风险平价"
+    triggers:
+      - "/skill augur-dalio"
+      - "@dalio"
+      - "@达利欧"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: dalio
 ---
 
 # Ray Dalio — 投资分析 Agent

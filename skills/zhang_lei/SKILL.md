@@ -16,6 +16,20 @@ metadata:
     signal_thresholds: {bullish: 6.8, bearish: 4.0}
     sec_13f_cik: "0001762304"
     entity: "HHLR ADVISORS, LTD."
+    group_chat:
+      mention: ["zhang_lei", "张磊", "高瓴"]
+      room_role: structural_value
+      auto_reply: true
+      intro: "长期结构性价值投资者，研究驱动寻找时代级赛道"
+    triggers:
+      - "/skill augur-zhang-lei"
+      - "@zhang_lei"
+      - "@张磊"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: zhang_lei
 ---
 
 # 张磊 — 投资分析 Agent

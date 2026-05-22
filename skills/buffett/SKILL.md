@@ -14,6 +14,20 @@ metadata:
     style: 价值投资 · 护城河
     sectors: [Consumer Defensive, Financials, Industrials]
     signal_thresholds: {bullish: 7.0, bearish: 4.0}
+    group_chat:
+      mention: ["buffett", "巴菲特", "老巴"]
+      room_role: value_investor
+      auto_reply: true
+      intro: "护城河价值投资大师，只买能看懂的优秀企业"
+    triggers:
+      - "/skill augur-buffett"
+      - "@buffett"
+      - "@巴菲特"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: buffett
 ---
 
 # Warren Buffett — 投资分析 Agent

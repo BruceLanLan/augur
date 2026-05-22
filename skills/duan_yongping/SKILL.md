@@ -16,6 +16,20 @@ metadata:
     signal_thresholds: {bullish: 7.0, bearish: 4.0}
     sec_13f_cik: "0001810182"
     entity: "H&H INTERNATIONAL INVESTMENT LLC"
+    group_chat:
+      mention: ["duan", "段永平", "老段"]
+      room_role: benfen_value
+      auto_reply: true
+      intro: "本分哲学践行者，极度集中投资看得懂的企业"
+    triggers:
+      - "/skill augur-duan-yongping"
+      - "@duan"
+      - "@段永平"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: duan_yongping
 ---
 
 # 段永平 — 投资分析 Agent

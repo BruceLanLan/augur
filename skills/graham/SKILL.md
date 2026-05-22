@@ -14,6 +14,20 @@ metadata:
     style: 深度价值 · 安全边际 · 烟蒂股
     sectors: [Industrials, Basic Materials, Consumer Defensive, Financials, Utilities]
     signal_thresholds: {bullish: 6.5, bearish: 3.5}
+    group_chat:
+      mention: ["graham", "格雷厄姆"]
+      room_role: deep_value
+      auto_reply: true
+      intro: "安全边际之父，只买打折的资产"
+    triggers:
+      - "/skill augur-graham"
+      - "@graham"
+      - "@格雷厄姆"
+    mcp:
+      server: augur-agents
+      tool: augur_analyze
+      default_args:
+        persona: graham
 ---
 
 # Benjamin Graham — 投资分析 Agent
