@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Enhance Dashboard UI/UX - improve personas page (card grid + avatars + expand + filter), index page (quick analysis widget + system status), stocks page polish, and comprehensive CSS improvements",
+  "status": "pending",
+  "steps": [
+    "Rewrite dashboard/templates/personas.html: implement a card-based grid layout with improved styling. Each card shows: agent avatar (from /docs/images/avatars/{id}.svg), agent name, style keywords, philosophy summary, current model assignment, country flag for Chinese investors. Cards should be expandable (click to show full detail including all philosophy items and scoring weights). Add a search/filter bar at top that filters personas by name or style text. Use vanilla JS for expand/collapse and filter logic.",
+    "Enhance dashboard/templates/index.html: add a 'Quick Analysis' widget section with a mini form (ticker input + analyze button) that calls /api/analyze/{ticker} and shows a compact consensus result (signal badge + score) inline without navigating away. Add a 'System Status' card showing agent count, config file status, and available model count. Keep the existing hero section and featured personas but improve spacing and responsiveness.",
+    "Improve dashboard/templates/stocks.html: add smooth transitions when results appear (fade-in). Ensure the quick ticker buttons auto-fill AND auto-focus the input. Add a mini loading animation with pulsing dots. Make the agent cards in results show a truncated version that expands on click to reveal full reasoning. Ensure responsive behavior for mobile/tablet.",
+    "Comprehensive CSS update in dashboard/static/css/baoyu.css: add responsive breakpoints (@media queries for mobile/tablet). Add card hover effects (subtle glow, slight lift). Add transition animations (fade-in for sections, slide-in for toasts). Add form input focus states for dark theme (green glow border). Add .toast-container and .toast styles. Add .expandable-card and .card-expanded states. Add .filter-input styling. Add .loading-pulse keyframe animation. Improve typography (better line-height, letter-spacing for headers). Keep all existing baoyu-theme styles intact.",
+    "Update dashboard/templates/base.html if needed to add any shared toast container div or additional meta tags for better mobile rendering"
+  ],
+  "acceptance_criteria": [
+    "Personas page shows card grid with avatars, expandable detail, and working search/filter",
+    "Index page has quick analysis widget that returns inline results",
+    "Stocks page has smooth transitions, expandable agent cards, responsive layout",
+    "CSS includes responsive breakpoints, hover effects, animations, toast styles",
+    "All pages maintain Bloomberg dark theme consistency",
+    "All existing tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -v --tb=short",
+    "python -c \"from dashboard.app import app; print('Dashboard imports OK')\"",
+    "python -c \"import pathlib; css = pathlib.Path('dashboard/static/css/baoyu.css').read_text(); assert '@media' in css; assert 'toast' in css; print('CSS OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

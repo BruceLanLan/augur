@@ -23,6 +23,7 @@ try:
     from fastapi.templating import Jinja2Templates
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.staticfiles import StaticFiles
+    from pydantic import BaseModel
     import uvicorn
 except ImportError:
     print("Missing dependencies. Run: pip install fastapi uvicorn jinja2")
@@ -34,6 +35,8 @@ try:
 except ImportError:
     from scanner.personas.registry import AgentRegistry, DecisionCoordinator
     from scanner.personas.base import MarketContext
+
+from augur.config import get_config, set_config, save_config, reset_config
 
 app = FastAPI(
     title="Augur — 多智能体投资分析",
@@ -148,9 +151,23 @@ async def signals_page(request: Request):
 
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
+    config = get_config()
+    available_models = config.get("available_models", {})
+    models_flat = []
+    for provider_models in available_models.values():
+        if isinstance(provider_models, list):
+            models_flat.extend(provider_models)
+    personas = _persona_meta()
+    per_agent = config.get("per_agent", {})
+    default_model = config.get("defaults", {}).get("model", "")
+    for p in personas:
+        p["current_model"] = per_agent.get(p["id"], default_model)
     return templates.TemplateResponse("settings.html", {
         "request": request,
         "title": "设置",
+        "personas": personas,
+        "available_models": models_flat,
+        "default_model": default_model,
     })
 
 
@@ -235,6 +252,99 @@ async def get_persona(agent_id: str):
     if not agent:
         raise HTTPException(status_code=404, detail=f"Persona '{agent_id}' not found")
     return agent.to_dict()
+
+
+# ============ Config API Routes ============
+
+class ConfigUpdateBody(BaseModel):
+    """Request body for full config update."""
+    defaults: Optional[Dict[str, Any]] = None
+    per_agent: Optional[Dict[str, Any]] = None
+    available_models: Optional[Dict[str, Any]] = None
+
+
+class PersonaModelBody(BaseModel):
+    """Request body for persona model update."""
+    model: str
+
+
+class CustomPersonaBody(BaseModel):
+    """Request body for custom persona creation."""
+    yaml_content: str
+    agent_id: str
+
+
+@app.get("/api/config")
+async def api_get_config():
+    """返回完整配置"""
+    return get_config()
+
+
+@app.put("/api/config")
+async def api_put_config(body: ConfigUpdateBody):
+    """更新完整配置"""
+    data = body.dict(exclude_none=True)
+    for key, value in data.items():
+        set_config(key, value)
+    save_config()
+    return {"status": "ok", "message": "配置已更新"}
+
+
+@app.get("/api/config/persona/{agent_id}")
+async def api_get_persona_config(agent_id: str):
+    """获取单个 Agent 的模型配置"""
+    config = get_config()
+    per_agent = config.get("per_agent", {})
+    default_model = config.get("defaults", {}).get("model", "")
+    model = per_agent.get(agent_id, default_model)
+    return {"agent_id": agent_id, "model": model}
+
+
+@app.put("/api/config/persona/{agent_id}")
+async def api_put_persona_config(agent_id: str, body: PersonaModelBody):
+    """更新单个 Agent 的模型配置"""
+    set_config(f"per_agent.{agent_id}", body.model)
+    save_config()
+    return {"status": "ok", "agent_id": agent_id, "model": body.model}
+
+
+@app.get("/api/models")
+async def api_get_models():
+    """返回所有可用模型（扁平列表）"""
+    config = get_config()
+    available_models = config.get("available_models", {})
+    models_flat = []
+    for provider, provider_models in available_models.items():
+        if isinstance(provider_models, list):
+            models_flat.extend(provider_models)
+    return {"models": models_flat}
+
+
+@app.post("/api/custom-persona")
+async def api_create_custom_persona(body: CustomPersonaBody):
+    """保存自定义 Persona YAML 到 personas/custom/"""
+    custom_dir = Path(__file__).parent.parent / "personas" / "custom"
+    custom_dir.mkdir(parents=True, exist_ok=True)
+    filepath = custom_dir / f"{body.agent_id}.yaml"
+    filepath.write_text(body.yaml_content, encoding="utf-8")
+    return {"status": "ok", "path": str(filepath)}
+
+
+@app.get("/api/schema/persona")
+async def api_persona_schema():
+    """返回 Persona YAML 结构描述"""
+    return {
+        "type": "object",
+        "properties": {
+            "agent_id": {"type": "string", "description": "唯一标识符"},
+            "name": {"type": "string", "description": "显示名称"},
+            "identity": {"type": "string", "description": "人格身份描述"},
+            "philosophy": {"type": "array", "items": {"type": "string"}, "description": "投资哲学要点"},
+            "scoring_weights": {"type": "object", "description": "评分权重 (维度 -> 0-1)"},
+            "model": {"type": "string", "description": "使用的 LLM 模型"},
+        },
+        "required": ["agent_id", "name", "identity"],
+    }
 
 
 @app.get("/health")

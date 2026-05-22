@@ -1,36 +1,243 @@
 {% extends "base.html" %}
 {% block title %}设置 — Augur{% endblock %}
+
+{% block extra_head %}
+<style>
+    .persona-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 1rem;
+    }
+    .persona-card {
+        background: #111;
+        border: 1px solid #1a3a2a;
+        border-radius: 10px;
+        padding: 1rem 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .persona-card:hover {
+        border-color: #00ff88;
+        box-shadow: 0 0 12px rgba(0, 255, 136, 0.08);
+    }
+    .persona-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        background: #1a1a1a;
+        overflow: hidden;
+    }
+    .persona-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .persona-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .persona-name {
+        font-weight: 600;
+        color: #e0e0e0;
+        font-size: 0.95rem;
+        margin-bottom: 2px;
+    }
+    .persona-style {
+        font-size: 0.75rem;
+        color: #666;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .persona-model-select {
+        background: #0d0d0d;
+        border: 1px solid #1a3a2a;
+        color: #ccc;
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+        min-width: 140px;
+        max-width: 180px;
+    }
+    .persona-model-select:focus {
+        outline: none;
+        border-color: #00ff88;
+        box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.15);
+    }
+    .btn-save-persona {
+        background: transparent;
+        border: 1px solid #1a3a2a;
+        color: #00ff88;
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    .btn-save-persona:hover {
+        background: #00ff88;
+        color: #0a0a0a;
+        border-color: #00ff88;
+    }
+    .btn-save-all {
+        background: #00ff88;
+        color: #0a0a0a;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 28px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-save-all:hover {
+        background: #00cc6e;
+        transform: translateY(-1px);
+    }
+    .settings-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    /* Toast system */
+    .toast-container {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+    .toast-msg {
+        background: #1a1a1a;
+        border: 1px solid #1a3a2a;
+        border-radius: 8px;
+        padding: 12px 20px;
+        color: #e0e0e0;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        transform: translateX(120%);
+        transition: transform 0.3s ease;
+        max-width: 320px;
+    }
+    .toast-msg.show {
+        transform: translateX(0);
+    }
+    .toast-msg.success {
+        border-left: 3px solid #00ff88;
+    }
+    .toast-msg.error {
+        border-left: 3px solid #e74c3c;
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-  <h2 style="color:#00ff88;">⚙️ 设置</h2>
-  <p class="text-muted mb-5">系统配置与数据源管理</p>
-
-  <div class="row justify-content-center">
-    <div class="col-md-8 text-center">
-      <div class="card py-5">
-        <div style="font-size:4rem;">🔧</div>
-        <h4 style="color:#00ff88;" class="mt-3">功能开发中</h4>
-        <p class="text-muted mt-2" style="max-width:400px; margin:auto;">
-          设置页面将支持 API Key 管理、Agent 权重调整、自定义 Watchlist，以及数据源配置。
-        </p>
-        <div class="mt-4 d-flex gap-3 justify-content-center flex-wrap">
-          <div class="card px-4 py-3" style="background:#111; min-width:140px;">
-            <div style="font-size:.72rem; color:#555; text-transform:uppercase; letter-spacing:.5px;">计划配置</div>
-            <div class="mt-2 text-start" style="font-size:.82rem; color:#aaa;">
-              <div class="mb-1">✓ Hermes API 地址</div>
-              <div class="mb-1">✓ Agent 权重覆盖</div>
-              <div class="mb-1">✓ SEC EDGAR User-Agent</div>
-              <div>✓ 主题 / 语言切换</div>
-            </div>
-          </div>
+    <div class="settings-header">
+        <div>
+            <h2 style="color:#00ff88; margin:0;">&#9881;&#65039; 模型配置</h2>
+            <p class="text-muted mb-0 mt-1">为每位投资大师分配 LLM 模型</p>
         </div>
-        <div class="mt-4">
-          <a href="/" class="btn" style="background:#00ff88; color:#0a0a0a; font-weight:600;">
-            返回首页 →
-          </a>
-        </div>
-      </div>
+        <button class="btn-save-all" onclick="saveAll()">
+            <i class="bi bi-save"></i> 全部保存
+        </button>
     </div>
-  </div>
+
+    <div class="persona-grid" id="persona-grid">
+        {% for persona in personas %}
+        <div class="persona-card" data-agent-id="{{ persona.id }}">
+            <div class="persona-avatar">
+                <img src="/docs/images/avatars/{{ persona.id }}.svg" alt="{{ persona.name }}" onerror="this.parentElement.innerHTML='<div style=&quot;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:#1a1a1a;&quot;>&#x1F464;</div>'">
+            </div>
+            <div class="persona-info">
+                <div class="persona-name">{{ persona.name }}</div>
+                <div class="persona-style">{{ persona.style }}</div>
+            </div>
+            <select class="persona-model-select" data-agent-id="{{ persona.id }}">
+                {% for model in available_models %}
+                <option value="{{ model }}" {% if model == persona.current_model %}selected{% endif %}>{{ model }}</option>
+                {% endfor %}
+            </select>
+            <button class="btn-save-persona" onclick="savePersona('{{ persona.id }}')">保存</button>
+        </div>
+        {% endfor %}
+    </div>
 </div>
+
+<div class="toast-container" id="toast-container"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function showToast(message, type) {
+    type = type || 'success';
+    var container = document.getElementById('toast-container');
+    var toast = document.createElement('div');
+    toast.className = 'toast-msg ' + type;
+    toast.textContent = message;
+    container.appendChild(toast);
+    // Trigger animation
+    setTimeout(function() { toast.classList.add('show'); }, 10);
+    // Remove after 3s
+    setTimeout(function() {
+        toast.classList.remove('show');
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 3000);
+}
+
+function savePersona(agentId) {
+    var select = document.querySelector('select[data-agent-id="' + agentId + '"]');
+    var model = select.value;
+    fetch('/api/config/persona/' + agentId, {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({model: model})
+    })
+    .then(function(resp) { return resp.json(); })
+    .then(function(data) {
+        if (data.status === 'ok') {
+            showToast(agentId + ' 模型已更新为 ' + model, 'success');
+        } else {
+            showToast('保存失败: ' + (data.detail || '未知错误'), 'error');
+        }
+    })
+    .catch(function(err) {
+        showToast('请求失败: ' + err.message, 'error');
+    });
+}
+
+function saveAll() {
+    var cards = document.querySelectorAll('.persona-card');
+    var promises = [];
+    cards.forEach(function(card) {
+        var agentId = card.getAttribute('data-agent-id');
+        var select = card.querySelector('select');
+        var model = select.value;
+        promises.push(
+            fetch('/api/config/persona/' + agentId, {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({model: model})
+            }).then(function(r) { return r.json(); })
+        );
+    });
+    Promise.all(promises)
+    .then(function(results) {
+        var ok = results.filter(function(r) { return r.status === 'ok'; }).length;
+        showToast('已保存 ' + ok + ' 位投资大师的模型配置', 'success');
+    })
+    .catch(function(err) {
+        showToast('批量保存失败: ' + err.message, 'error');
+    });
+}
+</script>
 {% endblock %}

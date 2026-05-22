@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Add Config REST API endpoints to dashboard/app.py and build a fully functional Settings page with model management UI",
+  "status": "in_progress",
+  "steps": [
+    "In dashboard/app.py, add the following API endpoints using src/augur/config.py (get_config, set_config, save_config): GET /api/config (return full config), PUT /api/config (update full config, accept JSON body), GET /api/config/persona/{agent_id} (get model config for one persona), PUT /api/config/persona/{agent_id} (update model for one persona, accept JSON body with 'model' field), GET /api/models (return available_models from config), POST /api/custom-persona (accept YAML content, save to personas/custom/), GET /api/schema/persona (return persona YAML schema definition)",
+    "Update dashboard/app.py settings_page route to pass personas list and available_models data to the template context",
+    "Rewrite dashboard/templates/settings.html to be a fully functional settings page: display all 17 personas in a table/grid with avatar (from /docs/images/avatars/{id}.svg), name, style tags, and a model dropdown for each. Populate dropdowns from available_models (flattened list from all providers). Add Save button per persona that calls PUT /api/config/persona/{id}. Add toast notification system for success/error feedback. Include a 'Save All' button. Keep Bloomberg dark theme styling consistent with other pages.",
+    "Add toast notification CSS to dashboard/static/css/baoyu.css or inline in settings.html - dark-themed toast that slides in from top-right",
+    "Add test in tests/test_registry.py or a new tests/test_api.py to verify the new config API endpoints work (import app from dashboard.app, use TestClient)"
+  ],
+  "acceptance_criteria": [
+    "GET /api/config returns JSON with defaults and per_agent keys from agents.yaml",
+    "PUT /api/config/persona/buffett with {\"model\": \"gpt-4o\"} updates config and returns success",
+    "GET /api/models returns flattened list of all available models",
+    "Settings page displays all 17 personas with current model and working dropdowns",
+    "Saving a model change shows toast notification and persists the change",
+    "All existing tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -v --tb=short",
+    "python -c \"from dashboard.app import app; print('Dashboard imports OK')\"",
+    "python -c \"from augur.config import get_config; c = get_config(); print('Config OK:', 'per_agent' in c)\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

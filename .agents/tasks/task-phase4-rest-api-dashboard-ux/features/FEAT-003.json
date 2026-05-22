@@ -1,0 +1,22 @@
+{
+  "id": "FEAT-003",
+  "type": "docs",
+  "description": "Update README.md with v4.1 version log entry describing the Config REST API and UI/UX improvements, add API documentation section",
+  "status": "pending",
+  "steps": [
+    "In README.md version log table, add a v4.1 entry: date 2026-05-22, content describing Config REST API (GET/PUT /api/config, /api/models) + Settings page fully functional + Personas page card grid with avatars/search + Index quick analysis widget + Stocks page polish + responsive CSS. Also update v4.2 roadmap item to mark UI/UX as done (checkbox checked).",
+    "In the Web Dashboard section of README.md, update the feature descriptions: change Settings from '开发中' to functional (Agent模型配置), update the Personas description to mention card grid with avatars and search. Add a new subsection '### REST API Endpoints' under the Web Dashboard section listing all new endpoints: GET /api/config, PUT /api/config, GET /api/config/persona/{id}, PUT /api/config/persona/{id}, GET /api/models, POST /api/custom-persona, GET /api/schema/persona, with brief descriptions.",
+    "Update the roadmap section: mark v4.1 and v4.2 as completed with [x], adjust descriptions to match what was actually built"
+  ],
+  "acceptance_criteria": [
+    "README.md contains v4.1 version log entry with correct date and description",
+    "Web Dashboard section shows all 5 pages as functional (no '开发中')",
+    "REST API endpoints section documents all 7 new endpoints",
+    "Roadmap shows v4.1 and v4.2 as completed"
+  ],
+  "verification": [
+    "python -c \"import pathlib; r = pathlib.Path('README.md').read_text(); assert 'v4.1' in r; assert '/api/config' in r; assert '/api/models' in r; print('README OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
