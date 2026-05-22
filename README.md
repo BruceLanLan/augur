@@ -241,17 +241,35 @@ factors:
 Bloomberg 风格的暗色主题 Web 界面，内置 FastAPI 服务：
 
 ```
-🏠 首页     — 系统概览 + 快速分析入口
-🤖 人格页   — 17位投资大师对比展示
-📈 股票分析  — 单标的深度分析 + 实时17Agent评分
+🏠 首页     — 系统概览 + 快速分析(输入代码即得共识) + 系统状态
+🤖 人格页   — 17位大师卡片网格 + 头像 + 搜索筛选 + 展开详情
+📈 股票分析  — 单标的深度分析 + 实时17Agent评分 + 可展开推理
 ⚡ 信号监控  — 自选股批量扫描（开发中）
-⚙️ 设置     — Agent模型配置（开发中）
+⚙️ 设置     — Agent模型配置(17投资人独立模型选择 + 实时保存)
 ```
 
 启动方式：
 ```bash
 python3 -m dashboard.app --port 8000 --cors
 ```
+
+### REST API Endpoints
+
+Dashboard 内置 REST API，支持前端配置管理和外部集成：
+
+| Endpoint | Method | 说明 |
+|----------|--------|------|
+| `/api/config` | GET | 获取完整配置（agents.yaml 内容） |
+| `/api/config` | PUT | 更新完整配置 |
+| `/api/config/persona/{id}` | GET | 获取单个投资人的模型配置 |
+| `/api/config/persona/{id}` | PUT | 更新单个投资人的模型 |
+| `/api/models` | GET | 列出所有可用模型 |
+| `/api/custom-persona` | POST | 创建自定义投资人（YAML） |
+| `/api/schema/persona` | GET | 获取 Persona YAML Schema |
+| `/api/personas` | GET | 获取所有投资人列表 |
+| `/api/analyze/{ticker}` | GET | 17位大师共识分析 |
+| `/api/persona/{agent_id}` | GET | 获取单个投资人详情 |
+| `/health` | GET | 健康检查 |
 
 ---
 
@@ -416,6 +434,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v4.1** | 2026-05-22 | 🎨 Config REST API + Dashboard UI/UX - 设置页完全可用(17投资人模型配置) + 人格页搜索/展开/头像 + 首页快速分析 + 股票页交互优化 + 响应式CSS |
 | **v4.0** | 2026-05-22 | 🚀 pip 包化 — `augur-agents` PyPI 包 + CLI 6命令 + MCP Server 6工具 + 运行时配置管理 |
 | **v3.5** | 2026-05-22 | 🎨 Baoyu漫画风格配图 — hero-banner-baoyu + architecture-baoyu + 17投资人漫画头像 |
 | **v3.4** | 2026-05-21 | 🔌 Skill封装 — 17个独立Agent Skill + 模型配置 + README全面升级 |
@@ -440,8 +459,8 @@ augur/
 - [x] **v3.3**: Bloomberg风格 Web Dashboard（全5页路由）
 - [x] **v3.4**: 17个独立 Skill 封装 + LLM 模型配置
 - [x] **v4.0**: pip 包化 `augur-agents` + CLI 6命令 + MCP Server + Soul Injector
-- [ ] **v4.1**: Group Chat 增强 + 多Agent实时辩论
-- [ ] **v4.2**: UI/UX 优化 + 产品体验完善
+- [x] **v4.1**: Config REST API + Dashboard UI/UX 全面优化
+- [x] **v4.2**: 设置页完全可用 + 人格页搜索展开 + 首页快速分析 + 响应式设计
 - [ ] **v4.3**: Docker 容器化 + 一键部署文档
 - [ ] **v5.0**: 历史回测系统 + Agent IC 实盘追踪
 
