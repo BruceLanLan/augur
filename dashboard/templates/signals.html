@@ -1,36 +1,30 @@
 {% extends "base.html" %}
-{% block title %}信号监控 — Augur{% endblock %}
+{% block title %}信号监控 - Augur{% endblock %}
 {% block content %}
-<div class="container mt-4">
-  <h2 style="color:#00ff88;">⚡ 信号监控</h2>
-  <p class="text-muted mb-5">自选股实时信号追踪，多Agent共识预警</p>
 
-  <div class="row justify-content-center">
-    <div class="col-md-8 text-center">
-      <div class="card py-5">
-        <div style="font-size:4rem; mb-3;">🔭</div>
-        <h4 style="color:#00ff88;" class="mt-3">功能开发中</h4>
-        <p class="text-muted mt-2" style="max-width:400px; margin:auto;">
-          信号监控将支持自选股列表批量扫描、信号变化推送，以及与 Hermes Web UI 的实时联动。
-        </p>
-        <div class="mt-4 d-flex gap-3 justify-content-center flex-wrap">
-          <div class="card px-4 py-3" style="background:#111; min-width:140px;">
-            <div style="font-size:.72rem; color:#555; text-transform:uppercase; letter-spacing:.5px;">计划功能</div>
-            <div class="mt-2 text-start" style="font-size:.82rem; color:#aaa;">
-              <div class="mb-1">✓ 自选股 Watchlist</div>
-              <div class="mb-1">✓ 批量扫描 (cron)</div>
-              <div class="mb-1">✓ 信号变化推送</div>
-              <div>✓ 少数派报告提醒</div>
-            </div>
-          </div>
+<h2 style="color:var(--accent-orange); margin-bottom:4px;">信号监控</h2>
+<p class="text-muted mb-24" style="font-size:0.82rem;">自选股实时信号追踪，多Agent共识预警</p>
+
+<div class="card" style="max-width:640px; margin:0 auto; text-align:center; padding:48px 24px;">
+    <div style="font-size:3rem; margin-bottom:16px;">&#x1F52D;</div>
+    <h3 style="color:var(--accent-orange); margin-bottom:8px;">功能开发中</h3>
+    <p class="text-muted" style="max-width:400px; margin:0 auto 24px; font-size:0.85rem;">
+        信号监控将支持自选股列表批量扫描、信号变化推送，以及实时联动。
+    </p>
+
+    <div class="card" style="display:inline-block; text-align:left; padding:16px 24px; background:var(--bg-primary);">
+        <div class="data-label mb-8">计划功能</div>
+        <div style="font-size:0.82rem; color:var(--text-secondary); line-height:2;">
+            <div>&#x2713; 自选股 Watchlist</div>
+            <div>&#x2713; 批量扫描 (cron)</div>
+            <div>&#x2713; 信号变化推送</div>
+            <div>&#x2713; 少数派报告提醒</div>
         </div>
-        <div class="mt-4">
-          <a href="/stocks" class="btn" style="background:#00ff88; color:#0a0a0a; font-weight:600;">
-            前往股票分析 →
-          </a>
-        </div>
-      </div>
     </div>
-  </div>
+
+    <div style="margin-top:24px;">
+        <a href="/stocks" class="btn btn-primary">前往股票分析 &rarr;</a>
+    </div>
 </div>
+
 {% endblock %}

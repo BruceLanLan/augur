@@ -1,199 +1,104 @@
 {% extends "base.html" %}
-{% block title %}设置 — Augur{% endblock %}
-
+{% block title %}设置 - Augur{% endblock %}
 {% block extra_head %}
 <style>
-    .persona-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-        gap: 1rem;
-    }
-    .persona-card {
-        background: #111;
-        border: 1px solid #1a3a2a;
-        border-radius: 10px;
-        padding: 1rem 1.2rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        transition: border-color 0.3s, box-shadow 0.3s;
-    }
-    .persona-card:hover {
-        border-color: #00ff88;
-        box-shadow: 0 0 12px rgba(0, 255, 136, 0.08);
-    }
-    .persona-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        flex-shrink: 0;
-        background: #1a1a1a;
-        overflow: hidden;
-    }
-    .persona-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-    .persona-info {
-        flex: 1;
-        min-width: 0;
-    }
-    .persona-name {
-        font-weight: 600;
-        color: #e0e0e0;
-        font-size: 0.95rem;
-        margin-bottom: 2px;
-    }
-    .persona-style {
-        font-size: 0.75rem;
-        color: #666;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-    .persona-model-select {
-        background: #0d0d0d;
-        border: 1px solid #1a3a2a;
-        color: #ccc;
-        border-radius: 6px;
-        padding: 4px 8px;
-        font-size: 0.8rem;
-        min-width: 140px;
-        max-width: 180px;
-    }
-    .persona-model-select:focus {
-        outline: none;
-        border-color: #00ff88;
-        box-shadow: 0 0 0 2px rgba(0, 255, 136, 0.15);
-    }
-    .btn-save-persona {
-        background: transparent;
-        border: 1px solid #1a3a2a;
-        color: #00ff88;
-        border-radius: 6px;
-        padding: 4px 10px;
-        font-size: 0.78rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        white-space: nowrap;
-    }
-    .btn-save-persona:hover {
-        background: #00ff88;
-        color: #0a0a0a;
-        border-color: #00ff88;
-    }
-    .btn-save-all {
-        background: #00ff88;
-        color: #0a0a0a;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 28px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-    .btn-save-all:hover {
-        background: #00cc6e;
-        transform: translateY(-1px);
-    }
-    .settings-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 1.5rem;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-    /* Toast system */
-    .toast-container {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-    .toast-msg {
-        background: #1a1a1a;
-        border: 1px solid #1a3a2a;
-        border-radius: 8px;
-        padding: 12px 20px;
-        color: #e0e0e0;
-        font-size: 0.85rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-        transform: translateX(120%);
-        transition: transform 0.3s ease;
-        max-width: 320px;
-    }
-    .toast-msg.show {
-        transform: translateX(0);
-    }
-    .toast-msg.success {
-        border-left: 3px solid #00ff88;
-    }
-    .toast-msg.error {
-        border-left: 3px solid #e74c3c;
-    }
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 12px;
+}
+.persona-config-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: border-color 0.2s;
+}
+.persona-config-row:hover {
+    border-color: var(--accent-orange);
+}
+.persona-config-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    object-fit: cover;
+    flex-shrink: 0;
+}
+.persona-config-info {
+    flex: 1;
+    min-width: 0;
+}
+.persona-config-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+}
+.persona-config-style {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.save-persona-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--accent-orange);
+    border-radius: var(--radius-sm);
+    padding: 4px 10px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--font-ui);
+    white-space: nowrap;
+}
+.save-persona-btn:hover {
+    background: var(--accent-orange);
+    color: #000;
+    border-color: var(--accent-orange);
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="settings-header">
-        <div>
-            <h2 style="color:#00ff88; margin:0;">&#9881;&#65039; 模型配置</h2>
-            <p class="text-muted mb-0 mt-1">为每位投资大师分配 LLM 模型</p>
-        </div>
-        <button class="btn-save-all" onclick="saveAll()">
-            <i class="bi bi-save"></i> 全部保存
-        </button>
-    </div>
 
-    <div class="persona-grid" id="persona-grid">
-        {% for persona in personas %}
-        <div class="persona-card" data-agent-id="{{ persona.id }}">
-            <div class="persona-avatar">
-                <img src="/docs/images/avatars/{{ persona.id }}.svg" alt="{{ persona.name }}" onerror="this.parentElement.innerHTML='<div style=&quot;width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;background:#1a1a1a;&quot;>&#x1F464;</div>'">
-            </div>
-            <div class="persona-info">
-                <div class="persona-name">{{ persona.name }}</div>
-                <div class="persona-style">{{ persona.style }}</div>
-            </div>
-            <select class="persona-model-select" data-agent-id="{{ persona.id }}">
-                {% for model in available_models %}
-                <option value="{{ model }}" {% if model == persona.current_model %}selected{% endif %}>{{ model }}</option>
-                {% endfor %}
-            </select>
-            <button class="btn-save-persona" onclick="savePersona('{{ persona.id }}')">保存</button>
-        </div>
-        {% endfor %}
+<div class="flex items-center justify-between mb-24" style="flex-wrap:wrap; gap:12px;">
+    <div>
+        <h2 style="color:var(--accent-orange); margin:0;">模型配置</h2>
+        <p class="text-muted" style="font-size:0.82rem; margin:4px 0 0;">为每位投资大师分配 LLM 模型</p>
     </div>
+    <button class="btn btn-primary" onclick="saveAll()">全部保存</button>
 </div>
 
-<div class="toast-container" id="toast-container"></div>
+<div class="settings-grid" id="persona-grid">
+    {% for persona in personas %}
+    <div class="persona-config-row" data-agent-id="{{ persona.id }}">
+        <img src="/docs/images/avatars/{{ persona.id }}.svg"
+             alt="{{ persona.name }}"
+             class="persona-config-avatar"
+             onerror="this.style.display='none'">
+        <div class="persona-config-info">
+            <div class="persona-config-name">{{ persona.name }}</div>
+            <div class="persona-config-style">{{ persona.style }}</div>
+        </div>
+        <select class="form-select" data-agent-id="{{ persona.id }}" style="min-width:140px; max-width:180px;">
+            {% for model in available_models %}
+            <option value="{{ model }}" {% if model == persona.current_model %}selected{% endif %}>{{ model }}</option>
+            {% endfor %}
+        </select>
+        <button class="save-persona-btn" onclick="savePersona('{{ persona.id }}')">保存</button>
+    </div>
+    {% endfor %}
+</div>
+
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-function showToast(message, type) {
-    type = type || 'success';
-    var container = document.getElementById('toast-container');
-    var toast = document.createElement('div');
-    toast.className = 'toast-msg ' + type;
-    toast.textContent = message;
-    container.appendChild(toast);
-    // Trigger animation
-    setTimeout(function() { toast.classList.add('show'); }, 10);
-    // Remove after 3s
-    setTimeout(function() {
-        toast.classList.remove('show');
-        setTimeout(function() { toast.remove(); }, 300);
-    }, 3000);
-}
-
 function savePersona(agentId) {
     var select = document.querySelector('select[data-agent-id="' + agentId + '"]');
     var model = select.value;
@@ -205,7 +110,7 @@ function savePersona(agentId) {
     .then(function(resp) { return resp.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
-            showToast(agentId + ' 模型已更新为 ' + model, 'success');
+            showToast(agentId + ' 模型已更新为 ' + model);
         } else {
             showToast('保存失败: ' + (data.detail || '未知错误'), 'error');
         }
@@ -216,7 +121,7 @@ function savePersona(agentId) {
 }
 
 function saveAll() {
-    var cards = document.querySelectorAll('.persona-card');
+    var cards = document.querySelectorAll('.persona-config-row');
     var promises = [];
     cards.forEach(function(card) {
         var agentId = card.getAttribute('data-agent-id');
@@ -233,7 +138,7 @@ function saveAll() {
     Promise.all(promises)
     .then(function(results) {
         var ok = results.filter(function(r) { return r.status === 'ok'; }).length;
-        showToast('已保存 ' + ok + ' 位投资大师的模型配置', 'success');
+        showToast('已保存 ' + ok + ' 位投资大师的模型配置');
     })
     .catch(function(err) {
         showToast('批量保存失败: ' + err.message, 'error');

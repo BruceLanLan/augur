@@ -1,214 +1,189 @@
 {% extends "base.html" %}
-{% block title %}🦉 Augur — 多智能体投资分析{% endblock %}
+{% block title %}Augur - 多智能体投资分析{% endblock %}
 {% block extra_head %}
 <style>
-.quick-result { display:none; }
+.hero-input {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-family: var(--font-data);
+    width: 100%;
+    max-width: 400px;
+    text-transform: uppercase;
+}
+.hero-input:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+    box-shadow: 0 0 0 2px rgba(255,140,0,0.15);
+}
+.quick-result { display:none; margin-top:12px; }
 .quick-result.show { display:block; animation: fadeInUp 0.4s ease forwards; }
-.quick-signal-badge { font-size:1.1rem; padding:0.4em 1em; border-radius:6px; font-weight:700; letter-spacing:0.5px; display:inline-block; }
-.quick-badge-bullish { background:#00ff88; color:#0a0a0a; }
-.quick-badge-neutral { background:#f39c12; color:#0a0a0a; }
-.quick-badge-bearish { background:#e74c3c; color:#fff; }
-.status-dot { width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px; }
-.status-dot-green { background:#00ff88; box-shadow:0 0 6px rgba(0,255,136,0.5); }
 #quick-spinner { display:none; }
-@keyframes fadeInUp { from { opacity:0; transform:translateY(15px); } to { opacity:1; transform:translateY(0); } }
 </style>
 {% endblock %}
 {% block content %}
-<div class="container mt-4">
 
-  <!-- Hero -->
-  <div class="text-center mb-5">
-    <h1 style="font-size:2.5rem; color:#00ff88; font-weight:700; letter-spacing:-1px;">
-      🦉 Augur
-    </h1>
-    <p class="text-muted" style="font-size:1.15rem;">
-      {{ agent_count }} 位虚拟投资大师 · 多智能体共识分析
-    </p>
-    <div class="d-flex justify-content-center gap-2 mt-4" style="max-width:520px; margin:auto;">
-      <input id="hero-ticker" type="text" class="form-control form-control-lg bg-dark text-light border-secondary"
-             placeholder="输入股票代码，如 AAPL、NVDA、BRK.B"
-             style="border-color:#1a3a2a !important; font-size:1.1rem;"
-             onkeydown="if(event.key==='Enter') heroGo()">
-      <a id="hero-btn" href="/stocks" onclick="heroGo(); return false;"
-         class="btn btn-lg px-4" style="background:#00ff88; color:#0a0a0a; white-space:nowrap; font-weight:600;">
-        分析 →
-      </a>
+<!-- Status Bar -->
+<div class="status-bar">
+    <div class="status-bar-item">
+        <span class="label">Agents</span>
+        <span class="value">{{ agent_count }}</span>
     </div>
-  </div>
-
-  <!-- Quick Analysis Section -->
-  <div class="card mb-4" style="border-color:#1a3a2a;">
-    <div class="card-body">
-      <h5 style="color:#00ff88; font-size:0.9rem; margin-bottom:12px;">⚡ 快速分析</h5>
-      <div class="row g-2 align-items-end">
-        <div class="col-md-4">
-          <input id="quick-ticker" type="text" class="form-control bg-dark text-light border-secondary"
-                 placeholder="股票代码 (如 AAPL)" style="text-transform:uppercase;"
-                 onkeydown="if(event.key==='Enter') quickAnalyze()">
-        </div>
-        <div class="col-md-2">
-          <button class="btn w-100" onclick="quickAnalyze()" style="background:#00ff88; color:#0a0a0a; font-weight:600;">
-            <i class="bi bi-lightning-fill"></i> 分析
-          </button>
-        </div>
-        <div class="col-md-6">
-          <div id="quick-spinner" class="text-center">
-            <span class="loading-pulse" style="color:#00ff88;">分析中...</span>
-          </div>
-          <div id="quick-result" class="quick-result">
-            <div class="d-flex align-items-center gap-3 flex-wrap">
-              <span id="qr-signal" class="quick-signal-badge quick-badge-neutral">--</span>
-              <div>
-                <div style="font-size:0.75rem; color:#888;">评分</div>
-                <span id="qr-score" style="font-size:1.3rem; font-weight:700; color:#00ff88;">--</span>
-              </div>
-              <div>
-                <div style="font-size:0.75rem; color:#888;">置信度</div>
-                <span id="qr-confidence" style="font-size:1.1rem; font-weight:600; color:#f39c12;">--</span>
-              </div>
-              <a id="qr-link" href="/stocks" class="btn btn-sm ms-auto" style="border:1px solid #00ff88; color:#00ff88;">
-                查看完整分析 →
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
+    <div class="status-bar-item">
+        <span class="label">Models</span>
+        <span class="value" id="model-count">--</span>
     </div>
-  </div>
-
-  <!-- System Status -->
-  <div class="row g-3 mb-4">
-    <div class="col-md-4">
-      <div class="card h-100 py-3 text-center">
-        <div style="font-size:1.6rem; color:#00ff88; font-weight:700;">{{ agent_count }}</div>
-        <div class="text-muted" style="font-size:0.78rem;">投资大师 (Agent)</div>
-      </div>
+    <div class="status-bar-item">
+        <span class="label">Status</span>
+        <span class="value" style="color:var(--signal-buy);">ACTIVE</span>
     </div>
-    <div class="col-md-4">
-      <div class="card h-100 py-3 text-center">
-        <div id="model-count" style="font-size:1.6rem; color:#00ff88; font-weight:700;">--</div>
-        <div class="text-muted" style="font-size:0.78rem;">可用模型</div>
-      </div>
+    <div class="status-bar-item">
+        <span class="label">Engine</span>
+        <span class="value">Consensus v3</span>
     </div>
-    <div class="col-md-4">
-      <div class="card h-100 py-3 text-center">
-        <div style="font-size:1.2rem; color:#00ff88; font-weight:600;">
-          <span class="status-dot status-dot-green"></span>Active
-        </div>
-        <div class="text-muted" style="font-size:0.78rem;">系统状态</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Stats bar -->
-  <div class="row g-3 mb-5 text-center">
-    {% for stat in stats %}
-    <div class="col-6 col-md-3">
-      <div class="card h-100 py-3">
-        <div style="font-size:1.8rem; color:#00ff88; font-weight:700;">{{ stat.value }}</div>
-        <div class="text-muted" style="font-size:0.8rem; margin-top:2px;">{{ stat.label }}</div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-
-  <!-- Featured personas -->
-  <h5 class="mb-3" style="color:#00ff88;">精选投资人</h5>
-  <div class="row g-3 mb-5">
-    {% for p in featured %}
-    <div class="col-md-6 col-lg-3">
-      <div class="card h-100 card-hover-glow">
-        <div class="card-body d-flex flex-column">
-          <div class="d-flex align-items-center mb-2 gap-2">
-            <span style="font-size:1.6rem;">{{ p.avatar }}</span>
-            <div>
-              <div style="font-weight:600; font-size:0.9rem; color:#e0e0e0;">{{ p.name }}</div>
-              <div class="text-muted" style="font-size:0.7rem;">{{ p.style }}</div>
-            </div>
-          </div>
-          <p style="font-size:0.8rem; color:#aaa; flex:1;">{{ p.desc }}</p>
-          <span class="badge mt-2" style="background:#1a3a2a; color:#00ff88; width:fit-content;">{{ p.tag }}</span>
-        </div>
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-
-  <!-- How it works -->
-  <h5 class="mb-3" style="color:#00ff88;">工作原理</h5>
-  <div class="row g-3 mb-5">
-    <div class="col-md-4">
-      <div class="card text-center py-4 px-3 card-hover-glow">
-        <div style="font-size:2rem;">📊</div>
-        <h6 class="mt-2" style="color:#00ff88;">1. 输入标的</h6>
-        <p class="text-muted" style="font-size:0.82rem;">输入股票代码和基本财务指标（PE、毛利率、ROE等）</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card text-center py-4 px-3 card-hover-glow">
-        <div style="font-size:2rem;">🤖</div>
-        <h6 class="mt-2" style="color:#00ff88;">2. 多Agent分析</h6>
-        <p class="text-muted" style="font-size:0.82rem;">{{ agent_count }} 位投资大师从各自视角独立分析，得出评分与信号</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card text-center py-4 px-3 card-hover-glow">
-        <div style="font-size:2rem;">🎯</div>
-        <h6 class="mt-2" style="color:#00ff88;">3. 共识决策</h6>
-        <p class="text-muted" style="font-size:0.82rem;">行业加权、机制感知、多样性惩罚，形成最终共识信号与建仓比例</p>
-      </div>
-    </div>
-  </div>
-
 </div>
+
+<!-- Hero Quick Analysis -->
+<div class="card mb-24" style="padding:32px; text-align:center;">
+    <h1 style="font-size:1.8rem; color:var(--accent-orange); margin-bottom:4px; font-family:var(--font-data);">AUGUR</h1>
+    <p class="text-muted mb-16" style="font-size:0.88rem;">{{ agent_count }} 位虚拟投资大师 &middot; 多智能体共识分析</p>
+    <div class="flex items-center justify-center gap-12" style="flex-wrap:wrap;">
+        <input class="hero-input" id="hero-ticker" type="text"
+               placeholder="输入股票代码 (AAPL / NVDA / 0700.HK)"
+               onkeydown="if(event.key==='Enter') heroGo()">
+        <button class="btn btn-primary" onclick="heroGo()" style="padding:12px 24px; font-size:0.92rem;">
+            分析 &rarr;
+        </button>
+    </div>
+</div>
+
+<!-- Quick Analysis Widget -->
+<div class="card mb-24">
+    <div class="card-header">快速分析</div>
+    <div class="flex items-center gap-12" style="flex-wrap:wrap;">
+        <input class="form-input" id="quick-ticker" type="text"
+               placeholder="股票代码" style="max-width:160px; text-transform:uppercase; font-family:var(--font-data);"
+               onkeydown="if(event.key==='Enter') quickAnalyze()">
+        <button class="btn btn-primary" onclick="quickAnalyze()">分析</button>
+        <div id="quick-spinner" class="loading-pulse text-orange text-mono" style="font-size:0.82rem;">分析中...</div>
+    </div>
+    <div id="quick-result" class="quick-result">
+        <div class="flex items-center gap-24" style="flex-wrap:wrap; margin-top:12px; padding:12px; background:var(--bg-primary); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+            <div>
+                <div class="data-label">信号</div>
+                <span id="qr-signal" class="signal-badge signal-badge-neutral" style="font-size:0.92rem;">--</span>
+            </div>
+            <div>
+                <div class="data-label">评分</div>
+                <span id="qr-score" class="data-value" style="font-size:1.2rem;">--</span>
+            </div>
+            <div>
+                <div class="data-label">置信度</div>
+                <span id="qr-confidence" class="text-mono" style="color:var(--signal-neutral); font-weight:600;">--</span>
+            </div>
+            <a id="qr-link" href="/stocks" class="btn btn-sm" style="margin-left:auto;">查看完整分析 &rarr;</a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid-4 mb-24">
+    {% for stat in stats %}
+    <div class="card" style="text-align:center; padding:20px 12px;">
+        <div class="data-value">{{ stat.value }}</div>
+        <div class="data-label" style="margin-top:4px;">{{ stat.label }}</div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Featured Personas -->
+<div class="section-title">精选投资人</div>
+<div class="grid-4 mb-24">
+    {% for p in featured %}
+    <div class="card" style="padding:14px;">
+        <div class="flex items-center gap-8 mb-8">
+            <span style="font-size:1.4rem;">{{ p.avatar }}</span>
+            <div>
+                <div style="font-weight:600; font-size:0.85rem;">{{ p.name }}</div>
+                <div class="text-muted" style="font-size:0.7rem;">{{ p.style }}</div>
+            </div>
+        </div>
+        <p class="text-muted" style="font-size:0.75rem; margin:0 0 8px;">{{ p.desc }}</p>
+        <span class="badge badge-orange">{{ p.tag }}</span>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- How it works -->
+<div class="section-title">工作原理</div>
+<div class="grid-3 mb-24">
+    <div class="card" style="text-align:center; padding:24px 16px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">&#x1F4CA;</div>
+        <h4 style="color:var(--accent-orange); font-size:0.88rem;">1. 输入标的</h4>
+        <p class="text-muted" style="font-size:0.78rem; margin:0;">输入股票代码和基本财务指标</p>
+    </div>
+    <div class="card" style="text-align:center; padding:24px 16px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">&#x1F916;</div>
+        <h4 style="color:var(--accent-orange); font-size:0.88rem;">2. 多Agent分析</h4>
+        <p class="text-muted" style="font-size:0.78rem; margin:0;">{{ agent_count }} 位投资大师从各自视角独立分析</p>
+    </div>
+    <div class="card" style="text-align:center; padding:24px 16px;">
+        <div style="font-size:1.8rem; margin-bottom:8px;">&#x1F3AF;</div>
+        <h4 style="color:var(--accent-orange); font-size:0.88rem;">3. 共识决策</h4>
+        <p class="text-muted" style="font-size:0.78rem; margin:0;">行业加权、机制感知，形成最终共识信号</p>
+    </div>
+</div>
+
 {% endblock %}
 {% block extra_scripts %}
 <script>
 function heroGo() {
-  const t = document.getElementById('hero-ticker').value.trim().toUpperCase();
-  if (t) window.location.href = '/stocks?ticker=' + encodeURIComponent(t);
-  else window.location.href = '/stocks';
+    var t = document.getElementById('hero-ticker').value.trim().toUpperCase();
+    if (t) window.location.href = '/stocks?ticker=' + encodeURIComponent(t);
+    else window.location.href = '/stocks';
 }
 
 function quickAnalyze() {
-  const ticker = document.getElementById('quick-ticker').value.trim().toUpperCase();
-  if (!ticker) return;
+    var ticker = document.getElementById('quick-ticker').value.trim().toUpperCase();
+    if (!ticker) return;
 
-  document.getElementById('quick-spinner').style.display = 'block';
-  document.getElementById('quick-result').classList.remove('show');
+    document.getElementById('quick-spinner').style.display = 'inline';
+    document.getElementById('quick-result').classList.remove('show');
 
-  fetch('/api/analyze/' + ticker)
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById('quick-spinner').style.display = 'none';
-      const cons = data.consensus || {};
-      const signal = (cons.signal || 'neutral').toLowerCase();
+    fetch('/api/analyze/' + ticker)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            document.getElementById('quick-spinner').style.display = 'none';
+            var cons = data.consensus || {};
+            var signal = (cons.signal || 'neutral').toLowerCase();
 
-      const sigEl = document.getElementById('qr-signal');
-      sigEl.textContent = signal === 'bullish' ? '看多 BUY' : signal === 'bearish' ? '看空 SELL' : '中性 HOLD';
-      sigEl.className = 'quick-signal-badge quick-badge-' + signal;
+            var sigEl = document.getElementById('qr-signal');
+            sigEl.textContent = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+            sigEl.className = 'signal-badge signal-badge-' + (signal === 'bullish' ? 'buy' : signal === 'bearish' ? 'sell' : 'neutral');
 
-      document.getElementById('qr-score').textContent = (cons.score || 0).toFixed(1) + '/10';
-      document.getElementById('qr-confidence').textContent = ((cons.confidence || 0) * 100).toFixed(0) + '%';
-      document.getElementById('qr-link').href = '/stocks?ticker=' + ticker;
+            document.getElementById('qr-score').textContent = (cons.score || 0).toFixed(1) + '/10';
+            document.getElementById('qr-confidence').textContent = ((cons.confidence || 0) * 100).toFixed(0) + '%';
+            document.getElementById('qr-link').href = '/stocks?ticker=' + ticker;
 
-      document.getElementById('quick-result').classList.add('show');
-    })
-    .catch(err => {
-      document.getElementById('quick-spinner').style.display = 'none';
-      alert('分析失败: ' + err);
-    });
+            document.getElementById('quick-result').classList.add('show');
+        })
+        .catch(function(err) {
+            document.getElementById('quick-spinner').style.display = 'none';
+            showToast('分析失败: ' + err, 'error');
+        });
 }
 
 // Load model count
 document.addEventListener('DOMContentLoaded', function() {
-  fetch('/api/models')
-    .then(r => r.json())
-    .then(data => {
-      document.getElementById('model-count').textContent = (data.models || []).length || '--';
-    })
-    .catch(() => {});
+    fetch('/api/models')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            document.getElementById('model-count').textContent = (data.models || []).length || '--';
+        })
+        .catch(function() {});
 });
 </script>
 {% endblock %}
