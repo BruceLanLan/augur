@@ -20,6 +20,9 @@ dependencies = [
 telegram = [
     "python-telegram-bot>=20.0",
 ]
+slack = [
+    "slack-bolt>=1.18.0",
+]
 cron = [
     "apscheduler>=3.10.0",
 ]
@@ -31,6 +34,7 @@ dev = [
 ]
 all = [
     "python-telegram-bot>=20.0",
+    "slack-bolt>=1.18.0",
     "apscheduler>=3.10.0",
     "mcp>=1.0.0;python_version>='3.10'",
 ]

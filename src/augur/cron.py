@@ -24,6 +24,10 @@ Configuration (~/.augur/watchlist.yaml):
       enabled: true
       chat_id: "YOUR_CHAT_ID"
       token: "YOUR_BOT_TOKEN"
+    slack:
+      enabled: true
+      channel: "#investment-signals"
+      token: "xoxb-YOUR-BOT-TOKEN"
     alert_threshold: 3
 
 CLI commands:
@@ -51,6 +55,11 @@ DEFAULT_CONFIG = {
         "telegram": {
             "enabled": False,
             "chat_id": "",
+            "token": "",
+        },
+        "slack": {
+            "enabled": False,
+            "channel": "",
             "token": "",
         },
         "alert_threshold": 3,
@@ -194,6 +203,11 @@ def _send_notifications(config: dict, results: List[Dict[str, Any]]):
     if tg_config.get("enabled") and tg_config.get("chat_id") and tg_config.get("token"):
         _send_telegram_notifications(tg_config, results, threshold)
 
+    # Slack notifications
+    slack_config = notifications.get("slack", {})
+    if slack_config.get("enabled") and slack_config.get("channel") and slack_config.get("token"):
+        _send_slack_notifications(slack_config, results, threshold)
+
 
 def _send_telegram_notifications(
     tg_config: dict, results: List[Dict[str, Any]], threshold: float
@@ -227,6 +241,49 @@ def _send_telegram_notifications(
             loop.run_until_complete(_send())
     except RuntimeError:
         asyncio.run(_send())
+
+
+def _send_slack_notifications(
+    slack_config: dict, results: List[Dict[str, Any]], threshold: float
+):
+    """Send results to Slack channel."""
+    try:
+        from slack_sdk import WebClient
+        from slack_sdk.errors import SlackApiError
+    except ImportError:
+        print("Warning: slack-bolt not installed. Skipping Slack notifications.")
+        print("Install with: pip install 'augur-agents[slack]'")
+        return
+
+    token = slack_config["token"]
+    channel = slack_config["channel"]
+    client = WebClient(token=token)
+
+    for analysis in results:
+        ticker = analysis["ticker"]
+        consensus = analysis["consensus"]
+        agent_results = analysis["results"]
+
+        try:
+            from augur.bots.slack_bot import format_consensus_blocks, format_consensus_text
+
+            blocks = format_consensus_blocks(ticker, consensus, agent_results)
+            fallback_text = format_consensus_text(ticker, consensus, agent_results)
+
+            client.chat_postMessage(
+                channel=channel,
+                blocks=blocks,
+                text=fallback_text,
+            )
+        except ImportError:
+            # Fallback if slack_bot module not available
+            message = analysis.get("message", f"Augur analysis: {ticker}")
+            try:
+                client.chat_postMessage(channel=channel, text=message)
+            except Exception as e:
+                print(f"  Failed to send Slack notification for {ticker}: {e}")
+        except Exception as e:
+            print(f"  Failed to send Slack notification for {ticker}: {e}")
 
 
 def start_scheduler():

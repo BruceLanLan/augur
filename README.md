@@ -131,6 +131,10 @@ augur inject-soul --profile my-buffett --persona buffett --format hermes
 # Telegram Bot
 augur telegram
 
+# Slack Bot
+augur slack                    # Socket Mode (开发)
+augur slack --mode http --port 3000  # HTTP Mode (生产)
+
 # Cron 定时分析
 augur cron-run             # 手动运行一次
 augur cron-start           # 启动定时守护进程
@@ -187,6 +191,71 @@ augur telegram
 
 ---
 
+## 💬 Slack Bot
+
+Augur 支持通过 Slack Bot 进行实时分析，支持 Socket Mode（开发）和 HTTP Mode（生产）两种模式。
+
+### 创建 Slack App
+
+1. 前往 [api.slack.com/apps](https://api.slack.com/apps)，点击 "Create New App"
+2. 选择 "From scratch"，输入名称（如 "Augur"）并选择 Workspace
+3. 在 "OAuth & Permissions" 中添加 Bot Token Scopes:
+   - `chat:write` - 发送消息
+   - `app_mentions:read` - 读取 @augur 提及
+   - `commands` - 支持 Slash Commands
+   - `im:read` / `im:write` - 私聊消息
+4. Install to Workspace，获取 Bot User OAuth Token (`xoxb-...`)
+5. (Socket Mode) 在 "Basic Information" > "App-Level Tokens" 生成 Token (`xapp-...`)，Scope: `connections:write`
+
+### 配置与启动
+
+```bash
+# 安装 slack 依赖
+pip install 'augur-agents[slack]'
+
+# Socket Mode (推荐开发用)
+export SLACK_BOT_TOKEN='xoxb-your-bot-token'
+export SLACK_APP_TOKEN='xapp-your-app-token'
+augur slack
+
+# HTTP Mode (生产环境，需配置 Request URL)
+export SLACK_BOT_TOKEN='xoxb-your-bot-token'
+export SLACK_SIGNING_SECRET='your-signing-secret'
+augur slack --mode http --port 3000
+```
+
+### Slash Commands
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `/augur-analyze TICKER [指标]` | 17位大师共识分析 | `/augur-analyze AAPL pe=32 roe=0.55` |
+| `/augur TICKER [指标]` | 快捷共识分析 | `/augur NVDA pe=45` |
+| `/augur-ask PERSONA 问题` | 向特定大师提问 | `/augur-ask buffett analyze AAPL` |
+| `/augur-personas` | 列出所有投资大师 | `/augur-personas` |
+| `/augur-help` | 显示帮助 | `/augur-help` |
+
+### App Mention & DM
+
+在频道中 @augur 即可触发分析：
+
+```
+@augur analyze AAPL pe=32 roe=0.55
+@augur @buffett analyze AAPL
+```
+
+直接私聊 Bot 发送包含股票代码的消息也可触发分析。
+
+### Block Kit 格式输出
+
+Slack Bot 使用 Block Kit 进行富文本输出，包含：
+- Header: 分析标题
+- Section fields: 信号/评分/置信度
+- Agent 明细列表
+- 关键发现与风险提示
+- Context footer
+
+---
+
 ## ⏰ Cron 定时分析 + Watchlist
 
 ### Watchlist 管理
@@ -233,12 +302,16 @@ notifications:
     enabled: true
     chat_id: "YOUR_CHAT_ID"
     token: "YOUR_BOT_TOKEN"
+  slack:
+    enabled: true
+    channel: "#investment-signals"
+    token: "xoxb-YOUR-BOT-TOKEN"
   alert_threshold: 3      # 评分变化>3才推送
 ```
 
 ### Cron 定时触发
 
-使用 `augur cron-start` 启动守护进程，按配置的 cron 表达式自动执行分析并推送到 Telegram。
+使用 `augur cron-start` 启动守护进程，按配置的 cron 表达式自动执行分析并推送到 Telegram 和 Slack。
 
 ---
 
@@ -429,16 +502,21 @@ augur telegram
 # /analyze AAPL pe=32 gm=46 roe=55
 # /ask buffett 你觉得现在的苹果值得持有吗？
 
-# === Slack Bot (计划中) ===
-# export SLACK_BOT_TOKEN=xoxb-your-token
-# augur slack
+# === Slack Bot (已完成) ===
+export SLACK_BOT_TOKEN=xoxb-your-token
+export SLACK_APP_TOKEN=xapp-your-app-token
+augur slack
+# 用户在 Slack 发送：
+# /augur-analyze AAPL pe=32 roe=0.55
+# /augur-ask buffett analyze AAPL
+# 或 @augur analyze AAPL
 
-# === WeChat/微信 Bot (计划中) ===
+# === WeChat/微信 Bot (计划中 v4.4) ===
 # export WECHAT_APP_ID=your_app_id
 # export WECHAT_APP_SECRET=your_secret
 # augur wechat
 
-# === Lark/飞书 Bot (计划中) ===
+# === Lark/飞书 Bot (计划中 v4.4) ===
 # export LARK_APP_ID=your_app_id
 # export LARK_APP_SECRET=your_secret
 # augur lark
@@ -500,7 +578,8 @@ augur/
 │   ├── cron.py                 # Cron 定时分析 + Watchlist 管理
 │   ├── bots/                   # 多平台 Bot 适配器
 │   │   ├── __init__.py
-│   │   └── telegram_bot.py     # Telegram Bot (python-telegram-bot)
+│   │   ├── telegram_bot.py     # Telegram Bot (python-telegram-bot)
+│   │   └── slack_bot.py        # Slack Bot (slack-bolt, Socket + HTTP)
 │   └── personas/               # 17位投资人人格 Agent
 │       ├── base.py             # Agent基类、MarketContext、AgentResponse
 │       ├── buffett.py          # Warren Buffett (沃伦·巴菲特)
@@ -561,6 +640,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v4.3** | 2026-05-22 | 💬 Slack Bot (Socket Mode + HTTP) + Cron Slack 推送 |
 | **v4.2** | 2026-05-22 | 📱 Telegram Bot + Cron 定时共识分析 + Watchlist 管理 |
 | **v4.1** | 2026-05-22 | 🎨 Config REST API + Dashboard UI/UX - 设置页完全可用(17投资人模型配置) + 人格页搜索/展开/头像 + 首页快速分析 + 股票页交互优化 + 响应式CSS |
 | **v4.0** | 2026-05-22 | 🚀 pip 包化 — `augur-agents` PyPI 包 + CLI 6命令 + MCP Server 6工具 + 运行时配置管理 |
@@ -589,7 +669,8 @@ augur/
 - [x] **v4.0**: pip 包化 `augur-agents` + CLI 6命令 + MCP Server + Soul Injector
 - [x] **v4.1**: Config REST API + Dashboard UI/UX 全面优化
 - [x] **v4.2**: Telegram Bot + Cron 定时共识分析 + Watchlist 管理
-- [ ] **v4.3**: Slack / WeChat / Lark(飞书) Bot 多平台适配
+- [x] **v4.3**: Slack Bot (Socket Mode + HTTP Mode) + Cron Slack 推送
+- [ ] **v4.4**: WeChat/微信 + Lark/飞书 Bot 多平台适配
 - [ ] **v5.0**: Docker 容器化 + 一键部署文档
 - [ ] **v5.1**: 历史回测系统 + Agent IC 实盘追踪
 
