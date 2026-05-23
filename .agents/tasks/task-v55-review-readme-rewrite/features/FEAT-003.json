@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-003",
+  "type": "docs",
+  "description": "Update SVG diagrams to reflect v5.5 state. Verify and update hero-banner, architecture, consensus-flow, skills-deploy, and dashboard-preview SVGs.",
+  "status": "pending",
+  "steps": [
+    "Read docs/images/hero-banner-baoyu.svg - update title/subtitle text to reflect v5.5 capabilities (currently says 17 personas which is correct, verify all agent boxes match current roster)",
+    "Read docs/images/architecture-baoyu.svg - currently says 'Augur v5.4', update to 'Augur v5.5', verify 6-layer architecture is accurate (User Access Layer with all platforms, Core Engine, Persona Agents, Consensus Mechanism, Data Layer, Storage)",
+    "Read docs/images/consensus-flow.svg - verify 6-step consensus flow matches actual implementation in registry.py (industry-aware weights, market regime routing, rolling IC, diversity penalty, Kelly sizing, risk veto)",
+    "Read docs/images/skills-deploy.svg - verify it shows all current deployment targets (Dashboard, Hermes, CLI, MCP, Telegram, Slack, WeChat, Lark)",
+    "Read docs/images/dashboard-preview.svg - verify it represents Bloomberg dark theme UI with correct page structure",
+    "Update version references from v5.4 to v5.5 in all SVGs that contain version text"
+  ],
+  "acceptance_criteria": [
+    "architecture-baoyu.svg says v5.5 instead of v5.4",
+    "All SVGs are valid XML (no broken tags)",
+    "hero-banner reflects current feature set",
+    "All platform names in skills-deploy match actual implementations"
+  ],
+  "verification": [
+    "grep -l 'v5.4' docs/images/*.svg returns empty (no remaining v5.4 references)",
+    "python -c \"import xml.etree.ElementTree as ET; ET.parse('docs/images/architecture-baoyu.svg')\" succeeds (valid XML)",
+    "python -c \"import xml.etree.ElementTree as ET; ET.parse('docs/images/hero-banner-baoyu.svg')\" succeeds"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

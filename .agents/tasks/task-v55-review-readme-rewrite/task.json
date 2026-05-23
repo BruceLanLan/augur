@@ -1,0 +1,7 @@
+{
+  "task_id": "task-v55-review-readme-rewrite",
+  "task_description": "Augur v5.5 - Full project review, professional README.md rewrite (Chinese), SVG diagram updates, and complete English README_EN.md generation. Update pyproject.toml metadata.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
