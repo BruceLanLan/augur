@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-002",
+  "type": "docs",
+  "description": "Create complete English README_EN.md - professional translation adapted for international developers, same structure as Chinese README but with English-appropriate examples and phrasing.",
+  "status": "pending",
+  "steps": [
+    "Read the newly written README.md (from FEAT-001) to use as the source",
+    "Create README_EN.md at project root with professional English translation",
+    "Adapt content for international developers: use English persona names primarily, keep Chinese names in parentheses for Chinese investors",
+    "Include English CLI examples and API documentation",
+    "Link back to Chinese version with header: 'English | [中文](README.md)'",
+    "Ensure all SVG diagram references use the same paths (docs/images/*.svg)",
+    "Version log entries should be in English",
+    "Keep the same badge structure but with English text where applicable"
+  ],
+  "acceptance_criteria": [
+    "README_EN.md exists at project root",
+    "Professional English (not machine-translated quality)",
+    "Same structure as Chinese README",
+    "All features accurately documented in English",
+    "Links back to Chinese README",
+    "All SVG references are correct paths",
+    "Version log in English"
+  ],
+  "verification": [
+    "test -f README_EN.md succeeds",
+    "grep -c 'README.md' README_EN.md returns at least 1 (link to Chinese version)",
+    "grep -c 'docs/images/' README_EN.md returns multiple (SVG references intact)"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

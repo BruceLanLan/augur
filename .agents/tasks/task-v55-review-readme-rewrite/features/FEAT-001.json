@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-001",
+  "type": "docs",
+  "description": "Complete professional rewrite of README.md (Chinese) with cleaner structure, no redundancy, accurate feature documentation, and professional formatting. Also update pyproject.toml metadata for v5.5.",
+  "status": "in_progress",
+  "steps": [
+    "Read the current README.md (1130 lines) and identify all redundant/repeated sections",
+    "Read src/augur/cli.py to confirm all 15 CLI commands are documented correctly (analyze, consensus, list-personas, mcp-server, api, inject-soul, telegram, slack, wechat, lark, cron-run, cron-start, watchlist-add, watchlist-show, backtest, ic-report, fetch)",
+    "Read src/augur/mcp_server.py to confirm all 6 MCP tools are documented",
+    "Read dashboard/app.py to confirm all 7 dashboard pages and REST API endpoints",
+    "Rewrite README.md from scratch with professional structure: hero section with version badge (v5.5), concise 3-line quickstart, feature matrix, 17 personas table, quick start guide, platform integration (consolidated - not 4 separate long sections), architecture overview (referencing SVG), version log (consolidated), contribution guide",
+    "Remove redundancy: current README has the same CLI commands listed in 3 places, platform info repeated in both dedicated sections and integration section. Consolidate to single authoritative section each.",
+    "Add bilingual header linking to README_EN.md: '[English](README_EN.md) | 中文'",
+    "Update pyproject.toml: bump version to 5.5.0, update description to be more professional, add project.urls (Homepage, Repository, Documentation), add keywords, add classifiers for PyPI"
+  ],
+  "acceptance_criteria": [
+    "README.md is professional, well-structured, under 800 lines (current is 1130 with lots of redundancy)",
+    "All 15+ CLI commands are accurately documented",
+    "All 6 MCP tools are listed",
+    "All 7 Dashboard pages mentioned",
+    "All 4 platform bots (Telegram/Slack/WeChat/Lark) covered in a consolidated section",
+    "pyproject.toml version is 5.5.0",
+    "Header includes English README link",
+    "No repeated information between sections",
+    "pytest tests/ -v still passes (55 tests)"
+  ],
+  "verification": [
+    "pytest tests/ -v passes all tests",
+    "python -c \"import augur; print(augur.__version__)\" prints the expected version",
+    "grep -c 'README_EN.md' README.md returns at least 1"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

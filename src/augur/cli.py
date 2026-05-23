@@ -23,7 +23,7 @@ import click
 
 
 @click.group()
-@click.version_option(version="0.1.0", prog_name="augur")
+@click.version_option(version="5.5.0", prog_name="augur")
 def main():
     """Augur - Multi-agent investment analysis system"""
     pass
