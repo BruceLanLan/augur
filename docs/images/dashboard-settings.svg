@@ -1,0 +1,223 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" fill="none">
+  <defs>
+    <style>
+      .mono { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace; }
+      .sans { font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="700" fill="#0a0a0f"/>
+
+  <!-- Left Sidebar -->
+  <rect x="0" y="0" width="64" height="700" fill="#10101a"/>
+  <line x1="64" y1="0" x2="64" y2="700" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="32" cy="40" r="14" fill="#1e1e2e"/>
+  <text x="32" y="44" text-anchor="middle" fill="#e8e8f0" font-size="12" class="sans">A</text>
+  <circle cx="32" cy="90" r="14" fill="#1e1e2e"/>
+  <rect x="24" y="84" width="16" height="12" rx="2" fill="none" stroke="#6b6b80" stroke-width="1.5"/>
+  <circle cx="32" cy="140" r="14" fill="#1e1e2e"/>
+  <rect x="24" y="134" width="16" height="12" rx="2" fill="none" stroke="#6b6b80" stroke-width="1.5"/>
+  <circle cx="32" cy="190" r="14" fill="#1e1e2e"/>
+  <circle cx="32" cy="190" r="5" fill="none" stroke="#6b6b80" stroke-width="1.5"/>
+  <circle cx="32" cy="240" r="14" fill="#ff8c00" opacity="0.2"/>
+  <path d="M26 234 L38 234 L38 246 L26 246 Z" fill="none" stroke="#ff8c00" stroke-width="1.5"/>
+
+  <!-- Header bar -->
+  <rect x="80" y="16" width="920" height="48" rx="8" fill="#14141f"/>
+  <rect x="80" y="16" width="920" height="48" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <text x="104" y="46" fill="#e8e8f0" font-size="16" font-weight="bold" class="sans">Agent 模型配置</text>
+  <!-- Save all button -->
+  <rect x="880" y="26" width="100" height="28" rx="4" fill="#ff8c00"/>
+  <text x="930" y="44" text-anchor="middle" fill="#0a0a0f" font-size="12" font-weight="bold" class="sans">全部保存</text>
+
+  <!-- Config Grid: Row 1 -->
+  <!-- Buffett -->
+  <rect x="80" y="80" width="296" height="100" rx="8" fill="#14141f"/>
+  <rect x="80" y="80" width="296" height="100" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="112" cy="112" r="16" fill="#1a472a"/>
+  <text x="112" y="118" text-anchor="middle" fill="#00c853" font-size="12" font-weight="bold" class="sans">B</text>
+  <text x="136" y="108" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">Buffett</text>
+  <text x="136" y="124" fill="#6b6b80" font-size="9" class="sans">Warren Buffett · 价值投资</text>
+  <!-- Dropdown -->
+  <rect x="96" y="140" width="180" height="26" rx="4" fill="#0a0a0f"/>
+  <rect x="96" y="140" width="180" height="26" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="108" y="157" fill="#e8e8f0" font-size="10" class="mono">claude-sonnet-4-6</text>
+  <text x="260" y="157" fill="#6b6b80" font-size="10" class="sans">&#9662;</text>
+  <!-- Save button -->
+  <rect x="290" y="140" width="52" height="26" rx="4" fill="#00c853" opacity="0.15"/>
+  <text x="316" y="157" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">保存</text>
+
+  <!-- Graham -->
+  <rect x="392" y="80" width="296" height="100" rx="8" fill="#14141f"/>
+  <rect x="392" y="80" width="296" height="100" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="424" cy="112" r="16" fill="#3a3a1a"/>
+  <text x="424" y="118" text-anchor="middle" fill="#ffd600" font-size="12" font-weight="bold" class="sans">G</text>
+  <text x="448" y="108" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">Graham</text>
+  <text x="448" y="124" fill="#6b6b80" font-size="9" class="sans">Benjamin Graham · 安全边际</text>
+  <rect x="408" y="140" width="180" height="26" rx="4" fill="#0a0a0f"/>
+  <rect x="408" y="140" width="180" height="26" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="420" y="157" fill="#e8e8f0" font-size="10" class="mono">claude-sonnet-4-6</text>
+  <text x="572" y="157" fill="#6b6b80" font-size="10" class="sans">&#9662;</text>
+  <rect x="602" y="140" width="52" height="26" rx="4" fill="#00c853" opacity="0.15"/>
+  <text x="628" y="157" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">保存</text>
+
+  <!-- 段永平 -->
+  <rect x="704" y="80" width="296" height="100" rx="8" fill="#14141f"/>
+  <rect x="704" y="80" width="296" height="100" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="736" cy="112" r="16" fill="#2a1a47"/>
+  <text x="736" y="118" text-anchor="middle" fill="#b388ff" font-size="12" font-weight="bold" class="sans">段</text>
+  <text x="760" y="108" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">段永平</text>
+  <text x="760" y="124" fill="#6b6b80" font-size="9" class="sans">Duan Yongping · 本分投资</text>
+  <rect x="720" y="140" width="180" height="26" rx="4" fill="#0a0a0f"/>
+  <rect x="720" y="140" width="180" height="26" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="732" y="157" fill="#e8e8f0" font-size="10" class="mono">deepseek-v4</text>
+  <text x="884" y="157" fill="#6b6b80" font-size="10" class="sans">&#9662;</text>
+  <rect x="914" y="140" width="52" height="26" rx="4" fill="#00c853" opacity="0.15"/>
+  <text x="940" y="157" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">保存</text>
+
+  <!-- Config Grid: Row 2 -->
+  <!-- 但斌 -->
+  <rect x="80" y="196" width="296" height="100" rx="8" fill="#14141f"/>
+  <rect x="80" y="196" width="296" height="100" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="112" cy="228" r="16" fill="#47331a"/>
+  <text x="112" y="234" text-anchor="middle" fill="#ffb74d" font-size="12" font-weight="bold" class="sans">但</text>
+  <text x="136" y="224" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">但斌</text>
+  <text x="136" y="240" fill="#6b6b80" font-size="9" class="sans">Dan Bin · 时间的玫瑰</text>
+  <rect x="96" y="256" width="180" height="26" rx="4" fill="#0a0a0f"/>
+  <rect x="96" y="256" width="180" height="26" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="108" y="273" fill="#e8e8f0" font-size="10" class="mono">kimi-k2</text>
+  <text x="260" y="273" fill="#6b6b80" font-size="10" class="sans">&#9662;</text>
+  <rect x="290" y="256" width="52" height="26" rx="4" fill="#00c853" opacity="0.15"/>
+  <text x="316" y="273" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">保存</text>
+
+  <!-- 大宇 -->
+  <rect x="392" y="196" width="296" height="100" rx="8" fill="#14141f"/>
+  <rect x="392" y="196" width="296" height="100" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="424" cy="228" r="16" fill="#471a1a"/>
+  <text x="424" y="234" text-anchor="middle" fill="#ff5252" font-size="12" font-weight="bold" class="sans">大</text>
+  <text x="448" y="224" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">大宇</text>
+  <text x="448" y="240" fill="#6b6b80" font-size="9" class="sans">Dayu · 信息差 · 动量</text>
+  <rect x="408" y="256" width="180" height="26" rx="4" fill="#0a0a0f"/>
+  <rect x="408" y="256" width="180" height="26" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="420" y="273" fill="#e8e8f0" font-size="10" class="mono">deepseek-v4</text>
+  <text x="572" y="273" fill="#6b6b80" font-size="10" class="sans">&#9662;</text>
+  <rect x="602" y="256" width="52" height="26" rx="4" fill="#00c853" opacity="0.15"/>
+  <text x="628" y="273" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">保存</text>
+
+  <!-- Aschenbrenner -->
+  <rect x="704" y="196" width="296" height="100" rx="8" fill="#14141f"/>
+  <rect x="704" y="196" width="296" height="100" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="736" cy="228" r="16" fill="#1a1a47"/>
+  <text x="736" y="234" text-anchor="middle" fill="#7c4dff" font-size="12" font-weight="bold" class="sans">A</text>
+  <text x="760" y="224" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">Aschenbrenner</text>
+  <text x="760" y="240" fill="#6b6b80" font-size="9" class="sans">Leopold · AGI Scaling</text>
+  <rect x="720" y="256" width="180" height="26" rx="4" fill="#0a0a0f"/>
+  <rect x="720" y="256" width="180" height="26" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="732" y="273" fill="#e8e8f0" font-size="10" class="mono">claude-opus-4-7</text>
+  <text x="884" y="273" fill="#6b6b80" font-size="10" class="sans">&#9662;</text>
+  <rect x="914" y="256" width="52" height="26" rx="4" fill="#00c853" opacity="0.15"/>
+  <text x="940" y="273" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">保存</text>
+
+  <!-- Config Grid: Row 3 -->
+  <!-- Lynch -->
+  <rect x="80" y="312" width="296" height="100" rx="8" fill="#14141f"/>
+  <rect x="80" y="312" width="296" height="100" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="112" cy="344" r="16" fill="#1a472a"/>
+  <text x="112" y="350" text-anchor="middle" fill="#00c853" font-size="12" font-weight="bold" class="sans">L</text>
+  <text x="136" y="340" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">Lynch</text>
+  <text x="136" y="356" fill="#6b6b80" font-size="9" class="sans">Peter Lynch · GARP</text>
+  <rect x="96" y="372" width="180" height="26" rx="4" fill="#0a0a0f"/>
+  <rect x="96" y="372" width="180" height="26" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="108" y="389" fill="#e8e8f0" font-size="10" class="mono">claude-sonnet-4-6</text>
+  <text x="260" y="389" fill="#6b6b80" font-size="10" class="sans">&#9662;</text>
+  <rect x="290" y="372" width="52" height="26" rx="4" fill="#00c853" opacity="0.15"/>
+  <text x="316" y="389" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">保存</text>
+
+  <!-- Marks -->
+  <rect x="392" y="312" width="296" height="100" rx="8" fill="#14141f"/>
+  <rect x="392" y="312" width="296" height="100" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="424" cy="344" r="16" fill="#3a3a1a"/>
+  <text x="424" y="350" text-anchor="middle" fill="#ffd600" font-size="12" font-weight="bold" class="sans">M</text>
+  <text x="448" y="340" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">Marks</text>
+  <text x="448" y="356" fill="#6b6b80" font-size="9" class="sans">Howard Marks · 周期</text>
+  <rect x="408" y="372" width="180" height="26" rx="4" fill="#0a0a0f"/>
+  <rect x="408" y="372" width="180" height="26" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="420" y="389" fill="#e8e8f0" font-size="10" class="mono">claude-sonnet-4-6</text>
+  <text x="572" y="389" fill="#6b6b80" font-size="10" class="sans">&#9662;</text>
+  <rect x="602" y="372" width="52" height="26" rx="4" fill="#00c853" opacity="0.15"/>
+  <text x="628" y="389" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">保存</text>
+
+  <!-- Soros -->
+  <rect x="704" y="312" width="296" height="100" rx="8" fill="#14141f"/>
+  <rect x="704" y="312" width="296" height="100" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="736" cy="344" r="16" fill="#47471a"/>
+  <text x="736" y="350" text-anchor="middle" fill="#ffd600" font-size="12" font-weight="bold" class="sans">S</text>
+  <text x="760" y="340" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">Soros</text>
+  <text x="760" y="356" fill="#6b6b80" font-size="9" class="sans">George Soros · 反身性</text>
+  <rect x="720" y="372" width="180" height="26" rx="4" fill="#0a0a0f"/>
+  <rect x="720" y="372" width="180" height="26" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="732" y="389" fill="#e8e8f0" font-size="10" class="mono">claude-sonnet-4-6</text>
+  <text x="884" y="389" fill="#6b6b80" font-size="10" class="sans">&#9662;</text>
+  <rect x="914" y="372" width="52" height="26" rx="4" fill="#00c853" opacity="0.15"/>
+  <text x="940" y="389" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">保存</text>
+
+  <!-- More cards indicator (scrollable hint) -->
+  <text x="540" y="440" text-anchor="middle" fill="#6b6b80" font-size="10" class="sans">... 还有 11 位投资人 (向下滚动) ...</text>
+
+  <!-- Bottom section: Provider info -->
+  <rect x="80" y="460" width="920" height="60" rx="8" fill="#14141f"/>
+  <rect x="80" y="460" width="920" height="60" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <text x="104" y="484" fill="#6b6b80" font-size="11" class="sans">可用模型提供商:</text>
+
+  <!-- Provider badges -->
+  <rect x="220" y="472" width="76" height="22" rx="4" fill="#1e1e2e"/>
+  <text x="258" y="487" text-anchor="middle" fill="#e8e8f0" font-size="10" class="sans">Anthropic</text>
+
+  <rect x="306" y="472" width="64" height="22" rx="4" fill="#1e1e2e"/>
+  <text x="338" y="487" text-anchor="middle" fill="#e8e8f0" font-size="10" class="sans">OpenAI</text>
+
+  <rect x="380" y="472" width="76" height="22" rx="4" fill="#1e1e2e"/>
+  <text x="418" y="487" text-anchor="middle" fill="#e8e8f0" font-size="10" class="sans">DeepSeek</text>
+
+  <rect x="466" y="472" width="76" height="22" rx="4" fill="#1e1e2e"/>
+  <text x="504" y="487" text-anchor="middle" fill="#e8e8f0" font-size="10" class="sans">Moonshot</text>
+
+  <rect x="552" y="472" width="68" height="22" rx="4" fill="#1e1e2e"/>
+  <text x="586" y="487" text-anchor="middle" fill="#e8e8f0" font-size="10" class="sans">Minimax</text>
+
+  <rect x="630" y="472" width="56" height="22" rx="4" fill="#1e1e2e"/>
+  <text x="658" y="487" text-anchor="middle" fill="#e8e8f0" font-size="10" class="sans">Kimi</text>
+
+  <!-- Model usage stats -->
+  <text x="104" y="508" fill="#6b6b80" font-size="9" class="sans">当前分配: claude-sonnet x10 | deepseek-v4 x4 | kimi-k2 x2 | claude-opus x1</text>
+
+  <!-- API Key status section -->
+  <rect x="80" y="536" width="920" height="80" rx="8" fill="#14141f"/>
+  <rect x="80" y="536" width="920" height="80" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <text x="104" y="560" fill="#e8e8f0" font-size="12" font-weight="600" class="sans">API Key 状态</text>
+
+  <!-- Key indicators -->
+  <circle cx="104" cy="584" r="4" fill="#00c853"/>
+  <text x="114" y="588" fill="#a8a8b8" font-size="10" class="sans">ANTHROPIC_API_KEY</text>
+  <text x="260" y="588" fill="#00c853" font-size="9" class="mono">已配置</text>
+
+  <circle cx="340" cy="584" r="4" fill="#00c853"/>
+  <text x="350" y="588" fill="#a8a8b8" font-size="10" class="sans">DEEPSEEK_API_KEY</text>
+  <text x="490" y="588" fill="#00c853" font-size="9" class="mono">已配置</text>
+
+  <circle cx="570" cy="584" r="4" fill="#00c853"/>
+  <text x="580" y="588" fill="#a8a8b8" font-size="10" class="sans">OPENAI_API_KEY</text>
+  <text x="710" y="588" fill="#00c853" font-size="9" class="mono">已配置</text>
+
+  <circle cx="790" cy="584" r="4" fill="#ffd600"/>
+  <text x="800" y="588" fill="#a8a8b8" font-size="10" class="sans">MOONSHOT_API_KEY</text>
+  <text x="940" y="588" fill="#ffd600" font-size="9" class="mono">未配置</text>
+
+  <!-- Bottom status -->
+  <rect x="80" y="660" width="920" height="30" rx="6" fill="#14141f"/>
+  <rect x="80" y="660" width="920" height="30" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="100" cy="675" r="4" fill="#00c853"/>
+  <text x="112" y="679" fill="#6b6b80" font-size="11" class="sans">17 位投资人已配置 · 4/5 API Key 就绪 · 系统正常</text>
+  <text x="920" y="679" fill="#6b6b80" font-size="10" class="mono">v5.5</text>
+</svg>

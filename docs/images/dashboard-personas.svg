@@ -1,0 +1,147 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" fill="none">
+  <defs>
+    <style>
+      .mono { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace; }
+      .sans { font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="700" fill="#0a0a0f"/>
+
+  <!-- Left Sidebar -->
+  <rect x="0" y="0" width="64" height="700" fill="#10101a"/>
+  <line x1="64" y1="0" x2="64" y2="700" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="32" cy="40" r="14" fill="#1e1e2e"/>
+  <text x="32" y="44" text-anchor="middle" fill="#e8e8f0" font-size="12" class="sans">A</text>
+  <circle cx="32" cy="90" r="14" fill="#ff8c00" opacity="0.2"/>
+  <rect x="24" y="84" width="16" height="12" rx="2" fill="none" stroke="#ff8c00" stroke-width="1.5"/>
+  <circle cx="32" cy="140" r="14" fill="#1e1e2e"/>
+  <rect x="24" y="134" width="16" height="12" rx="2" fill="none" stroke="#6b6b80" stroke-width="1.5"/>
+  <circle cx="32" cy="190" r="14" fill="#1e1e2e"/>
+  <circle cx="32" cy="190" r="5" fill="none" stroke="#6b6b80" stroke-width="1.5"/>
+
+  <!-- Search bar -->
+  <rect x="80" y="16" width="920" height="44" rx="8" fill="#14141f"/>
+  <rect x="80" y="16" width="920" height="44" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <rect x="96" y="26" width="300" height="24" rx="4" fill="#0a0a0f"/>
+  <rect x="96" y="26" width="300" height="24" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="112" y="42" fill="#6b6b80" font-size="12" class="sans">搜索投资人...</text>
+  <!-- Search icon -->
+  <circle cx="378" cy="38" r="6" fill="none" stroke="#6b6b80" stroke-width="1.2"/>
+  <line x1="382" y1="42" x2="386" y2="46" stroke="#6b6b80" stroke-width="1.2"/>
+
+  <!-- Filter chips -->
+  <rect x="80" y="70" width="920" height="36" rx="0" fill="transparent"/>
+  <!-- Active chip -->
+  <rect x="96" y="74" width="48" height="26" rx="13" fill="#ff8c00"/>
+  <text x="120" y="91" text-anchor="middle" fill="#0a0a0f" font-size="11" font-weight="bold" class="sans">全部</text>
+  <!-- Other chips -->
+  <rect x="154" y="74" width="48" height="26" rx="13" fill="#1e1e2e"/>
+  <text x="178" y="91" text-anchor="middle" fill="#a8a8b8" font-size="11" class="sans">价值</text>
+  <rect x="212" y="74" width="48" height="26" rx="13" fill="#1e1e2e"/>
+  <text x="236" y="91" text-anchor="middle" fill="#a8a8b8" font-size="11" class="sans">宏观</text>
+  <rect x="270" y="74" width="48" height="26" rx="13" fill="#1e1e2e"/>
+  <text x="294" y="91" text-anchor="middle" fill="#a8a8b8" font-size="11" class="sans">成长</text>
+  <rect x="328" y="74" width="60" height="26" rx="13" fill="#1e1e2e"/>
+  <text x="358" y="91" text-anchor="middle" fill="#a8a8b8" font-size="11" class="sans">Crypto</text>
+  <rect x="398" y="74" width="48" height="26" rx="13" fill="#1e1e2e"/>
+  <text x="422" y="91" text-anchor="middle" fill="#a8a8b8" font-size="11" class="sans">中国</text>
+
+  <!-- Card Grid: Row 1 -->
+  <!-- Warren Buffett -->
+  <rect x="80" y="116" width="220" height="130" rx="8" fill="#14141f"/>
+  <rect x="80" y="116" width="220" height="130" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="120" cy="152" r="20" fill="#1a472a"/>
+  <text x="120" y="158" text-anchor="middle" fill="#00c853" font-size="16" font-weight="bold" class="sans">W</text>
+  <text x="150" y="148" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">Warren Buffett</text>
+  <text x="150" y="166" fill="#6b6b80" font-size="10" class="sans">护城河 · 价值</text>
+  <rect x="96" y="186" width="90" height="18" rx="9" fill="#1e1e2e"/>
+  <text x="141" y="198" text-anchor="middle" fill="#a8a8b8" font-size="9" class="mono">claude-sonnet</text>
+  <circle cx="272" cy="134" r="4" fill="#00c853"/>
+
+  <!-- 段永平 -->
+  <rect x="310" y="116" width="220" height="130" rx="8" fill="#14141f"/>
+  <rect x="310" y="116" width="220" height="130" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="350" cy="152" r="20" fill="#2a1a47"/>
+  <text x="350" y="158" text-anchor="middle" fill="#b388ff" font-size="16" font-weight="bold" class="sans">段</text>
+  <text x="380" y="148" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">段永平</text>
+  <text x="380" y="166" fill="#6b6b80" font-size="10" class="sans">本分 · 集中</text>
+  <rect x="326" y="186" width="90" height="18" rx="9" fill="#1e1e2e"/>
+  <text x="371" y="198" text-anchor="middle" fill="#a8a8b8" font-size="9" class="mono">deepseek-v4</text>
+  <circle cx="502" cy="134" r="4" fill="#00c853"/>
+
+  <!-- Ray Dalio -->
+  <rect x="540" y="116" width="220" height="130" rx="8" fill="#14141f"/>
+  <rect x="540" y="116" width="220" height="130" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="580" cy="152" r="20" fill="#1a3347"/>
+  <text x="580" y="158" text-anchor="middle" fill="#64b5f6" font-size="16" font-weight="bold" class="sans">R</text>
+  <text x="610" y="148" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">Ray Dalio</text>
+  <text x="610" y="166" fill="#6b6b80" font-size="10" class="sans">宏观 · 全天候</text>
+  <rect x="556" y="186" width="90" height="18" rx="9" fill="#1e1e2e"/>
+  <text x="601" y="198" text-anchor="middle" fill="#a8a8b8" font-size="9" class="mono">claude-sonnet</text>
+  <circle cx="732" cy="134" r="4" fill="#00c853"/>
+
+  <!-- Cathie Wood -->
+  <rect x="770" y="116" width="220" height="130" rx="8" fill="#14141f"/>
+  <rect x="770" y="116" width="220" height="130" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="810" cy="152" r="20" fill="#47331a"/>
+  <text x="810" y="158" text-anchor="middle" fill="#ffb74d" font-size="16" font-weight="bold" class="sans">C</text>
+  <text x="840" y="148" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">Cathie Wood</text>
+  <text x="840" y="166" fill="#6b6b80" font-size="10" class="sans">颠覆 · 创新</text>
+  <rect x="786" y="186" width="90" height="18" rx="9" fill="#1e1e2e"/>
+  <text x="831" y="198" text-anchor="middle" fill="#a8a8b8" font-size="9" class="mono">claude-sonnet</text>
+  <circle cx="962" cy="134" r="4" fill="#00c853"/>
+
+  <!-- Card Grid: Row 2 -->
+  <!-- 大宇 -->
+  <rect x="80" y="260" width="220" height="130" rx="8" fill="#14141f"/>
+  <rect x="80" y="260" width="220" height="130" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="120" cy="296" r="20" fill="#471a1a"/>
+  <text x="120" y="302" text-anchor="middle" fill="#ff5252" font-size="16" font-weight="bold" class="sans">大</text>
+  <text x="150" y="292" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">大宇</text>
+  <text x="150" y="310" fill="#6b6b80" font-size="10" class="sans">信息差 · 动量</text>
+  <rect x="96" y="330" width="90" height="18" rx="9" fill="#1e1e2e"/>
+  <text x="141" y="342" text-anchor="middle" fill="#a8a8b8" font-size="9" class="mono">deepseek-v4</text>
+  <circle cx="272" cy="278" r="4" fill="#00c853"/>
+
+  <!-- Peter Thiel -->
+  <rect x="310" y="260" width="220" height="130" rx="8" fill="#14141f"/>
+  <rect x="310" y="260" width="220" height="130" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="350" cy="296" r="20" fill="#1a1a47"/>
+  <text x="350" y="302" text-anchor="middle" fill="#7c4dff" font-size="16" font-weight="bold" class="sans">P</text>
+  <text x="380" y="292" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">Peter Thiel</text>
+  <text x="380" y="310" fill="#6b6b80" font-size="10" class="sans">垄断 · 0到1</text>
+  <rect x="326" y="330" width="90" height="18" rx="9" fill="#1e1e2e"/>
+  <text x="371" y="342" text-anchor="middle" fill="#a8a8b8" font-size="9" class="mono">claude-sonnet</text>
+  <circle cx="502" cy="278" r="4" fill="#00c853"/>
+
+  <!-- 张磊 -->
+  <rect x="540" y="260" width="220" height="130" rx="8" fill="#14141f"/>
+  <rect x="540" y="260" width="220" height="130" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="580" cy="296" r="20" fill="#1a472a"/>
+  <text x="580" y="302" text-anchor="middle" fill="#00c853" font-size="16" font-weight="bold" class="sans">张</text>
+  <text x="610" y="292" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">张磊</text>
+  <text x="610" y="310" fill="#6b6b80" font-size="10" class="sans">结构 · 赛道</text>
+  <rect x="556" y="330" width="90" height="18" rx="9" fill="#1e1e2e"/>
+  <text x="601" y="342" text-anchor="middle" fill="#a8a8b8" font-size="9" class="mono">deepseek-v4</text>
+  <circle cx="732" cy="278" r="4" fill="#00c853"/>
+
+  <!-- George Soros -->
+  <rect x="770" y="260" width="220" height="130" rx="8" fill="#14141f"/>
+  <rect x="770" y="260" width="220" height="130" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="810" cy="296" r="20" fill="#47471a"/>
+  <text x="810" y="302" text-anchor="middle" fill="#ffd600" font-size="16" font-weight="bold" class="sans">G</text>
+  <text x="840" y="292" fill="#e8e8f0" font-size="13" font-weight="600" class="sans">George Soros</text>
+  <text x="840" y="310" fill="#6b6b80" font-size="10" class="sans">反身性 · 宏观</text>
+  <rect x="786" y="330" width="90" height="18" rx="9" fill="#1e1e2e"/>
+  <text x="831" y="342" text-anchor="middle" fill="#a8a8b8" font-size="9" class="mono">claude-sonnet</text>
+  <circle cx="962" cy="278" r="4" fill="#00c853"/>
+
+  <!-- Bottom status bar -->
+  <rect x="80" y="660" width="920" height="30" rx="6" fill="#14141f"/>
+  <rect x="80" y="660" width="920" height="30" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="100" cy="675" r="4" fill="#00c853"/>
+  <text x="112" y="679" fill="#6b6b80" font-size="11" class="sans">17 位投资大师 · 系统就绪 · 全部在线</text>
+  <text x="920" y="679" fill="#6b6b80" font-size="10" class="mono">v5.5</text>
+</svg>

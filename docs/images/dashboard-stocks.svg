@@ -1,0 +1,299 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 700" fill="none">
+  <defs>
+    <style>
+      .mono { font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace; }
+      .sans { font-family: -apple-system, 'SF Pro Display', 'Segoe UI', sans-serif; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1100" height="700" fill="#0a0a0f"/>
+
+  <!-- Left Sidebar (collapsed 64px) -->
+  <rect x="0" y="0" width="64" height="700" fill="#10101a"/>
+  <line x1="64" y1="0" x2="64" y2="700" stroke="#1e1e2e" stroke-width="1"/>
+
+  <!-- Nav icons -->
+  <circle cx="32" cy="40" r="14" fill="#1e1e2e"/>
+  <text x="32" y="44" text-anchor="middle" fill="#e8e8f0" font-size="12" class="sans">A</text>
+
+  <circle cx="32" cy="90" r="14" fill="#1e1e2e"/>
+  <rect x="24" y="84" width="16" height="12" rx="2" fill="none" stroke="#6b6b80" stroke-width="1.5"/>
+
+  <circle cx="32" cy="140" r="14" fill="#ff8c00" opacity="0.2"/>
+  <rect x="24" y="134" width="16" height="12" rx="2" fill="none" stroke="#ff8c00" stroke-width="1.5"/>
+
+  <circle cx="32" cy="190" r="14" fill="#1e1e2e"/>
+  <path d="M24 184 L40 184 L40 196 L24 196 Z" fill="none" stroke="#6b6b80" stroke-width="1.5"/>
+
+  <circle cx="32" cy="240" r="14" fill="#1e1e2e"/>
+  <circle cx="32" cy="240" r="5" fill="none" stroke="#6b6b80" stroke-width="1.5"/>
+
+  <circle cx="32" cy="290" r="14" fill="#1e1e2e"/>
+  <path d="M26 290 L38 290 M32 284 L32 296" stroke="#6b6b80" stroke-width="1.5"/>
+
+  <!-- Main Content Area -->
+  <!-- Top bar -->
+  <rect x="80" y="16" width="920" height="48" rx="8" fill="#14141f"/>
+  <rect x="80" y="16" width="920" height="48" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+
+  <!-- Input field -->
+  <rect x="96" y="26" width="200" height="28" rx="4" fill="#0a0a0f"/>
+  <rect x="96" y="26" width="200" height="28" rx="4" fill="none" stroke="#2a2a3e" stroke-width="1"/>
+  <text x="112" y="45" fill="#e8e8f0" font-size="14" font-weight="bold" class="mono">AAPL</text>
+
+  <!-- Auto-fetch button -->
+  <rect x="310" y="26" width="90" height="28" rx="4" fill="#ff8c00"/>
+  <text x="355" y="45" text-anchor="middle" fill="#0a0a0f" font-size="11" font-weight="bold" class="sans">自动获取</text>
+
+  <!-- Analyze button -->
+  <rect x="410" y="26" width="64" height="28" rx="4" fill="#00c853"/>
+  <text x="442" y="45" text-anchor="middle" fill="#0a0a0f" font-size="12" font-weight="bold" class="sans">分析</text>
+
+  <!-- Status indicator -->
+  <circle cx="510" cy="40" r="4" fill="#00c853"/>
+  <text x="520" y="44" fill="#6b6b80" font-size="11" class="sans">实时数据就绪</text>
+
+  <!-- Consensus Banner -->
+  <rect x="80" y="80" width="680" height="140" rx="8" fill="#14141f"/>
+  <rect x="80" y="80" width="680" height="140" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+
+  <!-- BUY signal badge -->
+  <rect x="96" y="96" width="60" height="24" rx="12" fill="#00c853" opacity="0.15"/>
+  <text x="126" y="112" text-anchor="middle" fill="#00c853" font-size="11" font-weight="bold" class="mono">BUY</text>
+
+  <!-- BULLISH text -->
+  <text x="96" y="148" fill="#00c853" font-size="32" font-weight="bold" class="mono">BULLISH</text>
+
+  <!-- Score -->
+  <text x="340" y="108" fill="#6b6b80" font-size="11" class="sans">综合评分</text>
+  <text x="340" y="148" fill="#e8e8f0" font-size="36" font-weight="bold" class="mono">7.8</text>
+  <text x="405" y="148" fill="#6b6b80" font-size="18" class="mono">/10</text>
+
+  <!-- Confidence -->
+  <text x="500" y="108" fill="#6b6b80" font-size="11" class="sans">信心度</text>
+  <text x="500" y="148" fill="#e8e8f0" font-size="36" font-weight="bold" class="mono">78%</text>
+
+  <!-- Kelly Position -->
+  <text x="630" y="108" fill="#6b6b80" font-size="11" class="sans">Kelly 仓位</text>
+  <text x="630" y="148" fill="#ff8c00" font-size="36" font-weight="bold" class="mono">12%</text>
+
+  <!-- Progress bar -->
+  <rect x="96" y="180" width="648" height="4" rx="2" fill="#1e1e2e"/>
+  <rect x="96" y="180" width="506" height="4" rx="2" fill="#00c853"/>
+
+  <!-- Consensus subtitle -->
+  <text x="96" y="206" fill="#6b6b80" font-size="11" class="sans">17位投资大师共识 - 13 看多 / 3 中性 / 1 看空</text>
+
+  <!-- Agent Grid (4x2) -->
+  <!-- Row 1 -->
+  <!-- Buffett -->
+  <rect x="80" y="230" width="162" height="72" rx="6" fill="#14141f"/>
+  <rect x="80" y="230" width="162" height="72" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="104" cy="258" r="12" fill="#1a3a1a"/>
+  <text x="104" y="262" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">B</text>
+  <text x="122" y="262" fill="#e8e8f0" font-size="12" font-weight="500" class="sans">Buffett</text>
+  <circle cx="96" cy="282" r="4" fill="#00c853"/>
+  <text x="106" y="286" fill="#00c853" font-size="13" font-weight="bold" class="mono">8.2/10</text>
+  <text x="160" y="286" fill="#6b6b80" font-size="9" class="sans">看多</text>
+
+  <!-- Graham -->
+  <rect x="252" y="230" width="162" height="72" rx="6" fill="#14141f"/>
+  <rect x="252" y="230" width="162" height="72" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="276" cy="258" r="12" fill="#3a3a1a"/>
+  <text x="276" y="262" text-anchor="middle" fill="#ffd600" font-size="10" font-weight="bold" class="sans">G</text>
+  <text x="294" y="262" fill="#e8e8f0" font-size="12" font-weight="500" class="sans">Graham</text>
+  <circle cx="268" cy="282" r="4" fill="#ffd600"/>
+  <text x="278" y="286" fill="#ffd600" font-size="13" font-weight="bold" class="mono">5.8/10</text>
+  <text x="332" y="286" fill="#6b6b80" font-size="9" class="sans">中性</text>
+
+  <!-- Lynch -->
+  <rect x="424" y="230" width="162" height="72" rx="6" fill="#14141f"/>
+  <rect x="424" y="230" width="162" height="72" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="448" cy="258" r="12" fill="#1a3a1a"/>
+  <text x="448" y="262" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">L</text>
+  <text x="466" y="262" fill="#e8e8f0" font-size="12" font-weight="500" class="sans">Lynch</text>
+  <circle cx="440" cy="282" r="4" fill="#00c853"/>
+  <text x="450" y="286" fill="#00c853" font-size="13" font-weight="bold" class="mono">7.5/10</text>
+  <text x="504" y="286" fill="#6b6b80" font-size="9" class="sans">看多</text>
+
+  <!-- Dalio -->
+  <rect x="596" y="230" width="162" height="72" rx="6" fill="#14141f"/>
+  <rect x="596" y="230" width="162" height="72" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="620" cy="258" r="12" fill="#1a3a1a"/>
+  <text x="620" y="262" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">D</text>
+  <text x="638" y="262" fill="#e8e8f0" font-size="12" font-weight="500" class="sans">Dalio</text>
+  <circle cx="612" cy="282" r="4" fill="#00c853"/>
+  <text x="622" y="286" fill="#00c853" font-size="13" font-weight="bold" class="mono">6.9/10</text>
+  <text x="676" y="286" fill="#6b6b80" font-size="9" class="sans">看多</text>
+
+  <!-- Row 2 -->
+  <!-- Marks -->
+  <rect x="80" y="312" width="162" height="72" rx="6" fill="#14141f"/>
+  <rect x="80" y="312" width="162" height="72" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="104" cy="340" r="12" fill="#3a3a1a"/>
+  <text x="104" y="344" text-anchor="middle" fill="#ffd600" font-size="10" font-weight="bold" class="sans">M</text>
+  <text x="122" y="344" fill="#e8e8f0" font-size="12" font-weight="500" class="sans">Marks</text>
+  <circle cx="96" cy="364" r="4" fill="#ffd600"/>
+  <text x="106" y="368" fill="#ffd600" font-size="13" font-weight="bold" class="mono">5.2/10</text>
+  <text x="160" y="368" fill="#6b6b80" font-size="9" class="sans">中性</text>
+
+  <!-- 段永平 -->
+  <rect x="252" y="312" width="162" height="72" rx="6" fill="#14141f"/>
+  <rect x="252" y="312" width="162" height="72" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="276" cy="340" r="12" fill="#1a3a1a"/>
+  <text x="276" y="344" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">段</text>
+  <text x="294" y="344" fill="#e8e8f0" font-size="12" font-weight="500" class="sans">段永平</text>
+  <circle cx="268" cy="364" r="4" fill="#00c853"/>
+  <text x="278" y="368" fill="#00c853" font-size="13" font-weight="bold" class="mono">7.8/10</text>
+  <text x="332" y="368" fill="#6b6b80" font-size="9" class="sans">看多</text>
+
+  <!-- 张磊 -->
+  <rect x="424" y="312" width="162" height="72" rx="6" fill="#14141f"/>
+  <rect x="424" y="312" width="162" height="72" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="448" cy="340" r="12" fill="#1a3a1a"/>
+  <text x="448" y="344" text-anchor="middle" fill="#00c853" font-size="10" font-weight="bold" class="sans">张</text>
+  <text x="466" y="344" fill="#e8e8f0" font-size="12" font-weight="500" class="sans">张磊</text>
+  <circle cx="440" cy="364" r="4" fill="#00c853"/>
+  <text x="450" y="368" fill="#00c853" font-size="13" font-weight="bold" class="mono">7.1/10</text>
+  <text x="504" y="368" fill="#6b6b80" font-size="9" class="sans">看多</text>
+
+  <!-- 大宇 -->
+  <rect x="596" y="312" width="162" height="72" rx="6" fill="#14141f"/>
+  <rect x="596" y="312" width="162" height="72" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <circle cx="620" cy="340" r="12" fill="#3a1a1a"/>
+  <text x="620" y="344" text-anchor="middle" fill="#ff1744" font-size="10" font-weight="bold" class="sans">大</text>
+  <text x="638" y="344" fill="#e8e8f0" font-size="12" font-weight="500" class="sans">大宇</text>
+  <circle cx="612" cy="364" r="4" fill="#ff1744"/>
+  <text x="622" y="368" fill="#ff1744" font-size="13" font-weight="bold" class="mono">3.5/10</text>
+  <text x="676" y="368" fill="#6b6b80" font-size="9" class="sans">看空</text>
+
+  <!-- Right Sidebar: Key Findings -->
+  <rect x="780" y="80" width="220" height="304" rx="8" fill="#14141f"/>
+  <rect x="780" y="80" width="220" height="304" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+
+  <text x="796" y="106" fill="#e8e8f0" font-size="13" font-weight="bold" class="sans">关键发现</text>
+  <line x1="796" y1="114" x2="984" y2="114" stroke="#1e1e2e" stroke-width="1"/>
+
+  <!-- Finding items -->
+  <circle cx="804" cy="136" r="3" fill="#00c853"/>
+  <text x="814" y="140" fill="#a8a8b8" font-size="10" class="sans">护城河极深 (品牌+生态)</text>
+
+  <circle cx="804" cy="160" r="3" fill="#00c853"/>
+  <text x="814" y="164" fill="#a8a8b8" font-size="10" class="sans">自由现金流强劲</text>
+
+  <circle cx="804" cy="184" r="3" fill="#00c853"/>
+  <text x="814" y="188" fill="#a8a8b8" font-size="10" class="sans">Services 收入占比持续提升</text>
+
+  <circle cx="804" cy="208" r="3" fill="#00c853"/>
+  <text x="814" y="212" fill="#a8a8b8" font-size="10" class="sans">AI 整合推动换机周期</text>
+
+  <circle cx="804" cy="232" r="3" fill="#ffd600"/>
+  <text x="814" y="236" fill="#a8a8b8" font-size="10" class="sans">估值偏高 (PE 29x)</text>
+
+  <circle cx="804" cy="256" r="3" fill="#ffd600"/>
+  <text x="814" y="260" fill="#a8a8b8" font-size="10" class="sans">中国市场风险</text>
+
+  <circle cx="804" cy="280" r="3" fill="#ff1744"/>
+  <text x="814" y="284" fill="#a8a8b8" font-size="10" class="sans">硬件增长放缓</text>
+
+  <circle cx="804" cy="304" r="3" fill="#00c853"/>
+  <text x="814" y="308" fill="#a8a8b8" font-size="10" class="sans">回购力度极大</text>
+
+  <circle cx="804" cy="328" r="3" fill="#00c853"/>
+  <text x="814" y="332" fill="#a8a8b8" font-size="10" class="sans">资本配置优秀</text>
+
+  <circle cx="804" cy="352" r="3" fill="#ffd600"/>
+  <text x="814" y="356" fill="#a8a8b8" font-size="10" class="sans">反垄断监管风险</text>
+
+  <!-- Bottom section: Additional metrics -->
+  <rect x="80" y="400" width="920" height="80" rx="8" fill="#14141f"/>
+  <rect x="80" y="400" width="920" height="80" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+
+  <text x="96" y="424" fill="#6b6b80" font-size="10" class="sans">实时行情</text>
+  <text x="96" y="446" fill="#e8e8f0" font-size="18" font-weight="bold" class="mono">$198.36</text>
+  <text x="200" y="446" fill="#00c853" font-size="12" class="mono">+2.14%</text>
+
+  <text x="310" y="424" fill="#6b6b80" font-size="10" class="sans">市值</text>
+  <text x="310" y="446" fill="#e8e8f0" font-size="18" font-weight="bold" class="mono">$3.05T</text>
+
+  <text x="480" y="424" fill="#6b6b80" font-size="10" class="sans">P/E</text>
+  <text x="480" y="446" fill="#e8e8f0" font-size="18" font-weight="bold" class="mono">29.1x</text>
+
+  <text x="600" y="424" fill="#6b6b80" font-size="10" class="sans">ROE</text>
+  <text x="600" y="446" fill="#e8e8f0" font-size="18" font-weight="bold" class="mono">157%</text>
+
+  <text x="720" y="424" fill="#6b6b80" font-size="10" class="sans">FCF Yield</text>
+  <text x="720" y="446" fill="#e8e8f0" font-size="18" font-weight="bold" class="mono">3.4%</text>
+
+  <text x="860" y="424" fill="#6b6b80" font-size="10" class="sans">RSI(14)</text>
+  <text x="860" y="446" fill="#ffd600" font-size="18" font-weight="bold" class="mono">62.3</text>
+
+  <text x="96" y="468" fill="#6b6b80" font-size="9" class="sans">数据来源: Yahoo Finance | 延迟 ~15min | 缓存 5min</text>
+
+  <!-- Bottom mini chart area -->
+  <rect x="80" y="496" width="450" height="180" rx="8" fill="#14141f"/>
+  <rect x="80" y="496" width="450" height="180" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <text x="96" y="520" fill="#6b6b80" font-size="10" class="sans">评分分布</text>
+
+  <!-- Mini bar chart -->
+  <rect x="110" y="540" width="24" height="100" rx="2" fill="#00c853" opacity="0.7"/>
+  <text x="122" y="656" text-anchor="middle" fill="#6b6b80" font-size="8" class="mono">8.2</text>
+
+  <rect x="150" y="582" width="24" height="58" rx="2" fill="#ffd600" opacity="0.7"/>
+  <text x="162" y="656" text-anchor="middle" fill="#6b6b80" font-size="8" class="mono">5.8</text>
+
+  <rect x="190" y="550" width="24" height="90" rx="2" fill="#00c853" opacity="0.7"/>
+  <text x="202" y="656" text-anchor="middle" fill="#6b6b80" font-size="8" class="mono">7.5</text>
+
+  <rect x="230" y="558" width="24" height="82" rx="2" fill="#00c853" opacity="0.7"/>
+  <text x="242" y="656" text-anchor="middle" fill="#6b6b80" font-size="8" class="mono">6.9</text>
+
+  <rect x="270" y="588" width="24" height="52" rx="2" fill="#ffd600" opacity="0.7"/>
+  <text x="282" y="656" text-anchor="middle" fill="#6b6b80" font-size="8" class="mono">5.2</text>
+
+  <rect x="310" y="544" width="24" height="96" rx="2" fill="#00c853" opacity="0.7"/>
+  <text x="322" y="656" text-anchor="middle" fill="#6b6b80" font-size="8" class="mono">7.8</text>
+
+  <rect x="350" y="552" width="24" height="88" rx="2" fill="#00c853" opacity="0.7"/>
+  <text x="362" y="656" text-anchor="middle" fill="#6b6b80" font-size="8" class="mono">7.1</text>
+
+  <rect x="390" y="610" width="24" height="30" rx="2" fill="#ff1744" opacity="0.7"/>
+  <text x="402" y="656" text-anchor="middle" fill="#6b6b80" font-size="8" class="mono">3.5</text>
+
+  <!-- Signal distribution -->
+  <rect x="550" y="496" width="450" height="180" rx="8" fill="#14141f"/>
+  <rect x="550" y="496" width="450" height="180" rx="8" fill="none" stroke="#1e1e2e" stroke-width="1"/>
+  <text x="566" y="520" fill="#6b6b80" font-size="10" class="sans">投资风格分布</text>
+
+  <!-- Donut-style indicators -->
+  <circle cx="640" cy="600" r="40" fill="none" stroke="#1e1e2e" stroke-width="8"/>
+  <circle cx="640" cy="600" r="40" fill="none" stroke="#00c853" stroke-width="8" stroke-dasharray="188 63" stroke-dashoffset="0"/>
+  <circle cx="640" cy="600" r="40" fill="none" stroke="#ffd600" stroke-width="8" stroke-dasharray="37 214" stroke-dashoffset="-188"/>
+  <circle cx="640" cy="600" r="40" fill="none" stroke="#ff1744" stroke-width="8" stroke-dasharray="12 239" stroke-dashoffset="-225"/>
+  <text x="640" y="596" text-anchor="middle" fill="#e8e8f0" font-size="14" font-weight="bold" class="mono">76%</text>
+  <text x="640" y="612" text-anchor="middle" fill="#6b6b80" font-size="9" class="sans">看多</text>
+
+  <!-- Legend -->
+  <circle cx="740" cy="565" r="4" fill="#00c853"/>
+  <text x="750" y="569" fill="#a8a8b8" font-size="10" class="sans">看多 (13)</text>
+
+  <circle cx="740" cy="590" r="4" fill="#ffd600"/>
+  <text x="750" y="594" fill="#a8a8b8" font-size="10" class="sans">中性 (3)</text>
+
+  <circle cx="740" cy="615" r="4" fill="#ff1744"/>
+  <text x="750" y="619" fill="#a8a8b8" font-size="10" class="sans">看空 (1)</text>
+
+  <!-- Style categories -->
+  <text x="840" y="560" fill="#6b6b80" font-size="9" class="sans">价值投资</text>
+  <rect x="840" y="566" width="60" height="4" rx="2" fill="#00c853" opacity="0.6"/>
+
+  <text x="840" y="588" fill="#6b6b80" font-size="9" class="sans">成长投资</text>
+  <rect x="840" y="594" width="45" height="4" rx="2" fill="#00c853" opacity="0.6"/>
+
+  <text x="840" y="616" fill="#6b6b80" font-size="9" class="sans">宏观对冲</text>
+  <rect x="840" y="622" width="30" height="4" rx="2" fill="#ffd600" opacity="0.6"/>
+
+  <text x="840" y="644" fill="#6b6b80" font-size="9" class="sans">动量交易</text>
+  <rect x="840" y="650" width="15" height="4" rx="2" fill="#ff1744" opacity="0.6"/>
+</svg>
