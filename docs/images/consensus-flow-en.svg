@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 360" width="1000" height="360">
+  <defs>
+    <pattern id="bg-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="0.8" fill="#cbd5e1" opacity="0.3"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="360" fill="#f8f6f0"/>
+  <rect width="1000" height="360" fill="url(#bg-dots)"/>
+  <rect x="8" y="8" width="984" height="344" rx="10" fill="none" stroke="#1e293b" stroke-width="2"/>
+  <text x="500" y="36" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#0f172a">Consensus Decision Flow</text>
+
+  <!-- Step 1 -->
+  <rect x="30" y="52" width="920" height="40" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <text x="50" y="77" font-family="Arial" font-size="11" font-weight="600" fill="#1e40af">User Input</text>
+  <text x="140" y="77" font-family="Arial" font-size="10" fill="#64748b">Stock ticker / Analysis question / Command</text>
+  <text x="850" y="77" font-family="Arial" font-size="8" fill="#94a3b8">Step 1</text>
+  <line x1="500" y1="92" x2="500" y2="112" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 2 -->
+  <rect x="30" y="112" width="920" height="70" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+  <text x="50" y="137" font-family="Arial" font-size="11" font-weight="600" fill="#065f46">17 Agents Analyze in Parallel</text>
+  <text x="850" y="137" font-family="Arial" font-size="8" fill="#94a3b8">Step 2</text>
+  <g transform="translate(50,148)"><rect width="100" height="22" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#1e40af">Buffett</text></g>
+  <g transform="translate(158,148)"><rect width="100" height="22" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#1e40af">Graham</text></g>
+  <g transform="translate(266,148)"><rect width="100" height="22" rx="4" fill="#dcfce7" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#166534">Dalio</text></g>
+  <g transform="translate(374,148)"><rect width="100" height="22" rx="4" fill="#f3e8ff" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#4c1d95">Aschenbrenner</text></g>
+  <g transform="translate(482,148)"><rect width="100" height="22" rx="4" fill="#ffedd5" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#9a3412">BTCdayu</text></g>
+  <g transform="translate(590,148)"><rect width="100" height="22" rx="4" fill="#fce7e7" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#991b1b">Duan Yongping</text></g>
+  <g transform="translate(698,148)"><rect width="100" height="22" rx="4" fill="#fef3c7" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#92400e">Thiel</text></g>
+  <g transform="translate(806,148)"><rect width="100" height="22" rx="4" fill="#f8fafc" stroke="#1e293b" stroke-width="0.8"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">+10 more</text></g>
+  <line x1="500" y1="182" x2="500" y2="200" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 3 -->
+  <rect x="30" y="200" width="920" height="55" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+  <text x="50" y="225" font-family="Arial" font-size="11" font-weight="600" fill="#5b21b6">Consensus Engine</text>
+  <text x="850" y="225" font-family="Arial" font-size="8" fill="#94a3b8">Step 3</text>
+  <g transform="translate(50,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">Industry Weighting</text></g>
+  <g transform="translate(200,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">Regime Routing</text></g>
+  <g transform="translate(350,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">Rolling IC Weight</text></g>
+  <g transform="translate(500,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">Diversity Penalty</text></g>
+  <g transform="translate(650,235)"><rect width="140" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="70" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">Meta Model</text></g>
+  <g transform="translate(800,235)"><rect width="130" height="14" rx="3" fill="#f5f3ff" stroke="#7c3aed" stroke-width="0.6"/><text x="65" y="12" text-anchor="middle" font-family="Arial" font-size="6" fill="#5b21b6">Calmar Calibration</text></g>
+  <line x1="500" y1="255" x2="500" y2="274" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Step 4 -->
+  <rect x="30" y="274" width="440" height="48" rx="6" fill="#fff" stroke="#d97706" stroke-width="1.5"/>
+  <text x="50" y="299" font-family="Arial" font-size="10" font-weight="600" fill="#92400e">Risk Verdict</text>
+  <text x="50" y="314" font-family="Arial" font-size="8" fill="#64748b">Kelly Position / Calmar / VaR / Circuit Breaker</text>
+  <rect x="510" y="274" width="440" height="48" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+  <text x="530" y="299" font-family="Arial" font-size="10" font-weight="600" fill="#065f46">Final Output</text>
+  <text x="530" y="314" font-family="Arial" font-size="8" fill="#64748b">BULLISH/NEUTRAL/BEARISH / Score / Position Advice</text>
+  <circle cx="50" cy="342" r="3" fill="#22c55e"/><text x="60" y="346" font-family="Arial" font-size="8" fill="#64748b">Augur Dashboard</text>
+  <circle cx="230" cy="342" r="3" fill="#3b82f6"/><text x="240" y="346" font-family="Arial" font-size="8" fill="#64748b">Hermes Web UI</text>
+  <circle cx="430" cy="342" r="3" fill="#a855f7"/><text x="440" y="346" font-family="Arial" font-size="8" fill="#64748b">Skill Chat</text>
+  <circle cx="600" cy="342" r="3" fill="#f59e0b"/><text x="610" y="346" font-family="Arial" font-size="8" fill="#64748b">Telegram/Slack</text>
+  <circle cx="810" cy="342" r="3" fill="#ef4444"/><text x="820" y="346" font-family="Arial" font-size="8" fill="#64748b">API</text>
+</svg>
