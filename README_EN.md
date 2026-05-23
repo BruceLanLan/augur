@@ -195,6 +195,23 @@ python3 -m dashboard.app --port 8000 --cors
 | Settings | `/settings` | Agent model configuration |
 | Create Persona | `/create_persona` | YAML custom investor creation |
 
+### Dashboard Preview
+
+<p align="center">
+  <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis" width="100%"/>
+  <br><em>Stock Analysis - Enter a ticker for instant 17-master consensus</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/dashboard-personas.svg" alt="Personas" width="100%"/>
+  <br><em>Personas - 17 master cards with search and filter</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/dashboard-settings.svg" alt="Settings" width="100%"/>
+  <br><em>Settings - Independent model configuration per investor</em>
+</p>
+
 ---
 
 ## Real-time Data (yfinance)

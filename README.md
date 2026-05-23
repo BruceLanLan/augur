@@ -195,6 +195,23 @@ python3 -m dashboard.app --port 8000 --cors
 | 设置 | `/settings` | Agent模型配置 |
 | 创建人格 | `/create_persona` | YAML 自定义投资人 |
 
+### Dashboard 界面预览
+
+<p align="center">
+  <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis" width="100%"/>
+  <br><em>股票分析页 - 输入代码即得17位大师共识</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/dashboard-personas.svg" alt="Personas" width="100%"/>
+  <br><em>投资人页 - 17位大师卡片网格 + 搜索筛选</em>
+</p>
+
+<p align="center">
+  <img src="docs/images/dashboard-settings.svg" alt="Settings" width="100%"/>
+  <br><em>设置页 - 每位投资人独立模型配置</em>
+</p>
+
 ---
 
 ## 实时数据 (yfinance)
