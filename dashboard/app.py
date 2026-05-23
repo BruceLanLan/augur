@@ -474,6 +474,54 @@ async def api_run_watchlist_analysis():
     return {"status": "ok", "results": all_results}
 
 
+@app.get("/backtest", response_class=HTMLResponse)
+async def backtest_page(request: Request):
+    return templates.TemplateResponse("backtest.html", {
+        "request": request,
+        "title": "历史回测 - Agent IC",
+    })
+
+
+@app.get("/api/backtest/run")
+async def api_run_backtest(ticker: str = "AAPL", days: int = 30):
+    """Run demo backtest, return results"""
+    from augur.backtest import Backtester, generate_sample_data
+
+    if days < 5:
+        days = 5
+    if days > 120:
+        days = 120
+
+    historical_data, forward_returns = generate_sample_data(ticker, days)
+    backtester = Backtester()
+    result = backtester.run_backtest(ticker, historical_data, forward_returns)
+
+    return {
+        "status": "ok",
+        "ticker": result.ticker,
+        "days": days,
+        "total_records": len(result.records),
+        "consensus_ic": result.consensus_ic,
+        "agent_ics": [a.to_dict() for a in result.agent_ics],
+        "summary": result.summary,
+    }
+
+
+@app.get("/api/backtest/leaderboard")
+async def api_ic_leaderboard():
+    """Get saved IC leaderboard"""
+    from augur.backtest import Backtester
+
+    backtester = Backtester()
+    ics = backtester.get_leaderboard()
+
+    return {
+        "status": "ok",
+        "leaderboard": [a.to_dict() for a in ics],
+        "count": len(ics),
+    }
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "agents": len(get_registry().get_all())}
