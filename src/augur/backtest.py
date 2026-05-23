@@ -414,6 +414,86 @@ class Backtester:
             return []
         return self._calculate_ics(records)
 
+    def run_live_backtest(self, ticker: str, days: int = 60) -> BacktestResult:
+        """
+        Run backtest using real historical data from yfinance.
+
+        Args:
+            ticker: Stock ticker
+            days: Number of days to backtest
+
+        Returns:
+            BacktestResult with all records and IC calculations
+        """
+        from augur.data import fetch_history, calculate_technicals
+
+        # Fetch enough history for forward returns (days + 60)
+        total_period = days + 70
+        period_map = {
+            60: "6mo",
+            120: "1y",
+            180: "1y",
+            250: "2y",
+        }
+        # Pick the smallest period that covers our needs
+        period = "1y"
+        for threshold, p in sorted(period_map.items()):
+            if total_period <= threshold:
+                period = p
+                break
+        else:
+            period = "2y"
+
+        prices = fetch_history(ticker, period=period)
+        if not prices or len(prices) < days + 5:
+            raise ValueError(f"Insufficient data for {ticker}: got {len(prices)} days, need at least {days + 5}")
+
+        # Build historical_data and forward_returns
+        # Use last `days + 60` entries, backtest on first `days`
+        if len(prices) > days + 60:
+            prices = prices[-(days + 60):]
+
+        actual_days = min(days, len(prices) - 5)
+        historical_data = []
+        forward_returns = []
+
+        for i in range(actual_days):
+            day = prices[i]
+            date_str = day["date"]
+
+            # Calculate technicals from prices up to this point
+            history_slice = prices[:i + 1]
+            technicals = calculate_technicals(history_slice) if len(history_slice) >= 5 else {}
+
+            historical_data.append({
+                "date": date_str,
+                "price": day["close"],
+                "rsi": technicals.get("rsi", 50),
+                "macd": technicals.get("macd", 0),
+                "sma20": technicals.get("sma20", 0),
+                "sma50": technicals.get("sma50", 0),
+            })
+
+            # Forward returns
+            ret_5d = 0.0
+            ret_20d = 0.0
+            ret_60d = 0.0
+            if i + 5 < len(prices):
+                ret_5d = (prices[i + 5]["close"] / prices[i]["close"]) - 1
+            if i + 20 < len(prices):
+                ret_20d = (prices[i + 20]["close"] / prices[i]["close"]) - 1
+            if i + 60 < len(prices):
+                ret_60d = (prices[i + 60]["close"] / prices[i]["close"]) - 1
+
+            forward_returns.append({
+                "date": date_str,
+                "return_5d": round(ret_5d, 5),
+                "return_20d": round(ret_20d, 5),
+                "return_60d": round(ret_60d, 5),
+            })
+
+        return self.run_backtest(ticker, historical_data, forward_returns)
+
 
 # ============ Demo Data Generator ============
 

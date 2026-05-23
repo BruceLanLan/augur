@@ -107,17 +107,120 @@ pip install -e .
 
 ---
 
+## 📈 实时数据 (yfinance)
+
+从 v5.4 开始，Augur 支持通过 yfinance 自动获取实时市场数据，无需手动输入财务指标。只需输入股票代码，系统自动获取价格、估值、基本面和技术指标。
+
+### 支持市场
+
+| 市场 | 代码格式 | 示例 | 延迟 |
+|------|---------|------|------|
+| 美股 (NYSE/NASDAQ) | `TICKER` | AAPL, NVDA, TSLA | ~15分钟 |
+| 港股 (HKEX) | `XXXX.HK` | 0700.HK, 9988.HK | ~15分钟 |
+| A股-上交所 (SSE) | `XXXXXX.SS` | 600519.SS | ~15分钟 |
+| A股-深交所 (SZSE) | `XXXXXX.SZ` | 000858.SZ | ~15分钟 |
+
+### 安装数据模块
+
+```bash
+pip install 'augur-agents[data]'
+# 或手动安装
+pip install yfinance pandas
+```
+
+### CLI 自动获取
+
+```bash
+# 直接分析，无需指定任何指标! 自动从 yfinance 获取
+augur analyze AAPL
+augur consensus NVDA
+
+# 仅获取数据 (不分析)
+augur fetch AAPL
+augur fetch 0700.HK --json
+
+# 手动指定指标时使用用户提供的值
+augur analyze AAPL --pe 32 --roe 0.55
+
+# 使用真实历史数据进行回测
+augur backtest AAPL --days 60 --live
+```
+
+### API 自动获取
+
+```bash
+# 无参数时自动获取实时数据
+GET /api/analyze/AAPL
+
+# 获取原始市场数据
+GET /api/fetch/AAPL
+GET /api/fetch/0700.HK
+
+# 搜索股票代码
+GET /api/search?q=apple
+
+# 手动指定则使用用户数据
+GET /api/analyze/AAPL?pe=32&gross_margins=0.46&auto_fetch=false
+```
+
+### Dashboard 自动获取
+
+在股票分析页面:
+1. 输入股票代码 (如 AAPL)
+2. 点击 "自动获取" 按钮从 yfinance 拉取实时数据并填充表单
+3. 或直接点击 "分析" -- 未填写指标时自动获取
+4. 页面显示 "数据来源: yfinance 实时" 标识
+
+### 获取的指标
+
+| 指标 | 来源字段 | 说明 |
+|------|---------|------|
+| 价格 (price) | currentPrice | 当前/最近交易价 |
+| 市盈率 (PE) | trailingPE | 滚动市盈率 |
+| 市净率 (PB) | priceToBook | 市净率 |
+| 市销率 (PS) | priceToSalesTrailing12Months | 市销率 |
+| ROE | returnOnEquity | 净资产收益率 |
+| 毛利率 | grossMargins | 销售毛利率 |
+| 营业利润率 | operatingMargins | 营业利润率 |
+| 营收增速 | revenueGrowth | 同比营收增长 |
+| 净利润增速 | earningsGrowth | 同比利润增长 |
+| 负债比率 | debtToEquity / 100 | 资产负债率 |
+| 自由现金流 | freeCashflow | FCF |
+| 市值 | marketCap | 总市值 |
+| 流动比率 | currentRatio | 流动比率 |
+| RSI | 计算值 (14期) | 相对强弱指数 |
+| MACD | 计算值 (12/26/9) | 移动平均收敛散度 |
+| SMA20/50 | 计算值 | 20/50日均线 |
+
+### 数据限制
+
+- 美股数据延迟约15分钟 (非实时Level 1)
+- 部分 A 股/港股字段可能缺失
+- 数据缓存5分钟，避免频繁请求
+- yfinance 依赖 Yahoo Finance，可能存在地区访问限制
+
+---
+
 ## 🖥️ CLI 命令行
 
 ```bash
 # 列出所有投资人
 augur list-personas
 
-# 单投资人分析
+# 分析 (自动获取实时数据，无需指定指标!)
+augur analyze AAPL
+augur analyze NVDA
+augur analyze 0700.HK
+
+# 手动指定指标时覆盖自动获取
 augur analyze AAPL --persona buffett --pe 32 --roe 0.55 --gross-margins 0.46
 
-# 17位大师共识
-augur consensus AAPL --pe 32 --roe 0.55 --gross-margins 0.46
+# 17位大师共识 (自动获取)
+augur consensus AAPL
+
+# 仅获取实时数据
+augur fetch AAPL
+augur fetch 0700.HK --json
 
 # 启动 MCP Server (供 Hermes/Claude 等调用)
 augur mcp-server
@@ -149,10 +252,11 @@ augur cron-run             # 手动运行一次
 augur cron-start           # 启动定时守护进程
 
 # 历史回测 + IC 追踪
-augur backtest AAPL --days 30   # 运行回测(模拟数据)
-augur backtest NVDA --days 60   # 回测其他标的
-augur ic-report                 # 查看 IC 排行榜
-augur ic-report --agent buffett # 查看特定 Agent IC
+augur backtest AAPL --days 30 --demo   # 模拟数据回测
+augur backtest AAPL --days 60 --live   # 使用真实历史数据回测!
+augur backtest NVDA --days 60          # 默认模拟数据
+augur ic-report                        # 查看 IC 排行榜
+augur ic-report --agent buffett        # 查看特定 Agent IC
 
 # Watchlist 管理
 augur watchlist-add AAPL --pe 32 --roe 0.55
@@ -719,7 +823,9 @@ Dashboard 内置 REST API，支持前端配置管理和外部集成：
 | `/api/custom-persona` | POST | 创建自定义投资人（YAML） |
 | `/api/schema/persona` | GET | 获取 Persona YAML Schema |
 | `/api/personas` | GET | 获取所有投资人列表 |
-| `/api/analyze/{ticker}` | GET | 17位大师共识分析 |
+| `/api/analyze/{ticker}` | GET | 17位大师共识分析 (支持自动获取数据) |
+| `/api/fetch/{ticker}` | GET | 获取实时市场数据 (yfinance) |
+| `/api/search?q=` | GET | 搜索股票代码 |
 | `/api/persona/{agent_id}` | GET | 获取单个投资人详情 |
 | `/health` | GET | 健康检查 |
 
@@ -856,6 +962,7 @@ augur/
 │   ├── soul.py                 # Soul Injector - 人格注入引擎
 │   ├── cron.py                 # Cron 定时分析 + Watchlist 管理
 │   ├── backtest.py             # 历史回测 + Agent IC 追踪
+│   ├── data.py                 # 实时数据获取 (yfinance) + 技术指标计算
 │   ├── bots/                   # 多平台 Bot 适配器
 │   │   ├── __init__.py
 │   │   ├── telegram_bot.py     # Telegram Bot (python-telegram-bot)
@@ -922,6 +1029,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v5.4** | 2026-05-23 | 📈 实时行情接入 (yfinance) -- 自动获取美股/港股/A股数据，无需手动输入指标 |
 | **v5.3** | 2026-05-23 | \U0001f4f1 个人微信接入 (GeWeChat) -- Hermes Agent 同款方案, 扫码即用 |
 | **v5.2** | 2026-05-23 | ✨ UX 打磨 — 键盘快捷键 + 加载骨架 + Score仪表 + 打印样式 + 移动端底部导航 |
 | **v5.1** | 2026-05-24 | 📊 历史回测系统 + Agent IC 实盘追踪 + 排行榜 |
@@ -966,7 +1074,8 @@ augur/
 - [x] **v5.1**: 历史回测系统 + Agent IC 实盘追踪 + 排行榜
 - [x] **v5.2**: UI/UX 优化 + 产品体验提升 (键盘快捷键/加载骨架/Score仪表/打印样式/移动端)
 - [x] **v5.3**: 个人微信接入 (GeWeChat) -- 扫码即用, 三模式 (personal/wecom/webhook)
-- [ ] **v5.4**: Real-time data integration (yfinance)
+- [x] **v5.4**: 实时行情接入 (yfinance) -- 自动获取美股/港股/A股数据，无需手动输入
+- [ ] **v5.5**: UI/UX 优化 + 产品体验提升
 
 ---
 

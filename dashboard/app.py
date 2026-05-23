@@ -214,35 +214,74 @@ async def analyze_ticker(
     market_cap: float = 0,
     institutional_ownership: float = 0,
     insider_ownership: float = 0,
-    current_ratio: float = 1.5,
+    current_ratio: float = 0,
     earnings_growth: float = 0,
     sector: str = "",
     industry: str = "",
+    auto_fetch: bool = True,
 ):
     """
     使用所有17位投资大师分析指定标的
 
-    基本用法: GET /api/analyze/AAPL?price=210&pe=32&gross_margins=0.46
+    基本用法: GET /api/analyze/AAPL (自动获取实时数据)
+    手动指标: GET /api/analyze/AAPL?price=210&pe=32&gross_margins=0.46
     """
-    ctx = MarketContext(
-        ticker=ticker.upper(),
-        price=price,
-        pe=pe,
-        pb=pb,
-        revenue_growth=revenue_growth,
-        gross_margins=gross_margins,
-        operating_margins=operating_margins,
-        roe=roe,
-        debt_ratio=debt_ratio,
-        fcf=fcf,
-        market_cap=market_cap,
-        institutional_ownership=institutional_ownership,
-        insider_ownership=insider_ownership,
-        current_ratio=current_ratio,
-        earnings_growth=earnings_growth,
-        sector=sector,
-        industry=industry,
-    )
+    # Check if any meaningful metric was provided by user
+    has_user_metrics = any([
+        price > 0, pe > 0, pb > 0, revenue_growth != 0,
+        gross_margins > 0, operating_margins != 0, roe > 0,
+        debt_ratio > 0, fcf != 0, market_cap > 0,
+    ])
+
+    data_source = "manual"
+
+    if not has_user_metrics and auto_fetch:
+        # Try to auto-fetch from yfinance
+        try:
+            from augur.data import fetch_market_context
+            ctx = fetch_market_context(ticker)
+            data_source = "yfinance"
+        except (ImportError, Exception):
+            # Fallback to manual (empty) context
+            ctx = MarketContext(
+                ticker=ticker.upper(),
+                price=price,
+                pe=pe,
+                pb=pb,
+                revenue_growth=revenue_growth,
+                gross_margins=gross_margins,
+                operating_margins=operating_margins,
+                roe=roe,
+                debt_ratio=debt_ratio,
+                fcf=fcf,
+                market_cap=market_cap,
+                institutional_ownership=institutional_ownership,
+                insider_ownership=insider_ownership,
+                current_ratio=current_ratio,
+                earnings_growth=earnings_growth,
+                sector=sector,
+                industry=industry,
+            )
+    else:
+        ctx = MarketContext(
+            ticker=ticker.upper(),
+            price=price,
+            pe=pe,
+            pb=pb,
+            revenue_growth=revenue_growth,
+            gross_margins=gross_margins,
+            operating_margins=operating_margins,
+            roe=roe,
+            debt_ratio=debt_ratio,
+            fcf=fcf,
+            market_cap=market_cap,
+            institutional_ownership=institutional_ownership,
+            insider_ownership=insider_ownership,
+            current_ratio=current_ratio,
+            earnings_growth=earnings_growth,
+            sector=sector,
+            industry=industry,
+        )
 
     coord = get_coordinator()
     agent_responses = coord.analyze_with_all(ctx)
@@ -255,6 +294,16 @@ async def analyze_ticker(
     return {
         "ticker": ticker.upper(),
         "timestamp": __import__("datetime").datetime.utcnow().isoformat() + "Z",
+        "data_source": data_source,
+        "market_data": {
+            "price": ctx.price,
+            "pe": ctx.pe,
+            "pb": ctx.pb,
+            "roe": ctx.roe,
+            "gross_margins": ctx.gross_margins,
+            "sector": ctx.sector,
+            "industry": ctx.industry,
+        },
         "consensus": consensus_resp.to_dict(),
         "agents": [r.to_dict() for r in agent_responses.values()],
         "agent_count": len(agent_responses),
@@ -525,6 +574,54 @@ async def api_ic_leaderboard():
 @app.get("/health")
 async def health():
     return {"status": "ok", "agents": len(get_registry().get_all())}
+
+
+# ============ Data Fetch API Routes ============
+
+@app.get("/api/fetch/{ticker}")
+async def api_fetch_ticker(ticker: str):
+    """Fetch real-time market data for a ticker via yfinance"""
+    try:
+        from augur.data import fetch_market_context
+    except ImportError:
+        raise HTTPException(
+            status_code=501,
+            detail="yfinance not installed. Install with: pip install 'augur-agents[data]'"
+        )
+
+    try:
+        ctx = fetch_market_context(ticker)
+        return {
+            "status": "ok",
+            "ticker": ctx.ticker,
+            "source": "yfinance",
+            "data": ctx.to_dict(),
+        }
+    except ImportError as e:
+        raise HTTPException(status_code=501, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch data: {e}")
+
+
+@app.get("/api/search")
+async def api_search_tickers(q: str = ""):
+    """Search for tickers by name/symbol"""
+    if not q or len(q) < 1:
+        return {"results": []}
+
+    try:
+        from augur.data import search_ticker
+    except ImportError:
+        raise HTTPException(
+            status_code=501,
+            detail="yfinance not installed. Install with: pip install 'augur-agents[data]'"
+        )
+
+    try:
+        results = search_ticker(q)
+        return {"status": "ok", "query": q, "results": results}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Search failed: {e}")
 
 
 # ============ Main ============

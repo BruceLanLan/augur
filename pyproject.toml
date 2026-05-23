@@ -17,6 +17,10 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+data = [
+    "yfinance>=0.2.0",
+    "pandas>=1.5.0",
+]
 telegram = [
     "python-telegram-bot>=20.0",
 ]
@@ -40,6 +44,8 @@ dev = [
     "pytest>=7.0",
 ]
 all = [
+    "yfinance>=0.2.0",
+    "pandas>=1.5.0",
     "python-telegram-bot>=20.0",
     "slack-bolt>=1.18.0",
     "gewechat-client>=0.1.0",
