@@ -72,7 +72,7 @@
                     <span class="status-dot"></span>
                     <span class="status-text">系统就绪</span>
                 </div>
-                <div class="version-info">v5.1</div>
+                <div class="version-info">v5.2</div>
             </div>
         </aside>
 
@@ -89,6 +89,30 @@
             {% block content %}{% endblock %}
         </main>
     </div>
+
+    <!-- Bottom nav for mobile -->
+    <nav class="bottom-nav" id="bottom-nav">
+        <a class="bottom-nav-item" href="/" data-page="home">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+            <span>首页</span>
+        </a>
+        <a class="bottom-nav-item" href="/stocks" data-page="stocks">
+            <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
+            <span>分析</span>
+        </a>
+        <a class="bottom-nav-item" href="/personas" data-page="personas">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            <span>大师</span>
+        </a>
+        <a class="bottom-nav-item" href="/backtest" data-page="backtest">
+            <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+            <span>回测</span>
+        </a>
+        <a class="bottom-nav-item" href="/settings" data-page="settings">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15"/></svg>
+            <span>设置</span>
+        </a>
+    </nav>
 
     <!-- Toast container -->
     <div class="toast-container" id="toast-container"></div>
@@ -126,6 +150,15 @@
                 item.classList.add('active');
             }
         });
+        // Bottom nav highlight
+        document.querySelectorAll('.bottom-nav-item').forEach(function(item) {
+            var href = item.getAttribute('href');
+            if (path === href || (href !== '/' && path.startsWith(href))) {
+                item.classList.add('active');
+            } else if (href === '/' && path === '/') {
+                item.classList.add('active');
+            }
+        });
     });
 
     // Toast utility
@@ -142,6 +175,164 @@
             setTimeout(function() { toast.remove(); }, 300);
         }, 3000);
     }
+
+    // === v5.2 Global Utilities ===
+
+    // Format large numbers (e.g. 1500000000 -> "15.0亿", 23400000 -> "2340.0万")
+    function formatNumber(num) {
+        if (num === null || num === undefined || isNaN(num)) return '--';
+        var abs = Math.abs(num);
+        if (abs >= 1e8) return (num / 1e8).toFixed(1) + '亿';
+        if (abs >= 1e4) return (num / 1e4).toFixed(1) + '万';
+        if (abs >= 1e3) return num.toFixed(0);
+        return num.toFixed(2);
+    }
+
+    function formatNumberEN(num) {
+        if (num === null || num === undefined || isNaN(num)) return '--';
+        var abs = Math.abs(num);
+        if (abs >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+        if (abs >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+        if (abs >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+        return num.toFixed(2);
+    }
+
+    // Relative time (Chinese)
+    function relativeTime(timestamp) {
+        if (!timestamp) return '';
+        var now = Date.now();
+        var diff = now - (typeof timestamp === 'number' ? timestamp : new Date(timestamp).getTime());
+        if (diff < 0) return '刚刚';
+        var seconds = Math.floor(diff / 1000);
+        if (seconds < 60) return '刚刚';
+        var minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + '分钟前';
+        var hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + '小时前';
+        var days = Math.floor(hours / 24);
+        if (days < 30) return days + '天前';
+        var months = Math.floor(days / 30);
+        return months + '个月前';
+    }
+
+    // Copy to clipboard utility
+    function copyToClipboard(text, btn) {
+        if (!text) return;
+        navigator.clipboard.writeText(text).then(function() {
+            if (btn) {
+                var orig = btn.textContent;
+                btn.textContent = '已复制';
+                btn.classList.add('copy-flash');
+                setTimeout(function() {
+                    btn.textContent = orig;
+                    btn.classList.remove('copy-flash');
+                }, 1500);
+            }
+            showToast('已复制到剪贴板');
+        }).catch(function() {
+            showToast('复制失败', 'error');
+        });
+    }
+
+    // LocalStorage cache for analysis results
+    var augurCache = {
+        KEY: 'augur-recent-analyses',
+        MAX: 10,
+        get: function() {
+            try {
+                return JSON.parse(localStorage.getItem(this.KEY)) || [];
+            } catch(e) { return []; }
+        },
+        add: function(ticker, result) {
+            var list = this.get();
+            list = list.filter(function(item) { return item.ticker !== ticker; });
+            list.unshift({ ticker: ticker, result: result, time: Date.now() });
+            if (list.length > this.MAX) list = list.slice(0, this.MAX);
+            localStorage.setItem(this.KEY, JSON.stringify(list));
+        },
+        getLast: function(n) {
+            return this.get().slice(0, n || 5);
+        },
+        clear: function() {
+            localStorage.removeItem(this.KEY);
+        }
+    };
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        var tag = (e.target.tagName || '').toLowerCase();
+        var inInput = (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable);
+
+        // Ctrl+K or / (not in input) -> focus ticker input
+        if ((e.key === '/' && !inInput) || (e.key === 'k' && (e.ctrlKey || e.metaKey))) {
+            e.preventDefault();
+            var tickerInput = document.getElementById('hero-ticker') || document.getElementById('inp-ticker') || document.getElementById('quick-ticker');
+            if (tickerInput) { tickerInput.focus(); tickerInput.select(); }
+            return;
+        }
+
+        // Ctrl+Enter -> submit current form
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+            e.preventDefault();
+            var primaryBtn = document.querySelector('.btn-primary');
+            if (primaryBtn) primaryBtn.click();
+            return;
+        }
+
+        // Escape -> close expanded cards or modals
+        if (e.key === 'Escape') {
+            // Close expanded persona rows
+            document.querySelectorAll('.persona-row.expanded').forEach(function(row) {
+                row.classList.remove('expanded');
+            });
+            // Close expanded agent reasoning
+            document.querySelectorAll('.agent-reasoning.expanded').forEach(function(div) {
+                div.classList.remove('expanded');
+            });
+            // Close mobile sidebar
+            closeSidebar();
+            return;
+        }
+
+        // Number keys 1-5 for quick navigation (not in input)
+        if (!inInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            var navMap = { '1': '/', '2': '/stocks', '3': '/personas', '4': '/backtest', '5': '/settings' };
+            if (navMap[e.key]) {
+                window.location.href = navMap[e.key];
+                return;
+            }
+        }
+    });
+
+    // Connection status - ping /health every 30s
+    (function() {
+        var statusDot = document.querySelector('.status-dot');
+        var statusText = document.querySelector('.status-text');
+        var indicator = document.querySelector('.status-indicator');
+        if (!statusDot) return;
+
+        function checkHealth() {
+            fetch('/health', { method: 'GET' })
+                .then(function(r) {
+                    if (r.ok) {
+                        indicator.classList.add('connected');
+                        indicator.classList.remove('disconnected');
+                        statusText.textContent = '系统就绪';
+                    } else {
+                        indicator.classList.remove('connected');
+                        indicator.classList.add('disconnected');
+                        statusText.textContent = '连接异常';
+                    }
+                })
+                .catch(function() {
+                    indicator.classList.remove('connected');
+                    indicator.classList.add('disconnected');
+                    statusText.textContent = '连接断开';
+                });
+        }
+
+        setInterval(checkHealth, 30000);
+    })();
     </script>
     {% block extra_scripts %}{% endblock %}
 </body>

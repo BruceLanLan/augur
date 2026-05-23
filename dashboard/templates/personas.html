@@ -51,8 +51,12 @@
 
 <div class="flex items-center justify-between mb-16" style="flex-wrap:wrap; gap:12px;">
     <div>
-        <h2 style="color:var(--accent-orange); margin:0;">人格系统</h2>
-        <p class="text-muted" style="font-size:0.82rem; margin:4px 0 0;">17位投资大师 - 点击行展开详情</p>
+        <h2 style="color:var(--accent-orange); margin:0;">人格系统 <span class="badge badge-orange" style="vertical-align:middle; font-size:0.72rem;">{{ personas|length }} 位</span></h2>
+        <p class="text-muted" style="font-size:0.82rem; margin:4px 0 0;">{{ personas|length }}位投资大师 - 点击行展开详情 <span class="shortcut-hint"><kbd>&uarr;</kbd><kbd>&darr;</kbd> 导航 &middot; <kbd>Enter</kbd> 展开</span></p>
+    </div>
+    <div class="flex gap-8">
+        <button class="btn btn-sm btn-ghost" onclick="expandAllPersonas(true)">全部展开</button>
+        <button class="btn btn-sm btn-ghost" onclick="expandAllPersonas(false)">全部收起</button>
     </div>
 </div>
 
@@ -195,5 +199,52 @@ function setFilter(filter, btn) {
     btn.classList.add('active');
     filterPersonas();
 }
+
+function expandAllPersonas(expand) {
+    document.querySelectorAll('.persona-row').forEach(function(row) {
+        if (row.style.display === 'none') return;
+        if (expand) row.classList.add('expanded');
+        else row.classList.remove('expanded');
+    });
+}
+
+// Keyboard navigation for persona rows
+(function() {
+    var focusedIndex = -1;
+
+    function getVisibleRows() {
+        return Array.from(document.querySelectorAll('.persona-row')).filter(function(r) {
+            return r.style.display !== 'none';
+        });
+    }
+
+    function highlightRow(rows, idx) {
+        rows.forEach(function(r) { r.style.outline = ''; });
+        if (idx >= 0 && idx < rows.length) {
+            rows[idx].style.outline = '2px solid var(--accent-orange)';
+            rows[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        var tag = (e.target.tagName || '').toLowerCase();
+        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+        if (window.location.pathname !== '/personas') return;
+
+        var rows = getVisibleRows();
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            focusedIndex = Math.min(focusedIndex + 1, rows.length - 1);
+            highlightRow(rows, focusedIndex);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            focusedIndex = Math.max(focusedIndex - 1, 0);
+            highlightRow(rows, focusedIndex);
+        } else if (e.key === 'Enter' && focusedIndex >= 0 && focusedIndex < rows.length) {
+            e.preventDefault();
+            rows[focusedIndex].classList.toggle('expanded');
+        }
+    });
+})();
 </script>
 {% endblock %}
