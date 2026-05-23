@@ -326,6 +326,53 @@ def watchlist_show_cmd():
         click.echo(f"{ticker:<10s} {pe:<8s} {roe:<8s} {gm:<8s} {price:<10s}")
 
 
+@main.command("backtest")
+@click.argument("ticker", required=False, default="AAPL")
+@click.option("--days", type=int, default=30, help="Number of days to backtest")
+@click.option("--demo", is_flag=True, help="Use generated sample data")
+def backtest_cmd(ticker, days, demo):
+    """Run historical backtest on a ticker"""
+    from augur.backtest import Backtester, generate_sample_data
+
+    click.echo(f"Running backtest for {ticker.upper()} ({days} days)...\n")
+
+    historical_data, forward_returns = generate_sample_data(ticker, days)
+
+    backtester = Backtester()
+    result = backtester.run_backtest(ticker, historical_data, forward_returns)
+
+    click.echo(result.summary)
+    click.echo(f"\nTotal records: {len(result.records)}")
+    click.echo(f"Consensus IC (20d): {result.consensus_ic:.4f}")
+
+
+@main.command("ic-report")
+@click.option("--agent", "-a", default=None, help="Filter by agent ID")
+def ic_report_cmd(agent):
+    """Show Agent IC leaderboard"""
+    from augur.backtest import Backtester
+
+    backtester = Backtester()
+
+    if agent:
+        ics = backtester.get_ic_report(agent_id=agent)
+    else:
+        ics = backtester.get_leaderboard()
+
+    if not ics:
+        click.echo("No backtest records found. Run 'augur backtest TICKER --demo' first.")
+        return
+
+    click.echo(f"{'Rank':<5} {'Agent':<22} {'IC 5d':<10} {'IC 20d':<10} {'IC 60d':<10} {'Hit Rate':<10} {'Predictions'}")
+    click.echo("-" * 85)
+
+    for i, ic in enumerate(ics, 1):
+        click.echo(
+            f"{i:<5} {ic.agent_id:<22} {ic.ic_5d:<10.4f} {ic.ic_20d:<10.4f} "
+            f"{ic.ic_60d:<10.4f} {ic.hit_rate:<10.1%} {ic.total_predictions}"
+        )
+
+
 def _print_result(result):
     """Pretty print a single analysis result"""
     click.echo(f"Agent:      {result.agent_name}")

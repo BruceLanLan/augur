@@ -147,6 +147,12 @@ augur lark --mode webhook      # Webhook 推送模式
 augur cron-run             # 手动运行一次
 augur cron-start           # 启动定时守护进程
 
+# 历史回测 + IC 追踪
+augur backtest AAPL --days 30   # 运行回测(模拟数据)
+augur backtest NVDA --days 60   # 回测其他标的
+augur ic-report                 # 查看 IC 排行榜
+augur ic-report --agent buffett # 查看特定 Agent IC
+
 # Watchlist 管理
 augur watchlist-add AAPL --pe 32 --roe 0.55
 augur watchlist-show
@@ -442,6 +448,57 @@ notifications:
 ### Cron 定时触发
 
 使用 `augur cron-start` 启动守护进程，按配置的 cron 表达式自动执行分析并推送到 Telegram、Slack、微信和飞书。
+
+---
+
+## 📊 历史回测
+
+Augur 内置历史回测系统，可回放历史数据通过17位Agent，计算每位Agent的 IC (Information Coefficient)，追踪预测准确率。
+
+### CLI 回测
+
+```bash
+# 使用模拟数据运行回测 (默认 AAPL 30天)
+augur backtest AAPL --days 30 --demo
+
+# 回测其他标的
+augur backtest NVDA --days 60
+augur backtest TSLA --days 45
+
+# 查看 IC 排行榜
+augur ic-report
+
+# 查看特定 Agent 的 IC
+augur ic-report --agent buffett
+```
+
+### Web 回测界面
+
+在 Dashboard 侧边栏点击 "回测" 进入回测页面:
+- 输入股票代码 + 滑动天数
+- 点击 "运行回测" 执行17位Agent历史回测
+- 查看共识IC、Agent排行榜、命中率可视化
+
+### 回测指标说明
+
+| 指标 | 说明 |
+|------|------|
+| **IC (Information Coefficient)** | Spearman秩相关系数，衡量预测信号与实际收益的相关性 |
+| **IC 5d / 20d / 60d** | 分别对应5日、20日、60日前瞻收益的IC |
+| **命中率 (Hit Rate)** | 预测方向正确的比例 |
+| **正确时均分** | 预测正确时Agent给出的平均评分 |
+| **错误时均分** | 预测错误时Agent给出的平均评分 |
+
+### 数据存储
+
+回测记录保存在 `~/.augur/backtest/records.jsonl`，可累积追踪长期表现。
+
+### REST API
+
+```
+GET /api/backtest/run?ticker=AAPL&days=30   # 运行回测
+GET /api/backtest/leaderboard               # IC排行榜
+```
 
 ---
 
@@ -748,6 +805,7 @@ augur/
 │   ├── persona_loader.py       # YAML 自定义人格加载
 │   ├── soul.py                 # Soul Injector - 人格注入引擎
 │   ├── cron.py                 # Cron 定时分析 + Watchlist 管理
+│   ├── backtest.py             # 历史回测 + Agent IC 追踪
 │   ├── bots/                   # 多平台 Bot 适配器
 │   │   ├── __init__.py
 │   │   ├── telegram_bot.py     # Telegram Bot (python-telegram-bot)
@@ -814,6 +872,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v5.1** | 2026-05-24 | 📊 历史回测系统 + Agent IC 实盘追踪 + 排行榜 |
 | **v5.0** | 2026-05-23 | 🐳 Docker 容器化 — Dockerfile + docker-compose 多服务编排 |
 | **v4.6** | 2026-05-23 | 📱 微信 (企业微信+Webhook) + 飞书 (Event+Webhook) Bot 多平台适配 |
 | **v4.5** | 2026-05-23 | 📊 信号监控页 + 自定义投资人 UI 创建器 + Watchlist API + requirements.txt |
@@ -852,7 +911,8 @@ augur/
 - [x] **v4.5**: 信号监控页 + 自定义投资人 UI 创建器 + Watchlist API + requirements.txt
 - [x] **v4.6**: WeChat/微信 + Lark/飞书 Bot 多平台适配
 - [x] **v5.0**: Docker 容器化 + docker-compose 多服务编排 + Makefile
-- [ ] **v5.1**: 历史回测系统 + Agent IC 实盘追踪
+- [x] **v5.1**: 历史回测系统 + Agent IC 实盘追踪 + 排行榜
+- [ ] **v5.2**: UI/UX 优化 + 产品体验提升
 
 ---
 

@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}历史回测 - Agent IC{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">历史回测</h1>
+    <p class="page-subtitle">Agent IC (Information Coefficient) 实盘追踪</p>
+</div>
+
+<!-- Controls -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-body" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 120px;">
+            <label class="form-label">股票代码</label>
+            <input type="text" id="bt-ticker" class="form-input" value="AAPL" placeholder="AAPL" style="text-transform: uppercase;">
+        </div>
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label">回测天数: <span id="bt-days-val">30</span></label>
+            <input type="range" id="bt-days" min="10" max="90" value="30" class="form-range" oninput="document.getElementById('bt-days-val').textContent=this.value">
+        </div>
+        <div>
+            <button class="btn btn-primary" id="bt-run-btn" onclick="runBacktest()">运行回测</button>
+        </div>
+    </div>
+</div>
+
+<!-- Loading -->
+<div id="bt-loading" style="display: none; text-align: center; padding: 3rem;">
+    <div class="spinner"></div>
+    <p style="color: var(--text-secondary); margin-top: 1rem;">正在回测 17 位投资大师...</p>
+</div>
+
+<!-- Result Banner -->
+<div id="bt-banner" class="card" style="display: none; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-green);">
+    <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">共识 IC (20d)</div>
+            <div id="bt-consensus-ic" style="font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">--</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">标的</div>
+            <div id="bt-result-ticker" style="font-size: 1.2rem; font-weight: 600;">--</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">预测总数</div>
+            <div id="bt-total-records" style="font-size: 1.2rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">--</div>
+        </div>
+        <div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);">回测天数</div>
+            <div id="bt-result-days" style="font-size: 1.2rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">--</div>
+        </div>
+    </div>
+</div>
+
+<!-- Leaderboard Table -->
+<div id="bt-leaderboard" class="card" style="display: none;">
+    <div class="card-header">
+        <h3 class="card-title">Agent IC 排行榜</h3>
+        <span class="badge" style="font-size: 0.7rem;">按 IC 20d 排序</span>
+    </div>
+    <div class="card-body" style="overflow-x: auto;">
+        <table class="data-table" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">#</th>
+                    <th>Agent</th>
+                    <th>IC 5d</th>
+                    <th>IC 20d</th>
+                    <th>IC 60d</th>
+                    <th>命中率</th>
+                    <th style="min-width: 200px;">命中率可视化</th>
+                    <th>正确均分</th>
+                    <th>错误均分</th>
+                    <th>总预测</th>
+                </tr>
+            </thead>
+            <tbody id="bt-table-body">
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+.form-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.form-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-tertiary, #1a1a2e);
+    border: 1px solid var(--border-color, #2a2a3e);
+    border-radius: 4px;
+    color: var(--text-primary, #e0e0e0);
+    font-size: 0.9rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent-blue, #4fc3f7);
+}
+.form-range {
+    width: 100%;
+    height: 4px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: var(--border-color, #2a2a3e);
+    border-radius: 2px;
+    outline: none;
+    margin-top: 0.5rem;
+}
+.form-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--accent-blue, #4fc3f7);
+    cursor: pointer;
+}
+.btn {
+    padding: 0.5rem 1.2rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-primary {
+    background: var(--accent-blue, #4fc3f7);
+    color: #000;
+}
+.btn-primary:hover {
+    background: #29b6f6;
+    transform: translateY(-1px);
+}
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+.data-table {
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+.data-table th {
+    text-align: left;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color, #2a2a3e);
+}
+.data-table td {
+    padding: 0.55rem 0.5rem;
+    border-bottom: 1px solid var(--border-color, #1a1a2e);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+}
+.data-table tr:hover {
+    background: var(--bg-tertiary, #1a1a2e);
+}
+.data-table tr.top-agent td {
+    color: var(--accent-green, #66bb6a);
+}
+.data-table tr.bottom-agent td {
+    color: var(--accent-red, #ef5350);
+}
+.hit-bar-container {
+    width: 100%;
+    height: 18px;
+    background: var(--bg-tertiary, #1a1a2e);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+.hit-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+.hit-bar-label {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.65rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-color, #2a2a3e);
+    border-top-color: var(--accent-blue, #4fc3f7);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.badge {
+    background: var(--bg-tertiary, #1a1a2e);
+    color: var(--text-secondary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+}
+.ic-positive { color: var(--accent-green, #66bb6a); }
+.ic-negative { color: var(--accent-red, #ef5350); }
+.ic-neutral { color: var(--text-secondary); }
+</style>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function runBacktest() {
+    var ticker = document.getElementById('bt-ticker').value.trim().toUpperCase() || 'AAPL';
+    var days = document.getElementById('bt-days').value;
+    var btn = document.getElementById('bt-run-btn');
+
+    // Show loading
+    btn.disabled = true;
+    btn.textContent = '回测中...';
+    document.getElementById('bt-loading').style.display = 'block';
+    document.getElementById('bt-banner').style.display = 'none';
+    document.getElementById('bt-leaderboard').style.display = 'none';
+
+    try {
+        var resp = await fetch('/api/backtest/run?ticker=' + encodeURIComponent(ticker) + '&days=' + days);
+        var data = await resp.json();
+
+        if (data.status === 'ok') {
+            renderResults(data);
+        } else {
+            showToast('回测失败: ' + (data.detail || 'unknown error'), 'error');
+        }
+    } catch (e) {
+        showToast('请求失败: ' + e.message, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = '运行回测';
+        document.getElementById('bt-loading').style.display = 'none';
+    }
+}
+
+function renderResults(data) {
+    // Banner
+    var banner = document.getElementById('bt-banner');
+    banner.style.display = 'block';
+
+    var ic = data.consensus_ic;
+    var icEl = document.getElementById('bt-consensus-ic');
+    icEl.textContent = ic.toFixed(4);
+    icEl.style.color = ic > 0 ? 'var(--accent-green, #66bb6a)' : ic < 0 ? 'var(--accent-red, #ef5350)' : 'var(--text-secondary)';
+    banner.style.borderLeftColor = ic > 0 ? 'var(--accent-green, #66bb6a)' : 'var(--accent-red, #ef5350)';
+
+    document.getElementById('bt-result-ticker').textContent = data.ticker;
+    document.getElementById('bt-total-records').textContent = data.total_records;
+    document.getElementById('bt-result-days').textContent = data.days;
+
+    // Leaderboard
+    var leaderboard = document.getElementById('bt-leaderboard');
+    leaderboard.style.display = 'block';
+
+    var tbody = document.getElementById('bt-table-body');
+    tbody.innerHTML = '';
+
+    var agents = data.agent_ics || [];
+    var totalAgents = agents.length;
+
+    for (var i = 0; i < agents.length; i++) {
+        var a = agents[i];
+        var tr = document.createElement('tr');
+
+        // Color coding: top 3 green, bottom 3 red
+        if (i < 3) {
+            tr.className = 'top-agent';
+        } else if (i >= totalAgents - 3) {
+            tr.className = 'bottom-agent';
+        }
+
+        var hitPct = (a.hit_rate * 100).toFixed(1);
+        var barColor = a.hit_rate >= 0.6 ? 'var(--accent-green, #66bb6a)' :
+                       a.hit_rate >= 0.4 ? 'var(--accent-yellow, #ffa726)' :
+                       'var(--accent-red, #ef5350)';
+
+        tr.innerHTML =
+            '<td>' + (i + 1) + '</td>' +
+            '<td style="font-weight:600;">' + a.agent_id + '</td>' +
+            '<td class="' + icClass(a.ic_5d) + '">' + a.ic_5d.toFixed(4) + '</td>' +
+            '<td class="' + icClass(a.ic_20d) + '">' + a.ic_20d.toFixed(4) + '</td>' +
+            '<td class="' + icClass(a.ic_60d) + '">' + a.ic_60d.toFixed(4) + '</td>' +
+            '<td>' + hitPct + '%</td>' +
+            '<td><div class="hit-bar-container"><div class="hit-bar" style="width:' + hitPct + '%;background:' + barColor + ';"></div><span class="hit-bar-label">' + hitPct + '%</span></div></td>' +
+            '<td>' + a.avg_score_when_right.toFixed(1) + '</td>' +
+            '<td>' + a.avg_score_when_wrong.toFixed(1) + '</td>' +
+            '<td>' + a.total_predictions + '</td>';
+
+        tbody.appendChild(tr);
+    }
+}
+
+function icClass(val) {
+    if (val > 0.02) return 'ic-positive';
+    if (val < -0.02) return 'ic-negative';
+    return 'ic-neutral';
+}
+</script>
+{% endblock %}
