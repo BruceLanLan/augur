@@ -103,9 +103,15 @@
                 <option>Communication Services</option><option>Utilities</option>
             </select>
         </div>
-        <div style="align-self:flex-end;">
+        <div style="align-self:flex-end; display:flex; gap:8px;">
             <button class="btn btn-primary" onclick="runAnalysis()" style="padding:8px 20px;">分析</button>
+            <button class="btn btn-ghost" onclick="autoFetch()" style="padding:8px 14px; font-size:0.78rem;" title="从yfinance自动获取实时数据">自动获取</button>
         </div>
+    </div>
+
+    <!-- Data source indicator -->
+    <div id="data-source-indicator" style="display:none; margin-bottom:8px;">
+        <span style="font-size:0.72rem; padding:2px 8px; border-radius:3px; background:var(--accent-orange); color:#000; font-weight:600;">数据来源: yfinance 实时</span>
     </div>
 
     <!-- Quick tickers -->
@@ -260,6 +266,54 @@ function num(id, scale) {
     return scale ? v * scale : v;
 }
 
+function autoFetch() {
+    var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase();
+    if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
+
+    showToast('正在从 yfinance 获取 ' + ticker + ' 实时数据...', 'info');
+
+    fetch('/api/fetch/' + ticker)
+        .then(function(r) { return r.json(); })
+        .then(function(resp) {
+            if (resp.status === 'ok' && resp.data) {
+                var d = resp.data;
+                if (d.price) document.getElementById('inp-price').value = d.price.toFixed(2);
+                if (d.market_cap) document.getElementById('inp-mktcap').value = (d.market_cap / 1e8).toFixed(1);
+                if (d.pe) document.getElementById('inp-pe').value = d.pe.toFixed(1);
+                if (d.pb) document.getElementById('inp-pb').value = d.pb.toFixed(2);
+                if (d.gross_margins) document.getElementById('inp-gm').value = (d.gross_margins * 100).toFixed(1);
+                if (d.operating_margins) document.getElementById('inp-om').value = (d.operating_margins * 100).toFixed(1);
+                if (d.roe) document.getElementById('inp-roe').value = (d.roe * 100).toFixed(1);
+                if (d.debt_ratio) document.getElementById('inp-debt').value = (d.debt_ratio * 100).toFixed(1);
+                if (d.revenue_growth) document.getElementById('inp-revg').value = (d.revenue_growth * 100).toFixed(1);
+                if (d.earnings_growth) document.getElementById('inp-epsg').value = (d.earnings_growth * 100).toFixed(1);
+                if (d.fcf) document.getElementById('inp-fcf').value = (d.fcf / 1e8).toFixed(1);
+                if (d.current_ratio) document.getElementById('inp-cr').value = d.current_ratio.toFixed(2);
+                if (d.sector) {
+                    var sel = document.getElementById('inp-sector');
+                    for (var i = 0; i < sel.options.length; i++) {
+                        if (sel.options[i].value === d.sector) { sel.selectedIndex = i; break; }
+                    }
+                }
+                // Show data source indicator
+                document.getElementById('data-source-indicator').style.display = 'block';
+                // Open advanced metrics to show filled data
+                document.getElementById('advMetrics').classList.add('open');
+                showToast('已获取 ' + ticker + ' 实时数据', 'success');
+            } else {
+                showToast('获取数据失败: ' + (resp.detail || '未知错误'), 'error');
+            }
+        })
+        .catch(function(err) {
+            showToast('请求失败: ' + (err.message || err), 'error');
+        });
+}
+
+function hasUserMetrics() {
+    return num('inp-price') > 0 || num('inp-pe') > 0 || num('inp-pb') > 0 ||
+           num('inp-gm') > 0 || num('inp-roe') > 0 || num('inp-mktcap') > 0;
+}
+
 function runAnalysis() {
     var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase();
     if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
@@ -278,9 +332,16 @@ function runAnalysis() {
         fcf: num('inp-fcf', 1e8),
         institutional_ownership: num('inp-inst') / 100,
         insider_ownership: num('inp-ins') / 100,
-        current_ratio: parseFloat(document.getElementById('inp-cr').value) || 1.5,
+        current_ratio: parseFloat(document.getElementById('inp-cr').value) || 0,
         sector: document.getElementById('inp-sector').value,
     });
+
+    // If no user metrics, enable auto_fetch
+    if (!hasUserMetrics()) {
+        params.set('auto_fetch', 'true');
+    } else {
+        params.set('auto_fetch', 'false');
+    }
 
     var resultsEl = document.getElementById('results');
     resultsEl.style.display = 'none';
@@ -292,6 +353,12 @@ function runAnalysis() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             document.getElementById('spinner').style.display = 'none';
+            // Show data source indicator if data came from yfinance
+            if (data.data_source === 'yfinance') {
+                document.getElementById('data-source-indicator').style.display = 'block';
+            } else {
+                document.getElementById('data-source-indicator').style.display = 'none';
+            }
             renderResults(data);
             resultsEl.classList.add('show');
         })

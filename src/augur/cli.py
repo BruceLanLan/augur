@@ -32,32 +32,43 @@ def main():
 @main.command("analyze")
 @click.argument("ticker")
 @click.option("--persona", "-p", default=None, help="Specific persona ID to use")
-@click.option("--pe", type=float, default=0, help="PE ratio")
-@click.option("--pb", type=float, default=0, help="PB ratio")
-@click.option("--roe", type=float, default=0, help="Return on equity (decimal, e.g. 0.15)")
-@click.option("--gross-margins", type=float, default=0, help="Gross margins (decimal, e.g. 0.45)")
-@click.option("--revenue-growth", type=float, default=0, help="Revenue growth (decimal)")
-@click.option("--debt-ratio", type=float, default=0, help="Debt ratio")
-@click.option("--fcf", type=float, default=0, help="Free cash flow")
-@click.option("--market-cap", type=float, default=0, help="Market cap")
-@click.option("--price", type=float, default=0, help="Current price")
+@click.option("--pe", type=float, default=None, help="PE ratio")
+@click.option("--pb", type=float, default=None, help="PB ratio")
+@click.option("--roe", type=float, default=None, help="Return on equity (decimal, e.g. 0.15)")
+@click.option("--gross-margins", type=float, default=None, help="Gross margins (decimal, e.g. 0.45)")
+@click.option("--revenue-growth", type=float, default=None, help="Revenue growth (decimal)")
+@click.option("--debt-ratio", type=float, default=None, help="Debt ratio")
+@click.option("--fcf", type=float, default=None, help="Free cash flow")
+@click.option("--market-cap", type=float, default=None, help="Market cap")
+@click.option("--price", type=float, default=None, help="Current price")
 def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price):
-    """Analyze a ticker with one or all agents"""
+    """Analyze a ticker with one or all agents (auto-fetches data if no metrics specified)"""
     from augur.personas.base import MarketContext
     from augur.registry import AgentRegistry
 
-    ctx = MarketContext(
-        ticker=ticker.upper(),
-        pe=pe,
-        pb=pb,
-        roe=roe,
-        gross_margins=gross_margins,
-        revenue_growth=revenue_growth,
-        debt_ratio=debt_ratio,
-        fcf=fcf,
-        market_cap=market_cap,
-        price=price,
-    )
+    # Check if user provided any metrics
+    user_metrics = {k: v for k, v in {
+        "pe": pe, "pb": pb, "roe": roe, "gross_margins": gross_margins,
+        "revenue_growth": revenue_growth, "debt_ratio": debt_ratio,
+        "fcf": fcf, "market_cap": market_cap, "price": price,
+    }.items() if v is not None}
+
+    if not user_metrics:
+        # Auto-fetch from yfinance
+        ctx = _auto_fetch_context(ticker)
+    else:
+        ctx = MarketContext(
+            ticker=ticker.upper(),
+            pe=pe or 0,
+            pb=pb or 0,
+            roe=roe or 0,
+            gross_margins=gross_margins or 0,
+            revenue_growth=revenue_growth or 0,
+            debt_ratio=debt_ratio or 0,
+            fcf=fcf or 0,
+            market_cap=market_cap or 0,
+            price=price or 0,
+        )
 
     registry = AgentRegistry()
 
@@ -81,32 +92,43 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
 
 @main.command("consensus")
 @click.argument("ticker")
-@click.option("--pe", type=float, default=0, help="PE ratio")
-@click.option("--pb", type=float, default=0, help="PB ratio")
-@click.option("--roe", type=float, default=0, help="Return on equity (decimal)")
-@click.option("--gross-margins", type=float, default=0, help="Gross margins (decimal)")
-@click.option("--revenue-growth", type=float, default=0, help="Revenue growth (decimal)")
-@click.option("--debt-ratio", type=float, default=0, help="Debt ratio")
-@click.option("--fcf", type=float, default=0, help="Free cash flow")
-@click.option("--market-cap", type=float, default=0, help="Market cap")
-@click.option("--price", type=float, default=0, help="Current price")
+@click.option("--pe", type=float, default=None, help="PE ratio")
+@click.option("--pb", type=float, default=None, help="PB ratio")
+@click.option("--roe", type=float, default=None, help="Return on equity (decimal)")
+@click.option("--gross-margins", type=float, default=None, help="Gross margins (decimal)")
+@click.option("--revenue-growth", type=float, default=None, help="Revenue growth (decimal)")
+@click.option("--debt-ratio", type=float, default=None, help="Debt ratio")
+@click.option("--fcf", type=float, default=None, help="Free cash flow")
+@click.option("--market-cap", type=float, default=None, help="Market cap")
+@click.option("--price", type=float, default=None, help="Current price")
 def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price):
-    """Get multi-agent consensus on a ticker"""
+    """Get multi-agent consensus on a ticker (auto-fetches data if no metrics specified)"""
     from augur.personas.base import MarketContext
     from augur.registry import AgentRegistry, DecisionCoordinator
 
-    ctx = MarketContext(
-        ticker=ticker.upper(),
-        pe=pe,
-        pb=pb,
-        roe=roe,
-        gross_margins=gross_margins,
-        revenue_growth=revenue_growth,
-        debt_ratio=debt_ratio,
-        fcf=fcf,
-        market_cap=market_cap,
-        price=price,
-    )
+    # Check if user provided any metrics
+    user_metrics = {k: v for k, v in {
+        "pe": pe, "pb": pb, "roe": roe, "gross_margins": gross_margins,
+        "revenue_growth": revenue_growth, "debt_ratio": debt_ratio,
+        "fcf": fcf, "market_cap": market_cap, "price": price,
+    }.items() if v is not None}
+
+    if not user_metrics:
+        # Auto-fetch from yfinance
+        ctx = _auto_fetch_context(ticker)
+    else:
+        ctx = MarketContext(
+            ticker=ticker.upper(),
+            pe=pe or 0,
+            pb=pb or 0,
+            roe=roe or 0,
+            gross_margins=gross_margins or 0,
+            revenue_growth=revenue_growth or 0,
+            debt_ratio=debt_ratio or 0,
+            fcf=fcf or 0,
+            market_cap=market_cap or 0,
+            price=price or 0,
+        )
 
     registry = AgentRegistry()
     coordinator = DecisionCoordinator(registry)
@@ -330,11 +352,29 @@ def watchlist_show_cmd():
 @click.argument("ticker", required=False, default="AAPL")
 @click.option("--days", type=int, default=30, help="Number of days to backtest")
 @click.option("--demo", is_flag=True, help="Use generated sample data")
-def backtest_cmd(ticker, days, demo):
+@click.option("--live", is_flag=True, help="Use real historical data from yfinance")
+def backtest_cmd(ticker, days, demo, live):
     """Run historical backtest on a ticker"""
     from augur.backtest import Backtester, generate_sample_data
 
     click.echo(f"Running backtest for {ticker.upper()} ({days} days)...\n")
+
+    if live:
+        # Use real data from yfinance
+        try:
+            backtester = Backtester()
+            result = backtester.run_live_backtest(ticker, days=days)
+            click.echo(result.summary)
+            click.echo(f"\nTotal records: {len(result.records)}")
+            click.echo(f"Consensus IC (20d): {result.consensus_ic:.4f}")
+            click.echo(f"\n[数据来源: yfinance 实时历史数据]")
+            return
+        except ImportError as e:
+            click.echo(f"Error: {e}", err=True)
+            click.echo("Falling back to sample data...\n", err=True)
+        except Exception as e:
+            click.echo(f"Error fetching live data: {e}", err=True)
+            click.echo("Falling back to sample data...\n", err=True)
 
     historical_data, forward_returns = generate_sample_data(ticker, days)
 
@@ -371,6 +411,75 @@ def ic_report_cmd(agent):
             f"{i:<5} {ic.agent_id:<22} {ic.ic_5d:<10.4f} {ic.ic_20d:<10.4f} "
             f"{ic.ic_60d:<10.4f} {ic.hit_rate:<10.1%} {ic.total_predictions}"
         )
+
+
+@main.command("fetch")
+@click.argument("ticker")
+@click.option("--json", "as_json", is_flag=True, help="Output as JSON")
+def fetch_cmd(ticker, as_json):
+    """Fetch real-time market data for a ticker (via yfinance)"""
+    try:
+        from augur.data import fetch_market_context
+    except ImportError:
+        click.echo("Error: yfinance is required. Install with: pip install 'augur-agents[data]'", err=True)
+        raise SystemExit(1)
+
+    click.echo(f"Fetching data for {ticker.upper()}...\n")
+
+    try:
+        ctx = fetch_market_context(ticker)
+    except ImportError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
+    except Exception as e:
+        click.echo(f"Error fetching data: {e}", err=True)
+        raise SystemExit(1)
+
+    if as_json:
+        import json
+        click.echo(json.dumps(ctx.to_dict(), indent=2, ensure_ascii=False))
+    else:
+        click.echo(f"{'Ticker':<18s} {ctx.ticker}")
+        click.echo(f"{'Price':<18s} {ctx.price:.2f}")
+        click.echo(f"{'Market Cap':<18s} {ctx.market_cap:,.0f}")
+        click.echo(f"{'PE':<18s} {ctx.pe:.2f}")
+        click.echo(f"{'PB':<18s} {ctx.pb:.2f}")
+        click.echo(f"{'PS':<18s} {ctx.ps:.2f}")
+        click.echo(f"{'ROE':<18s} {ctx.roe:.2%}")
+        click.echo(f"{'Gross Margins':<18s} {ctx.gross_margins:.2%}")
+        click.echo(f"{'Operating Margins':<18s} {ctx.operating_margins:.2%}")
+        click.echo(f"{'Revenue Growth':<18s} {ctx.revenue_growth:.2%}")
+        click.echo(f"{'Earnings Growth':<18s} {ctx.earnings_growth:.2%}")
+        click.echo(f"{'Debt Ratio':<18s} {ctx.debt_ratio:.2f}")
+        click.echo(f"{'FCF':<18s} {ctx.fcf:,.0f}")
+        click.echo(f"{'Current Ratio':<18s} {ctx.current_ratio:.2f}")
+        click.echo(f"{'Sector':<18s} {ctx.sector}")
+        click.echo(f"{'Industry':<18s} {ctx.industry}")
+        click.echo(f"{'RSI':<18s} {ctx.rsi:.1f}")
+        click.echo(f"{'MACD':<18s} {ctx.macd:.4f}")
+        click.echo(f"{'SMA20':<18s} {ctx.sma20:.2f}")
+        click.echo(f"{'SMA50':<18s} {ctx.sma50:.2f}")
+        click.echo(f"\n[数据来源: yfinance 实时]")
+
+
+def _auto_fetch_context(ticker: str):
+    """Auto-fetch MarketContext from yfinance, with graceful fallback."""
+    from augur.personas.base import MarketContext
+
+    try:
+        from augur.data import fetch_market_context
+        click.echo(f"Auto-fetching data for {ticker.upper()} from yfinance...\n")
+        ctx = fetch_market_context(ticker)
+        click.echo(f"  Price: {ctx.price:.2f} | PE: {ctx.pe:.1f} | ROE: {ctx.roe:.2%} | GM: {ctx.gross_margins:.2%}")
+        click.echo(f"  [数据来源: yfinance 实时]\n")
+        return ctx
+    except ImportError:
+        click.echo("Warning: yfinance not installed. Using empty metrics.", err=True)
+        click.echo("Install with: pip install 'augur-agents[data]'\n", err=True)
+        return MarketContext(ticker=ticker.upper())
+    except Exception as e:
+        click.echo(f"Warning: Failed to fetch data: {e}. Using empty metrics.\n", err=True)
+        return MarketContext(ticker=ticker.upper())
 
 
 def _print_result(result):
