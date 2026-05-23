@@ -10,7 +10,7 @@
   <rect width="1200" height="750" fill="#f8f6f0"/>
   <rect width="1200" height="750" fill="url(#bg-dots)"/>
   <rect x="8" y="8" width="1184" height="734" rx="10" fill="none" stroke="#1e293b" stroke-width="2"/>
-  <text x="600" y="36" text-anchor="middle" font-family="Arial" font-size="18" font-weight="800" fill="#0f172a">Augur v5.4 系统架构</text>
+  <text x="600" y="36" text-anchor="middle" font-family="Arial" font-size="18" font-weight="800" fill="#0f172a">Augur v5.5 系统架构</text>
 
   <!-- Layer 1: 用户接入层 -->
   <rect x="20" y="50" width="1160" height="72" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
@@ -112,5 +112,5 @@
   <!-- Footer -->
   <text x="600" y="680" text-anchor="middle" font-family="Arial" font-size="10" fill="#64748b">数据流: 用户输入 → 引擎调度 → 17 Agents分析 → 共识风控 → 数据聚合 → 多渠道推送</text>
   <text x="600" y="700" text-anchor="middle" font-family="Arial" font-size="9" fill="#94a3b8">蓝=价值(Buffett/Graham/Munger/Li Lu) | 绿=宏观(Dalio/Soros/Marks) | 紫=成长(Fisher/Wood/Aschenbrenner/Thiel/Lynch) | 橙=Crypto(ARPS/大宇) | 红=中国(段永平/张磊/但斌)</text>
-  <text x="600" y="720" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">Augur v5.4 - Multi-Agent Investment Analysis System</text>
+  <text x="600" y="720" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">Augur v5.5 - Multi-Agent Investment Analysis System</text>
 </svg>
