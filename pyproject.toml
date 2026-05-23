@@ -24,8 +24,8 @@ slack = [
     "slack-bolt>=1.18.0",
 ]
 wechat = [
-    "wechatpy>=2.0.0",
-    "cryptography>=3.0",
+    "gewechat-client>=0.1.0",
+    "requests>=2.28.0",
 ]
 lark = [
     "lark-oapi>=1.0.0",
@@ -42,8 +42,8 @@ dev = [
 all = [
     "python-telegram-bot>=20.0",
     "slack-bolt>=1.18.0",
-    "wechatpy>=2.0.0",
-    "cryptography>=3.0",
+    "gewechat-client>=0.1.0",
+    "requests>=2.28.0",
     "lark-oapi>=1.0.0",
     "apscheduler>=3.10.0",
     "mcp>=1.0.0;python_version>='3.10'",

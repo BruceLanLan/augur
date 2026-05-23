@@ -209,11 +209,11 @@ def slack_cmd(mode, port):
 
 
 @main.command("wechat")
-@click.option("--mode", type=click.Choice(["wecom", "webhook"]), default="wecom",
-              help="Mode: wecom (enterprise) or webhook (push only)")
-@click.option("--port", type=int, default=8080, help="Port for WeCom callback server")
+@click.option("--mode", type=click.Choice(["personal", "wecom", "webhook"]), default="personal",
+              help="Mode: personal (GeWeChat), wecom (enterprise), or webhook (push only)")
+@click.option("--port", type=int, default=8066, help="Port for callback server")
 def wechat_cmd(mode, port):
-    """Start the WeChat/WeCom bot"""
+    """Start the WeChat bot (personal/wecom/webhook)"""
     from augur.bots.wechat_bot import run_wechat_bot
     run_wechat_bot(mode=mode, port=port)
 

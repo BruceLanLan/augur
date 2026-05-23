@@ -60,20 +60,32 @@ services:
     restart: unless-stopped
     profiles: ["slack"]
 
-  # WeChat Bot (企业微信)
+  # GeWeChat Docker (个人微信协议服务)
+  gewe:
+    image: registry.cn-chengdu.aliyuncs.com/gewechat/gewechat:latest
+    container_name: gewechat
+    ports:
+      - "2531:2531"
+      - "2532:2532"
+    volumes:
+      - gewe-data:/root/temp
+    restart: unless-stopped
+    profiles: ["wechat"]
+
+  # WeChat Bot (个人微信 - 推荐)
   wechat:
     build: .
     ports:
-      - "8080:8080"
+      - "8066:8066"
     volumes:
       - augur-config:/root/.augur
     environment:
-      - WECHAT_CORP_ID=${WECHAT_CORP_ID}
-      - WECHAT_CORP_SECRET=${WECHAT_CORP_SECRET}
-      - WECHAT_AGENT_ID=${WECHAT_AGENT_ID}
-      - WECHAT_TOKEN=${WECHAT_TOKEN}
-      - WECHAT_AES_KEY=${WECHAT_AES_KEY}
-    command: ["augur", "wechat", "--mode", "wecom", "--port", "8080"]
+      - GEWECHAT_BASE_URL=http://gewe:2531/v2/api
+      - GEWECHAT_TOKEN=${GEWECHAT_TOKEN}
+      - GEWECHAT_APP_ID=${GEWECHAT_APP_ID}
+    command: ["augur", "wechat", "--mode", "personal", "--port", "8066"]
+    depends_on:
+      - gewe
     restart: unless-stopped
     profiles: ["wechat"]
 
@@ -110,3 +122,4 @@ services:
 
 volumes:
   augur-config:
+  gewe-data:

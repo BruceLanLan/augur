@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Augur 微信 Bot - 企业微信 + Webhook 双模式
+Augur 微信 Bot - 三模式支持
+
+Mode 1: 个人微信 (GeWeChat) - 推荐, 扫码登录个人号
+Mode 2: 企业微信 (WeCom) - 企业场景
+Mode 3: Webhook (仅推送) - 最简单
 
 Usage:
+    # 个人微信模式 (推荐, GeWeChat Docker)
+    export GEWECHAT_BASE_URL=http://127.0.0.1:2531/v2/api
+    export GEWECHAT_TOKEN=your_token
+    augur wechat --mode personal --port 8066
+
     # 企业微信模式 (接收+发送)
     export WECHAT_CORP_ID=your_corp_id
     export WECHAT_CORP_SECRET=your_corp_secret
@@ -20,8 +29,14 @@ Commands (in chat):
     @巴菲特 TICKER 或 问 buffett TICKER - 向特定大师提问
     投资人列表 或 personas - 列出所有投资大师
     帮助 或 help - 显示帮助
+    直接输入 TICKER (如 AAPL) - 触发共识分析
 
-Environment Variables:
+Environment Variables (个人微信):
+    GEWECHAT_BASE_URL    - GeWeChat API 地址 (默认 http://127.0.0.1:2531/v2/api)
+    GEWECHAT_TOKEN       - GeWeChat 认证 Token
+    GEWECHAT_APP_ID      - GeWeChat App ID (首次为空, 自动生成并保存)
+
+Environment Variables (企业微信):
     WECHAT_CORP_ID       - 企业ID
     WECHAT_CORP_SECRET   - 应用Secret
     WECHAT_AGENT_ID      - 应用AgentId
@@ -33,6 +48,8 @@ Environment Variables:
 import os
 import re
 import json
+import threading
+from pathlib import Path
 from typing import Optional, Dict, Any
 
 # Signal emoji mapping (WeCom markdown支持)
@@ -228,6 +245,314 @@ def format_single_agent_wechat(ticker: str, result) -> str:
     return "\n".join(lines)
 
 
+# ============================================================
+# Mode 1: 个人微信 (GeWeChat) - 推荐
+# ============================================================
+
+def _load_gewechat_config() -> Dict[str, Any]:
+    """Load GeWeChat config from ~/.augur/wechat.yaml."""
+    config_path = Path.home() / ".augur" / "wechat.yaml"
+    if config_path.exists():
+        try:
+            import yaml
+            with open(config_path, "r") as f:
+                return yaml.safe_load(f) or {}
+        except Exception:
+            pass
+    return {}
+
+
+def _save_gewechat_config(config: Dict[str, Any]):
+    """Save GeWeChat config to ~/.augur/wechat.yaml."""
+    config_path = Path.home() / ".augur" / "wechat.yaml"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        import yaml
+        with open(config_path, "w") as f:
+            yaml.safe_dump(config, f, default_flow_style=False)
+    except ImportError:
+        # Fallback to simple write
+        with open(config_path, "w") as f:
+            for k, v in config.items():
+                f.write(f"{k}: {v}\n")
+
+
+class GeWeChatBot:
+    """个人微信 Bot - 通过 GeWeChat Docker 扫码登录个人号
+
+    GeWeChat 是一个 Docker 容器化的微信协议服务。
+    用户扫码登录后, 通过 RESTful API 收发消息。
+    Python 客户端: pip install gewechat-client
+
+    推荐方案 - Hermes Agent 同款方案, 扫码即用。
+    """
+
+    def __init__(self, base_url: str, token: str, app_id: str = ""):
+        """初始化 GeWeChat Bot.
+
+        Args:
+            base_url: GeWeChat API 地址 (如 http://127.0.0.1:2531/v2/api)
+            token: GeWeChat 认证 Token
+            app_id: App ID (首次为空, 登录后自动生成)
+        """
+        try:
+            from gewechat_client import GewechatClient
+        except ImportError:
+            raise ImportError(
+                "gewechat-client is not installed.\n"
+                "Install with: pip install 'augur-agents[wechat]'\n"
+                "  or: pip install gewechat-client>=0.1.0"
+            )
+
+        self.base_url = base_url
+        self.token = token
+        self.app_id = app_id
+        self.client = GewechatClient(base_url, token)
+        self._logged_in = False
+
+    def login(self) -> bool:
+        """Login via QR code. Display QR in terminal.
+
+        Returns:
+            True if login successful
+        """
+        print("\U0001f4f1 GeWeChat Login - Scan QR Code with WeChat")
+        print("=" * 50)
+
+        try:
+            # If we have an app_id, try to reuse it
+            if self.app_id:
+                print(f"   Reusing app_id: {self.app_id}")
+                # Try to check if still logged in
+                try:
+                    resp = self.client.fetch_contacts_list(self.app_id)
+                    if resp and resp.get("ret") == 200:
+                        print("   Already logged in!")
+                        self._logged_in = True
+                        return True
+                except Exception:
+                    pass
+
+            # Get new login QR code
+            resp = self.client.get_qr_code(self.app_id)
+
+            if not resp or resp.get("ret") != 200:
+                # First time - need to create app
+                if not self.app_id:
+                    print("   Creating new app instance...")
+                    resp = self.client.get_qr_code("")
+                    if resp and resp.get("ret") == 200:
+                        data = resp.get("data", {})
+                        self.app_id = data.get("appId", "")
+                        if self.app_id:
+                            self._save_app_id()
+                            print(f"   New app_id: {self.app_id}")
+
+            if resp and resp.get("ret") == 200:
+                data = resp.get("data", {})
+                qr_data = data.get("qrData", "")
+                qr_url = data.get("qrImgUrl", "")
+
+                if qr_url:
+                    print(f"\n   QR Image URL: {qr_url}")
+                if qr_data:
+                    self._print_qr_terminal(qr_data)
+
+                print("\n   Waiting for scan...")
+                print("   (Open WeChat -> Scan -> Confirm login)")
+
+                # Poll for login status
+                import time
+                for _ in range(60):  # Wait up to 60 seconds
+                    time.sleep(2)
+                    try:
+                        check = self.client.check_login(self.app_id)
+                        if check and check.get("ret") == 200:
+                            login_data = check.get("data", {})
+                            status = login_data.get("status", 0)
+                            if status == 2:  # Logged in
+                                self._logged_in = True
+                                nickname = login_data.get("nickName", "User")
+                                print(f"\n   Login successful! Welcome, {nickname}")
+                                self._save_app_id()
+                                return True
+                            elif status == 1:  # Scanned, waiting confirm
+                                print("   Scanned! Please confirm on phone...")
+                    except Exception:
+                        pass
+
+                print("\n   Login timeout. Please try again.")
+                return False
+            else:
+                err_msg = resp.get("msg", "Unknown error") if resp else "No response"
+                print(f"\n   Failed to get QR code: {err_msg}")
+                return False
+
+        except Exception as e:
+            print(f"\n   Login error: {e}")
+            return False
+
+    def _print_qr_terminal(self, qr_data: str):
+        """Print QR code in terminal using simple block characters."""
+        try:
+            import qrcode
+            qr = qrcode.QRCode(border=1)
+            qr.add_data(qr_data)
+            qr.make(fit=True)
+            qr.print_ascii(invert=True)
+        except ImportError:
+            # Fallback - just show the data
+            print(f"\n   QR Data: {qr_data[:100]}...")
+            print("   (Install 'qrcode' package for terminal QR display)")
+
+    def _save_app_id(self):
+        """Save app_id to ~/.augur/wechat.yaml for reuse."""
+        config = _load_gewechat_config()
+        config["gewechat_app_id"] = self.app_id
+        config["gewechat_base_url"] = self.base_url
+        _save_gewechat_config(config)
+        print(f"   App ID saved to ~/.augur/wechat.yaml")
+
+    def handle_message(self, msg_data: Dict[str, Any]) -> Optional[str]:
+        """Parse incoming message and route to handler.
+
+        Args:
+            msg_data: Message data from GeWeChat callback
+
+        Returns:
+            Response text or None
+        """
+        msg_type = msg_data.get("type", 0)
+        content = msg_data.get("content", "").strip()
+
+        # Only handle text messages (type 1)
+        if msg_type != 1 or not content:
+            return None
+
+        text = content.strip()
+
+        # Help command
+        if text in ("帮助", "help", "?", "\uff1f"):
+            return self._help_text()
+
+        # Personas list
+        if text in ("投资人列表", "personas", "列表"):
+            return self._personas_text()
+
+        # Analyze command: "分析 AAPL" or "analyze AAPL"
+        analyze_match = re.match(r"(?:分析|analyze)\s+(\S+)(.*)", text, re.IGNORECASE)
+        if analyze_match:
+            ticker = analyze_match.group(1).upper()
+            extra = analyze_match.group(2)
+            metrics = _parse_metrics(extra)
+            return self._run_consensus(ticker, metrics)
+
+        # Specific persona: "@巴菲特 AAPL" or "问 buffett AAPL"
+        ask_match = re.match(r"(?:@|问\s*)(\S+)\s+(\S+)(.*)", text)
+        if ask_match:
+            persona_name = ask_match.group(1)
+            ticker_or_question = ask_match.group(2)
+            extra = ask_match.group(3)
+            persona_id = PERSONA_MENTIONS.get(persona_name)
+            if persona_id:
+                ticker = _extract_ticker(ticker_or_question + " " + extra) or ticker_or_question.upper()
+                metrics = _parse_metrics(extra)
+                return self._run_single_agent(persona_id, ticker, metrics)
+
+        # Ticker-only input: just "AAPL" triggers consensus
+        ticker_only = re.match(r"^([A-Z]{1,5}(?:\.\w+)?)$", text.upper().strip())
+        if ticker_only and text.strip().upper() == text.strip().upper():
+            potential_ticker = ticker_only.group(1)
+            # Avoid triggering on common Chinese words that happen to be uppercase
+            if re.match(r"^[A-Z]{1,5}(?:\.[A-Z]+)?$", text.strip()):
+                return self._run_consensus(potential_ticker, {})
+
+        return None
+
+    def send_text(self, to_wxid: str, content: str):
+        """Send text message via GeWeChat API.
+
+        Args:
+            to_wxid: Target WeChat ID
+            content: Message content
+        """
+        try:
+            self.client.post_text(self.app_id, to_wxid, content)
+        except Exception as e:
+            print(f"Failed to send message: {e}")
+
+    def _run_consensus(self, ticker: str, metrics: Dict[str, float]) -> str:
+        """Run consensus analysis and return formatted message."""
+        try:
+            from augur.registry import AgentRegistry, DecisionCoordinator
+
+            market_ctx = _build_market_context(ticker, metrics)
+            registry = AgentRegistry()
+            coordinator = DecisionCoordinator(registry)
+
+            results = coordinator.analyze_with_all(market_ctx)
+            consensus = coordinator.get_consensus(results, ticker=ticker, context=market_ctx)
+
+            return format_wechat_message(ticker, consensus, results)
+        except Exception as e:
+            return f"\u274c \u5206\u6790\u5931\u8d25: {e}"
+
+    def _run_single_agent(self, persona_id: str, ticker: str,
+                          metrics: Dict[str, float]) -> str:
+        """Run single agent analysis and return formatted message."""
+        try:
+            from augur.registry import AgentRegistry
+
+            registry = AgentRegistry()
+            agent = registry.get(persona_id)
+
+            if not agent:
+                return f"\u274c \u672a\u627e\u5230\u6295\u8d44\u4eba: {persona_id}"
+
+            market_ctx = _build_market_context(ticker, metrics)
+            result = agent.analyze(market_ctx)
+            return format_single_agent_wechat(ticker, result)
+        except Exception as e:
+            return f"\u274c \u5206\u6790\u5931\u8d25: {e}"
+
+    def _help_text(self) -> str:
+        """Generate help message for personal WeChat."""
+        return (
+            "\U0001f989 Augur - \u591a\u667a\u80fd\u4f53\u6295\u8d44\u5206\u6790\n\n"
+            "\u53ef\u7528\u547d\u4ee4:\n"
+            "\u2022 \u5206\u6790 TICKER - 17\u4f4d\u5927\u5e08\u5171\u8bc6\n"
+            "\u2022 AAPL - \u76f4\u63a5\u8f93\u5165\u4ee3\u7801\u5373\u53ef\u5206\u6790\n"
+            "\u2022 @\u5df4\u83f2\u7279 TICKER - \u5411\u7279\u5b9a\u5927\u5e08\u63d0\u95ee\n"
+            "\u2022 \u6295\u8d44\u4eba\u5217\u8868 - \u67e5\u770b\u6240\u6709\u5927\u5e08\n"
+            "\u2022 \u5e2e\u52a9 - \u663e\u793a\u672c\u5e2e\u52a9\n\n"
+            "\u793a\u4f8b:\n"
+            "\u2022 AAPL\n"
+            "\u2022 \u5206\u6790 NVDA pe=45 roe=0.85\n"
+            "\u2022 @\u6bb5\u6c38\u5e73 TSLA"
+        )
+
+    def _personas_text(self) -> str:
+        """Generate personas list."""
+        try:
+            from augur.registry import AgentRegistry
+
+            registry = AgentRegistry()
+            agents = registry.get_all()
+
+            lines = [f"\U0001f989 \u53ef\u7528\u6295\u8d44\u5927\u5e08 ({len(agents)}\u4f4d)\n"]
+            for agent in agents:
+                emoji = AGENT_EMOJI.get(agent.agent_id, "\U0001f464")
+                lines.append(f"{emoji} {agent.agent_id} - {agent.name}")
+
+            return "\n".join(lines)
+        except Exception as e:
+            return f"\u274c \u83b7\u53d6\u5217\u8868\u5931\u8d25: {e}"
+
+
+# ============================================================
+# Mode 2: 企业微信 (WeCom)
+# ============================================================
+
 class WeComBot:
     """企业微信 Bot - 接收消息 + 主动推送
 
@@ -386,6 +711,10 @@ class WeComBot:
         except Exception as e:
             return f"\u274c \u83b7\u53d6\u5217\u8868\u5931\u8d25: {e}"
 
+
+# ============================================================
+# Mode 3: Webhook (仅推送)
+# ============================================================
 
 class WebhookBot:
     """微信群机器人 Webhook - 仅推送
@@ -656,14 +985,146 @@ def run_webhook_mode():
     print(f"\nDone. Sent {len(results)} reports to WeChat group.")
 
 
-def run_wechat_bot(mode: str = "wecom", port: int = 8080):
+def run_personal_wechat(port: int = 8066):
+    """Start personal WeChat bot via GeWeChat.
+
+    启动个人微信模式: 通过 GeWeChat Docker 容器扫码登录个人号,
+    然后启动 HTTP 回调服务器接收消息.
+
+    Args:
+        port: HTTP callback server port (default: 8066)
+    """
+    base_url = os.environ.get("GEWECHAT_BASE_URL", "http://127.0.0.1:2531/v2/api")
+    token = os.environ.get("GEWECHAT_TOKEN", "")
+    app_id = os.environ.get("GEWECHAT_APP_ID", "")
+
+    # Try to load saved app_id if not in env
+    if not app_id:
+        config = _load_gewechat_config()
+        app_id = config.get("gewechat_app_id", "")
+
+    if not token:
+        print("Error: GEWECHAT_TOKEN environment variable is not set.")
+        print("")
+        print("Setup steps:")
+        print("  1. Start GeWeChat Docker:")
+        print("     docker compose --profile wechat up -d gewe")
+        print("  2. Set token:")
+        print("     export GEWECHAT_TOKEN='your_token'")
+        print("  3. Run again:")
+        print("     augur wechat --mode personal")
+        print("")
+        print("See: https://github.com/Devo919/Gewechat")
+        raise SystemExit(1)
+
+    try:
+        from gewechat_client import GewechatClient  # noqa: F401
+    except ImportError:
+        print("Error: gewechat-client is not installed.")
+        print("Install it with: pip install 'augur-agents[wechat]'")
+        print("  or: pip install gewechat-client>=0.1.0")
+        raise SystemExit(1)
+
+    bot = GeWeChatBot(base_url, token, app_id)
+
+    # Login
+    print(f"\U0001f989 Augur Personal WeChat Bot (GeWeChat)")
+    print(f"   API: {base_url}")
+    print(f"   Callback port: {port}")
+    print("")
+
+    if not bot.login():
+        print("Login failed. Exiting.")
+        raise SystemExit(1)
+
+    # Start HTTP callback server
+    from http.server import HTTPServer, BaseHTTPRequestHandler
+
+    class GeWeChatCallbackHandler(BaseHTTPRequestHandler):
+        """HTTP handler for GeWeChat message callbacks."""
+
+        def do_POST(self):
+            """Handle incoming message callback from GeWeChat."""
+            content_length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(content_length).decode("utf-8")
+
+            try:
+                msg_data = json.loads(body)
+                from_wxid = msg_data.get("fromUser", "")
+                to_wxid = msg_data.get("toUser", "")
+
+                reply = bot.handle_message(msg_data)
+                if reply and from_wxid:
+                    # Reply to sender
+                    reply_to = from_wxid
+                    bot.send_text(reply_to, reply)
+
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.end_headers()
+                self.wfile.write(json.dumps({"ret": 200}).encode("utf-8"))
+
+            except Exception as e:
+                print(f"Callback error: {e}")
+                self.send_response(200)
+                self.end_headers()
+                self.wfile.write(b'{"ret": 200}')
+
+        def log_message(self, format, *args):
+            """Suppress default logging for clean output."""
+            pass
+
+    # Set callback URL in GeWeChat
+    callback_url = f"http://host.docker.internal:{port}/callback"
+    try:
+        bot.client.set_callback(bot.app_id, callback_url, token)
+        print(f"   Callback URL set: {callback_url}")
+    except Exception as e:
+        print(f"   Warning: Could not set callback URL: {e}")
+        print(f"   You may need to configure it manually.")
+
+    print("")
+    print(f"\U0001f7e2 Personal WeChat Bot running on port {port}")
+    print("   Commands: 分析 TICKER | @巴菲特 TICKER | AAPL | 帮助")
+    print("   Press Ctrl+C to stop.")
+
+    server = HTTPServer(("0.0.0.0", port), GeWeChatCallbackHandler)
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        print("\nPersonal WeChat Bot stopped.")
+        server.shutdown()
+
+
+def run_wecom(port: int = 8080):
+    """Start WeCom (企业微信) callback server.
+
+    Alias for run_wecom_server for consistent naming.
+
+    Args:
+        port: HTTP port (default: 8080)
+    """
+    run_wecom_server(port=port)
+
+
+def run_webhook():
+    """Run in webhook-only mode.
+
+    Alias for run_webhook_mode for consistent naming.
+    """
+    run_webhook_mode()
+
+
+def run_wechat_bot(mode: str = "personal", port: int = 8066):
     """Start the WeChat bot.
 
     Args:
-        mode: 'wecom' for full enterprise mode, 'webhook' for webhook-only push
-        port: Port for WeCom callback server (default: 8080)
+        mode: 'personal' for GeWeChat, 'wecom' for enterprise, 'webhook' for push only
+        port: Port for callback server (default: 8066 for personal, 8080 for wecom)
     """
-    if mode == "webhook":
+    if mode == "personal":
+        run_personal_wechat(port=port)
+    elif mode == "webhook":
         run_webhook_mode()
     else:
         run_wecom_server(port=port)
