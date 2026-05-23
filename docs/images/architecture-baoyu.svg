@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 580" width="1000" height="580">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" width="1200" height="750">
   <defs>
     <pattern id="bg-dots" width="20" height="20" patternUnits="userSpaceOnUse">
       <circle cx="10" cy="10" r="0.8" fill="#cbd5e1" opacity="0.3"/>
@@ -7,79 +7,110 @@
       <path d="M0,0 L10,5 L0,10 Z" fill="#94a3b8"/>
     </marker>
   </defs>
-  <rect width="1000" height="580" fill="#f8f6f0"/>
-  <rect width="1000" height="580" fill="url(#bg-dots)"/>
-  <rect x="8" y="8" width="984" height="564" rx="10" fill="none" stroke="#1e293b" stroke-width="2"/>
-  <text x="500" y="36" text-anchor="middle" font-family="Arial" font-size="18" font-weight="800" fill="#0f172a">Augur 系统架构</text>
+  <rect width="1200" height="750" fill="#f8f6f0"/>
+  <rect width="1200" height="750" fill="url(#bg-dots)"/>
+  <rect x="8" y="8" width="1184" height="734" rx="10" fill="none" stroke="#1e293b" stroke-width="2"/>
+  <text x="600" y="36" text-anchor="middle" font-family="Arial" font-size="18" font-weight="800" fill="#0f172a">Augur v5.4 系统架构</text>
 
-  <!-- Layer 1: UI -->
-  <rect x="20" y="50" width="960" height="68" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
-  <rect x="20" y="50" width="960" height="18" rx="6" fill="#eff6ff" stroke="none"/>
-  <rect x="20" y="62" width="960" height="6" fill="#eff6ff" stroke="none"/>
-  <text x="30" y="63" font-family="Arial" font-size="8" font-weight="700" fill="#1e40af">用户界面层</text>
-  <rect x="35" y="76" width="210" height="34" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/>
-  <text x="140" y="93" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">Hermes Web UI</text>
-  <text x="140" y="105" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">React / Socket.IO</text>
-  <rect x="270" y="76" width="210" height="34" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/>
-  <text x="375" y="93" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">Augur Dashboard</text>
-  <text x="375" y="105" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">FastAPI / Bloomberg风格</text>
-  <rect x="505" y="76" width="210" height="34" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/>
-  <text x="610" y="93" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">CLI / Telegram</text>
-  <text x="610" y="105" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">Slack / OpenClaude</text>
-  <rect x="740" y="76" width="220" height="34" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/>
-  <text x="850" y="93" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">Agents API</text>
-  <text x="850" y="105" text-anchor="middle" font-family="Arial" font-size="6" fill="#64748b">REST / Skills / MCP</text>
-  <line x1="500" y1="118" x2="500" y2="140" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Layer 1: 用户接入层 -->
+  <rect x="20" y="50" width="1160" height="72" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+  <rect x="20" y="50" width="1160" height="18" rx="6" fill="#eff6ff" stroke="none"/>
+  <rect x="20" y="62" width="1160" height="6" fill="#eff6ff" stroke="none"/>
+  <text x="30" y="63" font-family="Arial" font-size="9" font-weight="700" fill="#1e40af">Layer 1: 用户接入层</text>
+  <g transform="translate(30,76)"><rect width="140" height="36" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/><text x="70" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">Hermes Web UI</text><text x="70" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">React / Socket.IO</text></g>
+  <g transform="translate(180,76)"><rect width="140" height="36" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/><text x="70" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">Augur Dashboard</text><text x="70" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">7页 / Bloomberg风格</text></g>
+  <g transform="translate(330,76)"><rect width="130" height="36" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/><text x="65" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">CLI</text><text x="65" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">15 命令 / Click</text></g>
+  <g transform="translate(470,76)"><rect width="140" height="36" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/><text x="70" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">MCP Server</text><text x="70" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">6 tools / stdio</text></g>
+  <g transform="translate(620,76)"><rect width="100" height="36" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/><text x="50" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">Telegram</text><text x="50" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Bot API</text></g>
+  <g transform="translate(730,76)"><rect width="100" height="36" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/><text x="50" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">Slack</text><text x="50" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Webhook</text></g>
+  <g transform="translate(840,76)"><rect width="140" height="36" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/><text x="70" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">微信(GeWeChat)</text><text x="70" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">个人/企业/群聊</text></g>
+  <g transform="translate(990,76)"><rect width="100" height="36" rx="5" fill="#f8fafc" stroke="#2563eb" stroke-width="1.2"/><text x="50" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">飞书</text><text x="50" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Lark Webhook</text></g>
+  <line x1="600" y1="122" x2="600" y2="138" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- Layer 2: Engine -->
-  <rect x="20" y="140" width="960" height="165" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
-  <rect x="20" y="140" width="960" height="18" rx="6" fill="#ecfdf5" stroke="none"/>
-  <rect x="20" y="152" width="960" height="6" fill="#ecfdf5" stroke="none"/>
-  <text x="30" y="153" font-family="Arial" font-size="8" font-weight="700" fill="#065f46">分析引擎 - 17位投资大师 Agent</text>
-  <g transform="translate(30,170)"><rect width="130" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Buffett</text></g>
-  <g transform="translate(168,170)"><rect width="130" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Graham</text></g>
-  <g transform="translate(306,170)"><rect width="130" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Munger</text></g>
-  <g transform="translate(444,170)"><rect width="130" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Fisher</text></g>
-  <g transform="translate(582,170)"><rect width="130" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Lynch</text></g>
-  <g transform="translate(720,170)"><rect width="130" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Marks</text></g>
-  <g transform="translate(858,170)"><rect width="110" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="55" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Thiel</text></g>
-  <g transform="translate(30,206)"><rect width="130" height="28" rx="4" fill="#dcfce7" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#166534">Dalio</text></g>
-  <g transform="translate(168,206)"><rect width="130" height="28" rx="4" fill="#dcfce7" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#166534">Soros</text></g>
-  <g transform="translate(306,206)"><rect width="130" height="28" rx="4" fill="#dcfce7" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#166534">Cathie Wood</text></g>
-  <g transform="translate(444,206)"><rect width="130" height="28" rx="4" fill="#f3e8ff" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#4c1d95">Aschenbrenner</text></g>
-  <g transform="translate(582,206)"><rect width="130" height="28" rx="4" fill="#f3e8ff" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#4c1d95">ARPS</text></g>
-  <g transform="translate(720,206)"><rect width="130" height="28" rx="4" fill="#ffedd5" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#9a3412">大宇</text></g>
-  <g transform="translate(30,242)"><rect width="130" height="28" rx="4" fill="#fce7e7" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#991b1b">段永平</text></g>
-  <g transform="translate(168,242)"><rect width="130" height="28" rx="4" fill="#fce7e7" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#991b1b">张磊</text></g>
-  <g transform="translate(306,242)"><rect width="130" height="28" rx="4" fill="#fce7e7" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#991b1b">李录</text></g>
-  <g transform="translate(444,242)"><rect width="130" height="28" rx="4" fill="#fce7e7" stroke="#1e293b" stroke-width="1"/><text x="65" y="19" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#991b1b">但斌</text></g>
-  <text x="30" y="288" font-family="Arial" font-size="7" fill="#64748b">蓝色=价值 / 绿色=宏观 / 紫色=主题 / 橙色=币圈 / 红色=中国</text>
-  <text x="870" y="288" font-family="Arial" font-size="7" fill="#64748b">每个Agent含独立SKILL.md</text>
-  <line x1="500" y1="305" x2="500" y2="330" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Layer 2: 核心引擎层 -->
+  <rect x="20" y="140" width="1160" height="80" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+  <rect x="20" y="140" width="1160" height="18" rx="6" fill="#ecfdf5" stroke="none"/>
+  <rect x="20" y="152" width="1160" height="6" fill="#ecfdf5" stroke="none"/>
+  <text x="30" y="153" font-family="Arial" font-size="9" font-weight="700" fill="#065f46">Layer 2: 核心引擎层</text>
+  <g transform="translate(35,166)"><rect width="200" height="42" rx="5" fill="#f8fafc" stroke="#059669" stroke-width="1.2"/><text x="100" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">AgentRegistry</text><text x="100" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">17 Agents / YAML加载</text></g>
+  <g transform="translate(255,166)"><rect width="200" height="42" rx="5" fill="#f8fafc" stroke="#059669" stroke-width="1.2"/><text x="100" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">DecisionCoordinator</text><text x="100" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">6层共识 / 行业权重</text></g>
+  <g transform="translate(475,166)"><rect width="200" height="42" rx="5" fill="#f8fafc" stroke="#059669" stroke-width="1.2"/><text x="100" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">DebateProtocol</text><text x="100" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">多轮辩论 / 交叉质询</text></g>
+  <g transform="translate(695,166)"><rect width="200" height="42" rx="5" fill="#f8fafc" stroke="#059669" stroke-width="1.2"/><text x="100" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">Soul Injector</text><text x="100" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">人格注入引擎</text></g>
+  <g transform="translate(915,166)"><rect width="245" height="42" rx="5" fill="#f8fafc" stroke="#059669" stroke-width="1.2"/><text x="122" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">Persona Loader (YAML)</text><text x="122" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">自定义Agent / 热加载</text></g>
+  <line x1="600" y1="220" x2="600" y2="236" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- Layer 3: Consensus -->
-  <rect x="20" y="330" width="960" height="75" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
-  <rect x="20" y="330" width="960" height="18" rx="6" fill="#f5f3ff" stroke="none"/>
-  <rect x="20" y="342" width="960" height="6" fill="#f5f3ff" stroke="none"/>
-  <text x="30" y="343" font-family="Arial" font-size="8" font-weight="700" fill="#5b21b6">共识与风控层</text>
-  <g transform="translate(35,356)"><rect width="220" height="40" rx="4" fill="#f8fafc" stroke="#7c3aed" stroke-width="1"/><text x="110" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#5b21b6">DecisionCoordinator</text><text x="110" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">行业权重 / 机制路由 / 滚动IC</text></g>
-  <g transform="translate(275,356)"><rect width="220" height="40" rx="4" fill="#f8fafc" stroke="#7c3aed" stroke-width="1"/><text x="110" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#5b21b6">RiskManager</text><text x="110" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Kelly Sizer / Calmar / VaR</text></g>
-  <g transform="translate(515,356)"><rect width="220" height="40" rx="4" fill="#f8fafc" stroke="#7c3aed" stroke-width="1"/><text x="110" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#5b21b6">Optimization</text><text x="110" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Bayesian调参 / 相关性矩阵</text></g>
-  <g transform="translate(755,356)"><rect width="210" height="40" rx="4" fill="#f8fafc" stroke="#7c3aed" stroke-width="1"/><text x="105" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#5b21b6">Evolution Tracker</text><text x="105" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">风格漂移 / 事件时间线</text></g>
-  <line x1="500" y1="405" x2="500" y2="430" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <!-- Layer 3: Agent 人格层 (17位) -->
+  <rect x="20" y="238" width="1160" height="148" rx="6" fill="#fff" stroke="#4f46e5" stroke-width="1.5"/>
+  <rect x="20" y="238" width="1160" height="18" rx="6" fill="#eef2ff" stroke="none"/>
+  <rect x="20" y="250" width="1160" height="6" fill="#eef2ff" stroke="none"/>
+  <text x="30" y="251" font-family="Arial" font-size="9" font-weight="700" fill="#3730a3">Layer 3: Agent 人格层 (17位)</text>
+  <!-- 蓝=价值 row -->
+  <g transform="translate(30,264)"><rect width="135" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Buffett</text></g>
+  <g transform="translate(175,264)"><rect width="135" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Graham</text></g>
+  <g transform="translate(320,264)"><rect width="135" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Munger</text></g>
+  <g transform="translate(465,264)"><rect width="135" height="28" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#1e40af">Li Lu</text></g>
+  <text x="30" y="260" font-family="Arial" font-size="7" fill="#1e40af">蓝=价值投资</text>
+  <!-- 绿=宏观 row -->
+  <g transform="translate(630,264)"><rect width="120" height="28" rx="4" fill="#dcfce7" stroke="#1e293b" stroke-width="1"/><text x="60" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#166534">Dalio</text></g>
+  <g transform="translate(760,264)"><rect width="120" height="28" rx="4" fill="#dcfce7" stroke="#1e293b" stroke-width="1"/><text x="60" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#166534">Soros</text></g>
+  <g transform="translate(890,264)"><rect width="120" height="28" rx="4" fill="#dcfce7" stroke="#1e293b" stroke-width="1"/><text x="60" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#166534">Marks</text></g>
+  <text x="630" y="260" font-family="Arial" font-size="7" fill="#166534">绿=宏观策略</text>
+  <!-- 紫=成长 row -->
+  <g transform="translate(30,302)"><rect width="135" height="28" rx="4" fill="#f3e8ff" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#6b21a8">Fisher</text></g>
+  <g transform="translate(175,302)"><rect width="135" height="28" rx="4" fill="#f3e8ff" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#6b21a8">Cathie Wood</text></g>
+  <g transform="translate(320,302)"><rect width="135" height="28" rx="4" fill="#f3e8ff" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#6b21a8">Aschenbrenner</text></g>
+  <g transform="translate(465,302)"><rect width="135" height="28" rx="4" fill="#f3e8ff" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#6b21a8">Thiel</text></g>
+  <g transform="translate(610,302)"><rect width="135" height="28" rx="4" fill="#f3e8ff" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#6b21a8">Lynch</text></g>
+  <text x="30" y="298" font-family="Arial" font-size="7" fill="#6b21a8">紫=成长投资</text>
+  <!-- 橙=Crypto row -->
+  <g transform="translate(30,340)"><rect width="135" height="28" rx="4" fill="#ffedd5" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#9a3412">ARPS</text></g>
+  <g transform="translate(175,340)"><rect width="135" height="28" rx="4" fill="#ffedd5" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#9a3412">大宇</text></g>
+  <text x="30" y="336" font-family="Arial" font-size="7" fill="#9a3412">橙=Crypto</text>
+  <!-- 红=中国 row -->
+  <g transform="translate(370,340)"><rect width="135" height="28" rx="4" fill="#fce7e7" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#991b1b">段永平</text></g>
+  <g transform="translate(515,340)"><rect width="135" height="28" rx="4" fill="#fce7e7" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#991b1b">张磊</text></g>
+  <g transform="translate(660,340)"><rect width="135" height="28" rx="4" fill="#fce7e7" stroke="#1e293b" stroke-width="1"/><text x="68" y="18" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#991b1b">但斌</text></g>
+  <text x="370" y="336" font-family="Arial" font-size="7" fill="#991b1b">红=中国投资家</text>
+  <text x="1000" y="375" font-family="Arial" font-size="7" fill="#64748b">每位Agent含独立SKILL.md</text>
+  <line x1="600" y1="386" x2="600" y2="402" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <!-- Layer 4: Data -->
-  <rect x="20" y="430" width="960" height="58" rx="6" fill="#fff" stroke="#d97706" stroke-width="1.5"/>
-  <rect x="20" y="430" width="960" height="18" rx="6" fill="#fffbeb" stroke="none"/>
-  <rect x="20" y="442" width="960" height="6" fill="#fffbeb" stroke="none"/>
-  <text x="30" y="443" font-family="Arial" font-size="8" font-weight="700" fill="#92400e">数据与存储层</text>
-  <g transform="translate(35,456)"><rect width="125" height="22" rx="3" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="62" y="16" text-anchor="middle" font-family="Arial" font-size="7" fill="#92400e">yfinance</text></g>
-  <g transform="translate(175,456)"><rect width="125" height="22" rx="3" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="62" y="16" text-anchor="middle" font-family="Arial" font-size="7" fill="#92400e">Macro SPY/VIX</text></g>
-  <g transform="translate(315,456)"><rect width="125" height="22" rx="3" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="62" y="16" text-anchor="middle" font-family="Arial" font-size="7" fill="#92400e">Parquet价格仓</text></g>
-  <g transform="translate(455,456)"><rect width="125" height="22" rx="3" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="62" y="16" text-anchor="middle" font-family="Arial" font-size="7" fill="#92400e">SEC 13F</text></g>
-  <g transform="translate(595,456)"><rect width="125" height="22" rx="3" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="62" y="16" text-anchor="middle" font-family="Arial" font-size="7" fill="#92400e">Evolution DB</text></g>
-  <g transform="translate(735,456)"><rect width="125" height="22" rx="3" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="62" y="16" text-anchor="middle" font-family="Arial" font-size="7" fill="#92400e">Hermes Memory</text></g>
-  <g transform="translate(875,456)"><rect width="92" height="22" rx="3" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="46" y="16" text-anchor="middle" font-family="Arial" font-size="7" fill="#92400e">YAML</text></g>
-  <text x="500" y="530" text-anchor="middle" font-family="Arial" font-size="10" fill="#64748b">User Input  17 Agents Analysis  Consensus & Risk  Output</text>
-  <text x="500" y="548" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">部署到: Hermes Agent / Web UI / OpenClaude / Claude Code / Codex / Telegram / Slack</text>
+  <!-- Layer 4: 共识与风控层 -->
+  <rect x="20" y="404" width="1160" height="72" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+  <rect x="20" y="404" width="1160" height="18" rx="6" fill="#f5f3ff" stroke="none"/>
+  <rect x="20" y="416" width="1160" height="6" fill="#f5f3ff" stroke="none"/>
+  <text x="30" y="417" font-family="Arial" font-size="9" font-weight="700" fill="#5b21b6">Layer 4: 共识与风控层</text>
+  <g transform="translate(35,430)"><rect width="250" height="36" rx="5" fill="#f8fafc" stroke="#7c3aed" stroke-width="1"/><text x="125" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#5b21b6">DecisionCoordinator</text><text x="125" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">6层共识 / 行业权重 / 机制路由</text></g>
+  <g transform="translate(305,430)"><rect width="250" height="36" rx="5" fill="#f8fafc" stroke="#7c3aed" stroke-width="1"/><text x="125" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#5b21b6">RiskManager</text><text x="125" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Kelly Sizer / VaR / Calmar</text></g>
+  <g transform="translate(575,430)"><rect width="250" height="36" rx="5" fill="#f8fafc" stroke="#7c3aed" stroke-width="1"/><text x="125" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#5b21b6">Backtest + IC</text><text x="125" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">历史回测 / 滚动IC追踪</text></g>
+  <g transform="translate(845,430)"><rect width="315" height="36" rx="5" fill="#f8fafc" stroke="#7c3aed" stroke-width="1"/><text x="157" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#5b21b6">Cron + Watchlist</text><text x="157" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">定时任务 / 自选股监控</text></g>
+  <line x1="600" y1="476" x2="600" y2="492" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 5: 数据与配置层 -->
+  <rect x="20" y="494" width="1160" height="72" rx="6" fill="#fff" stroke="#d97706" stroke-width="1.5"/>
+  <rect x="20" y="494" width="1160" height="18" rx="6" fill="#fffbeb" stroke="none"/>
+  <rect x="20" y="506" width="1160" height="6" fill="#fffbeb" stroke="none"/>
+  <text x="30" y="507" font-family="Arial" font-size="9" font-weight="700" fill="#92400e">Layer 5: 数据与配置层</text>
+  <g transform="translate(35,520)"><rect width="165" height="34" rx="4" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="82" y="14" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#92400e">yfinance</text><text x="82" y="27" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">实时行情 / 美港A股</text></g>
+  <g transform="translate(215,520)"><rect width="150" height="34" rx="4" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="75" y="14" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#92400e">SEC 13F</text><text x="75" y="27" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">机构持仓数据</text></g>
+  <g transform="translate(380,520)"><rect width="170" height="34" rx="4" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="85" y="14" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#92400e">~/.augur/config.yaml</text><text x="85" y="27" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">全局配置</text></g>
+  <g transform="translate(565,520)"><rect width="155" height="34" rx="4" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="78" y="14" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#92400e">watchlist.yaml</text><text x="78" y="27" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">自选股列表</text></g>
+  <g transform="translate(735,520)"><rect width="140" height="34" rx="4" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="70" y="14" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#92400e">backtest/</text><text x="70" y="27" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">回测数据存储</text></g>
+  <g transform="translate(890,520)"><rect width="270" height="34" rx="4" fill="#f8fafc" stroke="#d97706" stroke-width="0.8"/><text x="135" y="14" text-anchor="middle" font-family="Arial" font-size="8" font-weight="600" fill="#92400e">config/agents.yaml</text><text x="135" y="27" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Agent模型配置 / 权重</text></g>
+  <line x1="600" y1="566" x2="600" y2="582" stroke="#94a3b8" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Layer 6: 输出与推送层 -->
+  <rect x="20" y="584" width="1160" height="72" rx="6" fill="#fff" stroke="#0d9488" stroke-width="1.5"/>
+  <rect x="20" y="584" width="1160" height="18" rx="6" fill="#f0fdfa" stroke="none"/>
+  <rect x="20" y="596" width="1160" height="6" fill="#f0fdfa" stroke="none"/>
+  <text x="30" y="597" font-family="Arial" font-size="9" font-weight="700" fill="#115e59">Layer 6: 输出与推送层</text>
+  <g transform="translate(35,610)"><rect width="200" height="36" rx="5" fill="#f8fafc" stroke="#0d9488" stroke-width="1.2"/><text x="100" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#115e59">Telegram 推送</text><text x="100" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">实时信号 / 报告</text></g>
+  <g transform="translate(255,610)"><rect width="200" height="36" rx="5" fill="#f8fafc" stroke="#0d9488" stroke-width="1.2"/><text x="100" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#115e59">Slack 推送</text><text x="100" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Channel通知</text></g>
+  <g transform="translate(475,610)"><rect width="200" height="36" rx="5" fill="#f8fafc" stroke="#0d9488" stroke-width="1.2"/><text x="100" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#115e59">微信 Webhook</text><text x="100" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">企业微信 / GeWeChat</text></g>
+  <g transform="translate(695,610)"><rect width="200" height="36" rx="5" fill="#f8fafc" stroke="#0d9488" stroke-width="1.2"/><text x="100" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#115e59">飞书 Webhook</text><text x="100" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Lark Bot推送</text></g>
+  <g transform="translate(915,610)"><rect width="245" height="36" rx="5" fill="#f8fafc" stroke="#0d9488" stroke-width="1.2"/><text x="122" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#115e59">Dashboard Toast</text><text x="122" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Web实时通知</text></g>
+
+  <!-- Footer -->
+  <text x="600" y="680" text-anchor="middle" font-family="Arial" font-size="10" fill="#64748b">数据流: 用户输入 → 引擎调度 → 17 Agents分析 → 共识风控 → 数据聚合 → 多渠道推送</text>
+  <text x="600" y="700" text-anchor="middle" font-family="Arial" font-size="9" fill="#94a3b8">蓝=价值(Buffett/Graham/Munger/Li Lu) | 绿=宏观(Dalio/Soros/Marks) | 紫=成长(Fisher/Wood/Aschenbrenner/Thiel/Lynch) | 橙=Crypto(ARPS/大宇) | 红=中国(段永平/张磊/但斌)</text>
+  <text x="600" y="720" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">Augur v5.4 - Multi-Agent Investment Analysis System</text>
 </svg>
