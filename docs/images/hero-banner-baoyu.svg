@@ -96,7 +96,7 @@
   <text x="600" y="326" text-anchor="middle" font-family="Arial" font-size="9" fill="#64748b">Python · FastAPI · 17位独立Agent Skill · Bloomberg风格仪表盘</text>
 
   <!-- Footer -->
-  <text x="600" y="370" text-anchor="middle" font-family="Arial" font-size="9" fill="#94a3b8">v3.5 · github.com/BruceLanLan/augur</text>
+  <text x="600" y="370" text-anchor="middle" font-family="Arial" font-size="9" fill="#94a3b8">v5.5 · github.com/BruceLanLan/augur</text>
 
   <!-- Decorative corners -->
   <path d="M30,28 L30,20 L40,20" fill="none" stroke="#2563eb" stroke-width="2.5" stroke-linecap="round"/>

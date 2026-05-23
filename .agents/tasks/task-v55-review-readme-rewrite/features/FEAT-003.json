@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "docs",
   "description": "Update SVG diagrams to reflect v5.5 state. Verify and update hero-banner, architecture, consensus-flow, skills-deploy, and dashboard-preview SVGs.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Read docs/images/hero-banner-baoyu.svg - update title/subtitle text to reflect v5.5 capabilities (currently says 17 personas which is correct, verify all agent boxes match current roster)",
     "Read docs/images/architecture-baoyu.svg - currently says 'Augur v5.4', update to 'Augur v5.5', verify 6-layer architecture is accurate (User Access Layer with all platforms, Core Engine, Persona Agents, Consensus Mechanism, Data Layer, Storage)",
