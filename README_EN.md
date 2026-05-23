@@ -12,7 +12,7 @@ English | [中文](README.md)
 <h3 align="center">Multi-Agent Investment Analysis System - 17 Virtual Investment Masters at Your Service</h3>
 
 <p align="center">
-  <img src="docs/images/hero-banner-baoyu.svg" alt="Augur" width="100%"/>
+  <img src="docs/images/hero-banner-en.svg" alt="Augur" width="100%"/>
 </p>
 
 <p align="center">
@@ -345,7 +345,7 @@ make docker-build && make docker-up
 ## Project Architecture
 
 <p align="center">
-  <img src="docs/images/architecture-baoyu.svg" alt="Augur Architecture" width="100%"/>
+  <img src="docs/images/architecture-en.svg" alt="Augur Architecture" width="100%"/>
 </p>
 
 ```
@@ -382,7 +382,7 @@ augur/
 **Consensus Mechanism:**
 
 <p align="center">
-  <img src="docs/images/consensus-flow.svg" alt="Consensus Flow" width="100%"/>
+  <img src="docs/images/consensus-flow-en.svg" alt="Consensus Flow" width="100%"/>
 </p>
 
 17 agents analyze independently, then results are aggregated through a 6-layer weighted system:
@@ -442,6 +442,18 @@ Hermes delivers information; Augur interprets it. One transmits, the other predi
 3. **Algorithm Improvements** - Enhance scoring logic or the consensus mechanism
 4. **Bot Adapters** - Add new platforms in `src/augur/bots/`
 5. **Web UI** - Improve the `dashboard/` frontend
+
+---
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=BruceLanLan%2Faugur&type=timeline&logscale=&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&legend=top-left" />
+ </picture>
+</a>
 
 ---
 

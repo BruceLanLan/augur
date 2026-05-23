@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 380" width="1000" height="380">
+  <defs>
+    <pattern id="bg-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+      <circle cx="10" cy="10" r="0.8" fill="#cbd5e1" opacity="0.3"/>
+    </pattern>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#94a3b8"/>
+    </marker>
+  </defs>
+  <rect width="1000" height="380" fill="#f8f6f0"/>
+  <rect width="1000" height="380" fill="url(#bg-dots)"/>
+  <rect x="8" y="8" width="984" height="364" rx="10" fill="none" stroke="#1e293b" stroke-width="2"/>
+  <text x="500" y="36" text-anchor="middle" font-family="Arial" font-size="16" font-weight="700" fill="#0f172a">One-Click Deploy to Any Platform</text>
+
+  <!-- Row 1 -->
+  <g transform="translate(30,55)">
+    <rect width="280" height="55" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#1e40af">Augur Dashboard</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">Built-in FastAPI / Browser access / Zero config</text>
+    <text x="250" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">Built-in</text>
+  </g>
+  <g transform="translate(330,55)">
+    <rect width="280" height="55" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#065f46">Hermes Agent</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">Conversational / /skill augur to load</text>
+    <text x="250" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">Built-in</text>
+  </g>
+  <g transform="translate(630,55)">
+    <rect width="340" height="55" rx="6" fill="#fff" stroke="#7c3aed" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#5b21b6">Hermes Web UI</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">Chat interface / Session mgmt / Skill integration</text>
+    <text x="310" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">Skill Mode</text>
+  </g>
+
+  <!-- Row 2 -->
+  <g transform="translate(30,125)">
+    <rect width="280" height="55" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#1e40af">OpenClaude</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">Standalone Agent registration / YAML config</text>
+    <text x="250" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">Supported</text>
+  </g>
+  <g transform="translate(330,125)">
+    <rect width="280" height="55" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#065f46">Claude Code / Codex</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">Terminal integration / --skill parameter</text>
+    <text x="250" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">Supported</text>
+  </g>
+  <g transform="translate(630,125)">
+    <rect width="340" height="55" rx="6" fill="#fff" stroke="#d97706" stroke-width="1.5"/>
+    <text x="16" y="28" font-family="Arial" font-size="12" font-weight="700" fill="#92400e">Telegram / Slack / Discord</text>
+    <text x="16" y="46" font-family="Arial" font-size="7" fill="#64748b">Hermes Gateway relay / Real-time chat</text>
+    <text x="310" y="46" font-family="Arial" font-size="7" font-weight="600" fill="#16a34a">Supported</text>
+  </g>
+
+  <!-- How it works -->
+  <rect x="30" y="200" width="940" height="80" rx="6" fill="#fff" stroke="#1e293b" stroke-width="1.5"/>
+  <text x="50" y="222" font-family="Arial" font-size="11" font-weight="700" fill="#0f172a">How It Works</text>
+  <g transform="translate(50,235)"><rect width="200" height="34" rx="4" fill="#f0f9ff" stroke="#2563eb" stroke-width="1"/><text x="100" y="16" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#1e40af">SKILL.md</text><text x="100" y="29" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">17 independent Skill files</text></g>
+  <g transform="translate(280,235)"><rect width="200" height="34" rx="4" fill="#f0fdf4" stroke="#059669" stroke-width="1"/><text x="100" y="16" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">hermes skills install</text><text x="100" y="29" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">One-click install to Hermes Agent</text></g>
+  <g transform="translate(510,235)"><rect width="200" height="34" rx="4" fill="#fefce8" stroke="#d97706" stroke-width="1"/><text x="100" y="16" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#92400e">Agent Activate</text><text x="100" y="29" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">/skill buffett to start chat</text></g>
+  <g transform="translate(740,235)"><rect width="200" height="34" rx="4" fill="#fdf2f8" stroke="#ec4899" stroke-width="1"/><text x="100" y="16" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#be185d">Get Analysis</text><text x="100" y="29" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Score / Signal / Reasoning / Position</text></g>
+  <line x1="250" y1="252" x2="278" y2="252" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="480" y1="252" x2="508" y2="252" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+  <line x1="710" y1="252" x2="738" y2="252" stroke="#94a3b8" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <text x="50" y="310" font-family="Arial" font-size="9" font-weight="600" fill="#0f172a">Quick Command Examples:</text>
+  <text x="50" y="330" font-family="Arial" font-size="8" fill="#475569">$ hermes skills install ./skills/buffett/SKILL.md   /skill buffett  Analyze AAPL</text>
+  <text x="50" y="348" font-family="Arial" font-size="8" fill="#475569">$ hermes skills install ./skills/dayu/SKILL.md      /skill dayu     What about BTC?</text>
+</svg>
