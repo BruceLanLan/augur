@@ -74,7 +74,7 @@
 {% block content %}
 
 <h2 style="color:var(--accent-orange); margin-bottom:4px;">股票分析</h2>
-<p class="text-muted mb-16" style="font-size:0.82rem;">输入标的代码，获得 17 位投资大师的共识判断</p>
+<p class="text-muted mb-16" style="font-size:0.82rem;">输入标的代码，获得 17 位投资大师的共识判断 <span class="shortcut-hint">按 <kbd>/</kbd> 聚焦 &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交</span></p>
 
 <!-- Input Panel -->
 <div class="card mb-24">
@@ -141,7 +141,21 @@
 <!-- Spinner -->
 <div id="spinner">
     <div class="spinner" style="margin:0 auto;"></div>
-    <p class="loading-pulse text-orange text-mono mt-16" style="font-size:0.88rem;">正在调用 17 位投资大师...</p>
+    <p class="loading-pulse text-orange text-mono mt-16" style="font-size:0.88rem; text-align:center;">正在调用 17 位投资大师...</p>
+    <div class="grid-3 mt-16" style="gap:12px;">
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+        <div class="skeleton skeleton-card"></div>
+    </div>
+</div>
+
+<!-- Error Panel -->
+<div id="error-panel" class="error-panel mb-16" style="display:none;">
+    <div class="error-panel-title">分析失败</div>
+    <div class="error-panel-msg" id="error-msg"></div>
+    <div class="error-panel-retry">
+        <button class="btn btn-sm" onclick="runAnalysis()">重试</button>
+    </div>
 </div>
 
 <!-- Results -->
@@ -157,6 +171,9 @@
             <div style="border-left:1px solid var(--border-color); padding-left:20px;">
                 <div class="data-label">综合评分</div>
                 <div id="cons-score" class="data-value">--</div>
+                <div class="score-gauge mt-8" style="width:120px;">
+                    <div class="score-gauge-fill" id="cons-score-gauge" style="width:0%;"></div>
+                </div>
             </div>
             <div style="border-left:1px solid var(--border-color); padding-left:20px;">
                 <div class="data-label">置信度</div>
@@ -206,7 +223,13 @@
     </div>
 
     <!-- Agent Grid -->
-    <div class="section-title">各位投资大师评分</div>
+    <div class="flex items-center justify-between mb-12">
+        <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">各位投资大师评分</div>
+        <div class="flex gap-8">
+            <button class="btn btn-sm btn-ghost" onclick="toggleAllAgents(true)">全部展开</button>
+            <button class="btn btn-sm btn-ghost" onclick="toggleAllAgents(false)">全部收起</button>
+        </div>
+    </div>
     <div class="grid-auto" id="agent-grid"></div>
 
 </div><!-- /results -->
@@ -263,6 +286,7 @@ function runAnalysis() {
     resultsEl.style.display = 'none';
     resultsEl.classList.remove('show');
     document.getElementById('spinner').style.display = 'block';
+    document.getElementById('error-panel').style.display = 'none';
 
     fetch('/api/analyze/' + ticker + '?' + params)
         .then(function(r) { return r.json(); })
@@ -273,7 +297,8 @@ function runAnalysis() {
         })
         .catch(function(err) {
             document.getElementById('spinner').style.display = 'none';
-            showToast('分析失败: ' + err, 'error');
+            document.getElementById('error-panel').style.display = 'block';
+            document.getElementById('error-msg').textContent = '请求失败: ' + (err.message || err) + '。请检查网络连接或服务是否运行中。';
         });
 }
 
@@ -314,6 +339,16 @@ function toggleReasoning(el) {
     }
 }
 
+function toggleAllAgents(expand) {
+    document.querySelectorAll('.agent-reasoning').forEach(function(div) {
+        if (expand) div.classList.add('expanded');
+        else div.classList.remove('expanded');
+    });
+    document.querySelectorAll('.expand-btn').forEach(function(btn) {
+        btn.textContent = expand ? '收起' : '展开';
+    });
+}
+
 function renderResults(data) {
     var cons = data.consensus;
     var agents = data.agents || [];
@@ -334,6 +369,17 @@ function renderResults(data) {
     document.getElementById('cons-score').textContent = (cons.score||0).toFixed(1) + ' / 10';
     document.getElementById('cons-confidence').textContent = ((cons.confidence||0)*100).toFixed(0) + '%';
     document.getElementById('cons-reasoning').textContent = cons.reasoning || '';
+
+    // Score gauge
+    var gaugeEl = document.getElementById('cons-score-gauge');
+    if (gaugeEl) gaugeEl.style.width = ((cons.score||0)/10*100).toFixed(0) + '%';
+
+    // Cache this analysis
+    augurCache.add(ticker, {
+        signal: cons.signal || 'neutral',
+        score: cons.score || 0,
+        confidence: cons.confidence || 0
+    });
 
     var posPct = cons.metadata && cons.metadata.position_sizing
         ? (cons.metadata.position_sizing.position_pct || 0).toFixed(1) + '%'
@@ -388,8 +434,9 @@ function renderResults(data) {
             '<span class="signal-badge ' + signalBadgeClass(a.signal) + '" style="font-size:0.68rem;">' + signalLabel(a.signal) + '</span>' +
             '</div>' +
             '<div class="flex items-center gap-8 mb-8">' +
-            '<span class="text-mono" style="font-size:1.2rem; font-weight:700; color:' + scoreColor + ';">' + (a.score||0).toFixed(1) + '</span>' +
-            '<div style="flex:1;"><div class="score-bar-bg"><div class="score-bar-fill" style="background:' + scoreColor + '; width:' + scoreWidth + '%;"></div></div>' +
+            '<div class="score-gauge-circle" style="--score-pct:' + scoreWidth + '; width:48px; height:48px;">' +
+            '<span class="score-gauge-circle-value" style="font-size:0.82rem;">' + (a.score||0).toFixed(1) + '</span></div>' +
+            '<div style="flex:1;"><div class="score-gauge"><div class="score-gauge-fill" style="width:' + scoreWidth + '%;"></div></div>' +
             '<div class="text-muted" style="font-size:0.65rem; margin-top:2px;">置信度 ' + ((a.confidence||0)*100).toFixed(0) + '%</div></div>' +
             '</div>' +
             '<div class="agent-reasoning"><p class="text-muted" style="font-size:0.75rem; line-height:1.5; margin:0;">' + reasoning + '</p></div>' +

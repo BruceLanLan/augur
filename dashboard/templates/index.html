@@ -58,6 +58,7 @@
             分析 &rarr;
         </button>
     </div>
+    <div class="shortcut-hint" style="margin-top:8px;">按 <kbd>/</kbd> 快速聚焦 &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交</div>
 </div>
 
 <!-- Quick Analysis Widget -->
@@ -117,6 +118,14 @@
     {% endfor %}
 </div>
 
+<!-- Recent Analyses (from cache) -->
+<div id="recent-section" class="mb-24" style="display:none;">
+    <div class="section-title">最近分析</div>
+    <div class="card" style="padding:0; overflow:hidden;">
+        <ul class="recent-list" id="recent-list"></ul>
+    </div>
+</div>
+
 <!-- How it works -->
 <div class="section-title">工作原理</div>
 <div class="grid-3 mb-24">
@@ -169,6 +178,14 @@ function quickAnalyze() {
             document.getElementById('qr-link').href = '/stocks?ticker=' + ticker;
 
             document.getElementById('quick-result').classList.add('show');
+
+            // Cache the result
+            augurCache.add(ticker, {
+                signal: cons.signal || 'neutral',
+                score: cons.score || 0,
+                confidence: cons.confidence || 0
+            });
+            renderRecentAnalyses();
         })
         .catch(function(err) {
             document.getElementById('quick-spinner').style.display = 'none';
@@ -184,6 +201,32 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('model-count').textContent = (data.models || []).length || '--';
         })
         .catch(function() {});
+
+    // Show recent analyses from cache
+    renderRecentAnalyses();
 });
+
+function renderRecentAnalyses() {
+    var recent = augurCache.getLast(5);
+    var section = document.getElementById('recent-section');
+    var list = document.getElementById('recent-list');
+    if (!section || !list) return;
+    if (recent.length === 0) { section.style.display = 'none'; return; }
+    section.style.display = 'block';
+    list.innerHTML = '';
+    recent.forEach(function(item) {
+        var signal = (item.result.signal || 'neutral').toLowerCase();
+        var signalLabel = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+        var badgeClass = signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral';
+        var li = document.createElement('li');
+        li.className = 'recent-item';
+        li.onclick = function() { window.location.href = '/stocks?ticker=' + item.ticker; };
+        li.innerHTML = '<span class="recent-item-ticker">' + item.ticker + '</span>' +
+            '<span class="signal-badge ' + badgeClass + ' recent-item-signal">' + signalLabel + '</span>' +
+            '<span class="text-mono" style="font-size:0.78rem; color:var(--accent-orange);">' + (item.result.score || 0).toFixed(1) + '/10</span>' +
+            '<span class="recent-item-time">' + relativeTime(item.time) + '</span>';
+        list.appendChild(li);
+    });
+}
 </script>
 {% endblock %}

@@ -872,6 +872,7 @@ augur/
 
 | 版本 | 日期 | 内容 |
 |------|------|------|
+| **v5.2** | 2026-05-23 | ✨ UX 打磨 — 键盘快捷键 + 加载骨架 + Score仪表 + 打印样式 + 移动端底部导航 |
 | **v5.1** | 2026-05-24 | 📊 历史回测系统 + Agent IC 实盘追踪 + 排行榜 |
 | **v5.0** | 2026-05-23 | 🐳 Docker 容器化 — Dockerfile + docker-compose 多服务编排 |
 | **v4.6** | 2026-05-23 | 📱 微信 (企业微信+Webhook) + 飞书 (Event+Webhook) Bot 多平台适配 |
@@ -912,7 +913,8 @@ augur/
 - [x] **v4.6**: WeChat/微信 + Lark/飞书 Bot 多平台适配
 - [x] **v5.0**: Docker 容器化 + docker-compose 多服务编排 + Makefile
 - [x] **v5.1**: 历史回测系统 + Agent IC 实盘追踪 + 排行榜
-- [ ] **v5.2**: UI/UX 优化 + 产品体验提升
+- [x] **v5.2**: UI/UX 优化 + 产品体验提升 (键盘快捷键/加载骨架/Score仪表/打印样式/移动端)
+- [ ] **v5.3**: Real-time data integration (yfinance)
 
 ---
 

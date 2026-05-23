@@ -68,10 +68,13 @@
 
 <div class="flex items-center justify-between mb-24" style="flex-wrap:wrap; gap:12px;">
     <div>
-        <h2 style="color:var(--accent-orange); margin:0;">模型配置</h2>
+        <h2 style="color:var(--accent-orange); margin:0;">模型配置 <span id="unsaved-indicator" class="unsaved-dot" style="display:none;"></span></h2>
         <p class="text-muted" style="font-size:0.82rem; margin:4px 0 0;">为每位投资大师分配 LLM 模型</p>
     </div>
-    <button class="btn btn-primary" onclick="saveAll()">全部保存</button>
+    <div class="flex gap-8">
+        <button class="btn btn-sm btn-ghost" onclick="resetAll()" title="重置所有选择为默认值">全部重置</button>
+        <button class="btn btn-primary" id="save-all-btn" onclick="saveAll()">全部保存</button>
+    </div>
 </div>
 
 <div class="settings-grid" id="persona-grid">
@@ -99,6 +102,35 @@
 
 {% block extra_scripts %}
 <script>
+var originalValues = {};
+
+// Track original values on load for unsaved detection
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.persona-config-row select').forEach(function(sel) {
+        var id = sel.getAttribute('data-agent-id');
+        originalValues[id] = sel.value;
+        sel.addEventListener('change', function() { checkUnsaved(); });
+    });
+});
+
+function checkUnsaved() {
+    var hasChanges = false;
+    document.querySelectorAll('.persona-config-row select').forEach(function(sel) {
+        var id = sel.getAttribute('data-agent-id');
+        if (sel.value !== originalValues[id]) hasChanges = true;
+    });
+    var dot = document.getElementById('unsaved-indicator');
+    if (dot) dot.style.display = hasChanges ? 'inline-block' : 'none';
+}
+
+function getProviderClass(model) {
+    if (model.includes('claude')) return 'claude';
+    if (model.includes('deepseek')) return 'deepseek';
+    if (model.includes('gpt')) return 'gpt';
+    if (model.includes('kimi')) return 'kimi';
+    return '';
+}
+
 function savePersona(agentId) {
     var select = document.querySelector('select[data-agent-id="' + agentId + '"]');
     var model = select.value;
@@ -110,7 +142,15 @@ function savePersona(agentId) {
     .then(function(resp) { return resp.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
+            originalValues[agentId] = model;
+            checkUnsaved();
             showToast(agentId + ' 模型已更新为 ' + model);
+            // Flash success on the row
+            var row = select.closest('.persona-config-row');
+            if (row) {
+                row.style.borderColor = 'var(--signal-buy)';
+                setTimeout(function() { row.style.borderColor = ''; }, 1500);
+            }
         } else {
             showToast('保存失败: ' + (data.detail || '未知错误'), 'error');
         }
@@ -138,11 +178,51 @@ function saveAll() {
     Promise.all(promises)
     .then(function(results) {
         var ok = results.filter(function(r) { return r.status === 'ok'; }).length;
+        // Update original values
+        cards.forEach(function(card) {
+            var agentId = card.getAttribute('data-agent-id');
+            var select = card.querySelector('select');
+            originalValues[agentId] = select.value;
+        });
+        checkUnsaved();
         showToast('已保存 ' + ok + ' 位投资大师的模型配置');
+        // Success animation on button
+        var btn = document.getElementById('save-all-btn');
+        if (btn) {
+            var orig = btn.textContent;
+            btn.textContent = '\u2713 已保存';
+            btn.classList.add('check-pop');
+            setTimeout(function() {
+                btn.textContent = orig;
+                btn.classList.remove('check-pop');
+            }, 2000);
+        }
     })
     .catch(function(err) {
         showToast('批量保存失败: ' + err.message, 'error');
     });
 }
+
+function resetAll() {
+    if (!confirm('确定要重置所有模型为默认值吗？')) return;
+    document.querySelectorAll('.persona-config-row select').forEach(function(sel) {
+        sel.selectedIndex = 0;
+    });
+    checkUnsaved();
+    showToast('已重置为默认值，请点击"全部保存"确认', 'warning');
+}
+
+// Warn before leaving with unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    var hasChanges = false;
+    document.querySelectorAll('.persona-config-row select').forEach(function(sel) {
+        var id = sel.getAttribute('data-agent-id');
+        if (sel.value !== originalValues[id]) hasChanges = true;
+    });
+    if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
 </script>
 {% endblock %}
