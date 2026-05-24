@@ -1,22 +1,22 @@
 English | [中文](README.md)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/v5.5-Latest-blue?style=for-the-badge" alt="v5.5"/>
-  <img src="https://img.shields.io/badge/17-Investor%20Personas-brightgreen?style=for-the-badge" alt="17 Personas"/>
+  <img src="https://img.shields.io/badge/v5.6-Latest-blue?style=for-the-badge" alt="v5.6"/>
+  <img src="https://img.shields.io/badge/18-Investor%20Personas-brightgreen?style=for-the-badge" alt="18 Personas"/>
   <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python" alt="Python"/>
   <img src="https://img.shields.io/badge/pip%20install-augur--agents-orange?style=for-the-badge&logo=pypi" alt="pip install"/>
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT"/>
 </p>
 
 <h1 align="center">Augur</h1>
-<h3 align="center">Multi-Agent Investment Analysis System - 17 Virtual Investment Masters at Your Service</h3>
+<h3 align="center">Multi-Agent Investment Analysis System - 18 Virtual Investment Masters at Your Service</h3>
 
 <p align="center">
   <img src="docs/images/hero-banner-en.svg" alt="Augur" width="100%"/>
 </p>
 
 <p align="center">
-  <em>17 AI Investment Masters (incl. 5 Chinese investors) | Multi-dimensional Consensus Analysis | Bloomberg-style Terminal Dashboard | Multi-platform Deployment</em>
+  <em>18 AI Investment Masters (incl. 5 Chinese investors) | Multi-dimensional Consensus Analysis | Bloomberg-style Terminal Dashboard | Multi-platform Deployment</em>
 </p>
 
 ---
@@ -35,7 +35,7 @@ augur analyze AAPL
 
 | Feature | Description |
 |---------|-------------|
-| 17 Investor Personas | From value investing to crypto speculation, US equities to Chinese markets - each master has an independent personality and scoring logic |
+| 18 Investor Personas | From value investing to crypto speculation, US equities to Chinese markets - each master has an independent personality and scoring logic |
 | Multi-Agent Consensus | Industry-aware weighting + market regime routing + rolling IC dynamic weighting + diversity penalty |
 | Real-time Data (yfinance) | Auto-fetches US/HK/A-share prices, valuations, fundamentals, and technical indicators |
 | Bloomberg-style Dashboard | Dark-themed FastAPI interface with 7 pages covering the full analysis workflow |
@@ -47,7 +47,7 @@ augur analyze AAPL
 
 ---
 
-## 17 Investment Masters
+## 18 Investment Masters
 
 | # | Investor | Skill | Style | Key Metrics | Recommended Model |
 |---|----------|-------|-------|-------------|-------------------|
@@ -68,6 +68,7 @@ augur analyze AAPL
 | 15 | Zhang Lei (张磊) / Hillhouse | `augur-zhang-lei` | Long-term Structural Value | Revenue Growth >15%, structural trends | deepseek-v4 |
 | 16 | Li Lu (李录) / Himalaya | `augur-li-lu` | Deep Value / Margin of Safety | PE <25, ROE >12%, no high leverage | claude-sonnet-4-6 |
 | 17 | Dan Bin (但斌) / Oriental Harbor | `augur-dan-bin` | Brand Moat / Era Beta | Gross Margin >40%, pricing power | kimi-k2 |
+| 18 | Serenity (@aleabitoreddit) | `augur-serenity` | AI/Semi Supply Chain Bottleneck Trading | Revenue Growth >30%, semiconductor sector | claude-sonnet-4-6 |
 
 > Each investor has: Full persona documentation (`personas/*.md`) + Independent Skill (`skills/*/SKILL.md`) + Python analysis engine (`src/augur/personas/*.py`)
 
@@ -97,7 +98,7 @@ The system tracks each master's portfolio changes and style drift, automatically
 ```bash
 # Core Analysis
 augur analyze AAPL                    # Single-target analysis (auto-fetches real-time data)
-augur consensus NVDA                  # 17-master consensus
+augur consensus NVDA                  # 18-master consensus
 augur list-personas                   # List all investors
 augur fetch 0700.HK --json            # Fetch market data only
 
@@ -134,7 +135,7 @@ augur ic-report --agent buffett       # Specific agent IC
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/analyze/{ticker}` | GET | 17-master consensus analysis (supports auto-fetch) |
+| `/api/analyze/{ticker}` | GET | 18-master consensus analysis (supports auto-fetch) |
 | `/api/fetch/{ticker}` | GET | Fetch real-time market data |
 | `/api/search?q=` | GET | Search stock tickers |
 | `/api/personas` | GET | List all investors |
@@ -153,7 +154,7 @@ augur ic-report --agent buffett       # Specific agent IC
 | Tool | Description |
 |------|-------------|
 | `augur_analyze` | Single-investor analysis on a given target |
-| `augur_consensus` | 17-master consensus analysis |
+| `augur_consensus` | 18-master consensus analysis |
 | `augur_list_personas` | List all available investors |
 | `augur_configure` | Runtime configuration management |
 | `augur_create_persona` | Create a custom investor persona |
@@ -188,7 +189,7 @@ python3 -m dashboard.app --port 8000 --cors
 | Page | Path | Description |
 |------|------|-------------|
 | Home | `/` | System overview + quick analysis + status |
-| Personas | `/personas` | 17 master cards + search/filter |
+| Personas | `/personas` | 18 master cards + search/filter |
 | Stock Analysis | `/stocks` | Deep analysis + real-time scoring + auto-fetch |
 | Signal Monitor | `/signals` | Watchlist batch scanning |
 | Backtest | `/backtest` | Historical backtesting + IC rankings |
@@ -199,12 +200,12 @@ python3 -m dashboard.app --port 8000 --cors
 
 <p align="center">
   <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis" width="100%"/>
-  <br><em>Stock Analysis - Enter a ticker for instant 17-master consensus</em>
+  <br><em>Stock Analysis - Enter a ticker for instant 18-master consensus</em>
 </p>
 
 <p align="center">
   <img src="docs/images/dashboard-personas.svg" alt="Personas" width="100%"/>
-  <br><em>Personas - 17 master cards with search and filter</em>
+  <br><em>Personas - 18 master cards with search and filter</em>
 </p>
 
 <p align="center">
@@ -380,10 +381,10 @@ augur/
 │   │   ├── slack_bot.py
 │   │   ├── wechat_bot.py
 │   │   └── lark_bot.py
-│   └── personas/               # 17 Investor Agents
+│   └── personas/               # 18 Investor Agents
 │       ├── base.py             # Base class + MarketContext + AgentResponse
-│       ├── buffett.py ... dan_bin.py
-│       └── (17 Python modules)
+│       ├── buffett.py ... serenity.py
+│       └── (18 Python modules)
 ├── scanner/                    # Backward-compatible shim
 ├── dashboard/                  # Bloomberg-style Web UI
 │   ├── app.py                  # FastAPI + routes
@@ -402,7 +403,7 @@ augur/
   <img src="docs/images/consensus-flow-en.svg" alt="Consensus Flow" width="100%"/>
 </p>
 
-17 agents analyze independently, then results are aggregated through a 6-layer weighted system:
+18 agents analyze independently, then results are aggregated through a 6-layer weighted system:
 1. **Industry-aware Weighting** - Tech stocks give higher weight to Wood/Aschenbrenner
 2. **Market Regime Routing** - Bear market increases weight for Marks/Dalio
 3. **Rolling IC Weighting** - Agents with higher historical accuracy get dynamic weight boosts
@@ -416,6 +417,7 @@ augur/
 
 | Version | Changes |
 |---------|---------|
+| **v5.6** | 18th investor: Serenity (@aleabitoreddit) - AI/Semi Supply Chain Bottleneck Trading |
 | **v5.5** | Documentation overhaul + pyproject.toml metadata refinement |
 | **v5.4** | Real-time market data (yfinance) - auto-fetch for US/HK/A-shares |
 | **v5.3** | Personal WeChat integration (GeWeChat) - scan-to-use, 3-mode support |

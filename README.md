@@ -1,22 +1,22 @@
 [English](README_EN.md) | 中文
 
 <p align="center">
-  <img src="https://img.shields.io/badge/v5.5-Latest-blue?style=for-the-badge" alt="v5.5"/>
-  <img src="https://img.shields.io/badge/17-Investor%20Personas-brightgreen?style=for-the-badge" alt="17 Personas"/>
+  <img src="https://img.shields.io/badge/v5.6-Latest-blue?style=for-the-badge" alt="v5.6"/>
+  <img src="https://img.shields.io/badge/18-Investor%20Personas-brightgreen?style=for-the-badge" alt="18 Personas"/>
   <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python" alt="Python"/>
   <img src="https://img.shields.io/badge/pip%20install-augur--agents-orange?style=for-the-badge&logo=pypi" alt="pip install"/>
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT"/>
 </p>
 
 <h1 align="center">Augur</h1>
-<h3 align="center">多智能体投资分析系统 - 17位虚拟投资大师为你决策</h3>
+<h3 align="center">多智能体投资分析系统 - 18位虚拟投资大师为你决策</h3>
 
 <p align="center">
   <img src="docs/images/hero-banner-baoyu.svg" alt="Augur" width="100%"/>
 </p>
 
 <p align="center">
-  <em>17位AI投资大师(含5位中国投资人) | 多维度共识分析 | Bloomberg风格仪表盘 | 多平台部署</em>
+  <em>18位AI投资大师(含5位中国投资人) | 多维度共识分析 | Bloomberg风格仪表盘 | 多平台部署</em>
 </p>
 
 ---
@@ -35,7 +35,7 @@ augur analyze AAPL
 
 | 功能 | 说明 |
 |------|------|
-| 17位投资大师人格 | 价值投资到币圈博弈、美股到中国市场，每位大师有独立人格与评分逻辑 |
+| 18位投资大师人格 | 价值投资到币圈博弈、美股到中国市场，每位大师有独立人格与评分逻辑 |
 | 多Agent共识机制 | 行业感知权重 + 市场机制路由 + 滚动IC动态权重 + 多样性惩罚 |
 | 实时数据 (yfinance) | 自动获取美股/港股/A股价格、估值、基本面和技术指标 |
 | Bloomberg风格 Dashboard | 暗色主题 FastAPI 界面，7个页面完整覆盖分析流程 |
@@ -47,7 +47,7 @@ augur analyze AAPL
 
 ---
 
-## 17位投资大师
+## 18位投资大师
 
 | # | 投资人 | Skill | 风格 | 核心指标 | 推荐模型 |
 |---|--------|-------|------|---------|---------|
@@ -68,6 +68,7 @@ augur analyze AAPL
 | 15 | 张磊 (高瓴) | `augur-zhang-lei` | 长期结构性价值 | 营收增速>15%、结构性赛道 | deepseek-v4 |
 | 16 | 李录 (喜马拉雅) | `augur-li-lu` | 深度价值/安全边际 | PE<25、ROE>12%、无高负债 | claude-sonnet-4-6 |
 | 17 | 但斌 (东方港湾) | `augur-dan-bin` | 品牌护城河/时代Beta | 毛利率>40%、定价权 | kimi-k2 |
+| 18 | Serenity (@aleabitoreddit) | `augur-serenity` | AI/半导体供应链瓶颈交易 | 营收增速>30%、半导体行业 | claude-sonnet-4-6 |
 
 > 每位投资人都有: 完整人格文档(`personas/*.md`) + 独立Skill(`skills/*/SKILL.md`) + Python分析引擎(`src/augur/personas/*.py`)
 
@@ -97,7 +98,7 @@ augur analyze AAPL
 ```bash
 # 核心分析
 augur analyze AAPL                    # 单标的分析 (自动获取实时数据)
-augur consensus NVDA                  # 17位大师共识
+augur consensus NVDA                  # 18位大师共识
 augur list-personas                   # 列出所有投资人
 augur fetch 0700.HK --json            # 仅获取市场数据
 
@@ -134,7 +135,7 @@ augur ic-report --agent buffett       # 特定 Agent IC
 
 | Endpoint | Method | 说明 |
 |----------|--------|------|
-| `/api/analyze/{ticker}` | GET | 17位大师共识分析 (支持自动获取) |
+| `/api/analyze/{ticker}` | GET | 18位大师共识分析 (支持自动获取) |
 | `/api/fetch/{ticker}` | GET | 获取实时市场数据 |
 | `/api/search?q=` | GET | 搜索股票代码 |
 | `/api/personas` | GET | 获取所有投资人列表 |
@@ -153,7 +154,7 @@ augur ic-report --agent buffett       # 特定 Agent IC
 | 工具 | 说明 |
 |------|------|
 | `augur_analyze` | 单投资人分析指定标的 |
-| `augur_consensus` | 17位大师共识分析 |
+| `augur_consensus` | 18位大师共识分析 |
 | `augur_list_personas` | 列出所有可用投资人 |
 | `augur_configure` | 运行时配置管理 |
 | `augur_create_persona` | 创建自定义投资人人格 |
@@ -188,7 +189,7 @@ python3 -m dashboard.app --port 8000 --cors
 | 页面 | 路径 | 说明 |
 |------|------|------|
 | 首页 | `/` | 系统概览 + 快速分析 + 状态 |
-| 人格 | `/personas` | 17位大师卡片 + 搜索筛选 |
+| 人格 | `/personas` | 18位大师卡片 + 搜索筛选 |
 | 股票分析 | `/stocks` | 深度分析 + 实时评分 + 自动获取 |
 | 信号监控 | `/signals` | 自选股批量扫描 |
 | 回测 | `/backtest` | 历史回测 + IC排行 |
@@ -199,12 +200,12 @@ python3 -m dashboard.app --port 8000 --cors
 
 <p align="center">
   <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis" width="100%"/>
-  <br><em>股票分析页 - 输入代码即得17位大师共识</em>
+  <br><em>股票分析页 - 输入代码即得18位大师共识</em>
 </p>
 
 <p align="center">
   <img src="docs/images/dashboard-personas.svg" alt="Personas" width="100%"/>
-  <br><em>投资人页 - 17位大师卡片网格 + 搜索筛选</em>
+  <br><em>投资人页 - 18位大师卡片网格 + 搜索筛选</em>
 </p>
 
 <p align="center">
@@ -380,10 +381,10 @@ augur/
 │   │   ├── slack_bot.py
 │   │   ├── wechat_bot.py
 │   │   └── lark_bot.py
-│   └── personas/               # 17位投资人 Agent
+│   └── personas/               # 18位投资人 Agent
 │       ├── base.py             # 基类 + MarketContext + AgentResponse
-│       ├── buffett.py ... dan_bin.py
-│       └── (17个 Python 模块)
+│       ├── buffett.py ... serenity.py
+│       └── (18个 Python 模块)
 ├── scanner/                    # 向后兼容 shim
 ├── dashboard/                  # Bloomberg风格 Web UI
 │   ├── app.py                  # FastAPI + 路由
@@ -402,7 +403,7 @@ augur/
   <img src="docs/images/consensus-flow.svg" alt="Consensus Flow" width="100%"/>
 </p>
 
-17位Agent独立分析，通过6层加权汇总:
+18位Agent独立分析，通过6层加权汇总:
 1. 行业感知权重 - 科技股给 Wood/Aschenbrenner 更高权重
 2. 市场机制路由 - 熊市时 Marks/Dalio 权重提升
 3. 滚动IC权重 - 历史准确率高的Agent动态加权
@@ -416,6 +417,7 @@ augur/
 
 | 版本 | 内容 |
 |------|------|
+| **v5.6** | 🆕 第18位投资人: Serenity (@aleabitoreddit) - AI/半导体供应链瓶颈交易 |
 | **v5.5** | 文档重构 + pyproject.toml 元数据完善 |
 | **v5.4** | 实时行情接入 (yfinance) - 自动获取美股/港股/A股数据 |
 | **v5.3** | 个人微信接入 (GeWeChat) - 扫码即用, 三模式支持 |

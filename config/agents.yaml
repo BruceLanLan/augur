@@ -32,6 +32,9 @@ per_agent:
   soros:         claude-sonnet-4-6   # 反身性分析
   marks:         claude-sonnet-4-6   # 周期判断
 
+  # ====== 供应链交易派 ======
+  serenity:      claude-sonnet-4-6   # AI/半导体供应链需要强推理
+
   # ====== 特殊资产 ======
   arps:          claude-sonnet-4-6   # Crypto+黄金宏观
   lynch:         claude-sonnet-4-6   # GARP消费成长
