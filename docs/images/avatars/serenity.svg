@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <clipPath id="circle"><circle cx="60" cy="52" r="45"/></clipPath>
+  </defs>
+  <circle cx="60" cy="52" r="45" fill="#b2dfdb" stroke="#000" stroke-width="3"/>
+  <!-- Hair (messy tech bro style) -->
+  <path d="M32,40 Q38,18 60,16 Q82,18 88,40" fill="#1a1a1a" stroke="#000" stroke-width="2.5"/>
+  <path d="M32,40 L32,48" fill="none" stroke="#000" stroke-width="2"/>
+  <path d="M88,40 L88,48" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Messy hair tufts -->
+  <path d="M42,24 L39,18 L44,20" fill="none" stroke="#111" stroke-width="2"/>
+  <path d="M76,24 L79,18 L74,20" fill="none" stroke="#111" stroke-width="2"/>
+  <path d="M58,19 L56,13 L62,17" fill="none" stroke="#111" stroke-width="2"/>
+  <!-- Face -->
+  <ellipse cx="60" cy="52" rx="20" ry="24" fill="#f5d0a9" stroke="#000" stroke-width="2.5"/>
+  <!-- Eyebrows (sharp, focused) -->
+  <path d="M44,40 Q50,37 56,40" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+  <path d="M64,40 Q70,37 76,40" fill="none" stroke="#1a1a1a" stroke-width="2.5"/>
+  <!-- Eyes (determined) -->
+  <circle cx="50" cy="46" r="3.5" fill="#000"/>
+  <circle cx="70" cy="46" r="3.5" fill="#000"/>
+  <!-- Eye shine -->
+  <circle cx="51.5" cy="44.5" r="1" fill="#fff"/>
+  <circle cx="71.5" cy="44.5" r="1" fill="#fff"/>
+  <!-- Nose -->
+  <path d="M58,52 Q60,56 62,52" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Confident smirk -->
+  <path d="M50,62 Q60,66 70,62" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Hoodie (teal semiconductor theme) -->
+  <rect x="28" y="72" width="64" height="28" rx="6" fill="#009688" stroke="#000" stroke-width="2.5"/>
+  <path d="M44,72 L60,84 L76,72" fill="none" stroke="#000" stroke-width="2"/>
+  <!-- Circuit pattern on hoodie -->
+  <path d="M34,84 L40,84 L40,88 L46,88" fill="none" stroke="#4db6ac" stroke-width="1.5"/>
+  <circle cx="46" cy="88" r="2" fill="#4db6ac"/>
+  <path d="M74,84 L80,84 L80,88 L86,88" fill="none" stroke="#4db6ac" stroke-width="1.5"/>
+  <circle cx="74" cy="84" r="2" fill="#4db6ac"/>
+  <!-- Chip icon on chest -->
+  <rect x="54" y="78" width="12" height="10" rx="1" fill="#004d40" stroke="#4db6ac" stroke-width="1"/>
+  <line x1="54" y1="81" x2="52" y2="81" stroke="#4db6ac" stroke-width="1"/>
+  <line x1="54" y1="85" x2="52" y2="85" stroke="#4db6ac" stroke-width="1"/>
+  <line x1="66" y1="81" x2="68" y2="81" stroke="#4db6ac" stroke-width="1"/>
+  <line x1="66" y1="85" x2="68" y2="85" stroke="#4db6ac" stroke-width="1"/>
+  <!-- Name label -->
+  <rect x="5" y="98" width="110" height="18" rx="4" fill="#00796b" stroke="#000" stroke-width="2"/>
+  <text x="60" y="111" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="8" font-weight="bold" fill="#fff">Serenity</text>
+</svg>

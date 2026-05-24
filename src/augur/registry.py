@@ -45,6 +45,7 @@ class AgentRegistry:
         from augur.personas.zhang_lei import ZhangLeiAgent
         from augur.personas.li_lu import LiLuAgent
         from augur.personas.dan_bin import DanBinAgent
+        from augur.personas.serenity import SerenityAgent
 
         agents = [
             BuffettAgent(), GrahamAgent(), LynchAgent(), DalioAgent(), MungerAgent(),
@@ -53,6 +54,7 @@ class AgentRegistry:
             DayuAgent(),
             ThielAgent(),
             DuanYongpingAgent(), ZhangLeiAgent(), LiLuAgent(), DanBinAgent(),
+            SerenityAgent(),
         ]
         for agent in agents:
             self._agents[agent.agent_id] = agent
