@@ -1,3 +1,5 @@
+[English](agent-integration-guide-en.md) | 中文
+
 # Augur Agent 整合指南
 
 > 让17位传奇投资大师成为你的 AI Agent 伙伴，随时随地为你分析

@@ -1,52 +1,52 @@
-[English](data-sources-en.md) | 中文
+English | [中文](data-sources.md)
 
-# 📊 数据源API集成方案
+# Data Source API Integration Guide
 
-本文档介绍如何为投资分析Skill集成实时数据API，覆盖股票行情、财务数据、期权数据、13F持仓等。
+This document describes how to integrate real-time data APIs for investment analysis Skills, covering stock quotes, financial data, options data, 13F holdings, and more.
 
 ---
 
-## 一、推荐API方案
+## 1. Recommended API Options
 
-### 1. Yahoo Finance API（免费，推荐）
+### 1. Yahoo Finance API (Free, Recommended)
 
-**优点**：免费、数据全面、覆盖全球市场、无需申请
+**Advantages**: Free, comprehensive data, global market coverage, no application required
 
-**集成方式**：使用 `yfinance` Python库
+**Integration**: Use the `yfinance` Python library
 
 ```python
 import yfinance as yf
 
-# 获取股票数据
+# Get stock data
 ticker = yf.Ticker("00700.HK")
 
-# 实时/历史价格
-hist = ticker.history(period="1d")  # 当日价格
-hist = ticker.history(period="1y")  # 1年历史
+# Real-time/historical prices
+hist = ticker.history(period="1d")  # Today's price
+hist = ticker.history(period="1y")  # 1 year history
 
-# 财务报表
-income_stmt = ticker.financials        # 利润表
-balance_sheet = ticker.balance_sheet    # 资产负债表
-cash_flow = ticker.cashflow             # 现金流量表
+# Financial statements
+income_stmt = ticker.financials        # Income statement
+balance_sheet = ticker.balance_sheet    # Balance sheet
+cash_flow = ticker.cashflow             # Cash flow statement
 
-# 推荐数据
-recommendations = ticker.recommendations  # 分析师评级
-analyst_price_targets = ticker.analyst_price_targets  # 目标价
+# Recommendations
+recommendations = ticker.recommendations  # Analyst ratings
+analyst_price_targets = ticker.analyst_price_targets  # Price targets
 
-# 期权数据
-options = ticker.options                  # 到期日
-calls = ticker.option_chain(date)[0]     # Call期权链
-puts = ticker.option_chain(date)[1]      # Put期权链
+# Options data
+options = ticker.options                  # Expiration dates
+calls = ticker.option_chain(date)[0]     # Call option chain
+puts = ticker.option_chain(date)[1]      # Put option chain
 
-# 关键统计
-info = ticker.info  # PE、EPS、股息、50日均价等全部信息
+# Key statistics
+info = ticker.info  # PE, EPS, dividends, 50-day MA, and all other info
 ```
 
-### 2. Alpha Vantage（免费/付费）
+### 2. Alpha Vantage (Free/Paid)
 
-**优点**：专业财务数据、GAAP/IFRS财报、实时价格
+**Advantages**: Professional financial data, GAAP/IFRS statements, real-time prices
 
-**申请**：https://www.alphavantage.co/ （免费API Key）
+**Sign up**: https://www.alphavantage.co/ (Free API Key)
 
 ```python
 import requests
@@ -54,51 +54,51 @@ import requests
 API_KEY = "YOUR_FREE_KEY"
 BASE_URL = "https://www.alphavantage.co/query"
 
-# 股票报价
+# Stock quote
 def get_quote(symbol):
     url = f"{BASE_URL}?function=GLOBAL_QUOTE&symbol={symbol}&apikey={API_KEY}"
     return requests.get(url).json()
 
-# 财报
+# Financial statements
 def get_income_statement(symbol):
     url = f"{BASE_URL}?function=INCOME_STATEMENT&symbol={symbol}&apikey={API_KEY}"
     return requests.get(url).json()
 
-# 关键技术指标
+# Key technical indicators
 def get_overview(symbol):
     url = f"{BASE_URL}?function=OVERVIEW&symbol={symbol}&apikey={API_KEY}"
     return requests.get(url).json()
 ```
 
-### 3. SEC EDGAR API（免费，13F持仓）
+### 3. SEC EDGAR API (Free, 13F Holdings)
 
-**用途**：13F机构持仓、8-K重大事件、10-K/10-Q年报季报
+**Use case**: 13F institutional holdings, 8-K material events, 10-K/10-Q annual and quarterly reports
 
 ```python
 import requests
 
-# 获取公司13F持仓（机构持仓）
+# Get 13F holdings (institutional positions)
 def get_13f_filings(cik):
     url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
     headers = {"User-Agent": "Your Name your@email.com"}
     return requests.get(url, headers=headers).json()
 
-# 获取最新13F
+# Get latest 13F
 def get_latest_13f(cik):
     url = f"https://data.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=13F&owner=include&count=1"
     return requests.get(url, headers={"User-Agent": "Your Name your@email.com"}).text
 
-# 搜索公司CIK
+# Search company CIK
 def search_company(company_name):
     url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=companysearch&company={company_name}"
     return requests.get(url, headers={"User-Agent": "Your Name your@email.com"}).text
 ```
 
-### 4. Finnhub（免费/付费）
+### 4. Finnhub (Free/Paid)
 
-**优点**：实时技术指标、蜡烛图、新闻情绪
+**Advantages**: Real-time technical indicators, candlestick charts, news sentiment
 
-**申请**：https://finnhub.io/ （免费tier可用）
+**Sign up**: https://finnhub.io/ (Free tier available)
 
 ```python
 import requests
@@ -106,62 +106,63 @@ import requests
 API_KEY = "YOUR_KEY"
 BASE_URL = "https://finnhub.io/api/v1"
 
-# 蜡烛图数据
+# Candlestick data
 def get_candles(symbol, resolution="D", from_time=None, to_time=None):
     url = f"{BASE_URL}/stock/candle?symbol={symbol}&resolution={resolution}&from={from_time}&to={to_time}&token={API_KEY}"
     return requests.get(url).json()
 
-# 技术指标
+# Technical indicators
 def get_technical_indicators(symbol, indicator="sma", params={}):
     url = f"{BASE_URL}/scan/technical-indicator?symbol={symbol}&indicator={indicator}&token={API_KEY}"
     return requests.get(url).json()
 
-# 分析师评级
+# Analyst ratings
 def get_recommendations(symbol):
     url = f"{BASE_URL}/stock/recommendation?symbol={symbol}&token={API_KEY}"
     return requests.get(url).json()
 
-# 收益日历
+# Earnings calendar
 def get_earnings_calendar(from_date, to_date):
     url = f"{BASE_URL}/calendar/earnings?from={from_date}&to={to_date}&token={API_KEY}"
     return requests.get(url).json()
 ```
 
-### 5. Crunchbase（VC/一级市场）
+### 5. Crunchbase (VC/Primary Market)
 
-**用途**：融资历史、估值、创始人信息、投资方
+**Use case**: Funding history, valuations, founder information, investors
 
 ```python
-# Crunchbase API (需要付费，但有免费tier)
+# Crunchbase API (paid, but has a free tier)
 # https://data.crunchbase.com/docs
 
-# 替代：使用公开的VC数据API
-# Airbnb API: https://api.airbnb.com (需要申请)
+# Alternative: Use public VC data APIs
+# Airbnb API: https://api.airbnb.com (requires application)
 ```
 
 ---
 
-## 二、集成到分析流程
+## 2. Integration into the Analysis Pipeline
 
-### 数据获取工作流
+### Data Retrieval Workflow
 
 ```
-分析请求 → 自动获取数据 → 数据处理 → 分析输出
-              ↓
-    ┌─────────┬─────────┬─────────┐
-    ↓         ↓         ↓         ↓
-  行情API   财报API   13F API   期权API
-    ↓         ↓         ↓         ↓
-  实时价格  财务数据  机构持仓  波动率
+Analysis Request -> Auto-fetch Data -> Data Processing -> Analysis Output
+                       |
+    +------------------+------------------+------------------+
+    |                  |                  |                  |
+  Quote API      Financials API     13F API          Options API
+    |                  |                  |                  |
+  Real-time      Financial         Institutional    Volatility
+  Prices         Data              Holdings
 ```
 
-### Python数据获取脚本示例
+### Python Data Retrieval Script Example
 
 ```python
 #!/usr/bin/env python3
 """
-投资分析数据获取脚本
-自动获取股票行情、财务数据、技术指标、分析师评级
+Investment Analysis Data Retrieval Script
+Automatically fetches stock quotes, financial data, technical indicators, analyst ratings
 """
 
 import yfinance as yf
@@ -174,7 +175,7 @@ class StockDataFetcher:
         self.t = yf.Ticker(ticker)
 
     def get_price(self):
-        """获取实时价格"""
+        """Get real-time price"""
         hist = self.t.history(period="1d")
         if not hist.empty:
             return {
@@ -186,7 +187,7 @@ class StockDataFetcher:
             }
 
     def get_technicals(self):
-        """获取技术指标"""
+        """Get technical indicators"""
         info = self.t.info
         hist_50d = self.t.history(period="3mo")
         hist_200d = self.t.history(period="1y")
@@ -205,7 +206,7 @@ class StockDataFetcher:
         }
 
     def _calculate_rsi(self, period=14):
-        """计算RSI"""
+        """Calculate RSI"""
         hist = self.t.history(period="3mo")
         if len(hist) < period:
             return None
@@ -217,7 +218,7 @@ class StockDataFetcher:
         return rsi.iloc[-1]
 
     def get_financials(self):
-        """获取财务数据"""
+        """Get financial data"""
         try:
             income = self.t.financials
             balance = self.t.balance_sheet
@@ -235,7 +236,7 @@ class StockDataFetcher:
             return {"error": str(e)}
 
     def get_analyst_data(self):
-        """获取分析师数据"""
+        """Get analyst data"""
         info = self.t.info
         recommendations = self.t.recommendations
         return {
@@ -248,7 +249,7 @@ class StockDataFetcher:
         }
 
     def get_all_data(self):
-        """获取所有数据"""
+        """Get all data"""
         return {
             "ticker": self.ticker,
             "timestamp": datetime.now().isoformat(),
@@ -258,7 +259,7 @@ class StockDataFetcher:
             "analyst": self.get_analyst_data()
         }
 
-# 使用示例
+# Usage example
 if __name__ == "__main__":
     fetcher = StockDataFetcher("00700.HK")
     data = fetcher.get_all_data()
@@ -267,7 +268,7 @@ if __name__ == "__main__":
 
 ---
 
-## 三、13F机构持仓获取
+## 3. 13F Institutional Holdings Retrieval
 
 ```python
 import requests
@@ -275,20 +276,20 @@ from bs4 import BeautifulSoup
 
 def get_13f_holdings(company_name_or_cik):
     """
-    获取13F机构持仓数据
+    Retrieve 13F institutional holdings data
     """
-    # 如果输入的是公司名，先搜索CIK
+    # If input is a company name, search for CIK first
     if not company_name_or_cik.isdigit():
         search_url = f"https://www.sec.gov/cgi-bin/browse-edgar?company={company_name_or_cik}&type=13F&count=1"
         headers = {"User-Agent": "Your Name your@email.com"}
         response = requests.get(search_url, headers=headers)
         soup = BeautifulSoup(response.text, 'html.parser')
-        # 找到CIK...
+        # Find CIK...
         cik = soup.find('a', {'id': 'documentsButton'})['href'].split('CIK=')[1].split('&')[0]
     else:
         cik = company_name_or_cik
 
-    # 获取最新的13F filing
+    # Get latest 13F filing
     filings_url = f"https://data.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=13F&count=1"
     headers = {"User-Agent": "Your Name your@email.com", "Accept-Encoding": "gzip, deflate"}
     response = requests.get(filings_url, headers=headers)
@@ -298,13 +299,13 @@ def get_13f_holdings(company_name_or_cik):
 
 ---
 
-## 四、完整数据分析工具
+## 4. Complete Investment Analysis Tool
 
 ```python
 #!/usr/bin/env python3
 """
-完整投资分析数据工具
-支持：行情、财务、技术指标、分析师评级、13F持仓、期权
+Complete Investment Analysis Data Tool
+Supports: Quotes, Financials, Technical Indicators, Analyst Ratings, 13F Holdings, Options
 """
 
 import yfinance as yf
@@ -318,16 +319,16 @@ import json
 class InvestmentAnalysisTool:
     def __init__(self, ticker: str, market="US"):
         """
-        初始化
+        Initialize
         market: US, HK, CN, JP, EU
         """
         self.ticker = ticker
         self.market = market
         self.t = yf.Ticker(ticker)
 
-    # ========== 行情数据 ==========
+    # ========== Quote Data ==========
     def get_realtime_quote(self):
-        """实时行情"""
+        """Real-time quote"""
         info = self.t.info
         hist = self.t.history(period="1d")
         hist_1y = self.t.history(period="1y")
@@ -354,9 +355,9 @@ class InvestmentAnalysisTool:
             "200d_ma": hist_1y['Close'].tail(200).mean() if len(hist_1y) >= 200 else None,
         }
 
-    # ========== 财务数据 ==========
+    # ========== Financial Data ==========
     def get_financials(self):
-        """完整财务报表"""
+        """Complete financial statements"""
         return {
             "income_statement": self._safe_get_data(self.t.financials),
             "balance_sheet": self._safe_get_data(self.t.balance_sheet),
@@ -365,14 +366,14 @@ class InvestmentAnalysisTool:
         }
 
     def _safe_get_data(self, df):
-        """安全获取DataFrame"""
+        """Safely get DataFrame"""
         if df is None or df.empty:
             return None
         return df.to_dict()
 
-    # ========== 技术指标 ==========
+    # ========== Technical Indicators ==========
     def get_technical_analysis(self):
-        """技术指标计算"""
+        """Calculate technical indicators"""
         hist_3m = self.t.history(period="3mo")
         hist_1y = self.t.history(period="1y")
         hist_2y = self.t.history(period="2y")
@@ -431,9 +432,9 @@ class InvestmentAnalysisTool:
         true_range = ranges.max(axis=1)
         return float(true_range.rolling(window=period).mean().iloc[-1])
 
-    # ========== 分析师评级 ==========
+    # ========== Analyst Ratings ==========
     def get_analyst_consensus(self):
-        """分析师共识评级"""
+        """Analyst consensus ratings"""
         info = self.t.info
         recommendations = self.t.recommendations
 
@@ -451,15 +452,15 @@ class InvestmentAnalysisTool:
             "earnings_history": self.t.earnings_history.to_dict() if hasattr(self.t, 'earnings_history') and self.t.earnings_history is not None else None,
         }
 
-    # ========== 期权数据 ==========
+    # ========== Options Data ==========
     def get_options_data(self):
-        """期权链数据"""
+        """Option chain data"""
         try:
             dates = self.t.options
             if not dates:
                 return None
 
-            # 获取最近的到期日
+            # Get the nearest expiration date
             nearest_date = dates[0]
             chain = self.t.option_chain(nearest_date)
 
@@ -484,9 +485,9 @@ class InvestmentAnalysisTool:
         except Exception as e:
             return {"error": str(e)}
 
-    # ========== 整合输出 ==========
+    # ========== Consolidated Output ==========
     def generate_analysis_data(self):
-        """生成完整的分析数据"""
+        """Generate complete analysis data"""
         return {
             "ticker": self.ticker,
             "generated_at": datetime.now().isoformat(),
@@ -498,19 +499,19 @@ class InvestmentAnalysisTool:
         }
 
 
-# ========== 使用示例 ==========
+# ========== Usage Examples ==========
 if __name__ == "__main__":
-    # 港股腾讯
+    # Hong Kong - Tencent
     tool_hk = InvestmentAnalysisTool("00700.HK")
     data_hk = tool_hk.generate_analysis_data()
     print(json.dumps(data_hk, indent=2, ensure_ascii=False, default=str))
 
-    # 美股苹果
+    # US - Apple
     tool_us = InvestmentAnalysisTool("AAPL")
     data_us = tool_us.generate_analysis_data()
     print(json.dumps(data_us, indent=2, ensure_ascii=False, default=str))
 
-    # A股宁德时代
+    # China A-shares - CATL
     tool_cn = InvestmentAnalysisTool("300750.SZ")
     data_cn = tool_cn.generate_analysis_data()
     print(json.dumps(data_cn, indent=2, ensure_ascii=False, default=str))
@@ -518,29 +519,29 @@ if __name__ == "__main__":
 
 ---
 
-## 五、快速安装
+## 5. Quick Installation
 
 ```bash
-# 安装依赖
+# Install dependencies
 pip install yfinance pandas numpy requests beautifulsoup4 lxml
 
-# 运行
+# Run
 python investment_analysis_tool.py
 ```
 
 ---
 
-## 六、数据源对比
+## 6. Data Source Comparison
 
-| 数据源 | 行情 | 财报 | 技术指标 | 期权 | 13F | 费用 |
-|--------|------|------|----------|-------|------|------|
-| Yahoo Finance (yfinance) | ✅ | ✅ | ✅ | ✅ | ❌ | 免费 |
-| Alpha Vantage | ✅ | ✅ | ✅ | ❌ | ❌ | 免费tier |
-| SEC EDGAR | ❌ | ✅ | ❌ | ❌ | ✅ | 免费 |
-| Finnhub | ✅ | ✅ | ✅ | ✅ | ❌ | 免费tier |
-| Bloomberg | ✅ | ✅ | ✅ | ✅ | ✅ | 付费 |
-| Wind | ✅ | ✅ | ✅ | ✅ | ✅ | 付费 |
+| Data Source | Quotes | Financials | Technical Indicators | Options | 13F | Cost |
+|------------|--------|-----------|---------------------|---------|-----|------|
+| Yahoo Finance (yfinance) | Yes | Yes | Yes | Yes | No | Free |
+| Alpha Vantage | Yes | Yes | Yes | No | No | Free tier |
+| SEC EDGAR | No | Yes | No | No | Yes | Free |
+| Finnhub | Yes | Yes | Yes | Yes | No | Free tier |
+| Bloomberg | Yes | Yes | Yes | Yes | Yes | Paid |
+| Wind | Yes | Yes | Yes | Yes | Yes | Paid |
 
 ---
 
-*本文档为投资分析Skill的数据补充方案，可选择性集成。*
+*This document provides supplemental data integration options for investment analysis Skills. Integration is optional.*
