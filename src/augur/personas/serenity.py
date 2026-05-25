@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-SerenityAgent - Serenity (@aleabitoreddit) AI/半导体供应链瓶颈交易
+SerenityAgent - Serenity (@aleabitoreddit) 供应链卡脖子逆向工程交易
+
+基于真实X/Twitter数据:
+- 352K+ followers, 30K+ paid subscribers
+- 核心方法论: Bottom-Up Supply Chain Reverse Engineering (Chokepoint Theory)
+- 核心标的: $AXTI, $RPI, $SIVE, Soitec, $VLN, $NBIS, $AAOI, $EWY
+- 期权策略: IV Expansion
+- 地缘叠加: 半导体供应链物理与地缘政治地图
 """
 
 from typing import Dict
@@ -8,121 +15,171 @@ from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalT
 
 
 class SerenityAgent(BaseAgent):
-    """Serenity (@aleabitoreddit) - AI/半导体供应链瓶颈交易"""
+    """Serenity (@aleabitoreddit) - 供应链卡脖子逆向工程交易"""
 
     def __init__(self):
         super().__init__(
             agent_id="serenity",
             name="Serenity (@aleabitoreddit)",
-            identity="""Reddit WSB著名交易者，AI/Semi Supply Chain Analyst。前RISC-V基金会成员，前AI研究科学家。
-核心论点是AI算力爆发期，瓶颈在HBM、CoWoS封装、电力基建，交易这些瓶颈公司获取alpha。
-供应链情报+技术分析+期权结构，在半导体/AI板块找unknown bottlenecks。""",
-            philosophy=["供应链瓶颈交易", "Unknown Bottlenecks", "高杠杆高conviction", "快速决策严格止损", "Channel Checks优先"],
+            identity="""Reddit WSB传奇交易者(AleaBito)转X平台，352K+粉丝，30K+付费订阅者。
+前RISC-V基金会成员，前AI研究科学家，Nature论文作者。
+核心方法论: 自下而上供应链逆向工程(Chokepoint Theory)。
+从GPU集群出发层层解构，找到物理不可替代、华尔街无覆盖的微型股卡脖子垄断者。
+核心覆盖: 硅光子CPO($SIVE/Soitec/FOCI)、光互联($AAOI/$AXTI)、NeoCloud($NBIS/$CIFR/$IREN)。
+利用IV expansion在催化剂前布局期权获取超额收益。""",
+            philosophy=[
+                "供应链卡脖子逆向工程(Chokepoint Theory)",
+                "Own Compute - 拥有算力是逃离底层唯一机会",
+                "自下而上(Bottom-Up)而非自上而下(Top-Down)",
+                "IV Expansion期权策略",
+                "华尔街制度性盲区套利",
+                "对抗性AI论证(Red Team)",
+            ],
             scoring_weights={
-                "supply_chain_edge": 0.30,     # 供应链瓶颈识别
-                "momentum_leverage": 0.25,     # 动量+杠杆信号
-                "ai_compute_thesis": 0.20,     # AI算力需求论证
-                "valuation_growth": 0.15,      # 成长估值
-                "risk_management": 0.10,       # 风控
+                "supply_chain_bottleneck": 0.30,  # 卡脖子识别
+                "options_iv_momentum": 0.25,      # IV expansion + 动量
+                "ai_compute_demand": 0.20,        # AI算力需求/NeoCloud
+                "geopolitical_catalyst": 0.15,    # 地缘催化剂
+                "risk_sizing": 0.10,              # 风险仓位管理
             },
             thresholds={
                 "bullish_threshold": 7.0,
                 "bearish_threshold": 4.0,
             },
             biases={
-                "semiconductor_focus": True,
-                "supply_chain_intel": True,
-                "options_leverage": True,
-                "wsb_momentum": True,
+                "bottom_up_reverse_engineering": True,
+                "small_cap_chokepoint": True,
+                "iv_expansion_options": True,
+                "geopolitical_overlay": True,
+                "anti_consensus": True,
             }
         )
 
     def get_system_prompt(self) -> str:
-        return """你是Serenity (@aleabitoreddit)，Reddit WSB著名交易者，现X/Twitter AI/Semi供应链分析师。
+        return """你是Serenity (@aleabitoreddit)，Reddit WSB传奇交易者，现X平台最大付费订阅金融账号(352K粉丝/30K付费)。
 
-核心观点：
-1. AI算力需求指数增长，但供应链各环节产能扩张速度不一
-2. 瓶颈在哪里，alpha就在哪里 - "The bottleneck is the alpha"
-3. HBM内存、CoWoS先进封装、光刻设备是当前最紧张的瓶颈
-4. 供应链channel checks比财报更早反映真实供需
-5. 高conviction时用期权杠杆放大收益，但止损严格
-6. 快速决策，不纠结，thesis被证伪立刻出局
+核心方法论 - Chokepoint Theory (卡脖子逆向工程):
+1. 从GPU超算集群出发，自下而上层层解构AI供应链
+2. 找到物理层面不可替代、被极少数企业垄断的超微型组件或原材料
+3. 这些卡脖子点市值极小(<$1B)，华尔街因合规限制无法覆盖
+4. 一旦供应中断，整个下游AI产业集群物理瘫痪
+5. 比喻: "霍尔木兹海峡" / "怀石料理中无人注意的紫苏叶"
 
-名言：
-- "Channel checks don't lie. Earnings calls do."
-- "CoWoS is the new oil. HBM is the new gold."
-- "If you can't tell me the lead time, you don't know the trade."
-- "YOCO - You Only Channel-check Once (before you bet big)."
+核心投资主线:
+- 硅光子/CPO: 光进铜退不可逆 -> DFB激光器(Sivers) -> SOI衬底(Soitec) -> MBE设备(Riber)
+- NeoCloud: AI Capex溢出到GPU专用云($NBIS/$CIFR/$IREN)，季度营收可能10倍爆发
+- 光互联底层: InP基板($AXTI)、光模块($AAOI)
+- 人形机器人: 稀土/减速器/执行器的中国垄断风险
 
-你的分析框架：
-- 第一步判断公司在AI供应链哪个环节
-- 是否处于瓶颈位置(需求增速>产能增速)
-- 技术面确认(RSI/MACD/Volume)
-- 估值是否已充分反映瓶颈溢价
+期权策略:
+- "Your portfolio would have doubled in a week off IV expansion"
+- 低IV时布局，催化剂驱动IV暴涨，期权翻倍即使标的涨幅有限
+- 交易周期8个月到1年，约1.4x杠杆
+
+地缘叠加:
+- "Iran War is about to end. Markets probably even better for Europe/Taiwan/Korean"
+- 全球半导体卡脖子物理与地缘政治地图(跨美/台/欧/日)
+- CHIPS法案拨款、出口管制变化是核心催化剂
+
+风格:
+- "The only chance to escape the permanent underclass is in the next 5 years. By owning compute."
+- "This is how you get hundreds of % in return, not value investing in Paypal."
+- WSB meme文化 + 物理学级供应链分析的极端反差
+- 发布前用AI做Red Team论证
+
+你的分析框架:
+- 第一步: 这家公司是不是供应链中物理不可替代的卡脖子点?
+- 第二步: 华尔街是否因制度性限制(市值/地域)而无法覆盖?
+- 第三步: IV是否处于低位? 催化剂时间线?
+- 第四步: 地缘/政策催化剂方向?
+- 第五步: 用AI做对手盘验证，检验替代方案威胁
 """
 
     def analyze(self, context: MarketContext) -> AgentResponse:
-        """Serenity AI/半导体供应链瓶颈分析"""
+        """Serenity 供应链卡脖子逆向工程分析"""
         factors = {}
 
         sector = context.sector.lower() if context.sector else ""
         industry = context.industry.lower() if context.industry else ""
 
-        # 1. supply_chain_edge (0-10): 供应链瓶颈识别
-        sce_score = 5  # 基础分
-        # 半导体/技术行业天然优势
-        semi_keywords = ["semiconductor", "chip", "gpu", "memory", "foundry",
-                         "equipment", "eda", "packaging", "hbm"]
-        tech_keywords = ["data center", "networking", "infrastructure", "hardware"]
+        # 1. supply_chain_bottleneck (0-10): 卡脖子识别
+        # 核心: 物理不可替代 + 市值小 + 华尔街无覆盖
+        scb_score = 5  # 基础分
+
+        # 半导体/光子学/材料行业天然优势
+        chokepoint_keywords = ["semiconductor", "photonics", "optical", "laser",
+                               "substrate", "epitax", "wafer", "crystal",
+                               "rare earth", "magnet", "chemical"]
+        infra_keywords = ["data center", "cloud", "networking", "interconnect",
+                          "fiber", "optic"]
+        semi_keywords = ["chip", "gpu", "memory", "foundry", "equipment",
+                         "packaging", "hbm"]
+
+        choke_matches = sum(1 for kw in chokepoint_keywords if kw in sector or kw in industry)
+        infra_matches = sum(1 for kw in infra_keywords if kw in sector or kw in industry)
         semi_matches = sum(1 for kw in semi_keywords if kw in sector or kw in industry)
-        tech_matches = sum(1 for kw in tech_keywords if kw in sector or kw in industry)
-        sce_score += min(semi_matches * 2, 4)
-        sce_score += min(tech_matches * 1, 2)
 
-        # 高毛利率表明定价权/瓶颈位置
-        if context.gross_margins > 0.60:
-            sce_score += 2
+        scb_score += min(choke_matches * 2, 4)
+        scb_score += min(infra_matches * 1.5, 3)
+        scb_score += min(semi_matches * 1, 2)
+
+        # 高毛利率 = 定价权/垄断位置 (Serenity loves 63%+ gross margins like VLN/NVDA)
+        if context.gross_margins > 0.63:
+            scb_score += 2  # NVDA/VLN级毛利 = 卡脖子确认
         elif context.gross_margins > 0.50:
-            sce_score += 1
+            scb_score += 1
 
-        # 非半导体/科技行业扣分
-        if "semiconductor" not in sector and "tech" not in sector and "hardware" not in sector:
-            sce_score -= 3
+        # 小市值加分 (Serenity偏好<$1B的隐形垄断者)
+        if hasattr(context, 'market_cap') and context.market_cap:
+            if context.market_cap < 1e9:
+                scb_score += 2  # 微型股 = 研究真空
+            elif context.market_cap < 5e9:
+                scb_score += 1
 
-        factors["supply_chain_edge"] = min(max(sce_score, 0), 10)
+        # 非相关行业扣分
+        if not any(kw in sector or kw in industry for kw in
+                   chokepoint_keywords + infra_keywords + semi_keywords +
+                   ["tech", "hardware", "robot", "energy", "defense"]):
+            scb_score -= 4
 
-        # 2. momentum_leverage (0-10): 动量+杠杆信号
-        mom_score = 5  # 基础分
-        # RSI 50-75 = 健康上升趋势
+        factors["supply_chain_bottleneck"] = min(max(scb_score, 0), 10)
+
+        # 2. options_iv_momentum (0-10): IV Expansion + 动量信号
+        iv_score = 5  # 基础分
+
+        # RSI: Serenity偏好有动量但未过热
         rsi = context.rsi_14
-        if 50 <= rsi <= 75:
-            mom_score += 2  # 完美动量区间
+        if 50 <= rsi <= 70:
+            iv_score += 2  # 健康上升动量
         elif 40 <= rsi < 50:
-            mom_score += 1  # 即将上穿
-        elif rsi > 75:
-            mom_score -= 1  # 超买风险
-        elif rsi < 30:
-            mom_score -= 2  # 超卖，不追跌
+            iv_score += 1  # 即将启动
+        elif rsi > 80:
+            iv_score -= 2  # 散户已蜂拥 = IV高位 = crush风险
+        elif rsi > 70:
+            iv_score -= 1  # IV可能已高
 
-        # MACD > Signal = 动量向上
+        # MACD动量确认
         if context.macd > context.macd_signal:
-            mom_score += 2
+            iv_score += 2
         else:
-            mom_score -= 1
+            iv_score -= 1
 
-        # 价格接近52周高点 = 突破模式
+        # 价格接近52周高点 = 突破模式(Serenity likes momentum)
         if context.price_to_52w_high > 0.90:
-            mom_score += 1
-        elif context.price_to_52w_high < 0.70:
-            mom_score -= 1
+            iv_score += 1
+        elif context.price_to_52w_high < 0.60:
+            iv_score -= 1  # 深度回调，可能是底部机会但IV不确定
 
-        factors["momentum_leverage"] = min(max(mom_score, 0), 10)
+        factors["options_iv_momentum"] = min(max(iv_score, 0), 10)
 
-        # 3. ai_compute_thesis (0-10): AI算力需求论证
+        # 3. ai_compute_demand (0-10): AI算力需求 / NeoCloud溢出
         ai_score = 5  # 基础分
-        # 高收入增速 = AI需求驱动
-        if context.revenue_growth > 0.50:
-            ai_score += 3  # 爆炸性增长 = AI算力直接受益
+
+        # 高收入增速 = AI需求验证 (RPI 58%, NeoCloud 7-14x)
+        if context.revenue_growth > 1.0:
+            ai_score += 4  # NeoCloud级爆发(>100%)
+        elif context.revenue_growth > 0.50:
+            ai_score += 3  # RPI级增速(55-58%)
         elif context.revenue_growth > 0.30:
             ai_score += 2
         elif context.revenue_growth > 0.15:
@@ -130,140 +187,139 @@ class SerenityAgent(BaseAgent):
         elif context.revenue_growth < 0:
             ai_score -= 2
 
-        # 半导体行业天然AI相关
-        if "semiconductor" in sector:
+        # 行业相关性
+        ai_related = ["semiconductor", "data center", "cloud", "gpu", "optical",
+                      "networking", "photonics", "ai", "compute"]
+        if any(kw in sector or kw in industry for kw in ai_related):
             ai_score += 2
-        elif "tech" in sector or "software" in sector:
+        elif "tech" in sector or "hardware" in sector:
             ai_score += 1
 
-        # 高资本支出 = AI基建投入
-        if context.debt_ratio > 30 and ("semiconductor" in sector or "tech" in sector):
-            ai_score += 1  # 主动负债扩产
+        factors["ai_compute_demand"] = min(max(ai_score, 0), 10)
 
-        factors["ai_compute_thesis"] = min(max(ai_score, 0), 10)
+        # 4. geopolitical_catalyst (0-10): 地缘催化剂
+        geo_score = 5  # 基础分
 
-        # 4. valuation_growth (0-10): 成长估值
-        val_score = 5  # 基础分
-        # PS < 20 且高增速 = 可接受估值
-        if context.ps < 10 and context.revenue_growth > 0.20:
-            val_score += 3  # 低估值+高增速 = 完美
-        elif context.ps < 15 and context.revenue_growth > 0.20:
-            val_score += 2
-        elif context.ps < 20 and context.revenue_growth > 0.15:
-            val_score += 1
-        elif context.ps > 25:
-            val_score -= 2  # 估值过高
-        elif context.ps > 20:
-            val_score -= 1
+        # 半导体/国防/稀土受地缘催化
+        geo_sensitive = ["semiconductor", "defense", "rare earth", "nuclear",
+                         "aerospace", "chip", "optical", "laser"]
+        geo_matches = sum(1 for kw in geo_sensitive if kw in sector or kw in industry)
+        geo_score += min(geo_matches * 1.5, 3)
 
-        # PE合理性
-        if context.pe < 30 and context.revenue_growth > 0.20:
-            val_score += 1  # 低PE+高增速
-        elif context.pe > 60:
-            val_score -= 1  # PE过高
+        # 非美国市场标的(欧/台/韩/日)有地缘折价消除空间
+        # 目前通过行业关键词间接判断
+        intl_keywords = ["european", "taiwan", "korea", "japan", "sweden", "france"]
+        if any(kw in industry.lower() for kw in intl_keywords):
+            geo_score += 2  # 国际卡脖子标的，地缘折价消除潜力
 
-        # 高收入增速本身加分
-        if context.revenue_growth > 0.30:
-            val_score += 1
+        # 高增速 + 半导体 = CHIPS法案受益潜力
+        if context.revenue_growth > 0.30 and "semiconductor" in sector:
+            geo_score += 1
 
-        factors["valuation_growth"] = min(max(val_score, 0), 10)
+        factors["geopolitical_catalyst"] = min(max(geo_score, 0), 10)
 
-        # 5. risk_management (0-10): 风控
+        # 5. risk_sizing (0-10): 风险仓位管理
         risk_score = 5  # 基础分
-        # 波动率适中
-        rsi = context.rsi_14
-        if 30 <= rsi <= 70:
-            risk_score += 1  # 波动率可控
 
-        # 回撤风险
+        # 现金充裕/低负债 = 安全 (VLN: $93.5M cash, zero debt)
+        if context.debt_ratio < 20:
+            risk_score += 3  # VLN级: 零负债 + 巨额现金
+        elif context.debt_ratio < 40:
+            risk_score += 2
+        elif context.debt_ratio < 60:
+            risk_score += 1
+        elif context.debt_ratio > 80:
+            risk_score -= 2
+
+        # 回撤风险 (Serenity能承受15-25%单日回撤)
         if context.max_drawdown:
             max_dd = abs(context.max_drawdown)
-            if max_dd < 0.20:
-                risk_score += 2  # 低回撤
-            elif max_dd < 0.30:
+            if max_dd < 0.25:
+                risk_score += 2
+            elif max_dd < 0.40:
                 risk_score += 1
-            elif max_dd > 0.50:
-                risk_score -= 2  # 高回撤风险
+            elif max_dd > 0.60:
+                risk_score -= 2
 
-        # 负债率
-        if context.debt_ratio < 30:
-            risk_score += 2  # 低负债 = 财务健康
-        elif context.debt_ratio < 50:
-            risk_score += 1
-        elif context.debt_ratio > 70:
-            risk_score -= 2  # 高负债风险
+        # RSI极端值 = 流动性踩踏风险
+        if context.rsi_14 > 85:
+            risk_score -= 2  # 散户蜂拥，踩踏风险极高
+        elif context.rsi_14 < 20:
+            risk_score -= 1  # 恐慌抛售中
 
-        factors["risk_management"] = min(max(risk_score, 0), 10)
+        factors["risk_sizing"] = min(max(risk_score, 0), 10)
 
         # 计算总分
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)
         avg_score = sum(factors.values()) / len(factors)
         signal = self._calculate_signal(avg_score)
-        confidence = min(0.85, 0.4 + factors["supply_chain_edge"] / 15 + factors["momentum_leverage"] / 15)
+        confidence = min(0.85, 0.4 + factors["supply_chain_bottleneck"] / 15 + factors["options_iv_momentum"] / 15)
 
         key_findings = []
         risks = []
 
         # 生成发现
-        if factors["supply_chain_edge"] >= 7:
-            key_findings.append(f"🔗 供应链瓶颈位置明确，定价权强（评分:{factors['supply_chain_edge']}/10）")
-        if factors["momentum_leverage"] >= 7:
-            key_findings.append(f"📈 动量信号强烈，RSI/MACD配合良好（评分:{factors['momentum_leverage']}/10）")
-        if factors["ai_compute_thesis"] >= 7:
-            key_findings.append(f"⚡ AI算力需求直接受益，增速验证thesis（评分:{factors['ai_compute_thesis']}/10）")
-        if factors["valuation_growth"] >= 7:
-            key_findings.append(f"💎 估值合理+高增速，PEG attractive（评分:{factors['valuation_growth']}/10）")
-        if factors["risk_management"] >= 7:
-            key_findings.append(f"🛡️ 风控指标健康，回撤可控（评分:{factors['risk_management']}/10）")
+        if factors["supply_chain_bottleneck"] >= 7:
+            key_findings.append(f"🔗 卡脖子位置确认: 物理不可替代的供应链垄断者（评分:{factors['supply_chain_bottleneck']}/10）")
+        if factors["options_iv_momentum"] >= 7:
+            key_findings.append(f"📈 IV Expansion机会: 动量向上+催化剂窗口（评分:{factors['options_iv_momentum']}/10）")
+        if factors["ai_compute_demand"] >= 7:
+            key_findings.append(f"⚡ AI算力直接受益: NeoCloud级增速验证（评分:{factors['ai_compute_demand']}/10）")
+        if factors["geopolitical_catalyst"] >= 7:
+            key_findings.append(f"🌍 地缘催化剂: CHIPS法案/出口管制/风险折价消除（评分:{factors['geopolitical_catalyst']}/10）")
+        if factors["risk_sizing"] >= 7:
+            key_findings.append(f"🛡️ 财务健康: 低负债高现金，流动性风险可控（评分:{factors['risk_sizing']}/10）")
 
         # 风险
-        if factors["supply_chain_edge"] < 4:
-            risks.append("不在AI供应链核心位置，缺乏瓶颈逻辑")
-        if factors["momentum_leverage"] < 4:
-            risks.append("动量走弱，RSI/MACD不支持，不适合杠杆入场")
-        if "semiconductor" not in sector and "tech" not in sector:
-            risks.append("非半导体/科技行业，供应链瓶颈框架适用性低")
-        if context.ps > 25:
-            risks.append(f"PS={context.ps:.1f}过高，瓶颈溢价可能已被充分定价")
+        if factors["supply_chain_bottleneck"] < 4:
+            risks.append("非供应链卡脖子位置，缺乏物理不可替代性逻辑")
+        if factors["options_iv_momentum"] < 4:
+            risks.append("动量走弱或IV过高，IV crush风险大")
+        if factors["risk_sizing"] < 4:
+            risks.append("高负债或高回撤，流动性踩踏风险")
+        if not any(kw in sector or kw in industry for kw in
+                   ["semiconductor", "tech", "hardware", "optical", "data center", "cloud", "defense"]):
+            risks.append("非AI供应链相关行业，Chokepoint Theory框架适用性低")
         if context.rsi_14 > 80:
-            risks.append(f"RSI={context.rsi_14:.0f}严重超买，短期回调风险大")
+            risks.append(f"RSI={context.rsi_14:.0f}严重超买，散户已蜂拥，踩踏风险极高")
+        if context.ps > 25:
+            risks.append(f"PS={context.ps:.1f}过高，卡脖子溢价可能已被充分定价")
 
         # 模型适用性
-        if factors["supply_chain_edge"] >= 7 and factors["ai_compute_thesis"] >= 5:
+        if factors["supply_chain_bottleneck"] >= 7 and factors["ai_compute_demand"] >= 5:
             coverage_confidence = 1.0
-        elif factors["supply_chain_edge"] >= 5 or factors["ai_compute_thesis"] >= 6:
+        elif factors["supply_chain_bottleneck"] >= 5 or factors["ai_compute_demand"] >= 6:
             coverage_confidence = 0.7
         else:
             coverage_confidence = 0.25
 
-        reasoning = f"""## {self.name} Analysis for {context.ticker}
+        reasoning = f"""## {self.name} Chokepoint Analysis for {context.ticker}
 
-**供应链瓶颈识别: {factors['supply_chain_edge']}/10** (权重{self.scoring_weights['supply_chain_edge']:.0%})
+**卡脖子识别: {factors['supply_chain_bottleneck']}/10** (权重{self.scoring_weights['supply_chain_bottleneck']:.0%})
 - 行业: {context.sector} / {context.industry}
-- 毛利率: {context.gross_margins*100:.1f}% {'(定价权强)' if context.gross_margins > 0.60 else ''}
-- 瓶颈判断: {'核心瓶颈位置' if factors['supply_chain_edge'] >= 7 else '非核心瓶颈' if factors['supply_chain_edge'] < 4 else '潜在瓶颈'}
+- 毛利率: {context.gross_margins*100:.1f}% {'(垄断级定价权)' if context.gross_margins > 0.63 else '(强定价权)' if context.gross_margins > 0.50 else ''}
+- 卡脖子判断: {'物理不可替代的供应链垄断者' if factors['supply_chain_bottleneck'] >= 7 else '非卡脖子位置' if factors['supply_chain_bottleneck'] < 4 else '潜在瓶颈，需验证替代方案'}
 
-**动量杠杆信号: {factors['momentum_leverage']}/10** (权重{self.scoring_weights['momentum_leverage']:.0%})
-- RSI(14): {context.rsi_14:.1f} {'(健康上升)' if 50 <= context.rsi_14 <= 75 else '(超买警告)' if context.rsi_14 > 75 else ''}
+**IV Expansion + 动量: {factors['options_iv_momentum']}/10** (权重{self.scoring_weights['options_iv_momentum']:.0%})
+- RSI(14): {context.rsi_14:.1f} {'(健康动量)' if 50 <= context.rsi_14 <= 70 else '(超买=IV crush风险)' if context.rsi_14 > 80 else ''}
 - MACD vs Signal: {'动量向上' if context.macd > context.macd_signal else '动量向下'}
 - 52周高点距离: {context.price_to_52w_high*100:.1f}%
 
-**AI算力需求: {factors['ai_compute_thesis']}/10** (权重{self.scoring_weights['ai_compute_thesis']:.0%})
-- 收入增速: {context.revenue_growth*100:.1f}%
+**AI算力需求/NeoCloud: {factors['ai_compute_demand']}/10** (权重{self.scoring_weights['ai_compute_demand']:.0%})
+- 收入增速: {context.revenue_growth*100:.1f}% {'(NeoCloud级爆发)' if context.revenue_growth > 1.0 else '(RPI级增速)' if context.revenue_growth > 0.50 else ''}
 - 行业: {context.sector}
-- AI受益判断: {'直接受益' if factors['ai_compute_thesis'] >= 7 else '间接受益' if factors['ai_compute_thesis'] >= 5 else '关联度低'}
+- AI受益判断: {'GPU算力溢出直接受益' if factors['ai_compute_demand'] >= 7 else '间接受益' if factors['ai_compute_demand'] >= 5 else '关联度低'}
 
-**成长估值: {factors['valuation_growth']}/10** (权重{self.scoring_weights['valuation_growth']:.0%})
-- PS: {context.ps:.1f} {'(合理)' if context.ps < 15 else '(偏高)' if context.ps > 20 else ''}
-- PE: {context.pe:.1f}
-- 收入增速: {context.revenue_growth*100:.1f}%
+**地缘催化剂: {factors['geopolitical_catalyst']}/10** (权重{self.scoring_weights['geopolitical_catalyst']:.0%})
+- 地缘敏感度: {'高(半导体/国防/稀土)' if factors['geopolitical_catalyst'] >= 7 else '中' if factors['geopolitical_catalyst'] >= 5 else '低'}
+- CHIPS法案/出口管制受益: {'是' if context.revenue_growth > 0.30 and 'semiconductor' in sector else '待观察'}
 
-**风险管理: {factors['risk_management']}/10** (权重{self.scoring_weights['risk_management']:.0%})
-- 负债率: {context.debt_ratio:.1f}%
-- RSI区间: {'可控' if 30 <= context.rsi_14 <= 70 else '需注意'}
+**风险管理: {factors['risk_sizing']}/10** (权重{self.scoring_weights['risk_sizing']:.0%})
+- 负债率: {context.debt_ratio:.1f}% {'(VLN级: 近零负债)' if context.debt_ratio < 20 else ''}
+- 回撤承受: {'可控' if factors['risk_sizing'] >= 6 else '需警惕流动性踩踏'}
 
 **综合评分: {total_score:.1f}/10**
-**供应链瓶颈交易结论: {'🚀 Full send - 供应链瓶颈+动量确认，高conviction入场' if avg_score >= self.thresholds.get('bullish_threshold', 7.0) else '⚠️ No edge - 无明确瓶颈逻辑或动量不支持' if avg_score <= self.thresholds.get('bearish_threshold', 4.0) else '⏳ Watching - 等待供应链数据确认或技术面突破'}**
+**Chokepoint Verdict: {'🚀 Full send - 物理不可替代的卡脖子+IV expansion窗口+地缘催化' if avg_score >= self.thresholds.get('bullish_threshold', 7.0) else '⚠️ No edge - 非卡脖子位置或已被市场充分定价' if avg_score <= self.thresholds.get('bearish_threshold', 4.0) else '⏳ Watching - 需验证物理替代方案威胁或等待催化剂窗口'}**
 """
 
         return AgentResponse(
