@@ -1,3 +1,5 @@
+[English](hermes-setup-guide-en.md) | 中文
+
 # Hermes Agent 接入 Augur - 完整指引
 
 ## 前置条件
