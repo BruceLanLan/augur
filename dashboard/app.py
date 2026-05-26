@@ -84,6 +84,8 @@ def _persona_meta() -> List[Dict]:
     default_model = config.get("defaults", {}).get("model", "")
     meta = []
     for agent in registry.get_all():
+        # Chinese mainland investors only; Serenity is excluded because
+        # the persona is international (anonymous, multi-market, non-China-based).
         chinese_investors = {"duan_yongping", "zhang_lei", "li_lu", "dan_bin", "dayu"}
         country = "🇨🇳 中国" if agent.agent_id in chinese_investors else ""
         meta.append({

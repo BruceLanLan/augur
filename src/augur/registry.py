@@ -146,7 +146,7 @@ class DecisionCoordinator:
                 reasoning="No results"
             )
 
-        # Industry-aware weights
+        # --- Industry-aware weights ---
         weights = {}
         regime = None
         if ticker:
@@ -162,7 +162,7 @@ class DecisionCoordinator:
             except Exception:
                 pass
 
-        # Regime-aware weight adjustment
+        # --- Regime-aware weight adjustment ---
         regime_features = {}
         try:
             from scanner.regime_weights import detect_regime, apply_regime_weights
@@ -190,7 +190,7 @@ class DecisionCoordinator:
         except Exception:
             regime = None
 
-        # Load correlation matrix (diversity penalty)
+        # --- Correlation diversity penalty ---
         corr_matrix = {}
         try:
             corr_file = Path(__file__).parent.parent / "feedback" / "agent_correlation.json"
@@ -200,7 +200,7 @@ class DecisionCoordinator:
         except Exception:
             pass
 
-        # Signal counting (weighted + diversity adjusted)
+        # --- Signal counting and scoring ---
         signal_counts = {SignalType.BULLISH: 0.0, SignalType.NEUTRAL: 0.0, SignalType.BEARISH: 0.0}
         total_score = 0.0
         total_weight = 0.0
@@ -278,7 +278,7 @@ class DecisionCoordinator:
             regime_label = regime_labels.get(regime, regime)
             regime_note = f" | Regime: {regime_label}"
 
-        # Probability calibration
+        # --- Probability calibration ---
         calibrated_confidence = min(0.95, total_confidence)
         try:
             from scanner.probability_calibrator import calibrate_confidence
@@ -286,7 +286,7 @@ class DecisionCoordinator:
         except Exception:
             pass
 
-        # Meta-model score blending
+        # --- Meta-model blending ---
         try:
             from scanner.meta_model import MetaModel
             mm = MetaModel.load()
@@ -308,7 +308,7 @@ class DecisionCoordinator:
             risks=all_risks[:3],
         )
 
-        # Risk Manager veto layer
+        # --- Risk Manager veto ---
         try:
             from scanner.risk_manager import RiskManager
             ctx_for_risk = context
@@ -332,7 +332,7 @@ class DecisionCoordinator:
         except Exception:
             pass
 
-        # Kelly position sizing
+        # --- Kelly position sizing ---
         try:
             from scanner.kelly_sizer import compute_position_size
             max_dd_pct = 0.0
@@ -366,7 +366,7 @@ class DecisionCoordinator:
         except Exception:
             pass
 
-        # Adversarial check: all-bullish overheating warning
+        # --- Adversarial overheating check ---
         valid_results = {k: v for k, v in results.items() if v.signal != SignalType.ERROR}
         if valid_results and sum(1 for r in valid_results.values() if r.signal == SignalType.BULLISH) == len(valid_results):
             result.risks.append("All agents bullish - historically this consensus often means overvaluation")
