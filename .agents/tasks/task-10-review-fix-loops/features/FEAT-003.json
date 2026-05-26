@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Loops 7-9: Code quality polish, test coverage expansion, performance, and documentation accuracy",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "LOOP 7 - Code quality and consistency: (a) Add type hints to all public functions in src/augur/config.py that are missing them. (b) In src/augur/registry.py, the get_consensus method is very long (150+ lines). Add section comments and docstrings to the major sections to improve readability. (c) In src/augur/data.py, the _calculate_technicals_from_prices has a bug: when n < 14 for RSI but still >= 2, it returns 50.0 from _calculate_rsi but the fallback check in the caller doesn't handle this gracefully. Ensure consistency. (d) Remove unused 'threading' import from personas/base.py if RLock is only used in registry.py. (e) In dashboard/app.py, the _persona_meta() function builds country info - add 'serenity' mapping as international.",
     "LOOP 8 - Test coverage expansion: (a) Add test_backtest.py with tests: test_generate_sample_data produces correct structure, test_backtester_run_with_sample_data, test_check_hit_logic for bullish/bearish/neutral cases. (b) Add test_data.py with tests: test_calculate_rsi_basic, test_calculate_macd_basic, test_calculate_technicals_from_prices_short_data. (c) Add test_cron.py with tests: test_load_watchlist_default, test_add_to_watchlist, test_remove_from_watchlist. (d) Add test_soul.py with tests: test_generate_soul_valid_persona, test_generate_soul_invalid_persona, test_soul_injector_class. (e) Ensure all new tests pass and total count reaches 70+.",

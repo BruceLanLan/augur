@@ -4,6 +4,33 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v6.0.1 (2025-05-26)
+
+### Bug Fixes
+- Fix critical signal value mismatch in watchlist analysis (`bullish`/`bearish`/`neutral` vs `buy`/`sell`/`hold`)
+- Fix `src/augur/api.py` version (was "0.1.0", now "6.0.0")
+- Fix `current_ratio` default value inflation (1.5 -> 0)
+- Fix CORS allow_methods to include PUT/DELETE
+- Guard telegram_bot import in cron.py to prevent crash without extras
+- Remove unused threading import from personas/base.py
+
+### Improvements
+- Add ticker format validation (regex, max 15 chars) on analyze/backtest/watchlist endpoints
+- Add accessibility improvements (aria-label, meta description)
+- Add double-submit prevention in stocks analysis UI
+- Add section comments to registry.py get_consensus() for readability
+- Add serenity to test expected agent IDs
+
+### Test Coverage
+- Add test_backtest.py (6 tests)
+- Add test_data.py (6 tests)
+- Add test_cron.py (3 tests)
+- Add test_soul.py (4 tests)
+- Add TestTickerValidation (4 tests)
+- Total tests: 55 -> 78+
+
+---
+
 ## v6.0.0 (2025)
 
 - Bug fixes: TemplateResponse API deprecation, persona count consistency (17->18)
