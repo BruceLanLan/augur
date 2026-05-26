@@ -1,0 +1,7 @@
+{
+  "task_id": "task-10-review-fix-loops",
+  "task_description": "Run 10 iterative Review-Debug-Fix-Optimize loops on the Augur project. Each loop reviews code/templates/tests/docs, finds issues, fixes them, verifies with tests, and commits to main. Progressive depth: Loops 1-3 obvious bugs, Loops 4-6 logic/edge cases/UX, Loops 7-9 polish/tests/docs, Loop 10 final verification + version bump to 6.1.0.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}

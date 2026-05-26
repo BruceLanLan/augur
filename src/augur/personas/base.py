@@ -16,7 +16,6 @@ from typing import Dict, List, Optional, Any, Callable
 from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime
-import threading
 
 
 # ============ 类型定义 ============

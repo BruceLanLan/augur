@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Loops 7-9: Code quality polish, test coverage expansion, performance, and documentation accuracy",
+  "status": "pending",
+  "steps": [
+    "LOOP 7 - Code quality and consistency: (a) Add type hints to all public functions in src/augur/config.py that are missing them. (b) In src/augur/registry.py, the get_consensus method is very long (150+ lines). Add section comments and docstrings to the major sections to improve readability. (c) In src/augur/data.py, the _calculate_technicals_from_prices has a bug: when n < 14 for RSI but still >= 2, it returns 50.0 from _calculate_rsi but the fallback check in the caller doesn't handle this gracefully. Ensure consistency. (d) Remove unused 'threading' import from personas/base.py if RLock is only used in registry.py. (e) In dashboard/app.py, the _persona_meta() function builds country info - add 'serenity' mapping as international.",
+    "LOOP 8 - Test coverage expansion: (a) Add test_backtest.py with tests: test_generate_sample_data produces correct structure, test_backtester_run_with_sample_data, test_check_hit_logic for bullish/bearish/neutral cases. (b) Add test_data.py with tests: test_calculate_rsi_basic, test_calculate_macd_basic, test_calculate_technicals_from_prices_short_data. (c) Add test_cron.py with tests: test_load_watchlist_default, test_add_to_watchlist, test_remove_from_watchlist. (d) Add test_soul.py with tests: test_generate_soul_valid_persona, test_generate_soul_invalid_persona, test_soul_injector_class. (e) Ensure all new tests pass and total count reaches 70+.",
+    "LOOP 9 - Performance and documentation: (a) In src/augur/registry.py _register_default_agents, all 18 agents are imported individually. This is fine but add a comment noting this is intentional for explicit control. (b) In README.md and README_EN.md, verify that the feature list accurately reflects the current state: 18 personas (not 17), version 6.0.0, all 4 bots, MCP server, CLI, backtest system. Fix any inaccuracies. (c) In docs/CHANGELOG.md, add entries for the fixes made in loops 1-8 under a new v6.0.1 section. (d) In pyproject.toml description, verify it says 18 (not 17 or other number). (e) Verify Dockerfile works with current dependencies list.",
+    "After all 3 loops, run full test suite, verify 70+ tests pass. Commit: fix(loop-7-9): code quality, test coverage expansion to 70+, documentation accuracy"
+  ],
+  "acceptance_criteria": [
+    "Type hints added to config.py public functions",
+    "New test files: test_backtest.py, test_data.py, test_cron.py, test_soul.py",
+    "Total test count reaches 70+",
+    "README.md accurately states 18 personas, v6.0.0",
+    "docs/CHANGELOG.md has v6.0.1 entries",
+    "All tests pass",
+    "Changes committed to main"
+  ],
+  "verification": [
+    "pytest tests/ -v - all 70+ tests pass",
+    "grep -c '18' README.md verifies persona count accuracy"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

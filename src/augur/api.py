@@ -25,13 +25,13 @@ from augur.personas.base import MarketContext
 app = FastAPI(
     title="Augur API",
     description="Multi-agent investment analysis API",
-    version="0.1.0",
+    version="6.0.0",
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
@@ -78,7 +78,7 @@ async def analyze_ticker(
     market_cap: float = 0,
     institutional_ownership: float = 0,
     insider_ownership: float = 0,
-    current_ratio: float = 1.5,
+    current_ratio: float = 0,
     earnings_growth: float = 0,
     sector: str = "",
     industry: str = "",

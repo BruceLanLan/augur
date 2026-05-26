@@ -33,6 +33,7 @@ from augur.personas.duan_yongping import DuanYongpingAgent
 from augur.personas.zhang_lei import ZhangLeiAgent
 from augur.personas.li_lu import LiLuAgent
 from augur.personas.dan_bin import DanBinAgent
+from augur.personas.serenity import SerenityAgent
 
 __all__ = [
     # Types
@@ -44,5 +45,5 @@ __all__ = [
     "MungerAgent", "SorosAgent", "MarksAgent", "CathieWoodAgent",
     "FisherAgent", "ArpsAgent", "AschenbrennerAgent",
     "DayuAgent", "ThielAgent", "DuanYongpingAgent",
-    "ZhangLeiAgent", "LiLuAgent", "DanBinAgent",
+    "ZhangLeiAgent", "LiLuAgent", "DanBinAgent", "SerenityAgent",
 ]
