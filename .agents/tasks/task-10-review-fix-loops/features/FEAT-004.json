@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "fix",
   "description": "Loop 10: Final verification pass - confirm everything works, version bump to 6.1.0, final commit",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "LOOP 10 - Final verification and version bump: (a) Run the full test suite (pytest tests/ -v) and confirm ALL tests pass (should be 70+). (b) Verify all Python files can be imported without errors: python -c 'import augur; from augur.registry import AgentRegistry; from augur.cli import main; from augur.mcp_server import create_server; from augur.soul import SoulInjector; from augur.backtest import Backtester; from augur.cron import load_watchlist; from augur.data import _calculate_rsi; from augur.persona_loader import YamlAgent; print(\"All imports OK\")'. (c) Verify CLI works: augur --version should show 6.1.0 after bump. (d) Bump version to 6.1.0 in: pyproject.toml, src/augur/__init__.py, dashboard/app.py (FastAPI version), base.html sidebar version, update test_cli.py version assertion. (e) Update docs/CHANGELOG.md with final v6.1.0 release notes summarizing all 10 loops of fixes. (f) Final commit: chore(v6.1.0): version bump + final verification - 10 review-fix loops complete",
     "Verify the final state is clean: git status shows no uncommitted changes, all tests pass, version is 6.1.0 everywhere."
