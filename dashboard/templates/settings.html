@@ -136,48 +136,59 @@ var chineseInvestors = ['duan_yongping', 'zhang_lei', 'li_lu', 'dan_bin', 'dayu'
 
 function applyPreset(preset) {
     var selects = document.querySelectorAll('.persona-config-row select');
+    var unmatchedCount = 0;
     selects.forEach(function(sel) {
         var agentId = sel.getAttribute('data-agent-id');
         var options = sel.options;
+        var matched = false;
 
         if (preset === 'claude') {
             for (var i = 0; i < options.length; i++) {
                 if (options[i].value.toLowerCase().indexOf('claude') !== -1) {
-                    sel.selectedIndex = i; break;
+                    sel.selectedIndex = i; matched = true; break;
                 }
             }
+            if (!matched) unmatchedCount++;
         } else if (preset === 'deepseek-cn') {
             if (chineseInvestors.indexOf(agentId) !== -1) {
                 for (var i = 0; i < options.length; i++) {
                     if (options[i].value.toLowerCase().indexOf('deepseek') !== -1) {
-                        sel.selectedIndex = i; break;
+                        sel.selectedIndex = i; matched = true; break;
                     }
                 }
+                if (!matched) unmatchedCount++;
             }
         } else if (preset === 'best') {
             if (agentId === 'aschenbrenner') {
                 for (var i = 0; i < options.length; i++) {
                     if (options[i].value.toLowerCase().indexOf('claude') !== -1 && options[i].value.toLowerCase().indexOf('opus') !== -1) {
-                        sel.selectedIndex = i; break;
+                        sel.selectedIndex = i; matched = true; break;
                     }
                 }
+                if (!matched) unmatchedCount++;
             } else if (chineseInvestors.indexOf(agentId) !== -1) {
                 for (var i = 0; i < options.length; i++) {
                     if (options[i].value.toLowerCase().indexOf('deepseek') !== -1) {
-                        sel.selectedIndex = i; break;
+                        sel.selectedIndex = i; matched = true; break;
                     }
                 }
+                if (!matched) unmatchedCount++;
             } else {
                 for (var i = 0; i < options.length; i++) {
                     if (options[i].value.toLowerCase().indexOf('claude') !== -1 && options[i].value.toLowerCase().indexOf('sonnet') !== -1) {
-                        sel.selectedIndex = i; break;
+                        sel.selectedIndex = i; matched = true; break;
                     }
                 }
+                if (!matched) unmatchedCount++;
             }
         }
     });
     checkUnsaved();
-    showToast('已应用预设: ' + (preset === 'claude' ? '全部Claude' : preset === 'deepseek-cn' ? '中国投资人用DeepSeek' : '最强配置'), 'info');
+    var presetLabel = preset === 'claude' ? '全部Claude' : preset === 'deepseek-cn' ? '中国投资人用DeepSeek' : '最强配置';
+    showToast('已应用预设: ' + presetLabel, 'info');
+    if (unmatchedCount > 0) {
+        showToast('部分投资人未找到匹配模型 (' + unmatchedCount + '位)', 'warning');
+    }
 }
 
 function getProviderClass(model) {
