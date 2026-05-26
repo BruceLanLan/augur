@@ -50,6 +50,7 @@
     <div class="flex items-center justify-center gap-12" style="flex-wrap:wrap;">
         <input class="hero-input" id="hero-ticker" type="text"
                placeholder="输入股票代码 (AAPL / NVDA / 0700.HK)"
+               aria-label="Stock ticker input"
                onkeydown="if(event.key==='Enter') heroGo()">
         <button class="btn btn-primary" onclick="heroGo()" style="padding:12px 24px; font-size:0.92rem;">
             分析 &rarr;

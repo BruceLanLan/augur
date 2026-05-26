@@ -220,6 +220,10 @@ async def analyze_ticker(
     基本用法: GET /api/analyze/AAPL (自动获取实时数据)
     手动指标: GET /api/analyze/AAPL?price=210&pe=32&gross_margins=0.46
     """
+    # Validate ticker format to prevent injection issues with yfinance or URLs
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
+
     # Check if any meaningful metric was provided by user
     has_user_metrics = any([
         price > 0, pe > 0, pb > 0, revenue_growth != 0,
@@ -231,6 +235,8 @@ async def analyze_ticker(
 
     if not has_user_metrics and auto_fetch:
         # Try to auto-fetch from yfinance
+        # When auto_fetch succeeds, manual params are ignored. This is intentional:
+        # real-time data takes precedence over manually supplied values to avoid stale overrides.
         try:
             from augur.data import fetch_market_context
             ctx = fetch_market_context(ticker)
@@ -454,6 +460,8 @@ async def api_add_to_watchlist(body: WatchlistAddBody):
     # Validate ticker
     if not re.match(r'^[A-Za-z0-9.\-]+$', body.ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format")
+    if len(body.ticker) > 15:
+        raise HTTPException(status_code=400, detail="Ticker too long (max 15 characters)")
     metrics = {}
     for field in ["pe", "pb", "roe", "gross_margins", "revenue_growth", "debt_ratio", "fcf", "market_cap", "price"]:
         val = getattr(body, field, None)
@@ -527,6 +535,10 @@ async def backtest_page(request: Request):
 @app.get("/api/backtest/run")
 async def api_run_backtest(ticker: str = "AAPL", days: int = 30):
     """Run demo backtest, return results"""
+    # Validate ticker format
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
+
     from augur.backtest import Backtester, generate_sample_data
 
     if days < 5:
