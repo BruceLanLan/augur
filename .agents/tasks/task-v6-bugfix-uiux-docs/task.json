@@ -1,7 +1,14 @@
 {
   "task_id": "task-v6-bugfix-uiux-docs",
   "task_description": "Augur v6.0 release: Fix bugs (TemplateResponse deprecation, persona count 17->18), overhaul UI/UX (simplify flows, add loading states, presets), and restructure all documentation for professional quality",
-  "status": "in_progress",
+  "status": "completed",
   "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
-  "blocked_reason": null
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "pass",
+    "test_quality": "pass",
+    "docker_build": "skipped",
+    "summary": "All 55 tests pass. Version is 6.0.0. No stale '17' persona references remain. CORS middleware correctly allows all methods. Dead code removed. README rewritten professionally."
+  }
 }
