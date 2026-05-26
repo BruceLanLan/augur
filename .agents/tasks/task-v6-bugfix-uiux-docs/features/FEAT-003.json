@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "docs",
   "description": "Complete documentation restructure: Rewrite README.md (Chinese) and README_EN.md (English) to be more professional, attractive and readable. Create docs/CHANGELOG.md. Update all docs to say 18 agents and v6.0. Update SKILL.md.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "1. README.md (Chinese) - Complete rewrite: Better hero section with a compelling hook ('你的AI投资决策委员会'). '3秒看懂' visual summary section. Cleaner quick start (literally 3 commands). Feature highlights as punchy bullet points not dense tables. Show input AND output examples. Professional but accessible tone. 18 investors. v6.0.0. Keep the 18-investor table but make it cleaner. Add a 'Why Augur?' section. Keep Star History chart. Add architecture diagram reference. Simplify the version log into a brief section pointing to CHANGELOG.md.",
     "2. README_EN.md (English) - Same quality rewrite as Chinese version. Mirror structure. 18 investors, v6.0. Professional English copy.",
