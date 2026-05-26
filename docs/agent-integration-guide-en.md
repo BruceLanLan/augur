@@ -309,9 +309,16 @@ In Slack channels:
 -> All 18 masters consensus
 ```
 
-#### WeChat (In Development)
+#### WeChat
 
-A WeChat bot adapter is planned. Contributions welcome (see `bots/` directory).
+```bash
+# Connect via Hermes Gateway or use the built-in Bot
+pip install 'augur-agents[wechat]'
+export GEWECHAT_TOKEN='...' GEWECHAT_BASE_URL='http://127.0.0.1:2531/v2/api'
+augur wechat --mode personal --port 8066
+```
+
+Personal WeChat, Enterprise WeChat (WeCom), and Webhook modes are all supported. See [README](../README_EN.md) for full details.
 
 ---
 
@@ -373,7 +380,8 @@ skills/
 ├── duan_yongping/SKILL.md       # Duan Yongping (段永平) - Ben Fen / Extreme Concentration
 ├── zhang_lei/SKILL.md           # Zhang Lei (张磊, Hillhouse) - Long-term Structural Value
 ├── li_lu/SKILL.md               # Li Lu (李录, Himalaya) - Deep Value
-└── dan_bin/SKILL.md             # Dan Bin (但斌, Oriental Harbor) - Brand Moat
+├── dan_bin/SKILL.md             # Dan Bin (但斌, Oriental Harbor) - Brand Moat
+└── serenity/SKILL.md            # Serenity (@aleabitoreddit) - AI/Semi Supply Chain Chokepoint
 ```
 
 ### Skill File Structure
@@ -495,7 +503,7 @@ Call the API directly in automated workflows:
 
 # Using a Python script
 python3 -c "
-from scanner.personas.registry import AgentRegistry, DecisionCoordinator
+from augur.registry import AgentRegistry, DecisionCoordinator
 reg = AgentRegistry()
 coord = DecisionCoordinator(reg)
 results = coord.analyze_with_all(MarketContext(ticker='AAPL', ...))
@@ -534,7 +542,7 @@ Use the consensus engine to invoke any combination of Agents simultaneously for 
 
 ```bash
 python3 -c "
-from scanner.personas.registry import AgentRegistry, DecisionCoordinator
+from augur.registry import AgentRegistry, DecisionCoordinator
 reg = AgentRegistry()
 # Enable only specific Agents for comparison
 agents = ['buffett', 'lynch', 'dayu', 'duan_yongping']
@@ -556,7 +564,7 @@ for id, r in results.items():
 User Input
   |
   |---> Hermes Agent Skill -> SKILL.md -> Call LLM -> Return analysis
-  |---> Augur Dashboard (FastAPI) -> scanner/ -> 18 Agents -> Consensus -> Results
+  |---> Augur Dashboard (FastAPI) -> src/augur/ -> 18 Agents -> Consensus -> Results
   |---> OpenClaude/OpenClaw -> Standalone Agent process
   |---> Claude Code/Codex -> Terminal one-off analysis
   |---> Telegram/Slack Bot -> Messaging platform interaction
@@ -590,7 +598,7 @@ A: No. All Agents call LLM APIs. Locally you only need to run the FastAPI servic
 A: Network connectivity is required to call LLM APIs. However, the analysis engine itself can run locally by connecting to a local Ollama instance for offline use.
 
 **Q: How do I add a new investor?**
-A: Two methods: 1) Write a YAML file under `personas/custom/` (no code needed); 2) Write a Python Agent under `scanner/personas/` (more powerful).
+A: Two methods: 1) Write a YAML file under `personas/custom/` (no code needed); 2) Write a Python Agent under `src/augur/personas/` (more powerful).
 
 **Q: Can all 18 Agents work simultaneously?**
 A: Yes. The consensus engine supports parallel invocation of all Agents and automatically aggregates results.
