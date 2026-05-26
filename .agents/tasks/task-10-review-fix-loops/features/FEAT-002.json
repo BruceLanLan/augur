@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Loops 4-6: Logic errors, edge cases, missing validations, and UX improvements",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "LOOP 4 - Edge case handling: (a) In dashboard/app.py analyze_ticker, if auto_fetch is True but yfinance import fails, the fallback creates a context but never sets data_source to 'manual' explicitly (it only initializes data_source='manual' at the top). Ensure the logic is clear. (b) In src/augur/data.py fetch_market_context, if stock.info returns None the code sets info={} but then tries to read fields - add explicit safety. (c) In src/augur/backtest.py Backtester._check_hit, the 'neutral' hit check uses abs(actual_return) < 0.02 but this is overly generous for daily returns - document this is intentional for 20d returns. (d) In src/augur/cron.py run_watchlist_analysis imports format_consensus_message from telegram_bot which will fail if telegram extras not installed. Guard this import with try/except.",
     "LOOP 5 - Input validation and error handling: (a) In dashboard/app.py the /api/analyze/{ticker} endpoint does not validate ticker format (could get injection if passed to yfinance). Add a regex validation for ticker (alphanum, dots, hyphens only, max 15 chars). (b) In the CLI watchlist-add command, add validation that ticker is reasonable format before saving. (c) In src/augur/persona_loader.py the _eval_rule_condition uses eval() - while it restricts __builtins__, add a comment explaining the security boundary (only admin-provided YAML). (d) In the backtest endpoint /api/backtest/run, validate that ticker param is safe. (e) Add proper error response when days is invalid in the backtest endpoint.",
@@ -21,5 +21,5 @@
     "python -c \"from augur.cron import run_watchlist_analysis; print('import ok')\""
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 59 tests pass. Ticker validation regex ^[A-Za-z0-9.\\-]{1,15}$ applied to analyze, backtest, and watchlist endpoints. The cron.py fallback for format_consensus_message was already correctly implemented in FEAT-001. No pre-existing test failures found."
 }
