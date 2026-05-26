@@ -1383,3 +1383,86 @@ kbd {
 .sparkline.flat {
     background: linear-gradient(90deg, var(--border-color) 0%, var(--signal-neutral) 50%, var(--border-color) 100%);
 }
+
+/* --- v6.0 UX Enhancements --- */
+
+/* Better card hover depth */
+.card:hover {
+    border-color: var(--border-hover);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Fade in animation */
+.fade-in {
+    animation: fadeInUp 0.4s ease forwards;
+}
+
+/* Analysis progress */
+.progress-text {
+    font-size: 0.82rem;
+    color: var(--accent-orange);
+    font-family: var(--font-data);
+    text-align: center;
+    margin-top: 12px;
+}
+
+/* Inline result card (for index page) */
+.inline-result {
+    background: var(--bg-card);
+    border: 2px solid var(--accent-orange);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-top: 16px;
+    animation: fadeInUp 0.4s ease forwards;
+}
+
+.inline-result .signal-big {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: var(--font-data);
+}
+
+/* Preset buttons */
+.preset-btn {
+    background: rgba(255, 140, 0, 0.08);
+    border: 1px solid rgba(255, 140, 0, 0.3);
+    color: var(--accent-orange);
+}
+
+.preset-btn:hover {
+    background: rgba(255, 140, 0, 0.15);
+    border-color: var(--accent-orange);
+}
+
+/* Hero section emphasis */
+.hero-section {
+    text-align: center;
+    padding: 40px 24px;
+}
+
+.hero-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent-orange);
+    font-family: var(--font-data);
+    margin-bottom: 8px;
+}
+
+.hero-subtitle {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+/* Mobile touch targets */
+@media (max-width: 768px) {
+    .btn, .ticker-btn, .filter-tag, .preset-btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+
+    .form-input, .form-select {
+        min-height: 44px;
+        font-size: 16px; /* prevents iOS zoom */
+    }
+}

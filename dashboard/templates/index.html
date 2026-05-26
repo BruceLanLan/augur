@@ -6,9 +6,9 @@
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
-    padding: 12px 16px;
+    padding: 14px 18px;
     color: var(--text-primary);
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-family: var(--font-data);
     width: 100%;
     max-width: 400px;
@@ -19,9 +19,6 @@
     border-color: var(--accent-orange);
     box-shadow: 0 0 0 2px rgba(255,140,0,0.15);
 }
-.quick-result { display:none; margin-top:12px; }
-.quick-result.show { display:block; animation: fadeInUp 0.4s ease forwards; }
-#quick-spinner { display:none; }
 </style>
 {% endblock %}
 {% block content %}
@@ -47,9 +44,9 @@
 </div>
 
 <!-- Hero Quick Analysis -->
-<div class="card mb-24" style="padding:32px; text-align:center;">
-    <h1 style="font-size:1.8rem; color:var(--accent-orange); margin-bottom:4px; font-family:var(--font-data);">AUGUR</h1>
-    <p class="text-muted mb-16" style="font-size:0.88rem;">{{ agent_count }} 位虚拟投资大师 &middot; 多智能体共识分析</p>
+<div class="card mb-24 hero-section" style="padding:40px 24px;">
+    <h1 class="hero-title">AUGUR</h1>
+    <p class="hero-subtitle">输入股票代码，一键获得18位大师共识</p>
     <div class="flex items-center justify-center gap-12" style="flex-wrap:wrap;">
         <input class="hero-input" id="hero-ticker" type="text"
                placeholder="输入股票代码 (AAPL / NVDA / 0700.HK)"
@@ -59,33 +56,45 @@
         </button>
     </div>
     <div class="shortcut-hint" style="margin-top:8px;">按 <kbd>/</kbd> 快速聚焦 &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交</div>
-</div>
 
-<!-- Quick Analysis Widget -->
-<div class="card mb-24">
-    <div class="card-header">快速分析</div>
-    <div class="flex items-center gap-12" style="flex-wrap:wrap;">
-        <input class="form-input" id="quick-ticker" type="text"
-               placeholder="股票代码" style="max-width:160px; text-transform:uppercase; font-family:var(--font-data);"
-               onkeydown="if(event.key==='Enter') quickAnalyze()">
-        <button class="btn btn-primary" onclick="quickAnalyze()">分析</button>
-        <div id="quick-spinner" class="loading-pulse text-orange text-mono" style="font-size:0.82rem;">分析中...</div>
+    <!-- Inline loading skeleton -->
+    <div id="hero-spinner" style="display:none; margin-top:16px;">
+        <p class="loading-pulse text-orange text-mono progress-text">正在分析... 18位投资大师共识决策中</p>
+        <div class="grid-3 mt-16" style="gap:12px; max-width:600px; margin:0 auto;">
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+            <div class="skeleton skeleton-card"></div>
+        </div>
     </div>
-    <div id="quick-result" class="quick-result">
-        <div class="flex items-center gap-24" style="flex-wrap:wrap; margin-top:12px; padding:12px; background:var(--bg-primary); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+
+    <!-- Inline result card -->
+    <div id="hero-result" class="inline-result" style="display:none; max-width:600px; margin:16px auto 0;">
+        <div class="flex items-center gap-24" style="flex-wrap:wrap;">
             <div>
                 <div class="data-label">信号</div>
-                <span id="qr-signal" class="signal-badge signal-badge-neutral" style="font-size:0.92rem;">--</span>
+                <span id="hr-signal" class="signal-badge signal-badge-neutral signal-big">--</span>
             </div>
             <div>
                 <div class="data-label">评分</div>
-                <span id="qr-score" class="data-value" style="font-size:1.2rem;">--</span>
+                <span id="hr-score" class="data-value" style="font-size:1.4rem;">--</span>
             </div>
             <div>
                 <div class="data-label">置信度</div>
-                <span id="qr-confidence" class="text-mono" style="color:var(--signal-neutral); font-weight:600;">--</span>
+                <span id="hr-confidence" class="text-mono" style="color:var(--signal-neutral); font-weight:600; font-size:1.1rem;">--</span>
             </div>
-            <a id="qr-link" href="/stocks" class="btn btn-sm" style="margin-left:auto;">查看完整分析 &rarr;</a>
+        </div>
+        <div id="hr-reasoning" class="text-muted" style="font-size:0.8rem; margin-top:12px; line-height:1.6;"></div>
+        <div style="margin-top:12px; text-align:right;">
+            <a id="hr-link" href="/stocks" class="btn btn-sm">查看完整分析 &rarr;</a>
+        </div>
+    </div>
+
+    <!-- Inline error -->
+    <div id="hero-error" class="error-panel" style="display:none; max-width:600px; margin:16px auto 0;">
+        <div class="error-panel-title">分析失败</div>
+        <div class="error-panel-msg" id="hero-error-msg"></div>
+        <div class="error-panel-retry">
+            <button class="btn btn-sm" onclick="heroGo()">重试</button>
         </div>
     </div>
 </div>
@@ -151,36 +160,33 @@
 <script>
 function heroGo() {
     var t = document.getElementById('hero-ticker').value.trim().toUpperCase();
-    if (t) window.location.href = '/stocks?ticker=' + encodeURIComponent(t);
-    else window.location.href = '/stocks';
-}
+    if (!t) { showToast('请输入股票代码', 'warning'); return; }
 
-function quickAnalyze() {
-    var ticker = document.getElementById('quick-ticker').value.trim().toUpperCase();
-    if (!ticker) return;
+    // Show loading, hide previous results/errors
+    document.getElementById('hero-spinner').style.display = 'block';
+    document.getElementById('hero-result').style.display = 'none';
+    document.getElementById('hero-error').style.display = 'none';
 
-    document.getElementById('quick-spinner').style.display = 'inline';
-    document.getElementById('quick-result').classList.remove('show');
-
-    fetch('/api/analyze/' + ticker)
+    fetch('/api/analyze/' + t)
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            document.getElementById('quick-spinner').style.display = 'none';
+            document.getElementById('hero-spinner').style.display = 'none';
             var cons = data.consensus || {};
             var signal = (cons.signal || 'neutral').toLowerCase();
 
-            var sigEl = document.getElementById('qr-signal');
+            var sigEl = document.getElementById('hr-signal');
             sigEl.textContent = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
-            sigEl.className = 'signal-badge signal-badge-' + (signal === 'bullish' ? 'buy' : signal === 'bearish' ? 'sell' : 'neutral');
+            sigEl.className = 'signal-badge signal-big ' + (signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral');
 
-            document.getElementById('qr-score').textContent = (cons.score || 0).toFixed(1) + '/10';
-            document.getElementById('qr-confidence').textContent = ((cons.confidence || 0) * 100).toFixed(0) + '%';
-            document.getElementById('qr-link').href = '/stocks?ticker=' + ticker;
+            document.getElementById('hr-score').textContent = (cons.score || 0).toFixed(1) + '/10';
+            document.getElementById('hr-confidence').textContent = ((cons.confidence || 0) * 100).toFixed(0) + '%';
+            document.getElementById('hr-reasoning').textContent = cons.reasoning || '';
+            document.getElementById('hr-link').href = '/stocks?ticker=' + t;
 
-            document.getElementById('quick-result').classList.add('show');
+            document.getElementById('hero-result').style.display = 'block';
 
             // Cache the result
-            augurCache.add(ticker, {
+            augurCache.add(t, {
                 signal: cons.signal || 'neutral',
                 score: cons.score || 0,
                 confidence: cons.confidence || 0
@@ -188,8 +194,9 @@ function quickAnalyze() {
             renderRecentAnalyses();
         })
         .catch(function(err) {
-            document.getElementById('quick-spinner').style.display = 'none';
-            showToast('分析失败: ' + err, 'error');
+            document.getElementById('hero-spinner').style.display = 'none';
+            document.getElementById('hero-error').style.display = 'block';
+            document.getElementById('hero-error-msg').textContent = '请求失败: ' + (err.message || err);
         });
 }
 

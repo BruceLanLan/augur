@@ -68,13 +68,20 @@
 
 <div class="flex items-center justify-between mb-24" style="flex-wrap:wrap; gap:12px;">
     <div>
-        <h2 style="color:var(--accent-orange); margin:0;">模型配置 <span id="unsaved-indicator" class="unsaved-dot" style="display:none;"></span></h2>
+        <h2 style="color:var(--accent-orange); margin:0;">模型配置 <span id="unsaved-indicator" class="unsaved-dot" style="display:none;"></span><span id="unsaved-text" style="display:none; font-size:0.75rem; color:var(--signal-sell); margin-left:4px; font-weight:400;">有未保存更改</span></h2>
         <p class="text-muted" style="font-size:0.82rem; margin:4px 0 0;">为每位投资大师分配 LLM 模型</p>
     </div>
     <div class="flex gap-8">
         <button class="btn btn-sm btn-ghost" onclick="resetAll()" title="重置所有选择为默认值">全部重置</button>
         <button class="btn btn-primary" id="save-all-btn" onclick="saveAll()">全部保存</button>
     </div>
+</div>
+
+<!-- Preset buttons -->
+<div class="flex gap-8 mb-16" style="flex-wrap:wrap;">
+    <button class="btn btn-sm preset-btn" onclick="applyPreset('claude')">全部 Claude</button>
+    <button class="btn btn-sm preset-btn" onclick="applyPreset('deepseek-cn')">中国投资人用 DeepSeek</button>
+    <button class="btn btn-sm preset-btn" onclick="applyPreset('best')">最强配置</button>
 </div>
 
 <div class="settings-grid" id="persona-grid">
@@ -120,7 +127,57 @@ function checkUnsaved() {
         if (sel.value !== originalValues[id]) hasChanges = true;
     });
     var dot = document.getElementById('unsaved-indicator');
+    var txt = document.getElementById('unsaved-text');
     if (dot) dot.style.display = hasChanges ? 'inline-block' : 'none';
+    if (txt) txt.style.display = hasChanges ? 'inline' : 'none';
+}
+
+var chineseInvestors = ['duan_yongping', 'zhang_lei', 'li_lu', 'dan_bin', 'dayu'];
+
+function applyPreset(preset) {
+    var selects = document.querySelectorAll('.persona-config-row select');
+    selects.forEach(function(sel) {
+        var agentId = sel.getAttribute('data-agent-id');
+        var options = sel.options;
+
+        if (preset === 'claude') {
+            for (var i = 0; i < options.length; i++) {
+                if (options[i].value.toLowerCase().indexOf('claude') !== -1) {
+                    sel.selectedIndex = i; break;
+                }
+            }
+        } else if (preset === 'deepseek-cn') {
+            if (chineseInvestors.indexOf(agentId) !== -1) {
+                for (var i = 0; i < options.length; i++) {
+                    if (options[i].value.toLowerCase().indexOf('deepseek') !== -1) {
+                        sel.selectedIndex = i; break;
+                    }
+                }
+            }
+        } else if (preset === 'best') {
+            if (agentId === 'aschenbrenner') {
+                for (var i = 0; i < options.length; i++) {
+                    if (options[i].value.toLowerCase().indexOf('claude') !== -1 && options[i].value.toLowerCase().indexOf('opus') !== -1) {
+                        sel.selectedIndex = i; break;
+                    }
+                }
+            } else if (chineseInvestors.indexOf(agentId) !== -1) {
+                for (var i = 0; i < options.length; i++) {
+                    if (options[i].value.toLowerCase().indexOf('deepseek') !== -1) {
+                        sel.selectedIndex = i; break;
+                    }
+                }
+            } else {
+                for (var i = 0; i < options.length; i++) {
+                    if (options[i].value.toLowerCase().indexOf('claude') !== -1 && options[i].value.toLowerCase().indexOf('sonnet') !== -1) {
+                        sel.selectedIndex = i; break;
+                    }
+                }
+            }
+        }
+    });
+    checkUnsaved();
+    showToast('已应用预设: ' + (preset === 'claude' ? '全部Claude' : preset === 'deepseek-cn' ? '中国投资人用DeepSeek' : '最强配置'), 'info');
 }
 
 function getProviderClass(model) {

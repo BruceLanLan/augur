@@ -81,7 +81,7 @@
     <div class="flex items-center gap-12 mb-12" style="flex-wrap:wrap;">
         <div style="flex:1; min-width:200px; max-width:280px;">
             <label class="data-label mb-4">股票代码</label>
-            <input id="inp-ticker" type="text" class="form-input" style="font-family:var(--font-data); font-size:1rem; font-weight:600; text-transform:uppercase;"
+            <input id="inp-ticker" type="text" class="form-input" style="font-family:var(--font-data); font-size:1.2rem; font-weight:700; text-transform:uppercase; padding:12px 16px;"
                    placeholder="AAPL / NVDA / 0700.HK"
                    onkeydown="if(event.key==='Enter') runAnalysis()">
         </div>
@@ -104,8 +104,7 @@
             </select>
         </div>
         <div style="align-self:flex-end; display:flex; gap:8px;">
-            <button class="btn btn-primary" onclick="runAnalysis()" style="padding:8px 20px;">分析</button>
-            <button class="btn btn-ghost" onclick="autoFetch()" style="padding:8px 14px; font-size:0.78rem;" title="从yfinance自动获取实时数据">自动获取</button>
+            <button class="btn btn-primary" onclick="runAnalysis()" style="padding:10px 24px; font-size:0.92rem;">分析</button>
         </div>
     </div>
 
@@ -147,7 +146,7 @@
 <!-- Spinner -->
 <div id="spinner">
     <div class="spinner" style="margin:0 auto;"></div>
-    <p class="loading-pulse text-orange text-mono mt-16" style="font-size:0.88rem; text-align:center;">正在调用 18 位投资大师...</p>
+    <p class="loading-pulse text-orange text-mono mt-16 progress-text" style="font-size:0.88rem; text-align:center;">正在分析... 18位投资大师共识决策中</p>
     <div class="grid-3 mt-16" style="gap:12px;">
         <div class="skeleton skeleton-card"></div>
         <div class="skeleton skeleton-card"></div>

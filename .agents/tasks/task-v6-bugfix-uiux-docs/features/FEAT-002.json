@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "UI/UX overhaul: Simplify stocks page flow (single button auto-fetch+analyze), improve index page one-click experience, enhance personas page with model badges and quick-action, add settings presets, global UX improvements (Enter submit, loading skeleton with progress, error states, CSS polish)",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "1. STOCKS PAGE (dashboard/templates/stocks.html): Remove the separate '自动获取' button. Make the single '分析' button do auto-fetch + analyze in one step (it already does this via auto_fetch=true when no metrics provided - just remove the confusing separate button). Hide advanced metrics by default (already hidden). Add a big hero-style input at top. Show loading skeleton with progress text '正在分析... (X/18 完成)' during analysis.",
     "2. STOCKS PAGE: After results load, show a large consensus signal banner FIRST (already exists), then make agent cards collapsible by default (already collapsed). Add fade-in animation to results. Add inline error panel with retry button (already exists in HTML but improve styling).",

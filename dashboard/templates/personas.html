@@ -108,11 +108,14 @@
                 </div>
                 <div style="min-width:100px;">
                     {% if persona.model %}
-                    <span class="badge badge-dim">{{ persona.model }}</span>
+                    <span class="provider-badge {% if 'claude' in persona.model %}claude{% elif 'deepseek' in persona.model %}deepseek{% elif 'gpt' in persona.model %}gpt{% elif 'kimi' in persona.model %}kimi{% endif %}">{{ persona.model }}</span>
                     {% endif %}
                 </div>
                 <div style="min-width:60px;">
                     <span class="badge badge-green" style="font-size:0.65rem;">{{ persona.status }}</span>
+                </div>
+                <div style="min-width:40px;">
+                    <a href="/stocks?ticker=&persona={{ persona.id }}" class="btn btn-sm" style="font-size:0.65rem; padding:2px 8px;" onclick="event.stopPropagation();" title="使用此大师分析">分析</a>
                 </div>
                 <span class="expand-icon">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
