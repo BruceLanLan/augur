@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Loops 1-3: Fix obvious bugs, broken references, inconsistencies, and code quality issues across the entire codebase",
+  "status": "in_progress",
+  "steps": [
+    "LOOP 1 - Broken references and imports: (a) In src/augur/api.py the version is hardcoded as '0.1.0' but should be '6.0.0'. (b) In src/augur/api.py the CORS allow_methods is only ['GET','POST'] but PUT and DELETE are used by dashboard/app.py endpoints - this inconsistency should be noted. (c) In dashboard/app.py the watchlist run endpoint counts signal values as 'buy'/'sell'/'hold' but AgentResponse uses SignalType enum values 'bullish'/'neutral'/'bearish' - the comparison `r.signal.value == 'buy'` will always be 0. Fix to use 'bullish'/'neutral'/'bearish'. (d) In signals.html the JS checks `result.signal === 'buy'` which also needs to match actual API output. Fix to check 'bullish'/'bearish'/'neutral'.",
+    "LOOP 2 - Version and count inconsistencies: (a) In base.html sidebar footer shows 'v6.0' - should dynamically show the version or at least be 'v6.0.0'. (b) The serenity.py persona docstring says '352K+ followers, 30K+ paid subscribers' but based on user's research it should now say '330K+' or keep the larger '352K+' consistently. Fix docstring to be consistent with user-provided data. (c) In dashboard/app.py the signal counting in api_run_watchlist_analysis uses wrong signal values. Same pattern as Loop 1d but in the watchlist batch endpoint. (d) The src/augur/api.py current_ratio default is 1.5 which incorrectly inflates scores for tickers with no data. Change default to 0.",
+    "LOOP 3 - Dead code and unused patterns: (a) The dashboard/app.py still has a fallback import from scanner.personas - verify scanner shims exist. (b) In registry.py get_consensus() tries to import from scanner.industry_matrix, scanner.regime_weights, scanner.macro_features, scanner.rolling_ic, scanner.probability_calibrator, scanner.meta_model, scanner.risk_manager, scanner.kelly_sizer, scanner.ten_x_screener - all these fail silently which is fine, but add a note in the code that these are optional advanced modules. (c) The Dockerfile should pin the package version to match pyproject.toml. (d) Add missing __all__ export in src/augur/personas/__init__.py if it does not already properly export all agents. (e) Ensure the serenity agent_id is listed in test_registry.py expected IDs list.",
+    "After all 3 loops, run pytest tests/ -v and verify all tests pass. Commit with message: fix(loop-1-3): fix signal value mismatches, version inconsistencies, dead code cleanup"
+  ],
+  "acceptance_criteria": [
+    "api_run_watchlist_analysis correctly counts signals using 'bullish'/'neutral'/'bearish' instead of 'buy'/'sell'/'hold'",
+    "src/augur/api.py version updated to match pyproject.toml",
+    "src/augur/api.py current_ratio default changed from 1.5 to 0",
+    "serenity agent_id included in test_registry.py expected list",
+    "All 55+ tests pass after changes",
+    "Changes committed to main"
+  ],
+  "verification": [
+    "pytest tests/ -v - all tests pass",
+    "python -c \"from augur.registry import AgentRegistry; r=AgentRegistry(); assert 'serenity' in [a.agent_id for a in r.get_all()]\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

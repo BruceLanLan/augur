@@ -509,9 +509,9 @@ async def api_run_watchlist_analysis():
             "score": round(consensus.score, 1),
             "confidence": round(consensus.confidence, 2) if hasattr(consensus, 'confidence') else 0.0,
             "agent_count": len(results),
-            "buy_count": sum(1 for r in results.values() if r.signal.value == "buy"),
-            "sell_count": sum(1 for r in results.values() if r.signal.value == "sell"),
-            "hold_count": sum(1 for r in results.values() if r.signal.value == "hold"),
+            "buy_count": sum(1 for r in results.values() if r.signal.value == "bullish"),
+            "sell_count": sum(1 for r in results.values() if r.signal.value == "bearish"),
+            "hold_count": sum(1 for r in results.values() if r.signal.value == "neutral"),
         })
 
     return {"status": "ok", "results": all_results}

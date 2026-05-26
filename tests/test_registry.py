@@ -20,6 +20,7 @@ class TestAgentRegistry:
             "soros", "marks", "cathie_wood", "fisher", "arps",
             "aschenbrenner", "dayu", "thiel",
             "duan_yongping", "zhang_lei", "li_lu", "dan_bin",
+            "serenity",
         ]
         for eid in expected:
             assert eid in agent_ids, f"Missing agent: {eid}"

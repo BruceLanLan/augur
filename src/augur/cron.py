@@ -160,7 +160,15 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
     """
     from augur.personas.base import MarketContext
     from augur.registry import AgentRegistry, DecisionCoordinator
-    from augur.bots.telegram_bot import format_consensus_message
+
+    try:
+        from augur.bots.telegram_bot import format_consensus_message
+    except ImportError:
+        def format_consensus_message(ticker, consensus, results):
+            """Fallback formatter when telegram_bot is not available."""
+            signal = consensus.signal.value.upper()
+            score = f"{consensus.score:.1f}/10"
+            return f"[Augur] {ticker}: {signal} ({score}) - {len(results)} agents analyzed"
 
     config = load_watchlist()
     watchlist = config.get("watchlist", [])

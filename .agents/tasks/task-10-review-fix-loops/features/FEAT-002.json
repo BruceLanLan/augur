@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Loops 4-6: Logic errors, edge cases, missing validations, and UX improvements",
+  "status": "pending",
+  "steps": [
+    "LOOP 4 - Edge case handling: (a) In dashboard/app.py analyze_ticker, if auto_fetch is True but yfinance import fails, the fallback creates a context but never sets data_source to 'manual' explicitly (it only initializes data_source='manual' at the top). Ensure the logic is clear. (b) In src/augur/data.py fetch_market_context, if stock.info returns None the code sets info={} but then tries to read fields - add explicit safety. (c) In src/augur/backtest.py Backtester._check_hit, the 'neutral' hit check uses abs(actual_return) < 0.02 but this is overly generous for daily returns - document this is intentional for 20d returns. (d) In src/augur/cron.py run_watchlist_analysis imports format_consensus_message from telegram_bot which will fail if telegram extras not installed. Guard this import with try/except.",
+    "LOOP 5 - Input validation and error handling: (a) In dashboard/app.py the /api/analyze/{ticker} endpoint does not validate ticker format (could get injection if passed to yfinance). Add a regex validation for ticker (alphanum, dots, hyphens only, max 15 chars). (b) In the CLI watchlist-add command, add validation that ticker is reasonable format before saving. (c) In src/augur/persona_loader.py the _eval_rule_condition uses eval() - while it restricts __builtins__, add a comment explaining the security boundary (only admin-provided YAML). (d) In the backtest endpoint /api/backtest/run, validate that ticker param is safe. (e) Add proper error response when days is invalid in the backtest endpoint.",
+    "LOOP 6 - UX improvements: (a) In dashboard/templates/stocks.html, when the analysis is running and user hits Enter again, prevent duplicate requests by disabling the button. (b) In dashboard/templates/index.html, add aria-labels to the hero input for accessibility. (c) In dashboard/templates/signals.html, the 'add ticker' input should auto-uppercase on blur (not just via CSS text-transform which only affects display). (d) In base.html, add a meta description tag for SEO. (e) In dashboard/templates/create_persona.html, add client-side validation feedback when required fields are empty before submit.",
+    "After all 3 loops, run pytest tests/ -v. Add new test cases: test_ticker_validation for the new validation, test_watchlist_signal_format to verify correct signal value format. Commit with message: fix(loop-4-6): edge cases, input validation, UX improvements"
+  ],
+  "acceptance_criteria": [
+    "Ticker validation rejects invalid characters in dashboard/app.py analyze endpoint",
+    "cron.py run_watchlist_analysis handles missing telegram_bot import gracefully",
+    "New tests added for ticker validation",
+    "All tests pass (55+ original + new ones)",
+    "Changes committed to main"
+  ],
+  "verification": [
+    "pytest tests/ -v - all tests pass including new validation tests",
+    "python -c \"from augur.cron import run_watchlist_analysis; print('import ok')\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
