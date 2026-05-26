@@ -3,7 +3,7 @@
 augur.backtest - 历史回测系统 + Agent IC 实盘追踪
 
 功能:
-  - 回放历史数据给所有17位Agent
+  - 回放历史数据给所有18位Agent
   - 记录预测信号与评分
   - 对比实际价格走势
   - 计算每位Agent的IC (Information Coefficient)

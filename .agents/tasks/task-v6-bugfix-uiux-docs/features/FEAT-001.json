@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Bug fixes: TemplateResponse API update, persona count 17->18 everywhere, pyproject description, version bump to 6.0.0, and app.py description/metadata fixes",
+  "status": "in_progress",
+  "steps": [
+    "1. Fix dashboard/app.py TemplateResponse calls (lines 124, 135, 145, 154, 173, 184, 528) from `templates.TemplateResponse('name.html', {'request': request, ...})` to `templates.TemplateResponse(request, 'name.html', {...without request key...})`. Note: check Starlette/Jinja2Templates version - if using older FastAPI the new API is `TemplateResponse(request, name, context)` where context dict no longer needs 'request' key. Actually the newest Starlette API is `TemplateResponse(request=request, name=name, context=context)` - verify what works with the installed version and use the non-deprecated form.",
+    "2. Fix dashboard/app.py line 49: change description from '17位虚拟投资大师' to '18位虚拟投资大师'",
+    "3. Fix dashboard/app.py line 50: version from '3.0.0' to '6.0.0'",
+    "4. Fix dashboard/app.py: the stats array has '17' for '维度权重系统' - this should stay as 17 (it's dimensions not personas), but verify",
+    "5. Fix dashboard/app.py docstring in analyze_ticker: '17位投资大师' -> '18位投资大师'",
+    "6. Fix src/augur/__init__.py: change docstring from '17 investor persona agents' to '18 investor persona agents', change __version__ from '5.5.0' to '6.0.0'",
+    "7. Fix pyproject.toml: change version to '6.0.0', description from '17 investor persona agents' to '18 investor persona agents'",
+    "8. Fix dashboard/templates/stocks.html: line 77 '17 位投资大师' -> '18 位投资大师', line 150 spinner text '17 位投资大师' -> '18 位投资大师'",
+    "9. Fix src/augur/bots/slack_bot.py: all occurrences of '17' referring to agents -> '18' (lines 384, 492, 637, 706)",
+    "10. Fix SKILL.md: all '17' persona references -> '18'",
+    "11. Fix docs/agent-integration-guide.md and docs/agent-integration-guide-en.md: all '17' agent references -> '18'",
+    "12. Fix SVGs: docs/images/architecture-baoyu.svg, architecture-en.svg, dashboard-preview.svg, hero-banner-en.svg - change '17' agent references to '18' and version references to 'v6.0'",
+    "13. Fix dashboard/templates/base.html sidebar footer: version from 'v5.2' to 'v6.0'"
+  ],
+  "acceptance_criteria": [
+    "No occurrence of '17' referring to persona/agent count remains in the codebase (except the '17维度权重系统' stat which is correct)",
+    "All TemplateResponse calls use the non-deprecated API format",
+    "Version is 6.0.0 in pyproject.toml, __init__.py, and dashboard app",
+    "pytest tests/ -v still passes"
+  ],
+  "verification": [
+    "grep -rn '17.*agent\\|17.*persona\\|17.*大师\\|17.*investor' /projects/sandbox/augur/ --include='*.py' --include='*.md' --include='*.html' --include='*.svg' | grep -v 'node_modules\\|.git\\|__pycache__' to confirm no stale '17' references",
+    "python -c \"import sys; sys.path.insert(0,'src'); from augur import __version__; assert __version__=='6.0.0', __version__\"",
+    "pytest tests/ -v"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -1,0 +1,7 @@
+{
+  "task_id": "task-v6-bugfix-uiux-docs",
+  "task_description": "Augur v6.0 release: Fix bugs (TemplateResponse deprecation, persona count 17->18), overhaul UI/UX (simplify flows, add loading states, presets), and restructure all documentation for professional quality",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

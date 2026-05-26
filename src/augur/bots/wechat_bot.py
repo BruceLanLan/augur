@@ -25,7 +25,7 @@ Usage:
     augur wechat --mode webhook
 
 Commands (in chat):
-    分析 TICKER 或 analyze TICKER - 17位大师共识分析
+    分析 TICKER 或 analyze TICKER - 18位大师共识分析
     @巴菲特 TICKER 或 问 buffett TICKER - 向特定大师提问
     投资人列表 或 personas - 列出所有投资大师
     帮助 或 help - 显示帮助

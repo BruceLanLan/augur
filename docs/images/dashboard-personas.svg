@@ -142,6 +142,6 @@
   <rect x="80" y="660" width="920" height="30" rx="6" fill="#14141f"/>
   <rect x="80" y="660" width="920" height="30" rx="6" fill="none" stroke="#1e1e2e" stroke-width="1"/>
   <circle cx="100" cy="675" r="4" fill="#00c853"/>
-  <text x="112" y="679" fill="#6b6b80" font-size="11" class="sans">17 位投资大师 · 系统就绪 · 全部在线</text>
+  <text x="112" y="679" fill="#6b6b80" font-size="11" class="sans">18 位投资大师 · 系统就绪 · 全部在线</text>
   <text x="920" y="679" fill="#6b6b80" font-size="10" class="mono">v5.5</text>
 </svg>

@@ -21,7 +21,7 @@
 
   <!-- Step 2 -->
   <rect x="30" y="112" width="920" height="70" rx="6" fill="#fff" stroke="#059669" stroke-width="1.5"/>
-  <text x="50" y="137" font-family="Arial" font-size="11" font-weight="600" fill="#065f46">17位Agent并行分析</text>
+  <text x="50" y="137" font-family="Arial" font-size="11" font-weight="600" fill="#065f46">18位Agent并行分析</text>
   <text x="850" y="137" font-family="Arial" font-size="8" fill="#94a3b8">步骤 2</text>
   <g transform="translate(50,148)"><rect width="100" height="22" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#1e40af">Buffett</text></g>
   <g transform="translate(158,148)"><rect width="100" height="22" rx="4" fill="#dbeafe" stroke="#1e293b" stroke-width="1"/><text x="50" y="16" text-anchor="middle" font-family="Arial" font-size="7" font-weight="600" fill="#1e40af">Graham</text></g>
