@@ -43,7 +43,7 @@ from augur.config import get_config, set_config, save_config, reset_config
 app = FastAPI(
     title="Augur — 多智能体投资分析",
     description="18位虚拟投资大师，多维度共识分析",
-    version="6.0.0",
+    version="6.1.0",
 )
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"

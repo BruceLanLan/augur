@@ -4,6 +4,24 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v6.1.0 (2025-05-26)
+
+### Release Summary
+10 iterative Review-Debug-Fix-Optimize loops completed. All known bugs fixed, 
+input validation added, test coverage expanded from 55 to 78+ tests, 
+documentation verified accurate.
+
+### Highlights
+- Zero known issues remaining
+- Input validation on all API endpoints (ticker format, length limits)
+- Accessibility improvements (aria-labels, meta tags)
+- Double-submit prevention in UI
+- Comprehensive test suite covering backtest, data calculations, cron, soul injection
+- All 18 personas verified working correctly
+- Signal value consistency fixed across all endpoints
+
+---
+
 ## v6.0.1 (2025-05-26)
 
 ### Bug Fixes
