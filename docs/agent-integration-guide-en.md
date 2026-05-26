@@ -2,13 +2,13 @@ English | [中文](agent-integration-guide.md)
 
 # Augur Agent Integration Guide
 
-> Make 17 legendary investment masters your AI Agent companions, ready to analyze for you anytime, anywhere
+> Make 18 legendary investment masters your AI Agent companions, ready to analyze for you anytime, anywhere
 
 ---
 
 ## 1. Product Form Overview
 
-Augur's 17 investor Agents can exist independently and be embedded into your workflow in multiple forms:
+Augur's 18 investor Agents can exist independently and be embedded into your workflow in multiple forms:
 
 | Form | Interaction | Use Case |
 |------|------------|----------|
@@ -26,14 +26,14 @@ Augur's 17 investor Agents can exist independently and be embedded into your wor
 
 ### Method 1: Augur Dashboard (Built-in Web Interface)
 
-Augur comes with a Bloomberg dark-theme FastAPI Web Dashboard where all 17 Agents are automatically loaded:
+Augur comes with a Bloomberg dark-theme FastAPI Web Dashboard where all 18 Agents are automatically loaded:
 
 ```bash
 # Start
 cd augur && python3 -m dashboard.app
 
 # -> Visit http://localhost:8000
-# -> All 17 Agents are automatically loaded, no extra configuration needed
+# -> All 18 Agents are automatically loaded, no extra configuration needed
 ```
 
 Dashboard pages at a glance:
@@ -41,7 +41,7 @@ Dashboard pages at a glance:
 | Page | Function |
 |------|----------|
 | 🏠 Home | System overview + quick analysis entry |
-| 🤖 Personas | 17 investment masters side-by-side |
+| 🤖 Personas | 18 investment masters side-by-side |
 | 📈 Stock Analysis | Single-stock deep analysis + real-time Agent scoring |
 | ⚡ Signal Monitor | Watchlist batch scanning (in development) |
 | ⚙️ Settings | Agent model configuration (in development) |
@@ -76,7 +76,7 @@ Activate in conversation:
 -> Returns Buffett-perspective scoring, reasoning, and signals
 ```
 
-#### Install the Entire Augur System (All 17 Masters)
+#### Install the Entire Augur System (All 18 Masters)
 
 ```bash
 # Method 1: Install the main Skill (unified dispatch)
@@ -92,7 +92,7 @@ Activate in conversation:
 /skill augur
 
 -> "Analyze TSLA, compare Buffett and Musk"
--> Returns consensus results from all 17 Agents
+-> Returns consensus results from all 18 Agents
 ```
 
 #### Example Conversations
@@ -102,7 +102,7 @@ Activate in conversation:
 | `/skill augur-buffett` -> "Analyze AAPL with the Buffett framework, PE=32, gross margin 46%, ROE=55%" | Returns Buffett-perspective deep analysis |
 | `/skill augur-zhang-lei` -> "Zhang Lei's perspective on PDD, revenue growth 86%" | Zhang Lei's (Hillhouse) long-term structural value assessment |
 | `/skill augur-dayu` -> "Dayu, what's the BTC sentiment right now?" | Dayu's crypto narrative analysis |
-| `/skill augur` -> "What do all the masters think about NVDA?" | 17-master consensus report |
+| `/skill augur` -> "What do all the masters think about NVDA?" | 18-master consensus report |
 
 ---
 
@@ -274,7 +274,7 @@ Chat directly in Telegram:
 
 ```
 User: /analyze AAPL pe=32 gm=46 roe=55
-Bot: 17-master analysis results...
+Bot: 18-master analysis results...
   [Consensus Signal: BUY | Overall Score: 7.2/10]
   🏆 Buffett: BUY (7.5/10) - Excellent moat, gross margin meets requirements
   🌐 Dalio: HOLD (6.0/10) - Tight macro environment
@@ -284,7 +284,7 @@ User: /ask buffett Do you think Apple is worth holding right now?
 Bot: Buffett-perspective analysis...
 
 User: /consensus TSLA
-Bot: 17-master consensus report...
+Bot: 18-master consensus report...
 ```
 
 #### Slack
@@ -306,7 +306,7 @@ In Slack channels:
 -> Buffett analysis results
 
 /consensus NVDA
--> All 17 masters consensus
+-> All 18 masters consensus
 ```
 
 #### WeChat (In Development)
@@ -556,7 +556,7 @@ for id, r in results.items():
 User Input
   |
   |---> Hermes Agent Skill -> SKILL.md -> Call LLM -> Return analysis
-  |---> Augur Dashboard (FastAPI) -> scanner/ -> 17 Agents -> Consensus -> Results
+  |---> Augur Dashboard (FastAPI) -> scanner/ -> 18 Agents -> Consensus -> Results
   |---> OpenClaude/OpenClaw -> Standalone Agent process
   |---> Claude Code/Codex -> Terminal one-off analysis
   |---> Telegram/Slack Bot -> Messaging platform interaction
@@ -592,7 +592,7 @@ A: Network connectivity is required to call LLM APIs. However, the analysis engi
 **Q: How do I add a new investor?**
 A: Two methods: 1) Write a YAML file under `personas/custom/` (no code needed); 2) Write a Python Agent under `scanner/personas/` (more powerful).
 
-**Q: Can all 17 Agents work simultaneously?**
+**Q: Can all 18 Agents work simultaneously?**
 A: Yes. The consensus engine supports parallel invocation of all Agents and automatically aggregates results.
 
 **Q: What asset types are supported?**

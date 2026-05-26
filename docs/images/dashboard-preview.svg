@@ -33,7 +33,7 @@
   <circle cx="660" cy="22" r="3" fill="#22d3ee" opacity="0.8">
     <animate attributeName="opacity" values="0.3;1;0.3" dur="2s" repeatCount="indefinite"/>
   </circle>
-  <text x="670" y="26" font-family="Arial" font-size="8" fill="#64748b">17 Agents Ready</text>
+  <text x="670" y="26" font-family="Arial" font-size="8" fill="#64748b">18 Agents Ready</text>
 
   <!-- Main content area -->
   <rect x="15" y="55" width="320" height="215" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
@@ -61,7 +61,7 @@
   <!-- Consensus panel -->
   <rect x="350" y="55" width="320" height="215" rx="6" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
   <text x="365" y="75" font-family="Arial" font-size="11" font-weight="bold" fill="#e2e8f0">🎯 AAPL 共识分析</text>
-  <text x="365" y="92" font-family="Arial" font-size="9" fill="#64748b">17位Agent · Consensus Score: 7.4/10</text>
+  <text x="365" y="92" font-family="Arial" font-size="9" fill="#64748b">18位Agent · Consensus Score: 7.4/10</text>
 
   <!-- Signal bar -->
   <rect x="365" y="105" width="290" height="22" rx="4" fill="#1e293b"/>
@@ -146,6 +146,6 @@
 
   <!-- Bottom status bar -->
   <rect x="0" y="495" width="1000" height="25" fill="#0f172a" stroke="#1e293b" stroke-width="1"/>
-  <text x="15" y="511" font-family="Arial" font-size="8" fill="#475569">v5.5 · 17 Agents Active · Data: yfinance · Last updated: just now</text>
+  <text x="15" y="511" font-family="Arial" font-size="8" fill="#475569">v6.0 · 18 Agents Active · Data: yfinance · Last updated: just now</text>
   <text x="750" y="511" font-family="Arial" font-size="8" fill="#475569">🌐 Hermes Web UI Ready · 📡 API: /v1/analyze</text>
 </svg>

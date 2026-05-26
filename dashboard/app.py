@@ -42,8 +42,8 @@ from augur.config import get_config, set_config, save_config, reset_config
 
 app = FastAPI(
     title="Augur — 多智能体投资分析",
-    description="17位虚拟投资大师，多维度共识分析",
-    version="3.0.0",
+    description="18位虚拟投资大师，多维度共识分析",
+    version="6.0.0",
 )
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -121,8 +121,7 @@ async def index(request: Request):
         {"avatar": "🚀", "name": "Cathie Wood", "style": "颠覆性创新", "desc": "专注 AI、基因组、区块链等颠覆性技术，接受高估值换取指数级成长。", "tag": "成长投资"},
         {"avatar": "🇨🇳", "name": "段永平", "style": "本分 · 极度集中", "desc": "「本分」哲学：只做正确的事，停止做错误的事。极度集中持仓，能力圈内重仓。", "tag": "中国价值"},
     ]
-    return templates.TemplateResponse("index.html", {
-        "request": request,
+    return templates.TemplateResponse(request=request, name="index.html", context={
         "title": "Augur — 投资大师仪表盘",
         "agent_count": agent_count,
         "stats": stats,
@@ -132,8 +131,7 @@ async def index(request: Request):
 
 @app.get("/personas", response_class=HTMLResponse)
 async def personas_page(request: Request):
-    return templates.TemplateResponse("personas.html", {
-        "request": request,
+    return templates.TemplateResponse(request=request, name="personas.html", context={
         "personas": _persona_meta(),
         "title": "投资人人格系统",
     })
@@ -142,8 +140,7 @@ async def personas_page(request: Request):
 @app.get("/stocks", response_class=HTMLResponse)
 async def stocks_page(request: Request):
     quick_tickers = ["AAPL", "NVDA", "MSFT", "GOOGL", "TSLA", "BRK.B", "META", "AMZN", "PDD", "BIDU"]
-    return templates.TemplateResponse("stocks.html", {
-        "request": request,
+    return templates.TemplateResponse(request=request, name="stocks.html", context={
         "title": "股票分析",
         "quick_tickers": quick_tickers,
     })
@@ -151,8 +148,7 @@ async def stocks_page(request: Request):
 
 @app.get("/signals", response_class=HTMLResponse)
 async def signals_page(request: Request):
-    return templates.TemplateResponse("signals.html", {
-        "request": request,
+    return templates.TemplateResponse(request=request, name="signals.html", context={
         "title": "信号监控",
     })
 
@@ -170,8 +166,7 @@ async def settings_page(request: Request):
     default_model = config.get("defaults", {}).get("model", "")
     for p in personas:
         p["current_model"] = per_agent.get(p["id"], default_model)
-    return templates.TemplateResponse("settings.html", {
-        "request": request,
+    return templates.TemplateResponse(request=request, name="settings.html", context={
         "title": "设置",
         "personas": personas,
         "available_models": models_flat,
@@ -181,8 +176,7 @@ async def settings_page(request: Request):
 
 @app.get("/create-persona", response_class=HTMLResponse)
 async def create_persona_page(request: Request):
-    return templates.TemplateResponse("create_persona.html", {
-        "request": request,
+    return templates.TemplateResponse(request=request, name="create_persona.html", context={
         "title": "创建自定义投资人",
     })
 
@@ -221,7 +215,7 @@ async def analyze_ticker(
     auto_fetch: bool = True,
 ):
     """
-    使用所有17位投资大师分析指定标的
+    使用所有18位投资大师分析指定标的
 
     基本用法: GET /api/analyze/AAPL (自动获取实时数据)
     手动指标: GET /api/analyze/AAPL?price=210&pe=32&gross_margins=0.46
@@ -525,8 +519,7 @@ async def api_run_watchlist_analysis():
 
 @app.get("/backtest", response_class=HTMLResponse)
 async def backtest_page(request: Request):
-    return templates.TemplateResponse("backtest.html", {
-        "request": request,
+    return templates.TemplateResponse(request=request, name="backtest.html", context={
         "title": "历史回测 - Agent IC",
     })
 

@@ -1,7 +1,7 @@
 ---
 name: augur
-description: "Augur — 17位虚拟投资大师多智能体共识分析系统。输入股票代码和财务数据，获得巴菲特、格雷厄姆、段永平、张磊等17位投资大师的独立评分与加权共识信号。覆盖美股/港股/A股/Crypto。"
-version: 3.4.0
+description: "Augur — 18位虚拟投资大师多智能体共识分析系统。输入股票代码和财务数据，获得巴菲特、格雷厄姆、段永平、张磊等18位投资大师的独立评分与加权共识信号。覆盖美股/港股/A股/Crypto。"
+version: 6.0.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]
@@ -11,8 +11,8 @@ model:
 metadata:
   augur:
     type: multi-agent-consensus
-    agent_count: 17
-    personas: [buffett, graham, lynch, dalio, munger, soros, marks, cathie_wood, fisher, arps, aschenbrenner, dayu, thiel, duan_yongping, zhang_lei, li_lu, dan_bin]
+    agent_count: 18
+    personas: [buffett, graham, lynch, dalio, munger, soros, marks, cathie_wood, fisher, arps, aschenbrenner, dayu, thiel, duan_yongping, zhang_lei, li_lu, dan_bin, serenity]
     coverage: [US stocks, HK stocks, A shares, Crypto]
 compatibility: "Python 3.8+, FastAPI dashboard 可选"
 ---
@@ -21,16 +21,16 @@ compatibility: "Python 3.8+, FastAPI dashboard 可选"
 
 ## 系统概览
 
-Augur 是一个 **17位虚拟投资大师的多智能体分析系统**。每位投资人都有独立的人格、哲学框架、行为规范和评分逻辑，系统最终用多Agent共识机制（行业加权、机制感知、相关性惩罚）汇总出集体判断。
+Augur 是一个 **18位虚拟投资大师的多智能体分析系统**。每位投资人都有独立的人格、哲学框架、行为规范和评分逻辑，系统最终用多Agent共识机制（行业加权、机制感知、相关性惩罚）汇总出集体判断。
 
 你可以：
 1. **单个投资人分析** — `augur-buffett`、`augur-zhang-lei` 等独立 Skill
-2. **多Agent共识** — 全部17位大师同时分析，给出加权共识信号
+2. **多Agent共识** — 全部18位大师同时分析，给出加权共识信号
 3. **部署到任意平台** — Telegram、Slack、WeChat、Claude、Hermes 都支持
 
 ---
 
-## 17位投资大师
+## 18位投资大师
 
 | Skill名称 | 投资人 | 风格 | 适合场景 | 推荐模型 |
 |-----------|--------|------|---------|---------|
@@ -59,7 +59,7 @@ Augur 是一个 **17位虚拟投资大师的多智能体分析系统**。每位�
 ### 方式一：在 Hermes / Claude / OpenClaw 中调用
 
 ```
-# 加载主 Skill（17位大师共识）
+# 加载主 Skill（18位大师共识）
 /skill augur
 "分析 AAPL，PE=32，毛利率46%，ROE=55%，科技板块"
 
@@ -125,7 +125,7 @@ per_agent:
 
 ## 共识机制说明
 
-所有17位Agent分析完成后，系统用 `DecisionCoordinator` 计算共识：
+所有18位Agent分析完成后，系统用 `DecisionCoordinator` 计算共识：
 
 1. **行业感知权重** — 科技股给 Aschenbrenner/Wood 更高权重，消费股给 Buffett/Munger 更高权重
 2. **市场机制路由** — 熊市时 Marks/Dalio 权重提升，牛市时 Lynch/Fisher 权重提升

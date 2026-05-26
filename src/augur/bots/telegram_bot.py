@@ -5,7 +5,7 @@ augur.bots.telegram_bot - Telegram Bot for Augur multi-agent analysis
 Commands:
   /analyze TICKER [pe=X roe=X ...] - Run full consensus analysis
   /ask PERSONA_ID question - Ask a specific investor persona
-  /consensus TICKER - 17-agent consensus report
+  /consensus TICKER - 18-agent consensus report
   /personas - List all available personas
   /help - Show help
 
@@ -250,7 +250,7 @@ def run_telegram_bot(token: Optional[str] = None):
             "\U0001f989 *Augur - \u591a\u667a\u80fd\u4f53\u6295\u8d44\u5206\u6790\u7cfb\u7edf*\n\n"
             "\U0001f4cb *\u53ef\u7528\u547d\u4ee4:*\n"
             "`/analyze TICKER [pe=X roe=X ...]` - \u5171\u8bc6\u5206\u6790\n"
-            "`/consensus TICKER` - 17-Agent \u5171\u8bc6\u62a5\u544a\n"
+            "`/consensus TICKER` - 18-Agent \u5171\u8bc6\u62a5\u544a\n"
             "`/ask PERSONA question` - \u5411\u7279\u5b9a\u6295\u8d44\u5927\u5e08\u63d0\u95ee\n"
             "`/personas` - \u5217\u51fa\u6240\u6709\u6295\u8d44\u5927\u5e08\n"
             "`/help` - \u663e\u793a\u5e2e\u52a9\n\n"

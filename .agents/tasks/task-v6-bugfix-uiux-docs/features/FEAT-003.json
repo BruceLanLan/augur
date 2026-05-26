@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-003",
+  "type": "docs",
+  "description": "Complete documentation restructure: Rewrite README.md (Chinese) and README_EN.md (English) to be more professional, attractive and readable. Create docs/CHANGELOG.md. Update all docs to say 18 agents and v6.0. Update SKILL.md.",
+  "status": "pending",
+  "steps": [
+    "1. README.md (Chinese) - Complete rewrite: Better hero section with a compelling hook ('你的AI投资决策委员会'). '3秒看懂' visual summary section. Cleaner quick start (literally 3 commands). Feature highlights as punchy bullet points not dense tables. Show input AND output examples. Professional but accessible tone. 18 investors. v6.0.0. Keep the 18-investor table but make it cleaner. Add a 'Why Augur?' section. Keep Star History chart. Add architecture diagram reference. Simplify the version log into a brief section pointing to CHANGELOG.md.",
+    "2. README_EN.md (English) - Same quality rewrite as Chinese version. Mirror structure. 18 investors, v6.0. Professional English copy.",
+    "3. Create docs/CHANGELOG.md - Extract version history from README into a dedicated changelog file. Format: ## v6.0.0 (current), ## v5.6, ## v5.5, etc. Both Chinese and English sections or just Chinese is fine (follow README pattern).",
+    "4. Update docs/agent-integration-guide.md - Fix all '17' to '18'. Fix any references to 'scanner/' path (should be 'src/augur/'). Update version references to v6.0.",
+    "5. Update docs/agent-integration-guide-en.md - Same fixes as Chinese version.",
+    "6. Update docs/hermes-setup-guide.md and docs/hermes-setup-guide-en.md - Update version to v6.0, ensure 18 agents mentioned, clean up examples.",
+    "7. Update SKILL.md - Change all '17' to '18', update version, ensure paths reference src/augur/ correctly.",
+    "8. Update SVG files (docs/images/hero-banner-en.svg) - Change '17' references to '18' in text elements. (Note: architecture SVGs were handled in FEAT-001 but verify hero-banner-en.svg content text)."
+  ],
+  "acceptance_criteria": [
+    "README.md is compelling, professional, and says 18 agents / v6.0",
+    "README_EN.md mirrors the Chinese version quality",
+    "docs/CHANGELOG.md exists with version history",
+    "All docs reference 18 agents and v6.0",
+    "No references to old 'scanner/' path remain in docs",
+    "SKILL.md updated to 18 agents"
+  ],
+  "verification": [
+    "grep -rn '17.*agent\\|17.*persona\\|17.*大师\\|17.*investor' /projects/sandbox/augur/docs/ /projects/sandbox/augur/README.md /projects/sandbox/augur/README_EN.md /projects/sandbox/augur/SKILL.md | grep -v '.git'",
+    "test -f /projects/sandbox/augur/docs/CHANGELOG.md && echo 'CHANGELOG exists'",
+    "grep '6.0' /projects/sandbox/augur/README.md && grep '18' /projects/sandbox/augur/README.md"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

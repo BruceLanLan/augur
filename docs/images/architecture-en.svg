@@ -10,7 +10,7 @@
   <rect width="1200" height="750" fill="#f8f6f0"/>
   <rect width="1200" height="750" fill="url(#bg-dots)"/>
   <rect x="8" y="8" width="1184" height="734" rx="10" fill="none" stroke="#1e293b" stroke-width="2"/>
-  <text x="600" y="36" text-anchor="middle" font-family="Arial" font-size="18" font-weight="800" fill="#0f172a">Augur v5.5 System Architecture</text>
+  <text x="600" y="36" text-anchor="middle" font-family="Arial" font-size="18" font-weight="800" fill="#0f172a">Augur v6.0 System Architecture</text>
 
   <!-- Layer 1: User Access -->
   <rect x="20" y="50" width="1160" height="72" rx="6" fill="#fff" stroke="#2563eb" stroke-width="1.5"/>
@@ -32,7 +32,7 @@
   <rect x="20" y="140" width="1160" height="18" rx="6" fill="#ecfdf5" stroke="none"/>
   <rect x="20" y="152" width="1160" height="6" fill="#ecfdf5" stroke="none"/>
   <text x="30" y="153" font-family="Arial" font-size="9" font-weight="700" fill="#065f46">Layer 2: Core Engine</text>
-  <g transform="translate(35,166)"><rect width="200" height="42" rx="5" fill="#f8fafc" stroke="#059669" stroke-width="1.2"/><text x="100" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">AgentRegistry</text><text x="100" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">17 Agents / YAML loader</text></g>
+  <g transform="translate(35,166)"><rect width="200" height="42" rx="5" fill="#f8fafc" stroke="#059669" stroke-width="1.2"/><text x="100" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">AgentRegistry</text><text x="100" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">18 Agents / YAML loader</text></g>
   <g transform="translate(255,166)"><rect width="200" height="42" rx="5" fill="#f8fafc" stroke="#059669" stroke-width="1.2"/><text x="100" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">DecisionCoordinator</text><text x="100" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">6-layer consensus / Industry weights</text></g>
   <g transform="translate(475,166)"><rect width="200" height="42" rx="5" fill="#f8fafc" stroke="#059669" stroke-width="1.2"/><text x="100" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">DebateProtocol</text><text x="100" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Multi-round debate</text></g>
   <g transform="translate(695,166)"><rect width="200" height="42" rx="5" fill="#f8fafc" stroke="#059669" stroke-width="1.2"/><text x="100" y="17" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#065f46">Soul Injector</text><text x="100" y="32" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Soul injection engine</text></g>
@@ -110,7 +110,7 @@
   <g transform="translate(915,610)"><rect width="245" height="36" rx="5" fill="#f8fafc" stroke="#0d9488" stroke-width="1.2"/><text x="122" y="15" text-anchor="middle" font-family="Arial" font-size="9" font-weight="600" fill="#115e59">Dashboard Toast</text><text x="122" y="28" text-anchor="middle" font-family="Arial" font-size="7" fill="#64748b">Web notifications</text></g>
 
   <!-- Footer -->
-  <text x="600" y="680" text-anchor="middle" font-family="Arial" font-size="10" fill="#64748b">Data flow: User input → Engine dispatch → 17 Agents analyze → Consensus + Risk → Data aggregation → Multi-channel push</text>
+  <text x="600" y="680" text-anchor="middle" font-family="Arial" font-size="10" fill="#64748b">Data flow: User input → Engine dispatch → 18 Agents analyze → Consensus + Risk → Data aggregation → Multi-channel push</text>
   <text x="600" y="700" text-anchor="middle" font-family="Arial" font-size="9" fill="#94a3b8">Blue=Value(Buffett/Graham/Munger/Li Lu) | Green=Macro(Dalio/Soros/Marks) | Purple=Growth(Fisher/Wood/Aschenbrenner/Thiel/Lynch) | Orange=Crypto(ARPS/BTCdayu) | Red=Chinese(Duan Yongping/Zhang Lei/Dan Bin)</text>
-  <text x="600" y="720" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">Augur v5.5 - Multi-Agent Investment Analysis System</text>
+  <text x="600" y="720" text-anchor="middle" font-family="Arial" font-size="8" fill="#94a3b8">Augur v6.0 - Multi-Agent Investment Analysis System</text>
 </svg>

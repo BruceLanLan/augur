@@ -381,7 +381,7 @@ def format_help_blocks() -> List[Dict[str, Any]]:
             "elements": [
                 {
                     "type": "mrkdwn",
-                    "text": "\U0001f989 Augur | 17 Investor Persona Agents",
+                    "text": "\U0001f989 Augur | 18 Investor Persona Agents",
                 }
             ],
         },
@@ -489,7 +489,7 @@ def run_slack_bot(mode: str = "socket", port: int = 3000):
         ticker = parts[0].upper()
         metrics = _parse_metrics(text)
 
-        respond(text=f":hourglass_flowing_sand: Analyzing {ticker} with 17 agents...")
+        respond(text=f":hourglass_flowing_sand: Analyzing {ticker} with 18 agents...")
 
         try:
             from augur.registry import AgentRegistry, DecisionCoordinator
@@ -634,7 +634,7 @@ def run_slack_bot(mode: str = "socket", port: int = 3000):
         else:
             # Full consensus analysis
             say(
-                text=f":hourglass_flowing_sand: Analyzing {ticker} with 17 agents...",
+                text=f":hourglass_flowing_sand: Analyzing {ticker} with 18 agents...",
                 thread_ts=thread_ts,
             )
 
@@ -703,7 +703,7 @@ def run_slack_bot(mode: str = "socket", port: int = 3000):
                 return
 
         # Default: full consensus
-        say(text=f":hourglass_flowing_sand: Analyzing {ticker} with 17 agents...")
+        say(text=f":hourglass_flowing_sand: Analyzing {ticker} with 18 agents...")
 
         try:
             from augur.registry import AgentRegistry, DecisionCoordinator

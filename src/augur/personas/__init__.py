@@ -5,7 +5,7 @@ augur.personas - Agent persona system package
 Provides:
   - Type definitions: SignalType, AgentResponse, MarketContext, DebateMessage
   - Base class: BaseAgent
-  - 17 concrete agents
+  - 18 concrete agents
 """
 
 from augur.personas.base import (

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Test AgentRegistry loads all 17+ agents and basic analysis works."""
+"""Test AgentRegistry loads all 18+ agents and basic analysis works."""
 
 import pytest
 from augur.registry import AgentRegistry, DecisionCoordinator
@@ -10,7 +10,7 @@ class TestAgentRegistry:
     def test_registry_loads_default_agents(self):
         registry = AgentRegistry()
         agents = registry.get_all()
-        assert len(agents) >= 17, f"Expected >= 17 agents, got {len(agents)}"
+        assert len(agents) >= 18, f"Expected >= 18 agents, got {len(agents)}"
 
     def test_registry_agent_ids(self):
         registry = AgentRegistry()

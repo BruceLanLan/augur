@@ -44,7 +44,7 @@ def create_server():
             "Install it with: pip install 'mcp>=1.0.0' (requires Python 3.10+)"
         )
 
-    mcp = FastMCP("augur", instructions="Multi-agent investment analysis system with 17 investor persona agents")
+    mcp = FastMCP("augur", instructions="Multi-agent investment analysis system with 18 investor persona agents")
 
     @mcp.tool()
     def augur_analyze(ticker: str, persona: Optional[str] = None, pe: float = 0,
