@@ -160,3 +160,30 @@ class TestPersonaConfigValidation:
         )
         assert resp.status_code == 200
         assert resp.json()["status"] == "ok"
+
+
+class TestTickerValidation:
+    """Tests for ticker format validation on /api/analyze/{ticker}."""
+
+    def test_analyze_valid_ticker(self):
+        """GET /api/analyze/AAPL should return 200."""
+        resp = client.get("/api/analyze/AAPL")
+        assert resp.status_code == 200
+
+    def test_analyze_invalid_ticker_with_spaces(self):
+        """GET /api/analyze/AA%20PL should return 400."""
+        resp = client.get("/api/analyze/AA PL")
+        assert resp.status_code == 400
+        assert "Invalid ticker" in resp.json()["detail"]
+
+    def test_analyze_invalid_ticker_with_special_chars(self):
+        """GET /api/analyze/AAPL;DROP should return 400."""
+        resp = client.get("/api/analyze/AAPL;DROP")
+        assert resp.status_code == 400
+        assert "Invalid ticker" in resp.json()["detail"]
+
+    def test_analyze_ticker_too_long(self):
+        """GET /api/analyze/ABCDEFGHIJKLMNOP (16 chars) should return 400."""
+        resp = client.get("/api/analyze/ABCDEFGHIJKLMNOP")
+        assert resp.status_code == 400
+        assert "Invalid ticker" in resp.json()["detail"]

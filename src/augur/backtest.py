@@ -190,7 +190,12 @@ class Backtester:
         )
 
     def _check_hit(self, signal: str, actual_return: float) -> bool:
-        """Check if prediction was correct"""
+        """Check if prediction was correct based on 20-day forward returns.
+
+        The 0.02 (2%) threshold for neutral is intentional: since actual_return
+        represents the cumulative 20-day forward return (not a single daily return),
+        a move of less than 2% over 20 trading days is reasonably considered "flat".
+        """
         if signal == "bullish" and actual_return > 0:
             return True
         elif signal == "bearish" and actual_return < 0:

@@ -274,6 +274,10 @@ function runAnalysis() {
     var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase();
     if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
 
+    // Disable submit button to prevent double-submit
+    var submitBtn = document.querySelector('.btn-primary');
+    if (submitBtn) submitBtn.disabled = true;
+
     var params = new URLSearchParams({
         price: num('inp-price'),
         market_cap: num('inp-mktcap', 1e8),
@@ -309,6 +313,7 @@ function runAnalysis() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             document.getElementById('spinner').style.display = 'none';
+            if (submitBtn) submitBtn.disabled = false;
             // Show data source indicator if data came from yfinance
             if (data.data_source === 'yfinance') {
                 document.getElementById('data-source-indicator').style.display = 'block';
@@ -320,6 +325,7 @@ function runAnalysis() {
         })
         .catch(function(err) {
             document.getElementById('spinner').style.display = 'none';
+            if (submitBtn) submitBtn.disabled = false;
             document.getElementById('error-panel').style.display = 'block';
             document.getElementById('error-msg').textContent = '请求失败: ' + (err.message || err) + '。请检查网络连接或服务是否运行中。';
         });

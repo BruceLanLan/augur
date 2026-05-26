@@ -82,6 +82,13 @@ def fetch_market_context(ticker: str) -> MarketContext:
     except Exception:
         info = {}
 
+    # If info is empty or missing 'symbol', we have no valid data from yfinance.
+    # Return a minimal MarketContext with just the ticker and zero defaults.
+    if not info or "symbol" not in info:
+        ctx = MarketContext(ticker=ticker.upper())
+        _cache_set(cache_key, ctx)
+        return ctx
+
     # Map yfinance info to MarketContext fields
     price = info.get("currentPrice") or info.get("regularMarketPrice", 0) or 0
     pe = info.get("trailingPE", 0) or 0
