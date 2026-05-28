@@ -203,9 +203,19 @@ skills:
 }
 ```
 
-6 MCP tools: `augur_analyze` · `augur_consensus` · `augur_list_personas` · `augur_configure` · `augur_create_persona` · `augur_debate`
+7 MCP tools: `augur_analyze` · `augur_consensus` · `augur_fetch` · `augur_list_personas` · `augur_configure` · `augur_create_persona` · `augur_debate`
 
-> All tools support **auto live data**: if no metrics are passed, yfinance fetches them automatically.
+| Tool | What it does |
+|------|-------------|
+| `augur_analyze` | Analyze with one or all personas. Returns signal, score, key_findings, risks, reasoning. |
+| `augur_consensus` | 18-master weighted consensus + Kelly position sizing. |
+| `augur_fetch` | Fetch live market data only (no analysis). Great for chaining with analyze. |
+| `augur_list_personas` | List all 18 investors with their ID, name, and philosophy. |
+| `augur_configure` | Set which LLM model a specific persona uses. |
+| `augur_create_persona` | Create a new YAML persona on the fly. |
+| `augur_debate` | Run multi-round debate among agents on a ticker. |
+
+> All tools auto-fetch live data from yfinance when no metrics are provided.
 
 ### Telegram / Slack / WeChat / Lark
 
@@ -225,32 +235,55 @@ docker compose --profile telegram up -d  # + Telegram Bot
 
 ---
 
-## ⚙️ Full CLI Reference
+## ⚙️ Full CLI Reference (20 commands)
 
 ```bash
-augur analyze AAPL                         # auto live data, all 18 masters
-augur analyze TSLA --persona cathie_wood   # specific master only
-augur consensus NVDA                       # weighted consensus + Kelly size
-augur list-personas                        # show all investors
+# ── Core Analysis ────────────────────────────────────────────────────────────
+augur analyze AAPL                            # auto live data, all 18 masters
+augur analyze NVDA --persona buffett          # specific master only
+augur analyze TSLA --persona cathie_wood --json  # JSON output (for scripting)
+augur consensus AAPL                          # weighted consensus + Kelly size
+augur consensus NVDA --json                   # JSON output (incl. individual)
+augur list-personas                           # list all 18 investors
 
-augur fetch 0700.HK --json                 # raw market data (JSON)
-augur backtest AAPL --days 30 --live       # real historical backtest
-augur ic-report                            # agent accuracy leaderboard
+# ── Data ─────────────────────────────────────────────────────────────────────
+augur fetch 0700.HK                           # fetch live data (no analysis)
+augur fetch AAPL --json                       # JSON format
 
-augur watchlist-add AAPL --pe 32 --roe 0.55 --gross-margins 0.46
-augur cron-run                             # run watchlist analysis once
-augur cron-start                           # start scheduled daemon (weekdays 9am)
+# ── Backtest & IC Tracking ───────────────────────────────────────────────────
+augur backtest AAPL --days 30 --live          # real yfinance history
+augur backtest AAPL --demo                    # simulated data (quick demo)
+augur ic-report                               # agent accuracy leaderboard
 
-augur inject-soul --profile my-buffett --persona buffett -f hermes
+# ── Watchlist Monitoring ─────────────────────────────────────────────────────
+augur watchlist-add AAPL --roe 0.55 --gross-margins 0.46 --sector Technology
+augur watchlist-show                          # display current watchlist
+augur cron-run                                # run watchlist analysis once
+augur cron-start                              # start scheduled daemon (weekdays 9am)
+
+# ── Services ─────────────────────────────────────────────────────────────────
+python3 -m dashboard.app --port 8000 --cors   # Bloomberg Dashboard (full API)
+augur api --port 8900                         # lightweight REST API
+augur mcp-server                              # MCP Server (stdio, Python 3.10+)
+
+# ── Hermes / Claude Integration ──────────────────────────────────────────────
+augur inject-soul --persona buffett -f hermes --profile my-buffett
+
+# ── Platform Bots ────────────────────────────────────────────────────────────
+augur telegram    # pip install -e ".[telegram]" && export TELEGRAM_TOKEN=...
+augur slack       # pip install -e ".[slack]"
+augur wechat      # pip install -e ".[wechat]" (GeWeChat personal mode)
+augur lark        # pip install -e ".[lark]"
 ```
 
-**Parameter conventions:**
+**Parameter conventions (across all commands):**
 
-| Type | Unit | Example |
-|------|------|---------|
-| Rates / margins | Decimal | `--roe 0.55` = 55% |
-| Ownership | Integer percent | `--institutional-ownership 66` = 66% |
-| Market cap / FCF | Billions USD | `--market-cap 2800` = $2.8T |
+| Type | Unit | Correct | Wrong |
+|------|------|---------|-------|
+| Rates / margins / growth | Decimal (0-1) | `--roe 0.55` (55%) | ~~`--roe 55`~~ |
+| Debt ratio | Decimal (0-1) | `--debt-ratio 0.35` (35%) | ~~`--debt-ratio 35`~~ |
+| Ownership | Integer percent | `--institutional-ownership 66` (66%) | ~~`--institutional-ownership 0.66`~~ |
+| Market cap / FCF | **Billions USD** | `--market-cap 2800` ($2.8T) | ~~`--market-cap 2800000000000`~~ |
 
 ---
 
@@ -285,6 +318,31 @@ factors:
 
 ---
 
+## 📡 Dashboard API Endpoints
+
+When Dashboard is running (`python3 -m dashboard.app --port 8000`), the following endpoints are available:
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/analyze/{ticker}` | GET | 18-master consensus, auto-yfinance when no metrics |
+| `/api/fetch/{ticker}` | GET | Fetch live market data only |
+| `/api/personas` | GET | List all 18 investors |
+| `/api/persona/{id}` | GET | Single investor details |
+| `/api/config` | GET/PUT | Global config read/write |
+| `/api/config/persona/{id}` | GET/PUT | Per-investor model config |
+| `/api/models` | GET | Available LLM models |
+| `/api/watchlist` | GET | Current watchlist |
+| `/api/watchlist/add` | POST | Add to watchlist |
+| `/api/watchlist/{ticker}` | DELETE | Remove from watchlist |
+| `/api/watchlist/run` | POST | Batch analyze + save last signal |
+| `/api/custom-persona` | POST | Create YAML persona (hot-reloads) |
+| `/api/backtest/run` | GET | Run IC backtest |
+| `/api/backtest/leaderboard` | GET | IC leaderboard |
+| `/api/search` | GET | Ticker search |
+| `/health` | GET | Health check |
+
+---
+
 ## ❓ Troubleshooting
 
 <details>
@@ -298,35 +356,72 @@ pip install -e ".[data]"
 <details>
 <summary>MCP Server "No module named mcp"</summary>
 
+The `mcp` package requires Python 3.10+:
 ```bash
-uv venv --python 3.11 .venv && uv pip install -e ".[mcp]"
-.venv/bin/augur mcp-server
+uv venv --python 3.11 .venv
+uv pip install -e ".[mcp]"
+.venv/bin/augur mcp-server   # verify it starts
+# then register the absolute path in ~/.hermes/config.yaml
 ```
 </details>
 
 <details>
-<summary>Analysis always shows NEUTRAL</summary>
+<summary>Analysis always returns NEUTRAL with low scores</summary>
 
-Use decimals for rates (`--roe 0.55` not `--roe 55`), billions for market cap (`--market-cap 2800` = $2.8T)
+Check parameter units (the #1 mistake):
+- ✅ `--roe 0.55` (55%)  ❌ ~~`--roe 55`~~
+- ✅ `--debt-ratio 0.35` (35%)  ❌ ~~`--debt-ratio 35`~~
+- ✅ `--market-cap 2800` ($2.8T)  ❌ ~~`--market-cap 2800000000000`~~
+- ✅ `--gross-margins 0.46` (46%)  ❌ ~~`--gross-margins 46`~~
 </details>
 
 <details>
 <summary>Dashboard stuck on "Loading"</summary>
 
 ```bash
-curl http://localhost:8000/health  # should return {"status":"ok","agents":18}
+# 1. Verify service is running
+curl http://localhost:8000/health   # should return {"status":"ok","agents":18}
+
+# 2. Make sure yfinance is installed (for auto-fetch)
 pip install -e ".[data]"
+
+# 3. Enable CORS for frontend calls
+python3 -m dashboard.app --port 8000 --cors
 ```
+</details>
+
+<details>
+<summary>Telegram Bot /analyze AAPL returns NEUTRAL with zero data</summary>
+
+Install yfinance:
+```bash
+pip install -e ".[data,telegram]"
+# Bot auto-fetches live data when no metrics are passed
+```
+</details>
+
+<details>
+<summary>Kelly position shows 0% or N/A</summary>
+
+Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUTRAL/BEARISH signals conservatively return 0.
+</details>
+
+<details>
+<summary>Custom YAML persona doesn't appear after creation</summary>
+
+The Dashboard supports hot-reload (saved YAML is immediately available in the same process). CLI/API will auto-load `personas/custom/*.yaml` on next restart.
 </details>
 
 ---
 
 ## 🤝 Contributing
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide: new investors (YAML/Python), bug fixes, Dashboard work, Bot work, parameter conventions.
+
 - **New investor** → Add YAML to `personas/custom/` or write Python like `src/augur/personas/buffett.py`
 - **Algorithm** → Improve `src/augur/coordinator.py` consensus mechanism
-- **New platform** → Add to `src/augur/bots/`
-- **UI** → Improve `dashboard/` frontend
+- **New platform** → Add to `src/augur/bots/`, reference `telegram_bot.py`
+- **UI** → Improve `dashboard/`, CSS variables in `bloomberg.css`
 
 ---
 

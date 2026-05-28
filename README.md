@@ -239,36 +239,57 @@ docker compose --profile telegram up -d  # + Telegram Bot
 
 ---
 
-## ⚙️ 完整 CLI
+## ⚙️ 完整 CLI（20 个命令）
 
 ```bash
-# 核心分析
-augur analyze AAPL                     # 自动实时数据，18位分析
-augur analyze TSLA --persona cathie_wood  # 指定大师
-augur consensus NVDA                   # 加权共识 + Kelly仓位
-augur list-personas                    # 列出所有投资人
+# ── 核心分析 ──────────────────────────────────────────────────────────────────
+augur analyze AAPL                            # 自动实时数据，18位同时分析
+augur analyze NVDA --persona buffett          # 仅用巴菲特框架
+augur analyze TSLA --persona cathie_wood --json  # JSON 输出（脚本集成）
+augur consensus AAPL                          # 18位加权共识 + Kelly 仓位建议
+augur consensus NVDA --json                   # JSON 输出（含个体结果）
+augur list-personas                           # 列出所有 18 位投资人
 
-# 数据与回测
-augur fetch 0700.HK --json            # 仅获取市场数据
-augur backtest AAPL --days 30 --live  # 真实历史回测
-augur ic-report                       # Agent IC 准确率排行
+# ── 数据 ──────────────────────────────────────────────────────────────────────
+augur fetch 0700.HK                           # 仅获取实时数据（不分析）
+augur fetch AAPL --json                       # JSON 格式输出
 
-# 自选股监控
-augur watchlist-add AAPL --pe 32 --roe 0.55 --gross-margins 0.46
-augur cron-run    # 立即运行一次
-augur cron-start  # 启动定时守护（工作日 9:00）
+# ── 回测与 IC 追踪 ────────────────────────────────────────────────────────────
+augur backtest AAPL --days 30 --live         # 用真实 yfinance 历史数据
+augur backtest AAPL --demo                   # 用模拟数据（快速演示）
+augur ic-report                              # Agent 预测准确率排行榜
 
-# Hermes Soul 注入
-augur inject-soul --profile buffett-profile --persona buffett -f hermes
+# ── 自选股监控 ────────────────────────────────────────────────────────────────
+augur watchlist-add AAPL --roe 0.55 --gross-margins 0.46 --sector Technology
+augur watchlist-show                         # 查看当前自选股列表
+augur cron-run                               # 立即运行一次自选股分析
+augur cron-start                             # 启动定时守护（工作日 09:00 AM）
+
+# ── 服务启动 ──────────────────────────────────────────────────────────────────
+python3 -m dashboard.app --port 8000 --cors  # Bloomberg Dashboard（含完整 API）
+augur api --port 8900                        # 轻量 REST API
+augur mcp-server                             # MCP Server (stdio, 需 Python 3.10+)
+
+# ── Hermes / Claude 集成 ──────────────────────────────────────────────────────
+augur inject-soul --persona buffett -f hermes --profile my-buffett
+# → 生成 soul.md 并存入 --output-dir（默认当前目录）
+
+# ── 平台 Bot（需先安装对应 extra） ────────────────────────────────────────────
+augur telegram    # pip install -e ".[telegram]" && export TELEGRAM_TOKEN=...
+augur slack       # pip install -e ".[slack]" && export SLACK_BOT_TOKEN=... SLACK_APP_TOKEN=...
+augur wechat      # pip install -e ".[wechat]"  （个人微信 GeWeChat 模式）
+augur wechat --mode wecom    # 企业微信
+augur lark        # pip install -e ".[lark]" && export LARK_APP_ID=... LARK_APP_SECRET=...
 ```
 
-**参数约定：**
+**参数约定（所有命令统一）：**
 
-| 参数类型 | 单位 | 示例 |
-|---------|------|------|
-| 比率/利润率 | 小数 | `--roe 0.55` = 55% |
-| 持仓比例 | 整数百分比 | `--institutional-ownership 66` = 66% |
-| 市值/FCF | 十亿 USD (B) | `--market-cap 2800` = $2.8T |
+| 参数类型 | 单位 | 正确示例 | 错误示例 |
+|---------|------|---------|---------|
+| 利润率 / 增速 / 比率 | 小数（0-1） | `--roe 0.55`（55%） | ~~`--roe 55`~~ |
+| 资产负债率 | 小数（0-1） | `--debt-ratio 0.35`（35%） | ~~`--debt-ratio 35`~~ |
+| 持仓比例 | 整数百分比 | `--institutional-ownership 66`（66%） | ~~`--institutional-ownership 0.66`~~ |
+| 市值 / FCF | **十亿 USD** | `--market-cap 2800`（$2.8T）`--fcf 90`（$90B） | ~~`--market-cap 2800000000000`~~ |
 
 ---
 
@@ -278,19 +299,22 @@ augur inject-soul --profile buffett-profile --persona buffett -f hermes
 augur/
 ├── src/augur/
 │   ├── personas/           # 18位投资人 Python 引擎
-│   │   ├── buffett.py      #   护城河评分逻辑
-│   │   ├── serenity.py     #   AI/半导体供应链
-│   │   └── ... (18个)
-│   ├── coordinator.py      # 共识引擎（6层加权）
-│   ├── data.py             # yfinance 实时数据
-│   ├── mcp_server.py       # MCP Server (6工具)
-│   ├── cli.py              # Click CLI (15+命令)
-│   ├── backtest.py         # IC 回测框架
-│   ├── cron.py             # 定时分析
-│   └── bots/               # Telegram/Slack/WeChat/Lark
+│   │   ├── buffett.py … serenity.py   # 每位独立评分逻辑
+│   │   └── base.py         # BaseAgent / MarketContext / AgentResponse
+│   ├── coordinator.py      # DecisionCoordinator — 6层加权共识
+│   ├── registry.py         # AgentRegistry + half-Kelly 仓位计算
+│   ├── data.py             # yfinance 实时数据（自动单位换算）
+│   ├── mcp_server.py       # MCP Server (7工具, stdio)
+│   ├── cli.py              # Click CLI (20命令)
+│   ├── api.py              # 轻量 REST API (FastAPI)
+│   ├── backtest.py         # IC 回测框架 + leaderboard
+│   ├── cron.py             # 定时分析 + watchlist 管理
+│   ├── config.py           # 配置管理（线程安全 RLock）
+│   ├── soul.py             # Hermes/Claude soul 注入
+│   └── bots/               # Telegram / Slack / WeChat / Lark
 ├── dashboard/              # Bloomberg 风格 Web UI
-│   ├── app.py              # FastAPI + 全部路由
-│   └── templates/          # 7个页面模板
+│   ├── app.py              # FastAPI + 25+ API 路由
+│   └── templates/          # 7个页面（含 create-persona / backtest）
 ├── skills/                 # Hermes/Claude Skill 定义
 │   └── buffett/SKILL.md    # 每位大师独立 Skill
 ├── personas/               # 深度人格文档 + YAML 自定义
@@ -350,10 +374,35 @@ factors:
 
 ---
 
+## 📡 Dashboard API 端点
+
+Dashboard 启动后（`python3 -m dashboard.app --port 8000`）自动提供以下 API：
+
+| 端点 | 方法 | 说明 |
+|------|------|------|
+| `/api/analyze/{ticker}` | GET | 18位共识分析，无指标时自动 yfinance |
+| `/api/fetch/{ticker}` | GET | 仅获取实时行情，不分析 |
+| `/api/personas` | GET | 列出所有 18 位投资人 |
+| `/api/persona/{id}` | GET | 单投资人详情 |
+| `/api/config` | GET/PUT | 全局配置读写 |
+| `/api/config/persona/{id}` | GET/PUT | 单投资人模型配置 |
+| `/api/models` | GET | 可用模型列表 |
+| `/api/watchlist` | GET | 自选股列表 |
+| `/api/watchlist/add` | POST | 添加自选股 |
+| `/api/watchlist/{ticker}` | DELETE | 移除自选股 |
+| `/api/watchlist/run` | POST | 批量分析自选股，保存历史信号 |
+| `/api/custom-persona` | POST | 创建 YAML 自定义投资人（热加载）|
+| `/api/backtest/run` | GET | 运行 IC 历史回测 |
+| `/api/backtest/leaderboard` | GET | IC 排行榜 |
+| `/api/search` | GET | 股票代码搜索 |
+| `/health` | GET | 健康检查 |
+
+---
+
 ## ❓ 常见问题
 
 <details>
-<summary>augur analyze 报 "yfinance not installed"</summary>
+<summary>augur analyze 报错 "yfinance not installed"</summary>
 
 ```bash
 pip install -e ".[data]"
@@ -361,39 +410,74 @@ pip install -e ".[data]"
 </details>
 
 <details>
-<summary>MCP Server 启动失败 "No module named mcp"</summary>
+<summary>MCP Server 报错 "No module named mcp"</summary>
 
 mcp 包需要 Python 3.10+：
 ```bash
 uv venv --python 3.11 .venv
 uv pip install -e ".[mcp]"
-.venv/bin/augur mcp-server
+.venv/bin/augur mcp-server   # 验证可启动
+# 然后在 ~/.hermes/config.yaml 中用绝对路径注册
 ```
 </details>
 
 <details>
-<summary>分析结果总是 NEUTRAL</summary>
+<summary>分析结果总是 NEUTRAL，评分偏低</summary>
 
-检查参数单位：毛利率/ROE 用小数（`--roe 0.55` 不是 `--roe 55`），市值用亿（`--market-cap 2800` = $2.8T）
+检查参数单位是否正确（这是最常见的错误）：
+- ✅ `--roe 0.55`（55%）  ❌ ~~`--roe 55`~~
+- ✅ `--debt-ratio 0.35`（35%）  ❌ ~~`--debt-ratio 35`~~
+- ✅ `--market-cap 2800`（$2.8T）  ❌ ~~`--market-cap 2800000000000`~~
+- ✅ `--gross-margins 0.46`（46%）  ❌ ~~`--gross-margins 46`~~
 </details>
 
 <details>
-<summary>Dashboard 显示 "加载中" 不动</summary>
+<summary>Dashboard 页面不显示或 "加载中" 卡住</summary>
 
-确认 yfinance 已安装 + 后端正常运行：
 ```bash
-curl http://localhost:8000/health  # 应返回 {"status":"ok","agents":18}
+# 1. 检查服务是否正常
+curl http://localhost:8000/health   # 应返回 {"status":"ok","agents":18}
+
+# 2. 确认 yfinance 已安装（自动数据获取）
+pip install -e ".[data]"
+
+# 3. 启用 CORS（供前端调用）
+python3 -m dashboard.app --port 8000 --cors
 ```
+</details>
+
+<details>
+<summary>Telegram Bot 发 /analyze AAPL 返回 NEUTRAL（全零数据）</summary>
+
+需要安装 yfinance：
+```bash
+pip install -e ".[data,telegram]"
+# Bot 在无指标时会自动从 yfinance 获取实时数据
+```
+</details>
+
+<details>
+<summary>Kelly 仓位建议显示 0% 或 N/A</summary>
+
+Kelly 只在 BULLISH 信号且 score > 5 时给出非零建议。NEUTRAL/BEARISH 信号下，Kelly 保守返回 0。
+</details>
+
+<details>
+<summary>自定义 YAML Persona 创建后不出现</summary>
+
+Dashboard 已支持热加载（保存 YAML 后同一进程立即可用）。CLI/API 重启后自动加载 `personas/custom/*.yaml`。
 </details>
 
 ---
 
 ## 🤝 贡献
 
+详见 [CONTRIBUTING.md](CONTRIBUTING.md)，包含：新增投资人（YAML/Python）、修复 Bug、Dashboard 开发、Bot 开发、参数约定等完整指南。
+
 - **新投资人** → `personas/custom/` 放 YAML，或仿 `src/augur/personas/buffett.py` 写 Python
 - **算法优化** → 改进 `src/augur/coordinator.py` 共识机制
-- **新平台 Bot** → 在 `src/augur/bots/` 添加
-- **Web UI** → 完善 `dashboard/` 前端
+- **新平台 Bot** → 在 `src/augur/bots/` 添加，参考 `telegram_bot.py`
+- **Web UI** → 完善 `dashboard/`，CSS 变量见 `bloomberg.css`
 
 ---
 
