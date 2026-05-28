@@ -105,7 +105,7 @@ class CathieWoodAgent(BaseAgent):
                 tam_score = 8  # 低PS+高增长=TAM扩张早期
             elif context.ps > 30:
                 tam_score = 3  # 高PS=TAM已充分定价
-        if context.market_cap < 10e9:
+        if context.market_cap < 10:
             tam_score += 1  # 小市值=TAM未被充分认识
         factors["tam_size"] = min(max(tam_score, 0), 10)
 
@@ -113,9 +113,9 @@ class CathieWoodAgent(BaseAgent):
         tech_risk_score = 5
         if context.gross_margins > 0.60:
             tech_risk_score += 3  # 高毛利=护城河
-        if context.debt_ratio < 40:
+        if context.debt_ratio < 0.40:
             tech_risk_score += 2  # 低负债=可持续创新
-        elif context.debt_ratio > 70:
+        elif context.debt_ratio > 0.70:
             tech_risk_score -= 2
         factors["tech_risk"] = min(max(tech_risk_score, 0), 10)
 
@@ -162,11 +162,11 @@ class CathieWoodAgent(BaseAgent):
 
 **市场空间TAM: {factors['tam_size']}/10**
 - PS: {context.ps:.1f}
-- 市值: {context.market_cap/1e9:.1f}B
+- 市值: {context.market_cap:.1f}B
 
 **技术风险: {factors['tech_risk']}/10**
 - 毛利率: {context.gross_margins*100:.1f}%
-- 负债率: {context.debt_ratio:.1f}%
+- 负债率: {context.debt_ratio*100:.1f}%
 
 **综合评分: {total_score:.1f}/10**
 破坏式创新结论：{'重仓颠覆者，5年视野' if avg_score >= bullish_th else '创新叙事不足，观望' if avg_score <= bearish_th else '中性，等待S曲线加速'}

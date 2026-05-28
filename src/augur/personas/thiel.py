@@ -127,9 +127,9 @@ class ThielAgent(BaseAgent):
             contrarian_score -= 1
 
         # 小市值 = 更多逆向空间
-        if context.market_cap < 5e9:
+        if context.market_cap < 5:
             contrarian_score += 2
-        elif context.market_cap < 50e9:
+        elif context.market_cap < 50:
             contrarian_score += 1
 
         factors["contrarian_timing"] = min(max(contrarian_score, 0), 10)
@@ -154,9 +154,9 @@ class ThielAgent(BaseAgent):
             founder_score += 1
 
         # 低负债 = 创始人不愿稀释控制权
-        if context.debt_ratio < 20:
+        if context.debt_ratio < 0.20:
             founder_score += 1
-        elif context.debt_ratio > 60:
+        elif context.debt_ratio > 0.60:
             founder_score -= 1
 
         factors["founder_quality"] = min(max(founder_score, 0), 10)
@@ -222,7 +222,7 @@ class ThielAgent(BaseAgent):
             long_score += 1
 
         # 大市值 = 已经验证了长期商业模式
-        if context.market_cap > 100e9:
+        if context.market_cap > 100:
             long_score += 1
 
         factors["long_term_bet"] = min(max(long_score, 0), 10)
@@ -289,7 +289,7 @@ class ThielAgent(BaseAgent):
 **创始人质量: {factors['founder_quality']}/10** (权重{self.scoring_weights['founder_quality']:.0%})
 - 内部人持仓: {context.insider_ownership:.1f}% {'👨‍💼 强力下注' if context.insider_ownership > 20 else ''}
 - 毛利率+增长: {context.gross_margins*100:.1f}% / {context.revenue_growth*100:.1f}%
-- 负债率: {context.debt_ratio:.1f}%
+- 负债率: {context.debt_ratio*100:.1f}%
 
 **技术护城河: {factors['technology_moat']}/10** (权重{self.scoring_weights['technology_moat']:.0%})
 - 收入增速: {context.revenue_growth*100:.1f}%
@@ -299,7 +299,7 @@ class ThielAgent(BaseAgent):
 **长期押注: {factors['long_term_bet']}/10** (权重{self.scoring_weights['long_term_bet']:.0%})
 - 收入增速: {context.revenue_growth*100:.1f}%
 - 毛利率: {context.gross_margins*100:.1f}%
-- 市值: ${context.market_cap/1e9:.1f}B
+- 市值: ${context.market_cap:.1f}B
 
 **综合评分: {total_score:.1f}/10**
 **Peter Thiel从0到1框架结论：{'🚀 垄断型企业！从0到1的创新，值得重仓' if avg_score >= self.thresholds.get('bullish_threshold', 7.0) else '⚠️ 这更像从1到n的复制生意' if avg_score <= self.thresholds.get('bearish_threshold', 4.0) else '⏳ 需要更多垄断信号——你相信什么别人不相信的真相？'}**"""

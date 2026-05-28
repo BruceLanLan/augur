@@ -78,12 +78,12 @@ class AschenbrennerAgent(BaseAgent):
         compute_score += min(matches * 1.5, 5)  # 最多+5分
 
         # 高负债率可能意味着重资本投入
-        if context.debt_ratio > 40 and ("tech" in sector or "semiconductor" in sector):
+        if context.debt_ratio > 0.40 and ("tech" in sector or "semiconductor" in sector):
             compute_score += 1  # 主动负债投入AI基础设施
         # 大市值公司在基础设施投资上更有能力
-        if context.market_cap > 500e9:
+        if context.market_cap > 500:
             compute_score += 2  # 超大规模玩家
-        elif context.market_cap > 100e9:
+        elif context.market_cap > 100:
             compute_score += 1
         # ROE高说明资本配置效率好
         if context.roe > 0.20:
@@ -143,11 +143,11 @@ class AschenbrennerAgent(BaseAgent):
         vert_matches = sum(1 for kw in vertical_keywords if kw in sector or kw in industry)
         vert_score += min(vert_matches * 1.5, 4)
         # 超大市值通常伴随垂直整合
-        if context.market_cap > 1e12:
+        if context.market_cap > 1000:
             vert_score += 3  # 万亿美元俱乐部=垂直整合王者
-        elif context.market_cap > 500e9:
+        elif context.market_cap > 500:
             vert_score += 2
-        elif context.market_cap > 100e9:
+        elif context.market_cap > 100:
             vert_score += 1
         # 高毛利率+高运营利润率=全栈控制力
         if context.gross_margins > 0.60 and context.operating_margins > 0.20:
@@ -189,7 +189,7 @@ class AschenbrennerAgent(BaseAgent):
         if context.institutional_ownership > 60:
             vision_score += 2
         # 大市值公司更可能有AGI视野
-        if context.market_cap > 500e9:
+        if context.market_cap > 500:
             vision_score += 1
         # 高PE可以被理解成"市场相信管理层的AGI叙事"
         if context.pe > 40:
@@ -228,7 +228,7 @@ class AschenbrennerAgent(BaseAgent):
             risks.append("非科技行业，AGI基础设施主题暴露不足")
         if context.pe > 80:
             risks.append(f"PE={context.pe:.1f}极高，即使AGI乐观也要考虑估值风险")
-        if context.market_cap < 10e9:
+        if context.market_cap < 10:
             risks.append("市值偏小，在万亿美元AGI竞赛中缺乏资源")
 
         # 模型适用性：Aschenbrenner框架仅对算力/AI基础设施公司有效
@@ -243,8 +243,8 @@ class AschenbrennerAgent(BaseAgent):
 
 **算力基础设施: {factors['compute_infrastructure']}/10** (权重{self.scoring_weights['compute_infrastructure']:.0%})
 - 行业: {context.sector} / {context.industry}
-- 市值: ${context.market_cap/1e9:.1f}B
-- 负债率: {context.debt_ratio:.1f}%
+- 市值: ${context.market_cap:.1f}B
+- 负债率: {context.debt_ratio*100:.1f}%
 - ROE: {context.roe*100:.1f}%
 
 **AI营收研发强度: {factors['ai_exposure']}/10** (权重{self.scoring_weights['ai_exposure']:.0%})

@@ -99,9 +99,9 @@ class GrahamAgent(BaseAgent):
             bs_score += 3
         elif context.current_ratio >= current_ratio_min * 0.75:
             bs_score += 1
-        if context.debt_ratio < 50:
+        if context.debt_ratio < 0.50:
             bs_score += 2
-        elif context.debt_ratio > 70:
+        elif context.debt_ratio > 0.70:
             bs_score -= 2
         factors["balance_sheet"] = min(bs_score * bs_multiplier, 10)
 
@@ -111,7 +111,7 @@ class GrahamAgent(BaseAgent):
             earn_score += 2
         if context.earnings_growth > 0:
             earn_score += 2
-        if context.debt_ratio < 50:
+        if context.debt_ratio < 0.50:
             earn_score += 1
         factors["earnings_stability"] = min(earn_score, 10)
 
@@ -134,8 +134,8 @@ class GrahamAgent(BaseAgent):
             key_findings.append(f"PB偏低({context.pb:.2f})，资产价值被低估(≤{pb_max})")
         if context.current_ratio >= current_ratio_min:
             key_findings.append(f"流动比率优秀({context.current_ratio:.1f})")
-        if context.debt_ratio > 70:
-            risks.append(f"负债率偏高({context.debt_ratio:.0f}%)")
+        if context.debt_ratio > 0.70:
+            risks.append(f"负债率偏高({context.debt_ratio*100:.0f}%)")
 
         # 模型适用性：Graham需要清晰的PE+PB+流动比率
         if context.pe > 0 and context.pb > 0 and context.current_ratio > 0:
@@ -180,7 +180,7 @@ class GrahamAgent(BaseAgent):
 **资产负债表: {factors['balance_sheet']}/10**
 - 流动比率: {cr_str} {'✓' if context.current_ratio and context.current_ratio >= current_ratio_min else '✗'}
 - 速动比率: {qr_str}
-- 负债率: {context.debt_ratio:.1f}% {'✓ 低负债' if context.debt_ratio and context.debt_ratio < 50 else '✗ 偏高'}
+- 负债率: {context.debt_ratio*100:.1f}% {'✓ 低负债' if context.debt_ratio and context.debt_ratio < 0.50 else '✗ 偏高'}
 
 **盈利稳定性: {factors['earnings_stability']}/10**
 - 收入增长: {context.revenue_growth*100:.1f}%

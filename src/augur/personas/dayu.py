@@ -348,11 +348,11 @@ class DayuAgent(BaseAgent):
 
         # 负债率
         debt = ctx.debt_ratio or 0
-        if debt > 80:
+        if debt > 0.80:
             score -= 2
-        elif debt > 60:
+        elif debt > 0.60:
             score -= 1
-        elif debt < 20:
+        elif debt < 0.20:
             score += 1
 
         return min(max(score, 0), 10)

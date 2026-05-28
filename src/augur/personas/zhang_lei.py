@@ -66,9 +66,9 @@ class ZhangLeiAgent(BaseAgent):
         if context.revenue_growth > 0.50:
             struct_score += 1.0
         # 市值反映TAM信心
-        if context.market_cap > 10_000_000_000:  # $10B+
+        if context.market_cap > 10:  # $10B+
             struct_score += 1.0
-        if context.market_cap > 50_000_000_000:  # $50B+
+        if context.market_cap > 50:  # $50B+
             struct_score += 0.5
         factors["structural_opportunity"] = max(0, min(struct_score * structural_multiplier, 10))
 
@@ -119,7 +119,7 @@ class ZhangLeiAgent(BaseAgent):
             moat_score += 2.0
         if context.operating_margins > 0.20:
             moat_score += 1.0
-        if context.debt_ratio < 40:
+        if context.debt_ratio < 0.40:
             moat_score += 0.5
         factors["competitive_moat"] = max(0, min(moat_score, 10))
 
@@ -199,7 +199,7 @@ class ZhangLeiAgent(BaseAgent):
 
 **结构性机会: {factors['structural_opportunity']:.1f}/10**
 - 营收增速: {context.revenue_growth*100:.1f}% {'✓ 高成长' if context.revenue_growth > 0.20 else '⚠️' if context.revenue_growth > 0.10 else '✗'}
-- 市值规模: ${context.market_cap/1e9:.1f}B
+- 市值规模: ${context.market_cap:.1f}B
 
 **商业模式质量: {factors['business_model_quality']:.1f}/10**
 - 毛利率: {gross_pct:.1f}%

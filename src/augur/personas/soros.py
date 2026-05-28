@@ -94,7 +94,7 @@ class SorosAgent(BaseAgent):
 
         # 4. 流动性条件 (0-10): 宏观流动性
         liquidity_score = 5
-        if context.market_cap > 100e9:
+        if context.market_cap > 100:
             liquidity_score += 2  # 大市值=流动性充裕
         if context.beta_1y > 1.2:
             liquidity_score += 1  # 高beta=宏观驱动
@@ -144,7 +144,7 @@ class SorosAgent(BaseAgent):
 - 距52周高点: {context.price_vs_52w_high:.1f}%
 
 **流动性条件: {factors['liquidity']}/10**
-- 市值: {context.market_cap/1e9:.1f}B
+- 市值: {context.market_cap:.1f}B
 - Beta: {context.beta_1y:.2f}
 
 **退出信号: {factors['exit_signal']}/10**

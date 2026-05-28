@@ -117,9 +117,9 @@ class LynchAgent(BaseAgent):
 
         # 4. 可理解性 (0-10) - 用市值作为代理
         understand_score = 5
-        if context.market_cap < 10e9:
+        if context.market_cap < 10:
             understand_score += 3
-        elif context.market_cap > 100e9:
+        elif context.market_cap > 100:
             understand_score -= 1
         factors["understandability"] = min(understand_score, 10)
 
@@ -191,7 +191,7 @@ class LynchAgent(BaseAgent):
 - ROE: {context.roe*100:.1f}%
 
 **可理解性: {factors['understandability']}/10**
-- 市值: {context.market_cap/1e9:.1f}B
+- 市值: {context.market_cap:.1f}B
 - 行业: {context.industry}
 
 **综合评分: {total_score:.1f}/10**

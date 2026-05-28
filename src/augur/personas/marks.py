@@ -108,7 +108,7 @@ class MarksAgent(BaseAgent):
                 distressed_score = 7
             elif context.pb > 4.0:
                 distressed_score = 2
-        if context.debt_ratio > 80:
+        if context.debt_ratio > 0.80:
             distressed_score -= 2  # 高负债降低质量
         factors["distressed_discount"] = min(max(distressed_score, 0), 10)
 

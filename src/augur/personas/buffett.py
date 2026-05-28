@@ -90,9 +90,9 @@ class BuffettAgent(BaseAgent):
 
         # 3. 财务实力 (0-10)
         finance_score = 5
-        if context.debt_ratio < 50:
+        if context.debt_ratio < 0.50:
             finance_score += 3
-        elif context.debt_ratio > 80:
+        elif context.debt_ratio > 0.80:
             finance_score -= 3
         if context.current_ratio > 1.5:
             finance_score += 2
@@ -139,8 +139,8 @@ class BuffettAgent(BaseAgent):
             key_findings.append(f"护城河强大：毛利率{context.gross_margins*100:.0f}%, ROE{context.roe*100:.0f}%")
         if factors["valuation"] >= 7 and context.pe > 0:
             key_findings.append(f"估值吸引：PE {context.pe:.1f}")
-        if context.debt_ratio > 70:
-            risks.append(f"负债率偏高({context.debt_ratio:.0f}%)")
+        if context.debt_ratio > 0.70:
+            risks.append(f"负债率偏高({context.debt_ratio*100:.0f}%)")
         if context.pe > 80:
             risks.append(f"估值极高(PE={context.pe:.0f})")
 
@@ -179,7 +179,7 @@ class BuffettAgent(BaseAgent):
 
 **盈利可预测性: {factors['earnings_predictability']}/10**
 **财务实力: {factors['financial_strength']}/10**
-- 负债率: {context.debt_ratio:.1f}% {'✓' if context.debt_ratio < 50 else '✗'}
+- 负债率: {context.debt_ratio*100:.1f}% {'✓' if context.debt_ratio < 0.50 else '✗'}
 - 流动比率: {context.current_ratio:.2f}
 
 **管理质量: {factors['management_quality']}/10**
