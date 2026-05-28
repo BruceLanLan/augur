@@ -1,462 +1,418 @@
 [English](README_EN.md) | 中文
 
-<p align="center">
-  <img src="https://img.shields.io/badge/v6.1.0-Latest-blue?style=for-the-badge" alt="v6.1.0"/>
-  <img src="https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge" alt="18 Personas"/>
-  <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python" alt="Python"/>
-  <img src="https://img.shields.io/badge/source%20install-git%20clone-orange?style=for-the-badge&logo=git" alt="git clone install"/>
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT"/>
-</p>
+<div align="center">
 
-<h1 align="center">Augur</h1>
-<h3 align="center">你的AI投资决策委员会</h3>
+<img src="docs/images/hero-banner-baoyu.svg" alt="Augur" width="100%"/>
 
-<p align="center">
-  <img src="docs/images/hero-banner-baoyu.svg" alt="Augur" width="100%"/>
-</p>
+# 🦉 Augur
 
-<p align="center">
-  <strong>18位AI投资大师同时分析一只股票，给你一个加权共识信号。</strong>
-</p>
+**你的 AI 投资决策委员会**
 
----
+*18位投资大师，同时分析，一次共识*
 
-## 3秒看懂
+[![v6.1.0](https://img.shields.io/badge/v6.1.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
+[![MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-- **它是什么** - 18位虚拟投资大师组成的多智能体分析系统（巴菲特、芒格、段永平、张磊、Serenity...）
-- **它做什么** - 输入一个股票代码，18位大师各自独立分析并评分，系统输出加权共识信号
-- **它有何不同** - 不是单一策略，而是多维度智慧碰撞；覆盖美股/港股/A股/Crypto；部署到CLI/API/Dashboard/Bot全平台
+</div>
 
 ---
 
-## 快速开始
+> **巴菲特会买这只股吗？达利欧怎么看宏观风险？段永平觉得管理层够不够「本分」？**
+>
+> 别再一个维度猜了。Augur 让 **18位** 顶级投资人同时为你分析，每人给出独立评分，最终汇成一个带 Kelly 仓位建议的加权共识信号。
+
+---
+
+## ✨ 真实运行效果
+
+```
+$ augur analyze NVDA
+
+Auto-fetching data for NVDA from yfinance...
+  Price: 820.00 | PE: 45.0 | ROE: 65.0% | GM: 78.0%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  NVDA — 18 Masters Consensus
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Signal:     BULLISH
+  Score:      7.6 / 10
+  Confidence: 82%
+  Kelly Size: 9.2%
+
+  Key Findings:
+    • 🛡️ AI reinforcing moat, competitive advantage expanding
+    • ⚡ AI revenue rapidly growing, clear AGI commercialisation
+    • 🚀 Revenue 122%, S-curve early rapid expansion phase
+
+  BULLISH (11): buffett, fisher, aschenbrenner, cathie_wood, thiel...
+  NEUTRAL  (5): dalio, marks, graham, soros, serenity
+  BEARISH  (2): arps, munger
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 🚀 30秒上手
 
 ```bash
-# 克隆并安装（源码安装，暂未发布到 PyPI）
-git clone https://github.com/BruceLanLan/augur.git
-cd augur
-pip install -e .                        # 安装核心功能（Python 3.8+）
-pip install -e ".[data]"               # 可选：安装 yfinance 实时数据支持
+git clone https://github.com/BruceLanLan/augur.git && cd augur
+pip install -e ".[data]"
 
-# 一键分析（自动获取实时行情）
-augur analyze AAPL
-
-# 18位大师共识
-augur consensus NVDA
-
-# 启动 Dashboard
-python3 -m dashboard.app --port 8000
-# 浏览器打开 http://localhost:8000
-```
-
-输出示例:
-```
-=== AAPL 18位大师共识分析 ===
-
-共识信号: BUY | 综合评分: 7.4/10 | 建议仓位: 8%
-
-  Buffett:       BUY  (8.0/10) - 护城河宽广，毛利率46%满足要求
-  Graham:        HOLD (6.5/10) - PE=32偏高，安全边际不足
-  Lynch:         BUY  (7.5/10) - PEG合理，营收增速健康
-  Munger:        BUY  (7.8/10) - 多元化优势，生态系统强大
-  Dalio:         HOLD (6.0/10) - 宏观不确定性偏高
-  段永平:        BUY  (8.2/10) - 商业模式清晰，管理层本分
-  张磊:          BUY  (7.5/10) - 结构性赛道，长期确定性高
-  Serenity:      HOLD (5.5/10) - 非半导体供应链核心标的
-  ...
-
-Kelly建议仓位: 8% | 风险否决: 未触发
+augur analyze AAPL         # 一键分析，自动获取实时数据
+augur consensus NVDA       # 18位共识 + Kelly仓位
+python3 -m dashboard.app   # 启动 Bloomberg 风格 Dashboard
+# → 浏览器打开 http://localhost:8000
 ```
 
 ---
 
-## v6.1.0 新特性
+## 💡 为什么是 Augur？
 
-- **一键分析** - Dashboard首页输入代码即刻获得结果，无需跳转
-- **内联结果展示** - 分析结果直接在当前页面渲染，Bloomberg风格评分卡片
-- **预设配置** - 一键快速分析AAPL/NVDA/TSLA等热门标的
-- **18位投资大师** - 新增第18位: Serenity (@aleabitoreddit) - AI/半导体供应链瓶颈交易
-
-完整变更日志见 [docs/CHANGELOG.md](docs/CHANGELOG.md)
-
----
-
-## 核心能力
-
-- **18位独立投资人格** - 价值投资、成长股、宏观交易、Crypto、AI地缘政治...每位大师有独立人格与评分逻辑
-- **6层加权共识引擎** - 行业感知 + 市场机制路由 + 滚动IC + 多样性惩罚 + Kelly仓位 + 风险否决
-- **实时数据接入 (yfinance)** - 自动获取美股/港股/A股价格、估值、基本面和技术指标
-- **Bloomberg风格Dashboard** - 暗色主题，7个页面覆盖完整分析流程
-- **多平台Bot** - Telegram / Slack / 微信(3模式) / 飞书(2模式)
-- **MCP Server** - 6个工具，供 Claude Desktop / Hermes 等直接调用
-- **历史回测 + IC追踪** - 回放历史数据，追踪每位Agent预测准确率
-- **Cron定时推送** - 自选股监控，定时推送到全平台
-- **YAML自定义人格** - 无需写代码，YAML文件即可创建自定义投资策略Agent
+| | 传统单策略 | ChatGPT 问答 | **Augur** |
+|--|:--:|:--:|:--:|
+| 分析维度 | 1 种 | 随机 | **18 种独立视角** |
+| 量化评分 | ✗ | ✗ | **0-10 结构化评分** |
+| 中国投资人 | ✗ | 有偏见 | **段永平/张磊/李录/但斌** |
+| 实时数据 | 手动输 | 无 | **yfinance 自动** |
+| 仓位建议 | ✗ | ✗ | **Kelly 公式** |
+| 部署到 Claude/Hermes | ✗ | ✗ | **MCP Server** |
 
 ---
 
-## 18位投资大师
+## 🧠 18位投资大师
 
-### 经典价值派
+<details>
+<summary><strong>经典价值派</strong>（点击展开）</summary>
 
-| # | 投资人 | Skill | 风格 | 核心指标 |
-|---|--------|-------|------|---------|
-| 1 | Warren Buffett | `augur-buffett` | 护城河价值投资 | 毛利率>40%, ROE>15%, 负债<50% |
-| 2 | Benjamin Graham | `augur-graham` | 深度价值/安全边际 | PE<15, PB<1.5, 流动比>2 |
-| 5 | Charlie Munger | `augur-munger` | 格栅理论/多元思维 | ROE>20%, 护城河+管理层 |
-| 9 | Philip Fisher | `augur-fisher` | 成长股/闲聊法 | 研发>10%, 毛利率>50% |
+| 投资人 | 核心框架 | 最强场景 |
+|--------|---------|---------|
+| 🏆 **巴菲特** | 护城河 + 可预测盈利 + FCF | 消费/金融蓝筹 |
+| 📐 **格雷厄姆** | 安全边际 PE<15 PB<1.5 | 深度价值股 |
+| 🧠 **芒格** | 格栅思维 + 逆向 | 被市场误解的企业 |
+| 🔬 **费雪** | Scuttlebutt + 毛利率持续性 | 成长型高质量公司 |
 
-### 成长与动量
+</details>
 
-| # | 投资人 | Skill | 风格 | 核心指标 |
-|---|--------|-------|------|---------|
-| 3 | Peter Lynch | `augur-lynch` | GARP成长 | PEG<1.5, 营收增速>15% |
-| 8 | Cathie Wood | `augur-cathie-wood` | 颠覆性创新 | 营收增速>30%, TAM |
-| 13 | Peter Thiel | `augur-thiel` | 从0到1垄断 | 网络效应, 技术壁垒 |
+<details>
+<summary><strong>成长与创新</strong></summary>
 
-### 宏观与周期
+| 投资人 | 核心框架 | 最强场景 |
+|--------|---------|---------|
+| 🚀 **彼得林奇** | PEG < 1.5 + 日常可理解 | GARP 成长股 |
+| 💡 **凯西伍德** | Wright定律 + TAM扩张 | AI/基因组/区块链 |
+| 🏢 **彼得蒂尔** | 0→1 垄断 + 逆向思考 | 科技平台/深科技 |
+| 🤖 **阿申布伦纳** | AGI基础设施 + 算力稀缺 | AI/半导体 |
 
-| # | 投资人 | Skill | 风格 | 核心指标 |
-|---|--------|-------|------|---------|
-| 4 | Ray Dalio | `augur-dalio` | 宏观/全天候 | 四象限分析, 债务周期 |
-| 6 | George Soros | `augur-soros` | 反身性/宏观交易 | 反身性信号, 趋势动量 |
-| 7 | Howard Marks | `augur-marks` | 周期/逆向投资 | 周期位置, 市场情绪 |
+</details>
 
-### 前沿科技与Crypto
+<details>
+<summary><strong>宏观与周期</strong></summary>
 
-| # | 投资人 | Skill | 风格 | 核心指标 |
-|---|--------|-------|------|---------|
-| 10 | ARPS | `augur-arps` | Crypto/黄金宏观 | BTC相关性, 黄金避险 |
-| 11 | Leopold Aschenbrenner | `augur-aschenbrenner` | AI地缘政治 | AI投入, 算力需求 |
-| 12 | 大宇 (BTCdayu) | `augur-dayu` | 信息差/情绪动量 | 情绪动量>估值 |
-| 18 | Serenity (@aleabitoreddit) | `augur-serenity` | AI/半导体供应链瓶颈交易 | 营收增速>30%, 半导体行业 |
+| 投资人 | 核心框架 | 最强场景 |
+|--------|---------|---------|
+| 🌐 **达利欧** | 全天候 + 债务周期 | 宏观轮动 |
+| 🔄 **索罗斯** | 反射性 + 趋势自我强化 | 趋势交易 |
+| 📉 **霍华德马克斯** | 钟摆情绪 + 二阶思考 | 周期底部 |
+| 🥇 **ARPS** | 实际利率 + Crypto/黄金 | 通胀对冲 |
 
-### 中国投资人
+</details>
 
-| # | 投资人 | Skill | 风格 | 核心指标 |
-|---|--------|-------|------|---------|
-| 14 | 段永平 | `augur-duan-yongping` | 本分/极度集中 | 商业模式清晰, 管理层本分 |
-| 15 | 张磊 (高瓴) | `augur-zhang-lei` | 长期结构性价值 | 营收增速>15%, 结构性赛道 |
-| 16 | 李录 (喜马拉雅) | `augur-li-lu` | 深度价值/安全边际 | PE<25, ROE>12%, 无高负债 |
-| 17 | 但斌 (东方港湾) | `augur-dan-bin` | 品牌护城河/时代Beta | 毛利率>40%, 定价权 |
+<details>
+<summary><strong>🇨🇳 中国投资人（独家）</strong></summary>
 
-> 每位投资人: 完整人格文档(`personas/*.md`) + 独立Skill(`skills/*/SKILL.md`) + Python分析引擎(`src/augur/personas/*.py`)
+| 投资人 | 核心框架 | 最强场景 |
+|--------|---------|---------|
+| 🎯 **段永平** | 本分 + 极度集中 | 商业模式清晰的消费科技 |
+| 🌏 **张磊（高瓴）** | 结构性长期价值 | 中国成长赛道 |
+| 🏔️ **李录（喜马拉雅）** | 深度价值 + 安全边际 | 港股/A股低估值 |
+| 🫖 **但斌（东方港湾）** | 品牌护城河 + 时代Beta | 消费龙头 |
+| ₿ **大宇（BTCdayu）** | 信息差 + 情绪动量 | Crypto/加密赛道 |
+
+</details>
+
+<details>
+<summary><strong>前沿特殊策略</strong></summary>
+
+| 投资人 | 核心框架 | 最强场景 |
+|--------|---------|---------|
+| 🔭 **Serenity** | AI/半导体供应链瓶颈 | 卡脖子环节标的 |
+
+</details>
 
 ---
 
-## 使用方式
-
-### CLI (15+ 命令)
+## 📊 Dashboard
 
 ```bash
-# 核心分析（需要 pip install -e ".[data]" 才能自动获取实时数据）
-augur analyze AAPL                    # 自动获取实时数据 + 18位大师分析
-augur analyze AAPL --persona buffett  # 仅用巴菲特框架分析
-augur consensus NVDA                  # 18位大师共识 + Kelly仓位
-augur list-personas                   # 列出所有投资人
-augur fetch 0700.HK --json            # 仅获取市场数据（JSON输出）
-
-# Dashboard 与 API 服务
-python3 -m dashboard.app --port 8000 --cors   # Bloomberg Dashboard
-augur api --port 8900                          # 轻量 REST API
-augur mcp-server                               # MCP Server (stdio 模式)
-
-# 回测
-augur backtest AAPL --days 30 --live  # 用真实历史数据回测
-augur backtest AAPL --demo            # 用模拟数据演示
-augur ic-report                       # Agent IC 排行榜
-
-# 自选股监控
-augur watchlist-add AAPL --pe 32 --roe 0.55 --gross-margins 0.46
-augur cron-run                        # 立即运行一次自选股分析
-augur cron-start                      # 启动定时守护进程（默认工作日9点）
-
-# 注入 Soul 到 Hermes Profile
-augur inject-soul --profile my-buffett --persona buffett -f hermes
-
-# Bot（需要配置对应环境变量，见下方说明）
-augur telegram    # 需 TELEGRAM_TOKEN
-augur slack       # 需 SLACK_BOT_TOKEN + SLACK_APP_TOKEN
-augur wechat      # 需 GeWeChat 客户端
-augur lark        # 需 LARK_APP_ID + LARK_APP_SECRET
-```
-
-### REST API (Dashboard 内置)
-
-Dashboard 启动后自动提供完整 REST API：
-
-```bash
-# 启动 Dashboard (含API)
 python3 -m dashboard.app --port 8000 --cors
-
-# 18位大师共识分析 (自动 yfinance)
-curl http://localhost:8000/api/analyze/AAPL
-
-# 手动指标分析 (小数: roe=0.55, debt_ratio=0.35; 整数: institutional_ownership=66)
-curl "http://localhost:8000/api/analyze/NVDA?pe=45&gross_margins=0.78&roe=0.65&debt_ratio=0.12&market_cap=3200"
-
-# 投资人列表
-curl http://localhost:8000/api/personas
-
-# 单投资人详情
-curl http://localhost:8000/api/persona/buffett
-
-# 模型配置
-curl http://localhost:8000/api/config
 ```
 
-完整端点: `/api/analyze/{ticker}` | `/api/personas` | `/api/persona/{id}` | `/api/config` | `/api/models` | `/api/custom-persona` | `/api/backtest/run` | `/api/backtest/leaderboard` | `/health`
+Bloomberg Terminal 风格，**7个页面**，完整分析流程：
 
-**参数约定：**
-- 比率/利润率：小数 — `roe=0.55`（55%），`debt_ratio=0.35`（35%）
-- 持仓比例：整数 — `institutional_ownership=66`（66%）
-- 市值/FCF：亿USD — `market_cap=28000`（$2.8T），`fcf=900`（$90B）
+| 页面 | 功能 | 亮点 |
+|------|------|------|
+| **首页** | 快速分析 + 历史记录 | 键盘 `/` 快速聚焦 |
+| **股票分析** | 18位共识 + 详情展开 | yfinance 自动填充 |
+| **人格系统** | 18位大师卡片 + 搜索/过滤 | 展开看评分权重 |
+| **信号监控** | 自选股批量扫描 | 自动 60s 刷新 |
+| **历史回测** | IC 排行榜 + 命中率 | 评估大师准确率 |
+| **设置** | 每位大师独立配置模型 | 实时保存 |
+| **创建大师** | 无代码 YAML 自定义 | 即时注册生效 |
 
-### MCP Server (6 Tools)
+<p align="center">
+  <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis Dashboard" width="100%"/>
+</p>
 
-MCP Server 需要 Python 3.10+（`mcp` 包要求）。若系统 Python 版本较低，建议用虚拟环境：
+---
+
+## 🔌 多平台部署
+
+### Claude Desktop / Hermes (MCP)
 
 ```bash
-# 创建 Python 3.11 虚拟环境（如系统 Python < 3.10）
+# Step 1: 安装 MCP 支持 (需要 Python 3.10+)
 uv venv --python 3.11 .venv
 uv pip install -e ".[mcp]"
-
-# 验证 MCP 服务器可启动
-.venv/bin/augur mcp-server
+.venv/bin/augur mcp-server   # 验证可启动
 ```
 
-**Hermes 配置** (`~/.hermes/config.yaml`)：
-
+**Hermes** (`~/.hermes/config.yaml`):
 ```yaml
 mcp_servers:
   augur:
-    command: /path/to/augur/.venv/bin/augur  # 替换为实际绝对路径
+    command: /绝对路径/augur/.venv/bin/augur
     args: [mcp-server]
-    description: "18-agent investment analysis"
 
 skills:
   external_dirs:
-    - /path/to/augur/skills  # 用于 /skill augur-buffett 等命令
+    - /绝对路径/augur/skills    # 启用 /skill augur-buffett 等命令
 ```
 
-**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`)：
-
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
     "augur": {
-      "command": "/path/to/augur/.venv/bin/augur",
+      "command": "/绝对路径/augur/.venv/bin/augur",
       "args": ["mcp-server"]
     }
   }
 }
 ```
 
-> 若 `augur` 已在系统 PATH 且为 Python 3.10+ 版本，可直接用 `command: augur`（省略路径）。
+6个 MCP 工具：`augur_analyze` · `augur_consensus` · `augur_list_personas` · `augur_configure` · `augur_create_persona` · `augur_debate`
 
-6个工具: `augur_analyze` | `augur_consensus` | `augur_list_personas` | `augur_configure` | `augur_create_persona` | `augur_debate`
+> 所有工具均支持**自动实时数据**：不传指标时自动从 yfinance 获取。
 
-所有 analyze/consensus 工具支持自动 yfinance 数据获取：不传指标时自动抓取实时数据。
-
----
-
-## Dashboard
-
-Bloomberg Terminal风格的暗色主题Web界面，7个页面覆盖完整分析流程。
+### Telegram / Slack / 微信 / 飞书
 
 ```bash
-python3 -m dashboard.app --port 8000 --cors
-# 访问 http://localhost:8000
-```
-
-<p align="center">
-  <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis" width="100%"/>
-  <br><em>股票分析页 - 输入代码即得18位大师共识评分</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/dashboard-personas.svg" alt="Personas" width="100%"/>
-  <br><em>投资人页 - 18位大师卡片网格</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/dashboard-settings.svg" alt="Settings" width="100%"/>
-  <br><em>设置页 - 每位投资人独立模型配置</em>
-</p>
-
-| 页面 | 路径 | 说明 |
-|------|------|------|
-| 首页 | `/` | 快速分析 + 预设标的 |
-| 人格 | `/personas` | 18位大师卡片 |
-| 股票分析 | `/stocks` | 深度分析 + 评分 |
-| 信号监控 | `/signals` | 自选股扫描 |
-| 回测 | `/backtest` | 历史回测 + IC |
-| 设置 | `/settings` | 模型配置 |
-| 创建人格 | `/create-persona` | YAML自定义 |
-
----
-
-## 平台Bot
-
-### Telegram
-```bash
-pip install -e ".[telegram]"           # 或在已 clone 的仓库中运行
-export TELEGRAM_TOKEN='your-bot-token'
+# Telegram
+pip install -e ".[telegram]"
+export TELEGRAM_TOKEN='your-token'
 augur telegram
-```
-命令: `/analyze AAPL` | `/consensus NVDA` | `/ask buffett 分析AAPL` | 支持自然语言 `@巴菲特 分析AAPL`
 
-### Slack
-```bash
+# Slack
 pip install -e ".[slack]"
 export SLACK_BOT_TOKEN='xoxb-...' SLACK_APP_TOKEN='xapp-...'
 augur slack
-```
-命令: `/augur-analyze AAPL` | 频道 `@augur analyze AAPL` | Block Kit 富文本输出
 
-### 微信 (3种模式)
-```bash
+# 个人微信 (GeWeChat)
 pip install -e ".[wechat]"
-# 个人微信 (推荐, GeWeChat扫码即用)
-augur wechat --mode personal --port 8066
-# 企业微信
-augur wechat --mode wecom --port 8080
-# Webhook (仅推送)
-augur wechat --mode webhook
+augur wechat --mode personal
+
+# 飞书
+pip install -e ".[lark]"
+export LARK_APP_ID='...' LARK_APP_SECRET='...'
+augur lark
 ```
 
-### 飞书 (2种模式)
+### Docker
+
 ```bash
-pip install -e ".[lark]"
-# Event订阅 (双向)
-augur lark --mode event --port 9000
-# Webhook (仅推送)
-augur lark --mode webhook
+docker compose up -d dashboard          # http://localhost:8000
+docker compose --profile telegram up -d  # + Telegram Bot
 ```
 
 ---
 
-## 架构
+## ⚙️ 完整 CLI
 
-<p align="center">
-  <img src="docs/images/architecture-baoyu.svg" alt="Augur Architecture" width="100%"/>
-</p>
+```bash
+# 核心分析
+augur analyze AAPL                     # 自动实时数据，18位分析
+augur analyze TSLA --persona cathie_wood  # 指定大师
+augur consensus NVDA                   # 加权共识 + Kelly仓位
+augur list-personas                    # 列出所有投资人
+
+# 数据与回测
+augur fetch 0700.HK --json            # 仅获取市场数据
+augur backtest AAPL --days 30 --live  # 真实历史回测
+augur ic-report                       # Agent IC 准确率排行
+
+# 自选股监控
+augur watchlist-add AAPL --pe 32 --roe 0.55 --gross-margins 0.46
+augur cron-run    # 立即运行一次
+augur cron-start  # 启动定时守护（工作日 9:00）
+
+# Hermes Soul 注入
+augur inject-soul --profile buffett-profile --persona buffett -f hermes
+```
+
+**参数约定：**
+
+| 参数类型 | 单位 | 示例 |
+|---------|------|------|
+| 比率/利润率 | 小数 | `--roe 0.55` = 55% |
+| 持仓比例 | 整数百分比 | `--institutional-ownership 66` = 66% |
+| 市值/FCF | 亿 USD | `--market-cap 28000` = $2.8T |
+
+---
+
+## 🏗️ 架构
 
 ```
 augur/
-├── src/augur/                  # pip包主模块
-│   ├── cli.py                  # Click CLI (15+ commands)
-│   ├── mcp_server.py           # MCP Server (6 tools, stdio)
-│   ├── api.py                  # REST API (FastAPI)
-│   ├── registry.py             # AgentRegistry + DecisionCoordinator
-│   ├── data.py                 # 实时数据 (yfinance)
-│   ├── backtest.py             # 历史回测 + IC
-│   ├── cron.py                 # 定时分析 + Watchlist
-│   ├── bots/                   # 多平台Bot
-│   │   ├── telegram_bot.py
-│   │   ├── slack_bot.py
-│   │   ├── wechat_bot.py
-│   │   └── lark_bot.py
-│   └── personas/               # 18位投资人Agent
-│       ├── base.py
-│       ├── buffett.py ... serenity.py
-│       └── (18个Python模块)
-├── dashboard/                  # Bloomberg风格Web UI
-│   ├── app.py                  # FastAPI + 路由
-│   └── templates/              # 7个页面模板
-├── skills/                     # 独立Skill (agentskills.io)
-├── personas/                   # 投资人深度文档 + custom/ YAML
-├── config/agents.yaml          # Agent LLM模型配置
-├── pyproject.toml              # pip包配置 (augur-agents)
-├── Dockerfile                  # 容器化
-└── docker-compose.yml          # 多服务编排
+├── src/augur/
+│   ├── personas/           # 18位投资人 Python 引擎
+│   │   ├── buffett.py      #   护城河评分逻辑
+│   │   ├── serenity.py     #   AI/半导体供应链
+│   │   └── ... (18个)
+│   ├── coordinator.py      # 共识引擎（6层加权）
+│   ├── data.py             # yfinance 实时数据
+│   ├── mcp_server.py       # MCP Server (6工具)
+│   ├── cli.py              # Click CLI (15+命令)
+│   ├── backtest.py         # IC 回测框架
+│   ├── cron.py             # 定时分析
+│   └── bots/               # Telegram/Slack/WeChat/Lark
+├── dashboard/              # Bloomberg 风格 Web UI
+│   ├── app.py              # FastAPI + 全部路由
+│   └── templates/          # 7个页面模板
+├── skills/                 # Hermes/Claude Skill 定义
+│   └── buffett/SKILL.md    # 每位大师独立 Skill
+├── personas/               # 深度人格文档 + YAML 自定义
+├── config/agents.yaml      # Agent 模型配置
+├── Dockerfile + docker-compose.yml
+└── pyproject.toml          # 包配置 (augur-agents)
 ```
 
-**共识机制 (6层加权):**
+**共识引擎 6 层加权：**
 
-1. 行业感知权重 - 科技股给 Wood/Aschenbrenner 更高权重
-2. 市场机制路由 - 熊市时 Marks/Dalio 权重提升
-3. 滚动IC权重 - 历史准确率高的Agent动态加权
-4. 多样性惩罚 - 观点相似的Agent减少冗余权重
-5. Kelly仓位建议 - 基于共识和置信度给出仓位比例
-6. 风险否决层 - 高负债+熊市时可否决共识看多
-
----
-
-## Docker 部署
-
-```bash
-# Dashboard + API
-docker compose up -d dashboard        # http://localhost:8000
-
-# Telegram Bot
-export TELEGRAM_TOKEN=your_token
-docker compose --profile telegram up -d
-
-# 全部服务
-docker compose --profile full --profile telegram --profile cron up -d
-
-# Makefile
-make docker-build && make docker-up
+```
+输入指标 → [18位大师独立分析]
+         → 行业感知权重    # 科技股 ↑ Wood/Aschenbrenner
+         → 市场机制路由    # 熊市 ↑ Marks/Dalio
+         → 滚动 IC 权重   # 历史准确率高者动态加权
+         → 多样性惩罚     # 观点相似者减少冗余
+         → Kelly 仓位     # 置信度 × 信号强度 → 仓位 %
+         → 风险否决层     # 高负债+熊市可否决看多
+         → 最终共识信号 + 仓位建议
 ```
 
 ---
 
-## 常见问题
+## 🔧 YAML 自定义大师
 
-**Q: `augur analyze AAPL` 报错 "yfinance not installed"**
-```bash
-pip install -e ".[data]"   # 安装 yfinance 实时数据支持
+无需写 Python，YAML 文件即可创建自定义投资策略：
+
+```yaml
+# personas/custom/my_quant.yaml
+agent_id: my_quant
+name: "我的量化策略"
+philosophy: ["动量", "价值", "低波动"]
+scoring_weights:
+  momentum: 0.40
+  value:    0.35
+  safety:   0.25
+factors:
+  momentum:
+    base: 5
+    rules:
+      - {if: "rsi > 55 and rsi < 75", add: 2}
+      - {if: "macd > macd_signal",     add: 1}
+      - {if: "price > sma50",          add: 1}
+  value:
+    base: 5
+    rules:
+      - {if: "pe > 0 and pe < 15",     add: 3}
+      - {if: "pb < 1.5 and pb > 0",   add: 2}
+  safety:
+    base: 5
+    rules:
+      - {if: "debt_ratio < 0.3",       add: 2}
+      - {if: "current_ratio > 2",      add: 2}
 ```
 
-**Q: MCP Server 启动失败 "No module named mcp"**
-> mcp 包要求 Python 3.10+。用虚拟环境解决：
+保存后立即生效，`augur list-personas` 可见。
+
+---
+
+## ❓ 常见问题
+
+<details>
+<summary>augur analyze 报 "yfinance not installed"</summary>
+
 ```bash
-uv venv --python 3.11 .venv && uv pip install -e ".[mcp]"
+pip install -e ".[data]"
+```
+</details>
+
+<details>
+<summary>MCP Server 启动失败 "No module named mcp"</summary>
+
+mcp 包需要 Python 3.10+：
+```bash
+uv venv --python 3.11 .venv
+uv pip install -e ".[mcp]"
 .venv/bin/augur mcp-server
 ```
+</details>
 
-**Q: Dashboard 启动后分析结果不出来**
-> 检查终端输出，通常是缺少 yfinance 或 fastapi：
+<details>
+<summary>分析结果总是 NEUTRAL</summary>
+
+检查参数单位：毛利率/ROE 用小数（`--roe 0.55` 不是 `--roe 55`），市值用亿（`--market-cap 28000` = $2.8T）
+</details>
+
+<details>
+<summary>Dashboard 显示 "加载中" 不动</summary>
+
+确认 yfinance 已安装 + 后端正常运行：
 ```bash
-pip install -e ".[data]"    # yfinance
-python3 -m dashboard.app --port 8000 --cors
+curl http://localhost:8000/health  # 应返回 {"status":"ok","agents":18}
 ```
-
-**Q: 股票分析结果总显示 NEUTRAL**
-> 输入指标时注意单位：毛利率/ROE/负债率用小数（0.46 而非 46），市值用亿（28000 = $2.8T）
-
-**Q: Bot 命令找不到**
-> 确认安装了对应 extra：`pip install -e ".[telegram]"` / `.[slack]` / `.[wechat]` / `.[lark]`
+</details>
 
 ---
 
-## 贡献
+## 🤝 贡献
 
-1. **新投资人** - `personas/custom/` 添加YAML，或参考 `src/augur/personas/buffett.py` 写Python Agent
-2. **新Skill** - 参考 `skills/buffett/SKILL.md` 格式
-3. **算法优化** - 改进评分逻辑或共识机制
-4. **Bot适配** - 在 `src/augur/bots/` 添加新平台
-5. **Web UI** - 完善 `dashboard/` 前端
+- **新投资人** → `personas/custom/` 放 YAML，或仿 `src/augur/personas/buffett.py` 写 Python
+- **算法优化** → 改进 `src/augur/coordinator.py` 共识机制
+- **新平台 Bot** → 在 `src/augur/bots/` 添加
+- **Web UI** → 完善 `dashboard/` 前端
 
 ---
 
-## Star History
+## 📈 Star History
 
-<a href="https://www.star-history.com/?repos=BruceLanLan%2Faugur&type=timeline&logscale=&legend=top-left">
+<a href="https://star-history.com/#BruceLanLan/augur&Timeline">
  <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&legend=top-left" />
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=BruceLanLan/augur&type=Timeline&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=BruceLanLan/augur&type=Timeline" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=BruceLanLan/augur&type=Timeline" />
  </picture>
 </a>
 
 ---
 
-## License
+<div align="center">
 
-MIT License - 详见 [LICENSE](LICENSE)
+MIT License · Built by [BruceLanLan](https://github.com/BruceLanLan)
 
-<p align="center">
-  <sub>Built with care by <a href="https://github.com/BruceLanLan">BruceLanLan</a></sub>
-</p>
+*📌 仅供学习研究，不构成投资建议*
+
+</div>

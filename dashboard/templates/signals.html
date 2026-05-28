@@ -10,7 +10,7 @@
     <div style="display:flex; align-items:center; gap:12px;">
         <span id="refresh-indicator" class="text-muted" style="font-size:0.75rem;">
             <span class="status-dot" style="background:var(--signal-buy); display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px;"></span>
-            自动刷新: 60s
+            列表刷新: 60s
         </span>
         <button class="btn btn-primary" onclick="runAllAnalysis()" id="run-all-btn">
             &#x25B6; 运行全部分析
@@ -121,10 +121,10 @@ function renderWatchlist() {
         var votesHtml = '<span style="color:var(--text-muted);">--</span>';
 
         if (result) {
-            var sigColor = result.signal === 'buy' ? 'var(--signal-buy)' :
-                           result.signal === 'sell' ? 'var(--signal-sell)' : 'var(--signal-neutral)';
-            var sigText = result.signal === 'buy' ? 'BUY' :
-                          result.signal === 'sell' ? 'SELL' : 'HOLD';
+            var sigColor = result.signal === 'bullish' ? 'var(--signal-buy)' :
+                           result.signal === 'bearish' ? 'var(--signal-sell)' : 'var(--signal-neutral)';
+            var sigText = result.signal === 'bullish' ? 'BUY' :
+                          result.signal === 'bearish' ? 'SELL' : 'HOLD';
             signalHtml = '<span style="color:' + sigColor + '; font-weight:600; font-family:var(--font-data);">' + sigText + '</span>';
             scoreHtml = '<span style="color:' + sigColor + '; font-family:var(--font-data);">' + result.score + '/10</span>';
             votesHtml = '<span style="font-family:var(--font-data);">' +
@@ -245,8 +245,8 @@ function showResultsSummary(results) {
 
     var buyCount = 0, sellCount = 0, holdCount = 0;
     for (var i = 0; i < results.length; i++) {
-        if (results[i].signal === 'buy') buyCount++;
-        else if (results[i].signal === 'sell') sellCount++;
+        if (results[i].signal === 'bullish') buyCount++;
+        else if (results[i].signal === 'bearish') sellCount++;
         else holdCount++;
     }
 

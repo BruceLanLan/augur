@@ -549,7 +549,7 @@ def generate_sample_data(ticker: str = "AAPL", days: int = 30) -> Tuple[List[Dic
             "date": date_str,
             "price": round(day_price, 2),
             "pe": round(day_pe, 1),
-            "pb": round(day_pe * day_roe / 100 * 10, 2),
+            "pb": round(day_pe * day_roe, 2),  # PB ≈ PE × ROE (Du Pont)
             "roe": round(day_roe, 3),
             "gross_margins": round(day_gm, 3),
             "revenue_growth": round(day_rg, 3),

@@ -103,9 +103,27 @@ def fetch_market_context(ticker: str) -> MarketContext:
     debt_ratio = debt_to_equity / 100.0 if debt_to_equity else 0
     fcf = (info.get("freeCashflow", 0) or 0) / 1e9         # raw USD → billions
     market_cap = (info.get("marketCap", 0) or 0) / 1e9    # raw USD → billions
+    revenue = (info.get("totalRevenue", 0) or 0) / 1e9    # raw USD → billions
     current_ratio = info.get("currentRatio", 0) or 0
+    quick_ratio = info.get("quickRatio", 0) or 0
     sector = info.get("sector", "") or ""
     industry = info.get("industry", "") or ""
+
+    # Ownership data (yfinance returns as fraction 0-1, convert to percentage 0-100)
+    institutional_ownership = (info.get("heldPercentInstitutions", 0) or 0) * 100
+    insider_ownership = (info.get("heldPercentInsiders", 0) or 0) * 100
+
+    # Short interest (fraction → decimal 0-1)
+    short_interest = info.get("shortRatio", 0) or 0
+
+    # Beta
+    beta_1y = info.get("beta", 1.0) or 1.0
+
+    # 52-week high/low distance
+    fifty_two_high = info.get("fiftyTwoWeekHigh", 0) or 0
+    fifty_two_low = info.get("fiftyTwoWeekLow", 0) or 0
+    price_vs_52w_high = ((price / fifty_two_high) - 1) * 100 if fifty_two_high and price else 0
+    price_vs_52w_low = ((price / fifty_two_low) - 1) * 100 if fifty_two_low and price else 0
 
     # Calculate technical indicators from price history
     technicals = {}
@@ -142,6 +160,14 @@ def fetch_market_context(ticker: str) -> MarketContext:
         current_ratio=current_ratio,
         sector=sector,
         industry=industry,
+        revenue=revenue,
+        quick_ratio=quick_ratio,
+        institutional_ownership=institutional_ownership,
+        insider_ownership=insider_ownership,
+        short_interest=short_interest,
+        beta_1y=beta_1y,
+        price_vs_52w_high=price_vs_52w_high,
+        price_vs_52w_low=price_vs_52w_low,
         rsi=rsi,
         macd=macd,
         macd_signal=macd_signal,

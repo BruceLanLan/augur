@@ -1,233 +1,194 @@
-English | [中文](README.md)
+中文 | [English](README_EN.md)
 
-<p align="center">
-  <img src="https://img.shields.io/badge/v6.1.0-Latest-blue?style=for-the-badge" alt="v6.0"/>
-  <img src="https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge" alt="18 Personas"/>
-  <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python" alt="Python"/>
-  <img src="https://img.shields.io/badge/pip%20install-augur--agents-orange?style=for-the-badge&logo=pypi" alt="pip install"/>
-  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT"/>
-</p>
+<div align="center">
 
-<h1 align="center">Augur</h1>
-<h3 align="center">Your AI Investment Advisory Board</h3>
+<img src="docs/images/hero-banner-baoyu.svg" alt="Augur" width="100%"/>
 
-<p align="center">
-  <img src="docs/images/hero-banner-en.svg" alt="Augur" width="100%"/>
-</p>
+# 🦉 Augur
 
-<p align="center">
-  <strong>18 AI investment masters analyze a stock simultaneously and deliver one weighted consensus signal.</strong>
-</p>
+**Your AI Investment Committee**
 
----
+*18 legendary investors. One consensus. Every time.*
 
-## Understand in 3 Seconds
+[![v6.1.0](https://img.shields.io/badge/v6.1.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
+[![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
+[![MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-- **What it is** - A multi-agent analysis system composed of 18 virtual investment masters (Buffett, Munger, Duan Yongping, Zhang Lei, Serenity...)
-- **What it does** - Enter a stock ticker, 18 masters analyze and score independently, the system outputs a weighted consensus signal
-- **What makes it different** - Not a single strategy but multi-dimensional intelligence collision; covers US/HK/A-shares/Crypto; deploys across CLI/API/Dashboard/Bot
+</div>
 
 ---
 
-## Quick Start
+> **Would Buffett buy this stock?** What does Dalio think about macro risk? Is management "benfun" (principled) by Duan Yongping's standard?
+>
+> Stop guessing from one angle. Augur lets **18 legendary investors** independently analyze any stock, each producing a structured score, then aggregates them into a weighted consensus with Kelly position sizing.
+
+---
+
+## ✨ See It In Action
+
+```
+$ augur analyze NVDA
+
+Auto-fetching data for NVDA from yfinance...
+  Price: 820.00 | PE: 45.0 | ROE: 65.0% | GM: 78.0%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  NVDA — 18 Masters Consensus
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Signal:     BULLISH
+  Score:      7.6 / 10
+  Confidence: 82%
+  Kelly Size: 9.2%
+
+  Key Findings:
+    • 🛡️ AI reinforcing moat, competitive advantage expanding
+    • ⚡ Revenue 122%, clear AGI commercialisation path
+    • 🚀 S-curve early rapid expansion phase
+
+  BULLISH (11): buffett, fisher, aschenbrenner, cathie_wood, thiel...
+  NEUTRAL  (5): dalio, marks, graham, soros, serenity
+  BEARISH  (2): arps, munger
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+---
+
+## 🚀 30-Second Setup
 
 ```bash
-# Clone and install (source install — not yet published to PyPI)
-git clone https://github.com/BruceLanLan/augur.git
-cd augur
-pip install -e .                       # core (Python 3.8+)
-pip install -e ".[data]"              # optional: add yfinance for live data
+git clone https://github.com/BruceLanLan/augur.git && cd augur
+pip install -e ".[data]"
 
-# Analyze (auto-fetches live data if yfinance is installed)
-augur analyze AAPL
-
-# 18-master consensus
-augur consensus NVDA
-
-# Launch Dashboard
-python3 -m dashboard.app --port 8000
-# Open http://localhost:8000
-```
-
-Example output:
-```
-=== AAPL 18-Master Consensus Analysis ===
-
-Consensus Signal: BUY | Overall Score: 7.4/10 | Suggested Position: 8%
-
-  Buffett:       BUY  (8.0/10) - Wide moat, 46% gross margin meets requirements
-  Graham:        HOLD (6.5/10) - PE=32 is elevated, insufficient margin of safety
-  Lynch:         BUY  (7.5/10) - Reasonable PEG, healthy revenue growth
-  Munger:        BUY  (7.8/10) - Diversified advantages, strong ecosystem
-  Dalio:         HOLD (6.0/10) - Elevated macro uncertainty
-  Duan Yongping: BUY  (8.2/10) - Clear business model, principled management
-  Zhang Lei:     BUY  (7.5/10) - Structural trend, high long-term certainty
-  Serenity:      HOLD (5.5/10) - Not a core semiconductor supply chain target
-  ...
-
-Kelly Position Sizing: 8% | Risk Veto: Not triggered
+augur analyze AAPL         # auto-fetch live data + 18-master analysis
+augur consensus NVDA       # consensus + Kelly position sizing
+python3 -m dashboard.app   # launch Bloomberg-style Dashboard
+# → open http://localhost:8000
 ```
 
 ---
 
-## What's New in v6.1.0
+## 💡 Why Augur?
 
-- **One-click analysis** - Enter a ticker on the Dashboard home page for instant results
-- **Inline results** - Analysis renders directly on the current page with Bloomberg-style score cards
-- **Preset configs** - Quick-analyze popular tickers like AAPL/NVDA/TSLA in one click
-- **18 investment masters** - Added #18: Serenity (@aleabitoreddit) - AI/Semiconductor Supply Chain Chokepoint Trading
-
-Full changelog at [docs/CHANGELOG.md](docs/CHANGELOG.md)
-
----
-
-## Core Capabilities
-
-- **18 independent investor personas** - Value investing, growth stocks, macro trading, Crypto, AI geopolitics... each master has independent personality and scoring logic
-- **6-layer weighted consensus engine** - Industry-aware + market regime routing + rolling IC + diversity penalty + Kelly sizing + risk veto
-- **Real-time data (yfinance)** - Auto-fetches US/HK/A-share prices, valuations, fundamentals, and technical indicators
-- **Bloomberg-style Dashboard** - Dark theme, 7 pages covering the full analysis workflow
-- **Multi-platform bots** - Telegram / Slack / WeChat (3 modes) / Lark (2 modes)
-- **MCP Server** - 6 tools for direct invocation by Claude Desktop / Hermes
-- **Backtesting + IC tracking** - Replay historical data, track each agent's prediction accuracy
-- **Cron scheduled push** - Watchlist monitoring with scheduled notifications across all platforms
-- **YAML custom personas** - Create custom investment strategy agents via YAML, no coding required
+| | Single Strategy | Ask ChatGPT | **Augur** |
+|--|:--:|:--:|:--:|
+| Analysis Angles | 1 | Random | **18 independent views** |
+| Quantified Score | ✗ | ✗ | **0–10 structured score** |
+| Chinese Investors | ✗ | Biased | **Duan / Zhang / Li Lu / Dan Bin** |
+| Live Data | Manual | None | **yfinance auto-fetch** |
+| Position Sizing | ✗ | ✗ | **Kelly formula** |
+| Deploy to Claude/Hermes | ✗ | ✗ | **MCP Server** |
 
 ---
 
-## 18 Investment Masters
+## 🧠 18 Investor Personas
 
-### Classic Value
+<details>
+<summary><strong>Classic Value</strong></summary>
 
-| # | Investor | Skill | Style | Key Metrics |
-|---|----------|-------|-------|-------------|
-| 1 | Warren Buffett | `augur-buffett` | Economic Moat Value Investing | Gross Margin >40%, ROE >15%, Debt <50% |
-| 2 | Benjamin Graham | `augur-graham` | Deep Value / Margin of Safety | PE <15, PB <1.5, Current Ratio >2 |
-| 5 | Charlie Munger | `augur-munger` | Latticework / Mental Models | ROE >20%, Moat + Management |
-| 9 | Philip Fisher | `augur-fisher` | Growth Stocks / Scuttlebutt | R&D >10%, Gross Margin >50% |
+| Investor | Framework | Best For |
+|----------|-----------|---------|
+| 🏆 **Warren Buffett** | Moat + owner earnings + FCF | Consumer/financial blue chips |
+| 📐 **Benjamin Graham** | Margin of safety, P/E<15 P/B<1.5 | Deep value stocks |
+| 🧠 **Charlie Munger** | Latticework + contrarian | Misunderstood quality businesses |
+| 🔬 **Philip Fisher** | Scuttlebutt + margin sustainability | High-quality growth companies |
 
-### Growth & Momentum
+</details>
 
-| # | Investor | Skill | Style | Key Metrics |
-|---|----------|-------|-------|-------------|
-| 3 | Peter Lynch | `augur-lynch` | GARP Growth | PEG <1.5, Revenue Growth >15% |
-| 8 | Cathie Wood | `augur-cathie-wood` | Disruptive Innovation | Revenue Growth >30%, TAM |
-| 13 | Peter Thiel | `augur-thiel` | Zero-to-One Monopoly | Network effects, tech barriers |
+<details>
+<summary><strong>Growth & Innovation</strong></summary>
 
-### Macro & Cycles
+| Investor | Framework | Best For |
+|----------|-----------|---------|
+| 🚀 **Peter Lynch** | PEG < 1.5 + everyday business | GARP growth stocks |
+| 💡 **Cathie Wood** | Wright's Law + TAM expansion | AI/Genomics/Blockchain |
+| 🏢 **Peter Thiel** | 0-to-1 monopoly + contrarian | Tech platforms / deep tech |
+| 🤖 **Leopold Aschenbrenner** | AGI infrastructure + compute scarcity | AI / semiconductors |
 
-| # | Investor | Skill | Style | Key Metrics |
-|---|----------|-------|-------|-------------|
-| 4 | Ray Dalio | `augur-dalio` | Macro / All-Weather | Four-quadrant analysis, debt cycles |
-| 6 | George Soros | `augur-soros` | Reflexivity / Macro Trading | Reflexivity signals, trend momentum |
-| 7 | Howard Marks | `augur-marks` | Cycles / Contrarian | Cycle positioning, market sentiment |
+</details>
 
-### Frontier Tech & Crypto
+<details>
+<summary><strong>Macro & Cycle</strong></summary>
 
-| # | Investor | Skill | Style | Key Metrics |
-|---|----------|-------|-------|-------------|
-| 10 | ARPS | `augur-arps` | Crypto / Gold Macro | BTC correlation, gold as safe haven |
-| 11 | Leopold Aschenbrenner | `augur-aschenbrenner` | AI Geopolitics | AI investment, compute demand |
-| 12 | BTCdayu | `augur-dayu` | Information Edge / Sentiment Momentum | Sentiment momentum > valuation |
-| 18 | Serenity (@aleabitoreddit) | `augur-serenity` | AI/Semi Supply Chain Chokepoint Trading | Revenue Growth >30%, semiconductor sector |
+| Investor | Framework | Best For |
+|----------|-----------|---------|
+| 🌐 **Ray Dalio** | All-weather + debt cycle | Macro rotation |
+| 🔄 **George Soros** | Reflexivity + self-reinforcing trends | Trend trading |
+| 📉 **Howard Marks** | Pendulum sentiment + second-level thinking | Cycle bottoms |
+| 🥇 **ARPS** | Real rates + Crypto/Gold macro | Inflation hedge |
 
-### Chinese Investors
+</details>
 
-| # | Investor | Skill | Style | Key Metrics |
-|---|----------|-------|-------|-------------|
-| 14 | Duan Yongping | `augur-duan-yongping` | Integrity / Extreme Concentration | Clear business model, principled management |
-| 15 | Zhang Lei (Hillhouse) | `augur-zhang-lei` | Long-term Structural Value | Revenue Growth >15%, structural trends |
-| 16 | Li Lu (Himalaya) | `augur-li-lu` | Deep Value / Margin of Safety | PE <25, ROE >12%, no high leverage |
-| 17 | Dan Bin (Oriental Harbor) | `augur-dan-bin` | Brand Moat / Era Beta | Gross Margin >40%, pricing power |
+<details>
+<summary><strong>🇨🇳 Chinese Investors (Exclusive)</strong></summary>
 
-> Each investor has: Full persona documentation (`personas/*.md`) + Independent Skill (`skills/*/SKILL.md`) + Python analysis engine (`src/augur/personas/*.py`)
+| Investor | Framework | Best For |
+|----------|-----------|---------|
+| 🎯 **Duan Yongping** | Benfun (principled) + extreme concentration | Consumer tech with clear model |
+| 🌏 **Zhang Lei (Hillhouse)** | Structural long-term value | Chinese growth sectors |
+| 🏔️ **Li Lu (Himalaya)** | Deep value + margin of safety | HK/A-share undervaluation |
+| 🫖 **Dan Bin (OrientalHarbour)** | Brand moat + era beta | Consumer champions |
+| ₿ **BTCdayu** | Information edge + sentiment momentum | Crypto / narrative trading |
+
+</details>
+
+<details>
+<summary><strong>Special Strategies</strong></summary>
+
+| Investor | Framework | Best For |
+|----------|-----------|---------|
+| 🔭 **Serenity** | AI/semiconductor supply chain chokepoints | Critical bottleneck plays |
+
+</details>
 
 ---
 
-## Usage
-
-### CLI (15+ Commands)
-
-```bash
-# Core Analysis (requires pip install -e ".[data]" for auto data fetch)
-augur analyze AAPL                    # Auto-fetch live data + 18-master analysis
-augur analyze AAPL --persona buffett  # Buffett framework only
-augur consensus NVDA                  # 18-master consensus + Kelly position sizing
-augur list-personas                   # List all investors
-augur fetch 0700.HK --json            # Fetch market data only (JSON)
-
-# Services
-python3 -m dashboard.app --port 8000 --cors  # Bloomberg Dashboard
-augur api --port 8900                         # Lightweight REST API
-augur mcp-server                              # MCP Server (stdio mode)
-
-# Backtesting
-augur backtest AAPL --days 30 --live  # Backtest with real yfinance data
-augur backtest AAPL --demo            # Demo with simulated data
-augur ic-report                       # Agent IC leaderboard
-
-# Watchlist & Scheduling
-augur watchlist-add AAPL --pe 32 --roe 0.55 --gross-margins 0.46
-augur cron-run                        # Run watchlist analysis once
-augur cron-start                      # Start scheduled daemon (weekdays 9am)
-
-# Soul injection for Hermes
-augur inject-soul --profile my-buffett --persona buffett -f hermes
-
-# Platform Bots (require env vars — see Bot section below)
-augur telegram    # needs TELEGRAM_TOKEN
-augur slack       # needs SLACK_BOT_TOKEN + SLACK_APP_TOKEN
-augur wechat      # needs GeWeChat client
-augur lark        # needs LARK_APP_ID + LARK_APP_SECRET
-```
-
-**Parameter conventions:**
-- Rates/margins: decimal — `--roe 0.55` (55%), `--debt-ratio 0.35` (35%)
-- Ownership: integer percent — `--institutional-ownership 66` (66%)
-- Market cap/FCF: billions USD — `--market-cap 2800` ($2.8T), `--fcf 90` ($90B)
-
-### REST API (Dashboard built-in)
-
-The Dashboard server provides the full REST API:
+## 📊 Bloomberg Dashboard
 
 ```bash
 python3 -m dashboard.app --port 8000 --cors
-
-# 18-master consensus (auto-fetches live data)
-curl http://localhost:8000/api/analyze/AAPL
-
-# Manual metrics (decimals for rates, billions for market cap)
-curl "http://localhost:8000/api/analyze/NVDA?pe=45&gross_margins=0.78&roe=0.65&market_cap=3200"
-
-# Investor list
-curl http://localhost:8000/api/personas
-
-# Configuration
-curl http://localhost:8000/api/config
 ```
 
-Full endpoints: `/api/analyze/{ticker}` | `/api/personas` | `/api/persona/{id}` | `/api/config` | `/api/models` | `/api/custom-persona` | `/api/backtest/run` | `/api/backtest/leaderboard` | `/health`
+**7 pages** covering the complete analysis workflow:
 
-### MCP Server (6 Tools)
+| Page | Function | Highlight |
+|------|----------|-----------|
+| **Home** | Quick analysis + recent history | Press `/` to focus ticker |
+| **Stock Analysis** | 18-master consensus + detail view | yfinance auto-fill |
+| **Personas** | 18-master cards + search/filter | Expand for factor weights |
+| **Signal Monitor** | Watchlist batch scan | Auto-refresh every 60s |
+| **Backtest** | IC leaderboard + hit rate | Track master accuracy |
+| **Settings** | Per-master model config | Saved instantly |
+| **Create Persona** | No-code YAML custom agent | Registers immediately |
 
-The MCP server requires Python 3.10+ (the `mcp` package requirement). Use a virtual environment if needed:
+<p align="center">
+  <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis Dashboard" width="100%"/>
+</p>
+
+---
+
+## 🔌 Deploy Anywhere
+
+### Claude Desktop / Hermes (MCP)
 
 ```bash
+# Requires Python 3.10+ for MCP support
 uv venv --python 3.11 .venv
 uv pip install -e ".[mcp]"
-.venv/bin/augur mcp-server  # verify it starts
+.venv/bin/augur mcp-server   # verify it starts
 ```
 
 **Hermes** (`~/.hermes/config.yaml`):
 ```yaml
 mcp_servers:
   augur:
-    command: /absolute/path/to/augur/.venv/bin/augur  # replace with your path
+    command: /absolute/path/to/augur/.venv/bin/augur
     args: [mcp-server]
 
 skills:
   external_dirs:
-    - /absolute/path/to/augur/skills  # for /skill augur-buffett commands
+    - /absolute/path/to/augur/skills   # enables /skill augur-buffett etc.
 ```
 
 **Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
@@ -242,195 +203,137 @@ skills:
 }
 ```
 
-> If `augur` is on your system PATH and uses Python 3.10+, you can use `command: augur` without the full path.
+6 MCP tools: `augur_analyze` · `augur_consensus` · `augur_list_personas` · `augur_configure` · `augur_create_persona` · `augur_debate`
 
-6 tools: `augur_analyze` | `augur_consensus` | `augur_list_personas` | `augur_configure` | `augur_create_persona` | `augur_debate`
+> All tools support **auto live data**: if no metrics are passed, yfinance fetches them automatically.
 
-All analyze/consensus tools support auto-fetch: when no metrics are passed, real-time data is fetched from yfinance automatically.
-
----
-
-## Dashboard
-
-Bloomberg Terminal-style dark theme web interface with 7 pages covering the full analysis workflow.
+### Telegram / Slack / WeChat / Lark
 
 ```bash
-python3 -m dashboard.app --port 8000 --cors
-# Visit http://localhost:8000
+pip install -e ".[telegram]" && export TELEGRAM_TOKEN='...' && augur telegram
+pip install -e ".[slack]" && export SLACK_BOT_TOKEN='...' SLACK_APP_TOKEN='...' && augur slack
+pip install -e ".[wechat]" && augur wechat --mode personal
+pip install -e ".[lark]" && export LARK_APP_ID='...' LARK_APP_SECRET='...' && augur lark
 ```
 
-<p align="center">
-  <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis" width="100%"/>
-  <br><em>Stock Analysis - Enter a ticker for instant 18-master consensus scoring</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/dashboard-personas.svg" alt="Personas" width="100%"/>
-  <br><em>Personas - 18 master cards with search and filter</em>
-</p>
-
-<p align="center">
-  <img src="docs/images/dashboard-settings.svg" alt="Settings" width="100%"/>
-  <br><em>Settings - Independent model configuration per investor</em>
-</p>
-
-| Page | Path | Description |
-|------|------|-------------|
-| Home | `/` | Quick analysis + preset tickers |
-| Personas | `/personas` | 18 master cards |
-| Stock Analysis | `/stocks` | Deep analysis + scoring |
-| Signal Monitor | `/signals` | Watchlist scanning |
-| Backtest | `/backtest` | Historical backtesting + IC |
-| Settings | `/settings` | Model configuration |
-| Create Persona | `/create_persona` | YAML custom personas |
-
----
-
-## Platform Bots
-
-### Telegram
-```bash
-pip install -e ".[telegram]"
-export TELEGRAM_TOKEN='your-bot-token'
-augur telegram
-```
-Commands: `/analyze AAPL` | `/consensus NVDA` | `/ask buffett analyze AAPL` | Natural language: `@Buffett analyze AAPL`
-
-### Slack
-```bash
-pip install -e ".[slack]"
-export SLACK_BOT_TOKEN='xoxb-...' SLACK_APP_TOKEN='xapp-...'
-augur slack
-```
-Commands: `/augur-analyze AAPL` | Channel mention `@augur analyze AAPL` | Block Kit rich text output
-
-### WeChat (3 Modes)
-```bash
-pip install -e ".[wechat]"
-# Personal WeChat (recommended, GeWeChat scan-to-use)
-augur wechat --mode personal --port 8066
-# Enterprise WeChat (WeCom)
-augur wechat --mode wecom --port 8080
-# Webhook (push-only)
-augur wechat --mode webhook
-```
-
-### Lark / Feishu (2 Modes)
-```bash
-pip install -e ".[lark]"
-# Event subscription (bidirectional)
-augur lark --mode event --port 9000
-# Webhook (push-only)
-augur lark --mode webhook
-```
-
----
-
-## Architecture
-
-<p align="center">
-  <img src="docs/images/architecture-en.svg" alt="Augur Architecture" width="100%"/>
-</p>
-
-```
-augur/
-├── src/augur/                  # pip package main module
-│   ├── cli.py                  # Click CLI (15+ commands)
-│   ├── mcp_server.py           # MCP Server (6 tools, stdio)
-│   ├── api.py                  # REST API (FastAPI)
-│   ├── registry.py             # AgentRegistry + DecisionCoordinator
-│   ├── data.py                 # Real-time data (yfinance)
-│   ├── backtest.py             # Historical backtesting + IC
-│   ├── cron.py                 # Scheduled analysis + Watchlist
-│   ├── bots/                   # Multi-platform bots
-│   │   ├── telegram_bot.py
-│   │   ├── slack_bot.py
-│   │   ├── wechat_bot.py
-│   │   └── lark_bot.py
-│   └── personas/               # 18 Investor Agents
-│       ├── base.py
-│       ├── buffett.py ... serenity.py
-│       └── (18 Python modules)
-├── dashboard/                  # Bloomberg-style Web UI
-│   ├── app.py                  # FastAPI + routes
-│   └── templates/              # 7 page templates
-├── skills/                     # Independent Skills (agentskills.io)
-├── personas/                   # Investor deep-dive docs + custom/ YAML
-├── config/agents.yaml          # Agent LLM model configuration
-├── pyproject.toml              # pip package config (augur-agents)
-├── Dockerfile                  # Containerization
-└── docker-compose.yml          # Multi-service orchestration
-```
-
-**Consensus Mechanism (6-layer weighting):**
-
-1. Industry-aware weighting - Tech stocks give higher weight to Wood/Aschenbrenner
-2. Market regime routing - Bear market increases weight for Marks/Dalio
-3. Rolling IC weighting - Agents with higher historical accuracy get dynamic weight boosts
-4. Diversity penalty - Agents with similar views have redundant weight reduced
-5. Kelly position sizing - Suggests position size based on consensus and confidence
-6. Risk veto layer - Can veto bullish consensus when debt is high + bear market detected
-
----
-
-## Docker Deployment
+### Docker
 
 ```bash
-# Dashboard + API
-docker compose up -d dashboard        # http://localhost:8000
-
-# Telegram Bot
-export TELEGRAM_TOKEN=your_token
-docker compose --profile telegram up -d
-
-# All services
-docker compose --profile full --profile telegram --profile cron up -d
-
-# Makefile shortcuts
-make docker-build && make docker-up
+docker compose up -d dashboard           # http://localhost:8000
+docker compose --profile telegram up -d  # + Telegram Bot
 ```
 
 ---
 
-## Contributing
+## ⚙️ Full CLI Reference
 
-1. **New Investors** - Add a YAML in `personas/custom/`, or write a Python Agent referencing `src/augur/personas/buffett.py`
-2. **New Skills** - Follow the `skills/buffett/SKILL.md` format
-3. **Algorithm Improvements** - Enhance scoring logic or consensus mechanism
-4. **Bot Adapters** - Add new platforms in `src/augur/bots/`
-5. **Web UI** - Improve the `dashboard/` frontend
+```bash
+augur analyze AAPL                         # auto live data, all 18 masters
+augur analyze TSLA --persona cathie_wood   # specific master only
+augur consensus NVDA                       # weighted consensus + Kelly size
+augur list-personas                        # show all investors
 
----
+augur fetch 0700.HK --json                 # raw market data (JSON)
+augur backtest AAPL --days 30 --live       # real historical backtest
+augur ic-report                            # agent accuracy leaderboard
 
-## Star History
+augur watchlist-add AAPL --pe 32 --roe 0.55 --gross-margins 0.46
+augur cron-run                             # run watchlist analysis once
+augur cron-start                           # start scheduled daemon (weekdays 9am)
 
-<a href="https://www.star-history.com/?repos=BruceLanLan%2Faugur&type=timeline&logscale=&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=BruceLanLan/augur&type=timeline&legend=top-left" />
- </picture>
-</a>
+augur inject-soul --profile my-buffett --persona buffett -f hermes
+```
 
----
+**Parameter conventions:**
 
-## Why "Augur"?
-
-> **Augur** - From Latin, the title of ancient Roman diviners. Augurs interpreted omens and predicted the future, reading the trajectories of bird flocks and the direction of lightning to foresee coming changes. This is exactly what this system does: it lets 18 investment masters help you see opportunities before the market shifts.
-
-| Figure | Role | Symbolism |
-|--------|------|-----------|
-| **Hermes** | Messenger of the gods | Information delivery, communication |
-| **Augur** | Interpreter of omens, predictor of the future | Analysis, interpretation, foresight |
-
-Hermes delivers information; Augur interprets it. One transmits, the other predicts - a natural complement.
+| Type | Unit | Example |
+|------|------|---------|
+| Rates / margins | Decimal | `--roe 0.55` = 55% |
+| Ownership | Integer percent | `--institutional-ownership 66` = 66% |
+| Market cap / FCF | Billions USD | `--market-cap 2800` = $2.8T |
 
 ---
 
-## License
+## 🔧 YAML Custom Personas
 
-MIT License - See [LICENSE](LICENSE)
+```yaml
+# personas/custom/my_quant.yaml
+agent_id: my_quant
+name: "My Quant Strategy"
+philosophy: ["momentum", "value", "low volatility"]
+scoring_weights:
+  momentum: 0.40
+  value:    0.35
+  safety:   0.25
+factors:
+  momentum:
+    base: 5
+    rules:
+      - {if: "rsi > 55 and rsi < 75", add: 2}
+      - {if: "macd > macd_signal",     add: 1}
+  value:
+    base: 5
+    rules:
+      - {if: "pe > 0 and pe < 15",     add: 3}
+      - {if: "pb < 1.5 and pb > 0",   add: 2}
+  safety:
+    base: 5
+    rules:
+      - {if: "debt_ratio < 0.3",       add: 2}
+      - {if: "current_ratio > 2",      add: 2}
+```
 
-<p align="center">
-  <sub>Built with care by <a href="https://github.com/BruceLanLan">BruceLanLan</a></sub>
-</p>
+---
+
+## ❓ Troubleshooting
+
+<details>
+<summary>"yfinance not installed" error</summary>
+
+```bash
+pip install -e ".[data]"
+```
+</details>
+
+<details>
+<summary>MCP Server "No module named mcp"</summary>
+
+```bash
+uv venv --python 3.11 .venv && uv pip install -e ".[mcp]"
+.venv/bin/augur mcp-server
+```
+</details>
+
+<details>
+<summary>Analysis always shows NEUTRAL</summary>
+
+Use decimals for rates (`--roe 0.55` not `--roe 55`), billions for market cap (`--market-cap 2800` = $2.8T)
+</details>
+
+<details>
+<summary>Dashboard stuck on "Loading"</summary>
+
+```bash
+curl http://localhost:8000/health  # should return {"status":"ok","agents":18}
+pip install -e ".[data]"
+```
+</details>
+
+---
+
+## 🤝 Contributing
+
+- **New investor** → Add YAML to `personas/custom/` or write Python like `src/augur/personas/buffett.py`
+- **Algorithm** → Improve `src/augur/coordinator.py` consensus mechanism
+- **New platform** → Add to `src/augur/bots/`
+- **UI** → Improve `dashboard/` frontend
+
+---
+
+<div align="center">
+
+MIT License · Built by [BruceLanLan](https://github.com/BruceLanLan)
+
+*For educational and research purposes only — not investment advice*
+
+</div>

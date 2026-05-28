@@ -208,14 +208,14 @@ class DayuAgent(BaseAgent):
 
         # 小市值弹性
         mc = ctx.market_cap or 0
-        if mc > 0 and mc < 500_000_000:
-            score += 2.5  # ~5亿以下 = 最大弹性
-        elif mc < 2_000_000_000:
-            score += 1.5  # ~20亿以下
-        elif mc < 10_000_000_000:
+        if mc > 0 and mc < 0.5:        # < $500M (billions unit)
+            score += 2.5  # 超小市值 = 最大弹性
+        elif mc < 2.0:                 # < $2B
+            score += 1.5
+        elif mc < 10.0:                # < $10B
             score += 0.5
-        elif mc > 200_000_000_000:
-            score -= 2    # 超级大盘弹性有限
+        elif mc > 200.0:               # > $200B 超级大盘
+            score -= 2    # 弹性有限
 
         # 亏损/未盈利=可能早期机会(币圈特色)
         pe = ctx.pe or 0
@@ -403,7 +403,7 @@ class DayuAgent(BaseAgent):
                             total_score: float, suggested_pos: float) -> str:
         change_str = f"{ctx.change_pct:+.1f}%" if ctx.change_pct else "N/A"
         rsi_str = f"{ctx.rsi:.0f}" if ctx.rsi else "N/A"
-        mc_str = f"${ctx.market_cap/1e9:.1f}B" if ctx.market_cap else "N/A"
+        mc_str = f"${ctx.market_cap:.1f}B" if ctx.market_cap else "N/A"
         pe_str = f"{ctx.pe:.1f}" if ctx.pe else "N/A"
 
         return f"""## {self.name} Analysis for {ctx.ticker}
