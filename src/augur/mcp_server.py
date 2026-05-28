@@ -269,5 +269,9 @@ def run_server():
     mcp.run(transport="stdio")
 
 
+# Alias for backward-compatibility with augur-mcp entry point
+main = run_server
+
+
 if __name__ == "__main__":
     run_server()
