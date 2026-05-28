@@ -30,7 +30,7 @@ class DuanYongpingAgent(BaseAgent):
                 "bearish_threshold": 4.0,
                 "gross_margin_min": 0.35,
                 "roe_min": 0.15,
-                "debt_ratio_max": 60,
+                "debt_ratio_max": 0.60,
                 "pe_max": 35,
             },
             biases={
@@ -79,7 +79,7 @@ class DuanYongpingAgent(BaseAgent):
         if "consumer" in sector or "technology" in sector or "software" in sector:
             moat_score += 0.5
         # 高负债扣分（护城河真实但财务脆弱）
-        if context.debt_ratio > 70:
+        if context.debt_ratio > 0.70:
             moat_score -= 1.5
         factors["moat_quality"] = max(0, min(moat_score, 10))
 
@@ -106,9 +106,9 @@ class DuanYongpingAgent(BaseAgent):
             durability_score += 1.5
         if context.revenue_growth > 0.20:
             durability_score += 1.0
-        if context.debt_ratio < 40:
+        if context.debt_ratio < 0.40:
             durability_score += 1.5  # 低负债 = 能扛周期
-        elif context.debt_ratio > 70:
+        elif context.debt_ratio > 0.70:
             durability_score -= 2.0
         if context.current_ratio > 1.5:
             durability_score += 1.0
@@ -160,8 +160,8 @@ class DuanYongpingAgent(BaseAgent):
             key_findings.append(f"管理层本分：内部人持股{context.insider_ownership:.1f}%")
         if context.fcf < 0:
             risks.append("负FCF：商业模式尚未证明可持续")
-        if context.debt_ratio > 60:
-            risks.append(f"负债率偏高({context.debt_ratio:.0f}%)，降低长期持续性")
+        if context.debt_ratio > 0.60:
+            risks.append(f"负债率偏高({context.debt_ratio*100:.0f}%)，降低长期持续性")
         if context.pe > 50:
             risks.append(f"估值偏高(PE={context.pe:.0f})，安全边际不足")
 
@@ -209,7 +209,7 @@ class DuanYongpingAgent(BaseAgent):
 
 **长期持续性: {factors['long_term_durability']:.1f}/10**
 - 营收增速: {context.revenue_growth*100:.1f}%
-- 负债率: {context.debt_ratio:.1f}% {'✓' if context.debt_ratio < 50 else '⚠️'}
+- 负债率: {context.debt_ratio*100:.1f}% {'✓' if context.debt_ratio < 0.50 else '⚠️'}
 
 **估值合理性: {factors['valuation_reasonableness']:.1f}/10**
 - PE: {pe_str}

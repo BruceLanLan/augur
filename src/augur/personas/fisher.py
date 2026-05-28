@@ -75,9 +75,9 @@ class FisherAgent(BaseAgent):
             mgmt_score += 3  # 高ROE=优秀资本配置
         elif context.roe > roe_min:
             mgmt_score += 1
-        if context.debt_ratio < 40:
+        if context.debt_ratio < 0.40:
             mgmt_score += 2  # 低负债=保守财务管理
-        elif context.debt_ratio > 70:
+        elif context.debt_ratio > 0.70:
             mgmt_score -= 2
         if context.institutional_ownership > 60:
             mgmt_score += 1  # 机构认可管理层
@@ -146,7 +146,7 @@ class FisherAgent(BaseAgent):
 
 **管理层质量: {factors['management_quality']}/10**
 - ROE: {context.roe*100:.1f}% {'✓ 优秀' if context.roe > roe_strong else '一般'}
-- 负债率: {context.debt_ratio:.1f}% {'✓ 保守' if context.debt_ratio < 40 else '偏高'}
+- 负债率: {context.debt_ratio*100:.1f}% {'✓ 保守' if context.debt_ratio < 0.40 else '偏高'}
 
 **销售组织力: {factors['sales_organization']}/10**
 - 收入增速: {context.revenue_growth*100:.1f}%

@@ -103,11 +103,11 @@ class ArpsAgent(BaseAgent):
 
         # 4. 流动性风险 (0-10, 越高越好)
         liq_risk_score = 5
-        if context.market_cap > 100e9:
+        if context.market_cap > 100:
             liq_risk_score += 3  # 大市值=流动性充足
-        elif context.market_cap > 10e9:
+        elif context.market_cap > 10:
             liq_risk_score += 1
-        elif context.market_cap < 1e9:
+        elif context.market_cap < 1:
             liq_risk_score -= 3  # 小市值=流动性风险高
         if iv_proxy > 0.50:
             liq_risk_score -= 2  # 极高波动=流动性风险
@@ -152,7 +152,7 @@ class ArpsAgent(BaseAgent):
 - 价格 vs SMA50: {'✓' if context.price > context.sma50 else '✗'}
 
 **流动性风险: {factors['liquidity_risk']}/10**
-- 市值: {context.market_cap/1e9:.1f}B {'✓ 充足' if context.market_cap > 10e9 else '⚠️ 偏低'}
+- 市值: {context.market_cap:.1f}B {'✓ 充足' if context.market_cap > 10 else '⚠️ 偏低'}
 - 波动率: {iv_proxy*100:.1f}%
 
 **综合评分: {total_score:.1f}/10**

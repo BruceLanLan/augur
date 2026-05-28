@@ -32,7 +32,7 @@ class LiLuAgent(BaseAgent):
                 "pe_max": 25,
                 "pb_max": 3.0,
                 "roe_min": 0.12,
-                "debt_ratio_max": 60,
+                "debt_ratio_max": 0.60,
                 "margin_of_safety_min": 0.25,
             },
             biases={
@@ -118,11 +118,11 @@ class LiLuAgent(BaseAgent):
         # 3. 财务健全 (0-10)
         # 李录：财务保守是长期持有的基础
         finance_score = 5.0
-        if context.debt_ratio < 30:
+        if context.debt_ratio < 0.30:
             finance_score += 2.5
-        elif context.debt_ratio < 50:
+        elif context.debt_ratio < 0.50:
             finance_score += 1.0
-        elif context.debt_ratio > 70:
+        elif context.debt_ratio > 0.70:
             finance_score -= 2.5
         if context.current_ratio > 2.0:
             finance_score += 1.5
@@ -182,11 +182,11 @@ class LiLuAgent(BaseAgent):
         if factors["competitive_position"] >= 7:
             key_findings.append(f"竞争地位强：毛利率{context.gross_margins*100:.0f}%，ROE{context.roe*100:.0f}%")
         if factors["financial_soundness"] >= 7:
-            key_findings.append(f"财务稳健：负债率{context.debt_ratio:.0f}%，流动比{context.current_ratio:.2f}")
+            key_findings.append(f"财务稳健：负债率{context.debt_ratio*100:.0f}%，流动比{context.current_ratio:.2f}")
         if context.pe > 30:
             risks.append(f"估值偏高(PE={context.pe:.0f})，安全边际不足，与李录偏好相悖")
-        if context.debt_ratio > 60:
-            risks.append(f"负债率{context.debt_ratio:.0f}%偏高，财务风险需关注")
+        if context.debt_ratio > 0.60:
+            risks.append(f"负债率{context.debt_ratio*100:.0f}%偏高，财务风险需关注")
         if context.fcf < 0 and context.roe < 0.10:
             risks.append("无FCF+低ROE，内在价值难以评估")
 
@@ -226,7 +226,7 @@ class LiLuAgent(BaseAgent):
 - ROE: {context.roe*100:.1f}% {'✓' if context.roe > 0.12 else '✗'}
 
 **财务健全: {factors['financial_soundness']:.1f}/10**
-- 负债率: {context.debt_ratio:.1f}% {'✓' if context.debt_ratio < 50 else '⚠️'}
+- 负债率: {context.debt_ratio*100:.1f}% {'✓' if context.debt_ratio < 0.50 else '⚠️'}
 - 流动比: {context.current_ratio:.2f}
 
 **管理层质量: {factors['management_quality']:.1f}/10**

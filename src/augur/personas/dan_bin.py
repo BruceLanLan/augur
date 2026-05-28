@@ -116,9 +116,9 @@ class DanBinAgent(BaseAgent):
         if any(k in sector for k in ["consumer", "health", "communication"]):
             china_score += 2.0
         # 市值规模 = 市场认可度
-        if context.market_cap > 5_000_000_000:
+        if context.market_cap > 5:
             china_score += 1.0
-        if context.market_cap > 20_000_000_000:
+        if context.market_cap > 20:
             china_score += 0.5
         if context.institutional_ownership > 40:
             china_score += 1.0

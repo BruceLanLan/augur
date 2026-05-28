@@ -96,7 +96,7 @@ class MungerAgent(BaseAgent):
         moat_score = 5
         if context.gross_margins > 0.40:
             moat_score += 3
-        if context.debt_ratio < 50:
+        if context.debt_ratio < 0.50:
             moat_score += 2
         factors["moat_durability"] = min(max(moat_score * moat_multiplier, 0), 10)
 
@@ -126,7 +126,7 @@ class MungerAgent(BaseAgent):
 
 **护城河持久性: {factors['moat_durability']}/10**
 - 毛利率: {context.gross_margins*100:.1f}%
-- 负债率: {context.debt_ratio:.1f}%
+- 负债率: {context.debt_ratio*100:.1f}%
 
 **综合评分: {total_score:.1f}/10**
 投资哲学：{' + '.join(self.philosophy[:2])}

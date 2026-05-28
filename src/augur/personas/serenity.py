@@ -131,9 +131,9 @@ class SerenityAgent(BaseAgent):
 
         # 小市值加分 (Serenity偏好<$1B的隐形垄断者)
         if hasattr(context, 'market_cap') and context.market_cap:
-            if context.market_cap < 1e9:
+            if context.market_cap < 1:
                 scb_score += 2  # 微型股 = 研究真空
-            elif context.market_cap < 5e9:
+            elif context.market_cap < 5:
                 scb_score += 1
 
         # 非相关行业扣分
@@ -148,7 +148,7 @@ class SerenityAgent(BaseAgent):
         iv_score = 5  # 基础分
 
         # RSI: Serenity偏好有动量但未过热
-        rsi = context.rsi_14
+        rsi = context.rsi
         if 50 <= rsi <= 70:
             iv_score += 2  # 健康上升动量
         elif 40 <= rsi < 50:
@@ -165,9 +165,9 @@ class SerenityAgent(BaseAgent):
             iv_score -= 1
 
         # 价格接近52周高点 = 突破模式(Serenity likes momentum)
-        if context.price_to_52w_high > 0.90:
+        if (1.0 + context.price_vs_52w_high / 100) > 0.90:
             iv_score += 1
-        elif context.price_to_52w_high < 0.60:
+        elif (1.0 + context.price_vs_52w_high / 100) < 0.60:
             iv_score -= 1  # 深度回调，可能是底部机会但IV不确定
 
         factors["options_iv_momentum"] = min(max(iv_score, 0), 10)
@@ -222,13 +222,13 @@ class SerenityAgent(BaseAgent):
         risk_score = 5  # 基础分
 
         # 现金充裕/低负债 = 安全 (VLN: $93.5M cash, zero debt)
-        if context.debt_ratio < 20:
+        if context.debt_ratio < 0.20:
             risk_score += 3  # VLN级: 零负债 + 巨额现金
-        elif context.debt_ratio < 40:
+        elif context.debt_ratio < 0.40:
             risk_score += 2
         elif context.debt_ratio < 60:
             risk_score += 1
-        elif context.debt_ratio > 80:
+        elif context.debt_ratio > 0.80:
             risk_score -= 2
 
         # 回撤风险 (Serenity能承受15-25%单日回撤)
@@ -242,9 +242,9 @@ class SerenityAgent(BaseAgent):
                 risk_score -= 2
 
         # RSI极端值 = 流动性踩踏风险
-        if context.rsi_14 > 85:
+        if context.rsi > 85:
             risk_score -= 2  # 散户蜂拥，踩踏风险极高
-        elif context.rsi_14 < 20:
+        elif context.rsi < 20:
             risk_score -= 1  # 恐慌抛售中
 
         factors["risk_sizing"] = min(max(risk_score, 0), 10)
@@ -280,8 +280,8 @@ class SerenityAgent(BaseAgent):
         if not any(kw in sector or kw in industry for kw in
                    ["semiconductor", "tech", "hardware", "optical", "data center", "cloud", "defense"]):
             risks.append("非AI供应链相关行业，Chokepoint Theory框架适用性低")
-        if context.rsi_14 > 80:
-            risks.append(f"RSI={context.rsi_14:.0f}严重超买，散户已蜂拥，踩踏风险极高")
+        if context.rsi > 80:
+            risks.append(f"RSI={context.rsi:.0f}严重超买，散户已蜂拥，踩踏风险极高")
         if context.ps > 25:
             risks.append(f"PS={context.ps:.1f}过高，卡脖子溢价可能已被充分定价")
 
@@ -301,9 +301,9 @@ class SerenityAgent(BaseAgent):
 - 卡脖子判断: {'物理不可替代的供应链垄断者' if factors['supply_chain_bottleneck'] >= 7 else '非卡脖子位置' if factors['supply_chain_bottleneck'] < 4 else '潜在瓶颈，需验证替代方案'}
 
 **IV Expansion + 动量: {factors['options_iv_momentum']}/10** (权重{self.scoring_weights['options_iv_momentum']:.0%})
-- RSI(14): {context.rsi_14:.1f} {'(健康动量)' if 50 <= context.rsi_14 <= 70 else '(超买=IV crush风险)' if context.rsi_14 > 80 else ''}
+- RSI(14): {context.rsi:.1f} {'(健康动量)' if 50 <= context.rsi <= 70 else '(超买=IV crush风险)' if context.rsi > 80 else ''}
 - MACD vs Signal: {'动量向上' if context.macd > context.macd_signal else '动量向下'}
-- 52周高点距离: {context.price_to_52w_high*100:.1f}%
+- 52周高点距离: {(1.0 + context.price_vs_52w_high / 100)*100:.1f}%
 
 **AI算力需求/NeoCloud: {factors['ai_compute_demand']}/10** (权重{self.scoring_weights['ai_compute_demand']:.0%})
 - 收入增速: {context.revenue_growth*100:.1f}% {'(NeoCloud级爆发)' if context.revenue_growth > 1.0 else '(RPI级增速)' if context.revenue_growth > 0.50 else ''}
@@ -315,7 +315,7 @@ class SerenityAgent(BaseAgent):
 - CHIPS法案/出口管制受益: {'是' if context.revenue_growth > 0.30 and 'semiconductor' in sector else '待观察'}
 
 **风险管理: {factors['risk_sizing']}/10** (权重{self.scoring_weights['risk_sizing']:.0%})
-- 负债率: {context.debt_ratio:.1f}% {'(VLN级: 近零负债)' if context.debt_ratio < 20 else ''}
+- 负债率: {context.debt_ratio*100:.1f}% {'(VLN级: 近零负债)' if context.debt_ratio < 0.20 else ''}
 - 回撤承受: {'可控' if factors['risk_sizing'] >= 6 else '需警惕流动性踩踏'}
 
 **综合评分: {total_score:.1f}/10**
