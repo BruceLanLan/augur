@@ -17,20 +17,40 @@ from typing import Optional
 def _build_context(ticker: str, pe: float = 0, pb: float = 0, roe: float = 0,
                    gross_margins: float = 0, revenue_growth: float = 0,
                    debt_ratio: float = 0, fcf: float = 0, market_cap: float = 0,
-                   price: float = 0):
-    """Build a MarketContext from parameters."""
+                   price: float = 0, institutional_ownership: float = 0,
+                   insider_ownership: float = 0, rsi: float = 50,
+                   volatility_20d: float = 0, short_interest: float = 0,
+                   volume: float = 0, sector: str = "", industry: str = "",
+                   auto_fetch: bool = True):
+    """Build a MarketContext from parameters, with optional auto-fetch from yfinance."""
     from augur.personas.base import MarketContext
+
+    # Auto-fetch if no core metrics provided
+    has_metrics = any([pe, pb, roe, gross_margins, revenue_growth, market_cap, price])
+    if not has_metrics and auto_fetch:
+        try:
+            from augur.data import fetch_market_context
+            return fetch_market_context(ticker)
+        except Exception:
+            pass
+
     return MarketContext(
         ticker=ticker.upper(),
-        pe=pe,
-        pb=pb,
-        roe=roe,
+        pe=pe, pb=pb, roe=roe,
         gross_margins=gross_margins,
         revenue_growth=revenue_growth,
         debt_ratio=debt_ratio,
         fcf=fcf,
         market_cap=market_cap,
         price=price,
+        institutional_ownership=institutional_ownership,
+        insider_ownership=insider_ownership,
+        rsi=rsi,
+        volatility_20d=volatility_20d,
+        short_interest=short_interest,
+        volume=volume,
+        sector=sector,
+        industry=industry,
     )
 
 
@@ -50,25 +70,34 @@ def create_server():
     def augur_analyze(ticker: str, persona: Optional[str] = None, pe: float = 0,
                       pb: float = 0, roe: float = 0, gross_margins: float = 0,
                       revenue_growth: float = 0, debt_ratio: float = 0,
-                      fcf: float = 0, market_cap: float = 0, price: float = 0) -> str:
-        """Analyze a ticker with one or all agents.
+                      fcf: float = 0, market_cap: float = 0, price: float = 0,
+                      institutional_ownership: float = 0, insider_ownership: float = 0,
+                      rsi: float = 50, sector: str = "", industry: str = "") -> str:
+        """Analyze a ticker with one or all agents. Auto-fetches live data if no metrics given.
 
         Args:
-            ticker: Stock ticker symbol (e.g. AAPL, NVDA)
+            ticker: Stock ticker symbol (e.g. AAPL, NVDA, 0700.HK)
             persona: Optional specific persona ID (e.g. buffett, graham). If None, uses all agents.
             pe: PE ratio
             pb: PB ratio
             roe: Return on equity (decimal, e.g. 0.15 for 15%)
             gross_margins: Gross margins (decimal, e.g. 0.45 for 45%)
             revenue_growth: Revenue growth rate (decimal)
-            debt_ratio: Debt ratio
-            fcf: Free cash flow
-            market_cap: Market capitalization
+            debt_ratio: Debt ratio as fraction of total assets (decimal, e.g. 0.35 for 35%)
+            fcf: Free cash flow in billions USD
+            market_cap: Market cap in billions USD
             price: Current stock price
+            institutional_ownership: Institutional ownership percentage (0-100)
+            insider_ownership: Insider ownership percentage (0-100)
+            rsi: RSI indicator (default 50 = neutral)
+            sector: Sector name (e.g. Technology)
+            industry: Industry name
         """
         from augur.registry import AgentRegistry
 
-        ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price)
+        ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
+                             fcf, market_cap, price, institutional_ownership, insider_ownership,
+                             rsi, sector=sector, industry=industry)
         registry = AgentRegistry()
 
         if persona:
@@ -91,8 +120,10 @@ def create_server():
     def augur_consensus(ticker: str, pe: float = 0, pb: float = 0, roe: float = 0,
                         gross_margins: float = 0, revenue_growth: float = 0,
                         debt_ratio: float = 0, fcf: float = 0, market_cap: float = 0,
-                        price: float = 0) -> str:
-        """Get multi-agent consensus on a ticker.
+                        price: float = 0, institutional_ownership: float = 0,
+                        insider_ownership: float = 0, rsi: float = 50,
+                        sector: str = "", industry: str = "") -> str:
+        """Get multi-agent consensus on a ticker. Auto-fetches live data if no metrics given.
 
         Args:
             ticker: Stock ticker symbol
@@ -101,14 +132,21 @@ def create_server():
             roe: Return on equity (decimal)
             gross_margins: Gross margins (decimal)
             revenue_growth: Revenue growth rate (decimal)
-            debt_ratio: Debt ratio
-            fcf: Free cash flow
-            market_cap: Market capitalization
+            debt_ratio: Debt ratio as fraction (decimal, e.g. 0.35)
+            fcf: Free cash flow in billions USD
+            market_cap: Market cap in billions USD
             price: Current stock price
+            institutional_ownership: Institutional ownership % (0-100)
+            insider_ownership: Insider ownership % (0-100)
+            rsi: RSI indicator (default 50)
+            sector: Sector name
+            industry: Industry name
         """
         from augur.registry import AgentRegistry, DecisionCoordinator
 
-        ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price)
+        ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
+                             fcf, market_cap, price, institutional_ownership, insider_ownership,
+                             rsi, sector=sector, industry=industry)
         registry = AgentRegistry()
         coordinator = DecisionCoordinator(registry)
 
@@ -190,25 +228,20 @@ def create_server():
     def augur_debate(ticker: str, rounds: int = 2, pe: float = 0, pb: float = 0,
                      roe: float = 0, gross_margins: float = 0, revenue_growth: float = 0,
                      debt_ratio: float = 0, fcf: float = 0, market_cap: float = 0,
-                     price: float = 0) -> str:
-        """Run a multi-round debate among agents on a ticker.
+                     price: float = 0, sector: str = "", industry: str = "") -> str:
+        """Run a multi-round debate among agents on a ticker. Auto-fetches live data if no metrics given.
 
         Args:
             ticker: Stock ticker symbol
             rounds: Number of debate rounds (default 2)
-            pe: PE ratio
-            pb: PB ratio
-            roe: Return on equity (decimal)
-            gross_margins: Gross margins (decimal)
-            revenue_growth: Revenue growth rate (decimal)
-            debt_ratio: Debt ratio
-            fcf: Free cash flow
-            market_cap: Market capitalization
-            price: Current stock price
+            pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price: Financial metrics
+            sector: Sector name
+            industry: Industry name
         """
         from augur.registry import AgentRegistry, DecisionCoordinator
 
-        ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price)
+        ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
+                             fcf, market_cap, price, sector=sector, industry=industry)
         registry = AgentRegistry()
         coordinator = DecisionCoordinator(registry)
 

@@ -95,6 +95,7 @@ class MarketContext:
     industry: str = ""
 
     # 技术指标
+    volume: float = 0           # 成交量
     rsi: float = 50
     macd: float = 0
     macd_signal: float = 0

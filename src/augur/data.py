@@ -101,8 +101,8 @@ def fetch_market_context(ticker: str) -> MarketContext:
     earnings_growth = info.get("earningsGrowth", 0) or 0
     debt_to_equity = info.get("debtToEquity", 0) or 0
     debt_ratio = debt_to_equity / 100.0 if debt_to_equity else 0
-    fcf = info.get("freeCashflow", 0) or 0
-    market_cap = info.get("marketCap", 0) or 0
+    fcf = (info.get("freeCashflow", 0) or 0) / 1e9         # raw USD → billions
+    market_cap = (info.get("marketCap", 0) or 0) / 1e9    # raw USD → billions
     current_ratio = info.get("currentRatio", 0) or 0
     sector = info.get("sector", "") or ""
     industry = info.get("industry", "") or ""

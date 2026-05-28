@@ -280,18 +280,18 @@ function runAnalysis() {
 
     var params = new URLSearchParams({
         price: num('inp-price'),
-        market_cap: num('inp-mktcap', 1e8),
+        market_cap: num('inp-mktcap') / 10,      // 亿USD → billion USD (1亿=0.1B)
         pe: num('inp-pe'),
         pb: num('inp-pb'),
-        gross_margins: num('inp-gm') / 100,
+        gross_margins: num('inp-gm') / 100,       // % → decimal
         operating_margins: num('inp-om') / 100,
         roe: num('inp-roe') / 100,
-        debt_ratio: num('inp-debt'),
+        debt_ratio: num('inp-debt') / 100,        // % → decimal (0.45 not 45)
         revenue_growth: num('inp-revg') / 100,
         earnings_growth: num('inp-epsg') / 100,
-        fcf: num('inp-fcf', 1e8),
-        institutional_ownership: num('inp-inst') / 100,
-        insider_ownership: num('inp-ins') / 100,
+        fcf: num('inp-fcf') / 10,                 // 亿USD → billion USD
+        institutional_ownership: num('inp-inst'), // persona code expects 0-100, not 0-1
+        insider_ownership: num('inp-ins'),
         current_ratio: parseFloat(document.getElementById('inp-cr').value) || 0,
         sector: document.getElementById('inp-sector').value,
     });
