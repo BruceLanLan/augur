@@ -237,9 +237,10 @@ function renderResults(data) {
 
     var ic = data.consensus_ic;
     var icEl = document.getElementById('bt-consensus-ic');
-    icEl.textContent = ic.toFixed(4);
-    icEl.style.color = ic > 0 ? 'var(--accent-green, #66bb6a)' : ic < 0 ? 'var(--accent-red, #ef5350)' : 'var(--text-secondary)';
-    banner.style.borderLeftColor = ic > 0 ? 'var(--accent-green, #66bb6a)' : 'var(--accent-red, #ef5350)';
+    var icNum = (ic != null && !isNaN(ic)) ? Number(ic) : null;
+    icEl.textContent = icNum !== null ? icNum.toFixed(4) : 'N/A';
+    icEl.style.color = icNum > 0 ? 'var(--accent-green, #66bb6a)' : icNum < 0 ? 'var(--accent-red, #ef5350)' : 'var(--text-secondary)';
+    banner.style.borderLeftColor = icNum > 0 ? 'var(--accent-green, #66bb6a)' : 'var(--accent-red, #ef5350)';
 
     document.getElementById('bt-result-ticker').textContent = data.ticker;
     document.getElementById('bt-total-records').textContent = data.total_records;

@@ -25,7 +25,7 @@ from augur.personas.base import MarketContext
 app = FastAPI(
     title="Augur API",
     description="Multi-agent investment analysis API",
-    version="6.0.0",
+    version="6.1.0",
 )
 
 app.add_middleware(
@@ -82,27 +82,42 @@ async def analyze_ticker(
     earnings_growth: float = 0,
     sector: str = "",
     industry: str = "",
+    auto_fetch: bool = True,
 ):
-    """Analyze a ticker with all agents and return consensus"""
-    ctx = MarketContext(
-        ticker=ticker.upper(),
-        price=price,
-        pe=pe,
-        pb=pb,
-        revenue_growth=revenue_growth,
-        gross_margins=gross_margins,
-        operating_margins=operating_margins,
-        roe=roe,
-        debt_ratio=debt_ratio,
-        fcf=fcf,
-        market_cap=market_cap,
-        institutional_ownership=institutional_ownership,
-        insider_ownership=insider_ownership,
-        current_ratio=current_ratio,
-        earnings_growth=earnings_growth,
-        sector=sector,
-        industry=industry,
-    )
+    """Analyze a ticker with all agents and return consensus.
+
+    Auto-fetches live data from yfinance when no metrics are provided.
+    """
+    has_metrics = any([price, pe, pb, revenue_growth, gross_margins, market_cap])
+    data_source = "manual"
+
+    if not has_metrics and auto_fetch:
+        try:
+            from augur.data import fetch_market_context
+            ctx = fetch_market_context(ticker)
+            data_source = "yfinance"
+        except Exception:
+            ctx = MarketContext(ticker=ticker.upper())
+    else:
+        ctx = MarketContext(
+            ticker=ticker.upper(),
+            price=price,
+            pe=pe,
+            pb=pb,
+            revenue_growth=revenue_growth,
+            gross_margins=gross_margins,
+            operating_margins=operating_margins,
+            roe=roe,
+            debt_ratio=debt_ratio,
+            fcf=fcf,
+            market_cap=market_cap,
+            institutional_ownership=institutional_ownership,
+            insider_ownership=insider_ownership,
+            current_ratio=current_ratio,
+            earnings_growth=earnings_growth,
+            sector=sector,
+            industry=industry,
+        )
 
     coord = get_coordinator()
     agent_responses = coord.analyze_with_all(ctx)
@@ -116,6 +131,7 @@ async def analyze_ticker(
     return {
         "ticker": ticker.upper(),
         "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        "data_source": data_source,
         "consensus": consensus_resp.to_dict(),
         "agents": [r.to_dict() for r in agent_responses.values()],
         "agent_count": len(agent_responses),

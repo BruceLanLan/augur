@@ -310,9 +310,9 @@ class DecisionCoordinator:
         )
 
         # --- Risk Manager veto ---
+        ctx_for_risk = context  # initialise outside try so Kelly block can access it
         try:
             from scanner.risk_manager import RiskManager
-            ctx_for_risk = context
             if ctx_for_risk is None:
                 for r in results.values():
                     meta_ctx = r.metadata.get("context")
@@ -333,27 +333,31 @@ class DecisionCoordinator:
         except Exception:
             pass
 
-        # --- Kelly position sizing ---
+        # --- Kelly position sizing (simplified half-Kelly) ---
         try:
-            from scanner.kelly_sizer import compute_position_size
-            max_dd_pct = 0.0
-            if ctx_for_risk is not None:
-                max_dd_pct = abs(getattr(ctx_for_risk, "max_drawdown", 0) or 0)
-                if max_dd_pct <= 1.0:
-                    max_dd_pct *= 100.0
-            position = compute_position_size(
-                result.score,
-                result.confidence,
-                signal=result.signal.value,
-                max_drawdown_pct=max_dd_pct,
-            )
-            verdict = result.metadata.get("risk_verdict", {})
-            cap = verdict.get("position_cap_pct", 100)
-            if cap < 100 and position["position_pct"] > cap:
-                position["position_pct"] = cap
-                position["rationale"] += f" (capped at {cap}%)"
+            sig = result.signal.value
+            score = result.score
+            conf = result.confidence
+            # Half-Kelly: f = 0.5 * (p - (1-p)/b) clamped to 0-20%
+            if sig == "bullish" and score >= 5:
+                # edge = (score - 5) / 5  maps [5,10] → [0,1]
+                edge = max(0, (score - 5) / 5)
+                full_kelly = edge * conf
+                pct = min(20.0, round(full_kelly * 0.5 * 100, 1))
+            elif sig == "bearish":
+                pct = 0.0
+            else:
+                pct = max(0.0, round((conf - 0.5) * 3.0, 1))
+
+            position = {
+                "position_pct": pct,
+                "signal": sig,
+                "score": round(score, 2),
+                "confidence": round(conf, 3),
+                "rationale": f"half-Kelly: {pct:.1f}% (score={score:.1f}, conf={conf:.0%})",
+            }
             result.metadata["position_sizing"] = position
-            result.metadata["position_pct"] = position.get("position_pct", 0)
+            result.metadata["position_pct"] = pct
         except Exception:
             pass
 
