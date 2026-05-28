@@ -163,23 +163,36 @@ augur backtest AAPL --days 60 --live  # 真实历史数据回测
 augur ic-report                       # IC 排行榜
 ```
 
-### REST API
+### REST API (Dashboard 内置)
+
+Dashboard 启动后自动提供完整 REST API：
 
 ```bash
-# 18位大师共识
+# 启动 Dashboard (含API)
+python3 -m dashboard.app --port 8000 --cors
+
+# 18位大师共识分析 (自动 yfinance)
 curl http://localhost:8000/api/analyze/AAPL
 
-# 获取实时行情
-curl http://localhost:8000/api/fetch/NVDA
+# 手动指标分析 (小数: roe=0.55, debt_ratio=0.35; 整数: institutional_ownership=66)
+curl "http://localhost:8000/api/analyze/NVDA?pe=45&gross_margins=0.78&roe=0.65&debt_ratio=0.12&market_cap=3200"
 
 # 投资人列表
 curl http://localhost:8000/api/personas
+
+# 单投资人详情
+curl http://localhost:8000/api/persona/buffett
 
 # 模型配置
 curl http://localhost:8000/api/config
 ```
 
-完整API端点: `/api/analyze/{ticker}` | `/api/fetch/{ticker}` | `/api/search` | `/api/personas` | `/api/persona/{id}` | `/api/config` | `/api/models` | `/api/custom-persona` | `/api/backtest/run` | `/api/backtest/leaderboard` | `/health`
+完整端点: `/api/analyze/{ticker}` | `/api/personas` | `/api/persona/{id}` | `/api/config` | `/api/models` | `/api/custom-persona` | `/api/backtest/run` | `/api/backtest/leaderboard` | `/health`
+
+**参数约定：**
+- 比率/利润率：小数 — `roe=0.55`（55%），`debt_ratio=0.35`（35%）
+- 持仓比例：整数 — `institutional_ownership=66`（66%）
+- 市值/FCF：亿USD — `market_cap=28000`（$2.8T），`fcf=900`（$90B）
 
 ### MCP Server (6 Tools)
 
