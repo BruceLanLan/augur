@@ -1,7 +1,7 @@
 English | [中文](README.md)
 
 <p align="center">
-  <img src="https://img.shields.io/badge/v6.0-Latest-blue?style=for-the-badge" alt="v6.0"/>
+  <img src="https://img.shields.io/badge/v6.1.0-Latest-blue?style=for-the-badge" alt="v6.0"/>
   <img src="https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge" alt="18 Personas"/>
   <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python" alt="Python"/>
   <img src="https://img.shields.io/badge/pip%20install-augur--agents-orange?style=for-the-badge&logo=pypi" alt="pip install"/>
@@ -32,9 +32,21 @@ English | [中文](README.md)
 ## Quick Start
 
 ```bash
-git clone https://github.com/BruceLanLan/augur.git && cd augur
-pip install -e .
+# Clone and install (source install — not yet published to PyPI)
+git clone https://github.com/BruceLanLan/augur.git
+cd augur
+pip install -e .                       # core (Python 3.8+)
+pip install -e ".[data]"              # optional: add yfinance for live data
+
+# Analyze (auto-fetches live data if yfinance is installed)
 augur analyze AAPL
+
+# 18-master consensus
+augur consensus NVDA
+
+# Launch Dashboard
+python3 -m dashboard.app --port 8000
+# Open http://localhost:8000
 ```
 
 Example output:
@@ -58,7 +70,7 @@ Kelly Position Sizing: 8% | Risk Veto: Not triggered
 
 ---
 
-## What's New in v6.0
+## What's New in v6.1.0
 
 - **One-click analysis** - Enter a ticker on the Dashboard home page for instant results
 - **Inline results** - Analysis renders directly on the current page with Bloomberg-style score cards
@@ -137,40 +149,55 @@ Full changelog at [docs/CHANGELOG.md](docs/CHANGELOG.md)
 ### CLI (15+ Commands)
 
 ```bash
-# Core Analysis
-augur analyze AAPL                    # Single target (auto-fetches real-time data)
-augur consensus NVDA                  # 18-master consensus
+# Core Analysis (requires pip install -e ".[data]" for auto data fetch)
+augur analyze AAPL                    # Auto-fetch live data + 18-master analysis
+augur analyze AAPL --persona buffett  # Buffett framework only
+augur consensus NVDA                  # 18-master consensus + Kelly position sizing
 augur list-personas                   # List all investors
-augur fetch 0700.HK --json            # Fetch market data only
+augur fetch 0700.HK --json            # Fetch market data only (JSON)
 
 # Services
-augur mcp-server                      # MCP Server (stdio)
-augur api --port 8900                 # REST API
-
-# Platform Bots
-augur telegram                        # Telegram Bot
-augur slack                           # Slack Bot
-augur wechat                          # Personal WeChat (GeWeChat)
-augur wechat --mode wecom             # Enterprise WeChat
-augur lark                            # Lark/Feishu
-
-# Scheduling & Monitoring
-augur cron-start                      # Start scheduled daemon
-augur watchlist-add AAPL --pe 32      # Add to watchlist
+python3 -m dashboard.app --port 8000 --cors  # Bloomberg Dashboard
+augur api --port 8900                         # Lightweight REST API
+augur mcp-server                              # MCP Server (stdio mode)
 
 # Backtesting
-augur backtest AAPL --days 60 --live  # Backtest with real historical data
-augur ic-report                       # IC leaderboard
+augur backtest AAPL --days 30 --live  # Backtest with real yfinance data
+augur backtest AAPL --demo            # Demo with simulated data
+augur ic-report                       # Agent IC leaderboard
+
+# Watchlist & Scheduling
+augur watchlist-add AAPL --pe 32 --roe 0.55 --gross-margins 0.46
+augur cron-run                        # Run watchlist analysis once
+augur cron-start                      # Start scheduled daemon (weekdays 9am)
+
+# Soul injection for Hermes
+augur inject-soul --profile my-buffett --persona buffett -f hermes
+
+# Platform Bots (require env vars — see Bot section below)
+augur telegram    # needs TELEGRAM_TOKEN
+augur slack       # needs SLACK_BOT_TOKEN + SLACK_APP_TOKEN
+augur wechat      # needs GeWeChat client
+augur lark        # needs LARK_APP_ID + LARK_APP_SECRET
 ```
 
-### REST API
+**Parameter conventions:**
+- Rates/margins: decimal — `--roe 0.55` (55%), `--debt-ratio 0.35` (35%)
+- Ownership: integer percent — `--institutional-ownership 66` (66%)
+- Market cap/FCF: billions USD — `--market-cap 2800` ($2.8T), `--fcf 90` ($90B)
+
+### REST API (Dashboard built-in)
+
+The Dashboard server provides the full REST API:
 
 ```bash
-# 18-master consensus
+python3 -m dashboard.app --port 8000 --cors
+
+# 18-master consensus (auto-fetches live data)
 curl http://localhost:8000/api/analyze/AAPL
 
-# Real-time market data
-curl http://localhost:8000/api/fetch/NVDA
+# Manual metrics (decimals for rates, billions for market cap)
+curl "http://localhost:8000/api/analyze/NVDA?pe=45&gross_margins=0.78&roe=0.65&market_cap=3200"
 
 # Investor list
 curl http://localhost:8000/api/personas
@@ -179,31 +206,47 @@ curl http://localhost:8000/api/personas
 curl http://localhost:8000/api/config
 ```
 
-Full API endpoints: `/api/analyze/{ticker}` | `/api/fetch/{ticker}` | `/api/search` | `/api/personas` | `/api/persona/{id}` | `/api/config` | `/api/models` | `/api/custom-persona` | `/api/backtest/run` | `/api/backtest/leaderboard` | `/health`
+Full endpoints: `/api/analyze/{ticker}` | `/api/personas` | `/api/persona/{id}` | `/api/config` | `/api/models` | `/api/custom-persona` | `/api/backtest/run` | `/api/backtest/leaderboard` | `/health`
 
 ### MCP Server (6 Tools)
 
-```yaml
-# Hermes configuration
-mcp_servers:
-  augur-agents:
-    command: augur
-    args: [mcp-server]
+The MCP server requires Python 3.10+ (the `mcp` package requirement). Use a virtual environment if needed:
+
+```bash
+uv venv --python 3.11 .venv
+uv pip install -e ".[mcp]"
+.venv/bin/augur mcp-server  # verify it starts
 ```
 
+**Hermes** (`~/.hermes/config.yaml`):
+```yaml
+mcp_servers:
+  augur:
+    command: /absolute/path/to/augur/.venv/bin/augur  # replace with your path
+    args: [mcp-server]
+
+skills:
+  external_dirs:
+    - /absolute/path/to/augur/skills  # for /skill augur-buffett commands
+```
+
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
-// Claude Desktop configuration
 {
   "mcpServers": {
-    "augur-agents": {
-      "command": "augur",
+    "augur": {
+      "command": "/absolute/path/to/augur/.venv/bin/augur",
       "args": ["mcp-server"]
     }
   }
 }
 ```
 
-Tools: `augur_analyze` | `augur_consensus` | `augur_list_personas` | `augur_configure` | `augur_create_persona` | `augur_debate`
+> If `augur` is on your system PATH and uses Python 3.10+, you can use `command: augur` without the full path.
+
+6 tools: `augur_analyze` | `augur_consensus` | `augur_list_personas` | `augur_configure` | `augur_create_persona` | `augur_debate`
+
+All analyze/consensus tools support auto-fetch: when no metrics are passed, real-time data is fetched from yfinance automatically.
 
 ---
 
@@ -247,7 +290,7 @@ python3 -m dashboard.app --port 8000 --cors
 
 ### Telegram
 ```bash
-pip install 'augur-agents[telegram]'
+pip install -e ".[telegram]"
 export TELEGRAM_TOKEN='your-bot-token'
 augur telegram
 ```
@@ -255,7 +298,7 @@ Commands: `/analyze AAPL` | `/consensus NVDA` | `/ask buffett analyze AAPL` | Na
 
 ### Slack
 ```bash
-pip install 'augur-agents[slack]'
+pip install -e ".[slack]"
 export SLACK_BOT_TOKEN='xoxb-...' SLACK_APP_TOKEN='xapp-...'
 augur slack
 ```
@@ -263,7 +306,7 @@ Commands: `/augur-analyze AAPL` | Channel mention `@augur analyze AAPL` | Block 
 
 ### WeChat (3 Modes)
 ```bash
-pip install 'augur-agents[wechat]'
+pip install -e ".[wechat]"
 # Personal WeChat (recommended, GeWeChat scan-to-use)
 augur wechat --mode personal --port 8066
 # Enterprise WeChat (WeCom)
@@ -274,7 +317,7 @@ augur wechat --mode webhook
 
 ### Lark / Feishu (2 Modes)
 ```bash
-pip install 'augur-agents[lark]'
+pip install -e ".[lark]"
 # Event subscription (bidirectional)
 augur lark --mode event --port 9000
 # Webhook (push-only)
