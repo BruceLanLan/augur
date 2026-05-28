@@ -45,7 +45,8 @@ def main():
 @click.option("--price", type=float, default=None, help="Current stock price")
 @click.option("--sector", default="", help="Sector name (e.g. Technology)")
 @click.option("--industry", default="", help="Industry name (e.g. Semiconductor)")
-def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry):
+@click.option("--json", "as_json", is_flag=True, default=False, help="Output raw JSON")
+def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry, as_json):
     """Analyze a ticker with one or all agents (auto-fetches data if no metrics specified)"""
     from augur.personas.base import MarketContext
     from augur.registry import AgentRegistry
@@ -83,15 +84,29 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
             click.echo(f"Available: {', '.join(a.agent_id for a in registry.get_all())}", err=True)
             raise SystemExit(1)
         result = agent.analyze(ctx)
-        _print_result(result)
+        if as_json:
+            import json as _json
+            click.echo(_json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+        else:
+            _print_result(result)
     else:
-        click.echo(f"Analyzing {ticker.upper()} with all {len(registry.get_all())} agents...\n")
-        for agent in registry.get_all():
-            try:
-                result = agent.analyze(ctx)
-                click.echo(f"  {result.agent_name:20s} | {result.signal.value:8s} | {result.score:.1f}/10 | conf={result.confidence:.0%}")
-            except Exception as e:
-                click.echo(f"  {agent.name:20s} | ERROR    | {e}")
+        if as_json:
+            import json as _json
+            all_results = {}
+            for agent in registry.get_all():
+                try:
+                    all_results[agent.agent_id] = agent.analyze(ctx).to_dict()
+                except Exception as e:
+                    all_results[agent.agent_id] = {"error": str(e)}
+            click.echo(_json.dumps(all_results, ensure_ascii=False, indent=2))
+        else:
+            click.echo(f"Analyzing {ticker.upper()} with all {len(registry.get_all())} agents...\n")
+            for agent in registry.get_all():
+                try:
+                    result = agent.analyze(ctx)
+                    click.echo(f"  {result.agent_name:20s} | {result.signal.value:8s} | {result.score:.1f}/10 | conf={result.confidence:.0%}")
+                except Exception as e:
+                    click.echo(f"  {agent.name:20s} | ERROR    | {e}")
 
 
 @main.command("consensus")
@@ -107,7 +122,8 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
 @click.option("--price", type=float, default=None, help="Current stock price")
 @click.option("--sector", default="", help="Sector name (e.g. Technology)")
 @click.option("--industry", default="", help="Industry name")
-def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry):
+@click.option("--json", "as_json", is_flag=True, default=False, help="Output raw JSON")
+def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry, as_json):
     """Get multi-agent consensus on a ticker (auto-fetches data if no metrics specified)"""
     from augur.personas.base import MarketContext
     from augur.registry import AgentRegistry, DecisionCoordinator
@@ -141,9 +157,20 @@ def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio
     registry = AgentRegistry()
     coordinator = DecisionCoordinator(registry)
 
-    click.echo(f"Computing consensus for {ticker.upper()}...\n")
+    if not as_json:
+        click.echo(f"Computing consensus for {ticker.upper()}...\n")
     results = coordinator.analyze_with_all(ctx)
     consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
+
+    if as_json:
+        import json as _json
+        payload = {
+            "ticker": ticker.upper(),
+            "consensus": consensus.to_dict(),
+            "individual": {aid: r.to_dict() for aid, r in results.items()},
+        }
+        click.echo(_json.dumps(payload, ensure_ascii=False, indent=2))
+        return
 
     click.echo(f"Signal:     {consensus.signal.value.upper()}")
     click.echo(f"Score:      {consensus.score:.1f}/10")

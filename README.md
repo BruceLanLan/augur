@@ -203,7 +203,7 @@ skills:
 }
 ```
 
-6个 MCP 工具：`augur_analyze` · `augur_consensus` · `augur_list_personas` · `augur_configure` · `augur_create_persona` · `augur_debate`
+7个 MCP 工具：`augur_analyze` · `augur_consensus` · `augur_fetch` · `augur_list_personas` · `augur_configure` · `augur_create_persona` · `augur_debate`
 
 > 所有工具均支持**自动实时数据**：不传指标时自动从 yfinance 获取。
 
@@ -268,7 +268,7 @@ augur inject-soul --profile buffett-profile --persona buffett -f hermes
 |---------|------|------|
 | 比率/利润率 | 小数 | `--roe 0.55` = 55% |
 | 持仓比例 | 整数百分比 | `--institutional-ownership 66` = 66% |
-| 市值/FCF | 亿 USD | `--market-cap 28000` = $2.8T |
+| 市值/FCF | 十亿 USD (B) | `--market-cap 2800` = $2.8T |
 
 ---
 
@@ -374,7 +374,7 @@ uv pip install -e ".[mcp]"
 <details>
 <summary>分析结果总是 NEUTRAL</summary>
 
-检查参数单位：毛利率/ROE 用小数（`--roe 0.55` 不是 `--roe 55`），市值用亿（`--market-cap 28000` = $2.8T）
+检查参数单位：毛利率/ROE 用小数（`--roe 0.55` 不是 `--roe 55`），市值用亿（`--market-cap 2800` = $2.8T）
 </details>
 
 <details>

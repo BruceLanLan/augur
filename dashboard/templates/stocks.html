@@ -208,6 +208,7 @@
                     <div class="flex items-center justify-between mb-8">
                         <span class="data-label">主要风险</span>
                         <button class="copy-btn" onclick="copyConsensus(this)">复制摘要</button>
+                        <button class="copy-btn" style="margin-left:8px;" onclick="exportJSON()">导出 JSON</button>
                     </div>
                     <ul id="cons-risks" style="list-style:none; padding:0; margin:0;"></ul>
                 </div>
@@ -247,11 +248,24 @@
 {% block extra_scripts %}
 <script>
 var lastConsensusText = '';
+var lastAnalysisData = null;
 
-// Pre-fill ticker from query string
+// Pre-fill ticker and optional persona from query string
 (function(){
     var p = new URLSearchParams(window.location.search);
     var t = p.get('ticker');
+    var persona = p.get('persona');
+    if (persona) {
+        // Store persona for use in analysis
+        window._selectedPersona = persona;
+        // Show persona hint
+        var hint = document.createElement('div');
+        hint.id = 'persona-hint';
+        hint.style.cssText = 'font-size:0.78rem; color:var(--accent-orange); margin-bottom:8px; padding:4px 8px; background:rgba(255,140,0,0.08); border-radius:4px; display:inline-block;';
+        hint.textContent = '🎯 使用 ' + persona + ' 框架分析 (来自人格系统)';
+        var container = document.getElementById('inp-ticker') ? document.getElementById('inp-ticker').closest('.card') : null;
+        if (container) container.insertBefore(hint, container.firstChild);
+    }
     if (t) { document.getElementById('inp-ticker').value = t; runAnalysis(); }
 })();
 
@@ -365,6 +379,18 @@ function copyConsensus(btn) {
     }
 }
 
+function exportJSON() {
+    if (!lastAnalysisData) { showToast('请先运行分析', 'warning'); return; }
+    var blob = new Blob([JSON.stringify(lastAnalysisData, null, 2)], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (lastAnalysisData.ticker || 'augur') + '_analysis.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('JSON 已导出');
+}
+
 function toggleReasoning(el) {
     var div = el.previousElementSibling;
     if (div) {
@@ -389,6 +415,7 @@ function renderResults(data) {
     var ticker = data.ticker || '';
 
     lastConsensusText = ticker + ' 共识分析:\n信号: ' + signalLabel(cons.signal) + '\n评分: ' + (cons.score||0).toFixed(1) + '/10\n置信度: ' + ((cons.confidence||0)*100).toFixed(0) + '%\n' + (cons.reasoning || '');
+    lastAnalysisData = data;  // save for JSON export
 
     // Consensus banner
     var consCard = document.getElementById('consensus-card');

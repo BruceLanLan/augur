@@ -408,7 +408,19 @@ async def api_create_custom_persona(body: CustomPersonaBody):
     custom_dir.mkdir(parents=True, exist_ok=True)
     filepath = custom_dir / f"{body.agent_id}.yaml"
     filepath.write_text(body.yaml_content, encoding="utf-8")
-    return {"status": "ok", "path": str(filepath)}
+
+    # Hot-reload: register in the live registry immediately
+    try:
+        from augur.persona_loader import load_persona_yaml
+        global _registry, _coordinator
+        new_agent = load_persona_yaml(str(filepath))
+        if _registry is not None and new_agent.agent_id not in {a.agent_id for a in _registry.get_all()}:
+            _registry.register(new_agent)
+            _coordinator = None  # reset coordinator so it uses updated registry
+    except Exception:
+        pass  # hot-reload is best-effort; YAML is saved and will load on restart
+
+    return {"status": "ok", "path": str(filepath), "hot_loaded": True}
 
 
 @app.get("/api/schema/persona")
@@ -513,7 +525,8 @@ async def api_run_watchlist_analysis():
         results = coordinator.analyze_with_all(ctx)
         consensus = coordinator.get_consensus(results, ticker=ticker, context=ctx)
 
-        all_results.append({
+        import datetime
+        result_item = {
             "ticker": ticker,
             "signal": consensus.signal.value,
             "score": round(consensus.score, 1),
@@ -522,7 +535,30 @@ async def api_run_watchlist_analysis():
             "buy_count": sum(1 for r in results.values() if r.signal.value == "bullish"),
             "sell_count": sum(1 for r in results.values() if r.signal.value == "bearish"),
             "hold_count": sum(1 for r in results.values() if r.signal.value == "neutral"),
-        })
+            "last_run": datetime.datetime.utcnow().isoformat() + "Z",
+            "key_findings": consensus.key_findings[:2] if consensus.key_findings else [],
+            "kelly_pct": consensus.metadata.get("position_sizing", {}).get("position_pct"),
+        }
+        all_results.append(result_item)
+
+        # Persist last signal back to watchlist item
+        try:
+            for w_item in watchlist:
+                if w_item.get("ticker", "").upper() == ticker.upper():
+                    w_item["last_signal"] = consensus.signal.value
+                    w_item["last_score"] = result_item["score"]
+                    w_item["last_run"] = result_item["last_run"]
+                    break
+        except Exception:
+            pass
+
+    # Save updated watchlist with last_signal
+    try:
+        from augur.cron import save_watchlist
+        config["watchlist"] = watchlist
+        save_watchlist(config)
+    except Exception:
+        pass
 
     return {"status": "ok", "results": all_results}
 

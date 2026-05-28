@@ -216,5 +216,5 @@ class ZhangLeiAgent(BaseAgent):
 - PE: {pe_str}
 
 **综合评分: {total_score:.1f}/10**
-高瓴判断：{'✓ 值得做时间的朋友。' if total_score >= 7 else '⚠️ 赛道对但需等更好价格。' if total_score >= 5 else '✗ 赛道不够大或护城河不够宽。'}
+高瓴判断：{"✓ 值得做时间的朋友。" if total_score >= self.thresholds.get("bullish_threshold", 7.0) else "⚠️ 赛道对但需等更好价格。" if total_score >= self.thresholds.get("bearish_threshold", 4.0) else "✗ 赛道不够大或护城河不够宽。"}
 """

@@ -55,6 +55,7 @@ AGENT_EMOJI = {
     "zhang_lei": "\U0001f30f",
     "li_lu": "\U0001f3d4\ufe0f",
     "dan_bin": "\U0001fad6",
+    "serenity": "\U0001f52d",  # telescope
 }
 
 # Persona name mapping for @mention detection
@@ -90,6 +91,8 @@ PERSONA_MENTIONS = {
     "蒂尔": "thiel",
     "thiel": "thiel",
     "aschenbrenner": "aschenbrenner",
+    "serenity": "serenity",
+    "arps": "arps",
 }
 
 
@@ -107,8 +110,19 @@ def _parse_metrics(args: list) -> Dict[str, float]:
 
 
 def _build_market_context(ticker: str, metrics: Dict[str, float]):
-    """Build MarketContext from ticker and parsed metrics."""
+    """Build MarketContext from ticker and parsed metrics.
+
+    If no metrics provided, auto-fetches from yfinance.
+    """
     from augur.personas.base import MarketContext
+
+    # Auto-fetch when no metrics given
+    if not metrics:
+        try:
+            from augur.data import fetch_market_context
+            return fetch_market_context(ticker)
+        except Exception:
+            pass  # fallback to empty context
 
     field_map = {
         "pe": "pe",
@@ -126,6 +140,8 @@ def _build_market_context(ticker: str, metrics: Dict[str, float]):
         "market_cap": "market_cap",
         "mc": "market_cap",
         "price": "price",
+        "sector": "sector",
+        "industry": "industry",
     }
 
     kwargs = {"ticker": ticker.upper()}

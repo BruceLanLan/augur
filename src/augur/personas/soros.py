@@ -131,23 +131,23 @@ class SorosAgent(BaseAgent):
 
         reasoning = f"""## {self.name} Analysis for {context.ticker}
 
-**市场偏见强度: {factors['market_bias']}/10**
+**市场偏见强度: {factors['market_bias']:.1f}/10**
 - PE: {context.pe:.1f} {'（高估值=强烈偏见）' if context.pe > 30 else ''}
 - 20日波动率: {context.volatility_20d*100:.1f}%
 
-**趋势强化阶段: {factors['trend_reinforcement']}/10**
+**趋势强化阶段: {factors['trend_reinforcement']:.1f}/10**
 - 收入增速: {context.revenue_growth*100:.1f}% {'✓ 强化中' if context.revenue_growth > 0.30 else ''}
 - MACD: {'金叉' if context.macd > context.macd_signal else '死叉'}
 
-**拐点条件: {factors['inflection_condition']}/10**
+**拐点条件: {factors['inflection_condition']:.1f}/10**
 - RSI: {context.rsi:.1f} {'⚠️ 超买' if context.rsi > 75 else '⚠️ 超卖' if context.rsi < 30 else '中性'}
 - 距52周高点: {context.price_vs_52w_high:.1f}%
 
-**流动性条件: {factors['liquidity']}/10**
+**流动性条件: {factors['liquidity']:.1f}/10**
 - 市值: {context.market_cap:.1f}B
 - Beta: {context.beta_1y:.2f}
 
-**退出信号: {factors['exit_signal']}/10**
+**退出信号: {factors['exit_signal']:.1f}/10**
 - MACD柱: {context.macd_histogram:.3f}
 
 **综合评分: {total_score:.1f}/10**

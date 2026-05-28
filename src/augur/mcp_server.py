@@ -105,7 +105,22 @@ def create_server():
             if not agent:
                 return f"Error: Persona '{persona}' not found. Available: {', '.join(a.agent_id for a in registry.get_all())}"
             result = agent.analyze(ctx)
-            return f"Agent: {result.agent_name}\nSignal: {result.signal.value}\nScore: {result.score:.1f}/10\nConfidence: {result.confidence:.0%}\nReasoning: {result.reasoning}"
+            lines = [
+                f"Agent: {result.agent_name}",
+                f"Signal: {result.signal.value.upper()}",
+                f"Score: {result.score:.1f}/10",
+                f"Confidence: {result.confidence:.0%}",
+            ]
+            if result.key_findings:
+                lines.append("Key Findings:")
+                for f in result.key_findings[:4]:
+                    lines.append(f"  - {f}")
+            if result.risks:
+                lines.append("Risks:")
+                for r in result.risks[:3]:
+                    lines.append(f"  - {r}")
+            lines.append(f"\nReasoning:\n{result.reasoning}")
+            return "\n".join(lines)
         else:
             lines = [f"Analysis of {ticker.upper()} with {len(registry.get_all())} agents:\n"]
             for agent in registry.get_all():
@@ -153,13 +168,17 @@ def create_server():
         results = coordinator.analyze_with_all(ctx)
         consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
 
+        pos = consensus.metadata.get("position_sizing", {})
+        kelly = pos.get("position_pct", None)
         lines = [
             f"Consensus for {ticker.upper()}:",
-            f"  Signal: {consensus.signal.value}",
+            f"  Signal: {consensus.signal.value.upper()}",
             f"  Score: {consensus.score:.1f}/10",
             f"  Confidence: {consensus.confidence:.0%}",
-            f"  Reasoning: {consensus.reasoning}",
         ]
+        if kelly is not None:
+            lines.append(f"  Kelly Position: {kelly:.1f}%")
+        lines.append(f"  Reasoning: {consensus.reasoning}")
         if consensus.key_findings:
             lines.append("  Key Findings:")
             for f in consensus.key_findings:
@@ -259,6 +278,40 @@ def create_server():
         for agent_id, result in results.items():
             lines.append(f"  {result.agent_name:20s} | {result.signal.value:8s} | {result.score:.1f}/10")
         return "\n".join(lines)
+
+    @mcp.tool()
+    def augur_fetch(ticker: str) -> str:
+        """Fetch real-time market data for a ticker without running analysis.
+
+        Args:
+            ticker: Stock ticker symbol (e.g. AAPL, NVDA, 0700.HK)
+
+        Returns:
+            Key market metrics: price, PE, gross margin, ROE, debt ratio, market cap, etc.
+        """
+        try:
+            from augur.data import fetch_market_context
+            ctx = fetch_market_context(ticker)
+            lines = [
+                f"Market data for {ctx.ticker} (via yfinance):",
+                f"  Price:        ${ctx.price:.2f}",
+                f"  PE:           {ctx.pe:.1f}",
+                f"  PB:           {ctx.pb:.2f}",
+                f"  Market Cap:   ${ctx.market_cap:.0f}B",
+                f"  ROE:          {ctx.roe:.1%}",
+                f"  Gross Margin: {ctx.gross_margins:.1%}",
+                f"  Op. Margin:   {ctx.operating_margins:.1%}",
+                f"  Rev Growth:   {ctx.revenue_growth:.1%}",
+                f"  Debt Ratio:   {ctx.debt_ratio:.1%}",
+                f"  FCF:          ${ctx.fcf:.1f}B",
+                f"  RSI:          {ctx.rsi:.0f}",
+                f"  Beta:         {ctx.beta_1y:.2f}",
+                f"  Sector:       {ctx.sector}",
+                f"  Industry:     {ctx.industry}",
+            ]
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Error fetching data for {ticker}: {e}\nMake sure yfinance is installed: pip install 'augur-agents[data]'"
 
     return mcp
 

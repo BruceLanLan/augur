@@ -1,7 +1,7 @@
 ---
 name: augur
 description: "Augur — 18位虚拟投资大师多智能体共识分析系统。输入股票代码和财务数据，获得巴菲特、格雷厄姆、段永平、张磊等18位投资大师的独立评分与加权共识信号。覆盖美股/港股/A股/Crypto。"
-version: 6.0.0
+version: 6.1.0
 author: lanzhihao1986@gmail.com
 license: MIT
 platforms: [linux, macos, windows]
