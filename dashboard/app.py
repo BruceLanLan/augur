@@ -113,9 +113,9 @@ async def index(request: Request):
     agent_count = len(get_registry().get_all())
     stats = [
         {"value": str(agent_count), "label": "虚拟投资大师"},
-        {"value": "5", "label": "SEC 13F 数据源"},
-        {"value": "17", "label": "维度权重系统"},
-        {"value": "实时", "label": "共识决策引擎"},
+        {"value": "6", "label": "共识加权层"},
+        {"value": "40+", "label": "评分因子"},
+        {"value": "实时", "label": "yfinance 数据"},
     ]
     featured = [
         {"avatar": "🏦", "name": "Warren Buffett", "style": "价值 · 护城河", "desc": "寻找具有持久竞争优势的企业，以合理价格长期持有。FCF 和 ROE 是核心衡量标准。", "tag": "价值投资"},

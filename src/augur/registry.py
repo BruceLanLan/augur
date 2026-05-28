@@ -72,7 +72,8 @@ class AgentRegistry:
             for custom_dir in candidates:
                 if custom_dir.exists():
                     for agent in load_personas_from_dir(custom_dir):
-                        self._agents[agent.agent_id] = agent
+                        if agent.agent_id not in self._agents:  # never overwrite built-in Python personas
+                            self._agents[agent.agent_id] = agent
                     break
         except Exception:
             pass

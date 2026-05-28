@@ -32,6 +32,7 @@ _PERSONA_MD_MAP = {
     "zhang_lei": "zhang-lei.md",
     "li_lu": "li-lu.md",
     "dan_bin": "dan-bin.md",
+    "serenity": "serenity.md",
 }
 
 

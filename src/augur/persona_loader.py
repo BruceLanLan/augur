@@ -138,7 +138,7 @@ def load_persona_yaml(path: str | Path) -> YamlAgent:
     path = Path(path)
     spec = yaml.safe_load(path.read_text(encoding="utf-8"))
     _validate_spec(spec, path)
-    logger.info("Loaded YAML persona: %s from %s", spec.get("agent_id"), path)
+    logger.debug("Loaded YAML persona: %s from %s", spec.get("agent_id"), path)
     return YamlAgent(spec)
 
 
