@@ -4,7 +4,99 @@ All notable changes to the Augur project are documented here.
 
 ---
 
-## v6.1.0 (2026-05-28)
+## v6.1.0-final (2026-05-28) — 正式发布版
+
+经过 **30 + 50 = 80 轮** 深度 Review、Debug、功能补全。
+
+### 🐛 关键 Bug 修复
+
+**数据精度 (data.py)**
+- `debt_ratio` D/E 误用为 D/A → 改为正确的 `D/(D+E)` 转换公式
+  - AAPL: 79.5% → 44.3%（真实资产负债率）
+- `short_interest` 字段错误：`shortRatio`（换手天数）→ `shortPercentOfFloat`（空头占比）
+- `macd_histogram` 字段缺失：yfinance 已计算但忘记传入 MarketContext
+- 新增 8 个字段：`revenue`, `quick_ratio`, `institutional_ownership`, `insider_ownership`,
+  `short_interest`, `beta_1y`, `price_vs_52w_high`, `price_vs_52w_low`
+
+**核心逻辑 (registry.py / personas/)**
+- `dayu.py`: market_cap 阈值用原始美元（500_000_000）→ 改为十亿单位（0.5）
+- `serenity.py`: `debt_ratio < 60` → `< 0.60`（之前覆盖了惩罚逻辑）
+- `dalio.py` / `munger.py`: scoring_weights 键名对齐 + 启用加权评分
+- `zhang_lei.py` / `dan_bin.py`: reasoning 硬编码阈值 → 读 `self.thresholds`
+- `soros.py`: reasoning 格式化统一为 `{factor:.1f}/10`
+- `cron.py`: `add_to_watchlist()` 更新已有 ticker 后未调用 `save_watchlist()`
+- `backtest.py`: PB 公式 `PE × ROE / 100 * 10` → 正确的 `PE × ROE`
+- `registry.py`: `ctx_for_risk` 作用域 NameError 修复
+
+**Kelly 仓位建议**
+- 之前永远返回 N/A（依赖不存在的 `scanner.kelly_sizer`）
+- 内联实现 half-Kelly 公式：`min(20%, 0.5 × edge × confidence × 100)`
+- BULLISH 信号且 score > 5 时给出非零建议
+
+**线程安全 (config.py)**
+- `get_config` / `set_config` / `save_config` / `reset_config` 添加 `RLock` 保护
+- 修复多并发请求时的竞态条件
+
+### ✨ 新增功能
+
+**MCP Server (6 → 7 工具)**
+- 新增 `augur_fetch`：仅获取实时数据不分析
+- `augur_consensus`：返回新增 Kelly 仓位
+- `augur_analyze`：单 persona 模式返回完整 key_findings + risks
+- `augur_debate`：补全 reasoning 输出
+
+**CLI (15 → 20 命令)**
+- 新增 `--json` 输出选项：`analyze` 和 `consensus` 支持机器可读输出
+- 新增 `--sector` / `--industry` 参数
+- 新增 `watchlist-show` 命令
+- `consensus` 输出新增 Kelly Size 行
+
+**Dashboard (7 页 + 25+ API)**
+- 分析结果新增「导出 JSON」按钮（Blob 下载）
+- `create-persona` 提交后热加载到运行中的 registry（无需重启）
+- `/api/watchlist/run` 结果持久化 `last_signal` / `last_score` / `last_run`
+- `stocks.html` 读取 URL 参数 `?persona=buffett`
+- 新增 `industry` 输入框（细分行业）
+- `personas.html` 「分析」按钮跳转后不再触发空 ticker 警告
+- `signals.html`: ROE/毛利率单位换算修复 + placeholder 加 `%` 提示
+
+**Telegram Bot 增强**
+- 无指标参数时自动 yfinance 获取数据（之前全零分析）
+- 补全 `serenity` / `arps` 的 AGENT_EMOJI 和 PERSONA_MENTIONS 映射
+
+**Dashboard UI/UX**
+- `bloomberg.css`: 新增 6 个 CSS 变量（`--accent-green/blue/red/yellow/bg-tertiary`）+ 3 个类
+- `backtest.html`: 删除本地 `.btn-primary` 蓝色覆盖（恢复全局橙色主题）
+- `backtest.html`: `consensus_ic` null check（防 `.toFixed()` 崩溃）
+- `settings.html`: Promise.all 部分保存失败时明确提示失败数量
+- `base.html`: 键盘导航 navMap 添加 `/signals` 页面
+- `create_persona.html`: 双栏布局改为 `auto-fill minmax(360px, 1fr)`（移动端不溢出）
+- `base.html`: 新增 `renderMarkdown()` 函数，分析结论以格式化 Markdown 展示
+
+### 📚 文档
+
+- 全面重写 README.md / README_EN.md（双语同步）
+  - 新增真实运行效果示例
+  - 新增「为什么是 Augur」对比表格
+  - 18 位投资人改为可折叠分组（经典价值/成长创新/宏观周期/中国/特殊）
+  - CLI 命令表扩充到 20 个
+  - 完整 Dashboard API 端点列表（16+ 端点）
+  - 参数约定表格（正确 vs 错误示例对比）
+  - 7 个常见问题折叠展示
+- 新建 [CONTRIBUTING.md](../CONTRIBUTING.md)：贡献指南 + PR 流程
+- SKILL.md 版本号同步至 6.1.0
+- 修正 CHANGELOG 年份 2025 → 2026
+- README 修正市值单位（亿 USD → 十亿 USD），示例数字 28000 → 2800
+
+### 🔧 兼容性
+
+- 远程 v6.1.0 (`src/augur/personas/`) 主架构
+- 本地 `scanner/personas/` 作为 backward-compat shim
+- `augur-mcp` 命令通过 `main = run_server` 别名保持兼容
+
+---
+
+## v6.1.0 (2026-05-28) — 初始发布
 
 ### Release Summary
 10 iterative Review-Debug-Fix-Optimize loops completed. All known bugs fixed, 
