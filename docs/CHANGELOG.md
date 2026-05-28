@@ -4,7 +4,7 @@ All notable changes to the Augur project are documented here.
 
 ---
 
-## v6.1.0 (2025-05-26)
+## v6.1.0 (2026-05-28)
 
 ### Release Summary
 10 iterative Review-Debug-Fix-Optimize loops completed. All known bugs fixed, 
@@ -22,7 +22,7 @@ documentation verified accurate.
 
 ---
 
-## v6.0.1 (2025-05-26)
+## v6.0.1 (2026-05-28)
 
 ### Bug Fixes
 - Fix critical signal value mismatch in watchlist analysis (`bullish`/`bearish`/`neutral` vs `buy`/`sell`/`hold`)

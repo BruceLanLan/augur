@@ -218,5 +218,5 @@ class DanBinAgent(BaseAgent):
 - PE: {pe_str}
 
 **综合评分: {total_score:.1f}/10**
-但斌判断：{'✓ 伟大公司，不要和它分开太早。' if total_score >= 7 else '⚠️ 有品牌但需等更好价格。' if total_score >= 5 else '✗ 缺乏品牌护城河或赛道不对。'}
+但斌判断：{"✓ 伟大公司，不要和它分开太早。" if total_score >= self.thresholds.get("bullish_threshold", 6.5) else "⚠️ 有品牌但需等更好价格。" if total_score >= self.thresholds.get("bearish_threshold", 3.8) else "✗ 缺乏品牌护城河或赛道不对。"}
 """
