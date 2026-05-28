@@ -397,7 +397,7 @@ function renderResults(data) {
 
     document.getElementById('cons-score').textContent = (cons.score||0).toFixed(1) + ' / 10';
     document.getElementById('cons-confidence').textContent = ((cons.confidence||0)*100).toFixed(0) + '%';
-    document.getElementById('cons-reasoning').textContent = cons.reasoning || '';
+    document.getElementById('cons-reasoning').innerHTML = renderMarkdown(cons.reasoning || '');
 
     // Score gauge
     var gaugeEl = document.getElementById('cons-score-gauge');
@@ -453,7 +453,7 @@ function renderResults(data) {
     sortedAgents.forEach(function(a) {
         var scoreColor = signalColor(a.signal);
         var scoreWidth = ((a.score||0)/10*100).toFixed(0);
-        var reasoning = (a.reasoning||'').replace(/#+\s*/g,'').replace(/\*\*/g,'');
+        var reasoning = renderMarkdown((a.reasoning||'').slice(0, 500));
 
         var div = document.createElement('div');
         div.className = 'card';
@@ -468,8 +468,8 @@ function renderResults(data) {
             '<div style="flex:1;"><div class="score-gauge"><div class="score-gauge-fill" style="width:' + scoreWidth + '%;"></div></div>' +
             '<div class="text-muted" style="font-size:0.65rem; margin-top:2px;">置信度 ' + ((a.confidence||0)*100).toFixed(0) + '%</div></div>' +
             '</div>' +
-            '<div class="agent-reasoning"><p class="text-muted" style="font-size:0.75rem; line-height:1.5; margin:0;">' + reasoning + '</p></div>' +
-            (reasoning.length > 120 ? '<button class="expand-btn" onclick="toggleReasoning(this)">展开</button>' : '');
+            '<div class="agent-reasoning"><div class="text-muted" style="font-size:0.75rem; line-height:1.6; margin:0;">' + reasoning + '</div></div>' +
+            '<button class="expand-btn" onclick="toggleReasoning(this)">展开</button>';
         grid.appendChild(div);
     });
 }

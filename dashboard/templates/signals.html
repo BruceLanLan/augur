@@ -27,9 +27,11 @@
                onkeydown="if(event.key==='Enter')addTicker()">
         <input type="number" id="add-pe-input" placeholder="PE" step="0.1"
                style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:80px;">
-        <input type="number" id="add-roe-input" placeholder="ROE" step="0.01"
+        <input type="number" id="add-roe-input" placeholder="ROE%" step="0.1" min="0" max="200"
+               title="ROE 百分比，如 55 表示 55%"
                style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:80px;">
-        <input type="number" id="add-gm-input" placeholder="毛利率" step="0.01"
+        <input type="number" id="add-gm-input" placeholder="毛利率%" step="0.1" min="0" max="100"
+               title="毛利率百分比，如 46 表示 46%"
                style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:90px;">
         <button class="btn btn-primary" onclick="addTicker()" style="padding:6px 16px;">+ 添加</button>
     </div>
@@ -159,8 +161,8 @@ function addTicker() {
     var roe = document.getElementById('add-roe-input').value;
     var gm = document.getElementById('add-gm-input').value;
     if (pe) body.pe = parseFloat(pe);
-    if (roe) body.roe = parseFloat(roe);
-    if (gm) body.gross_margins = parseFloat(gm);
+    if (roe) body.roe = parseFloat(roe) / 100;        // user enters %, API expects decimal
+    if (gm) body.gross_margins = parseFloat(gm) / 100; // same
 
     fetch('/api/watchlist/add', {
         method: 'POST',
