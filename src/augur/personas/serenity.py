@@ -226,7 +226,7 @@ class SerenityAgent(BaseAgent):
             risk_score += 3  # VLN级: 零负债 + 巨额现金
         elif context.debt_ratio < 0.40:
             risk_score += 2
-        elif context.debt_ratio < 60:
+        elif context.debt_ratio < 0.60:
             risk_score += 1
         elif context.debt_ratio > 0.80:
             risk_score -= 2

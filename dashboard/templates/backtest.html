@@ -3,9 +3,9 @@
 {% block title %}历史回测 - Agent IC{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1 class="page-title">历史回测</h1>
-    <p class="page-subtitle">Agent IC (Information Coefficient) 实盘追踪</p>
+<div style="margin-bottom:1.5rem;">
+    <h2 style="color:var(--accent-orange); margin:0 0 4px;">历史回测</h2>
+    <p style="color:var(--text-secondary); font-size:0.85rem; margin:0;">Agent IC (Information Coefficient) 实盘追踪</p>
 </div>
 
 <!-- Controls -->
@@ -122,28 +122,7 @@
     background: var(--accent-blue, #4fc3f7);
     cursor: pointer;
 }
-.btn {
-    padding: 0.5rem 1.2rem;
-    border: none;
-    border-radius: 4px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-.btn-primary {
-    background: var(--accent-blue, #4fc3f7);
-    color: #000;
-}
-.btn-primary:hover {
-    background: #29b6f6;
-    transform: translateY(-1px);
-}
-.btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: none;
-}
+/* Use global bloomberg.css .btn-primary (orange theme) — no local override */
 .data-table {
     border-collapse: collapse;
     font-size: 0.82rem;

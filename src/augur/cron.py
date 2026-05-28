@@ -123,6 +123,7 @@ def add_to_watchlist(ticker: str, metrics: Optional[Dict[str, float]] = None):
             # Update existing entry
             if metrics:
                 item.update(metrics)
+            save_watchlist(config)
             return config
 
     # Add new entry

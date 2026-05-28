@@ -311,7 +311,7 @@
 
         // Number keys 1-5 for quick navigation (not in input)
         if (!inInput && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            var navMap = { '1': '/', '2': '/stocks', '3': '/personas', '4': '/backtest', '5': '/settings' };
+            var navMap = { '1': '/', '2': '/stocks', '3': '/signals', '4': '/personas', '5': '/backtest', '6': '/settings' };
             if (navMap[e.key]) {
                 window.location.href = navMap[e.key];
                 return;

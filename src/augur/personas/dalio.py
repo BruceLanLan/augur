@@ -18,10 +18,10 @@ class DalioAgent(BaseAgent):
                         杠杆套利。偏好通过衍生品对冲风险。""",
             philosophy=["风险平价", "全球宏观", "周期分析", "分散化"],
             scoring_weights={
-                "macro_outlook": 0.30,     # 宏观前景
-                "diversification": 0.25,   # 分散化程度
-                "risk_adjusted": 0.25,    # 风险调整后收益
-                "liquidity": 0.20,        # 流动性
+                "macro_outlook":  0.30,   # 宏观趋势代理
+                "trend_strength": 0.25,   # 技术趋势强度
+                "risk_adjusted":  0.25,   # 波动率调整
+                "momentum":       0.20,   # 价格动量
             },
             thresholds={
                 "bullish_threshold": 7.0,
@@ -97,8 +97,8 @@ class DalioAgent(BaseAgent):
             momentum_score -= 2  # 超买回调风险
         factors["momentum"] = min(max(momentum_score, 0), 10)
 
-        # 计算综合评分
-        total_score = sum(factors.values()) / len(factors)
+        # 加权综合评分
+        total_score = sum(factors[k] * self.scoring_weights.get(k, 0.25) for k in factors)
         signal = self._calculate_signal(total_score)
         confidence = 0.5 + (factors["trend_strength"] - 5) / 20
 

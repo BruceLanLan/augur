@@ -9,7 +9,12 @@
     --bg-sidebar: #10101a;
     --bg-card: #14141f;
     --bg-card-hover: #1a1a2a;
+    --bg-tertiary: #1a1a2e;
     --accent-orange: #ff8c00;
+    --accent-green: #66bb6a;
+    --accent-blue: #4fc3f7;
+    --accent-red: #ef5350;
+    --accent-yellow: #ffa726;
     --signal-buy: #00c853;
     --signal-sell: #ff1744;
     --signal-neutral: #ffd600;
@@ -368,6 +373,23 @@ a:hover { color: #ffaa33; }
     margin-bottom: 12px;
     padding-bottom: 8px;
     border-bottom: 1px solid var(--border-color);
+}
+
+.card-body { /* content area within a card */ }
+
+.card-title {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--accent-orange);
+    margin: 0 0 8px;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-weight: 500;
 }
 
 /* --- Data Display --- */

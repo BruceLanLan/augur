@@ -100,7 +100,7 @@ class MungerAgent(BaseAgent):
             moat_score += 2
         factors["moat_durability"] = min(max(moat_score * moat_multiplier, 0), 10)
 
-        total_score = sum(factors.values()) / len(factors)
+        total_score = sum(factors[k] * self.scoring_weights.get(k, 0.25) for k in factors)
         if total_score >= bullish_threshold:
             signal = SignalType.BULLISH
         elif total_score <= bearish_threshold:
