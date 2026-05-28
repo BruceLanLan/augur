@@ -1,10 +1,10 @@
 [English](README_EN.md) | 中文
 
 <p align="center">
-  <img src="https://img.shields.io/badge/v6.0-Latest-blue?style=for-the-badge" alt="v6.0"/>
+  <img src="https://img.shields.io/badge/v6.1.0-Latest-blue?style=for-the-badge" alt="v6.1.0"/>
   <img src="https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge" alt="18 Personas"/>
   <img src="https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python" alt="Python"/>
-  <img src="https://img.shields.io/badge/pip%20install-augur--agents-orange?style=for-the-badge&logo=pypi" alt="pip install"/>
+  <img src="https://img.shields.io/badge/source%20install-git%20clone-orange?style=for-the-badge&logo=git" alt="git clone install"/>
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="MIT"/>
 </p>
 
@@ -32,9 +32,21 @@
 ## 快速开始
 
 ```bash
-git clone https://github.com/BruceLanLan/augur.git && cd augur
-pip install -e .
+# 克隆并安装（源码安装，暂未发布到 PyPI）
+git clone https://github.com/BruceLanLan/augur.git
+cd augur
+pip install -e .                        # 安装核心功能（Python 3.8+）
+pip install -e ".[data]"               # 可选：安装 yfinance 实时数据支持
+
+# 一键分析（自动获取实时行情）
 augur analyze AAPL
+
+# 18位大师共识
+augur consensus NVDA
+
+# 启动 Dashboard
+python3 -m dashboard.app --port 8000
+# 浏览器打开 http://localhost:8000
 ```
 
 输出示例:
@@ -58,7 +70,7 @@ Kelly建议仓位: 8% | 风险否决: 未触发
 
 ---
 
-## v6.0 新特性
+## v6.1.0 新特性
 
 - **一键分析** - Dashboard首页输入代码即刻获得结果，无需跳转
 - **内联结果展示** - 分析结果直接在当前页面渲染，Bloomberg风格评分卡片
@@ -137,30 +149,36 @@ Kelly建议仓位: 8% | 风险否决: 未触发
 ### CLI (15+ 命令)
 
 ```bash
-# 核心分析
-augur analyze AAPL                    # 单标的 (自动获取实时数据)
-augur consensus NVDA                  # 18位大师共识
+# 核心分析（需要 pip install -e ".[data]" 才能自动获取实时数据）
+augur analyze AAPL                    # 自动获取实时数据 + 18位大师分析
+augur analyze AAPL --persona buffett  # 仅用巴菲特框架分析
+augur consensus NVDA                  # 18位大师共识 + Kelly仓位
 augur list-personas                   # 列出所有投资人
-augur fetch 0700.HK --json            # 仅获取市场数据
+augur fetch 0700.HK --json            # 仅获取市场数据（JSON输出）
 
-# 服务启动
-augur mcp-server                      # MCP Server (stdio)
-augur api --port 8900                 # REST API
-
-# 平台Bot
-augur telegram                        # Telegram Bot
-augur slack                           # Slack Bot
-augur wechat                          # 个人微信 (GeWeChat)
-augur wechat --mode wecom             # 企业微信
-augur lark                            # 飞书
-
-# 定时与监控
-augur cron-start                      # 定时守护进程
-augur watchlist-add AAPL --pe 32      # 添加自选股
+# Dashboard 与 API 服务
+python3 -m dashboard.app --port 8000 --cors   # Bloomberg Dashboard
+augur api --port 8900                          # 轻量 REST API
+augur mcp-server                               # MCP Server (stdio 模式)
 
 # 回测
-augur backtest AAPL --days 60 --live  # 真实历史数据回测
-augur ic-report                       # IC 排行榜
+augur backtest AAPL --days 30 --live  # 用真实历史数据回测
+augur backtest AAPL --demo            # 用模拟数据演示
+augur ic-report                       # Agent IC 排行榜
+
+# 自选股监控
+augur watchlist-add AAPL --pe 32 --roe 0.55 --gross-margins 0.46
+augur cron-run                        # 立即运行一次自选股分析
+augur cron-start                      # 启动定时守护进程（默认工作日9点）
+
+# 注入 Soul 到 Hermes Profile
+augur inject-soul --profile my-buffett --persona buffett -f hermes
+
+# Bot（需要配置对应环境变量，见下方说明）
+augur telegram    # 需 TELEGRAM_TOKEN
+augur slack       # 需 SLACK_BOT_TOKEN + SLACK_APP_TOKEN
+augur wechat      # 需 GeWeChat 客户端
+augur lark        # 需 LARK_APP_ID + LARK_APP_SECRET
 ```
 
 ### REST API (Dashboard 内置)
@@ -196,27 +214,49 @@ curl http://localhost:8000/api/config
 
 ### MCP Server (6 Tools)
 
-```yaml
-# Hermes 配置
-mcp_servers:
-  augur-agents:
-    command: augur
-    args: [mcp-server]
+MCP Server 需要 Python 3.10+（`mcp` 包要求）。若系统 Python 版本较低，建议用虚拟环境：
+
+```bash
+# 创建 Python 3.11 虚拟环境（如系统 Python < 3.10）
+uv venv --python 3.11 .venv
+uv pip install -e ".[mcp]"
+
+# 验证 MCP 服务器可启动
+.venv/bin/augur mcp-server
 ```
 
+**Hermes 配置** (`~/.hermes/config.yaml`)：
+
+```yaml
+mcp_servers:
+  augur:
+    command: /path/to/augur/.venv/bin/augur  # 替换为实际绝对路径
+    args: [mcp-server]
+    description: "18-agent investment analysis"
+
+skills:
+  external_dirs:
+    - /path/to/augur/skills  # 用于 /skill augur-buffett 等命令
+```
+
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`)：
+
 ```json
-// Claude Desktop 配置
 {
   "mcpServers": {
-    "augur-agents": {
-      "command": "augur",
+    "augur": {
+      "command": "/path/to/augur/.venv/bin/augur",
       "args": ["mcp-server"]
     }
   }
 }
 ```
 
-工具: `augur_analyze` | `augur_consensus` | `augur_list_personas` | `augur_configure` | `augur_create_persona` | `augur_debate`
+> 若 `augur` 已在系统 PATH 且为 Python 3.10+ 版本，可直接用 `command: augur`（省略路径）。
+
+6个工具: `augur_analyze` | `augur_consensus` | `augur_list_personas` | `augur_configure` | `augur_create_persona` | `augur_debate`
+
+所有 analyze/consensus 工具支持自动 yfinance 数据获取：不传指标时自动抓取实时数据。
 
 ---
 
@@ -252,7 +292,7 @@ python3 -m dashboard.app --port 8000 --cors
 | 信号监控 | `/signals` | 自选股扫描 |
 | 回测 | `/backtest` | 历史回测 + IC |
 | 设置 | `/settings` | 模型配置 |
-| 创建人格 | `/create_persona` | YAML自定义 |
+| 创建人格 | `/create-persona` | YAML自定义 |
 
 ---
 
@@ -260,7 +300,7 @@ python3 -m dashboard.app --port 8000 --cors
 
 ### Telegram
 ```bash
-pip install 'augur-agents[telegram]'
+pip install -e ".[telegram]"           # 或在已 clone 的仓库中运行
 export TELEGRAM_TOKEN='your-bot-token'
 augur telegram
 ```
@@ -268,7 +308,7 @@ augur telegram
 
 ### Slack
 ```bash
-pip install 'augur-agents[slack]'
+pip install -e ".[slack]"
 export SLACK_BOT_TOKEN='xoxb-...' SLACK_APP_TOKEN='xapp-...'
 augur slack
 ```
@@ -276,7 +316,7 @@ augur slack
 
 ### 微信 (3种模式)
 ```bash
-pip install 'augur-agents[wechat]'
+pip install -e ".[wechat]"
 # 个人微信 (推荐, GeWeChat扫码即用)
 augur wechat --mode personal --port 8066
 # 企业微信
@@ -287,7 +327,7 @@ augur wechat --mode webhook
 
 ### 飞书 (2种模式)
 ```bash
-pip install 'augur-agents[lark]'
+pip install -e ".[lark]"
 # Event订阅 (双向)
 augur lark --mode event --port 9000
 # Webhook (仅推送)
@@ -359,6 +399,35 @@ docker compose --profile full --profile telegram --profile cron up -d
 # Makefile
 make docker-build && make docker-up
 ```
+
+---
+
+## 常见问题
+
+**Q: `augur analyze AAPL` 报错 "yfinance not installed"**
+```bash
+pip install -e ".[data]"   # 安装 yfinance 实时数据支持
+```
+
+**Q: MCP Server 启动失败 "No module named mcp"**
+> mcp 包要求 Python 3.10+。用虚拟环境解决：
+```bash
+uv venv --python 3.11 .venv && uv pip install -e ".[mcp]"
+.venv/bin/augur mcp-server
+```
+
+**Q: Dashboard 启动后分析结果不出来**
+> 检查终端输出，通常是缺少 yfinance 或 fastapi：
+```bash
+pip install -e ".[data]"    # yfinance
+python3 -m dashboard.app --port 8000 --cors
+```
+
+**Q: 股票分析结果总显示 NEUTRAL**
+> 输入指标时注意单位：毛利率/ROE/负债率用小数（0.46 而非 46），市值用亿（28000 = $2.8T）
+
+**Q: Bot 命令找不到**
+> 确认安装了对应 extra：`pip install -e ".[telegram]"` / `.[slack]` / `.[wechat]` / `.[lark]`
 
 ---
 
