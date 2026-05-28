@@ -246,6 +246,7 @@ function saveAll() {
     Promise.all(promises)
     .then(function(results) {
         var ok = results.filter(function(r) { return r.status === 'ok'; }).length;
+        var failed = results.length - ok;
         // Update original values
         cards.forEach(function(card) {
             var agentId = card.getAttribute('data-agent-id');
@@ -253,7 +254,11 @@ function saveAll() {
             originalValues[agentId] = select.value;
         });
         checkUnsaved();
-        showToast('已保存 ' + ok + ' 位投资大师的模型配置');
+        if (failed > 0) {
+            showToast('已保存 ' + ok + ' 位，' + failed + ' 位保存失败', 'warning');
+        } else {
+            showToast('已保存 ' + ok + ' 位投资大师的模型配置');
+        }
         // Success animation on button
         var btn = document.getElementById('save-all-btn');
         if (btn) {

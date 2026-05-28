@@ -100,7 +100,13 @@ def fetch_market_context(ticker: str) -> MarketContext:
     revenue_growth = info.get("revenueGrowth", 0) or 0
     earnings_growth = info.get("earningsGrowth", 0) or 0
     debt_to_equity = info.get("debtToEquity", 0) or 0
-    debt_ratio = debt_to_equity / 100.0 if debt_to_equity else 0
+    # yfinance debtToEquity is D/E percentage (e.g. 162 means D/E = 1.62)
+    # Convert to debt ratio (D/A = D/E / (1 + D/E))
+    if debt_to_equity:
+        de_ratio = debt_to_equity / 100.0  # D/E as decimal
+        debt_ratio = de_ratio / (1.0 + de_ratio)   # D/A = D/E / (1 + D/E)
+    else:
+        debt_ratio = 0
     fcf = (info.get("freeCashflow", 0) or 0) / 1e9         # raw USD → billions
     market_cap = (info.get("marketCap", 0) or 0) / 1e9    # raw USD → billions
     revenue = (info.get("totalRevenue", 0) or 0) / 1e9    # raw USD → billions
@@ -113,8 +119,8 @@ def fetch_market_context(ticker: str) -> MarketContext:
     institutional_ownership = (info.get("heldPercentInstitutions", 0) or 0) * 100
     insider_ownership = (info.get("heldPercentInsiders", 0) or 0) * 100
 
-    # Short interest (fraction → decimal 0-1)
-    short_interest = info.get("shortRatio", 0) or 0
+    # Short interest as fraction of float (0-1), e.g. 0.05 = 5% short
+    short_interest = info.get("shortPercentOfFloat", 0) or 0
 
     # Beta
     beta_1y = info.get("beta", 1.0) or 1.0
@@ -138,6 +144,7 @@ def fetch_market_context(ticker: str) -> MarketContext:
     rsi = technicals.get("rsi", 50)
     macd = technicals.get("macd", 0)
     macd_signal = technicals.get("macd_signal", 0)
+    macd_histogram = technicals.get("macd_histogram", 0)
     sma20 = technicals.get("sma20", 0)
     sma50 = technicals.get("sma50", 0)
     atr = technicals.get("atr", 0)
@@ -171,6 +178,7 @@ def fetch_market_context(ticker: str) -> MarketContext:
         rsi=rsi,
         macd=macd,
         macd_signal=macd_signal,
+        macd_histogram=macd_histogram,
         sma20=sma20,
         sma50=sma50,
         atr=atr,

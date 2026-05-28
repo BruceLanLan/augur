@@ -94,17 +94,21 @@
             <input id="inp-mktcap" type="number" min="0" class="form-input" placeholder="0">
         </div>
         <div style="min-width:140px;">
-            <label class="data-label mb-4">行业</label>
+            <label class="data-label mb-4">板块</label>
             <select id="inp-sector" class="form-select">
-                <option value="">-- 行业 --</option>
+                <option value="">-- 板块 --</option>
                 <option>Technology</option><option>Consumer Cyclical</option><option>Consumer Defensive</option>
                 <option>Healthcare</option><option>Financials</option><option>Energy</option>
                 <option>Industrials</option><option>Materials</option><option>Real Estate</option>
                 <option>Communication Services</option><option>Utilities</option>
             </select>
         </div>
+        <div style="min-width:140px;">
+            <label class="data-label mb-4">细分行业</label>
+            <input id="inp-industry" type="text" class="form-input" placeholder="如 Semiconductor" style="font-size:0.82rem;">
+        </div>
         <div style="align-self:flex-end; display:flex; gap:8px;">
-            <button class="btn btn-primary" onclick="runAnalysis()" style="padding:10px 24px; font-size:0.92rem;">分析</button>
+            <button id="analyze-btn" class="btn btn-primary" onclick="runAnalysis()" style="padding:10px 24px; font-size:0.92rem;">分析</button>
         </div>
     </div>
 
@@ -275,7 +279,7 @@ function runAnalysis() {
     if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
 
     // Disable submit button to prevent double-submit
-    var submitBtn = document.querySelector('.btn-primary');
+    var submitBtn = document.getElementById('analyze-btn') || document.querySelector('[onclick="runAnalysis()"]');
     if (submitBtn) submitBtn.disabled = true;
 
     var params = new URLSearchParams({
@@ -294,6 +298,7 @@ function runAnalysis() {
         insider_ownership: num('inp-ins'),
         current_ratio: parseFloat(document.getElementById('inp-cr').value) || 0,
         sector: document.getElementById('inp-sector').value,
+        industry: document.getElementById('inp-industry') ? document.getElementById('inp-industry').value : '',
     });
 
     // If no user metrics, enable auto_fetch

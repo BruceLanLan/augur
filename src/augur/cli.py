@@ -36,14 +36,16 @@ def main():
 @click.option("--persona", "-p", default=None, help="Specific persona ID to use")
 @click.option("--pe", type=float, default=None, help="PE ratio")
 @click.option("--pb", type=float, default=None, help="PB ratio")
-@click.option("--roe", type=float, default=None, help="Return on equity (decimal, e.g. 0.15)")
-@click.option("--gross-margins", type=float, default=None, help="Gross margins (decimal, e.g. 0.45)")
+@click.option("--roe", type=float, default=None, help="Return on equity (decimal, e.g. 0.55 for 55%)")
+@click.option("--gross-margins", type=float, default=None, help="Gross margins (decimal, e.g. 0.46 for 46%)")
 @click.option("--revenue-growth", type=float, default=None, help="Revenue growth (decimal)")
-@click.option("--debt-ratio", type=float, default=None, help="Debt ratio")
-@click.option("--fcf", type=float, default=None, help="Free cash flow")
-@click.option("--market-cap", type=float, default=None, help="Market cap")
-@click.option("--price", type=float, default=None, help="Current price")
-def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price):
+@click.option("--debt-ratio", type=float, default=None, help="Debt/assets ratio (decimal, e.g. 0.35 for 35%)")
+@click.option("--fcf", type=float, default=None, help="Free cash flow (billions USD)")
+@click.option("--market-cap", type=float, default=None, help="Market cap (billions USD)")
+@click.option("--price", type=float, default=None, help="Current stock price")
+@click.option("--sector", default="", help="Sector name (e.g. Technology)")
+@click.option("--industry", default="", help="Industry name (e.g. Semiconductor)")
+def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry):
     """Analyze a ticker with one or all agents (auto-fetches data if no metrics specified)"""
     from augur.personas.base import MarketContext
     from augur.registry import AgentRegistry
@@ -99,11 +101,13 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
 @click.option("--roe", type=float, default=None, help="Return on equity (decimal)")
 @click.option("--gross-margins", type=float, default=None, help="Gross margins (decimal)")
 @click.option("--revenue-growth", type=float, default=None, help="Revenue growth (decimal)")
-@click.option("--debt-ratio", type=float, default=None, help="Debt ratio")
-@click.option("--fcf", type=float, default=None, help="Free cash flow")
-@click.option("--market-cap", type=float, default=None, help="Market cap")
-@click.option("--price", type=float, default=None, help="Current price")
-def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price):
+@click.option("--debt-ratio", type=float, default=None, help="Debt/assets ratio (decimal)")
+@click.option("--fcf", type=float, default=None, help="Free cash flow (billions USD)")
+@click.option("--market-cap", type=float, default=None, help="Market cap (billions USD)")
+@click.option("--price", type=float, default=None, help="Current stock price")
+@click.option("--sector", default="", help="Sector name (e.g. Technology)")
+@click.option("--industry", default="", help="Industry name")
+def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry):
     """Get multi-agent consensus on a ticker (auto-fetches data if no metrics specified)"""
     from augur.personas.base import MarketContext
     from augur.registry import AgentRegistry, DecisionCoordinator
@@ -130,6 +134,8 @@ def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio
             fcf=fcf or 0,
             market_cap=market_cap or 0,
             price=price or 0,
+            sector=sector or "",
+            industry=industry or "",
         )
 
     registry = AgentRegistry()
@@ -139,9 +145,12 @@ def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio
     results = coordinator.analyze_with_all(ctx)
     consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
 
-    click.echo(f"Signal:     {consensus.signal.value}")
+    click.echo(f"Signal:     {consensus.signal.value.upper()}")
     click.echo(f"Score:      {consensus.score:.1f}/10")
     click.echo(f"Confidence: {consensus.confidence:.0%}")
+    pos = consensus.metadata.get("position_sizing", {})
+    if pos:
+        click.echo(f"Kelly Size: {pos.get('position_pct', 0):.1f}%")
     click.echo(f"Reasoning:  {consensus.reasoning}")
 
     if consensus.key_findings:
