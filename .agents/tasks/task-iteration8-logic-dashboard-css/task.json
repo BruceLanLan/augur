@@ -1,7 +1,14 @@
 {
   "task_id": "task-iteration8-logic-dashboard-css",
   "task_description": "Iteration 8: Investment logic correctness, dashboard page functionality, CSS/visual fixes, data freshness improvements, dead code cleanup",
-  "status": "in_progress",
+  "status": "completed",
   "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
-  "blocked_reason": null
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "pass",
+    "test_quality": "pass",
+    "docker_build": "skipped",
+    "summary": "275 tests pass (24 new). All investment logic fixes verified: Lynch PEG guard, Graham PE=0 neutral, Kelly 1% minimum with confidence check, overheating detection functional. Dead code fix makes DebateProtocol callable. Cache management APIs work. CSS fixes scoped correctly after review. Semantic review v1 issues addressed."
+  }
 }
