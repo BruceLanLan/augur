@@ -33,6 +33,30 @@ THEME_GROUPS = {
 }
 
 
+# ============ Agent投资框架描述 ============
+
+AGENT_PHILOSOPHY = {
+    "buffett": "护城河+可预测盈利+FCF",
+    "graham": "安全边际+净资产折价+低PE",
+    "munger": "优质企业+合理价格+长期持有",
+    "duan_yongping": "商业模式+管理层+确定性溢价",
+    "li_lu": "价值+成长复合+中国市场洞察",
+    "dan_bin": "时间玫瑰+消费龙头+长坡厚雪",
+    "zhang_lei": "长期结构性价值+产业链研究+护城河演化",
+    "cathie_wood": "颠覆性创新+指数型增长+5年愿景",
+    "fisher": "成长股投资+管理层评估+行业领导力",
+    "lynch": "PEG选股+生活观察+十倍股猎手",
+    "aschenbrenner": "AI超级周期+算力增长+技术奇点投资",
+    "thiel": "垄断型创新+从0到1+逆向思维",
+    "dalio": "全天候配置+宏观周期+风险平价",
+    "soros": "反身性理论+宏观趋势+市场情绪博弈",
+    "marks": "周期意识+风险控制+逆向投资",
+    "serenity": "波动率管理+尾部风险对冲+系统性风控",
+    "arps": "技术形态+动量因子+量价分析",
+    "dayu": "量化模型+资金流向+统计套利",
+}
+
+
 def _format_signal_chinese(signal_value: str) -> str:
     """将英文信号转换为中文标签。
 
@@ -161,6 +185,11 @@ def _format_theme_section(theme_name: str, agent_ids: List[str], results: Dict[s
         lines.append(f"**{response.agent_name}** ({signal_str}, {response.score:.1f}/10, 置信度 {response.confidence:.0%})")
         lines.append("")
 
+        # 投资框架描述
+        philosophy = AGENT_PHILOSOPHY.get(agent_id, "")
+        if philosophy:
+            lines.append(f"- **投资框架**: {philosophy}")
+
         if response.reasoning:
             import re as _re
             reasoning_text = response.reasoning
@@ -188,6 +217,171 @@ def _format_theme_section(theme_name: str, agent_ids: List[str], results: Dict[s
             for risk in response.risks[:3]:
                 lines.append(f"  - {risk}")
 
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def _format_disagreement_section(results: Dict[str, AgentResponse]) -> str:
+    """生成分歧焦点区段，展示多空分歧及原因。
+
+    Args:
+        results: 所有Agent的分析结果
+
+    Returns:
+        Markdown格式的分歧焦点区段
+    """
+    lines = []
+    lines.append("## 分歧焦点")
+    lines.append("")
+
+    valid_results = {k: v for k, v in results.items() if v.signal != SignalType.ERROR}
+    if not valid_results:
+        lines.append("*暂无有效Agent结果，无法生成分歧分析*")
+        lines.append("")
+        return "\n".join(lines)
+
+    bullish_agents = {k: v for k, v in valid_results.items() if v.signal == SignalType.BULLISH}
+    bearish_agents = {k: v for k, v in valid_results.items() if v.signal == SignalType.BEARISH}
+    neutral_agents = {k: v for k, v in valid_results.items() if v.signal == SignalType.NEUTRAL}
+
+    if not bullish_agents or (not bearish_agents and not neutral_agents):
+        lines.append("*当前分析结果高度一致，暂无显著分歧*")
+        lines.append("")
+        return "\n".join(lines)
+
+    # 分歧概览
+    lines.append("### 多空阵营对比")
+    lines.append("")
+    lines.append("| 阵营 | Agent数量 | 代表人物 | 核心逻辑 |")
+    lines.append("|------|-----------|----------|----------|")
+
+    # 看多阵营
+    bull_names = sorted(bullish_agents.values(), key=lambda x: x.score, reverse=True)
+    bull_rep = ", ".join(r.agent_name for r in bull_names[:3])
+    bull_themes = set()
+    for agent_id in list(bullish_agents.keys())[:3]:
+        for theme, info in THEME_GROUPS.items():
+            if agent_id in info["agents"]:
+                bull_themes.add(theme)
+                break
+    bull_theme_str = "/".join(bull_themes) if bull_themes else "多维度"
+    lines.append(f"| 🟢 看多 | {len(bullish_agents)} | {bull_rep} | {bull_theme_str}视角看好 |")
+
+    # 看空阵营
+    if bearish_agents:
+        bear_names = sorted(bearish_agents.values(), key=lambda x: x.score)
+        bear_rep = ", ".join(r.agent_name for r in bear_names[:3])
+        bear_themes = set()
+        for agent_id in list(bearish_agents.keys())[:3]:
+            for theme, info in THEME_GROUPS.items():
+                if agent_id in info["agents"]:
+                    bear_themes.add(theme)
+                    break
+        bear_theme_str = "/".join(bear_themes) if bear_themes else "多维度"
+        lines.append(f"| 🔴 看空 | {len(bearish_agents)} | {bear_rep} | {bear_theme_str}视角谨慎 |")
+
+    # 中性阵营
+    if neutral_agents:
+        neut_names = sorted(neutral_agents.values(), key=lambda x: x.score, reverse=True)
+        neut_rep = ", ".join(r.agent_name for r in neut_names[:3])
+        lines.append(f"| 🟡 中性 | {len(neutral_agents)} | {neut_rep} | 观望等待更多信号 |")
+
+    lines.append("")
+
+    # 分歧原因分析
+    lines.append("### 分歧原因")
+    lines.append("")
+
+    # Identify different investment schools in conflict
+    value_bulls = [v for k, v in bullish_agents.items() if k in THEME_GROUPS.get("价值投资", {}).get("agents", [])]
+    growth_bulls = [v for k, v in bullish_agents.items() if k in THEME_GROUPS.get("成长投资", {}).get("agents", [])]
+    risk_bears = [v for k, v in bearish_agents.items() if k in THEME_GROUPS.get("风险与宏观", {}).get("agents", [])]
+    risk_neutrals = [v for k, v in neutral_agents.items() if k in THEME_GROUPS.get("风险与宏观", {}).get("agents", [])]
+
+    if value_bulls and (risk_bears or risk_neutrals):
+        lines.append("- **价值派 vs 风控派**: 价值投资者认为当前估值具备安全边际，而风控派关注周期风险与尾部事件")
+
+    if growth_bulls and bearish_agents:
+        lines.append("- **成长派 vs 保守派**: 成长投资者看好未来增长空间与创新前景，保守派认为估值已充分反映预期")
+
+    # Score spread analysis
+    all_scores = [v.score for v in valid_results.values()]
+    if all_scores:
+        score_spread = max(all_scores) - min(all_scores)
+        if score_spread >= 3:
+            lines.append(f"- **评分分歧度**: 最高分 {max(all_scores):.1f} vs 最低分 {min(all_scores):.1f}，分差达 {score_spread:.1f} 分，反映投资理念根本性差异")
+        elif score_spread >= 1.5:
+            lines.append(f"- **评分分歧度**: 分差 {score_spread:.1f} 分，属于中度分歧，主要来自对估值合理性的不同判断")
+
+    if not value_bulls and not growth_bulls and not risk_bears and not risk_neutrals:
+        lines.append("- 各Agent基于不同投资框架得出了不同结论，体现了多角度分析的价值")
+
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _format_bull_bear_debate(results: Dict[str, AgentResponse]) -> str:
+    """生成多空辩论区段，展示TOP 3看多和TOP 3看空/中性Agent的核心论点。
+
+    Args:
+        results: 所有Agent的分析结果
+
+    Returns:
+        Markdown格式的多空辩论区段
+    """
+    lines = []
+    lines.append("## 多空辩论")
+    lines.append("")
+
+    valid_results = {k: v for k, v in results.items() if v.signal != SignalType.ERROR}
+    if not valid_results:
+        lines.append("*暂无有效Agent结果，无法生成辩论*")
+        lines.append("")
+        return "\n".join(lines)
+
+    # Sort by score to get top bulls and bears
+    sorted_by_score = sorted(valid_results.items(), key=lambda x: x[1].score, reverse=True)
+
+    # Top 3 bullish (highest score)
+    top_bulls = sorted_by_score[:3]
+    # Top 3 bearish (lowest score)
+    top_bears = sorted_by_score[-3:]
+    # Reverse bears so lowest is first
+    top_bears = list(reversed(top_bears))
+
+    lines.append("### 🟢 多方论点 (最看好的3位大师)")
+    lines.append("")
+
+    for agent_id, response in top_bulls:
+        philosophy = AGENT_PHILOSOPHY.get(agent_id, "")
+        philosophy_str = f" [{philosophy}]" if philosophy else ""
+        signal_str = _format_signal_emoji(response.signal.value)
+        lines.append(f"**{response.agent_name}**{philosophy_str} {signal_str} {response.score:.1f}/10")
+
+        reasoning_short = _clean_reasoning_for_table(response.reasoning)
+        lines.append(f"- {reasoning_short}")
+
+        if response.key_findings:
+            for finding in response.key_findings[:2]:
+                lines.append(f"- {finding}")
+        lines.append("")
+
+    lines.append("### 🔴 空方论点 (最谨慎的3位大师)")
+    lines.append("")
+
+    for agent_id, response in top_bears:
+        philosophy = AGENT_PHILOSOPHY.get(agent_id, "")
+        philosophy_str = f" [{philosophy}]" if philosophy else ""
+        signal_str = _format_signal_emoji(response.signal.value)
+        lines.append(f"**{response.agent_name}**{philosophy_str} {signal_str} {response.score:.1f}/10")
+
+        reasoning_short = _clean_reasoning_for_table(response.reasoning)
+        lines.append(f"- {reasoning_short}")
+
+        if response.risks:
+            for risk in response.risks[:2]:
+                lines.append(f"- 风险: {risk}")
         lines.append("")
 
     return "\n".join(lines)
@@ -354,6 +548,8 @@ def _format_position_recommendation(consensus: AgentResponse) -> str:
     lines = []
     lines.append("## 仓位建议")
     lines.append("")
+    lines.append("> 以下为 **18位大师加权共识建议**，综合多维度投资框架得出的集体决策，非任何单一投资者观点。")
+    lines.append("")
 
     position_sizing = consensus.metadata.get("position_sizing", {})
     position_pct = position_sizing.get("position_pct", consensus.metadata.get("position_pct", 0))
@@ -418,8 +614,8 @@ def generate_report(
     sections.append("---")
     sections.append("")
 
-    # ============ 执行摘要（巴菲特裁决） ============
-    sections.append("## 巴菲特裁决（执行摘要）")
+    # ============ 执行摘要（18位大师共识裁决） ============
+    sections.append("## 18位大师共识裁决（执行摘要）")
     sections.append("")
 
     signal_str = _format_signal_chinese(consensus.signal.value)
@@ -432,7 +628,7 @@ def generate_report(
     bearish_count = sum(1 for r in valid_results.values() if r.signal == SignalType.BEARISH)
     neutral_count = sum(1 for r in valid_results.values() if r.signal == SignalType.NEUTRAL)
 
-    sections.append("### 综合评分卡")
+    sections.append("### 投资委员会综合评分")
     sections.append("")
     sections.append("| 项目 | 结果 |")
     sections.append("|------|------|")
@@ -476,6 +672,16 @@ def generate_report(
         agent_ids = theme_info["agents"]
         sections.append(_format_theme_section(theme_name, agent_ids, results))
 
+    sections.append("---")
+    sections.append("")
+
+    # ============ 分歧焦点 ============
+    sections.append(_format_disagreement_section(results))
+    sections.append("---")
+    sections.append("")
+
+    # ============ 多空辩论 ============
+    sections.append(_format_bull_bear_debate(results))
     sections.append("---")
     sections.append("")
 
