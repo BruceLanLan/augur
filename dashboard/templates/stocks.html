@@ -360,6 +360,7 @@ function runAnalysis() {
                 document.getElementById('data-source-indicator').style.display = 'none';
             }
             renderResults(data);
+            resultsEl.style.display = 'block';
             resultsEl.classList.add('show');
         })
         .catch(function(err) {
