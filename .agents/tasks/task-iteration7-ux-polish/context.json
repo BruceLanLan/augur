@@ -1,0 +1,25 @@
+{
+  "project_type": "Python multi-agent investment analysis CLI + FastAPI dashboard",
+  "language": "Python 3.11",
+  "build_system": "setuptools via pyproject.toml, pip install -e .",
+  "test_framework": "pytest with click.testing.CliRunner for CLI, fastapi.testclient.TestClient for API",
+  "build_command": "pip install -e . 2>/dev/null || true",
+  "test_command": "python -m pytest tests/ -x -q",
+  "verification_instructions": "Run pytest tests/ -x -q to confirm all tests pass (211+ tests expected)",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e '.[dev]' && pip install fastapi uvicorn jinja2 httpx click pyyaml",
+  "environment_constraints": "OPEN_INTERNET network mode. Python 3.11 default. No Docker daemon needed for tests.",
+  "contribution_requirements": "All code must follow existing patterns. Tests required for new functionality.",
+  "key_patterns": "CLI uses Click with @main.command decorators. API uses FastAPI with HTTPException for errors. Dashboard uses Jinja2 templates with Bloomberg dark theme. Error messages mix Chinese/English depending on context.",
+  "relevant_files": [
+    "src/augur/cli.py",
+    "src/augur/api.py",
+    "dashboard/app.py",
+    "dashboard/templates/base.html",
+    "dashboard/templates/stocks.html",
+    "tests/test_cli.py",
+    "tests/test_api.py",
+    "tests/test_dashboard_errors.py"
+  ],
+  "directory_structure": "src/augur/ - core Python package (cli, api, registry, personas, config, data, backtest, cron, bots). dashboard/ - FastAPI web app with templates/ and static/. tests/ - pytest test files. config/ - YAML configs."
+}
