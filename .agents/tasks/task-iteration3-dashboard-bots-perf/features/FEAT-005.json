@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-005",
+  "type": "fix",
+  "description": "Address review findings: truncate exception messages in API responses, delegate bot _extract_ticker to shared utils, add timeout to parallel coordinator, remove ALL from STOP_WORDS",
+  "status": "in_progress",
+  "steps": [
+    "In src/augur/registry.py _analyze_single: truncate exception message to first line, max 200 chars in reasoning field",
+    "In src/augur/registry.py analyze_with_all: add timeout=30 to future.result(), handle TimeoutError with ERROR response",
+    "In src/augur/bots/telegram_bot.py handle_message exception reply: limit str(e) to first 100 chars",
+    "In all 4 bot files: replace _extract_ticker function body to delegate to augur.bots.utils.extract_ticker",
+    "In src/augur/bots/utils.py: remove ALL from STOP_WORDS (it is a real S&P 500 ticker - Allstate)",
+    "Update test_extract_filters_stop_words if needed due to ALL removal"
+  ],
+  "acceptance_criteria": [
+    "Exception reasoning in _analyze_single is truncated to first line, max 200 chars",
+    "future.result(timeout=30) is used in coordinator, TimeoutError handled",
+    "Telegram handle_message exception reply truncates to 100 chars",
+    "All 4 bot _extract_ticker functions delegate to shared utils.extract_ticker",
+    "ALL is not in STOP_WORDS",
+    "python -m pytest tests/ -q passes"
+  ],
+  "verification": [
+    "python -m pytest tests/ -q"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}

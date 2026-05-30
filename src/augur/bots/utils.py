@@ -15,7 +15,7 @@ STOP_WORDS = frozenset({
     'I', 'A', 'IT', 'AT', 'AM', 'AN', 'AS', 'BE', 'BY', 'DO', 'GO',
     'IF', 'IN', 'IS', 'ME', 'MY', 'NO', 'OF', 'ON', 'OR', 'SO', 'TO',
     'UP', 'US', 'WE', 'HE', 'OK', 'THE', 'AND', 'BUT', 'FOR', 'NOT',
-    'YOU', 'ALL', 'CAN', 'HER', 'WAS', 'ONE', 'OUR', 'OUT',
+    'YOU', 'CAN', 'HER', 'WAS', 'ONE', 'OUR', 'OUT',
 })
 
 

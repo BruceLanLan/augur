@@ -112,11 +112,8 @@ def _parse_metrics(text: str) -> Dict[str, float]:
 
 def _extract_ticker(text: str) -> Optional[str]:
     """Extract ticker symbol from text, filtering out common stop words."""
-    candidates = re.findall(r'\b([A-Z]{2,5})\b', text.upper())
-    for candidate in candidates:
-        if candidate not in STOP_WORDS:
-            return candidate
-    return None
+    from augur.bots.utils import extract_ticker
+    return extract_ticker(text)
 
 
 def _build_market_context(ticker: str, metrics: Dict[str, float]):
