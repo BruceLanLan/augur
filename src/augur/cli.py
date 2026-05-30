@@ -34,8 +34,18 @@ def main(ctx, no_color):
     ctx.ensure_object(dict)
     # Respect --no-color flag or NO_COLOR env variable
     if no_color or os.environ.get("NO_COLOR", "") != "":
+        _prev_no_color = os.environ.get("NO_COLOR")
         os.environ["NO_COLOR"] = "1"
         ctx.obj["no_color"] = True
+
+        # Restore original env state when CLI context closes
+        def _restore_env():
+            if _prev_no_color is None:
+                os.environ.pop("NO_COLOR", None)
+            else:
+                os.environ["NO_COLOR"] = _prev_no_color
+
+        ctx.call_on_close(_restore_env)
     else:
         ctx.obj["no_color"] = False
 
@@ -617,13 +627,6 @@ def _auto_fetch_context(ticker: str):
         click.echo(f"  Price: {ctx.price:.2f} | PE: {ctx.pe:.1f} | ROE: {ctx.roe:.2%} | GM: {ctx.gross_margins:.2%}")
         click.echo(f"  [数据来源: yfinance 实时]\n")
         return ctx
-    except ImportError:
-        click.echo(
-            "Warning: yfinance not installed. Install with: pip install 'augur-agents[data]'\n"
-            "  Core analysis still works without it (using empty metrics).\n",
-            err=True,
-        )
-        return MarketContext(ticker=ticker.upper())
     except Exception as e:
         click.echo(
             f"Warning: Failed to fetch data for {ticker.upper()}: {e}\n"

@@ -10,6 +10,8 @@ Provides endpoints:
 """
 
 import re
+import logging
+from datetime import datetime, timezone
 from typing import Optional, List, Dict
 from pathlib import Path
 
@@ -22,6 +24,7 @@ except ImportError:
 
 from augur.registry import AgentRegistry, DecisionCoordinator
 from augur.personas.base import MarketContext
+from augur.errors import api_error_response
 
 app = FastAPI(
     title="Augur API",
@@ -34,19 +37,16 @@ app = FastAPI(
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc: Exception):
     """Catch all unhandled exceptions and return consistent JSON error response."""
-    import logging
-    import datetime as _dt
     logger = logging.getLogger("augur.api")
     logger.error(f"Unhandled exception on {request.url.path}: {type(exc).__name__}: {exc}")
 
     return JSONResponse(
         status_code=500,
-        content={
-            "status": "error",
-            "detail": "Internal server error",
-            "timestamp": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "path": request.url.path,
-        },
+        content=api_error_response(
+            detail="Internal server error",
+            code="INTERNAL_ERROR",
+            path=request.url.path,
+        ),
     )
 
 app.add_middleware(
@@ -152,11 +152,10 @@ async def analyze_ticker(
         context=ctx,
     )
 
-    import datetime
     return {
         "status": "ok",
         "ticker": ticker.upper(),
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "data_source": data_source,
         "consensus": consensus_resp.to_dict(),
         "agents": [r.to_dict() for r in agent_responses.values()],
