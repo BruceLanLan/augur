@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "fix",
   "description": "Fix critical security vulnerabilities in persona_loader.py eval() and soul.py directory traversal, plus cron.py shallow merge bug and concurrency issues",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In src/augur/persona_loader.py: Replace eval() in _eval_rule_condition() with AST-based safe evaluation. Use ast.parse(condition, mode='eval') and walk the AST to only allow Compare, BoolOp, BinOp, UnaryOp, Num/Constant, Name (from allowed namespace), and Attribute nodes. Reject any Call, Lambda, ListComp, SetComp, DictComp, GeneratorExp, or Attribute chains that access __class__, __bases__, __subclasses__, __builtins__, etc. This prevents arbitrary code execution while still supporting conditions like 'pe > 25' and 'roe > 0.15 and gross_margins > 0.4'.",
     "In src/augur/soul.py inject_soul(): Add path sanitization. After constructing the output path, call .resolve() and verify it starts with out_dir.resolve(). Raise ValueError if directory traversal is detected. Also validate the format parameter - raise ValueError for unknown formats (only 'hermes', 'claude', 'raw' are valid).",
@@ -26,5 +26,5 @@
     "python3 -c to confirm path traversal is blocked"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 161 tests pass (136 existing + 25 new). AST-based eval blocks the proven exploit. Path traversal and format validation work correctly. Deep merge preserves nested defaults. The os import in cron.py is now used by pidfile logic (os.kill, os.getpid)."
 }
