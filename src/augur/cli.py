@@ -26,9 +26,18 @@ from augur import __version__
 
 @click.group()
 @click.version_option(version=__version__, prog_name="augur")
-def main():
+@click.option("--no-color", is_flag=True, default=False, help="Disable color output and emojis")
+@click.pass_context
+def main(ctx, no_color):
     """Augur - Multi-agent investment analysis system"""
-    pass
+    import os
+    ctx.ensure_object(dict)
+    # Respect --no-color flag or NO_COLOR env variable
+    if no_color or os.environ.get("NO_COLOR", "") != "":
+        os.environ["NO_COLOR"] = "1"
+        ctx.obj["no_color"] = True
+    else:
+        ctx.obj["no_color"] = False
 
 
 @main.command("analyze")
@@ -102,13 +111,23 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
                     all_results[agent.agent_id] = {"error": str(e)}
             click.echo(_json.dumps(all_results, ensure_ascii=False, indent=2))
         else:
+            from augur.cli_format import format_table, signal_icon, color_text
             click.echo(f"Analyzing {ticker.upper()} with all {len(registry.get_all())} agents...\n")
+            headers = ["Agent", "Signal", "Score", "Confidence"]
+            rows = []
             for agent in registry.get_all():
                 try:
                     result = agent.analyze(ctx)
-                    click.echo(f"  {result.agent_name:20s} | {result.signal.value:8s} | {result.score:.1f}/10 | conf={result.confidence:.0%}")
+                    icon = signal_icon(result.signal.value)
+                    rows.append([
+                        result.agent_name,
+                        f"{icon} {result.signal.value}",
+                        f"{result.score:.1f}/10",
+                        f"{result.confidence:.0%}",
+                    ])
                 except Exception as e:
-                    click.echo(f"  {agent.name:20s} | ERROR    | {e}")
+                    rows.append([agent.name, "ERROR", "-", str(e)])
+            click.echo(format_table(headers, rows))
 
 
 @main.command("consensus")
@@ -174,28 +193,42 @@ def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio
         click.echo(_json.dumps(payload, ensure_ascii=False, indent=2))
         return
 
-    click.echo(f"Signal:     {consensus.signal.value.upper()}")
-    click.echo(f"Score:      {consensus.score:.1f}/10")
-    click.echo(f"Confidence: {consensus.confidence:.0%}")
+    from augur.cli_format import format_box, format_table, signal_icon, color_text, clean_output
+
+    # Summary box
+    icon = signal_icon(consensus.signal.value)
+    box_lines = [
+        f"Signal:     {icon} {consensus.signal.value.upper()}",
+        f"Score:      {consensus.score:.1f}/10",
+        f"Confidence: {consensus.confidence:.0%}",
+    ]
     pos = consensus.metadata.get("position_sizing", {})
     if pos:
-        click.echo(f"Kelly Size: {pos.get('position_pct', 0):.1f}%")
-    click.echo(f"Reasoning:  {consensus.reasoning}")
+        box_lines.append(f"Kelly Size: {pos.get('position_pct', 0):.1f}%")
+    box_lines.append(f"Reasoning:  {clean_output(consensus.reasoning)}")
+    click.echo(format_box(box_lines, title=f"{ticker.upper()} Consensus"))
 
     if consensus.key_findings:
         click.echo(f"\nKey Findings:")
         for f in consensus.key_findings:
-            click.echo(f"  - {f}")
+            click.echo(f"  - {clean_output(f)}")
 
     if consensus.risks:
         click.echo(f"\nRisks:")
         for r in consensus.risks:
-            click.echo(f"  - {r}")
+            click.echo(f"  - {clean_output(r)}")
 
-    # Show individual agent breakdown
+    # Show individual agent breakdown as aligned table
     click.echo(f"\n--- Agent Breakdown ({len(results)} agents) ---")
+    headers = ["Agent", "Signal", "Score"]
+    rows = []
     for agent_id, result in results.items():
-        click.echo(f"  {result.agent_name:20s} | {result.signal.value:8s} | {result.score:.1f}/10")
+        rows.append([
+            result.agent_name,
+            f"{signal_icon(result.signal.value)} {result.signal.value}",
+            f"{result.score:.1f}/10",
+        ])
+    click.echo(format_table(headers, rows))
 
 
 @main.command("list-personas")
@@ -529,20 +562,23 @@ def _auto_fetch_context(ticker: str):
 
 def _print_result(result):
     """Pretty print a single analysis result"""
+    from augur.cli_format import signal_icon, clean_output
+
+    icon = signal_icon(result.signal.value)
     click.echo(f"Agent:      {result.agent_name}")
-    click.echo(f"Signal:     {result.signal.value}")
+    click.echo(f"Signal:     {icon} {result.signal.value}")
     click.echo(f"Score:      {result.score:.1f}/10")
     click.echo(f"Confidence: {result.confidence:.0%}")
 
     if result.key_findings:
         click.echo(f"\nKey Findings:")
         for f in result.key_findings:
-            click.echo(f"  - {f}")
+            click.echo(f"  - {clean_output(f)}")
 
     if result.risks:
         click.echo(f"\nRisks:")
         for r in result.risks:
-            click.echo(f"  - {r}")
+            click.echo(f"  - {clean_output(r)}")
 
 
 if __name__ == "__main__":

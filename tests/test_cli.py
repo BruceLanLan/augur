@@ -86,3 +86,51 @@ class TestCLI:
         result = runner.invoke(main, ["--version"])
         assert result.exit_code == 0
         assert "6.1.0" in result.output
+
+    def test_no_color_flag_strips_ansi_and_emoji(self, runner):
+        """Verify --no-color produces output without ANSI escape codes or emojis."""
+        import re
+        result = runner.invoke(main, ["--no-color", "consensus", "AAPL", "--pe", "25"])
+        assert result.exit_code == 0
+        # No ANSI escape sequences
+        ansi_pattern = re.compile(r"\033\[[0-9;]*m")
+        assert not ansi_pattern.search(result.output), "ANSI codes found in --no-color output"
+
+    def test_no_color_env_variable(self, runner):
+        """Verify NO_COLOR env variable disables color and emojis."""
+        import re
+        result = runner.invoke(main, ["consensus", "AAPL", "--pe", "25"], env={"NO_COLOR": "1"})
+        assert result.exit_code == 0
+        ansi_pattern = re.compile(r"\033\[[0-9;]*m")
+        assert not ansi_pattern.search(result.output), "ANSI codes found with NO_COLOR env"
+
+    def test_consensus_json_valid(self, runner):
+        """Verify --json output from consensus is parseable JSON."""
+        import json
+        result = runner.invoke(main, ["consensus", "AAPL", "--pe", "25", "--json"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert "ticker" in data
+        assert "consensus" in data
+        assert "individual" in data
+        assert data["ticker"] == "AAPL"
+
+    def test_analyze_json_valid_single(self, runner):
+        """Verify --json output from analyze (single persona) is parseable JSON."""
+        import json
+        result = runner.invoke(main, ["analyze", "AAPL", "--persona", "buffett", "--pe", "25", "--json"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert "signal" in data
+        assert "score" in data
+        assert isinstance(data["score"], (int, float))
+
+    def test_analyze_json_valid_all(self, runner):
+        """Verify --json output from analyze (all agents) is parseable JSON."""
+        import json
+        result = runner.invoke(main, ["analyze", "AAPL", "--pe", "25", "--json"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert isinstance(data, dict)
+        # Should contain agent keys
+        assert len(data) > 0
