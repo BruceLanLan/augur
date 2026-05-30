@@ -113,14 +113,14 @@ def load_watchlist() -> dict:
     return merged
 
 
-def save_watchlist(config: dict):
+def save_watchlist(config: dict) -> None:
     """Save watchlist configuration to ~/.augur/watchlist.yaml."""
     _ensure_config_dir()
     with open(WATCHLIST_PATH, "w", encoding="utf-8") as f:
         yaml.dump(config, f, allow_unicode=True, default_flow_style=False, sort_keys=False)
 
 
-def add_to_watchlist(ticker: str, metrics: Optional[Dict[str, float]] = None):
+def add_to_watchlist(ticker: str, metrics: Optional[Dict[str, float]] = None) -> dict:
     """Add a ticker to the watchlist.
 
     Args:
@@ -384,7 +384,7 @@ def _send_lark_notification(
             print(f"  Failed to send Lark notification for {ticker}: {e}")
 
 
-def start_scheduler():
+def start_scheduler() -> None:
     """Start the APScheduler daemon for periodic watchlist analysis."""
     try:
         from apscheduler.schedulers.blocking import BlockingScheduler

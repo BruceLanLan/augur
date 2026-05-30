@@ -38,12 +38,12 @@ def _cache_get(key: str) -> Optional[Any]:
     return entry["value"]
 
 
-def _cache_set(key: str, value: Any):
+def _cache_set(key: str, value: Any) -> None:
     """Set cache entry."""
     _cache[key] = {"value": value, "ts": time.time()}
 
 
-def clear_cache():
+def clear_cache() -> None:
     """Clear all cached data entries."""
     _cache.clear()
 
@@ -58,7 +58,7 @@ def cache_info() -> Dict[str, Any]:
 
 # ============ yfinance Helpers ============
 
-def _get_yfinance():
+def _get_yfinance() -> Any:
     """Lazy import yfinance with graceful ImportError."""
     try:
         import yfinance as yf
@@ -262,7 +262,7 @@ def fetch_history(ticker: str, period: str = "1y") -> List[Dict]:
     return results
 
 
-def calculate_technicals(prices: List[Dict]) -> Dict:
+def calculate_technicals(prices: List[Dict]) -> Dict[str, Any]:
     """
     Calculate technical indicators from price history.
 
@@ -310,7 +310,7 @@ def search_ticker(query: str) -> List[Dict]:
 
 # ============ Internal Helpers ============
 
-def _calculate_technicals_from_prices(closes: List[float]) -> Dict:
+def _calculate_technicals_from_prices(closes: List[float]) -> Dict[str, Any]:
     """Calculate technical indicators from a list of closing prices."""
     result = {}
 
@@ -391,7 +391,7 @@ def _calculate_rsi(closes: List[float], period: int = 14) -> float:
     return round(rsi, 2)
 
 
-def _calculate_macd(closes: List[float]) -> Dict:
+def _calculate_macd(closes: List[float]) -> Dict[str, float]:
     """Calculate MACD (12/26/9)."""
     if len(closes) < 26:
         return {"macd": 0, "signal": 0, "histogram": 0}

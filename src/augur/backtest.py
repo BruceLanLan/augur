@@ -102,7 +102,7 @@ class Backtester:
         ticker: str,
         historical_data: List[Dict],
         forward_returns: List[Dict],
-    ) -> BacktestResult:
+    ) -> "BacktestResult":
         """
         Run backtest: replay historical data through all agents.
 
@@ -211,7 +211,7 @@ class Backtester:
             return True
         return False
 
-    def _calculate_ics(self, records: List[BacktestRecord]) -> List[AgentIC]:
+    def _calculate_ics(self, records: List["BacktestRecord"]) -> List["AgentIC"]:
         """Calculate IC for each agent using Spearman rank correlation"""
         # Group by agent
         agent_records: Dict[str, List[BacktestRecord]] = {}
@@ -379,7 +379,7 @@ class Backtester:
 
         return "\n".join(lines)
 
-    def _save_records(self, records: List[BacktestRecord]):
+    def _save_records(self, records: List[BacktestRecord]) -> None:
         """Persist records to ~/.augur/backtest/records.jsonl (with rotation)."""
         self.RECORDS_DIR.mkdir(parents=True, exist_ok=True)
 
