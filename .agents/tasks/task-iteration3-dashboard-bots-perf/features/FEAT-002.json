@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Bot integration hardening: add exception guards around analyze calls so unhandled exceptions don't crash long-running bot processes, add ticker validation in all bot message handlers, fix duplicate code patterns with shared helper",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In src/augur/bots/telegram_bot.py: the handle_message handler for natural language @mentions calls agent.analyze() without try/except - if it raises, the entire update handler crashes. Wrap in try/except like the command handlers do.",
     "In src/augur/bots/slack_bot.py: the handle_app_mention and handle_dm event handlers properly have try/except, but the registry import inside the handler could raise ImportError at runtime - move the import to a helper that returns a friendly error message",
@@ -22,5 +22,5 @@
     "python -m pytest tests/ -q"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 99 tests pass. Stop-word filtering works correctly for common words. The _extract_ticker function in all bots now requires minimum 2-char matches and excludes common English words. The shared utils.py module provides extract_ticker and parse_metrics for future use by other modules."
 }
