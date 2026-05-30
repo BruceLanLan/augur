@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Add targeted tests for the bugs fixed in FEAT-001 and FEAT-002 to prevent regressions",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Add test in tests/test_data.py for negative debt_to_equity handling: test that fetch_market_context logic handles debt_to_equity values like -150, 0, and normal positive values (e.g. 162) correctly. Since we cannot call yfinance in tests, test the conversion logic directly by extracting or testing the formula.",
     "2. Add test in tests/test_api.py for the standalone api.py ticker validation: test that GET /api/analyze/AAPL;DROP returns 400 (using the augur.api app, not dashboard.app). Import the api.py app via TestClient and verify invalid tickers are rejected.",
@@ -18,5 +18,5 @@
     "pytest tests/ -v"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Added 8 new tests across 4 test files. All 86 tests pass (78 original + 8 new). Tests cover: debt_ratio conversion with negative/zero/positive values, standalone API ticker validation, backtest rotation logic existence, and persona non-negative scores with extreme inputs."
 }
