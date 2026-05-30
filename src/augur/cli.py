@@ -29,7 +29,19 @@ from augur import __version__
 @click.option("--no-color", is_flag=True, default=False, help="Disable color output and emojis")
 @click.pass_context
 def main(ctx, no_color):
-    """Augur - Multi-agent investment analysis system"""
+    """Augur - Multi-agent investment analysis system.
+
+    \b
+    18 virtual investor personas analyze stocks from different perspectives
+    and form consensus recommendations with Kelly position sizing.
+
+    \b
+    Quick start:
+      augur analyze AAPL          # Full analysis with all 18 agents
+      augur consensus NVDA        # Consensus recommendation
+      augur list-personas         # Show all personas
+      augur fetch TSLA            # Fetch real-time data
+    """
     import os
     ctx.ensure_object(dict)
     # Respect --no-color flag or NO_COLOR env variable
@@ -66,7 +78,15 @@ def main(ctx, no_color):
 @click.option("--industry", default="", help="Industry name (e.g. Semiconductor)")
 @click.option("--json", "as_json", is_flag=True, default=False, help="Output raw JSON")
 def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry, as_json):
-    """Analyze a ticker with one or all agents (auto-fetches data if no metrics specified)"""
+    """Analyze a ticker with one or all agents (auto-fetches data if no metrics specified).
+
+    \b
+    Examples:
+      augur analyze AAPL                     # Auto-fetch & analyze
+      augur analyze NVDA --pe 60 --roe 0.45  # Manual metrics
+      augur analyze TSLA --persona buffett   # Single persona
+      augur analyze MSFT --json              # JSON output
+    """
     from augur.personas.base import MarketContext
     from augur.registry import AgentRegistry
 
@@ -156,7 +176,14 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
 @click.option("--industry", default="", help="Industry name")
 @click.option("--json", "as_json", is_flag=True, default=False, help="Output raw JSON")
 def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry, as_json):
-    """Get multi-agent consensus on a ticker (auto-fetches data if no metrics specified)"""
+    """Get multi-agent consensus on a ticker (auto-fetches data if no metrics specified).
+
+    \b
+    Examples:
+      augur consensus AAPL                        # Auto-fetch consensus
+      augur consensus NVDA --pe 60 --roe 0.45     # Manual metrics
+      augur consensus TSLA --json                 # JSON output
+    """
     from augur.personas.base import MarketContext
     from augur.registry import AgentRegistry, DecisionCoordinator
 
@@ -244,7 +271,12 @@ def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio
 
 @main.command("list-personas")
 def list_personas_cmd():
-    """List all available personas"""
+    """List all available personas.
+
+    \b
+    Examples:
+      augur list-personas
+    """
     from augur.registry import AgentRegistry
 
     registry = AgentRegistry()
@@ -406,7 +438,14 @@ def cron_start_cmd():
 @click.option("--sector", default=None, help="Sector name (e.g. Technology)")
 @click.option("--industry", default=None, help="Industry name (e.g. Semiconductor)")
 def watchlist_add_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry):
-    """Add a ticker to the watchlist"""
+    """Add a ticker to the watchlist.
+
+    \b
+    Examples:
+      augur watchlist-add AAPL --pe 30 --roe 0.55
+      augur watchlist-add NVDA --sector Technology
+      augur watchlist-add BTC-USD
+    """
     from augur.cron import add_to_watchlist, WATCHLIST_PATH
 
     metrics = {}
@@ -479,7 +518,13 @@ def watchlist_show_cmd():
 @click.option("--demo", is_flag=True, help="Use generated sample data")
 @click.option("--live", is_flag=True, help="Use real historical data from yfinance")
 def backtest_cmd(ticker, days, demo, live):
-    """Run historical backtest on a ticker"""
+    """Run historical backtest on a ticker.
+
+    \b
+    Examples:
+      augur backtest AAPL --days 30 --demo   # Sample data
+      augur backtest NVDA --days 60 --live   # Real data
+    """
     from augur.backtest import Backtester, generate_sample_data
 
     click.echo(f"Running backtest for {ticker.upper()} ({days} days)...\n")
@@ -560,7 +605,14 @@ def ic_report_cmd(agent):
 @click.argument("ticker")
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 def fetch_cmd(ticker, as_json):
-    """Fetch real-time market data for a ticker (via yfinance)"""
+    """Fetch real-time market data for a ticker (via yfinance).
+
+    \b
+    Examples:
+      augur fetch AAPL           # Formatted output
+      augur fetch NVDA --json    # JSON output
+      augur fetch 0700.HK        # Hong Kong stock
+    """
     from augur.optional_deps import require_optional
     try:
         require_optional("augur.data", "real-time market data fetching", "pip install 'augur-agents[data]'")
