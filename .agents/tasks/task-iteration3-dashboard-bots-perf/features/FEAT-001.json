@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "fix",
   "description": "Dashboard frontend hardening: fix XSS in signals.html removeTicker, add interval cleanup on page unload, fix hardcoded ports, add ARIA labels, add fetch error handling for API calls, fix memory leak in health check interval",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In dashboard/templates/signals.html: the removeTicker function uses string concatenation with ticker in onclick handler - fix by escaping the ticker with escapeHtml() or use data attributes instead of inline onclick with string interpolation to prevent XSS via malicious ticker names stored in watchlist",
     "In dashboard/templates/signals.html: add cleanup for autoRefreshTimer on page unload using window.addEventListener('beforeunload', ...) or document visibilitychange to pause when tab hidden",
@@ -24,5 +24,5 @@
     "python -m pytest tests/ -q"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 99 tests pass. XSS fix uses data-ticker attribute with escapeHtml + event delegation instead of inline onclick with string concatenation. Visibility API used for both autoRefreshTimer (signals.html) and health check (base.html). ARIA labels added to hamburger, sidebar collapse, remove ticker, expand/collapse buttons. Persona rows have role=button and aria-expanded. Bot files had pre-existing unstaged changes from another feature - not included in this commit."
 }
