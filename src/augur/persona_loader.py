@@ -210,6 +210,46 @@ def _validate_spec(spec: Dict, path: Path) -> None:
     missing = [k for k in required if k not in spec]
     if missing:
         raise ValueError(f"YAML persona {path} is missing required keys: {missing}")
+
+    # Validate agent_id format
+    import re
+    agent_id = spec["agent_id"]
+    if not re.match(r'^[a-z0-9_-]+$', agent_id):
+        raise ValueError(
+            f"YAML persona {path}: agent_id '{agent_id}' is invalid. "
+            "Only lowercase letters, digits, underscores, and hyphens are allowed."
+        )
+
+    # Validate scoring_weights values are between 0 and 1.0
+    for key, val in spec["scoring_weights"].items():
+        if not isinstance(val, (int, float)):
+            raise ValueError(
+                f"YAML persona {path}: scoring_weights['{key}'] must be numeric, got {type(val).__name__}"
+            )
+        if val < 0 or val > 1.0:
+            raise ValueError(
+                f"YAML persona {path}: scoring_weights['{key}']={val} is out of range [0, 1.0]"
+            )
+
+    # Validate philosophy is a list
+    if "philosophy" in spec and not isinstance(spec["philosophy"], list):
+        logger.warning(
+            "Persona %s: 'philosophy' should be a list, got %s",
+            agent_id, type(spec["philosophy"]).__name__,
+        )
+
+    # Validate thresholds: bullish_threshold > bearish_threshold
+    if "thresholds" in spec:
+        thresholds = spec["thresholds"]
+        bullish_th = thresholds.get("bullish_threshold")
+        bearish_th = thresholds.get("bearish_threshold")
+        if bullish_th is not None and bearish_th is not None:
+            if bullish_th <= bearish_th:
+                logger.warning(
+                    "Persona %s: bullish_threshold (%.2f) should be > bearish_threshold (%.2f)",
+                    agent_id, bullish_th, bearish_th,
+                )
+
     total_w = sum(spec["scoring_weights"].values())
     if abs(total_w - 1.0) > 0.05:
         logger.warning(

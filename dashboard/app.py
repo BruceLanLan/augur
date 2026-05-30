@@ -13,10 +13,12 @@ import sys
 import os
 import re
 import logging
+import threading
+import time as _time
 import yaml
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 import argparse
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -128,6 +130,36 @@ def _persona_meta() -> List[Dict]:
             "model": per_agent.get(agent.agent_id, default_model),
         })
     return meta
+
+
+# ============ Rate Limiting ============
+
+_rate_limits: Dict[str, List[float]] = {}
+_rate_limit_lock = threading.Lock()
+_RATE_LIMIT_MAX = 30  # max requests per window
+_RATE_LIMIT_WINDOW = 60.0  # seconds
+
+
+def _check_rate_limit(ticker: str) -> bool:
+    """Check and enforce rate limit for a ticker. Returns True if allowed, False if exceeded."""
+    now = _time.time()
+    ticker_key = ticker.upper()
+    with _rate_limit_lock:
+        # Clean up expired entries for this ticker
+        if ticker_key in _rate_limits:
+            _rate_limits[ticker_key] = [
+                ts for ts in _rate_limits[ticker_key] if now - ts < _RATE_LIMIT_WINDOW
+            ]
+        else:
+            _rate_limits[ticker_key] = []
+
+        # Check limit
+        if len(_rate_limits[ticker_key]) >= _RATE_LIMIT_MAX:
+            return False
+
+        # Record this request
+        _rate_limits[ticker_key].append(now)
+        return True
 
 
 # ============ HTML Routes ============
@@ -250,6 +282,10 @@ async def analyze_ticker(
     # Validate ticker format to prevent injection issues with yfinance or URLs
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
+
+    # Rate limiting: max 30 requests per minute per ticker
+    if not _check_rate_limit(ticker):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Max 30 requests per minute per ticker.")
 
     # Check if any meaningful metric was provided by user
     has_user_metrics = any([
