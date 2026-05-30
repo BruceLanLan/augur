@@ -35,6 +35,13 @@ from augur.personas.cathie_wood import CathieWoodAgent
 from augur.personas.fisher import FisherAgent
 from augur.personas.arps import ArpsAgent
 from augur.personas.aschenbrenner import AschenbrennerAgent
+from augur.personas.thiel import ThielAgent
+from augur.personas.duan_yongping import DuanYongpingAgent
+from augur.personas.zhang_lei import ZhangLeiAgent
+from augur.personas.li_lu import LiLuAgent
+from augur.personas.dan_bin import DanBinAgent
+from augur.personas.serenity import SerenityAgent
+from augur.personas.dayu import DayuAgent
 
 __all__ = [
     # Types
@@ -49,4 +56,6 @@ __all__ = [
     "BuffettAgent", "GrahamAgent", "LynchAgent", "DalioAgent",
     "MungerAgent", "SorosAgent", "MarksAgent", "CathieWoodAgent",
     "FisherAgent", "ArpsAgent", "AschenbrennerAgent",
+    "ThielAgent", "DuanYongpingAgent", "ZhangLeiAgent",
+    "LiLuAgent", "DanBinAgent", "SerenityAgent", "DayuAgent",
 ]
