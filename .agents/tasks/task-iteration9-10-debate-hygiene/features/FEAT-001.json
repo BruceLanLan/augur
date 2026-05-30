@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Iteration 9: Deep testing of debate feature, watchlist/cron integration, and IC report. Add comprehensive tests covering: (1) augur_debate MCP tool end-to-end, (2) DebateProtocol class, (3) run_debate with minority report, (4) watchlist persistence and cron-run flow, (5) IC leaderboard calculation correctness, (6) Spearman rank correlation edge cases.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create tests/test_iteration9.py with comprehensive tests",
     "Test class TestDebateFeature: test augur_debate MCP tool produces valid results for a ticker with rounds=2, verify minority report in metadata when applicable, verify debate messages accumulate correctly in coordinator._debate_history, test DebateProtocol.initiate_debate() and get_debate_summary()",
@@ -21,5 +21,5 @@
     "python -m pytest tests/ -x -q --tb=short"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Discovered a pre-existing bug in cron.py: DEFAULT_CONFIG is mutated by add_to_watchlist due to shallow copy in load_watchlist(). Tests that call add_to_watchlist without a pre-existing file on disk will mutate DEFAULT_CONFIG['watchlist']. Worked around in tests by writing a clean initial YAML file before each watchlist test. Total test count is now 300 (275 existing + 25 new)."
 }
