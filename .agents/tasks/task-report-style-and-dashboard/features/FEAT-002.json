@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Verify and fix Dashboard features mentioned in README: keyboard shortcuts, history, auto-refresh, search/filter, backtest leaderboard, settings save, and create persona hot-reload. Also verify CLI output matches README format.",
+  "status": "in_progress",
+  "steps": [
+    "1. In dashboard/templates/base.html, verify that pressing '/' focuses the ticker input (hero-ticker or inp-ticker). Current code already does this via the keydown handler - confirm it works for both index.html (hero-ticker) and stocks.html (inp-ticker).",
+    "2. In dashboard/templates/index.html, verify analysis history is shown from localStorage cache (augurCache). The renderRecentAnalyses() function handles this. Confirm the 'recent-section' div is properly shown when cache has items.",
+    "3. In dashboard/templates/stocks.html, verify the display:block fix is in place (resultsEl.style.display = 'block' in the .then() callback). Confirm expand/collapse for each agent works via toggleReasoning().",
+    "4. In dashboard/templates/signals.html, verify: (a) auto-refresh via setInterval(loadWatchlist, 60000) with Visibility API pause/resume works, (b) addTicker() and removeTicker() functions work with proper API calls, (c) runAllAnalysis() calls /api/watchlist/run POST.",
+    "5. In dashboard/templates/backtest.html, verify: (a) runBacktest() calls /api/backtest/run with proper params, (b) renderResults() populates the leaderboard table with IC data.",
+    "6. In dashboard/templates/settings.html, verify: (a) each persona has its own model select dropdown, (b) savePersona() calls PUT /api/config/persona/{id}, (c) saveAll() sends all changes.",
+    "7. In dashboard/templates/create_persona.html, verify: (a) submitPersona() calls POST /api/custom-persona with YAML content, (b) the API endpoint in dashboard/app.py saves to personas/custom/ and hot-reloads the registry.",
+    "8. Verify the /api/custom-persona endpoint in dashboard/app.py properly saves YAML and reloads. If missing hot-reload after save, add registry.register() call for the new persona.",
+    "9. Check CLI output: run 'python -m augur.cli analyze AAPL --pe 25 --roe 0.55 --gross-margins 0.46' and verify the output format matches README (signal, score, confidence, Kelly, Key Findings with emojis, BULLISH/NEUTRAL/BEARISH counts)."
+  ],
+  "acceptance_criteria": [
+    "Dashboard stocks.html shows analysis results (display:block fix confirmed in place)",
+    "Keyboard '/' focuses ticker input on all pages that have one",
+    "Index page shows recent analysis history from cache",
+    "Signals page has working add/remove ticker and 60s auto-refresh with Visibility API",
+    "Backtest page loads and shows leaderboard table when run",
+    "Settings page saves per-persona model config",
+    "Create persona page submits YAML and persona is immediately available",
+    "CLI analyze output matches README format with signal/score/confidence/kelly/findings"
+  ],
+  "verification": [
+    "pytest tests/test_report.py tests/test_api.py tests/test_cli.py -v -x"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
