@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Coordinator weight calibration, data pipeline resilience, config validation, and API rate limiting - core logic improvements",
+  "status": "completed",
+  "steps": [
+    "1. In src/augur/registry.py DecisionCoordinator.get_consensus(): Add sector-aware weight boosts - when context.sector is 'Technology' or industry contains 'ai/semiconductor/software', boost weights for cathie_wood, aschenbrenner, thiel by 1.3x; when sector is 'Financial Services', boost buffett, graham, marks by 1.2x; when sector is 'Healthcare', boost fisher by 1.2x. Normalize weights after boosting.",
+    "2. In src/augur/registry.py: Fix diversity penalty formula - currently penalty *= (1.0 - (corr - 0.7)) which means corr=1.7 gives negative penalty. Clamp penalty to min 0.3: penalty = max(0.3, penalty * (1.0 - min(0.3, corr - 0.7)))",
+    "3. In src/augur/registry.py: Validate rolling_ic_weights are applied correctly - ensure they are normalized (sum to 1.0) before blending with base weights. Add normalization: if rolling_ic_weights, normalize sum to 1.0 first.",
+    "4. In src/augur/data.py fetch_market_context(): Handle partial data from yfinance more gracefully - when info dict has fields that are None, use 0 as default (already partially done with 'or 0' pattern, but extend to all fields). Add explicit None-to-0 coercion for all numeric fields.",
+    "5. In src/augur/data.py: Handle crypto tickers (BTC-USD, ETH-USD) and international tickers (0700.HK, 2330.TW) - the ticker regex in dashboard/app.py already allows dots and hyphens up to 15 chars. Verify data.py handles these without error. Add a _normalize_ticker() helper that uppercases and validates format.",
+    "6. In src/augur/data.py: Make cache thread-safe by adding a threading.Lock around _cache dict operations (_cache_get, _cache_set, clear_cache).",
+    "7. In src/augur/persona_loader.py: Enhance YAML persona validation - validate that scoring_weights values are between 0 and 1, validate agent_id matches [a-z0-9_-]+ pattern, validate philosophy is a list of strings, validate thresholds have bullish_threshold > bearish_threshold.",
+    "8. In src/augur/config.py: Add a validate_config() function that checks loaded config structure - 'defaults' should be dict, 'per_agent' should be dict of strings, 'available_models' should be dict of lists. Call it from get_config() and log warnings for invalid entries.",
+    "9. In dashboard/app.py: Add simple in-memory rate limiting for /api/analyze/{ticker} - max 30 requests per minute per ticker. Use a dict of ticker -> (count, window_start). Return 429 if exceeded."
+  ],
+  "acceptance_criteria": [
+    "Sector-aware weight boosting correctly increases weights for relevant personas when sector matches",
+    "Diversity penalty is clamped and never goes negative or above 1.0",
+    "Rolling IC weights are normalized before blending",
+    "fetch_market_context handles None values in yfinance info without raising exceptions",
+    "Cache operations in data.py are thread-safe (Lock protects reads/writes)",
+    "persona_loader _validate_spec rejects invalid scoring_weights ranges and bad agent_ids",
+    "config.py validate_config logs warnings for malformed config entries",
+    "Dashboard API returns 429 when rate limit exceeded for /api/analyze",
+    "All existing 301 tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q",
+    "python -m pytest tests/test_iteration11.py -v"
+  ],
+  "blocked_reason": null,
+  "findings": "All 301 existing tests pass after changes. All new functionality verified via manual inline tests. Rate limiting uses a simple in-memory list approach per ticker. Ticker normalization raises ValueError for invalid input which callers should handle."
+}
