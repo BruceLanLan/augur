@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "End-to-end integration tests exercising the full pipeline: CLI analyze/consensus, API /api/analyze, and error propagation when yfinance is unavailable. Validates the complete data flow from input to consensus output structure.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create tests/test_e2e_pipeline.py with TestE2EAnalysisPipeline class",
     "Test 1: Full pipeline via registry - AgentRegistry -> analyze_with_all -> get_consensus. Verify consensus response has all required fields: signal (bullish/neutral/bearish), score (0-10), confidence (0-1), reasoning, key_findings, risks, metadata.position_sizing",
@@ -27,5 +27,5 @@
     "python -m pytest tests/ -q --tb=short"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 10 E2E tests pass. Full suite 211 tests green. For Test 6 (yfinance fallback), the correct patch target is augur.data.fetch_market_context since dashboard/app.py uses a local import inside the endpoint function. One transient test ordering issue with test_dashboard_errors.py::test_path_traversal_ticker was observed once but is not reproducible."
 }
