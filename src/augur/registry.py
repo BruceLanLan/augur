@@ -13,6 +13,7 @@ import logging
 from typing import Dict, List, Optional, Any
 from threading import RLock
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
 
@@ -118,25 +119,53 @@ class DecisionCoordinator:
     """
 
     def __init__(self, registry: AgentRegistry = None):
-        self.registry = registry or AgentRegistry()
+        self.registry = registry or get_registry()
         self._debate_history: List[DebateMessage] = []
 
     def analyze_with_all(self, context: MarketContext) -> Dict[str, AgentResponse]:
-        """Analyze with all agents"""
+        """Analyze with all agents in parallel using ThreadPoolExecutor."""
         results = {}
-        for agent in self.registry.get_all():
-            try:
-                results[agent.agent_id] = agent.analyze(context)
-            except Exception as e:
-                results[agent.agent_id] = AgentResponse(
-                    agent_id=agent.agent_id,
-                    agent_name=agent.name,
-                    signal=SignalType.ERROR,
-                    confidence=0,
-                    score=0,
-                    reasoning=f"Analysis failed: {e}"
-                )
+        agents = self.registry.get_all()
+
+        try:
+            with ThreadPoolExecutor(max_workers=min(len(agents), 8)) as executor:
+                future_to_agent = {
+                    executor.submit(self._analyze_single, agent, context): agent
+                    for agent in agents
+                }
+                for future in as_completed(future_to_agent):
+                    agent = future_to_agent[future]
+                    try:
+                        results[agent.agent_id] = future.result()
+                    except Exception as e:
+                        results[agent.agent_id] = AgentResponse(
+                            agent_id=agent.agent_id,
+                            agent_name=agent.name,
+                            signal=SignalType.ERROR,
+                            confidence=0,
+                            score=0,
+                            reasoning=f"Analysis failed: {e}"
+                        )
+        except Exception:
+            # Fallback to sequential if threading fails
+            for agent in agents:
+                results[agent.agent_id] = self._analyze_single(agent, context)
+
         return results
+
+    def _analyze_single(self, agent: 'BaseAgent', context: MarketContext) -> AgentResponse:
+        """Analyze with a single agent, handling exceptions."""
+        try:
+            return agent.analyze(context)
+        except Exception as e:
+            return AgentResponse(
+                agent_id=agent.agent_id,
+                agent_name=agent.name,
+                signal=SignalType.ERROR,
+                confidence=0,
+                score=0,
+                reasoning=f"Analysis failed: {e}"
+            )
 
     def get_consensus(self, results: Dict[str, AgentResponse], ticker: str = "", date_str: str = None, context: MarketContext = None) -> AgentResponse:
         """Compute consensus signal with industry weighting"""
