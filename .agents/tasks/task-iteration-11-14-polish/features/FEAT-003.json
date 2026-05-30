@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Comprehensive test suite for iteration 11-14: behavioral tests, property-based Kelly tests, ticker parsing fuzz tests, and integration tests for all new features",
+  "status": "completed",
+  "steps": [
+    "1. Create tests/test_iteration11.py with the following test classes and methods:",
+    "2. TestCoordinatorWeights class: test_sector_aware_boost_technology (verify tech sector boosts cathie_wood/aschenbrenner/thiel weights), test_sector_aware_boost_financials (verify financial sector boosts buffett/graham/marks), test_diversity_penalty_never_negative (verify penalty stays >= 0.3), test_rolling_ic_weights_normalized (verify normalization before blending), test_consensus_score_always_clamped (verify score in [0,10] range)",
+    "3. TestDataPipelineResilience class: test_fetch_with_none_values (mock yfinance returning None for some fields, verify no crash), test_crypto_ticker_format (verify BTC-USD passes validation), test_international_ticker_format (verify 0700.HK, 2330.TW pass validation), test_cache_thread_safety (use concurrent.futures to hammer cache from multiple threads), test_partial_data_graceful (mock stock.info with missing keys)",
+    "4. TestConfigValidation class: test_validate_config_valid (valid config passes without warnings), test_validate_config_invalid_per_agent (non-dict per_agent triggers warning), test_validate_config_invalid_defaults (non-dict defaults triggers warning), test_persona_yaml_invalid_weights_range (weights > 1.0 rejected), test_persona_yaml_invalid_agent_id (spaces/special chars rejected)",
+    "5. TestRateLimiting class: test_rate_limit_allows_normal_traffic (29 requests pass), test_rate_limit_blocks_excess (31 requests to same ticker returns 429 on 31st)",
+    "6. TestKellyProperty class: test_kelly_always_non_negative (property test: for random score/confidence combos, position_pct >= 0), test_kelly_max_20_percent (property test: position never exceeds 20%), test_kelly_bearish_always_zero (bearish signal always gives 0% position), test_kelly_bullish_minimum_floor (bullish + conf>=0.5 gives at least 1%)",
+    "7. TestTickerParsing class: test_valid_tickers_accepted (AAPL, BRK.B, BTC-USD, 0700.HK all pass regex), test_invalid_tickers_rejected (SQL injection, path traversal, empty string, too-long strings rejected), test_unicode_ticker_rejected (Chinese/Japanese chars rejected)",
+    "8. TestResponsiveCSS class: test_css_has_tablet_breakpoint (grep for 1024px media query), test_css_has_focus_visible (grep for :focus-visible), test_css_has_table_responsive (grep for .table-responsive)"
+  ],
+  "acceptance_criteria": [
+    "All new tests in test_iteration11.py pass",
+    "Kelly property tests use at least 100 random inputs each",
+    "Ticker fuzz tests cover SQL injection, path traversal, unicode, and boundary cases",
+    "Thread safety test uses at least 10 concurrent threads",
+    "Total test count increases by 25+ new tests",
+    "All 301 existing tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/test_iteration11.py -v",
+    "python -m pytest tests/ -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": "All 41 new tests pass. Full suite (342 tests) passes with no regressions. Used sys.modules patch for scanner.rolling_ic mock since it is imported inside try/except block. Rate limit tests use auto_fetch=false to avoid yfinance calls."
+}

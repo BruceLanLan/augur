@@ -1,0 +1,28 @@
+{
+  "project_type": "Python multi-agent investment analysis system with FastAPI dashboard and Click CLI",
+  "language": "Python 3.8+",
+  "build_system": "setuptools via pyproject.toml, pip install -e .",
+  "test_framework": "pytest with tests/ directory, currently 301 tests passing",
+  "build_command": "pip install -e . (already done)",
+  "test_command": "python -m pytest tests/ -x -q",
+  "verification_instructions": "Run pytest tests/ and confirm all tests pass including new ones",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e '.[dev]' - already installed in this sandbox",
+  "environment_constraints": "OPEN_INTERNET mode, Python 3.11 default, all deps already installed",
+  "contribution_requirements": "All code must pass pytest. Follow existing patterns for agents/tests.",
+  "key_patterns": "Persona agents in src/augur/personas/*.py inherit BaseAgent. Registry in src/augur/registry.py. Coordinator handles consensus with weights. CLI uses Click. Dashboard uses FastAPI+Jinja2. Tests in tests/test_iteration*.py pattern.",
+  "relevant_files": [
+    "src/augur/registry.py",
+    "src/augur/data.py",
+    "src/augur/cli.py",
+    "src/augur/cli_format.py",
+    "src/augur/config.py",
+    "src/augur/persona_loader.py",
+    "src/augur/personas/base.py",
+    "src/augur/cron.py",
+    "dashboard/app.py",
+    "dashboard/static/css/bloomberg.css",
+    "tests/test_iteration9.py"
+  ],
+  "directory_structure": "src/augur/ = core library, dashboard/ = FastAPI web UI, tests/ = pytest tests, scanner/ = legacy loader, personas/ = custom YAML personas, config/ = default config"
+}
