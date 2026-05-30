@@ -10,6 +10,7 @@ Contains:
 """
 
 import logging
+import time
 from typing import Dict, List, Optional, Any
 from threading import RLock
 from pathlib import Path
@@ -121,9 +122,11 @@ class DecisionCoordinator:
     def __init__(self, registry: AgentRegistry = None):
         self.registry = registry or get_registry()
         self._debate_history: List[DebateMessage] = []
+        self._last_analysis_ms: float = 0.0
 
     def analyze_with_all(self, context: MarketContext) -> Dict[str, AgentResponse]:
         """Analyze with all agents in parallel using ThreadPoolExecutor."""
+        t0 = time.perf_counter()
         results = {}
         agents = self.registry.get_all()
 
@@ -161,6 +164,9 @@ class DecisionCoordinator:
             for agent in agents:
                 results[agent.agent_id] = self._analyze_single(agent, context)
 
+        elapsed_ms = (time.perf_counter() - t0) * 1000
+        self._last_analysis_ms = elapsed_ms
+        logger.debug("analyze_with_all completed in %.1fms", elapsed_ms)
         return results
 
     def _analyze_single(self, agent: 'BaseAgent', context: MarketContext) -> AgentResponse:
@@ -180,6 +186,7 @@ class DecisionCoordinator:
 
     def get_consensus(self, results: Dict[str, AgentResponse], ticker: str = "", date_str: str = None, context: MarketContext = None) -> AgentResponse:
         """Compute consensus signal with industry weighting"""
+        t0_consensus = time.perf_counter()
         if not results:
             return AgentResponse(
                 agent_id="consensus",
@@ -433,6 +440,14 @@ class DecisionCoordinator:
 
         # Clamp final score to valid range [0, 10]
         result.score = max(0.0, min(10.0, result.score))
+
+        # --- Timing metadata ---
+        consensus_ms = (time.perf_counter() - t0_consensus) * 1000
+        logger.debug("get_consensus completed in %.1fms", consensus_ms)
+        result.metadata["timing_ms"] = {
+            "analysis_ms": self._last_analysis_ms,
+            "consensus_ms": consensus_ms,
+        }
 
         return result
         """Add a debate message"""
