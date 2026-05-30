@@ -2,6 +2,6 @@
   "task_id": "task-iteration2-hardening",
   "task_description": "Iteration 2 of the review-fix-optimize loop: harden all 16 remaining personas (score clamping, division guards), fix coordinator edge cases, add MCP input validation, prevent dashboard XSS, and add regression tests.",
   "status": "in_progress",
-  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005"],
   "blocked_reason": null
 }
