@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "fix",
   "description": "Address semantic review issues: fix shallow-copy DEFAULT_CONFIG mutation, refactor MCP tool test to avoid format duplication, add negative-path test for run_backtest",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Fix shallow-copy in load_watchlist() by using _deep_merge(DEFAULT_CONFIG, {}) instead of DEFAULT_CONFIG.copy()",
     "Refactor test_augur_debate_mcp_tool to verify data structures instead of reconstructing output format",
@@ -18,5 +18,5 @@
     "python -m pytest tests/ -x -q --tb=short"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All 3 review issues fixed. (1) Replaced DEFAULT_CONFIG.copy() with _deep_merge(DEFAULT_CONFIG, {}) for a fully independent copy. (2) Refactored MCP tool test to verify data structure contracts (signal validity, score range, agent_name presence) instead of duplicating the output format string. Removed create_server() call since mcp package is not installed in test env. (3) Added test_run_backtest_empty_data that exercises the early-return path. Total: 301 tests passing."
 }

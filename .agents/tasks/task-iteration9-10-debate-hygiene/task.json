@@ -2,6 +2,6 @@
   "task_id": "task-iteration9-10-debate-hygiene",
   "task_description": "Iterations 9-10 combined: Deep test debate/watchlist/IC features, import cleanup, logging consistency, type hints, and docstring completeness",
   "status": "in_progress",
-  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
   "blocked_reason": null
 }
