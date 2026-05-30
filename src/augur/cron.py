@@ -103,7 +103,7 @@ def _deep_merge(base: dict, override: dict) -> dict:
 def load_watchlist() -> dict:
     """Load watchlist configuration from ~/.augur/watchlist.yaml."""
     if not WATCHLIST_PATH.exists():
-        return DEFAULT_CONFIG.copy()
+        return _deep_merge(DEFAULT_CONFIG, {})
 
     with open(WATCHLIST_PATH, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f) or {}

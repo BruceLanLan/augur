@@ -1,0 +1,22 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Address semantic review issues: fix shallow-copy DEFAULT_CONFIG mutation, refactor MCP tool test to avoid format duplication, add negative-path test for run_backtest",
+  "status": "in_progress",
+  "steps": [
+    "Fix shallow-copy in load_watchlist() by using _deep_merge(DEFAULT_CONFIG, {}) instead of DEFAULT_CONFIG.copy()",
+    "Refactor test_augur_debate_mcp_tool to verify data structures instead of reconstructing output format",
+    "Add test_run_backtest_empty_data to TestICReport class"
+  ],
+  "acceptance_criteria": [
+    "load_watchlist() returns a fully independent copy when no file exists",
+    "MCP tool test verifies data validity without duplicating output formatting",
+    "Empty-data backtest test verifies early-return path",
+    "All tests pass: python -m pytest tests/ -x -q --tb=short"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q --tb=short"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}
