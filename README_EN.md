@@ -235,7 +235,7 @@ docker compose --profile telegram up -d  # + Telegram Bot
 
 ---
 
-## ⚙️ Full CLI Reference (20 commands)
+## ⚙️ Full CLI Reference (17 commands)
 
 ```bash
 # ── Core Analysis ────────────────────────────────────────────────────────────
