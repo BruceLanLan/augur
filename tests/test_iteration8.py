@@ -151,8 +151,8 @@ class TestCacheEndpoints:
         return TestClient(app)
 
     def test_cache_clear_endpoint(self, client):
-        """GET /api/cache/clear should return status ok."""
-        response = client.get("/api/cache/clear")
+        """POST /api/cache/clear should return status ok."""
+        response = client.post("/api/cache/clear")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "ok"
@@ -171,7 +171,7 @@ class TestCacheEndpoints:
 
     def test_cache_clear_then_info(self, client):
         """Clear then info should show size 0."""
-        client.get("/api/cache/clear")
+        client.post("/api/cache/clear")
         response = client.get("/api/cache/info")
         data = response.json()
         assert data["cache"]["size"] == 0
@@ -507,8 +507,8 @@ class TestWatchlistAPI:
         assert response.status_code == 404
 
     def test_cache_clear_endpoint_ok(self, client):
-        """GET /api/cache/clear returns status ok."""
-        response = client.get("/api/cache/clear")
+        """POST /api/cache/clear returns status ok."""
+        response = client.post("/api/cache/clear")
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "ok"

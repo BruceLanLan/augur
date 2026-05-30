@@ -889,10 +889,9 @@ input, select, textarea {
 }
 
 /* --- Ticker & Agent Name Overflow --- */
+.persona-config-name,
 .recent-item-ticker,
-.persona-row .logo-text,
-.persona-row span,
-.data-value {
+.nav-item span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
