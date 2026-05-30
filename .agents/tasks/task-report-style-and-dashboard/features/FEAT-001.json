@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "fix",
   "description": "Overhaul report.py to integrate all 18 investors equally instead of framing as Buffett-style. Add disagreement section and bull/bear debate section.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. In src/augur/report.py, rename the executive summary section title from '巴菲特裁决（执行摘要）' to '18位大师共识裁决（执行摘要）'. Change the subsection title from '综合评分卡' to '投资委员会综合评分'.",
     "2. In the theme sections (_format_theme_section), ensure each agent's unique philosophy/framework is highlighted by adding a brief descriptor of their investment approach before their analysis. Use each agent's name and style prominently.",
@@ -23,5 +23,5 @@
     "pytest tests/test_report.py -v"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 37 tests pass. New sections (disagreement, bull/bear debate) integrate cleanly. Agent philosophy descriptors added to theme sections. No pre-existing test failures."
 }

@@ -1,0 +1,7 @@
+{
+  "task_id": "task-report-style-and-dashboard",
+  "task_description": "Fix 1: Overhaul report.py to remove Buffett-centric framing and integrate all 18 investors equally with disagreement analysis and bull/bear debate. Fix 2: Verify and implement all Dashboard features described in README.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}
