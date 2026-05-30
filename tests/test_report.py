@@ -11,6 +11,8 @@ from augur.report import (
     _format_signal_chinese,
     _format_agent_table,
     _format_theme_section,
+    _format_disagreement_section,
+    _format_bull_bear_debate,
     THEME_GROUPS,
 )
 
@@ -155,13 +157,27 @@ class TestGenerateReportBasic:
 
         # Check for major section headers
         assert "深度分析报告" in report
-        assert "巴菲特裁决" in report
+        assert "18位大师共识裁决" in report
         assert "Agent共识分析表" in report
         assert "分主题深度分析" in report
+        assert "分歧焦点" in report
+        assert "多空辩论" in report
         assert "财务概览" in report
         assert "风险矩阵" in report
         assert "仓位建议" in report
         assert "免责声明" in report
+        # Old title should NOT appear
+        assert "巴菲特裁决" not in report
+
+    def test_generate_report_consensus_recommendation(self):
+        """Verify position recommendation clearly states collective consensus."""
+        context = _make_full_context()
+        results = _make_full_results()
+        consensus = _make_consensus()
+
+        report = generate_report("AAPL", context, results, consensus)
+
+        assert "18位大师加权共识建议" in report
 
     def test_generate_report_agent_table(self):
         """Verify agent table has all agents."""
@@ -205,7 +221,7 @@ class TestGenerateReportBasic:
         assert "XYZ" in report
         assert "深度分析报告" in report
         # Should still have section headers
-        assert "巴菲特裁决" in report
+        assert "18位大师共识裁决" in report
         assert "Agent共识分析表" in report
 
 
@@ -275,6 +291,99 @@ class TestFormatThemeSection:
         section = _format_theme_section("价值投资", ["buffett"], results)
 
         assert "分析失败" in section
+
+    def test_theme_includes_agent_philosophy(self):
+        """Verify each agent section includes their investment philosophy."""
+        results = _make_full_results()
+        section = _format_theme_section("价值投资", THEME_GROUPS["价值投资"]["agents"], results)
+
+        # Buffett's philosophy should appear
+        assert "投资框架" in section
+        assert "护城河" in section
+
+
+class TestDisagreementSection:
+    """Test _format_disagreement_section helper."""
+
+    def test_disagreement_with_mixed_signals(self):
+        """Verify disagreement section identifies conflicts between bulls and bears."""
+        results = _make_full_results()
+        section = _format_disagreement_section(results)
+
+        assert "分歧焦点" in section
+        assert "多空阵营对比" in section
+        # Should have table rows for bulls
+        assert "看多" in section
+
+    def test_disagreement_all_bullish(self):
+        """When all agents agree, should show no significant disagreement."""
+        results = {
+            "buffett": _make_agent_response("buffett", "Warren Buffett", SignalType.BULLISH, 8.0, 0.85),
+            "graham": _make_agent_response("graham", "Benjamin Graham", SignalType.BULLISH, 7.5, 0.80),
+        }
+        section = _format_disagreement_section(results)
+
+        assert "分歧焦点" in section
+        assert "高度一致" in section
+
+    def test_disagreement_empty_results(self):
+        """Empty results should produce a valid section."""
+        section = _format_disagreement_section({})
+
+        assert "分歧焦点" in section
+        assert "暂无" in section
+
+    def test_disagreement_shows_score_spread(self):
+        """Score spread should be shown when significant."""
+        results = _make_full_results()
+        section = _format_disagreement_section(results)
+
+        # With marks at 4.5 and cathie_wood at 8.5, spread is 4.0 which is >= 3
+        assert "分歧度" in section
+
+
+class TestBullBearDebate:
+    """Test _format_bull_bear_debate helper."""
+
+    def test_debate_has_both_sides(self):
+        """Verify debate section shows both bull and bear perspectives."""
+        results = _make_full_results()
+        section = _format_bull_bear_debate(results)
+
+        assert "多空辩论" in section
+        assert "多方论点" in section
+        assert "空方论点" in section
+
+    def test_debate_shows_top_3_bulls(self):
+        """Verify top 3 highest-scoring agents appear in bull section."""
+        results = _make_full_results()
+        section = _format_bull_bear_debate(results)
+
+        # Cathie Wood has highest score (8.5), should appear in bull section
+        assert "Cathie Wood" in section
+
+    def test_debate_shows_top_3_bears(self):
+        """Verify top 3 lowest-scoring agents appear in bear section."""
+        results = _make_full_results()
+        section = _format_bull_bear_debate(results)
+
+        # Howard Marks has lowest score (4.5), should appear in bear section
+        assert "Howard Marks" in section
+
+    def test_debate_empty_results(self):
+        """Empty results should produce valid but minimal output."""
+        section = _format_bull_bear_debate({})
+
+        assert "多空辩论" in section
+        assert "暂无" in section
+
+    def test_debate_includes_philosophy(self):
+        """Verify agent philosophies are included in the debate."""
+        results = _make_full_results()
+        section = _format_bull_bear_debate(results)
+
+        # Should include at least one philosophy descriptor
+        assert "[" in section  # Philosophy is shown in brackets
 
 
 class TestEdgeCases:

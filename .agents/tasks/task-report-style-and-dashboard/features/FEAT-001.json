@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Overhaul report.py to integrate all 18 investors equally instead of framing as Buffett-style. Add disagreement section and bull/bear debate section.",
+  "status": "in_progress",
+  "steps": [
+    "1. In src/augur/report.py, rename the executive summary section title from '巴菲特裁决（执行摘要）' to '18位大师共识裁决（执行摘要）'. Change the subsection title from '综合评分卡' to '投资委员会综合评分'.",
+    "2. In the theme sections (_format_theme_section), ensure each agent's unique philosophy/framework is highlighted by adding a brief descriptor of their investment approach before their analysis. Use each agent's name and style prominently.",
+    "3. Add a new function _format_disagreement_section(results) that generates a '分歧焦点' section. This identifies the top areas where agents disagree (some bullish, some bearish on the same stock) and explains WHY they differ based on their philosophy.",
+    "4. Add a new function _format_bull_bear_debate(results) that shows the TOP 3 bullish agents' reasoning vs TOP 3 bearish agents' reasoning in a structured 'bear vs bull' debate format.",
+    "5. In _format_position_recommendation, add clear language stating this is a '18位大师加权共识建议' (consensus view from 18 masters), not one person's recommendation.",
+    "6. Update generate_report() to include the new disagreement and bull/bear debate sections after the theme analysis section.",
+    "7. Update tests/test_report.py to verify the new section names and new sections exist in the report output. Remove assertions for '巴菲特裁决' and replace with the new neutral title."
+  ],
+  "acceptance_criteria": [
+    "The executive summary no longer mentions '巴菲特裁决' - uses neutral '18位大师共识裁决' instead",
+    "A '分歧焦点' section appears in the generated report showing disagreements",
+    "A bull/bear debate section appears showing top 3 bullish vs top 3 bearish agents",
+    "The position recommendation section clearly states it is a consensus recommendation",
+    "pytest tests/test_report.py passes with all tests green"
+  ],
+  "verification": [
+    "pytest tests/test_report.py -v"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
