@@ -152,6 +152,11 @@ def inject_soul(profile_path: str, persona_id: str, format: str = "hermes", outp
     Returns:
         Path to the generated file
     """
+    # Validate format parameter
+    _VALID_FORMATS = ("hermes", "claude", "raw")
+    if format not in _VALID_FORMATS:
+        raise ValueError(f"Unknown format '{format}'. Supported: hermes, claude, raw")
+
     soul_content = generate_soul(persona_id)
 
     if output_dir:
@@ -165,26 +170,37 @@ def inject_soul(profile_path: str, persona_id: str, format: str = "hermes", outp
         profile_dir = out_dir / profile_path
         profile_dir.mkdir(parents=True, exist_ok=True)
         output_file = profile_dir / "soul.md"
-        output_file.write_text(soul_content, encoding="utf-8")
-        return output_file
-
     elif format == "claude":
         # For Claude format: write as a system prompt JSON snippet
+        output_file = out_dir / f"{profile_path}-claude.json"
+    else:
+        # Raw format: just the soul markdown
+        output_file = out_dir / f"{profile_path}-soul.md"
+
+    # Directory traversal protection: verify output stays within out_dir
+    resolved_output = output_file.resolve()
+    resolved_out_dir = out_dir.resolve()
+    if not str(resolved_output).startswith(str(resolved_out_dir)):
+        raise ValueError(
+            f"Path traversal detected: profile_path '{profile_path}' escapes output directory"
+        )
+
+    if format == "hermes":
+        profile_dir = output_file.parent
+        profile_dir.mkdir(parents=True, exist_ok=True)
+        output_file.write_text(soul_content, encoding="utf-8")
+    elif format == "claude":
         import json
         claude_config = {
             "name": profile_path,
             "persona_id": persona_id,
             "system_prompt": soul_content,
         }
-        output_file = out_dir / f"{profile_path}-claude.json"
         output_file.write_text(json.dumps(claude_config, ensure_ascii=False, indent=2), encoding="utf-8")
-        return output_file
-
     else:
-        # Raw format: just the soul markdown
-        output_file = out_dir / f"{profile_path}-soul.md"
         output_file.write_text(soul_content, encoding="utf-8")
-        return output_file
+
+    return output_file
 
 
 def inject_all_souls(profiles_dir: str, persona_mapping: dict, format: str = "hermes") -> list:

@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Fix critical security vulnerabilities in persona_loader.py eval() and soul.py directory traversal, plus cron.py shallow merge bug and concurrency issues",
+  "status": "in_progress",
+  "steps": [
+    "In src/augur/persona_loader.py: Replace eval() in _eval_rule_condition() with AST-based safe evaluation. Use ast.parse(condition, mode='eval') and walk the AST to only allow Compare, BoolOp, BinOp, UnaryOp, Num/Constant, Name (from allowed namespace), and Attribute nodes. Reject any Call, Lambda, ListComp, SetComp, DictComp, GeneratorExp, or Attribute chains that access __class__, __bases__, __subclasses__, __builtins__, etc. This prevents arbitrary code execution while still supporting conditions like 'pe > 25' and 'roe > 0.15 and gross_margins > 0.4'.",
+    "In src/augur/soul.py inject_soul(): Add path sanitization. After constructing the output path, call .resolve() and verify it starts with out_dir.resolve(). Raise ValueError if directory traversal is detected. Also validate the format parameter - raise ValueError for unknown formats (only 'hermes', 'claude', 'raw' are valid).",
+    "In src/augur/cron.py load_watchlist(): Replace shallow dict.update() with a recursive deep-merge helper that preserves nested defaults. When user specifies schedule.cron but not schedule.timezone, the timezone default should be preserved.",
+    "In src/augur/cron.py start_scheduler(): Add max_instances=1 to the add_job() call to prevent overlapping runs. Also add a simple file-based lock mechanism using a pidfile at ~/.augur/scheduler.pid - check if another scheduler is running before starting.",
+    "In src/augur/cron.py: Remove unused 'import os' statement.",
+    "Add comprehensive tests in tests/test_iteration5.py covering: (a) eval sandbox rejects malicious payloads like class introspection, __import__, lambda; (b) eval sandbox allows legitimate conditions like 'pe > 25', 'roe > 0.15 and gross_margins > 0.4'; (c) inject_soul raises ValueError on path traversal attempt with '../'; (d) inject_soul raises ValueError on invalid format; (e) load_watchlist deep-merges nested config correctly preserving timezone defaults; (f) start_scheduler sets max_instances=1"
+  ],
+  "acceptance_criteria": [
+    "eval() in _eval_rule_condition is replaced with AST-based safe evaluation that blocks class introspection attacks",
+    "inject_soul raises ValueError when profile_path contains directory traversal sequences",
+    "inject_soul raises ValueError when format is not one of 'hermes', 'claude', 'raw'",
+    "load_watchlist correctly preserves nested defaults when user config is partial",
+    "start_scheduler uses max_instances=1 and checks for existing pidfile",
+    "Unused os import is removed from cron.py",
+    "All new tests pass and all existing 136 tests still pass"
+  ],
+  "verification": [
+    "python3 -m pytest tests/ -x -q (all tests pass including new test_iteration5.py)",
+    "python3 -c to confirm eval sandbox blocks malicious payloads",
+    "python3 -c to confirm path traversal is blocked"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

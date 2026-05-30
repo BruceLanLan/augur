@@ -33,9 +33,59 @@ _CTX_FIELDS = {
 
 
 def _eval_rule_condition(condition: str, ctx: MarketContext) -> bool:
-    """Safely evaluate a boolean rule condition string against a MarketContext."""
+    """Safely evaluate a boolean rule condition string against a MarketContext.
+
+    Uses AST-based validation to prevent arbitrary code execution.
+    Only allows comparisons, boolean ops, arithmetic, constants, and
+    names from the MarketContext namespace.
+    """
+    import ast
+
     ns = {field: getattr(ctx, field, 0) for field in _CTX_FIELDS}
     ns.update({"True": True, "False": False})
+
+    # Allowed AST node types for safe evaluation
+    _ALLOWED_NODES = (
+        ast.Expression,
+        ast.Compare,
+        ast.BoolOp,
+        ast.BinOp,
+        ast.UnaryOp,
+        ast.Constant,
+        ast.Name,
+        ast.Load,
+        # Comparison operators
+        ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE,
+        ast.Is, ast.IsNot, ast.In, ast.NotIn,
+        # Boolean operators
+        ast.And, ast.Or, ast.Not,
+        # Arithmetic operators
+        ast.Add, ast.Sub, ast.Mult, ast.Div, ast.FloorDiv, ast.Mod, ast.Pow,
+        ast.USub, ast.UAdd,
+    )
+
+    try:
+        tree = ast.parse(condition, mode="eval")
+    except SyntaxError:
+        logger.warning("Invalid condition syntax: %s", condition)
+        return False
+
+    # Walk the AST and reject unsafe nodes
+    for node in ast.walk(tree):
+        if not isinstance(node, _ALLOWED_NODES):
+            logger.warning(
+                "Blocked unsafe AST node %s in condition: %s",
+                type(node).__name__, condition,
+            )
+            return False
+        # Only allow Name nodes that reference the allowed namespace
+        if isinstance(node, ast.Name) and node.id not in ns:
+            logger.warning(
+                "Blocked unknown name '%s' in condition: %s",
+                node.id, condition,
+            )
+            return False
+
     try:
         return bool(eval(condition, {"__builtins__": {}}, ns))  # noqa: S307
     except Exception:

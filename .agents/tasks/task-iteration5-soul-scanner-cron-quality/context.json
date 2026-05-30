@@ -1,0 +1,25 @@
+{
+  "project_type": "Python investment analysis multi-agent system with CLI, API, bot integrations, and MCP server",
+  "language": "Python 3.11",
+  "build_system": "pip with pyproject.toml, pytest for testing",
+  "test_framework": "pytest with tests/ directory, class-based test organization",
+  "build_command": "pip install -e '.[dev]'",
+  "test_command": "python3 -m pytest tests/ -x -q",
+  "verification_instructions": "Run pytest to confirm all tests pass, check for 0 failures",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e '.[dev]' in the project root",
+  "environment_constraints": "OPEN_INTERNET network mode, Python 3.11 via pyenv, all dependencies pre-installed",
+  "contribution_requirements": "All 18 personas must remain functional, existing tests must pass",
+  "key_patterns": "Backward-compat shims in scanner/ re-export from src/augur/. YAML safe_load used everywhere. BaseAgent pattern with analyze() method. MarketContext dataclass for input.",
+  "relevant_files": [
+    "src/augur/soul.py",
+    "src/augur/cron.py",
+    "src/augur/persona_loader.py",
+    "scanner/__init__.py",
+    "scanner/personas/__init__.py",
+    "scanner/persona_loader.py",
+    "tests/test_soul.py",
+    "tests/test_cron.py"
+  ],
+  "directory_structure": "src/augur/ = main package, scanner/ = backward-compat shims, skills/ = 18 SKILL.md files, personas/ = markdown persona docs, tests/ = pytest tests, dashboard/ = FastAPI app"
+}
