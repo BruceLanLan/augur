@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Add comprehensive tests for iteration 3 changes: bot command parsing, config validation, dashboard API edge cases, and parallel coordinator",
+  "status": "completed",
+  "steps": [
+    "Create tests/test_iteration3.py with the following test classes:",
+    "TestBotTickerExtraction: test that _extract_ticker in the new utils.py correctly filters stop words, extracts valid tickers, handles edge cases like empty string, all-lowercase, Chinese characters mixed with tickers",
+    "TestBotCommandParsing: test _parse_metrics from telegram/slack/wechat bots with various inputs including malformed key=value pairs, negative numbers, extremely large numbers",
+    "TestConfigValidation: test that config.py handles malformed YAML gracefully (non-dict, empty file, unicode errors), test set_config with deeply nested paths, test reset_config clears state",
+    "TestCoordinatorParallel: test that analyze_with_all produces the same results whether running sequentially or in parallel (deterministic agent scoring), test that errors in individual agents don't crash the parallel execution",
+    "TestDashboardAPIEdgeCases: use FastAPI TestClient to test /api/analyze with special characters in ticker (should return 400), test /api/watchlist/add with empty ticker, test /health endpoint returns expected structure",
+    "TestSignalsXSS: verify that ticker values with HTML special characters like <script> are properly rejected by the API ticker validation regex"
+  ],
+  "acceptance_criteria": [
+    "tests/test_iteration3.py exists with at least 15 new test functions",
+    "All tests pass: python -m pytest tests/test_iteration3.py -q",
+    "Full test suite passes: python -m pytest tests/ -q",
+    "Tests cover: bot ticker extraction, bot metric parsing, config edge cases, parallel coordinator, API validation"
+  ],
+  "verification": [
+    "python -m pytest tests/test_iteration3.py -v",
+    "python -m pytest tests/ -q"
+  ],
+  "blocked_reason": null,
+  "findings": "All 19 new tests pass. Full suite now at 118 tests (99 existing + 19 new). Key discovery: extract_ticker uppercases entire input before matching, so all words become candidates. The regex uses \\b word boundary which does not match inside Chinese characters without spaces. XSS test used semicolons since angle brackets in URL paths cause 404 at routing level."
+}
