@@ -1,0 +1,38 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Fix division-by-zero, score clamping, and edge case bugs across all 16 remaining persona files (buffett.py and graham.py were fixed in iteration 1)",
+  "status": "completed",
+  "steps": [
+    "In src/augur/personas/munger.py line ~74: guard `context.atr/context.price*100` against price=0 (ZeroDivisionError). Also guard the PEG calculation `context.pe / (context.earnings_growth * 100)` against earnings_growth=0.",
+    "In src/augur/personas/munger.py: ensure total_score is clamped to [0, 10] before returning (it uses raw weighted sum which could exceed 10 with multipliers)",
+    "In src/augur/personas/dalio.py line ~64: guard `context.atr / context.price * 100` against price=0",
+    "In src/augur/personas/dalio.py: the total_score is a weighted sum using 0.25 weights summing to 1.0, but individual factors can be >10 with stability_multiplier. Clamp total_score to [0,10]",
+    "In src/augur/personas/soros.py: total_score is weighted sum that should be clamped to [0,10]",
+    "In src/augur/personas/marks.py: total_score is weighted sum that should be clamped to [0,10]",
+    "In src/augur/personas/cathie_wood.py: total_score is weighted sum that should be clamped to [0,10]",
+    "In src/augur/personas/fisher.py: total_score is weighted sum that should be clamped to [0,10]",
+    "In src/augur/personas/lynch.py: total_score is weighted sum but factors use multipliers (growth_multiplier, peg_multiplier) that could exceed 10. Clamp total_score to [0,10]",
+    "In src/augur/personas/thiel.py: total_score should be clamped to [0,10]",
+    "In src/augur/personas/dayu.py: total_score should be clamped to [0,10]. Also in _score_momentum_sentiment, the elif chain for change_pct has a logic bug: -10 < change_pct < -5 enters the first elif (-5) rather than the second (-10), meaning change_pct=-7 gives score-=1 not -=2. Fix by reversing order to check most negative first.",
+    "In src/augur/personas/arps.py: total_score should be clamped to [0,10]",
+    "In src/augur/personas/aschenbrenner.py: total_score should be clamped to [0,10]",
+    "In src/augur/personas/serenity.py: total_score should be clamped to [0,10]",
+    "In src/augur/personas/duan_yongping.py: total_score should be clamped to [0,10]",
+    "In src/augur/personas/zhang_lei.py: total_score should be clamped to [0,10]",
+    "In src/augur/personas/li_lu.py: total_score should be clamped to [0,10]",
+    "In src/augur/personas/dan_bin.py: total_score should be clamped to [0,10]"
+  ],
+  "acceptance_criteria": [
+    "All 18 persona analyze() methods clamp total_score to [0, 10] before returning",
+    "No ZeroDivisionError when context.price=0 or context.earnings_growth=0",
+    "Running pytest tests/test_registry.py passes including the existing test_no_negative_scores_extreme_inputs test",
+    "A new test with all-zero context (price=0, pe=0, etc.) does not crash any persona"
+  ],
+  "verification": [
+    "python -m pytest tests/test_registry.py -x -q",
+    "python -c \"from augur.registry import AgentRegistry; from augur.personas.base import MarketContext; r=AgentRegistry(); ctx=MarketContext(ticker='TEST'); [a.analyze(ctx) for a in r.get_all()]; print('All OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": "All 16 persona files fixed. Division-by-zero guards added to munger.py (price=0 and earnings_growth=0). dalio.py already had the guard in place. dayu.py elif chain reordered for correct negative change_pct scoring. Score clamping max(0.0, min(10.0, total_score)) added to all 16 files. All 86 tests pass. Extreme-value tests confirm scores stay in [0,10]."
+}

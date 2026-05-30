@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Add comprehensive regression tests for iteration 2 fixes",
+  "status": "pending",
+  "steps": [
+    "Create tests/test_iteration2.py with the following test cases:",
+    "test_all_personas_clamp_score_0_10: For each of the 18 agents, call analyze() with extreme positive inputs (pe=1000, gross_margins=2.0, revenue_growth=5.0) and extreme negative inputs (pe=-5, roe=-1, gross_margins=-0.5, debt_ratio=2.0). Assert 0 <= score <= 10 for every result.",
+    "test_all_personas_zero_context: Create a MarketContext with all defaults (ticker='ZERO', everything else 0). Analyze with all agents. Assert no exception and all scores in [0,10].",
+    "test_munger_no_division_by_zero: Test Munger with price=0 and earnings_growth=0. Assert no exception.",
+    "test_dalio_no_division_by_zero: Test Dalio with price=0. Assert no exception.",
+    "test_coordinator_empty_results: Call get_consensus({}) and assert it returns neutral with score 0.",
+    "test_coordinator_all_error_results: Create results dict where every agent has SignalType.ERROR and coverage_confidence=0. Call get_consensus() and assert no ZeroDivisionError.",
+    "test_coordinator_consensus_score_clamped: Verify consensus score is always in [0, 10] even with extreme agent scores.",
+    "test_mcp_ticker_validation: Import mcp_server._build_context, call augur_analyze with ticker='<script>alert(1)</script>' (via direct call), verify it returns an error string.",
+    "test_dayu_momentum_ordering: Test that DayuAgent handles change_pct=-15 correctly (should get score-=2 not -=1)."
+  ],
+  "acceptance_criteria": [
+    "All new tests pass with python -m pytest tests/test_iteration2.py -v",
+    "Tests genuinely exercise the code paths fixed in this iteration",
+    "At least 9 distinct test functions"
+  ],
+  "verification": [
+    "python -m pytest tests/test_iteration2.py -v",
+    "python -m pytest tests/ -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

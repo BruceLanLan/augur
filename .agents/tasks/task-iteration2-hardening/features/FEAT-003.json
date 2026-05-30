@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Dashboard XSS prevention and remaining datetime.utcnow() fix",
+  "status": "pending",
+  "steps": [
+    "In dashboard/templates/stocks.html: The renderMarkdown() function uses innerHTML with user-facing data (agent reasoning, key_findings, risks). The data comes from backend Python strings, not raw user input, BUT the create-persona feature allows user YAML that becomes reasoning text. Add HTML entity escaping in renderMarkdown() before applying formatting: escape <, >, &, quotes first, then apply markdown formatting.",
+    "In dashboard/templates/stocks.html: The agent_name field is inserted via innerHTML. Ensure it goes through a sanitization step (textContent assignment or escape function).",
+    "Review dashboard/app.py: confirm no remaining datetime.utcnow() calls exist (iteration 1 claimed to fix but check). All timestamps should use datetime.now(timezone.utc).",
+    "In dashboard/app.py api_run_watchlist_analysis(): The consensus `key_findings` are returned as raw strings in JSON. This is safe for JSON API responses. No action needed on the backend for JSON-only endpoints.",
+    "Add a simple escapeHtml() JS helper function in base.html that escapes HTML entities, and use it in stocks.html's renderMarkdown and agent name rendering"
+  ],
+  "acceptance_criteria": [
+    "renderMarkdown() escapes HTML entities before applying formatting",
+    "Agent names rendered via innerHTML are sanitized",
+    "No datetime.utcnow() calls remain in dashboard/app.py",
+    "A test persona with name containing <script>alert(1)</script> does not execute JS when rendered"
+  ],
+  "verification": [
+    "grep -rn 'utcnow()' dashboard/app.py || echo 'No utcnow found - PASS'",
+    "grep -n 'escapeHtml' dashboard/templates/base.html dashboard/templates/stocks.html"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
