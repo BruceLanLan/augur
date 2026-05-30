@@ -246,10 +246,20 @@ class TestFormatThemeSection:
 
     def test_theme_with_no_matching_agents(self):
         results = {"buffett": _make_agent_response("buffett", "Warren Buffett")}
-        section = _format_theme_section("技术与量化", ["arps", "dayu", "zhang_lei"], results)
+        section = _format_theme_section("技术与量化", ["arps", "dayu"], results)
 
         assert "技术与量化" in section
         assert "暂无" in section
+
+    def test_zhang_lei_in_value_theme(self):
+        """Verify zhang_lei is classified under value investing, not technical."""
+        results = _make_full_results()
+        section = _format_theme_section("价值投资", THEME_GROUPS["价值投资"]["agents"], results)
+
+        assert "Zhang Lei" in section
+        # zhang_lei should NOT be in the technical theme
+        tech_section = _format_theme_section("技术与量化", THEME_GROUPS["技术与量化"]["agents"], results)
+        assert "Zhang Lei" not in tech_section
 
     def test_theme_with_error_agent(self):
         results = {
@@ -418,3 +428,27 @@ class TestReportAPIEndpoint:
         client = TestClient(app)
         response = client.get("/api/report/INVALID!!!TICKER")
         assert response.status_code == 400
+
+    def test_report_post_endpoint(self):
+        """Test the POST /api/report/ endpoint with pre-computed data."""
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from fastapi.testclient import TestClient
+        from dashboard.app import app
+
+        client = TestClient(app)
+        # First run analysis to get data
+        response = client.get("/api/analyze/AAPL?pe=25&auto_fetch=false")
+        assert response.status_code == 200
+        analysis_data = response.json()
+
+        # Now POST that data to the report endpoint
+        response = client.post("/api/report/AAPL", json=analysis_data)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"
+        assert data["ticker"] == "AAPL"
+        assert "report" in data
+        assert "深度分析报告" in data["report"]
+        assert data["data_source"] == "cached"

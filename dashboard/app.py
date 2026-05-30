@@ -511,6 +511,82 @@ async def report_ticker(
     }
 
 
+@app.post("/api/report/{ticker}")
+async def generate_report_from_data(ticker: str, request: Request):
+    """Generate report from pre-computed analysis data (avoids re-running agents)."""
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format.")
+
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON body")
+
+    # Reconstruct from pre-computed data
+    from augur.personas.base import AgentResponse, SignalType
+
+    consensus_data = body.get("consensus", {})
+    agents_data = body.get("agents", [])
+    market_data = body.get("market_data", {})
+
+    # Build context from market_data
+    ctx = MarketContext(
+        ticker=ticker.upper(),
+        price=market_data.get("price", 0),
+        pe=market_data.get("pe", 0),
+        pb=market_data.get("pb", 0),
+        roe=market_data.get("roe", 0),
+        gross_margins=market_data.get("gross_margins", 0),
+        operating_margins=market_data.get("operating_margins", 0),
+        revenue_growth=market_data.get("revenue_growth", 0),
+        debt_ratio=market_data.get("debt_ratio", 0),
+        fcf=market_data.get("fcf", 0),
+        market_cap=market_data.get("market_cap", 0),
+        sector=market_data.get("sector", ""),
+        industry=market_data.get("industry", ""),
+    )
+
+    # Reconstruct AgentResponses
+    signal_map = {"bullish": SignalType.BULLISH, "neutral": SignalType.NEUTRAL, "bearish": SignalType.BEARISH, "error": SignalType.ERROR}
+    results = {}
+    for agent_data in agents_data:
+        agent_id = agent_data.get("agent_id", "")
+        results[agent_id] = AgentResponse(
+            agent_id=agent_id,
+            agent_name=agent_data.get("agent_name", agent_id),
+            signal=signal_map.get(agent_data.get("signal", "neutral"), SignalType.NEUTRAL),
+            confidence=agent_data.get("confidence", 0),
+            score=agent_data.get("score", 0),
+            reasoning=agent_data.get("reasoning", ""),
+            key_findings=agent_data.get("key_findings", []),
+            risks=agent_data.get("risks", []),
+            metadata=agent_data.get("metadata", {}),
+        )
+
+    # Reconstruct consensus
+    consensus_resp = AgentResponse(
+        agent_id="consensus",
+        agent_name="Multi-Agent Consensus",
+        signal=signal_map.get(consensus_data.get("signal", "neutral"), SignalType.NEUTRAL),
+        confidence=consensus_data.get("confidence", 0),
+        score=consensus_data.get("score", 0),
+        reasoning=consensus_data.get("reasoning", ""),
+        key_findings=consensus_data.get("key_findings", []),
+        risks=consensus_data.get("risks", []),
+        metadata=consensus_data.get("metadata", {}),
+    )
+
+    report_md = generate_report(ticker.upper(), ctx, results, consensus_resp)
+
+    return {
+        "status": "ok",
+        "ticker": ticker.upper(),
+        "report": report_md,
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "data_source": "cached",
+    }
+
+
 # ============ Config API Routes ============
 
 class ConfigUpdateBody(BaseModel):

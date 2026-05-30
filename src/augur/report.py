@@ -15,7 +15,7 @@ from augur.personas.base import AgentResponse, MarketContext, SignalType
 
 THEME_GROUPS = {
     "价值投资": {
-        "agents": ["buffett", "graham", "munger", "duan_yongping", "li_lu", "dan_bin"],
+        "agents": ["buffett", "graham", "munger", "duan_yongping", "li_lu", "dan_bin", "zhang_lei"],
         "description": "价值投资视角，关注安全边际、内在价值与长期持有",
     },
     "成长投资": {
@@ -27,7 +27,7 @@ THEME_GROUPS = {
         "description": "宏观与风险管理视角，关注周期、风险溢价与尾部风险",
     },
     "技术与量化": {
-        "agents": ["arps", "dayu", "zhang_lei"],
+        "agents": ["arps", "dayu"],
         "description": "技术分析与量化视角，关注价格行为、动量与资金流向",
     },
 }
@@ -136,7 +136,8 @@ def _format_theme_section(theme_name: str, agent_ids: List[str], results: Dict[s
         lines.append("")
 
         if response.reasoning:
-            lines.append(f"- **核心逻辑**: {response.reasoning}")
+            reasoning_text = response.reasoning[:500] + "..." if len(response.reasoning) > 500 else response.reasoning
+            lines.append(f"- **核心逻辑**: {reasoning_text}")
 
         if response.key_findings:
             lines.append("- **关键发现**:")
