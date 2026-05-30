@@ -1,0 +1,33 @@
+{
+  "project_type": "Python multi-agent investment analysis platform with FastAPI dashboard, CLI, MCP server, and multi-platform bots",
+  "language": "Python 3.11",
+  "build_system": "pip/pyproject.toml with Makefile convenience targets",
+  "test_framework": "pytest with test files in tests/",
+  "build_command": "pip install -e . (already installed)",
+  "test_command": "python -m pytest tests/ -q",
+  "verification_instructions": "Run python -m pytest tests/ -q and confirm all tests pass (currently 99)",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e '.[dev]' - already set up",
+  "environment_constraints": "OPEN_INTERNET network mode. Python 3.11 available. FastAPI/uvicorn/jinja2/pydantic installed.",
+  "contribution_requirements": "Code must not break existing tests. All new code follows existing patterns.",
+  "key_patterns": "BaseAgent subclasses with analyze() method. MarketContext dataclass. AgentResponse with signal/score/confidence. DecisionCoordinator for consensus. Dashboard uses FastAPI+Jinja2. Bots use platform-specific SDKs.",
+  "relevant_files": [
+    "dashboard/templates/base.html",
+    "dashboard/templates/signals.html",
+    "dashboard/templates/stocks.html",
+    "dashboard/templates/index.html",
+    "dashboard/templates/backtest.html",
+    "dashboard/templates/personas.html",
+    "dashboard/templates/settings.html",
+    "dashboard/templates/create_persona.html",
+    "dashboard/app.py",
+    "src/augur/bots/telegram_bot.py",
+    "src/augur/bots/slack_bot.py",
+    "src/augur/bots/wechat_bot.py",
+    "src/augur/bots/lark_bot.py",
+    "src/augur/config.py",
+    "src/augur/registry.py",
+    "tests/test_iteration2.py"
+  ],
+  "directory_structure": "src/augur/ - main package, dashboard/ - FastAPI web app, tests/ - pytest tests, config/ - YAML config"
+}
