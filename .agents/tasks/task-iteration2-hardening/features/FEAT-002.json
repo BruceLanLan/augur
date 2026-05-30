@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Fix coordinator edge cases and MCP server input validation",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "In src/augur/registry.py DecisionCoordinator.get_consensus(): Clamp the final consensus total_score to [0, 10] (after meta-model blending and all weighting, total_score could drift outside bounds)",
     "In src/augur/registry.py: The Kelly criterion block has `edge = max(0, (score - 5) / 5)` which is fine, but ensure pct is clamped: `pct = max(0.0, min(20.0, ...))` to handle NaN or negative edge cases",
