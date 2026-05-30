@@ -128,12 +128,8 @@ class TestDebateFeature:
         assert history[2].content == "Debt is high"
 
     def test_augur_debate_mcp_tool(self):
-        """augur_debate function returns a string with 'Debate Results' and agent positions."""
-        from augur.mcp_server import create_server
-
-        # The augur_debate function is registered on the MCP server.
-        # We can call it by accessing the function from the module directly.
-        # Use the same logic as the MCP tool function.
+        """augur_debate produces valid data structures that the MCP tool consumes."""
+        # Verify run_debate + get_consensus produce valid data for the MCP tool
         from augur.registry import AgentRegistry, DecisionCoordinator
         from augur.personas.base import MarketContext
 
@@ -146,24 +142,20 @@ class TestDebateFeature:
         results = coordinator.run_debate(ctx, rounds=2)
         consensus = coordinator.get_consensus(results, ticker="NVDA", context=ctx)
 
-        # Reproduce what augur_debate returns
-        lines = [
-            f"Debate Results for NVDA (2 rounds, {len(results)} agents):",
-            f"  Consensus Signal: {consensus.signal.value}",
-            f"  Score: {consensus.score:.1f}/10",
-            f"  Confidence: {consensus.confidence:.0%}",
-            "",
-            "Agent Positions After Debate:",
-        ]
-        for agent_id, result in results.items():
-            lines.append(f"  {result.agent_name:20s} | {result.signal.value:8s} | {result.score:.1f}/10")
-        output = "\n".join(lines)
+        # Verify results has 18+ entries (one per agent)
+        assert len(results) >= 18
 
-        assert "Debate Results" in output
-        assert "NVDA" in output
-        assert "Agent Positions" in output
-        # Should have agent lines
-        assert output.count("|") >= 18
+        # Verify consensus has a valid signal
+        valid_signals = {s.value for s in SignalType}
+        assert consensus.signal.value in valid_signals
+
+        # Verify each result has the fields the MCP tool formats
+        for agent_id, result in results.items():
+            assert hasattr(result, "agent_name")
+            assert hasattr(result, "signal")
+            assert result.signal.value in valid_signals
+            assert hasattr(result, "score")
+            assert 0 <= result.score <= 10
 
     def test_debate_rounds_clamped(self):
         """run_debate with rounds parameter is respected (verify key_findings count)."""
@@ -472,3 +464,12 @@ class TestICReport:
             # Verify sorted by ic_20d descending
             for i in range(len(leaderboard) - 1):
                 assert leaderboard[i].ic_20d >= leaderboard[i + 1].ic_20d
+
+    def test_run_backtest_empty_data(self):
+        """run_backtest with empty data returns empty BacktestResult."""
+        bt = Backtester()
+        result = bt.run_backtest("EMPTY", [], [])
+        assert result.ticker == "EMPTY"
+        assert len(result.records) == 0
+        assert len(result.agent_ics) == 0
+        assert result.consensus_ic == 0.0
