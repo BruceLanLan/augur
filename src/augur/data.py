@@ -21,7 +21,7 @@ from augur.personas.base import MarketContext
 # ============ Cache ============
 
 _cache: Dict[str, Any] = {}
-_CACHE_TTL = 300  # 5 minutes
+_CACHE_TTL = 180  # 3 minutes
 
 
 def _cache_get(key: str) -> Optional[Any]:
@@ -40,6 +40,19 @@ def _cache_set(key: str, value: Any):
     _cache[key] = {"value": value, "ts": time.time()}
 
 
+def clear_cache():
+    """Clear all cached data entries."""
+    _cache.clear()
+
+
+def cache_info() -> Dict[str, Any]:
+    """Return cache metadata: current size and TTL setting."""
+    return {
+        "size": len(_cache),
+        "ttl_seconds": _CACHE_TTL,
+    }
+
+
 # ============ yfinance Helpers ============
 
 def _get_yfinance():
@@ -56,7 +69,7 @@ def _get_yfinance():
 
 # ============ Public API ============
 
-def fetch_market_context(ticker: str) -> MarketContext:
+def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketContext:
     """
     Fetch real-time data for a ticker and return a populated MarketContext.
 
@@ -65,14 +78,19 @@ def fetch_market_context(ticker: str) -> MarketContext:
     - HK stocks: 0700.HK, 9988.HK
     - A-shares: 600519.SS, 000858.SZ
 
+    Args:
+        ticker: Stock symbol
+        force_refresh: If True, bypass the cache and fetch fresh data
+
     Fills: price, pe, pb, ps, roe, gross_margins, operating_margins,
            revenue_growth, earnings_growth, debt_ratio, fcf, market_cap,
            current_ratio, sector, industry, rsi, sma50, etc.
     """
     cache_key = f"ctx:{ticker.upper()}"
-    cached = _cache_get(cache_key)
-    if cached is not None:
-        return cached
+    if not force_refresh:
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
 
     yf = _get_yfinance()
     stock = yf.Ticker(ticker)

@@ -280,6 +280,7 @@ a:hover { color: #ffaa33; }
     padding: 24px 32px;
     transition: margin-left var(--transition-speed) ease;
     max-width: calc(100% - var(--sidebar-width));
+    overflow-x: hidden;
 }
 
 .sidebar.collapsed ~ .app-main,
@@ -880,6 +881,17 @@ input, select, textarea {
 .ticker-btn:hover {
     background: rgba(255, 140, 0, 0.1);
     border-color: var(--accent-orange);
+}
+
+/* --- Ticker & Agent Name Overflow --- */
+.recent-item-ticker,
+.persona-row .logo-text,
+.persona-row span,
+.data-value {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 200px;
 }
 
 /* --- Filter Input --- */
