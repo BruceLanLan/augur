@@ -18,10 +18,7 @@ Environment variables:
 
 import os
 import re
-import asyncio
 from typing import Optional, Dict
-
-from augur.bots.utils import STOP_WORDS
 
 # Signal emoji mapping
 SIGNAL_EMOJI = {

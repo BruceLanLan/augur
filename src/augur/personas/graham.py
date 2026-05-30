@@ -4,7 +4,7 @@ GrahamAgent - Benjamin Graham 深度价值/安全边际
 """
 
 from typing import Dict
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class GrahamAgent(BaseAgent):

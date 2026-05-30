@@ -3,7 +3,7 @@
 DuanYongpingAgent - 段永平 本分·做正确的事
 """
 
-from typing import Dict, List
+from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

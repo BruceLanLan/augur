@@ -11,8 +11,11 @@ Provides 6 tools:
   - augur_debate
 """
 
+import logging
 import re
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 # Ticker validation pattern: 1-15 alphanumeric chars, dots, or hyphens
 _TICKER_PATTERN = re.compile(r'^[A-Za-z0-9.\-]{1,15}$')

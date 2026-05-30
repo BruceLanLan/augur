@@ -3,7 +3,6 @@
 ArpsAgent - Crypto/Gold专属 链上数据+实际利率框架
 """
 
-from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

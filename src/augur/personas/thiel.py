@@ -3,7 +3,6 @@
 ThielAgent - Peter Thiel 从0到1垄断投资框架
 """
 
-from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

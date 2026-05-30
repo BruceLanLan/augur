@@ -3,7 +3,6 @@
 MarksAgent - Howard Marks 市场情绪钟摆
 """
 
-from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

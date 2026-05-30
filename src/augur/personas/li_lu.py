@@ -3,7 +3,7 @@
 LiLuAgent - 李录 深度价值·安全边际·新兴市场
 """
 
-from typing import Dict, List
+from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

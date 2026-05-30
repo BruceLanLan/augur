@@ -43,6 +43,8 @@ except ImportError:
 from augur.config import get_config, set_config, save_config, reset_config
 from augur.errors import api_error_response
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(
     title="Augur — 多智能体投资分析",
     description="18位虚拟投资大师，多维度共识分析",
@@ -57,7 +59,6 @@ async def global_exception_handler(request: Request, exc: Exception):
 
     Never leak stack traces to clients. Log the real error for debugging.
     """
-    logger = logging.getLogger("augur.dashboard")
     logger.error(f"Unhandled exception on {request.url.path}: {type(exc).__name__}: {exc}")
 
     return JSONResponse(

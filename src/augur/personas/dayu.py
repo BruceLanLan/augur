@@ -17,7 +17,7 @@ DayuAgent (大宇) — 币圈"看准+重仓"投资人格
   - 小资金快速成长策略
 """
 
-from typing import Dict, List, Optional
+from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

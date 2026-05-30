@@ -10,7 +10,6 @@ SerenityAgent - Serenity (@aleabitoreddit) 供应链卡脖子逆向工程交易
 - 地缘叠加: 半导体供应链物理与地缘政治地图
 """
 
-from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

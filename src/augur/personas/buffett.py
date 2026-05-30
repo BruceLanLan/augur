@@ -3,7 +3,7 @@
 BuffettAgent - Warren Buffett 护城河价值投资
 """
 
-from typing import Dict, List
+from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

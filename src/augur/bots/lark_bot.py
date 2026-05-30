@@ -25,12 +25,9 @@ Environment Variables:
 import os
 import re
 import json
-import hashlib
 import time
 import threading
 from typing import Optional, Dict, Any, List
-
-from augur.bots.utils import STOP_WORDS
 
 
 # Signal emoji mapping

@@ -6,7 +6,6 @@ Provides consistent error formatting for both API and CLI contexts.
 """
 
 from datetime import datetime, timezone
-from typing import Optional
 
 
 def error_response(
