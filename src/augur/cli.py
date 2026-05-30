@@ -142,23 +142,61 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
                     all_results[agent.agent_id] = {"error": str(e)}
             click.echo(_json.dumps(all_results, ensure_ascii=False, indent=2))
         else:
-            from augur.cli_format import format_table, signal_icon, color_text
-            click.echo(f"Analyzing {ticker.upper()} with all {len(registry.get_all())} agents...\n")
-            headers = ["Agent", "Signal", "Score", "Confidence"]
-            rows = []
-            for agent in registry.get_all():
-                try:
-                    result = agent.analyze(ctx)
-                    icon = signal_icon(result.signal.value)
-                    rows.append([
-                        result.agent_name,
-                        f"{icon} {result.signal.value}",
-                        f"{result.score:.1f}/10",
-                        f"{result.confidence:.0%}",
-                    ])
-                except Exception as e:
-                    rows.append([agent.name, "ERROR", "-", str(e)])
-            click.echo(format_table(headers, rows))
+            from augur.registry import DecisionCoordinator
+            from augur.cli_format import signal_icon, clean_output
+
+            coordinator = DecisionCoordinator(registry)
+            results = coordinator.analyze_with_all(ctx)
+            consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
+
+            # Build the README-style consensus summary box
+            separator = "\u2501" * 46  # heavy horizontal line
+
+            num_agents = len(results)
+            click.echo(separator)
+            click.echo(f"  {ticker.upper()} \u2014 {num_agents} Masters Consensus")
+            click.echo(separator)
+
+            icon = signal_icon(consensus.signal.value)
+            click.echo(f"  Signal:     {icon} {consensus.signal.value.upper()}")
+            click.echo(f"  Score:      {consensus.score:.1f} / 10")
+            click.echo(f"  Confidence: {consensus.confidence:.0%}")
+
+            pos = consensus.metadata.get("position_sizing", {})
+            if pos:
+                click.echo(f"  Kelly Size: {pos.get('position_pct', 0):.1f}%")
+
+            # Key Findings
+            if consensus.key_findings:
+                click.echo("")
+                click.echo("  Key Findings:")
+                # Use emoji bullets matching README style
+                finding_emojis = ["\U0001f6e1\ufe0f", "\u26a1", "\U0001f680", "\U0001f4a1", "\U0001f4ca"]
+                for i, finding in enumerate(consensus.key_findings):
+                    emoji = finding_emojis[i % len(finding_emojis)]
+                    click.echo(f"    \u2022 {emoji} {clean_output(finding)}")
+
+            # Signal distribution breakdown
+            click.echo("")
+            from augur.personas.base import SignalType
+            bullish_agents = [aid for aid, r in results.items() if r.signal == SignalType.BULLISH]
+            neutral_agents = [aid for aid, r in results.items() if r.signal == SignalType.NEUTRAL]
+            bearish_agents = [aid for aid, r in results.items() if r.signal == SignalType.BEARISH]
+
+            if bullish_agents:
+                names = ", ".join(bullish_agents[:5])
+                suffix = f"..." if len(bullish_agents) > 5 else ""
+                click.echo(f"  BULLISH ({len(bullish_agents)}): {names}{suffix}")
+            if neutral_agents:
+                names = ", ".join(neutral_agents[:5])
+                suffix = f"..." if len(neutral_agents) > 5 else ""
+                click.echo(f"  NEUTRAL  ({len(neutral_agents)}): {names}{suffix}")
+            if bearish_agents:
+                names = ", ".join(bearish_agents[:5])
+                suffix = f"..." if len(bearish_agents) > 5 else ""
+                click.echo(f"  BEARISH ({len(bearish_agents)}): {names}{suffix}")
+
+            click.echo(separator)
 
 
 @main.command("consensus")

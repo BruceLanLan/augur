@@ -74,7 +74,10 @@ class TestCLI:
     def test_analyze_all(self, runner):
         result = runner.invoke(main, ["analyze", "AAPL", "--pe", "25"])
         assert result.exit_code == 0
-        assert "Analyzing AAPL" in result.output
+        assert "AAPL" in result.output
+        assert "Masters Consensus" in result.output
+        assert "Signal:" in result.output
+        assert "Score:" in result.output
 
     def test_consensus_runs(self, runner):
         result = runner.invoke(main, ["consensus", "NVDA", "--pe", "60", "--gross-margins", "0.75"])
