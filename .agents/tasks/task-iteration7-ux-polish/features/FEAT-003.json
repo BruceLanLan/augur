@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Graceful degradation for optional dependencies and comprehensive test coverage for iteration 7 changes",
+  "status": "completed",
+  "steps": [
+    "Create src/augur/optional_deps.py module that provides safe import wrappers: (1) require_optional(package_name, feature_name, install_extra) that raises a clear UserFacingError with pip install instructions, (2) is_available(package_name) that returns bool without raising, (3) a registry of optional deps mapping package to (feature_description, install_extra).",
+    "In src/augur/cli.py, update the commands that use optional deps (fetch, cron-run, cron-start, telegram, slack, wechat, lark, backtest --live) to use the new optional_deps module for consistent error messaging.",
+    "In dashboard/app.py, update the /api/fetch/{ticker} and /api/search endpoints to use optional_deps for consistent 501 responses with actionable messages.",
+    "Add a test_graceful_degradation section in tests/test_iteration7.py that: (1) mocks yfinance as unavailable and verifies CLI gives helpful message, (2) mocks apscheduler as unavailable and verifies cron commands give helpful message, (3) verifies core analyze/consensus commands work without optional deps.",
+    "Add a test_cli_output_format section in tests/test_iteration7.py that: (1) tests --no-color flag strips formatting, (2) tests --json produces valid json.loads() output, (3) tests help text completeness for all commands.",
+    "Run the full test suite to ensure no regressions: python -m pytest tests/ -x -q"
+  ],
+  "acceptance_criteria": [
+    "Commands that only need core deps (analyze, consensus, list-personas) work without yfinance/apscheduler installed",
+    "When yfinance is missing, 'augur fetch AAPL' prints: specific error, pip install command, and exits with code 1",
+    "When apscheduler is missing, 'augur cron-start' prints: specific error, pip install command, and exits with code 1",
+    "All iteration 7 tests pass: python -m pytest tests/test_iteration7.py -v",
+    "Full test suite passes: python -m pytest tests/ -x -q (211+ tests)"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": "All 251 tests pass (17 new tests added over 234 baseline). Used importlib.import_module patching in tests rather than builtins.__import__ since optional_deps module uses importlib internally. Updated existing test_fetch_cmd_missing_yfinance_message to work with the new approach. The optional_deps module is standalone with no external dependencies."
+}
