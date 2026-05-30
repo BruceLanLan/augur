@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Fix documentation inconsistencies between README.md, README_EN.md, and actual CLI implementation. Fix pyproject.toml and requirements.txt inconsistencies.",
+  "status": "pending",
+  "steps": [
+    "1. In README.md and README_EN.md: Change '20 个命令' / '20 commands' to '17 commands' (the actual number of augur CLI commands). The section title says 20 but there are only 17 registered @main.command entries. Note: dashboard.app, wechat --mode wecom are not separate commands.",
+    "2. In README.md and README_EN.md: The CLI reference section lists `python3 -m dashboard.app --port 8000 --cors` as a command but it is not an augur CLI command. Keep it in the docs as-is since it IS a valid way to run the project, but do not count it in the '20 commands' claim.",
+    "3. In requirements.txt: Currently only lists click, pyyaml, fastapi, uvicorn, jinja2 as core deps. But pyproject.toml also has httpx>=0.24.0. Add httpx>=0.24.0 to requirements.txt to keep them consistent.",
+    "4. In pyproject.toml: The 'all' extras group should include 'pytest>=7.0' from the dev group OR clarify that 'all' means all runtime deps only. Currently dev is separate which is correct - no change needed, just verify.",
+    "5. In Makefile: The 'run' target uses `python -m dashboard.app --port 8000 --cors` which is correct. But the 'api' target uses `augur api --port 8900`. Verify both work (they should). Add a brief comment in the Makefile documenting what each target does.",
+    "6. In README.md line about '完整 CLI（20 个命令）': update to '完整 CLI（17 个命令）'. In README_EN.md update 'Full CLI Reference (20 commands)' to 'Full CLI Reference (17 commands)'."
+  ],
+  "acceptance_criteria": [
+    "README.md and README_EN.md both say 17 commands instead of 20",
+    "requirements.txt includes httpx>=0.24.0",
+    "Makefile has brief comments on each target",
+    "All existing tests still pass"
+  ],
+  "verification": [
+    "Run pytest tests/ -v and confirm all tests pass",
+    "Grep README.md for '17' to confirm the command count is updated",
+    "Grep requirements.txt for httpx to confirm it is listed"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

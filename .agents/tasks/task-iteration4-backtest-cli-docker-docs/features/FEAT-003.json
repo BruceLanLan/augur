@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Add comprehensive tests for iteration 4 fixes: backtest edge cases, CLI sector/industry handling, and verify deterministic sample data generation",
+  "status": "pending",
+  "steps": [
+    "1. Create tests/test_iteration4.py with the following test classes and methods:",
+    "2. class TestBacktestEdgeCases: test_empty_historical_data (run_backtest with empty lists returns BacktestResult with empty records), test_single_day_backtest (only 1 day of data), test_all_neutral_predictions (mock agents to all return neutral - verify IC calculation does not crash), test_deterministic_seed_stability (verify generate_sample_data produces same results with PYTHONHASHSEED=0 and PYTHONHASHSEED=random - use the new deterministic seed).",
+    "3. class TestCLISectorIndustry: test_analyze_with_sector_industry (use CliRunner to invoke analyze with --sector and --industry, verify they appear in output or do not error), test_watchlist_add_with_sector (use CliRunner to invoke watchlist-add with --sector Technology, verify it does not error).",
+    "4. class TestBacktestRankCorrelation: test_rank_correlation_identical_values (all x same value returns 0.0), test_rank_correlation_perfect_positive (x=[1,2,3,4,5] y=[1,2,3,4,5] returns 1.0), test_rank_correlation_perfect_negative (x=[1,2,3,4,5] y=[5,4,3,2,1] returns -1.0), test_rank_correlation_short_list (n<3 returns 0.0).",
+    "5. class TestDockerfileConsistency: test_dockerfile_has_non_root_user (read Dockerfile content and assert 'USER' directive exists), test_dockercompose_no_version (read docker-compose.yml and assert it does not start with 'version:')."
+  ],
+  "acceptance_criteria": [
+    "All new tests pass with pytest tests/test_iteration4.py -v",
+    "Tests actually exercise the fixed code paths (not just static assertions)",
+    "Total test count increases by at least 10 new tests"
+  ],
+  "verification": [
+    "Run pytest tests/test_iteration4.py -v and confirm all new tests pass",
+    "Run pytest tests/ -v and confirm total test suite still passes (118+ existing + new)"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

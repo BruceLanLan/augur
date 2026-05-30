@@ -27,7 +27,13 @@ COPY scanner/ ./scanner/
 COPY docs/ ./docs/
 
 # Create augur config directory
-RUN mkdir -p /root/.augur
+RUN mkdir -p /app/.augur
+
+# Create non-root user for security
+RUN groupadd -r augur && useradd -r -g augur -d /app -s /sbin/nologin augur
+RUN chown -R augur:augur /app
+
+USER augur
 
 # Environment variables
 ENV PYTHONPATH=/app/src

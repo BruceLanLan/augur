@@ -1,0 +1,29 @@
+{
+  "project_type": "Python multi-agent investment analysis system with CLI, REST API, MCP server, dashboard, and bot integrations",
+  "language": "Python",
+  "build_system": "setuptools via pyproject.toml, pip install -e .",
+  "test_framework": "pytest with class-based tests in tests/",
+  "build_command": "pip install -e .",
+  "test_command": "pytest tests/ -v",
+  "verification_instructions": "1. Run pytest tests/ -v and confirm all tests pass. 2. Run augur --help to verify CLI commands are registered.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e . (already done)",
+  "environment_constraints": "OPEN_INTERNET network mode. Python 3.11. No Docker daemon available for actual builds.",
+  "contribution_requirements": "snake_case variables, no mandatory new dependencies (use optional extras), keep score 0-10, PR title format: fix:/feat:/docs:",
+  "key_patterns": "Click CLI commands in cli.py, dataclass-based models in personas/base.py, AgentRegistry pattern, JSONL file storage for backtest records",
+  "relevant_files": [
+    "src/augur/backtest.py",
+    "src/augur/cli.py",
+    "Dockerfile",
+    "docker-compose.yml",
+    "Makefile",
+    "pyproject.toml",
+    "requirements.txt",
+    "README.md",
+    "README_EN.md",
+    "CONTRIBUTING.md",
+    "tests/test_backtest.py",
+    "tests/test_cli.py"
+  ],
+  "directory_structure": "src/augur/ (main package), tests/ (pytest), dashboard/ (web UI), personas/ (YAML configs), config/ (agent config), skills/ (MCP skills)"
+}

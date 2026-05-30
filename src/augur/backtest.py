@@ -112,6 +112,9 @@ class Backtester:
         Returns:
             BacktestResult with all records and IC calculations
         """
+        if not historical_data or not forward_returns:
+            return BacktestResult(ticker=ticker.upper())
+
         from augur.registry import AgentRegistry, DecisionCoordinator
         from augur.personas.base import MarketContext
 
@@ -525,7 +528,7 @@ def generate_sample_data(ticker: str = "AAPL", days: int = 30) -> Tuple[List[Dic
     Returns:
         (historical_data, forward_returns) tuple
     """
-    random.seed(hash(ticker) % 10000)
+    random.seed(sum(ord(c) for c in ticker) % 10000)
 
     base_price = 150.0 + random.uniform(-50, 100)
     base_pe = 20 + random.uniform(5, 30)
