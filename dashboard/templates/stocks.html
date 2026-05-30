@@ -303,7 +303,9 @@ function num(id, scale) {
 
 function hasUserMetrics() {
     return num('inp-price') > 0 || num('inp-pe') > 0 || num('inp-pb') > 0 ||
-           num('inp-gm') > 0 || num('inp-roe') > 0 || num('inp-mktcap') > 0;
+           num('inp-gm') > 0 || num('inp-roe') > 0 || num('inp-mktcap') > 0 ||
+           num('inp-revg') != 0 || num('inp-debt') > 0 || num('inp-epsg') != 0 ||
+           num('inp-om') != 0 || num('inp-fcf') != 0;
 }
 
 function runAnalysis() {
@@ -525,10 +527,10 @@ function renderResults(data) {
         grid.appendChild(div);
     });
 
-    // Auto-generate report if report=1 in URL params
+    // Auto-generate report if requested via URL param
     if (window._autoReport) {
         window._autoReport = false;
-        setTimeout(generateReport, 500);
+        generateReport();
     }
 }
 
@@ -538,8 +540,21 @@ function generateReport() {
 
     showToast('正在生成深度报告...', 'info');
 
+    // If we already have analysis data, use POST to avoid re-running agents
+    if (lastAnalysisData && lastAnalysisData.ticker === ticker) {
+        fetch('/api/report/' + ticker, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(lastAnalysisData)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { handleReportResponse(data); })
+        .catch(function(err) { showToast('报告生成失败: ' + err.message, 'error'); });
+        return;
+    }
+
+    // No cached data - use GET (will run full analysis)
     var params = new URLSearchParams({auto_fetch: hasUserMetrics() ? 'false' : 'true'});
-    // Add the same manual metrics if user provided them
     if (hasUserMetrics()) {
         params.set('price', num('inp-price'));
         params.set('pe', num('inp-pe'));
@@ -558,19 +573,19 @@ function generateReport() {
 
     fetch('/api/report/' + ticker + '?' + params)
         .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.status === 'ok' && data.report) {
-                document.getElementById('report-content').textContent = data.report;
-                document.getElementById('report-section').style.display = 'block';
-                document.getElementById('report-section').scrollIntoView({behavior:'smooth'});
-                showToast('深度报告已生成');
-            } else {
-                showToast('报告生成失败: ' + (data.detail || 'unknown error'), 'error');
-            }
-        })
-        .catch(function(err) {
-            showToast('报告生成失败: ' + err.message, 'error');
-        });
+        .then(function(data) { handleReportResponse(data); })
+        .catch(function(err) { showToast('报告生成失败: ' + err.message, 'error'); });
+}
+
+function handleReportResponse(data) {
+    if (data.status === 'ok' && data.report) {
+        document.getElementById('report-content').textContent = data.report;
+        document.getElementById('report-section').style.display = 'block';
+        document.getElementById('report-section').scrollIntoView({behavior:'smooth'});
+        showToast('深度报告已生成');
+    } else {
+        showToast('报告生成失败: ' + (data.detail || 'unknown error'), 'error');
+    }
 }
 
 function copyReport() {
