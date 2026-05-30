@@ -6,10 +6,13 @@ Loads from ~/.augur/config.yaml if exists, else falls back to config/agents.yaml
 Provides get_config(), set_config(), save_config() API.
 """
 
+import logging
 import threading
 from pathlib import Path
 from typing import Any, Dict, Optional
 import copy
+
+logger = logging.getLogger(__name__)
 
 _config: Optional[Dict[str, Any]] = None
 _config_path: Optional[Path] = None
@@ -44,7 +47,11 @@ def _load_config() -> Dict[str, Any]:
         try:
             import yaml
             _config = yaml.safe_load(_config_path.read_text(encoding="utf-8")) or {}
-        except Exception:
+        except Exception as e:
+            logger.warning("Failed to load config from %s: %s", _config_path, e)
+            _config = {}
+        if not isinstance(_config, dict):
+            logger.warning("Config file %s did not parse as dict (got %s), using empty config", _config_path, type(_config).__name__)
             _config = {}
     else:
         _config = {}
@@ -71,6 +78,8 @@ def set_config(key: str, value: Any) -> None:
         target = _config
         for k in keys[:-1]:
             if k not in target or not isinstance(target[k], dict):
+                if k in target:
+                    logger.warning("Overwriting non-dict value at '%s' with nested dict", '.'.join(keys[:keys.index(k)+1]))
                 target[k] = {}
             target = target[k]
         target[keys[-1]] = value
