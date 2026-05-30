@@ -245,6 +245,7 @@ async def analyze_ticker(
             data_source = "yfinance"
         except (ImportError, Exception):
             # Fallback to manual (empty) context
+            data_source = "fallback"
             ctx = MarketContext(
                 ticker=ticker.upper(),
                 price=price,
@@ -293,7 +294,7 @@ async def analyze_ticker(
         context=ctx,
     )
 
-    return {
+    response = {
         "ticker": ticker.upper(),
         "timestamp": __import__("datetime").datetime.utcnow().isoformat() + "Z",
         "data_source": data_source,
@@ -310,6 +311,11 @@ async def analyze_ticker(
         "agents": [r.to_dict() for r in agent_responses.values()],
         "agent_count": len(agent_responses),
     }
+
+    if data_source == "fallback":
+        response["data_note"] = "Auto-fetch failed, using provided parameters"
+
+    return response
 
 
 @app.get("/api/persona/{agent_id}")
@@ -498,6 +504,7 @@ async def api_remove_from_watchlist(ticker: str):
 @app.post("/api/watchlist/run")
 async def api_run_watchlist_analysis():
     """Run consensus analysis on all watchlist tickers"""
+    import time
     from augur.cron import load_watchlist
     from augur.personas.base import MarketContext
 
@@ -509,6 +516,7 @@ async def api_run_watchlist_analysis():
 
     coordinator = get_coordinator()
     all_results = []
+    start_time = time.time()
 
     for item in watchlist:
         ticker = item.get("ticker", "")
@@ -560,7 +568,7 @@ async def api_run_watchlist_analysis():
     except Exception:
         pass
 
-    return {"status": "ok", "results": all_results}
+    return {"status": "ok", "results": all_results, "processing_time_ms": round((time.time() - start_time) * 1000)}
 
 
 @app.get("/backtest", response_class=HTMLResponse)

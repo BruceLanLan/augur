@@ -373,8 +373,23 @@ class Backtester:
         return "\n".join(lines)
 
     def _save_records(self, records: List[BacktestRecord]):
-        """Persist records to ~/.augur/backtest/records.jsonl"""
+        """Persist records to ~/.augur/backtest/records.jsonl (with rotation)."""
         self.RECORDS_DIR.mkdir(parents=True, exist_ok=True)
+
+        # Rotate if file exceeds 10MB
+        if self.RECORDS_FILE.exists():
+            try:
+                file_size = self.RECORDS_FILE.stat().st_size
+                if file_size > 10 * 1024 * 1024:  # 10MB
+                    with open(self.RECORDS_FILE, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                    # Keep last 5000 records
+                    if len(lines) > 5000:
+                        with open(self.RECORDS_FILE, "w", encoding="utf-8") as f:
+                            f.writelines(lines[-5000:])
+            except Exception:
+                pass  # rotation is best-effort
+
         with open(self.RECORDS_FILE, "a", encoding="utf-8") as f:
             for r in records:
                 f.write(json.dumps(r.to_dict(), ensure_ascii=False) + "\n")
