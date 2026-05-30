@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Address 6 issues from code review: wire errors.py into production, fix NO_COLOR env mutation, cache is_available() in dashboard, remove redundant ImportError catch, fix format_box off-by-one, move exception handler imports to module level",
+  "status": "completed",
+  "steps": [
+    "1. Wire errors.py into the global exception handlers in api.py and dashboard/app.py using api_error_response()",
+    "2. Fix NO_COLOR env mutation: clean up env var after CLI completes (or ensure tests use CliRunner env isolation)",
+    "3. Move is_available() checks in dashboard/app.py to module-level flags evaluated once at import time",
+    "4. Remove redundant except ImportError in _auto_fetch_context after is_available() guard",
+    "5. Fix format_box off-by-one: clamp fill to max(0, ...)",
+    "6. Move exception handler imports (logging, datetime) to module level in both api.py and dashboard/app.py"
+  ],
+  "acceptance_criteria": [
+    "errors.py api_error_response() is used in at least one production exception handler",
+    "NO_COLOR env var does not leak between CLI invocations",
+    "is_available() is not called on every request in dashboard endpoints",
+    "_auto_fetch_context has no redundant ImportError catch after is_available() guard",
+    "format_box handles titles longer than all content lines without negative fill",
+    "Exception handlers do not import logging or datetime inside the handler body",
+    "All 251 existing tests pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": "All 6 review issues addressed. errors.py is now used by both exception handlers (api.py and dashboard/app.py). NO_COLOR env is restored via ctx.call_on_close(). Dashboard uses _HAS_AUGUR_DATA module-level flag. format_box uses max(0, ...) for fill. All 251 tests pass unchanged."
+}

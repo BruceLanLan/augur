@@ -132,7 +132,8 @@ def format_box(lines: list, title: str = "") -> str:
 
     # Build box
     if title:
-        top = f"+-- {title} " + "-" * (max_width - len(title) - 3) + "+"
+        fill = max(0, max_width - len(title) - 3)
+        top = f"+-- {title} " + "-" * fill + "+"
     else:
         top = "+" + "-" * (max_width + 2) + "+"
 

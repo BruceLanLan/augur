@@ -12,6 +12,7 @@ Usage:
 import sys
 import os
 import re
+import logging
 import yaml
 from datetime import datetime, timezone
 from pathlib import Path
@@ -40,6 +41,7 @@ except ImportError:
     from scanner.personas.base import MarketContext
 
 from augur.config import get_config, set_config, save_config, reset_config
+from augur.errors import api_error_response
 
 app = FastAPI(
     title="Augur — 多智能体投资分析",
@@ -55,18 +57,16 @@ async def global_exception_handler(request: Request, exc: Exception):
 
     Never leak stack traces to clients. Log the real error for debugging.
     """
-    import logging
     logger = logging.getLogger("augur.dashboard")
     logger.error(f"Unhandled exception on {request.url.path}: {type(exc).__name__}: {exc}")
 
     return JSONResponse(
         status_code=500,
-        content={
-            "status": "error",
-            "detail": "Internal server error",
-            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-            "path": request.url.path,
-        },
+        content=api_error_response(
+            detail="Internal server error",
+            code="INTERNAL_ERROR",
+            path=request.url.path,
+        ),
     )
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
@@ -653,12 +653,15 @@ async def health():
 
 # ============ Data Fetch API Routes ============
 
+# Module-level flag: check once at import time whether augur.data is available
+from augur.optional_deps import is_available as _is_available, get_install_hint
+_HAS_AUGUR_DATA = _is_available("augur.data")
+
+
 @app.get("/api/fetch/{ticker}")
 async def api_fetch_ticker(ticker: str):
     """Fetch real-time market data for a ticker via yfinance"""
-    from augur.optional_deps import is_available, get_install_hint
-
-    if not is_available("augur.data"):
+    if not _HAS_AUGUR_DATA:
         feature, install_cmd = get_install_hint("augur.data")
         raise HTTPException(
             status_code=501,
@@ -686,9 +689,7 @@ async def api_search_tickers(q: str = ""):
     if not q or len(q) < 1:
         return {"results": []}
 
-    from augur.optional_deps import is_available, get_install_hint
-
-    if not is_available("augur.data"):
+    if not _HAS_AUGUR_DATA:
         feature, install_cmd = get_install_hint("augur.data")
         raise HTTPException(
             status_code=501,
