@@ -14,6 +14,7 @@ augur.backtest - 历史回测系统 + Agent IC 实盘追踪
 import json
 import math
 import random
+from collections import deque
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -381,14 +382,14 @@ class Backtester:
             try:
                 file_size = self.RECORDS_FILE.stat().st_size
                 if file_size > 10 * 1024 * 1024:  # 10MB
+                    # Keep last 5000 records using deque for memory efficiency
                     with open(self.RECORDS_FILE, "r", encoding="utf-8") as f:
-                        lines = f.readlines()
-                    # Keep last 5000 records
-                    if len(lines) > 5000:
-                        with open(self.RECORDS_FILE, "w", encoding="utf-8") as f:
-                            f.writelines(lines[-5000:])
+                        tail = deque(f, maxlen=5000)
+                    with open(self.RECORDS_FILE, "w", encoding="utf-8") as f:
+                        f.writelines(tail)
             except Exception:
-                pass  # rotation is best-effort
+                # best-effort rotation; file integrity handled by single-writer assumption
+                pass
 
         with open(self.RECORDS_FILE, "a", encoding="utf-8") as f:
             for r in records:

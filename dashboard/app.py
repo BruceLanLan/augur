@@ -13,6 +13,7 @@ import sys
 import os
 import re
 import yaml
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import argparse
@@ -296,7 +297,7 @@ async def analyze_ticker(
 
     response = {
         "ticker": ticker.upper(),
-        "timestamp": __import__("datetime").datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z",
         "data_source": data_source,
         "market_data": {
             "price": ctx.price,
@@ -533,7 +534,6 @@ async def api_run_watchlist_analysis():
         results = coordinator.analyze_with_all(ctx)
         consensus = coordinator.get_consensus(results, ticker=ticker, context=ctx)
 
-        import datetime
         result_item = {
             "ticker": ticker,
             "signal": consensus.signal.value,
@@ -543,7 +543,7 @@ async def api_run_watchlist_analysis():
             "buy_count": sum(1 for r in results.values() if r.signal.value == "bullish"),
             "sell_count": sum(1 for r in results.values() if r.signal.value == "bearish"),
             "hold_count": sum(1 for r in results.values() if r.signal.value == "neutral"),
-            "last_run": datetime.datetime.utcnow().isoformat() + "Z",
+            "last_run": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z",
             "key_findings": consensus.key_findings[:2] if consensus.key_findings else [],
             "kelly_pct": consensus.metadata.get("position_sizing", {}).get("position_pct"),
         }

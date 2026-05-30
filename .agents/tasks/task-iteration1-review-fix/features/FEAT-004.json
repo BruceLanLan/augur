@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Address review findings: fix utcnow in dashboard, improve backtest rotation memory usage, use logging in cron, replace structural test with behavioral test, add comment on bare except",
+  "status": "in_progress",
+  "steps": [
+    "1. Fix utcnow() in dashboard/app.py - replace with datetime.now(timezone.utc)",
+    "2. Improve backtest rotation in src/augur/backtest.py using collections.deque",
+    "3. Use logging instead of print() in cron.py error handler",
+    "4. Replace structural test with behavioral test in tests/test_backtest.py",
+    "5. Add comment explaining bare except in backtest rotation"
+  ],
+  "acceptance_criteria": [
+    "All tests pass (pytest tests/ -v)",
+    "No utcnow() usage in dashboard/app.py",
+    "Backtest rotation uses deque instead of readlines()",
+    "Cron error handler uses logger.error() instead of print()",
+    "test_save_records_rotation_exists replaced with behavioral test"
+  ],
+  "verification": [
+    "pytest tests/ -v"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}
