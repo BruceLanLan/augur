@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Fix documentation inconsistencies between README.md, README_EN.md, and actual CLI implementation. Fix pyproject.toml and requirements.txt inconsistencies.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "1. In README.md and README_EN.md: Change '20 个命令' / '20 commands' to '17 commands' (the actual number of augur CLI commands). The section title says 20 but there are only 17 registered @main.command entries. Note: dashboard.app, wechat --mode wecom are not separate commands.",
     "2. In README.md and README_EN.md: The CLI reference section lists `python3 -m dashboard.app --port 8000 --cors` as a command but it is not an augur CLI command. Keep it in the docs as-is since it IS a valid way to run the project, but do not count it in the '20 commands' claim.",
@@ -23,5 +23,5 @@
     "Grep requirements.txt for httpx to confirm it is listed"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 118 tests pass. Updated README.md (20->17 commands), README_EN.md (20->17 commands), requirements.txt (added httpx>=0.24.0), Makefile (added comments for each target)."
 }
