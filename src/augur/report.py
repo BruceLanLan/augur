@@ -299,10 +299,12 @@ def _format_disagreement_section(results: Dict[str, AgentResponse]) -> str:
     risk_bears = [v for k, v in bearish_agents.items() if k in THEME_GROUPS.get("风险与宏观", {}).get("agents", [])]
     risk_neutrals = [v for k, v in neutral_agents.items() if k in THEME_GROUPS.get("风险与宏观", {}).get("agents", [])]
 
-    if value_bulls and (risk_bears or risk_neutrals):
+    if len(value_bulls) >= 2 and len(risk_bears) >= 1:
         lines.append("- **价值派 vs 风控派**: 价值投资者认为当前估值具备安全边际，而风控派关注周期风险与尾部事件")
 
-    if growth_bulls and bearish_agents:
+    # For growth vs conservative: need >=2 growth-bulls AND >=1 actual bearish agent (any group)
+    all_bearish_agents = {k: v for k, v in valid_results.items() if v.signal == SignalType.BEARISH}
+    if len(growth_bulls) >= 2 and len(all_bearish_agents) >= 1:
         lines.append("- **成长派 vs 保守派**: 成长投资者看好未来增长空间与创新前景，保守派认为估值已充分反映预期")
 
     # Score spread analysis
@@ -345,10 +347,32 @@ def _format_bull_bear_debate(results: Dict[str, AgentResponse]) -> str:
 
     # Top 3 bullish (highest score)
     top_bulls = sorted_by_score[:3]
-    # Top 3 bearish (lowest score)
-    top_bears = sorted_by_score[-3:]
-    # Reverse bears so lowest is first
-    top_bears = list(reversed(top_bears))
+
+    # For bear section: prefer actual BEARISH agents, fill remaining from NEUTRAL sorted by lowest score
+    bearish_agents = [(k, v) for k, v in valid_results.items() if v.signal == SignalType.BEARISH]
+    bearish_agents.sort(key=lambda x: x[1].score)  # lowest score first
+
+    neutral_agents = [(k, v) for k, v in valid_results.items() if v.signal == SignalType.NEUTRAL]
+    neutral_agents.sort(key=lambda x: x[1].score)  # lowest score first
+
+    top_bears = []
+    top_bears.extend(bearish_agents[:3])
+    if len(top_bears) < 3:
+        remaining = 3 - len(top_bears)
+        top_bears.extend(neutral_agents[:remaining])
+
+    # If still not enough, fill from the overall lowest scores
+    if len(top_bears) < 3:
+        used_ids = {k for k, v in top_bears}
+        remaining_agents = [(k, v) for k, v in sorted_by_score if k not in used_ids]
+        remaining_agents.reverse()  # lowest first
+        for item in remaining_agents:
+            if len(top_bears) >= 3:
+                break
+            top_bears.append(item)
+
+    # Determine label based on whether any of the 3 are actually BEARISH
+    has_actual_bearish = any(v.signal == SignalType.BEARISH for _, v in top_bears)
 
     lines.append("### 🟢 多方论点 (最看好的3位大师)")
     lines.append("")
@@ -367,7 +391,10 @@ def _format_bull_bear_debate(results: Dict[str, AgentResponse]) -> str:
                 lines.append(f"- {finding}")
         lines.append("")
 
-    lines.append("### 🔴 空方论点 (最谨慎的3位大师)")
+    if has_actual_bearish:
+        lines.append("### 🔴 空方论点 (最谨慎的3位大师)")
+    else:
+        lines.append("### 🟡 最谨慎方 (评分最低的3位大师)")
     lines.append("")
 
     for agent_id, response in top_bears:
