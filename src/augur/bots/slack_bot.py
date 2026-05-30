@@ -37,6 +37,8 @@ import os
 import re
 from typing import Optional, Dict, List, Any
 
+from augur.bots.utils import STOP_WORDS
+
 
 # Signal emoji mapping (Slack style)
 SIGNAL_EMOJI = {
@@ -109,9 +111,12 @@ def _parse_metrics(text: str) -> Dict[str, float]:
 
 
 def _extract_ticker(text: str) -> Optional[str]:
-    """Extract ticker symbol from text."""
-    match = re.search(r"\b([A-Z]{1,5})\b", text.upper())
-    return match.group(1) if match else None
+    """Extract ticker symbol from text, filtering out common stop words."""
+    candidates = re.findall(r'\b([A-Z]{2,5})\b', text.upper())
+    for candidate in candidates:
+        if candidate not in STOP_WORDS:
+            return candidate
+    return None
 
 
 def _build_market_context(ticker: str, metrics: Dict[str, float]):

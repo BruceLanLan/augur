@@ -27,7 +27,10 @@ import re
 import json
 import hashlib
 import time
+import threading
 from typing import Optional, Dict, Any, List
+
+from augur.bots.utils import STOP_WORDS
 
 
 # Signal emoji mapping
@@ -115,9 +118,12 @@ def _parse_metrics(text: str) -> Dict[str, float]:
 
 
 def _extract_ticker(text: str) -> Optional[str]:
-    """Extract ticker symbol from text."""
-    match = re.search(r"\b([A-Z]{1,5})\b", text.upper())
-    return match.group(1) if match else None
+    """Extract ticker symbol from text, filtering out common stop words."""
+    candidates = re.findall(r'\b([A-Z]{2,5})\b', text.upper())
+    for candidate in candidates:
+        if candidate not in STOP_WORDS:
+            return candidate
+    return None
 
 
 def _build_market_context(ticker: str, metrics: Dict[str, float]):
@@ -263,32 +269,34 @@ class LarkEventBot:
         self.encrypt_key = encrypt_key
         self._tenant_access_token = None
         self._token_expires = 0
+        self._token_lock = threading.Lock()
 
     def _get_tenant_access_token(self) -> str:
-        """Get or refresh tenant access token."""
+        """Get or refresh tenant access token (thread-safe)."""
         import urllib.request
 
-        if self._tenant_access_token and time.time() < self._token_expires:
+        with self._token_lock:
+            if self._tenant_access_token and time.time() < self._token_expires:
+                return self._tenant_access_token
+
+            url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
+            payload = json.dumps({
+                "app_id": self.app_id,
+                "app_secret": self.app_secret,
+            }).encode("utf-8")
+
+            req = urllib.request.Request(
+                url, data=payload,
+                headers={"Content-Type": "application/json; charset=utf-8"},
+                method="POST",
+            )
+
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+
+            self._tenant_access_token = data.get("tenant_access_token", "")
+            self._token_expires = time.time() + data.get("expire", 7200) - 300
             return self._tenant_access_token
-
-        url = "https://open.feishu.cn/open-apis/auth/v3/tenant_access_token/internal"
-        payload = json.dumps({
-            "app_id": self.app_id,
-            "app_secret": self.app_secret,
-        }).encode("utf-8")
-
-        req = urllib.request.Request(
-            url, data=payload,
-            headers={"Content-Type": "application/json; charset=utf-8"},
-            method="POST",
-        )
-
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-
-        self._tenant_access_token = data.get("tenant_access_token", "")
-        self._token_expires = time.time() + data.get("expire", 7200) - 300
-        return self._tenant_access_token
 
     def verify_event(self, body: dict) -> Optional[Dict[str, Any]]:
         """Verify event callback and handle challenge."""

@@ -21,6 +21,8 @@ import re
 import asyncio
 from typing import Optional, Dict
 
+from augur.bots.utils import STOP_WORDS
+
 # Signal emoji mapping
 SIGNAL_EMOJI = {
     "bullish": "\U0001f7e2",   # green circle
@@ -107,6 +109,15 @@ def _parse_metrics(args: list) -> Dict[str, float]:
             except ValueError:
                 pass
     return metrics
+
+
+def _extract_ticker(text: str) -> Optional[str]:
+    """Extract ticker symbol from text, filtering out common stop words."""
+    candidates = re.findall(r'\b([A-Z]{2,5})\b', text.upper())
+    for candidate in candidates:
+        if candidate not in STOP_WORDS:
+            return candidate
+    return None
 
 
 def _build_market_context(ticker: str, metrics: Dict[str, float]):
@@ -348,8 +359,7 @@ def run_telegram_bot(token: Optional[str] = None):
         question = " ".join(context.args[1:])
 
         # Try to extract ticker from question
-        ticker_match = re.search(r"[A-Z]{1,5}", question.upper())
-        ticker = ticker_match.group(0) if ticker_match else "UNKNOWN"
+        ticker = _extract_ticker(question) or "UNKNOWN"
 
         # Parse any metrics from question
         metrics = _parse_metrics(context.args[1:])
@@ -403,24 +413,23 @@ def run_telegram_bot(token: Optional[str] = None):
 
         # Extract the rest as question
         question = re.sub(r"@\S+", "", text).strip()
-        ticker_match = re.search(r"[A-Z]{1,5}", question.upper())
-        ticker = ticker_match.group(0) if ticker_match else "UNKNOWN"
+        ticker = _extract_ticker(question) or "UNKNOWN"
 
         metrics = _parse_metrics(question.split())
 
-        from augur.registry import AgentRegistry
-
-        registry = AgentRegistry()
-        agent = registry.get(persona_id)
-
-        if not agent:
-            return
-
-        await update.message.reply_text(
-            f"\U0001f504 \u6b63\u5728\u8be2\u95ee {agent.name}..."
-        )
-
         try:
+            from augur.registry import AgentRegistry
+
+            registry = AgentRegistry()
+            agent = registry.get(persona_id)
+
+            if not agent:
+                return
+
+            await update.message.reply_text(
+                f"\U0001f504 \u6b63\u5728\u8be2\u95ee {agent.name}..."
+            )
+
             market_ctx = _build_market_context(ticker, metrics)
             result = agent.analyze(market_ctx)
             message = format_single_agent_message(ticker, result)

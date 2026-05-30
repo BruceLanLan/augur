@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Bot integration hardening: add exception guards around analyze calls so unhandled exceptions don't crash long-running bot processes, add ticker validation in all bot message handlers, fix duplicate code patterns with shared helper",
+  "status": "in_progress",
+  "steps": [
+    "In src/augur/bots/telegram_bot.py: the handle_message handler for natural language @mentions calls agent.analyze() without try/except - if it raises, the entire update handler crashes. Wrap in try/except like the command handlers do.",
+    "In src/augur/bots/slack_bot.py: the handle_app_mention and handle_dm event handlers properly have try/except, but the registry import inside the handler could raise ImportError at runtime - move the import to a helper that returns a friendly error message",
+    "In src/augur/bots/wechat_bot.py: GeWeChatBot.handle_message catches only text type but if content has only whitespace after strip, the regex matches may produce unexpected results with empty strings. Add early return for empty stripped content (already done for empty but verify regex edge cases). Also the login() polling loop uses bare time.sleep(2) for 60 iterations - add a configurable timeout parameter",
+    "In src/augur/bots/lark_bot.py: LarkEventBot.handle_message parses JSON from message.content but doesn't handle the case where content is empty string or the JSON has no 'text' key gracefully (already has check but verify). The _get_tenant_access_token method stores token without lock - add threading.Lock for thread safety since HTTPServer is multi-threaded",
+    "In all bots: _extract_ticker uses re.search(r'\\b([A-Z]{1,5})\\b', text.upper()) which will match common English words like 'I', 'A', 'IT', 'AT', 'AM', etc. Add a minimum length of 2 and exclude common stop words to reduce false positives",
+    "Create a shared helper module src/augur/bots/utils.py that exports validate_ticker_from_text(text) that all bots can use, implementing the improved extraction logic with stop-word filtering"
+  ],
+  "acceptance_criteria": [
+    "telegram_bot handle_message has try/except so unhandled errors don't crash the bot",
+    "A new src/augur/bots/utils.py exists with shared validate_ticker_from_text function",
+    "_extract_ticker in all bots filters out common English stop words (I, A, IT, AT, AM, AN, AS, BE, BY, DO, GO, IF, IN, IS, ME, MY, NO, OF, ON, OR, SO, TO, UP, US, WE)",
+    "lark_bot token refresh is thread-safe",
+    "python -m pytest tests/ -q passes with no regressions"
+  ],
+  "verification": [
+    "python -m pytest tests/ -q"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
