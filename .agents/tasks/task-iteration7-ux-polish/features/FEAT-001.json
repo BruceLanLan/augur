@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "CLI output beautification: add --no-color flag, improve table formatting with proper alignment, add color accessibility (bold text alternatives), ensure --json output is valid parseable JSON for all commands, and verify emoji rendering safety",
+  "status": "in_progress",
+  "steps": [
+    "In src/augur/cli.py, add a global --no-color option to the main Click group that sets an environment variable or context flag. When active, strip ANSI codes and use plain text markers instead of emojis.",
+    "Create a new module src/augur/cli_format.py that provides: (1) a color_text() helper respecting no-color mode, (2) a format_table() function for aligned columns with dynamic width, (3) a signal_icon() function that returns emoji or text based on mode, (4) a format_box() function for bordered output boxes.",
+    "Refactor the consensus_cmd output in src/augur/cli.py to use the new cli_format module: wrap signal/score/confidence in a bordered box, use consistent column alignment for the agent breakdown table.",
+    "Refactor analyze_cmd output (both single and all-agent modes) to use cli_format for consistent aligned columns.",
+    "Ensure the --json flag on analyze and consensus commands produces valid JSON including: proper timestamp field (ISO 8601), all numeric fields as numbers (not strings), and no trailing output after the JSON blob.",
+    "Add a --no-color test in tests/test_cli.py that verifies no ANSI escape sequences appear in output when the flag is set.",
+    "Add test cases verifying --json output is parseable by json.loads() for both analyze and consensus commands."
+  ],
+  "acceptance_criteria": [
+    "Running `augur --no-color consensus AAPL --pe 25` produces output with no ANSI escape codes and no emojis",
+    "Running `augur consensus AAPL --pe 25 --json | python -m json.tool` succeeds (valid JSON)",
+    "Running `augur analyze AAPL --pe 25 --json | python -m json.tool` succeeds (valid JSON)",
+    "Agent breakdown table columns are properly aligned (signal, score, name all line up)",
+    "All existing CLI tests continue to pass"
+  ],
+  "verification": [
+    "python -m pytest tests/test_cli.py -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
