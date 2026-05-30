@@ -236,8 +236,8 @@
     <div class="flex items-center justify-between mb-12">
         <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">各位投资大师评分</div>
         <div class="flex gap-8">
-            <button class="btn btn-sm btn-ghost" onclick="toggleAllAgents(true)">全部展开</button>
-            <button class="btn btn-sm btn-ghost" onclick="toggleAllAgents(false)">全部收起</button>
+            <button class="btn btn-sm btn-ghost" onclick="toggleAllAgents(true)" aria-label="全部展开">全部展开</button>
+            <button class="btn btn-sm btn-ghost" onclick="toggleAllAgents(false)" aria-label="全部收起">全部收起</button>
         </div>
     </div>
     <div class="grid-auto" id="agent-grid"></div>
@@ -395,7 +395,9 @@ function toggleReasoning(el) {
     var div = el.previousElementSibling;
     if (div) {
         div.classList.toggle('expanded');
-        el.textContent = div.classList.contains('expanded') ? '收起' : '展开';
+        var isExpanded = div.classList.contains('expanded');
+        el.textContent = isExpanded ? '收起' : '展开';
+        el.setAttribute('aria-label', isExpanded ? '收起推理' : '展开推理');
     }
 }
 
@@ -501,7 +503,7 @@ function renderResults(data) {
             '<div class="text-muted" style="font-size:0.65rem; margin-top:2px;">置信度 ' + ((a.confidence||0)*100).toFixed(0) + '%</div></div>' +
             '</div>' +
             '<div class="agent-reasoning"><div class="text-muted" style="font-size:0.75rem; line-height:1.6; margin:0;">' + reasoning + '</div></div>' +
-            '<button class="expand-btn" onclick="toggleReasoning(this)">展开</button>';
+            '<button class="expand-btn" onclick="toggleReasoning(this)" aria-label="展开推理">展开</button>';
         grid.appendChild(div);
     });
 }

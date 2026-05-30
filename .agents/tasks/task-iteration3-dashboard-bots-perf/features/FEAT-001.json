@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Dashboard frontend hardening: fix XSS in signals.html removeTicker, add interval cleanup on page unload, fix hardcoded ports, add ARIA labels, add fetch error handling for API calls, fix memory leak in health check interval",
+  "status": "in_progress",
+  "steps": [
+    "In dashboard/templates/signals.html: the removeTicker function uses string concatenation with ticker in onclick handler - fix by escaping the ticker with escapeHtml() or use data attributes instead of inline onclick with string interpolation to prevent XSS via malicious ticker names stored in watchlist",
+    "In dashboard/templates/signals.html: add cleanup for autoRefreshTimer on page unload using window.addEventListener('beforeunload', ...) or document visibilitychange to pause when tab hidden",
+    "In dashboard/templates/base.html: the health check setInterval(checkHealth, 30000) never gets cleaned up and has no error state recovery - add visibility API support to pause polling when page is hidden",
+    "In dashboard/templates/stocks.html: the exportJSON function creates an object URL but only revokes it immediately after click - this is fine but verify the blob is GC'd. More importantly, the renderResults function uses renderMarkdown for reasoning which does NOT escape HTML for trusted backend content (documented in comment), but agent_name is user-provided for custom personas - wrap agent_name in escapeHtml() in the grid rendering",
+    "In dashboard/templates/index.html: heroGo() error handler shows err.message directly via textContent (safe), but the hero-error-msg should also handle non-Error objects (e.g., if JSON parse fails) - add fallback",
+    "In dashboard/templates/backtest.html: the runBacktest async function lacks a finally block for btn state reset if the response JSON parsing fails - wrap in try/catch properly (already has try/finally but check fetch error paths)",
+    "In all templates: add aria-label attributes to interactive buttons that only have icon content (hamburger, sidebar collapse, remove ticker X button, expand/collapse buttons)"
+  ],
+  "acceptance_criteria": [
+    "removeTicker in signals.html uses safe escaping for ticker values in onclick handlers",
+    "autoRefreshTimer is cleaned up or paused when page is hidden/unloaded",
+    "Health check polling pauses when page is not visible (Page Visibility API)",
+    "Agent names from custom personas are escaped with escapeHtml() before innerHTML insertion in stocks.html",
+    "Key interactive buttons have aria-label attributes for accessibility",
+    "python -m pytest tests/ -q passes with no regressions"
+  ],
+  "verification": [
+    "python -m pytest tests/ -q"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
