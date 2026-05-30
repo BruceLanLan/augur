@@ -651,6 +651,24 @@ async def health():
     return {"status": "ok", "agents": len(get_registry().get_all())}
 
 
+# ============ Cache Management API Routes ============
+
+@app.get("/api/cache/clear")
+async def api_cache_clear():
+    """Clear the data cache to force fresh fetches."""
+    from augur.data import clear_cache
+    clear_cache()
+    return {"status": "ok", "message": "Cache cleared"}
+
+
+@app.get("/api/cache/info")
+async def api_cache_info():
+    """Return cache size and TTL info."""
+    from augur.data import cache_info
+    info = cache_info()
+    return {"status": "ok", "cache": info}
+
+
 # ============ Data Fetch API Routes ============
 
 # Module-level flag: check once at import time whether augur.data is available

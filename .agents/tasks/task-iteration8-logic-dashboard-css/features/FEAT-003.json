@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Dashboard page functionality: signals auto-refresh state persistence, settings page unsaved indicator accessibility, index.html history sorting, and create-persona YAML validation feedback",
+  "status": "pending",
+  "steps": [
+    "1. In dashboard/templates/signals.html: The auto-refresh timer reloads the watchlist every 60s but analysisResults (the signal/score display data) is stored only in a JS variable and lost on page reload. Fix: persist analysisResults to sessionStorage after runAllAnalysis completes, and restore from sessionStorage on page load. This way signals persist across auto-refreshes and page navigations within the session.",
+    "2. In dashboard/templates/index.html: The augurCache.getLast(5) returns results in insertion order (most recent first) which is correct. However, there is no deduplication check - if a user analyzes the same ticker twice quickly, it could appear twice because augurCache.add filters by ticker before unshift. Verify this is correct (it already deduplicates by ticker). Add a fallback sort by timestamp to guarantee order: change getLast to sort by time descending before slicing.",
+    "3. In dashboard/templates/create_persona.html: When YAML validation fails on the server (400 error), the error detail from the server is shown via showToast. Improve: also highlight the YAML preview with a red border for 3 seconds on validation failure so users know visually where the problem is.",
+    "4. In dashboard/templates/settings.html: The unsaved-indicator dot uses display:none/inline-block toggling. Add ARIA attributes: aria-live='polite' on the unsaved-text span so screen readers announce changes. Also add role='status' to the indicator.",
+    "5. In dashboard/templates/base.html: Add a .toast-container CSS rule in the <style> or ensure it exists in bloomberg.css with position:fixed; top:16px; right:16px; z-index:9999; so toasts never hide behind the sidebar.",
+    "6. Add tests for dashboard endpoints in tests/test_iteration8.py: test that /api/watchlist returns proper structure, test /api/watchlist/add with valid ticker, test /api/watchlist/AAPL DELETE"
+  ],
+  "acceptance_criteria": [
+    "signals.html persists analysisResults to sessionStorage and restores on load",
+    "index.html cache getLast is sorted by time descending",
+    "create_persona.html shows red border on YAML preview when validation fails",
+    "settings.html has aria-live and role=status attributes on unsaved indicator",
+    "toast-container has z-index 9999 and fixed positioning",
+    "Dashboard watchlist API tests pass"
+  ],
+  "verification": [
+    "python3 -m pytest /projects/sandbox/augur/tests/test_iteration8.py -v --tb=short"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Fix dead code in registry.py (add_debate_message after return), improve Kelly criterion calculation, add cache invalidation/force-refresh to data.py, and fix CSS z-index/overflow issues in dashboard",
+  "status": "in_progress",
+  "steps": [
+    "1. In src/augur/registry.py, fix the dead code at line 458: the add_debate_message method code appears AFTER a return statement inside get_consensus(). The code at lines 457-459 should be extracted as a proper method on DecisionCoordinator class. Move: (a) add def add_debate_message(self, msg: DebateMessage): self._debate_history.append(msg) as a separate method BEFORE get_debate_history(), and (b) remove the dead code lines from inside get_consensus().",
+    "2. In src/augur/data.py, add a force_refresh parameter to fetch_market_context(ticker, force_refresh=False) that bypasses the cache when True. Also add a public clear_cache() function and a cache_info() function that returns cache size and TTL. This allows stale data to be explicitly cleared.",
+    "3. In src/augur/data.py, reduce _CACHE_TTL from 300 to 180 seconds (3 minutes) for more timely data during market hours while still avoiding excessive API calls.",
+    "4. In dashboard/app.py, add a new API endpoint GET /api/cache/clear that calls clear_cache() from augur.data and returns {status: ok, message: 'Cache cleared'}. Also add GET /api/cache/info that returns cache size and TTL.",
+    "5. In dashboard/static/css/bloomberg.css, fix the following CSS issues: (a) Add overflow-x: hidden to .app-main to prevent horizontal scrollbar when content overflows. (b) Add text-overflow: ellipsis and max-width constraints to agent names and ticker displays to prevent long names from breaking layouts. (c) Add z-index: 1001 to the toast-container so toasts always appear above the sidebar. (d) On mobile (max-width: 768px), ensure bottom-nav has z-index higher than page content.",
+    "6. In dashboard/templates/base.html, add a style for .toast-container with position:fixed; z-index:1001; top:16px; right:16px; to ensure toasts don't stack behind sidebar.",
+    "7. Add comprehensive tests in tests/test_iteration8.py covering: (a) add_debate_message is callable and works, (b) data.py cache clearing works, (c) data.py cache TTL is 180, (d) force_refresh bypasses cache, (e) API /api/cache/clear endpoint, (f) API /api/cache/info endpoint, (g) Kelly criterion edge cases (score exactly 5, bearish signal, neutral with low confidence)"
+  ],
+  "acceptance_criteria": [
+    "add_debate_message is a proper method on DecisionCoordinator accessible from outside",
+    "DebateProtocol's _generate_debate_messages no longer crashes because add_debate_message now exists",
+    "data.py cache TTL is 180 seconds",
+    "fetch_market_context(ticker, force_refresh=True) skips the cache and fetches fresh data",
+    "clear_cache() empties the module-level _cache dict",
+    "GET /api/cache/clear returns 200 with status ok",
+    "GET /api/cache/info returns cache size and TTL",
+    "No horizontal overflow on .app-main",
+    "Toasts always render above sidebar (z-index 1001+)",
+    "All 251+ existing tests continue to pass plus new tests"
+  ],
+  "verification": [
+    "python3 -m pytest /projects/sandbox/augur/tests/ --tb=short -q",
+    "python3 -c \"import sys; sys.path.insert(0, '/projects/sandbox/augur/src'); from augur.registry import DecisionCoordinator; c = DecisionCoordinator(); print(hasattr(c, 'add_debate_message'))\" should print True",
+    "python3 -c \"import sys; sys.path.insert(0, '/projects/sandbox/augur/src'); from augur.data import clear_cache, cache_info; clear_cache(); print(cache_info())\" should work"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

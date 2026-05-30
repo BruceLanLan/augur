@@ -1,0 +1,7 @@
+{
+  "task_id": "task-iteration8-logic-dashboard-css",
+  "task_description": "Iteration 8: Investment logic correctness, dashboard page functionality, CSS/visual fixes, data freshness improvements, dead code cleanup",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}
