@@ -308,9 +308,11 @@ class DecisionCoordinator:
             if context and hasattr(context, 'sector') and context.sector:
                 sector_lower = (context.sector or "").lower()
                 industry_lower = (context.industry or "").lower() if hasattr(context, 'industry') else ""
-                is_tech = ("technology" in sector_lower or "tech" in sector_lower
-                           or "ai" in industry_lower or "semiconductor" in industry_lower
-                           or "software" in industry_lower)
+                is_tech = (sector_lower in ("technology", "information technology")
+                           or any(kw in industry_lower for kw in [
+                               "artificial intelligence", "machine learning",
+                               "semiconductor", "software"
+                           ]))
                 is_financial = "financial" in sector_lower
                 is_healthcare = "health" in sector_lower or "medical" in sector_lower
 

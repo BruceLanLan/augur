@@ -159,6 +159,16 @@ def _check_rate_limit(ticker: str) -> bool:
 
         # Record this request
         _rate_limits[ticker_key].append(now)
+
+        # Periodic eviction of stale ticker keys to prevent unbounded growth
+        if len(_rate_limits) > 1000:
+            stale_keys = [
+                k for k, v in _rate_limits.items()
+                if not v or all(now - ts >= _RATE_LIMIT_WINDOW for ts in v)
+            ]
+            for k in stale_keys:
+                del _rate_limits[k]
+
         return True
 
 

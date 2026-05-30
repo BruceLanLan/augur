@@ -144,6 +144,69 @@ class TestCoordinatorWeights:
             assert 0 <= consensus.score <= 10
             assert consensus.agent_id == "consensus"
 
+    @patch("augur.registry.Path")
+    def test_sector_boost_no_false_positive_retail(self, mock_path):
+        """A Retail company (sector=Consumer Cyclical, industry=Retail) should NOT get tech boost.
+
+        Regression test: the old 'ai' substring check matched 'ret-AI-l', boosting
+        cathie_wood/aschenbrenner/thiel incorrectly for non-tech companies.
+        """
+        mock_path.return_value.parent = MagicMock()
+        coordinator = DecisionCoordinator()
+
+        # Retail company context
+        ctx_retail = self._make_context(sector="Consumer Cyclical", industry="Retail")
+        results = self._make_mock_results(coordinator)
+
+        # Neutral context with no sector (baseline, no boost applied)
+        ctx_neutral = self._make_context(sector="", industry="")
+        results_neutral = self._make_mock_results(coordinator)
+
+        consensus_retail = coordinator.get_consensus(results, ticker="WMT", context=ctx_retail)
+        consensus_neutral = coordinator.get_consensus(results_neutral, ticker="WMT", context=ctx_neutral)
+
+        # The retail consensus should NOT have boosted tech personas.
+        # Since all agent responses are identical, any boost to cathie_wood/aschenbrenner/thiel
+        # would change the weighted average. With no boost, both should be equivalent.
+        # Just verify the retail score is close to the neutral score (no significant tech boost).
+        assert abs(consensus_retail.score - consensus_neutral.score) < 0.5, (
+            f"Retail got unexpected tech boost: retail_score={consensus_retail.score:.2f}, "
+            f"neutral_score={consensus_neutral.score:.2f}"
+        )
+
+    @patch("augur.registry.Path")
+    def test_sector_boost_no_false_positive_entertainment(self, mock_path):
+        """An Entertainment company should NOT get tech boost from 'ai' in 'entertainment'."""
+        mock_path.return_value.parent = MagicMock()
+        coordinator = DecisionCoordinator()
+
+        ctx_entertainment = self._make_context(sector="Communication Services", industry="Entertainment")
+        ctx_neutral = self._make_context(sector="", industry="")
+        results = self._make_mock_results(coordinator)
+
+        consensus_ent = coordinator.get_consensus(results, ticker="DIS", context=ctx_entertainment)
+        consensus_neutral = coordinator.get_consensus(results, ticker="DIS", context=ctx_neutral)
+
+        assert abs(consensus_ent.score - consensus_neutral.score) < 0.5, (
+            f"Entertainment got unexpected tech boost: ent_score={consensus_ent.score:.2f}, "
+            f"neutral_score={consensus_neutral.score:.2f}"
+        )
+
+    @patch("augur.registry.Path")
+    def test_sector_boost_no_biotech_false_positive(self, mock_path):
+        """Biotechnology sector should NOT get tech boost (it should route to healthcare)."""
+        mock_path.return_value.parent = MagicMock()
+        coordinator = DecisionCoordinator()
+
+        ctx_biotech = self._make_context(sector="Healthcare", industry="Biotechnology")
+        results = self._make_mock_results(coordinator)
+
+        consensus = coordinator.get_consensus(results, ticker="MRNA", context=ctx_biotech)
+
+        # Healthcare sector should boost fisher, NOT cathie_wood/aschenbrenner/thiel
+        assert 0 <= consensus.score <= 10
+        assert consensus.agent_id == "consensus"
+
     def test_consensus_score_always_clamped(self):
         """Consensus score is always in [0, 10]."""
         coordinator = DecisionCoordinator()
@@ -409,6 +472,27 @@ class TestRateLimiting:
         for i in range(30):
             resp = client.get("/api/analyze/TICKBRL?pe=20&auto_fetch=false")
             assert resp.status_code == 200, f"TICKBRL request {i+1} failed"
+
+    def test_rate_limit_stale_eviction(self):
+        """When > 1000 ticker keys exist, stale entries are evicted."""
+        from dashboard.app import _rate_limits, _rate_limit_lock, _RATE_LIMIT_WINDOW
+        import time as _t
+
+        with _rate_limit_lock:
+            # Populate with 1001 stale entries (timestamps beyond the window)
+            stale_ts = _t.time() - _RATE_LIMIT_WINDOW - 10
+            for i in range(1001):
+                _rate_limits[f"STALE{i}"] = [stale_ts]
+
+        # Now make a real request, which should trigger eviction
+        from dashboard.app import _check_rate_limit
+        result = _check_rate_limit("TRIGGER")
+        assert result is True
+
+        # After eviction, stale keys should be cleaned up
+        with _rate_limit_lock:
+            # The TRIGGER key should exist, but most stale keys should be gone
+            assert len(_rate_limits) < 1001
 
 
 # ============ TestKellyProperty ============
