@@ -121,6 +121,7 @@ class FisherAgent(BaseAgent):
         factors["growth_durability"] = min(max(growth_dur_score, 0), 10)
 
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)
+        total_score = max(0.0, min(10.0, total_score))
         avg_score = sum(factors.values()) / len(factors)
         signal = self._calculate_signal(avg_score)
         confidence = min(0.85, 0.5 + factors["margin_sustainability"] / 20)

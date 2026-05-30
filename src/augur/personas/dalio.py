@@ -99,6 +99,7 @@ class DalioAgent(BaseAgent):
 
         # 加权综合评分
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0.25) for k in factors)
+        total_score = max(0.0, min(10.0, total_score))
         signal = self._calculate_signal(total_score)
         confidence = 0.5 + (factors["trend_strength"] - 5) / 20
 

@@ -91,6 +91,7 @@ class DayuAgent(BaseAgent):
 
         # 综合评分
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)
+        total_score = max(0.0, min(10.0, total_score))
         avg_score = sum(factors.values()) / len(factors)
         signal = self._calculate_signal(avg_score)
 
@@ -153,12 +154,12 @@ class DayuAgent(BaseAgent):
             score += 2
         elif ctx.change_pct > 2:
             score += 1
-        elif ctx.change_pct < -5:
-            score -= 1
-        elif ctx.change_pct < -10:
-            score -= 2
         elif ctx.change_pct < -20:
             score -= 3
+        elif ctx.change_pct < -10:
+            score -= 2
+        elif ctx.change_pct < -5:
+            score -= 1
 
         # RSI动量
         rsi = ctx.rsi
