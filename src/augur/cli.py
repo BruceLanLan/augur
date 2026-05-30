@@ -512,8 +512,7 @@ def _auto_fetch_context(ticker: str):
         click.echo(f"  [数据来源: yfinance 实时]\n")
         return ctx
     except ImportError:
-        click.echo("Warning: yfinance not installed. Using empty metrics.", err=True)
-        click.echo("Install with: pip install 'augur-agents[data]'\n", err=True)
+        click.echo("Warning: yfinance not installed (pip install 'augur-agents[data]'). Analyzing with empty metrics.\n", err=True)
         return MarketContext(ticker=ticker.upper())
     except Exception as e:
         click.echo(f"Warning: Failed to fetch data: {e}. Using empty metrics.\n", err=True)

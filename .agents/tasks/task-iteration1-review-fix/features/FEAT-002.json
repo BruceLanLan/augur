@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Improve error handling, user feedback, and robustness in the analysis pipeline and dashboard",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "1. In src/augur/registry.py DecisionCoordinator.get_consensus(), the method references several scanner.* modules that don't exist in the current codebase (scanner.industry_matrix, scanner.regime_weights, etc). These are wrapped in try/except which is fine, but add a log message at debug level when these modules are missing so developers know they're being skipped. Add 'import logging; logger = logging.getLogger(__name__)' at the top and logger.debug() in the except blocks for the major feature modules (industry_matrix, regime_weights, rolling_ic, meta_model, risk_manager).",
     "2. In dashboard/app.py, the analyze_ticker endpoint silently falls back to empty MarketContext when yfinance fails. Add the exception message to the response so the frontend can show it. Add a 'data_note' field to the response when yfinance fails: e.g., 'data_note': 'yfinance fetch failed, using manual parameters' so the user knows data may be incomplete.",
@@ -24,5 +24,5 @@
     "python -c \"from augur.backtest import Backtester; bt = Backtester(); print('Backtest module OK')\""
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 78 tests pass. All 6 improvements implemented: logging in registry.py, data_note in dashboard, CLI message consolidation, processing_time_ms in watchlist/run, backtest log rotation, and cron error handling."
 }

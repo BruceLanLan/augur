@@ -196,19 +196,23 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
             if key in item:
                 ctx_kwargs[key] = item[key]
 
-        ctx = MarketContext(**ctx_kwargs)
-        results = coordinator.analyze_with_all(ctx)
-        consensus = coordinator.get_consensus(results, ticker=ticker, context=ctx)
+        try:
+            ctx = MarketContext(**ctx_kwargs)
+            results = coordinator.analyze_with_all(ctx)
+            consensus = coordinator.get_consensus(results, ticker=ticker, context=ctx)
 
-        analysis = {
-            "ticker": ticker,
-            "consensus": consensus,
-            "results": results,
-            "message": format_consensus_message(ticker, consensus, results),
-        }
-        all_results.append(analysis)
+            analysis = {
+                "ticker": ticker,
+                "consensus": consensus,
+                "results": results,
+                "message": format_consensus_message(ticker, consensus, results),
+            }
+            all_results.append(analysis)
 
-        print(f"  {ticker}: {consensus.signal.value.upper()} ({consensus.score:.1f}/10)")
+            print(f"  {ticker}: {consensus.signal.value.upper()} ({consensus.score:.1f}/10)")
+        except Exception as e:
+            print(f"  Error analyzing {ticker}: {e}")
+            continue
 
     # Send notifications
     _send_notifications(config, all_results)

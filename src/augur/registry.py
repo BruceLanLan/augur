@@ -9,9 +9,12 @@ Contains:
   - Global instances and convenience functions
 """
 
+import logging
 from typing import Dict, List, Optional, Any
 from threading import RLock
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
 
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType, DebateMessage
 
@@ -160,7 +163,8 @@ class DecisionCoordinator:
                     import json as _j
                     trained = _j.loads(matrix_file.read_text())
                 weights = get_agent_weights(industry, trained)
-            except Exception:
+            except Exception as e:
+                logger.debug("Module not available: %s", e)
                 pass
 
         # --- Regime-aware weight adjustment ---
@@ -188,7 +192,8 @@ class DecisionCoordinator:
                         weights = {k: v / total_rw for k, v in weights.items()}
             except Exception:
                 pass
-        except Exception:
+        except Exception as e:
+            logger.debug("Module not available: %s", e)
             regime = None
 
         # --- Correlation diversity penalty ---
@@ -295,7 +300,8 @@ class DecisionCoordinator:
                 agent_scores_dict = {aid: resp.score for aid, resp in results.items()}
                 mm_score = mm.predict(agent_scores_dict)
                 total_score = 0.5 * total_score + 0.5 * mm_score
-        except Exception:
+        except Exception as e:
+            logger.debug("Module not available: %s", e)
             pass
 
         result = AgentResponse(
@@ -330,7 +336,8 @@ class DecisionCoordinator:
             rm = RiskManager()
             verdict = rm.evaluate(ctx_for_risk, result, results, regime=regime, vix=vix)
             result = rm.apply_veto(result, verdict)
-        except Exception:
+        except Exception as e:
+            logger.debug("Module not available: %s", e)
             pass
 
         # --- Kelly position sizing (simplified half-Kelly) ---
