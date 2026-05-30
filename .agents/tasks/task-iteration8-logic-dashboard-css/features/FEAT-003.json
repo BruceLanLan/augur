@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Dashboard page functionality: signals auto-refresh state persistence, settings page unsaved indicator accessibility, index.html history sorting, and create-persona YAML validation feedback",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "1. In dashboard/templates/signals.html: The auto-refresh timer reloads the watchlist every 60s but analysisResults (the signal/score display data) is stored only in a JS variable and lost on page reload. Fix: persist analysisResults to sessionStorage after runAllAnalysis completes, and restore from sessionStorage on page load. This way signals persist across auto-refreshes and page navigations within the session.",
     "2. In dashboard/templates/index.html: The augurCache.getLast(5) returns results in insertion order (most recent first) which is correct. However, there is no deduplication check - if a user analyzes the same ticker twice quickly, it could appear twice because augurCache.add filters by ticker before unshift. Verify this is correct (it already deduplicates by ticker). Add a fallback sort by timestamp to guarantee order: change getLast to sort by time descending before slicing.",

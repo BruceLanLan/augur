@@ -468,3 +468,47 @@ class TestOverheatingUsesCtxPe:
         assert "valuation elevated" not in risk_text.lower(), (
             f"Risks should not mention PE overvaluation with PE=20, got: {consensus.risks}"
         )
+
+
+# ============ FEAT-003: Watchlist API Tests ============
+
+class TestWatchlistAPI:
+    """Tests for dashboard watchlist API endpoints."""
+
+    @pytest.fixture
+    def client(self):
+        """Create a test client for the dashboard."""
+        from fastapi.testclient import TestClient
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from dashboard.app import app
+        return TestClient(app)
+
+    def test_watchlist_api_structure(self, client):
+        """GET /api/watchlist returns dict with 'watchlist' key that is a list."""
+        response = client.get("/api/watchlist")
+        assert response.status_code == 200
+        data = response.json()
+        assert "watchlist" in data
+        assert isinstance(data["watchlist"], list)
+
+    def test_watchlist_add_valid(self, client):
+        """POST /api/watchlist/add with valid ticker returns status ok."""
+        response = client.post(
+            "/api/watchlist/add",
+            json={"ticker": "TEST"}
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"
+
+    def test_watchlist_delete_nonexist(self, client):
+        """DELETE /api/watchlist/NONEXIST returns 404."""
+        response = client.delete("/api/watchlist/NONEXIST")
+        assert response.status_code == 404
+
+    def test_cache_clear_endpoint_ok(self, client):
+        """GET /api/cache/clear returns status ok."""
+        response = client.get("/api/cache/clear")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"

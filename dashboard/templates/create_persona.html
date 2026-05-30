@@ -294,12 +294,16 @@ function submitPersona() {
                 '</div>';
         } else {
             showToast(data.detail || '注册失败', 'error');
+            var preview = document.getElementById('yaml-preview');
+            if(preview) { preview.style.borderColor='var(--signal-sell)'; setTimeout(function(){preview.style.borderColor='';},3000); }
         }
     })
     .catch(function(e) {
         btn.disabled = false;
         btn.innerHTML = '&#x2714; 注册投资人';
         showToast('注册失败: ' + e.message, 'error');
+        var preview = document.getElementById('yaml-preview');
+        if(preview) { preview.style.borderColor='var(--signal-sell)'; setTimeout(function(){preview.style.borderColor='';},3000); }
     });
 }
 

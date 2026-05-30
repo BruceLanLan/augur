@@ -252,7 +252,9 @@
             localStorage.setItem(this.KEY, JSON.stringify(list));
         },
         getLast: function(n) {
-            return this.get().slice(0, n || 5);
+            var items = this.get();
+            items.sort(function(a,b){return (b.time||0)-(a.time||0);});
+            return items.slice(0, n || 5);
         },
         clear: function() {
             localStorage.removeItem(this.KEY);

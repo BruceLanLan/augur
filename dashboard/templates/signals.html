@@ -79,6 +79,9 @@ var analysisResults = {};
 var autoRefreshTimer = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Restore analysis results from sessionStorage
+    try { var saved = sessionStorage.getItem('augur-analysis-results'); if(saved) { analysisResults = JSON.parse(saved); renderWatchlist(); } } catch(e){}
+
     loadWatchlist();
     startAutoRefresh();
 
@@ -244,6 +247,7 @@ function runAllAnalysis() {
                     var r = data.results[i];
                     analysisResults[r.ticker] = r;
                 }
+                sessionStorage.setItem('augur-analysis-results', JSON.stringify(analysisResults));
                 renderWatchlist();
                 showResultsSummary(data.results);
                 showToast('分析完成 - ' + data.results.length + ' 只股票');
