@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Dashboard XSS prevention and remaining datetime.utcnow() fix",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "In dashboard/templates/stocks.html: The renderMarkdown() function uses innerHTML with user-facing data (agent reasoning, key_findings, risks). The data comes from backend Python strings, not raw user input, BUT the create-persona feature allows user YAML that becomes reasoning text. Add HTML entity escaping in renderMarkdown() before applying formatting: escape <, >, &, quotes first, then apply markdown formatting.",
     "In dashboard/templates/stocks.html: The agent_name field is inserted via innerHTML. Ensure it goes through a sanitization step (textContent assignment or escape function).",
@@ -21,5 +21,5 @@
     "grep -n 'escapeHtml' dashboard/templates/base.html dashboard/templates/stocks.html"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "No utcnow() calls found in dashboard/app.py - already clean. escapeHtml() added to base.html and used in renderMarkdown() and agent name rendering in stocks.html. All 86 tests pass."
 }
