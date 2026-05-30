@@ -1,0 +1,31 @@
+{
+  "project_type": "Python multi-agent investment analysis system with FastAPI dashboard",
+  "language": "Python 3.8+",
+  "build_system": "setuptools via pyproject.toml, pip install -e '.[data,dev]'",
+  "test_framework": "pytest",
+  "build_command": "pip install -e '.[data,dev]' && python -c 'import augur; print(\"OK\")'",
+  "test_command": "pytest tests/ -x -q",
+  "verification_instructions": "Run pytest tests/test_report.py to verify report changes. Run python -m dashboard.app to verify dashboard starts.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e '.[data,dev]' from project root",
+  "environment_constraints": "OPEN_INTERNET network mode. Python 3.11 available via pyenv.",
+  "contribution_requirements": "Follow patterns in existing code. All new features must have tests.",
+  "key_patterns": "report.py uses generate_report() function with THEME_GROUPS dict for agent categorization. Dashboard templates extend base.html and use Jinja2. API routes in dashboard/app.py. CLI in src/augur/cli.py.",
+  "relevant_files": [
+    "src/augur/report.py",
+    "tests/test_report.py",
+    "dashboard/templates/stocks.html",
+    "dashboard/templates/index.html",
+    "dashboard/templates/signals.html",
+    "dashboard/templates/backtest.html",
+    "dashboard/templates/settings.html",
+    "dashboard/templates/create_persona.html",
+    "dashboard/templates/personas.html",
+    "dashboard/templates/base.html",
+    "dashboard/app.py",
+    "src/augur/cli.py",
+    "src/augur/cli_format.py",
+    "cases/analysis-reports/Alphabet-GOOGL-纳斯达克-深度分析.md"
+  ],
+  "directory_structure": "src/augur/ - core Python package; dashboard/ - FastAPI web UI; tests/ - pytest tests; cases/analysis-reports/ - reference report examples; personas/ - YAML custom personas"
+}
