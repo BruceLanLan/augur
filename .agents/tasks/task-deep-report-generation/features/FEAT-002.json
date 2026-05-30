@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Add CLI command 'augur report TICKER' and API endpoint 'POST /api/report/{ticker}' for report generation, plus unit tests",
+  "status": "completed",
+  "steps": [
+    "Add 'report' command to src/augur/cli.py following the existing pattern of analyze/consensus commands. Options: --output FILE (save to file, default stdout), --persona PERSONA (optional, highlight one agent's perspective), --json (output report wrapped in JSON). The command should: 1) auto-fetch or accept manual metrics like analyze/consensus, 2) run full 18-agent analysis + consensus, 3) call generate_report() from src/augur/report.py, 4) output report to stdout or save to --output file",
+    "Add POST /api/report/{ticker} endpoint to dashboard/app.py (the main dashboard FastAPI app). Accept same query params as /api/analyze/{ticker}. Return JSON: {ticker, report (full markdown string), timestamp, data_source}. Also add GET /api/report/{ticker} as an alias for convenience.",
+    "Add a 'Generate Report' button on dashboard/templates/stocks.html - place it next to the existing 'analyze' button or in the results section. When clicked, call the /api/report/{ticker} endpoint and display the markdown report in a modal or new section below results",
+    "Create tests/test_report.py with tests for: 1) generate_report() produces valid markdown with required sections, 2) CLI 'augur report' command help works, 3) CLI 'augur report TICKER --pe 25' produces output, 4) API endpoint returns correct JSON structure",
+    "Ensure the CLI report command supports --no-color flag (inherited from main group) - strip emojis from report if no-color is active"
+  ],
+  "acceptance_criteria": [
+    "augur report --help shows the command with correct options",
+    "augur report AAPL --pe 25 outputs a Markdown report to stdout with Chinese content",
+    "augur report AAPL --pe 25 --output /tmp/test.md saves report to file",
+    "POST /api/report/AAPL returns JSON with ticker, report (markdown string), and timestamp fields",
+    "Dashboard stocks.html has a Generate Report button that triggers report generation",
+    "pytest tests/test_report.py passes all new tests"
+  ],
+  "verification": [
+    "pytest tests/test_report.py tests/test_cli.py -x -q passes",
+    "Run: augur report AAPL --pe 30 --roe 0.25 and verify Chinese markdown output appears"
+  ],
+  "blocked_reason": null,
+  "findings": "All 24 tests pass (19 existing + 5 new). CLI 'augur report' command works with --help, manual metrics, and file output. API endpoint /api/report/{ticker} returns correct JSON. Dashboard has generate report button and auto-report URL param support."
+}

@@ -1,0 +1,27 @@
+{
+  "project_type": "Python CLI + FastAPI web app, multi-agent investment analysis system",
+  "language": "Python 3.8+",
+  "build_system": "setuptools via pyproject.toml, pip install -e .",
+  "test_framework": "pytest with click.testing.CliRunner for CLI tests, httpx/TestClient for API tests",
+  "build_command": "pip install -e . && python -c 'import augur; print(augur.__version__)'",
+  "test_command": "pytest tests/ -x -q",
+  "verification_instructions": "1. pip install -e . 2. pytest tests/ -x -q 3. augur report AAPL --pe 25 (verify report output)",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "cd /projects/sandbox/augur && pip install -e .",
+  "environment_constraints": "OPEN_INTERNET network mode. Python 3.11 available. No Docker needed for tests.",
+  "contribution_requirements": "Follow existing patterns in cli.py for CLI commands, api.py for endpoints. Use Chinese for report content.",
+  "key_patterns": "CLI uses Click groups (main), API uses FastAPI with get_registry()/get_coordinator() singletons. Agents produce AgentResponse with signal/score/confidence/key_findings/risks/reasoning. DecisionCoordinator.analyze_with_all() returns Dict[str, AgentResponse], get_consensus() returns AgentResponse with metadata including position_sizing. Dashboard uses Jinja2 templates in dashboard/templates/.",
+  "relevant_files": [
+    "src/augur/cli.py",
+    "src/augur/api.py",
+    "src/augur/registry.py",
+    "src/augur/personas/base.py",
+    "src/augur/cli_format.py",
+    "dashboard/app.py",
+    "dashboard/templates/stocks.html",
+    "cases/analysis-reports/example-analysis-costco.md",
+    "tests/test_cli.py",
+    "tests/test_api.py"
+  ],
+  "directory_structure": "src/augur/ - main package (cli.py, api.py, registry.py, personas/), dashboard/ - FastAPI web app with templates/, tests/ - pytest tests, cases/analysis-reports/ - example report format"
+}
