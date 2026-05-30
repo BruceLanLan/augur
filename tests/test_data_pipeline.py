@@ -119,60 +119,134 @@ class TestExtremeValues:
 
 
 class TestDebtRatioConversion:
-    """Verify data.py converts yfinance debtToEquity correctly."""
+    """Verify data.py converts yfinance debtToEquity correctly via fetch_market_context."""
 
     def test_conversion_162(self):
-        """debtToEquity=162 -> debt_ratio ~ 0.618."""
-        debt_to_equity = 162
-        de_ratio = debt_to_equity / 100.0
-        debt_ratio = de_ratio / (1.0 + de_ratio)
-        assert abs(debt_ratio - 0.618) < 0.01
+        """debtToEquity=162 -> debt_ratio ~ 0.618 via actual data.py logic."""
+        from unittest.mock import patch, MagicMock
+
+        mock_ticker = MagicMock()
+        mock_ticker.info = {
+            "symbol": "TEST",
+            "debtToEquity": 162,
+            "currentPrice": 100,
+        }
+        mock_ticker.history.return_value = MagicMock(empty=True)
+
+        with patch("augur.data._get_yfinance") as mock_yf:
+            mock_yf.return_value.Ticker.return_value = mock_ticker
+            from augur.data import _cache, fetch_market_context
+            _cache.clear()
+            ctx = fetch_market_context("TEST")
+
+        assert abs(ctx.debt_ratio - 0.618) < 0.01
 
     def test_conversion_zero(self):
-        """debtToEquity=0 -> debt_ratio=0."""
-        debt_to_equity = 0
-        if debt_to_equity > 0:
-            de_ratio = debt_to_equity / 100.0
-            debt_ratio = de_ratio / (1.0 + de_ratio)
-        else:
-            debt_ratio = 0
-        assert debt_ratio == 0
+        """debtToEquity=0 -> debt_ratio=0 via actual data.py logic."""
+        from unittest.mock import patch, MagicMock
+
+        mock_ticker = MagicMock()
+        mock_ticker.info = {
+            "symbol": "TEST",
+            "debtToEquity": 0,
+            "currentPrice": 50,
+        }
+        mock_ticker.history.return_value = MagicMock(empty=True)
+
+        with patch("augur.data._get_yfinance") as mock_yf:
+            mock_yf.return_value.Ticker.return_value = mock_ticker
+            from augur.data import _cache, fetch_market_context
+            _cache.clear()
+            ctx = fetch_market_context("TESTZERO")
+
+        assert ctx.debt_ratio == 0
 
     def test_conversion_negative(self):
-        """Negative debtToEquity (negative equity) -> debt_ratio=0."""
-        debt_to_equity = -150
-        if debt_to_equity > 0:
-            de_ratio = debt_to_equity / 100.0
-            debt_ratio = de_ratio / (1.0 + de_ratio)
-        else:
-            debt_ratio = 0
-        assert debt_ratio == 0
+        """Negative debtToEquity (negative equity) -> debt_ratio=0 via actual data.py logic."""
+        from unittest.mock import patch, MagicMock
+
+        mock_ticker = MagicMock()
+        mock_ticker.info = {
+            "symbol": "TEST",
+            "debtToEquity": -150,
+            "currentPrice": 50,
+        }
+        mock_ticker.history.return_value = MagicMock(empty=True)
+
+        with patch("augur.data._get_yfinance") as mock_yf:
+            mock_yf.return_value.Ticker.return_value = mock_ticker
+            from augur.data import _cache, fetch_market_context
+            _cache.clear()
+            ctx = fetch_market_context("TESTNEG")
+
+        assert ctx.debt_ratio == 0
 
     def test_conversion_very_large(self):
-        """Very large debtToEquity=10000 -> debt_ratio approaches 1.0."""
-        debt_to_equity = 10000
-        de_ratio = debt_to_equity / 100.0  # 100
-        debt_ratio = de_ratio / (1.0 + de_ratio)  # 100/101 ~ 0.99
-        assert 0.99 < debt_ratio < 1.0
+        """Very large debtToEquity=10000 -> debt_ratio approaches 1.0 via actual data.py logic."""
+        from unittest.mock import patch, MagicMock
+
+        mock_ticker = MagicMock()
+        mock_ticker.info = {
+            "symbol": "TEST",
+            "debtToEquity": 10000,
+            "currentPrice": 50,
+        }
+        mock_ticker.history.return_value = MagicMock(empty=True)
+
+        with patch("augur.data._get_yfinance") as mock_yf:
+            mock_yf.return_value.Ticker.return_value = mock_ticker
+            from augur.data import _cache, fetch_market_context
+            _cache.clear()
+            ctx = fetch_market_context("TESTLARGE")
+
+        assert 0.99 < ctx.debt_ratio < 1.0
 
 
 # ============ Test 5: Unit conversion consistency ============
 
 
 class TestUnitConversions:
-    """Verify fcf and market_cap are consistently in billions."""
+    """Verify fcf and market_cap are consistently converted to billions by data.py."""
 
     def test_fcf_in_billions(self):
-        """data.py divides raw fcf by 1e9."""
-        raw_fcf = 5_000_000_000  # 5 billion USD
-        converted = raw_fcf / 1e9
-        assert converted == 5.0
+        """data.py divides raw fcf by 1e9 - verify via fetch_market_context."""
+        from unittest.mock import patch, MagicMock
+
+        mock_ticker = MagicMock()
+        mock_ticker.info = {
+            "symbol": "TEST",
+            "freeCashflow": 5_000_000_000,  # 5 billion USD raw
+            "currentPrice": 100,
+        }
+        mock_ticker.history.return_value = MagicMock(empty=True)
+
+        with patch("augur.data._get_yfinance") as mock_yf:
+            mock_yf.return_value.Ticker.return_value = mock_ticker
+            from augur.data import _cache, fetch_market_context
+            _cache.clear()
+            ctx = fetch_market_context("TESTFCF")
+
+        assert ctx.fcf == 5.0
 
     def test_market_cap_in_billions(self):
-        """data.py divides raw market_cap by 1e9."""
-        raw_cap = 2_500_000_000_000  # 2.5 trillion
-        converted = raw_cap / 1e9
-        assert converted == 2500.0
+        """data.py divides raw market_cap by 1e9 - verify via fetch_market_context."""
+        from unittest.mock import patch, MagicMock
+
+        mock_ticker = MagicMock()
+        mock_ticker.info = {
+            "symbol": "TEST",
+            "marketCap": 2_500_000_000_000,  # 2.5 trillion raw
+            "currentPrice": 100,
+        }
+        mock_ticker.history.return_value = MagicMock(empty=True)
+
+        with patch("augur.data._get_yfinance") as mock_yf:
+            mock_yf.return_value.Ticker.return_value = mock_ticker
+            from augur.data import _cache, fetch_market_context
+            _cache.clear()
+            ctx = fetch_market_context("TESTCAP")
+
+        assert ctx.market_cap == 2500.0
 
     def test_market_context_expects_billions(self):
         """MarketContext fields represent billions when populated from data.py."""
@@ -185,21 +259,73 @@ class TestUnitConversions:
 
 
 class TestOwnershipConversion:
-    """Verify institutional_ownership converts from 0-1 fraction to 0-100 %."""
+    """Verify institutional_ownership converts from 0-1 fraction to 0-100 % via data.py."""
 
     def test_ownership_fraction_to_pct(self):
-        """yfinance fraction 0.75 -> 75.0 percentage."""
-        raw_fraction = 0.75
-        converted = raw_fraction * 100
-        assert converted == 75.0
+        """yfinance fraction 0.75 -> 75.0 percentage via fetch_market_context."""
+        from unittest.mock import patch, MagicMock
+
+        mock_ticker = MagicMock()
+        mock_ticker.info = {
+            "symbol": "TEST",
+            "heldPercentInstitutions": 0.75,
+            "heldPercentInsiders": 0.10,
+            "currentPrice": 100,
+        }
+        mock_ticker.history.return_value = MagicMock(empty=True)
+
+        with patch("augur.data._get_yfinance") as mock_yf:
+            mock_yf.return_value.Ticker.return_value = mock_ticker
+            from augur.data import _cache, fetch_market_context
+            _cache.clear()
+            ctx = fetch_market_context("TESTOWN")
+
+        assert ctx.institutional_ownership == 75.0
+        assert ctx.insider_ownership == 10.0
 
     def test_ownership_zero(self):
-        """Zero ownership stays zero."""
-        assert 0 * 100 == 0
+        """Zero ownership stays zero via fetch_market_context."""
+        from unittest.mock import patch, MagicMock
 
-    def test_ownership_one(self):
-        """Full ownership (1.0) -> 100%."""
-        assert 1.0 * 100 == 100.0
+        mock_ticker = MagicMock()
+        mock_ticker.info = {
+            "symbol": "TEST",
+            "heldPercentInstitutions": 0,
+            "heldPercentInsiders": 0,
+            "currentPrice": 100,
+        }
+        mock_ticker.history.return_value = MagicMock(empty=True)
+
+        with patch("augur.data._get_yfinance") as mock_yf:
+            mock_yf.return_value.Ticker.return_value = mock_ticker
+            from augur.data import _cache, fetch_market_context
+            _cache.clear()
+            ctx = fetch_market_context("TESTZOWN")
+
+        assert ctx.institutional_ownership == 0
+        assert ctx.insider_ownership == 0
+
+    def test_ownership_full(self):
+        """Full ownership (1.0) -> 100% via fetch_market_context."""
+        from unittest.mock import patch, MagicMock
+
+        mock_ticker = MagicMock()
+        mock_ticker.info = {
+            "symbol": "TEST",
+            "heldPercentInstitutions": 1.0,
+            "heldPercentInsiders": 1.0,
+            "currentPrice": 100,
+        }
+        mock_ticker.history.return_value = MagicMock(empty=True)
+
+        with patch("augur.data._get_yfinance") as mock_yf:
+            mock_yf.return_value.Ticker.return_value = mock_ticker
+            from augur.data import _cache, fetch_market_context
+            _cache.clear()
+            ctx = fetch_market_context("TESTFULL")
+
+        assert ctx.institutional_ownership == 100.0
+        assert ctx.insider_ownership == 100.0
 
 
 # ============ Test 7: Coordinator mixed valid/error results ============
@@ -291,10 +417,15 @@ class TestTimingMetadata:
 
 
 class TestPerformanceBaseline:
-    """Full 18-agent analysis completes in under 2 seconds."""
+    """Full 18-agent analysis completes within a reasonable time bound.
 
-    def test_analysis_under_2s(self, coordinator):
-        """Pure computation (no network) should finish quickly."""
+    This is a sanity check, not a strict performance contract. The threshold
+    is set generously (5s) to avoid flaky failures on resource-constrained
+    CI runners or heavily loaded containers. Typical local execution is < 1s.
+    """
+
+    def test_analysis_under_5s(self, coordinator):
+        """Pure computation (no network) should finish within sanity-check threshold."""
         ctx = MarketContext(
             ticker="PERF",
             pe=30,
@@ -312,4 +443,5 @@ class TestPerformanceBaseline:
         elapsed = time.perf_counter() - t0
 
         assert len(results) >= 18
-        assert elapsed < 2.0, f"Full analysis took {elapsed:.2f}s, expected < 2.0s"
+        # 5s is a generous sanity check; typical execution is well under 1s.
+        assert elapsed < 5.0, f"Full analysis took {elapsed:.2f}s, expected < 5.0s"

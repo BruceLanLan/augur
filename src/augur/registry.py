@@ -165,6 +165,11 @@ class DecisionCoordinator:
                 results[agent.agent_id] = self._analyze_single(agent, context)
 
         elapsed_ms = (time.perf_counter() - t0) * 1000
+        # NOTE: _last_analysis_ms is stored on the instance and read by get_consensus.
+        # Under concurrent requests on a singleton coordinator, this value may reflect
+        # a different request's analysis time. This is acceptable because the timing is
+        # informational telemetry (not a correctness concern). The consensus_ms value
+        # in get_consensus is always accurate since it uses a local variable.
         self._last_analysis_ms = elapsed_ms
         logger.debug("analyze_with_all completed in %.1fms", elapsed_ms)
         return results
