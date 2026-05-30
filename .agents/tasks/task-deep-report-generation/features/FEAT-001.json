@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Create the report generation module (src/augur/report.py) that transforms analysis results into a structured Chinese Markdown deep analysis report",
+  "status": "in_progress",
+  "steps": [
+    "Create src/augur/report.py with a generate_report(ticker, context, results, consensus) function",
+    "The function takes: ticker (str), context (MarketContext), results (Dict[str, AgentResponse]), consensus (AgentResponse) and returns a Markdown string",
+    "Report structure should follow the pattern in cases/analysis-reports/example-analysis-costco.md with these sections: 1) Title + metadata (date, method), 2) Executive Summary with scorecard/signal/score/position, 3) Agent Consensus Table showing all 18 agents' signal/score/confidence, 4) Detailed Findings organized by theme (value/growth/risk/moat/technical), 5) Risk Assessment matrix, 6) Position Recommendation with Kelly sizing",
+    "Group agent findings by investment theme: Value agents (buffett, graham, munger, duan_yongping, li_lu, dan_bin), Growth agents (cathie_wood, fisher, lynch, aschenbrenner, thiel), Risk/Macro agents (dalio, soros, marks, serenity), Technical agents (arps, dayu), China specialists (zhang_lei, duan_yongping, li_lu, dan_bin)",
+    "Use Chinese for all report content and section headers. Include market context data (PE, PB, ROE, etc) where available",
+    "Include the signal distribution counts (bullish/neutral/bearish) and generate a summary scoring table similar to the Costco example's scoring card",
+    "Add helper functions: _format_signal_chinese(signal) to convert 'bullish' to Chinese labels, _format_agent_table(results) for the agent breakdown table, _format_theme_section(theme_name, agent_ids, results) for themed analysis sections",
+    "Handle edge cases: empty results, all-error agents, missing context data"
+  ],
+  "acceptance_criteria": [
+    "generate_report returns a non-empty Markdown string with Chinese content",
+    "Report contains all section headers (executive summary, agent table, themed findings, risks, recommendation)",
+    "All 18 agents are represented in the agent consensus table",
+    "Theme groupings correctly categorize agents",
+    "Works with minimal context data (just ticker name)"
+  ],
+  "verification": [
+    "pytest tests/test_report.py -x -q passes all tests"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
