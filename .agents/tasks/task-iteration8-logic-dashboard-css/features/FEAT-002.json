@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Investment logic correctness fixes: Kelly criterion edge case handling, Lynch PEG overflow guard, Graham PE=0 handling, and coordinator adversarial overheating logic fix",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. In src/augur/registry.py get_consensus Kelly criterion section: The current Kelly calculation maps score [5,10] to edge [0,1], then: full_kelly = edge * conf, pct = min(20.0, full_kelly * 0.5 * 100). This is NOT actually the Kelly formula. The proper half-Kelly fraction is f* = 0.5 * (bp - q) / b where b=odds, p=win prob, q=1-p. The current simplified approach (edge * confidence * 50%) is acceptable as a proxy but has an issue: when score==5, edge==0 so pct==0 regardless of confidence, which could leave us with 0% allocation on a borderline-bullish signal. Fix: for bullish signals with score in [5, 5.5], set minimum pct to 1.0% (token position) to avoid zero-allocation on borderline signals.",
     "2. In src/augur/personas/lynch.py: PEG calculation does peg = context.pe / (context.earnings_growth * 100). If earnings_growth is very small (e.g. 0.001 = 0.1%), this gives PEG = PE/0.1 which is astronomically high. Add a guard: if context.earnings_growth < 0.01 (i.e. < 1% growth), treat PEG as undefined and give a neutral score of 5 instead of computing an extremely distorted value.",
@@ -21,5 +21,5 @@
     "python3 -m pytest /projects/sandbox/augur/tests/test_iteration8.py -v --tb=short"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 4 fixes implemented cleanly. 271 tests pass (7 new tests added). Lynch PEG guard uses >= 0.01 threshold. Graham val_score initialized at 5. Kelly minimum 1.0% applied after pct calculation. Overheating check simplified to use ctx_for_risk directly."
 }
