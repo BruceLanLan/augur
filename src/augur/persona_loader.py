@@ -87,7 +87,8 @@ def _eval_rule_condition(condition: str, ctx: MarketContext) -> bool:
             return False
 
     try:
-        return bool(eval(condition, {"__builtins__": {}}, ns))  # noqa: S307
+        code = compile(tree, "<condition>", "eval")
+        return bool(eval(code, {"__builtins__": {}}, ns))  # noqa: S307
     except Exception:
         return False
 

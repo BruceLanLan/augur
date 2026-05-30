@@ -180,7 +180,7 @@ def inject_soul(profile_path: str, persona_id: str, format: str = "hermes", outp
     # Directory traversal protection: verify output stays within out_dir
     resolved_output = output_file.resolve()
     resolved_out_dir = out_dir.resolve()
-    if not str(resolved_output).startswith(str(resolved_out_dir)):
+    if not resolved_output.is_relative_to(resolved_out_dir):
         raise ValueError(
             f"Path traversal detected: profile_path '{profile_path}' escapes output directory"
         )

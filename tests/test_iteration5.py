@@ -117,6 +117,21 @@ class TestSoulSecurity:
             with pytest.raises(ValueError, match="Path traversal detected"):
                 inject_soul("../../etc/evil", "buffett", format="hermes", output_dir=tmpdir)
 
+    def test_path_traversal_prefix_collision_blocked(self):
+        """inject_soul blocks prefix collision bypass (e.g. /tmp/out vs /tmp/output-evil)."""
+        from augur.soul import inject_soul
+
+        with tempfile.TemporaryDirectory() as base_dir:
+            # Create a subdirectory named 'out' as the output dir
+            out_dir = Path(base_dir) / "out"
+            out_dir.mkdir()
+            # An attacker tries a profile_path that would land in /out-evil/ sibling
+            # e.g. out_dir=/base/out, profile resolves to /base/output-evil/file
+            # With startswith check: "/base/out".startswith("/base/out") -> True (bypass!)
+            # With is_relative_to: correctly rejects
+            with pytest.raises(ValueError, match="Path traversal detected"):
+                inject_soul("../out-evil/payload", "buffett", format="raw", output_dir=str(out_dir))
+
     def test_path_traversal_blocked_raw_format(self):
         """inject_soul also blocks traversal in raw format."""
         from augur.soul import inject_soul

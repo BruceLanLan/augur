@@ -413,6 +413,13 @@ def start_scheduler():
     _ensure_config_dir()
     pidfile.write_text(str(os.getpid()))
 
+    # Register SIGTERM handler to clean up pidfile on container stop / process manager signal
+    def _cleanup(signum, frame):
+        pidfile.unlink(missing_ok=True)
+        raise SystemExit(0)
+
+    signal.signal(signal.SIGTERM, _cleanup)
+
     config = load_watchlist()
     schedule = config.get("schedule", {})
     cron_expr = schedule.get("cron", "0 9 * * 1-5")
