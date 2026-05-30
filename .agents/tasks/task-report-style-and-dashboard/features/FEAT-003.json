@@ -1,0 +1,23 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Fix 3 critical issues from semantic review: CLI error handling, NEUTRAL agents framed as bears, and disagreement narrative thresholds",
+  "status": "in_progress",
+  "steps": [
+    "1. In src/augur/cli.py analyze_cmd non-JSON branch, wrap coordinator.analyze_with_all() and coordinator.get_consensus() in try/except, printing user-friendly error and exiting gracefully.",
+    "2. In src/augur/report.py _format_bull_bear_debate, prefer actual BEARISH agents for bear section, fill remaining from NEUTRAL sorted by lowest score, and change label when none are actually BEARISH.",
+    "3. In src/augur/report.py _format_disagreement_section, add minimum thresholds: value vs risk needs >=2 value-bulls AND >=1 actual risk-bear; growth vs conservative needs >=2 growth-bulls AND >=1 actual bearish agent."
+  ],
+  "acceptance_criteria": [
+    "CLI analyze command catches exceptions and shows 'Analysis failed: {error}' instead of traceback",
+    "Bull/bear debate section prefers actual BEARISH agents for bear slots",
+    "Bear section label changes to yellow cautious label when no agents are actually BEARISH",
+    "Disagreement conditions have proper thresholds preventing false triggers",
+    "pytest tests/test_report.py tests/test_cli.py -v -x passes"
+  ],
+  "verification": [
+    "pytest tests/test_report.py tests/test_cli.py -v -x"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}

@@ -146,8 +146,12 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
             from augur.cli_format import signal_icon, clean_output
 
             coordinator = DecisionCoordinator(registry)
-            results = coordinator.analyze_with_all(ctx)
-            consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
+            try:
+                results = coordinator.analyze_with_all(ctx)
+                consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
+            except Exception as e:
+                click.echo(f"Analysis failed: {e}", err=True)
+                raise SystemExit(1)
 
             # Build the README-style consensus summary box
             separator = "\u2501" * 46  # heavy horizontal line
