@@ -528,13 +528,13 @@ def generate_sample_data(ticker: str = "AAPL", days: int = 30) -> Tuple[List[Dic
     Returns:
         (historical_data, forward_returns) tuple
     """
-    random.seed(sum(ord(c) for c in ticker) % 10000)
+    rng = random.Random(sum(ord(c) for c in ticker) % 10000)
 
-    base_price = 150.0 + random.uniform(-50, 100)
-    base_pe = 20 + random.uniform(5, 30)
-    base_roe = 0.10 + random.uniform(0.05, 0.30)
-    base_gm = 0.30 + random.uniform(0.05, 0.25)
-    base_rg = 0.05 + random.uniform(-0.05, 0.20)
+    base_price = 150.0 + rng.uniform(-50, 100)
+    base_pe = 20 + rng.uniform(5, 30)
+    base_roe = 0.10 + rng.uniform(0.05, 0.30)
+    base_gm = 0.30 + rng.uniform(0.05, 0.25)
+    base_rg = 0.05 + rng.uniform(-0.05, 0.20)
 
     historical_data = []
     forward_returns = []
@@ -542,12 +542,12 @@ def generate_sample_data(ticker: str = "AAPL", days: int = 30) -> Tuple[List[Dic
 
     # Generate price series (days + 60 for forward returns)
     total_days = days + 60
-    trend = random.choice([-0.0003, 0.0005, 0.0002])
-    vol = 0.015 + random.uniform(0, 0.01)
+    trend = rng.choice([-0.0003, 0.0005, 0.0002])
+    vol = 0.015 + rng.uniform(0, 0.01)
 
     current_price = base_price
     for i in range(total_days):
-        daily_return = trend + random.gauss(0, vol)
+        daily_return = trend + rng.gauss(0, vol)
         current_price *= (1 + daily_return)
         prices.append(current_price)
 
@@ -557,7 +557,7 @@ def generate_sample_data(ticker: str = "AAPL", days: int = 30) -> Tuple[List[Dic
         date_str = (start_date + timedelta(days=i)).strftime("%Y-%m-%d")
 
         # Add some noise to metrics each day
-        noise = random.uniform(-0.1, 0.1)
+        noise = rng.uniform(-0.1, 0.1)
         day_price = prices[i]
         day_pe = base_pe * (1 + noise * 0.3)
         day_roe = base_roe * (1 + noise * 0.2)
@@ -572,11 +572,11 @@ def generate_sample_data(ticker: str = "AAPL", days: int = 30) -> Tuple[List[Dic
             "roe": round(day_roe, 3),
             "gross_margins": round(day_gm, 3),
             "revenue_growth": round(day_rg, 3),
-            "debt_ratio": round(0.3 + random.uniform(-0.1, 0.2), 3),
+            "debt_ratio": round(0.3 + rng.uniform(-0.1, 0.2), 3),
             "fcf": round(day_price * 0.03 * (1 + noise), 2),
-            "market_cap": round(day_price * 1e9 * random.uniform(0.8, 1.5) / 1e9, 1),
-            "rsi": round(50 + random.gauss(0, 15), 1),
-            "macd": round(random.gauss(0, 2), 3),
+            "market_cap": round(day_price * 1e9 * rng.uniform(0.8, 1.5) / 1e9, 1),
+            "rsi": round(50 + rng.gauss(0, 15), 1),
+            "macd": round(rng.gauss(0, 2), 3),
         })
 
         # Forward returns

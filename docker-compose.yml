@@ -5,7 +5,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - augur-config:/root/.augur
+      - augur-config:/app/.augur
       - ./config:/app/config
     environment:
       - AUGUR_CONFIG=/app/config/agents.yaml
@@ -24,7 +24,7 @@ services:
     ports:
       - "8900:8900"
     volumes:
-      - augur-config:/root/.augur
+      - augur-config:/app/.augur
       - ./config:/app/config
     command: ["augur", "api", "--port", "8900"]
     restart: unless-stopped
@@ -42,7 +42,7 @@ services:
     stdin_open: true
     tty: true
     volumes:
-      - augur-config:/root/.augur
+      - augur-config:/app/.augur
       - ./config:/app/config
     command: ["augur", "mcp-server"]
     profiles: ["mcp"]
@@ -51,7 +51,7 @@ services:
   telegram:
     build: .
     volumes:
-      - augur-config:/root/.augur
+      - augur-config:/app/.augur
     environment:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}
     command: ["augur", "telegram"]
@@ -62,7 +62,7 @@ services:
   slack:
     build: .
     volumes:
-      - augur-config:/root/.augur
+      - augur-config:/app/.augur
     environment:
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
       - SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
@@ -88,7 +88,7 @@ services:
     ports:
       - "8066:8066"
     volumes:
-      - augur-config:/root/.augur
+      - augur-config:/app/.augur
     environment:
       - GEWECHAT_BASE_URL=http://gewe:2531/v2/api
       - GEWECHAT_TOKEN=${GEWECHAT_TOKEN}
@@ -105,7 +105,7 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - augur-config:/root/.augur
+      - augur-config:/app/.augur
     environment:
       - LARK_APP_ID=${LARK_APP_ID}
       - LARK_APP_SECRET=${LARK_APP_SECRET}
@@ -119,7 +119,7 @@ services:
   cron:
     build: .
     volumes:
-      - augur-config:/root/.augur
+      - augur-config:/app/.augur
       - ./config:/app/config
     environment:
       - TELEGRAM_TOKEN=${TELEGRAM_TOKEN}

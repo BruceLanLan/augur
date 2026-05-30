@@ -46,5 +46,5 @@ EXPOSE 8000 8900
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
-# Default: start dashboard
+# Default: start API server
 CMD ["augur", "api", "--port", "8000", "--host", "0.0.0.0"]
