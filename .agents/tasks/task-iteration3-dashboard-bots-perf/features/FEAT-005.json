@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "fix",
   "description": "Address review findings: truncate exception messages in API responses, delegate bot _extract_ticker to shared utils, add timeout to parallel coordinator, remove ALL from STOP_WORDS",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In src/augur/registry.py _analyze_single: truncate exception message to first line, max 200 chars in reasoning field",
     "In src/augur/registry.py analyze_with_all: add timeout=30 to future.result(), handle TimeoutError with ERROR response",
@@ -23,5 +23,5 @@
     "python -m pytest tests/ -q"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All 118 tests pass. Exception messages truncated to first line + 200 chars in registry.py and 100 chars in telegram handle_message. ALL removed from STOP_WORDS (Allstate ticker). All 4 bot _extract_ticker functions now delegate to shared utils.extract_ticker. TimeoutError handling added with 30s timeout per agent future."
 }
