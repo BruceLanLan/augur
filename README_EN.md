@@ -59,10 +59,18 @@ Auto-fetching data for NVDA from yfinance...
 
 ```bash
 git clone https://github.com/BruceLanLan/augur.git && cd augur
+
+# Create virtual environment and upgrade pip (fixes old-version compatibility)
+python3 -m venv .venv && source .venv/bin/activate
+pip install --upgrade pip setuptools wheel
+
+# Install Augur
 pip install -e ".[data]"
 
+# Start using
 augur analyze AAPL         # auto-fetch live data + 18-master analysis
 augur consensus NVDA       # consensus + Kelly position sizing
+augur report TSLA          # generate deep analysis report
 python3 -m dashboard.app   # launch Bloomberg-style Dashboard
 # → open http://localhost:8000
 ```
@@ -404,6 +412,25 @@ pip install -e ".[data,telegram]"
 <summary>Kelly position shows 0% or N/A</summary>
 
 Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUTRAL/BEARISH signals conservatively return 0.
+</details>
+
+<details>
+<summary>pip install error: "File 'setup.py' not found"</summary>
+
+This happens because your pip version is too old to recognize `pyproject.toml`. Fix:
+
+```bash
+# Option 1: Use a virtual environment (recommended)
+python3 -m venv .venv && source .venv/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install -e ".[data]"
+
+# Option 2: Upgrade system pip directly
+python3 -m pip install --upgrade pip setuptools wheel
+pip install -e ".[data]"
+```
+
+Note: macOS ships with an older pip (pip < 21) that doesn't support pyproject.toml. Upgrading pip resolves this.
 </details>
 
 <details>
