@@ -295,6 +295,12 @@ def inject_soul_cmd(profile, persona, output_dir, fmt):
 @main.command("telegram")
 def telegram_cmd():
     """Start the Telegram bot"""
+    from augur.optional_deps import require_optional
+    try:
+        require_optional("telegram", "Telegram bot integration", "pip install 'augur-agents[telegram]'")
+    except ImportError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
     from augur.bots.telegram_bot import run_telegram_bot
     run_telegram_bot()
 
@@ -305,6 +311,12 @@ def telegram_cmd():
 @click.option("--port", type=int, default=3000, help="Port for HTTP mode")
 def slack_cmd(mode, port):
     """Start the Slack bot"""
+    from augur.optional_deps import require_optional
+    try:
+        require_optional("slack_bolt", "Slack bot integration", "pip install 'augur-agents[slack]'")
+    except ImportError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
     from augur.bots.slack_bot import run_slack_bot
     run_slack_bot(mode=mode, port=port)
 
@@ -315,6 +327,12 @@ def slack_cmd(mode, port):
 @click.option("--port", type=int, default=8066, help="Port for callback server")
 def wechat_cmd(mode, port):
     """Start the WeChat bot (personal/wecom/webhook)"""
+    from augur.optional_deps import require_optional
+    try:
+        require_optional("augur.bots.wechat_bot", "WeChat bot integration", "pip install 'augur-agents[wechat]'")
+    except ImportError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
     from augur.bots.wechat_bot import run_wechat_bot
     run_wechat_bot(mode=mode, port=port)
 
@@ -325,6 +343,12 @@ def wechat_cmd(mode, port):
 @click.option("--port", type=int, default=9000, help="Port for event server")
 def lark_cmd(mode, port):
     """Start the Lark/Feishu bot"""
+    from augur.optional_deps import require_optional
+    try:
+        require_optional("augur.bots.lark_bot", "Lark/Feishu bot integration", "pip install 'augur-agents[lark]'")
+    except ImportError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
     from augur.bots.lark_bot import run_lark_bot
     run_lark_bot(mode=mode, port_num=port)
 
@@ -348,6 +372,12 @@ def cron_run_cmd():
 @main.command("cron-start")
 def cron_start_cmd():
     """Start the scheduler daemon"""
+    from augur.optional_deps import require_optional
+    try:
+        require_optional("apscheduler", "scheduled watchlist analysis (cron daemon)", "pip install 'augur-agents[cron]'")
+    except ImportError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
     from augur.cron import start_scheduler
     start_scheduler()
 
@@ -446,28 +476,38 @@ def backtest_cmd(ticker, days, demo, live):
 
     if live:
         # Use real data from yfinance
-        try:
-            backtester = Backtester()
-            result = backtester.run_live_backtest(ticker, days=days)
-            click.echo(result.summary)
-            click.echo(f"\nTotal records: {len(result.records)}")
-            click.echo(f"Consensus IC (20d): {result.consensus_ic:.4f}")
-            click.echo(f"\n[数据来源: yfinance 实时历史数据]")
-            return
-        except ImportError as e:
+        from augur.optional_deps import is_available
+        if not is_available("augur.data"):
             click.echo(
-                f"Error: {e}\n"
-                f"  Install with: pip install 'augur-agents[data]'\n"
-                f"  Falling back to sample data...\n",
+                "Error: Package 'augur.data' is required for real-time market data fetching but is not installed.\n"
+                "  Install with: pip install 'augur-agents[data]'\n"
+                "  Core commands (analyze, consensus, list-personas) still work without it.\n"
+                "  Falling back to sample data...\n",
                 err=True,
             )
-        except Exception as e:
-            click.echo(
-                f"Error fetching live data: {e}\n"
-                f"  Suggestion: Check network connection or try a different ticker.\n"
-                f"  Falling back to sample data...\n",
-                err=True,
-            )
+        else:
+            try:
+                backtester = Backtester()
+                result = backtester.run_live_backtest(ticker, days=days)
+                click.echo(result.summary)
+                click.echo(f"\nTotal records: {len(result.records)}")
+                click.echo(f"Consensus IC (20d): {result.consensus_ic:.4f}")
+                click.echo(f"\n[数据来源: yfinance 实时历史数据]")
+                return
+            except ImportError as e:
+                click.echo(
+                    f"Error: {e}\n"
+                    f"  Install with: pip install 'augur-agents[data]'\n"
+                    f"  Falling back to sample data...\n",
+                    err=True,
+                )
+            except Exception as e:
+                click.echo(
+                    f"Error fetching live data: {e}\n"
+                    f"  Suggestion: Check network connection or try a different ticker.\n"
+                    f"  Falling back to sample data...\n",
+                    err=True,
+                )
 
     historical_data, forward_returns = generate_sample_data(ticker, days)
 
@@ -511,15 +551,12 @@ def ic_report_cmd(agent):
 @click.option("--json", "as_json", is_flag=True, help="Output as JSON")
 def fetch_cmd(ticker, as_json):
     """Fetch real-time market data for a ticker (via yfinance)"""
+    from augur.optional_deps import require_optional
     try:
+        require_optional("augur.data", "real-time market data fetching", "pip install 'augur-agents[data]'")
         from augur.data import fetch_market_context
-    except ImportError:
-        click.echo(
-            "Error: yfinance package is not installed.\n"
-            "  Install with: pip install 'augur-agents[data]'\n"
-            "  This is required for real-time market data. Core analysis still works with manual metrics.",
-            err=True,
-        )
+    except ImportError as e:
+        click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
 
     click.echo(f"Fetching data for {ticker.upper()}...\n")
@@ -563,6 +600,15 @@ def fetch_cmd(ticker, as_json):
 def _auto_fetch_context(ticker: str):
     """Auto-fetch MarketContext from yfinance, with graceful fallback."""
     from augur.personas.base import MarketContext
+    from augur.optional_deps import is_available
+
+    if not is_available("augur.data"):
+        click.echo(
+            "Warning: yfinance not installed. Install with: pip install 'augur-agents[data]'\n"
+            "  Core analysis still works without it (using empty metrics).\n",
+            err=True,
+        )
+        return MarketContext(ticker=ticker.upper())
 
     try:
         from augur.data import fetch_market_context

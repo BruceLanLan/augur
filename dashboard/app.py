@@ -656,15 +656,17 @@ async def health():
 @app.get("/api/fetch/{ticker}")
 async def api_fetch_ticker(ticker: str):
     """Fetch real-time market data for a ticker via yfinance"""
-    try:
-        from augur.data import fetch_market_context
-    except ImportError:
+    from augur.optional_deps import is_available, get_install_hint
+
+    if not is_available("augur.data"):
+        feature, install_cmd = get_install_hint("augur.data")
         raise HTTPException(
             status_code=501,
-            detail="yfinance not installed. Install with: pip install 'augur-agents[data]'"
+            detail=f"Package 'yfinance' is required for {feature} but is not installed. Install with: {install_cmd}"
         )
 
     try:
+        from augur.data import fetch_market_context
         ctx = fetch_market_context(ticker)
         return {
             "status": "ok",
@@ -684,15 +686,17 @@ async def api_search_tickers(q: str = ""):
     if not q or len(q) < 1:
         return {"results": []}
 
-    try:
-        from augur.data import search_ticker
-    except ImportError:
+    from augur.optional_deps import is_available, get_install_hint
+
+    if not is_available("augur.data"):
+        feature, install_cmd = get_install_hint("augur.data")
         raise HTTPException(
             status_code=501,
-            detail="yfinance not installed. Install with: pip install 'augur-agents[data]'"
+            detail=f"Package 'yfinance' is required for {feature} but is not installed. Install with: {install_cmd}"
         )
 
     try:
+        from augur.data import search_ticker
         results = search_ticker(q)
         return {"status": "ok", "query": q, "results": results}
     except Exception as e:

@@ -7,6 +7,7 @@ import pytest
 from unittest.mock import patch
 from click.testing import CliRunner
 from fastapi.testclient import TestClient
+import importlib
 
 from dashboard.app import app as dashboard_app
 from augur.api import app as standalone_app
@@ -108,8 +109,13 @@ class TestCLIErrorMessages:
         """fetch command with missing yfinance should show pip install instructions."""
         from augur.cli import main
         runner = CliRunner()
-        # Mock the import to fail within the fetch command
-        with patch("builtins.__import__", side_effect=_make_import_blocker("augur.data")):
+        # Mock the importlib.import_module to fail within the fetch command
+        with patch("augur.optional_deps.importlib.import_module") as mock_import:
+            def selective_import(name):
+                if name == "augur.data":
+                    raise ImportError(f"No module named 'augur.data'")
+                return importlib.import_module(name)
+            mock_import.side_effect = selective_import
             result = runner.invoke(main, ["fetch", "AAPL"])
         output = result.output
         assert result.exit_code != 0
@@ -228,3 +234,194 @@ def _make_import_blocker(module_name):
 
 import builtins
 original_import = builtins.__import__
+
+
+class TestGracefulDegradation:
+    """Test graceful degradation when optional dependencies are missing."""
+
+    def test_fetch_cmd_missing_yfinance_gives_helpful_message(self):
+        """When yfinance/augur.data is unavailable, fetch should give actionable error."""
+        from augur.cli import main
+        runner = CliRunner()
+        with patch("augur.optional_deps.importlib.import_module") as mock_import:
+            def selective_import(name):
+                if name == "augur.data":
+                    raise ImportError(f"No module named 'augur.data'")
+                return importlib.import_module(name)
+            mock_import.side_effect = selective_import
+            result = runner.invoke(main, ["fetch", "AAPL"])
+        assert result.exit_code != 0
+        output = result.output
+        assert "augur-agents[data]" in output
+        assert "not installed" in output
+
+    def test_cron_start_missing_apscheduler_gives_helpful_message(self):
+        """When apscheduler is unavailable, cron-start should give actionable error."""
+        from augur.cli import main
+        runner = CliRunner()
+        with patch("augur.optional_deps.importlib.import_module") as mock_import:
+            def selective_import(name):
+                if name == "apscheduler":
+                    raise ImportError(f"No module named 'apscheduler'")
+                return importlib.import_module(name)
+            mock_import.side_effect = selective_import
+            result = runner.invoke(main, ["cron-start"])
+        assert result.exit_code != 0
+        output = result.output
+        assert "augur-agents[cron]" in output
+        assert "not installed" in output
+
+    def test_analyze_works_without_optional_deps(self):
+        """Core analyze command works without yfinance/apscheduler."""
+        from augur.cli import main
+        runner = CliRunner()
+        # Provide metrics so it doesn't try to auto-fetch
+        result = runner.invoke(main, ["analyze", "AAPL", "--pe", "25", "--roe", "0.5"])
+        assert result.exit_code == 0
+        # Should show analysis output
+        assert "AAPL" in result.output or "Agent" in result.output
+
+    def test_consensus_works_without_optional_deps(self):
+        """Core consensus command works without yfinance/apscheduler."""
+        from augur.cli import main
+        runner = CliRunner()
+        result = runner.invoke(main, ["consensus", "AAPL", "--pe", "25", "--roe", "0.5"])
+        assert result.exit_code == 0
+        assert "AAPL" in result.output
+
+    def test_list_personas_works_without_optional_deps(self):
+        """list-personas command works without any optional deps."""
+        from augur.cli import main
+        runner = CliRunner()
+        result = runner.invoke(main, ["list-personas"])
+        assert result.exit_code == 0
+        assert "Available Personas" in result.output
+
+    def test_telegram_cmd_missing_dep_gives_helpful_message(self):
+        """When telegram package is unavailable, command should give actionable error."""
+        from augur.cli import main
+        runner = CliRunner()
+        with patch("augur.optional_deps.importlib.import_module") as mock_import:
+            def selective_import(name):
+                if name == "telegram":
+                    raise ImportError(f"No module named 'telegram'")
+                return importlib.import_module(name)
+            mock_import.side_effect = selective_import
+            result = runner.invoke(main, ["telegram"])
+        assert result.exit_code != 0
+        output = result.output
+        assert "augur-agents[telegram]" in output
+
+    def test_slack_cmd_missing_dep_gives_helpful_message(self):
+        """When slack_bolt is unavailable, command should give actionable error."""
+        from augur.cli import main
+        runner = CliRunner()
+        with patch("augur.optional_deps.importlib.import_module") as mock_import:
+            def selective_import(name):
+                if name == "slack_bolt":
+                    raise ImportError(f"No module named 'slack_bolt'")
+                return importlib.import_module(name)
+            mock_import.side_effect = selective_import
+            result = runner.invoke(main, ["slack"])
+        assert result.exit_code != 0
+        output = result.output
+        assert "augur-agents[slack]" in output
+
+
+class TestOptionalDepsModule:
+    """Test the augur.optional_deps module itself."""
+
+    def test_is_available_returns_true_for_installed_packages(self):
+        """is_available should return True for packages we know exist."""
+        from augur.optional_deps import is_available
+        assert is_available("os") is True
+        assert is_available("sys") is True
+
+    def test_is_available_returns_false_for_missing_packages(self):
+        """is_available should return False for non-existent packages."""
+        from augur.optional_deps import is_available
+        with patch("augur.optional_deps.importlib.import_module", side_effect=ImportError):
+            assert is_available("nonexistent_package_xyz") is False
+
+    def test_require_optional_raises_for_missing_package(self):
+        """require_optional should raise ImportError with helpful message."""
+        from augur.optional_deps import require_optional
+        with patch("augur.optional_deps.importlib.import_module", side_effect=ImportError):
+            with pytest.raises(ImportError) as exc_info:
+                require_optional("yfinance")
+            msg = str(exc_info.value)
+            assert "yfinance" in msg
+            assert "augur-agents[data]" in msg
+            assert "not installed" in msg
+
+    def test_require_optional_passes_for_installed_package(self):
+        """require_optional should not raise for installed packages."""
+        from augur.optional_deps import require_optional
+        # 'os' is always available
+        require_optional("os", "operating system features", "pip install os")
+
+    def test_get_install_hint_returns_registry_entry(self):
+        """get_install_hint should return registered info for known packages."""
+        from augur.optional_deps import get_install_hint
+        feature, cmd = get_install_hint("yfinance")
+        assert "market data" in feature
+        assert "augur-agents[data]" in cmd
+
+    def test_get_install_hint_returns_default_for_unknown(self):
+        """get_install_hint should return generic hint for unknown packages."""
+        from augur.optional_deps import get_install_hint
+        feature, cmd = get_install_hint("some_unknown_pkg")
+        assert "some_unknown_pkg" in cmd
+
+
+class TestCLIOutputFormat:
+    """Test CLI output formatting: --no-color and --json flags."""
+
+    def test_no_color_strips_formatting(self):
+        """--no-color flag should produce output without ANSI escape codes."""
+        import re
+        from augur.cli import main
+        runner = CliRunner()
+        result = runner.invoke(main, ["--no-color", "consensus", "AAPL", "--pe", "25"])
+        assert result.exit_code == 0
+        # No ANSI escape sequences
+        ansi_pattern = re.compile(r"\033\[[0-9;]*m")
+        assert not ansi_pattern.search(result.output)
+
+    def test_json_output_analyze_is_valid(self):
+        """--json flag on analyze should produce valid JSON."""
+        import json
+        from augur.cli import main
+        runner = CliRunner()
+        result = runner.invoke(main, ["analyze", "AAPL", "--pe", "25", "--json"])
+        assert result.exit_code == 0
+        # Should be parseable JSON
+        data = json.loads(result.output)
+        assert isinstance(data, dict)
+
+    def test_json_output_consensus_is_valid(self):
+        """--json flag on consensus should produce valid JSON."""
+        import json
+        from augur.cli import main
+        runner = CliRunner()
+        result = runner.invoke(main, ["consensus", "AAPL", "--pe", "25", "--json"])
+        assert result.exit_code == 0
+        data = json.loads(result.output)
+        assert isinstance(data, dict)
+        assert "ticker" in data
+        assert "consensus" in data
+
+    def test_help_text_completeness(self):
+        """All main commands should have help text."""
+        from augur.cli import main
+        runner = CliRunner()
+        result = runner.invoke(main, ["--help"])
+        assert result.exit_code == 0
+        # Should list key commands
+        assert "analyze" in result.output
+        assert "consensus" in result.output
+        assert "list-personas" in result.output
+        assert "fetch" in result.output
+
+
+import importlib
