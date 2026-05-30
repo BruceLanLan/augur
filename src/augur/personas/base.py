@@ -11,8 +11,7 @@ Agent人格系统 — 基类与类型定义
   - DebateProtocol (辩论协议)
 """
 
-from pathlib import Path
-from typing import Dict, List, Optional, Any, Callable
+from typing import Dict, List, Any
 from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime

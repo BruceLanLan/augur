@@ -4,7 +4,7 @@ LynchAgent - Peter Lynch 成长投资(GARP)
 """
 
 from typing import Dict
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class LynchAgent(BaseAgent):

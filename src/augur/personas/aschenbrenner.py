@@ -3,7 +3,6 @@
 AschenbrennerAgent - Leopold Aschenbrenner AGI超级乐观 / 算力基础设施重注
 """
 
-from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

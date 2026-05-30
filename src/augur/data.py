@@ -12,10 +12,13 @@ Usage:
     history = fetch_history("AAPL", period="1y")  # Historical prices
 """
 
+import logging
 import time
 from typing import Dict, List, Optional, Any
 
 from augur.personas.base import MarketContext
+
+logger = logging.getLogger(__name__)
 
 
 # ============ Cache ============

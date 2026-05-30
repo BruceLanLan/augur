@@ -12,6 +12,7 @@ augur.backtest - 历史回测系统 + Agent IC 实盘追踪
 """
 
 import json
+import logging
 import math
 import random
 from collections import deque
@@ -19,6 +20,8 @@ from dataclasses import dataclass, field, asdict
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
+
+logger = logging.getLogger(__name__)
 
 
 # ============ Data Classes ============

@@ -3,7 +3,6 @@
 CathieWoodAgent - Cathie Wood 破坏式创新
 """
 
-from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

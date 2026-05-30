@@ -3,7 +3,6 @@
 MungerAgent - Charlie Munger 逆向投资/心理学
 """
 
-from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

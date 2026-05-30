@@ -37,8 +37,6 @@ import os
 import re
 from typing import Optional, Dict, List, Any
 
-from augur.bots.utils import STOP_WORDS
-
 
 # Signal emoji mapping (Slack style)
 SIGNAL_EMOJI = {

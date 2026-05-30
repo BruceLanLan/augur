@@ -3,7 +3,6 @@
 FisherAgent - Philip Fisher 成长股质地
 """
 
-from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

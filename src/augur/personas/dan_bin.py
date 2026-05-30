@@ -3,7 +3,7 @@
 DanBinAgent - 但斌 品牌护城河·时代β·消费成长
 """
 
-from typing import Dict, List
+from typing import Dict
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
 
 

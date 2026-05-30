@@ -48,11 +48,8 @@ Environment Variables (企业微信):
 import os
 import re
 import json
-import threading
 from pathlib import Path
 from typing import Optional, Dict, Any
-
-from augur.bots.utils import STOP_WORDS
 
 # Signal emoji mapping (WeCom markdown支持)
 SIGNAL_EMOJI = {
