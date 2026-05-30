@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "fix",
   "description": "Fix backtest system edge cases, CLI bugs (missing sector/industry in analyze, missing --sector in watchlist-add), and improve Dockerfile security",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. In src/augur/backtest.py: Fix generate_sample_data to use a stable seed that does not depend on Python's built-in hash() (which is randomized in Python 3.12+). Replace `random.seed(hash(ticker) % 10000)` with `random.seed(sum(ord(c) for c in ticker) % 10000)` or similar deterministic computation.",
     "2. In src/augur/backtest.py: Add guard in run_backtest for empty historical_data or forward_returns - return an empty BacktestResult early instead of proceeding with no data.",
@@ -28,5 +28,5 @@
     "Run augur watchlist-add --help and confirm --sector is listed"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 118 tests pass. CLI --sector and --industry options verified via --help. Deterministic seed, early return guard, Dockerfile non-root user, docker-compose healthchecks all implemented successfully."
 }
