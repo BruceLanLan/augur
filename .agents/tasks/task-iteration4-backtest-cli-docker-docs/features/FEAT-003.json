@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Add comprehensive tests for iteration 4 fixes: backtest edge cases, CLI sector/industry handling, and verify deterministic sample data generation",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "1. Create tests/test_iteration4.py with the following test classes and methods:",
     "2. class TestBacktestEdgeCases: test_empty_historical_data (run_backtest with empty lists returns BacktestResult with empty records), test_single_day_backtest (only 1 day of data), test_all_neutral_predictions (mock agents to all return neutral - verify IC calculation does not crash), test_deterministic_seed_stability (verify generate_sample_data produces same results with PYTHONHASHSEED=0 and PYTHONHASHSEED=random - use the new deterministic seed).",
@@ -20,5 +20,5 @@
     "Run pytest tests/ -v and confirm total test suite still passes (118+ existing + new)"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 18 new tests pass. Full suite now has 136 tests (118 existing + 18 new), all passing. Tests exercise actual code paths in backtest.py, cli.py, Dockerfile, docker-compose.yml, and requirements.txt."
 }
