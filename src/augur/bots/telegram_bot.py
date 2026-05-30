@@ -113,11 +113,8 @@ def _parse_metrics(args: list) -> Dict[str, float]:
 
 def _extract_ticker(text: str) -> Optional[str]:
     """Extract ticker symbol from text, filtering out common stop words."""
-    candidates = re.findall(r'\b([A-Z]{2,5})\b', text.upper())
-    for candidate in candidates:
-        if candidate not in STOP_WORDS:
-            return candidate
-    return None
+    from augur.bots.utils import extract_ticker
+    return extract_ticker(text)
 
 
 def _build_market_context(ticker: str, metrics: Dict[str, float]):
@@ -435,7 +432,8 @@ def run_telegram_bot(token: Optional[str] = None):
             message = format_single_agent_message(ticker, result)
             await update.message.reply_text(message)
         except Exception as e:
-            await update.message.reply_text(f"\u274c \u5206\u6790\u5931\u8d25: {e}")
+            err_msg = str(e).split('\n', 1)[0][:100]
+            await update.message.reply_text(f"\u274c \u5206\u6790\u5931\u8d25: {err_msg}")
 
     # --- Build application ---
     app = Application.builder().token(token).build()

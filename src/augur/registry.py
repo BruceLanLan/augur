@@ -136,15 +136,25 @@ class DecisionCoordinator:
                 for future in as_completed(future_to_agent):
                     agent = future_to_agent[future]
                     try:
-                        results[agent.agent_id] = future.result()
-                    except Exception as e:
+                        results[agent.agent_id] = future.result(timeout=30)
+                    except TimeoutError:
                         results[agent.agent_id] = AgentResponse(
                             agent_id=agent.agent_id,
                             agent_name=agent.name,
                             signal=SignalType.ERROR,
                             confidence=0,
                             score=0,
-                            reasoning=f"Analysis failed: {e}"
+                            reasoning="Analysis timed out"
+                        )
+                    except Exception as e:
+                        err_msg = str(e).split('\n', 1)[0][:200]
+                        results[agent.agent_id] = AgentResponse(
+                            agent_id=agent.agent_id,
+                            agent_name=agent.name,
+                            signal=SignalType.ERROR,
+                            confidence=0,
+                            score=0,
+                            reasoning=f"Analysis failed: {err_msg}"
                         )
         except Exception:
             # Fallback to sequential if threading fails
@@ -158,13 +168,14 @@ class DecisionCoordinator:
         try:
             return agent.analyze(context)
         except Exception as e:
+            err_msg = str(e).split('\n', 1)[0][:200]
             return AgentResponse(
                 agent_id=agent.agent_id,
                 agent_name=agent.name,
                 signal=SignalType.ERROR,
                 confidence=0,
                 score=0,
-                reasoning=f"Analysis failed: {e}"
+                reasoning=f"Analysis failed: {err_msg}"
             )
 
     def get_consensus(self, results: Dict[str, AgentResponse], ticker: str = "", date_str: str = None, context: MarketContext = None) -> AgentResponse:
