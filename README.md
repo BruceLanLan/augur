@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v6.1.0](https://img.shields.io/badge/v6.1.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.0.0](https://img.shields.io/badge/v7.0.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -478,6 +478,64 @@ Dashboard 已支持热加载（保存 YAML 后同一进程立即可用）。CLI/
 - **算法优化** → 改进 `src/augur/coordinator.py` 共识机制
 - **新平台 Bot** → 在 `src/augur/bots/` 添加，参考 `telegram_bot.py`
 - **Web UI** → 完善 `dashboard/`，CSS 变量见 `bloomberg.css`
+
+---
+
+## 📋 Changelog
+
+### v7.0.0
+
+经过 7 轮代码审查、Bug 修复和性能优化后的重大版本更新。
+
+#### 安全修复（严重）
+- **严重**: 将 `persona_loader.py` 中危险的 `eval()` 替换为基于 AST 的沙箱执行，防止恶意 YAML 条件触发任意代码执行
+- **严重**: 修复 `soul.py` 中 `inject_soul()` 的路径遍历漏洞，防止写入任意目录
+- 修复 Dashboard `signals.html` 中的 XSS 漏洞（内联 onclick 字符串插值）
+- 在 API、MCP 和 Dashboard 端点中增加 ticker 正则校验
+- 添加全局异常处理器，防止通过 API 响应泄露堆栈信息
+
+#### Bug 修复
+- 修复 `data.py` 中 yfinance 返回负 `debt_to_equity` 时的 ZeroDivisionError
+- 修复大宇 Persona 动量 elif 链排序错误（分支被遮蔽）
+- 修复所有 Agent 返回 ERROR 时 Coordinator 崩溃（total_weight==0）
+- 修复 CLI 缺失的 sector/industry 参数未传递给 MarketContext
+- 修复 cron 配置浅合并导致丢失嵌套默认值（timezone、notifications）
+- 全部 18 个 Persona 文件现在将评分限制在 [0, 10] 范围内
+- 为 Munger 和 Dalio Persona 增加了除零保护
+
+#### 性能优化
+- DecisionCoordinator 现使用 ThreadPoolExecutor 并行执行 18 个 Agent 分析（最高 8 倍加速）
+- 每个 Agent 增加 30 秒超时，防止挂起
+- 增加性能计时记录（metadata 中包含 analysis_ms 和 consensus_ms）
+- Dashboard 使用 Page Visibility API 在后台标签页暂停轮询
+
+#### 用户体验
+- 新增 `--no-color` CLI 选项（同时支持 NO_COLOR 环境变量）
+- 改进 CLI 输出格式：对齐表格和边框框
+- 所有错误信息现在可操作（包含 pip install 命令、--help 建议）
+- 新增 `src/augur/errors.py` 统一错误响应格式
+- 新增 `src/augur/optional_deps.py` 可选依赖缺失时优雅降级
+- Dashboard 模板全面增加 ARIA 无障碍标签
+- Dashboard API 响应现包含统一的 `status` 字段和 ISO 8601 时间戳
+
+#### 基础设施
+- Dockerfile：添加非 root 用户 `augur` 提升安全性
+- docker-compose.yml：移除已弃用的 `version` 字段，添加健康检查
+- requirements.txt：添加缺失的 `httpx>=0.24.0`
+- Scanner 模块：添加 6 个缺失的 Agent 导出以保持向后兼容
+- Cron：增加 PID 文件并发保护和 SIGTERM 信号处理
+
+#### 测试
+- 新增 173 个回归测试（从 78 个增加到 251 个）
+- 完整端到端管道测试（CLI + API）
+- 数据管道验证测试
+- Dashboard 错误处理测试
+- 安全攻击向量测试（eval 注入、XSS、路径遍历）
+- 性能基线测试
+
+#### 架构
+- 新模块：`cli_format.py`、`errors.py`、`optional_deps.py`、`bots/utils.py`
+- Bot 共享工具模块消除 ticker 提取代码重复
 
 ---
 

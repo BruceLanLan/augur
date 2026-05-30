@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v6.1.0](https://img.shields.io/badge/v6.1.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.0.0](https://img.shields.io/badge/v7.0.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -411,6 +411,64 @@ Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUT
 
 The Dashboard supports hot-reload (saved YAML is immediately available in the same process). CLI/API will auto-load `personas/custom/*.yaml` on next restart.
 </details>
+
+---
+
+## 📋 Changelog
+
+### v7.0.0
+
+Major version update after 7 iterations of code review, bug fixing, and optimization.
+
+#### Security Fixes (Critical)
+- **CRITICAL**: Replaced vulnerable `eval()` in `persona_loader.py` with AST-based sandbox, preventing arbitrary code execution via malicious YAML persona conditions
+- **CRITICAL**: Fixed path traversal vulnerability in `soul.py` `inject_soul()`, preventing writes to arbitrary directories
+- Fixed XSS vulnerability in Dashboard `signals.html` (inline onclick string interpolation)
+- Added ticker regex validation across API, MCP, and Dashboard endpoints
+- Added global exception handlers to prevent stack trace leakage via API responses
+
+#### Bug Fixes
+- Fixed ZeroDivisionError in `data.py` when yfinance returns negative `debt_to_equity`
+- Fixed Dayu persona momentum elif chain ordering bug (shadowed branch)
+- Fixed coordinator crash when all agents return ERROR (total_weight==0)
+- Fixed CLI missing sector/industry parameters not passed to MarketContext
+- Fixed cron config shallow merge losing nested default values (timezone, notifications)
+- All 18 persona files now clamp scores to [0, 10] range
+- Added division-by-zero guards in Munger and Dalio personas
+
+#### Performance
+- DecisionCoordinator now uses ThreadPoolExecutor for parallel 18-agent analysis (up to 8x speedup)
+- Added 30s timeout per agent to prevent hanging
+- Added performance timing instrumentation (analysis_ms + consensus_ms in metadata)
+- Dashboard uses Page Visibility API to pause polling in background tabs
+
+#### User Experience
+- New `--no-color` CLI flag (also respects NO_COLOR environment variable)
+- Improved CLI output formatting with aligned tables and bordered boxes
+- All error messages are now actionable (include pip install commands, --help suggestions)
+- Created `src/augur/errors.py` for consistent error response formatting
+- Created `src/augur/optional_deps.py` for graceful degradation when optional deps missing
+- Added ARIA accessibility labels across all Dashboard templates
+- Dashboard API responses now include consistent `status` field and ISO 8601 timestamps
+
+#### Infrastructure
+- Dockerfile: Added non-root user `augur` for security
+- docker-compose.yml: Removed deprecated `version` field, added healthchecks
+- requirements.txt: Added missing `httpx>=0.24.0`
+- Scanner module: Added 6 missing agent exports for backward compatibility
+- Cron: Added PID file concurrency protection and SIGTERM handler
+
+#### Testing
+- Added 173 new regression tests (from 78 to 251 total)
+- Full end-to-end pipeline tests (CLI + API)
+- Data pipeline validation tests
+- Dashboard error handling tests
+- Security attack vector tests (eval injection, XSS, path traversal)
+- Performance baseline tests
+
+#### Architecture
+- New modules: `cli_format.py`, `errors.py`, `optional_deps.py`, `bots/utils.py`
+- Bot shared utils module eliminates ticker extraction code duplication
 
 ---
 
