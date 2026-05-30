@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "CLI output beautification: add --no-color flag, improve table formatting with proper alignment, add color accessibility (bold text alternatives), ensure --json output is valid parseable JSON for all commands, and verify emoji rendering safety",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In src/augur/cli.py, add a global --no-color option to the main Click group that sets an environment variable or context flag. When active, strip ANSI codes and use plain text markers instead of emojis.",
     "Create a new module src/augur/cli_format.py that provides: (1) a color_text() helper respecting no-color mode, (2) a format_table() function for aligned columns with dynamic width, (3) a signal_icon() function that returns emoji or text based on mode, (4) a format_box() function for bordered output boxes.",
@@ -23,5 +23,5 @@
     "python -m pytest tests/test_cli.py -x -q"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 216 tests pass including 6 new CLI tests. The --no-color flag sets NO_COLOR env var which cli_format helpers check. Emojis embedded in agent analysis results (findings, reasoning) are stripped via regex in clean_output(). format_table and format_box provide consistent aligned output."
 }
