@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Error messages improvement and API response consistency: make all error messages actionable with suggested fixes, ensure consistent API response format (snake_case, ISO 8601 timestamps, standard error structure), add graceful degradation messages for missing optional dependencies",
+  "status": "in_progress",
+  "steps": [
+    "Create src/augur/errors.py module with: (1) a standard error response helper that returns {'status': 'error', 'detail': str, 'suggestion': str, 'code': str} format, (2) user-friendly error messages for common failures (network timeout, missing dependency, invalid input, rate limiting).",
+    "In src/augur/cli.py, update all click.echo(f'Error: ...') and click.echo(f'Warning: ...') calls to use structured error messages that include: what went wrong, why it happened, and what the user can do. Add Chinese translations where the primary audience is Chinese (the existing pattern mixes both languages).",
+    "In dashboard/app.py, add a global exception handler (@app.exception_handler) that catches unhandled exceptions and returns a consistent JSON error format: {'status': 'error', 'detail': str, 'timestamp': ISO8601, 'path': request_path} instead of raw 500 errors with stack traces.",
+    "Review and standardize all API endpoint responses: ensure all successful responses include a 'status' field ('ok'), all use snake_case field names, all timestamps use ISO 8601 with Z suffix consistently.",
+    "In the CLI commands that depend on optional packages (yfinance, apscheduler, telegram, slack), improve the ImportError messages to include: the exact pip install command, what functionality is lost, and whether core features still work without it.",
+    "Add test cases in tests/test_iteration7.py that verify: (1) global exception handler returns proper JSON, (2) missing optional dep CLI messages include pip install instructions, (3) API responses have consistent structure."
+  ],
+  "acceptance_criteria": [
+    "All API error responses contain 'status' and 'detail' fields",
+    "Unhandled exceptions in API return JSON (not HTML stack trace) with status 500",
+    "CLI error messages for missing yfinance include 'pip install augur-agents[data]'",
+    "All successful API responses include a 'status': 'ok' field or follow the existing pattern consistently",
+    "All timestamps in API responses use format YYYY-MM-DDTHH:MM:SSZ"
+  ],
+  "verification": [
+    "python -m pytest tests/test_iteration7.py -x -q",
+    "python -m pytest tests/test_api.py tests/test_dashboard_errors.py -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
