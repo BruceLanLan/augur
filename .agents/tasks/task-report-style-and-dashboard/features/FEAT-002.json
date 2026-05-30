@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Verify and fix Dashboard features mentioned in README: keyboard shortcuts, history, auto-refresh, search/filter, backtest leaderboard, settings save, and create persona hot-reload. Also verify CLI output matches README format.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. In dashboard/templates/base.html, verify that pressing '/' focuses the ticker input (hero-ticker or inp-ticker). Current code already does this via the keydown handler - confirm it works for both index.html (hero-ticker) and stocks.html (inp-ticker).",
     "2. In dashboard/templates/index.html, verify analysis history is shown from localStorage cache (augurCache). The renderRecentAnalyses() function handles this. Confirm the 'recent-section' div is properly shown when cache has items.",
@@ -28,5 +28,5 @@
     "pytest tests/test_report.py tests/test_api.py tests/test_cli.py -v -x"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "CLI analyze command now produces consensus box output matching README format. All 75 tests pass (test_report + test_api + test_cli). Dashboard templates confirmed working: keyboard shortcut, augurCache, display:block fix, auto-refresh, backtest, settings, create persona all in place."
 }
