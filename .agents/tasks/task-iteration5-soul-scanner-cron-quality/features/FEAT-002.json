@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Update scanner backward-compatibility shims to include all 18 agents (6 missing: Thiel, DuanYongping, ZhangLei, LiLu, DanBin, Serenity)",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "In scanner/__init__.py: Add imports and __all__ entries for ThielAgent, DuanYongpingAgent, ZhangLeiAgent, LiLuAgent, DanBinAgent, SerenityAgent from their respective augur.personas.* modules.",
     "In scanner/personas/__init__.py: Add imports for the 6 missing agents (ThielAgent, DuanYongpingAgent, ZhangLeiAgent, LiLuAgent, DanBinAgent, SerenityAgent) following the same pattern as existing imports.",
@@ -20,5 +20,5 @@
     "python3 -m pytest tests/ -x -q"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 18 agents now importable from scanner and scanner.personas. 164 tests pass (3 new tests added). scanner/personas/serenity.py shim was the only missing shim file."
 }
