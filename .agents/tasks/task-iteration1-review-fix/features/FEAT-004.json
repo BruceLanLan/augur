@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "fix",
   "description": "Address review findings: fix utcnow in dashboard, improve backtest rotation memory usage, use logging in cron, replace structural test with behavioral test, add comment on bare except",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Fix utcnow() in dashboard/app.py - replace with datetime.now(timezone.utc)",
     "2. Improve backtest rotation in src/augur/backtest.py using collections.deque",
@@ -21,5 +21,5 @@
     "pytest tests/ -v"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All 86 tests pass. Fixed 2 utcnow() occurrences in dashboard/app.py (analyze_ticker + watchlist/run). Replaced readlines() with deque(f, maxlen=5000) in backtest rotation. Changed cron print() to logger.error(). Replaced inspect.getsource structural test with a behavioral test that exercises _save_records with actual records."
 }
