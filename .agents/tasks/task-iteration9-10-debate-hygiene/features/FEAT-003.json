@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-003",
+  "type": "docs",
+  "description": "Iteration 10: Type hints for public APIs and docstring completeness. Add type hints to public functions in coordinator, registry, data, and CLI modules. Ensure all new modules (errors.py, optional_deps.py, cli_format.py, bots/utils.py) have proper module and function docstrings.",
+  "status": "in_progress",
+  "steps": [
+    "In src/augur/registry.py: add return type hints to public methods (register->bool, unregister->bool, get->Optional[BaseAgent], get_all->List[BaseAgent], list_agents->List[Dict], analyze_with_all->Dict[str,AgentResponse], get_consensus->AgentResponse, run_debate->Dict[str,AgentResponse]). Most already have them, verify and add missing ones.",
+    "In src/augur/data.py: add return type hints to public functions (fetch_market_context->MarketContext, fetch_history->List[Dict], calculate_technicals->Dict, search_ticker->List[Dict], clear_cache->None, cache_info->Dict[str,Any])",
+    "In src/augur/backtest.py: add return type hints to Backtester public methods (run_backtest->BacktestResult, load_records->List[BacktestRecord], get_ic_report->List[AgentIC], get_leaderboard->List[AgentIC], run_live_backtest->BacktestResult)",
+    "In src/augur/cron.py: verify type hints on public functions (load_watchlist, save_watchlist, add_to_watchlist, remove_from_watchlist, run_watchlist_analysis) - they already have return types via -> annotations, just verify completeness",
+    "In src/augur/cli_format.py: add return type hints to functions (color_text->str, signal_icon->str, format_table->str, format_box->str, strip_ansi->str, strip_emoji->str, clean_output->str) - some already have them",
+    "In src/augur/bots/utils.py: verify docstrings and type hints are present (they already are - confirm)",
+    "In src/augur/errors.py: verify docstrings and type hints (already present - confirm)", 
+    "Run tests to ensure no regressions from type hint additions"
+  ],
+  "acceptance_criteria": [
+    "All public functions in registry.py, data.py, backtest.py have return type annotations",
+    "All public functions in cli_format.py have return type annotations",
+    "Module docstrings present in errors.py, optional_deps.py, cli_format.py, bots/utils.py",
+    "python -m pytest tests/ -x -q passes all tests"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q --tb=short",
+    "python -c \"from augur.registry import AgentRegistry; r=AgentRegistry(); print(len(r.get_all()))\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -456,7 +456,7 @@ class DecisionCoordinator:
 
         return result
 
-    def add_debate_message(self, msg: DebateMessage):
+    def add_debate_message(self, msg: DebateMessage) -> None:
         """Add a debate message to the history."""
         self._debate_history.append(msg)
 
