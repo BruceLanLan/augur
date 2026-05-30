@@ -269,6 +269,9 @@ class DecisionCoordinator:
         if total_weight > 0:
             total_score /= total_weight
             total_confidence /= total_weight
+        else:
+            total_score = 0.0
+            total_confidence = 0.0
 
         # Weighted majority vote
         consensus_signal = max(signal_counts, key=signal_counts.get)
@@ -388,9 +391,10 @@ class DecisionCoordinator:
                     result.risks.append(f"PE={meta_ctx.pe:.1f}, valuation elevated - consider stop-loss")
                     break
 
-        return result
+        # Clamp final score to valid range [0, 10]
+        result.score = max(0.0, min(10.0, result.score))
 
-    def add_debate_message(self, msg: DebateMessage):
+        return result
         """Add a debate message"""
         self._debate_history.append(msg)
 

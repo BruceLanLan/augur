@@ -11,6 +11,7 @@ Provides 6 tools:
   - augur_debate
 """
 
+import re
 from typing import Optional
 
 
@@ -95,6 +96,9 @@ def create_server():
         """
         from augur.registry import AgentRegistry
 
+        if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+            return "Error: Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens."
+
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
                              fcf, market_cap, price, institutional_ownership, insider_ownership,
                              rsi, sector=sector, industry=industry)
@@ -158,6 +162,9 @@ def create_server():
             industry: Industry name
         """
         from augur.registry import AgentRegistry, DecisionCoordinator
+
+        if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+            return "Error: Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens."
 
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
                              fcf, market_cap, price, institutional_ownership, insider_ownership,
@@ -224,6 +231,11 @@ def create_server():
         Args:
             yaml_content: YAML content defining the persona (must include agent_id, name, scoring_weights)
         """
+        if not yaml_content or not yaml_content.strip():
+            return "Error: YAML content cannot be empty"
+        if len(yaml_content) > 10240:
+            return "Error: YAML content too large (max 10KB)"
+
         import tempfile
         from pathlib import Path
         from augur.persona_loader import load_persona_yaml
@@ -258,6 +270,10 @@ def create_server():
             industry: Industry name
         """
         from augur.registry import AgentRegistry, DecisionCoordinator
+
+        if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+            return "Error: Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens."
+        rounds = max(1, min(5, rounds))
 
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
                              fcf, market_cap, price, sector=sector, industry=industry)
