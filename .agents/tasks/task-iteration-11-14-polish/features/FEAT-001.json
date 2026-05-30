@@ -30,5 +30,5 @@
     "python -m pytest tests/test_iteration11.py -v"
   ],
   "blocked_reason": null,
-  "findings": "All 301 existing tests pass after changes. All new functionality verified via manual inline tests. Rate limiting uses a simple in-memory list approach per ticker. Ticker normalization raises ValueError for invalid input which callers should handle."
+  "findings": "All 301 existing tests pass after changes. All new functionality verified via manual inline tests. Rate limiting uses a simple in-memory list approach per ticker. Ticker normalization raises ValueError for invalid input which callers should handle. Post-review fixes applied: (1) sector boost 'ai' substring replaced with explicit keyword list to avoid retail/entertainment/railroad false positives, (2) 'tech' substring replaced with exact sector match to avoid biotech false positive, (3) rate limit dict now evicts stale keys when size > 1000, (4) regression tests added for all false positive scenarios."
 }
