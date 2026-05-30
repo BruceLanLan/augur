@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Fix coordinator edge cases and MCP server input validation",
+  "status": "pending",
+  "steps": [
+    "In src/augur/registry.py DecisionCoordinator.get_consensus(): Clamp the final consensus total_score to [0, 10] (after meta-model blending and all weighting, total_score could drift outside bounds)",
+    "In src/augur/registry.py: The Kelly criterion block has `edge = max(0, (score - 5) / 5)` which is fine, but ensure pct is clamped: `pct = max(0.0, min(20.0, ...))` to handle NaN or negative edge cases",
+    "In src/augur/registry.py get_consensus(): When `total_weight` is 0 (all agents returned SignalType.ERROR with coverage_confidence=0), the division `total_score /= total_weight` would be ZeroDivisionError. Add a guard: if total_weight == 0, return neutral early",
+    "In src/augur/mcp_server.py augur_analyze(): Add ticker validation (same regex pattern as dashboard: r'^[A-Za-z0-9.\\-]{1,15}$') and return a clear error string if invalid",
+    "In src/augur/mcp_server.py augur_consensus(): Add the same ticker validation",
+    "In src/augur/mcp_server.py augur_debate(): Add ticker validation and clamp rounds to [1, 5] to prevent resource abuse",
+    "In src/augur/mcp_server.py augur_create_persona(): Validate yaml_content is not empty and not excessively large (>10KB), return error string if invalid"
+  ],
+  "acceptance_criteria": [
+    "Consensus score is always in [0, 10]",
+    "No ZeroDivisionError in get_consensus when all agents error out",
+    "MCP tools return clear error strings for invalid tickers (not exceptions/crashes)",
+    "augur_debate rounds are clamped to [1, 5]"
+  ],
+  "verification": [
+    "python -m pytest tests/test_registry.py -x -q",
+    "python -c \"from augur.registry import DecisionCoordinator, AgentRegistry; from augur.personas.base import MarketContext, AgentResponse, SignalType; r=AgentRegistry(); c=DecisionCoordinator(r); empty={}; result=c.get_consensus(empty); print('Empty OK:', result.score); err_results={'a': AgentResponse(agent_id='a', agent_name='A', signal=SignalType.ERROR, confidence=0, score=0, reasoning='err', coverage_confidence=0.0)}; result2=c.get_consensus(err_results); print('Error OK:', result2.score)\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
