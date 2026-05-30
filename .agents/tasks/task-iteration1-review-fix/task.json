@@ -1,0 +1,7 @@
+{
+  "task_id": "task-iteration1-review-fix",
+  "task_description": "Iteration 1 review-fix-optimize cycle: fix bugs in data processing (negative debt ratio, RSI edge case), add missing ticker validation to standalone API, improve error handling and user feedback across CLI/dashboard/cron, add backtest log rotation, and write regression tests",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

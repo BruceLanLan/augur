@@ -1,0 +1,32 @@
+{
+  "project_type": "Python multi-agent investment analysis system with FastAPI dashboard, CLI, and MCP server",
+  "language": "Python 3.8+",
+  "build_system": "pip with setuptools, editable install via 'pip install -e .[dev,data]'",
+  "test_framework": "pytest with class-based tests in tests/ directory",
+  "build_command": "pip install -e '.[dev,data]'",
+  "test_command": "pytest tests/ -v",
+  "verification_instructions": "1. Run 'pytest tests/ -v' - all tests should pass. 2. Run 'augur list-personas' to verify CLI. 3. Run 'augur analyze AAPL --pe 25 --roe 0.15' to verify analysis.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e '.[dev,data]'",
+  "environment_constraints": "OPEN_INTERNET - full network access. Python 3.11.14 installed.",
+  "contribution_requirements": "snake_case variables, no forced formatting tools, keep consistent style with existing code, PR titles use fix:/feat:/docs: prefix. Metrics conventions: margins/ratios as decimals (0.46 = 46%), market_cap/fcf in billions USD, institutional_ownership as integer percentage.",
+  "key_patterns": "Each persona is a BaseAgent subclass in src/augur/personas/ with an analyze(MarketContext) method returning AgentResponse. The registry auto-loads all 18 built-in personas plus YAML custom ones. DecisionCoordinator computes weighted consensus. Dashboard is FastAPI + Jinja2 with Bloomberg-style dark theme.",
+  "relevant_files": [
+    "src/augur/data.py",
+    "src/augur/registry.py",
+    "src/augur/api.py",
+    "src/augur/cli.py",
+    "src/augur/personas/base.py",
+    "src/augur/personas/buffett.py",
+    "src/augur/backtest.py",
+    "src/augur/cron.py",
+    "dashboard/app.py",
+    "dashboard/templates/index.html",
+    "dashboard/templates/stocks.html",
+    "tests/test_registry.py",
+    "tests/test_data.py",
+    "tests/test_api.py",
+    "tests/test_cli.py"
+  ],
+  "directory_structure": "src/augur/ - core package (personas/, data, registry, api, cli, backtest, cron, mcp_server, soul, config). dashboard/ - FastAPI web app with templates/ and static/css/. tests/ - pytest tests. config/ - agents.yaml. personas/ - custom YAML personas."
+}

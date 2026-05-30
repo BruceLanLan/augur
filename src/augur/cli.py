@@ -479,7 +479,7 @@ def fetch_cmd(ticker, as_json):
     else:
         click.echo(f"{'Ticker':<18s} {ctx.ticker}")
         click.echo(f"{'Price':<18s} {ctx.price:.2f}")
-        click.echo(f"{'Market Cap':<18s} {ctx.market_cap:,.0f}")
+        click.echo(f"{'Market Cap':<18s} ${ctx.market_cap:,.1f}B")
         click.echo(f"{'PE':<18s} {ctx.pe:.2f}")
         click.echo(f"{'PB':<18s} {ctx.pb:.2f}")
         click.echo(f"{'PS':<18s} {ctx.ps:.2f}")
@@ -489,7 +489,7 @@ def fetch_cmd(ticker, as_json):
         click.echo(f"{'Revenue Growth':<18s} {ctx.revenue_growth:.2%}")
         click.echo(f"{'Earnings Growth':<18s} {ctx.earnings_growth:.2%}")
         click.echo(f"{'Debt Ratio':<18s} {ctx.debt_ratio:.2f}")
-        click.echo(f"{'FCF':<18s} {ctx.fcf:,.0f}")
+        click.echo(f"{'FCF':<18s} ${ctx.fcf:,.2f}B")
         click.echo(f"{'Current Ratio':<18s} {ctx.current_ratio:.2f}")
         click.echo(f"{'Sector':<18s} {ctx.sector}")
         click.echo(f"{'Industry':<18s} {ctx.industry}")

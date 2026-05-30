@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Fix bugs and edge cases in data processing, API validation, and persona scoring logic",
+  "status": "in_progress",
+  "steps": [
+    "1. Fix division-by-zero bug in src/augur/data.py fetch_market_context(): When yfinance returns a negative debt_to_equity (companies with negative equity, e.g. -150), the formula `de_ratio = debt_to_equity / 100.0` gives -1.5, and `de_ratio / (1.0 + de_ratio)` gives -1.5 / -0.5 = 3.0, which is nonsensical. Add a guard: if debt_to_equity is negative or produces an invalid ratio, clamp debt_ratio to 0 or use a safe fallback.",
+    "2. Fix potential negative factor scores in persona analysis. In src/augur/personas/buffett.py, the `finance_score` starts at 5 and can go to 2 (5-3=2) which is fine, but some personas might produce <0 scores. Add lower-bound clamping with max(0, score) before the min(score, 10) call in all persona files. Check: buffett.py financial_strength, graham.py balance_sheet, and similar patterns across all 18 persona files.",
+    "3. Add ticker format validation to src/augur/api.py to match the validation already in dashboard/app.py. The standalone API module lacks the regex check, allowing potentially malicious tickers. Add: `import re` and validate ticker with `re.match(r'^[A-Za-z0-9.\\-]{1,15}$', ticker)` in the analyze_ticker endpoint, raising HTTPException(400) if invalid.",
+    "4. Fix deprecated datetime.datetime.utcnow() usage in src/augur/api.py and dashboard/app.py. Replace with datetime.datetime.now(datetime.timezone.utc) for Python 3.12+ compatibility.",
+    "5. Fix edge case in src/augur/data.py _calculate_rsi(): When all price changes are gains (no losses), avg_loss=0 returns RSI=100.0. This is correct, but when all changes are losses (no gains), avg_gain=0, so rs=0 and RSI=0. Add symmetric handling: if avg_gain == 0 return 0.0 before the division.",
+    "6. Add error handling for yfinance returning None for stock.info in data.py. Currently if stock.info raises an exception it's caught, but if it returns a dict with partial data (symbol exists but no financials), some calculations may produce misleading 0 values. Add a warning comment documenting this is expected behavior (zeros mean 'no data').",
+    "7. Fix the CLI fetch command output formatting in src/augur/cli.py: Market Cap is in billions USD (per project conventions) but the output format string uses `{ctx.market_cap:,.0f}` which shows raw billions number without unit. Change to show the unit explicitly: e.g., '2,800.0B' or format as '$2.8T' for values >= 1000B."
+  ],
+  "acceptance_criteria": [
+    "All existing tests pass (pytest tests/ -v)",
+    "data.py handles negative debt_to_equity without error",
+    "api.py rejects tickers with special characters (returns 400)",
+    "No persona produces a factor score < 0",
+    "CLI fetch command shows proper market cap units"
+  ],
+  "verification": [
+    "pytest tests/ -v",
+    "python -c \"from augur.data import fetch_market_context; from augur.personas.base import MarketContext; print('OK')\"",
+    "augur list-personas"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

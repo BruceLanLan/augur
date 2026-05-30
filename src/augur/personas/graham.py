@@ -76,7 +76,7 @@ class GrahamAgent(BaseAgent):
                 val_score = 3
             else:
                 val_score = 1
-        factors["valuation"] = min(val_score * val_multiplier, 10)
+        factors["valuation"] = min(max(val_score * val_multiplier, 0), 10)
 
         # 2. 安全边际 (0-10) - PB作为主要指标
         mos_score = 5
@@ -103,7 +103,7 @@ class GrahamAgent(BaseAgent):
             bs_score += 2
         elif context.debt_ratio > 0.70:
             bs_score -= 2
-        factors["balance_sheet"] = min(bs_score * bs_multiplier, 10)
+        factors["balance_sheet"] = min(max(bs_score * bs_multiplier, 0), 10)
 
         # 4. 盈利稳定性 (0-10)
         earn_score = 5
@@ -113,7 +113,7 @@ class GrahamAgent(BaseAgent):
             earn_score += 2
         if context.debt_ratio < 0.50:
             earn_score += 1
-        factors["earnings_stability"] = min(earn_score, 10)
+        factors["earnings_stability"] = min(max(earn_score, 0), 10)
 
         # 计算综合评分 - 只使用factors中存在的因子
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)

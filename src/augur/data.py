@@ -102,7 +102,9 @@ def fetch_market_context(ticker: str) -> MarketContext:
     debt_to_equity = info.get("debtToEquity", 0) or 0
     # yfinance debtToEquity is D/E percentage (e.g. 162 means D/E = 1.62)
     # Convert to debt ratio (D/A = D/E / (1 + D/E))
-    if debt_to_equity:
+    # Guard: negative or zero debt_to_equity (negative shareholder equity) is invalid
+    # for this formula; de_ratio of -1.0 would cause ZeroDivisionError.
+    if debt_to_equity > 0:
         de_ratio = debt_to_equity / 100.0  # D/E as decimal
         debt_ratio = de_ratio / (1.0 + de_ratio)   # D/A = D/E / (1 + D/E)
     else:
@@ -360,6 +362,7 @@ def _calculate_rsi(closes: List[float], period: int = 14) -> float:
     avg_gain = sum(gains) / period
     avg_loss = sum(losses) / period
 
+    # All gains, no losses -> RSI=100; if avg_gain were 0 (all losses), rs=0 -> RSI=0
     if avg_loss == 0:
         return 100.0
     rs = avg_gain / avg_loss

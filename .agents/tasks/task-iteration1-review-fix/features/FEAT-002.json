@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Improve error handling, user feedback, and robustness in the analysis pipeline and dashboard",
+  "status": "pending",
+  "steps": [
+    "1. In src/augur/registry.py DecisionCoordinator.get_consensus(), the method references several scanner.* modules that don't exist in the current codebase (scanner.industry_matrix, scanner.regime_weights, etc). These are wrapped in try/except which is fine, but add a log message at debug level when these modules are missing so developers know they're being skipped. Add 'import logging; logger = logging.getLogger(__name__)' at the top and logger.debug() in the except blocks for the major feature modules (industry_matrix, regime_weights, rolling_ic, meta_model, risk_manager).",
+    "2. In dashboard/app.py, the analyze_ticker endpoint silently falls back to empty MarketContext when yfinance fails. Add the exception message to the response so the frontend can show it. Add a 'data_note' field to the response when yfinance fails: e.g., 'data_note': 'yfinance fetch failed, using manual parameters' so the user knows data may be incomplete.",
+    "3. In src/augur/cli.py _auto_fetch_context(), improve the error message when yfinance import fails. Currently says 'yfinance not installed. Using empty metrics.' - change to also suggest the exact install command in the same line for better UX: 'yfinance not installed (pip install augur-agents[data]). Analyzing with empty metrics.'",
+    "4. In dashboard/app.py, the /api/watchlist/run endpoint runs analysis synchronously on all tickers which can be slow. Add a timeout/progress indicator by including a 'processing_time_ms' field in the response so the frontend knows how long it took.",
+    "5. In src/augur/backtest.py Backtester._save_records(), the method appends to records.jsonl without any size limit. Add a simple rotation: if the file exceeds 10MB, truncate to the last 5000 records before appending. This prevents unbounded disk growth for heavy users.",
+    "6. In src/augur/cron.py run_watchlist_analysis(), when a ticker analysis fails (exception in coordinator), the error is silently swallowed. Add try/except around the per-ticker analysis with a print() message showing which ticker failed and why, then continue to the next ticker."
+  ],
+  "acceptance_criteria": [
+    "All existing tests pass (pytest tests/ -v)",
+    "registry.py has logging import and debug messages for missing scanner modules",
+    "dashboard analyze endpoint includes data_note field when yfinance fails",
+    "backtest records.jsonl has size-based rotation logic",
+    "cron.py prints error messages for failed ticker analyses instead of silently skipping"
+  ],
+  "verification": [
+    "pytest tests/ -v",
+    "python -c \"from augur.registry import DecisionCoordinator; from augur.personas.base import MarketContext; c = DecisionCoordinator(); r = c.analyze_with_all(MarketContext(ticker='TEST', pe=25)); cons = c.get_consensus(r, ticker='TEST', context=MarketContext(ticker='TEST', pe=25)); print(f'Consensus: {cons.signal.value} {cons.score:.1f}')\"",
+    "python -c \"from augur.backtest import Backtester; bt = Backtester(); print('Backtest module OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

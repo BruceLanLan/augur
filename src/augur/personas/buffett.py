@@ -78,7 +78,7 @@ class BuffettAgent(BaseAgent):
         roe_min = self.thresholds.get("roe_min", 0.15)
         if context.roe > roe_min:
             moat_score += 1
-        factors["moat"] = min(moat_score * growth_multiplier, 10)
+        factors["moat"] = min(max(moat_score * growth_multiplier, 0), 10)
 
         # 2. 盈利可预测性 (0-10)
         earnings_score = 5
@@ -86,7 +86,7 @@ class BuffettAgent(BaseAgent):
             earnings_score += 3
         if context.fcf > 0:
             earnings_score += 2
-        factors["earnings_predictability"] = min(earnings_score, 10)
+        factors["earnings_predictability"] = min(max(earnings_score, 0), 10)
 
         # 3. 财务实力 (0-10)
         finance_score = 5
@@ -96,7 +96,7 @@ class BuffettAgent(BaseAgent):
             finance_score -= 3
         if context.current_ratio > 1.5:
             finance_score += 2
-        factors["financial_strength"] = min(finance_score, 10)
+        factors["financial_strength"] = min(max(finance_score, 0), 10)
 
         # 4. 管理质量 (0-10)
         mgmt_score = 5
@@ -104,7 +104,7 @@ class BuffettAgent(BaseAgent):
             mgmt_score += 3
         if context.institutional_ownership > 70:
             mgmt_score += 2
-        factors["management_quality"] = min(mgmt_score, 10)
+        factors["management_quality"] = min(max(mgmt_score, 0), 10)
 
         # 5. 估值 (0-10)
         val_score = 5
@@ -120,7 +120,7 @@ class BuffettAgent(BaseAgent):
             fcf_yield = context.fcf / context.market_cap
             if fcf_yield > 0.05:
                 val_score += 2
-        factors["valuation"] = min(val_score * value_multiplier, 10)
+        factors["valuation"] = min(max(val_score * value_multiplier, 0), 10)
 
         # 计算综合评分 - 只使用factors中存在的因子
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)
