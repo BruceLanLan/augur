@@ -1,0 +1,23 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Config system improvements and coordinator parallel analysis: add config validation in _load_config, add concurrent.futures for analyze_with_all parallelization, fix config edge cases",
+  "status": "completed",
+  "steps": [
+    "In src/augur/config.py: _load_config silently catches all exceptions and sets _config={} - add logging.warning so users know their config file is malformed. Also add validation that loaded config is a dict (YAML could parse to a list or scalar)",
+    "In src/augur/config.py: set_config with dot notation 'a.b.c' creates intermediate dicts but doesn't validate that existing values aren't being overwritten from non-dict to dict. Add a check and log a warning if overwriting a non-dict value with a nested path",
+    "In src/augur/registry.py DecisionCoordinator.analyze_with_all: currently processes all 18 agents sequentially. Use concurrent.futures.ThreadPoolExecutor to analyze in parallel with max_workers=min(len(agents), 8). Wrap in try/except to fallback to sequential if threading fails. This is the main performance optimization.",
+    "In src/augur/registry.py: the coordinator creates a new AgentRegistry() in __init__ if none provided, which re-imports all 18 persona modules. Add a module-level cache so repeated DecisionCoordinator() instantiations reuse the same registry (the global get_registry() already does this but direct instantiation doesn't)"
+  ],
+  "acceptance_criteria": [
+    "config.py logs a warning when config file is malformed or non-dict",
+    "DecisionCoordinator.analyze_with_all uses ThreadPoolExecutor for parallel execution",
+    "Sequential fallback works if threading raises an exception",
+    "python -m pytest tests/ -q passes with no regressions"
+  ],
+  "verification": [
+    "python -m pytest tests/ -q"
+  ],
+  "blocked_reason": null,
+  "findings": "All 99 tests pass. Config logging uses standard logging.warning for both malformed YAML and non-dict parse results. ThreadPoolExecutor uses max_workers=min(len(agents), 8) with sequential fallback. DecisionCoordinator now uses get_registry() for the cached global registry instance."
+}
