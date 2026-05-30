@@ -1,0 +1,22 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Add targeted tests for the bugs fixed in FEAT-001 and FEAT-002 to prevent regressions",
+  "status": "pending",
+  "steps": [
+    "1. Add test in tests/test_data.py for negative debt_to_equity handling: test that fetch_market_context logic handles debt_to_equity values like -150, 0, and normal positive values (e.g. 162) correctly. Since we cannot call yfinance in tests, test the conversion logic directly by extracting or testing the formula.",
+    "2. Add test in tests/test_api.py for the standalone api.py ticker validation: test that GET /api/analyze/AAPL;DROP returns 400 (using the augur.api app, not dashboard.app). Import the api.py app via TestClient and verify invalid tickers are rejected.",
+    "3. Add test in tests/test_backtest.py for the records rotation logic: create a Backtester instance, write more than the threshold of records, verify that the file doesn't grow unboundedly (or verify the rotation method exists and is callable).",
+    "4. Add test in tests/test_registry.py that verifies no persona produces negative factor scores. Run analyze_with_all with a MarketContext that has extreme values (very high debt, negative growth, etc.) and verify all responses have score >= 0."
+  ],
+  "acceptance_criteria": [
+    "All tests pass including the new ones",
+    "New tests would fail if the corresponding fixes were reverted",
+    "Test coverage of edge cases improves"
+  ],
+  "verification": [
+    "pytest tests/ -v"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

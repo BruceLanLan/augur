@@ -9,6 +9,7 @@ Provides endpoints:
   GET /health - health check
 """
 
+import re
 from typing import Optional, List, Dict
 from pathlib import Path
 
@@ -88,6 +89,9 @@ async def analyze_ticker(
 
     Auto-fetches live data from yfinance when no metrics are provided.
     """
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
+
     has_metrics = any([price, pe, pb, revenue_growth, gross_margins, market_cap])
     data_source = "manual"
 
@@ -130,7 +134,7 @@ async def analyze_ticker(
     import datetime
     return {
         "ticker": ticker.upper(),
-        "timestamp": datetime.datetime.utcnow().isoformat() + "Z",
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z",
         "data_source": data_source,
         "consensus": consensus_resp.to_dict(),
         "agents": [r.to_dict() for r in agent_responses.values()],
