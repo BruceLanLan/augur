@@ -167,6 +167,7 @@ class LiLuAgent(BaseAgent):
             factors[k] * self.scoring_weights[k]
             for k in factors
         )
+        total_score = max(0.0, min(10.0, total_score))
         avg_score = sum(factors.values()) / len(factors)
         signal = self._calculate_signal(avg_score)
         confidence = min(0.92, 0.50 + factors["intrinsic_value_discount"] / 20 + factors["competitive_position"] / 40)

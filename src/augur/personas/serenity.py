@@ -251,6 +251,7 @@ class SerenityAgent(BaseAgent):
 
         # 计算总分
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)
+        total_score = max(0.0, min(10.0, total_score))
         avg_score = sum(factors.values()) / len(factors)
         signal = self._calculate_signal(avg_score)
         confidence = min(0.85, 0.4 + factors["supply_chain_bottleneck"] / 15 + factors["options_iv_momentum"] / 15)

@@ -76,7 +76,7 @@ class MungerAgent(BaseAgent):
 
         # 2. 心理因素 - 波动率作为市场情绪代理
         psych_score = 5
-        if context.price and context.atr/context.price*100 > 3:
+        if context.price and context.price > 0 and context.atr/context.price*100 > 3:
             psych_score += 2  # 高波动反映恐惧
         if context.price_vs_52w_low < 10:  # 接近低点
             psych_score += 1
@@ -84,7 +84,7 @@ class MungerAgent(BaseAgent):
 
         # 3. 选择严格性 - 用PE和增长匹配度
         rigor_score = 5
-        if context.pe > 0 and context.earnings_growth > 0:
+        if context.pe > 0 and context.earnings_growth and context.earnings_growth > 0:
             peg = context.pe / (context.earnings_growth * 100)
             if peg < 1.5:
                 rigor_score += 3  # 增长被低估
@@ -101,6 +101,7 @@ class MungerAgent(BaseAgent):
         factors["moat_durability"] = min(max(moat_score * moat_multiplier, 0), 10)
 
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0.25) for k in factors)
+        total_score = max(0.0, min(10.0, total_score))
         if total_score >= bullish_threshold:
             signal = SignalType.BULLISH
         elif total_score <= bearish_threshold:
