@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-002",
+  "type": "chore",
+  "description": "Iteration 10: Import cleanup and logging consistency across the codebase. Remove unused imports from all source files. Add consistent logging.getLogger(__name__) to modules that lack it. Fix import patterns in bot modules (unused STOP_WORDS, asyncio, hashlib, urllib.request).",
+  "status": "completed",
+  "steps": [
+    "In src/augur/api.py: remove unused imports List, Dict, Path (line 15-16)",
+    "In src/augur/errors.py: remove unused import Optional (line 9)",
+    "In src/augur/personas/base.py: remove unused imports Path, Optional, Callable (from typing line and pathlib line)",
+    "In src/augur/personas/*.py (all 18 persona files): remove unused Dict and List from typing imports, remove unused SignalType imports where it is imported but only used via self._calculate_signal. NOTE: SignalType IS used in the from-import but often referenced via the parent module - check each carefully. Many personas import Dict/List but never use them as type annotations. Focus on removing Dict/List where clearly unused.",
+    "In src/augur/bots/telegram_bot.py: remove unused asyncio import and unused STOP_WORDS import",
+    "In src/augur/bots/slack_bot.py: remove unused STOP_WORDS import",
+    "In src/augur/bots/wechat_bot.py: remove unused threading and STOP_WORDS imports",
+    "In src/augur/bots/lark_bot.py: remove unused hashlib and STOP_WORDS imports",
+    "Add logging.getLogger(__name__) to modules that lack it: src/augur/backtest.py, src/augur/data.py, src/augur/mcp_server.py, dashboard/app.py (change 'augur.dashboard' to __name__)",
+    "Verify all tests still pass after cleanup"
+  ],
+  "acceptance_criteria": [
+    "No unused typing imports (Dict, List, Optional) remain in persona files",
+    "No unused STOP_WORDS imports in bot files",
+    "All modules that do logging use logging.getLogger(__name__) consistently",
+    "python -m pytest tests/ -x -q passes all tests",
+    "python -c 'from augur.registry import AgentRegistry; r=AgentRegistry(); print(len(r.get_all()))' outputs 18"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q --tb=short",
+    "python -c \"from augur.registry import AgentRegistry; r=AgentRegistry(); print(len(r.get_all()))\"",
+    "python -c \"import ast; [ast.parse(open(f).read()) for f in __import__('glob').glob('src/augur/**/*.py', recursive=True)]; print('All files parse OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": "All 300 tests pass. 18 agents register correctly. Removed Dict from persona files that don't use it in type annotations. Kept Dict in buffett, dan_bin, duan_yongping, li_lu, zhang_lei, graham, lynch, dayu (used in _generate_reasoning signatures). Kept SignalType in munger.py (uses SignalType.BULLISH/BEARISH/NEUTRAL directly). Removed SignalType from graham.py and lynch.py (only use self._calculate_signal)."
+}
