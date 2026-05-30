@@ -171,3 +171,26 @@ class TestMCPValidation:
         assert re.match(pattern, 'AAPL')
         assert re.match(pattern, '0700.HK')
         assert re.match(pattern, 'BRK.B')
+
+    def test_mcp_validate_ticker_function(self):
+        """_validate_ticker helper should reject invalid tickers and accept valid ones."""
+        from augur.mcp_server import _validate_ticker
+
+        # Valid tickers return None
+        assert _validate_ticker('AAPL') is None
+        assert _validate_ticker('0700.HK') is None
+        assert _validate_ticker('BRK.B') is None
+        assert _validate_ticker('NVDA') is None
+        assert _validate_ticker('TSM') is None
+
+        # Invalid tickers return error string
+        assert _validate_ticker('<script>alert(1)</script>') is not None
+        assert _validate_ticker('') is not None
+        assert _validate_ticker('A' * 16) is not None
+        assert _validate_ticker('TICK ER') is not None
+        assert _validate_ticker('TICK;DROP') is not None
+        assert _validate_ticker('../etc/passwd') is not None
+
+        # Verify the error message content
+        err = _validate_ticker('<bad>')
+        assert 'Invalid ticker' in err

@@ -14,6 +14,16 @@ Provides 6 tools:
 import re
 from typing import Optional
 
+# Ticker validation pattern: 1-15 alphanumeric chars, dots, or hyphens
+_TICKER_PATTERN = re.compile(r'^[A-Za-z0-9.\-]{1,15}$')
+
+
+def _validate_ticker(ticker: str) -> Optional[str]:
+    """Validate ticker format. Returns error message string if invalid, None if valid."""
+    if not ticker or not _TICKER_PATTERN.match(ticker):
+        return "Error: Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens."
+    return None
+
 
 def _build_context(ticker: str, pe: float = 0, pb: float = 0, roe: float = 0,
                    gross_margins: float = 0, revenue_growth: float = 0,
@@ -96,8 +106,9 @@ def create_server():
         """
         from augur.registry import AgentRegistry
 
-        if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
-            return "Error: Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens."
+        err = _validate_ticker(ticker)
+        if err:
+            return err
 
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
                              fcf, market_cap, price, institutional_ownership, insider_ownership,
@@ -163,8 +174,9 @@ def create_server():
         """
         from augur.registry import AgentRegistry, DecisionCoordinator
 
-        if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
-            return "Error: Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens."
+        err = _validate_ticker(ticker)
+        if err:
+            return err
 
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
                              fcf, market_cap, price, institutional_ownership, insider_ownership,
@@ -271,8 +283,9 @@ def create_server():
         """
         from augur.registry import AgentRegistry, DecisionCoordinator
 
-        if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
-            return "Error: Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens."
+        err = _validate_ticker(ticker)
+        if err:
+            return err
         rounds = max(1, min(5, rounds))
 
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
