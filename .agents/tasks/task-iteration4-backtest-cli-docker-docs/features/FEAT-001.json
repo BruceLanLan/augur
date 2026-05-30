@@ -28,5 +28,5 @@
     "Run augur watchlist-add --help and confirm --sector is listed"
   ],
   "blocked_reason": null,
-  "findings": "All 118 tests pass. CLI --sector and --industry options verified via --help. Deterministic seed, early return guard, Dockerfile non-root user, docker-compose healthchecks all implemented successfully."
+  "findings": "All 118 tests pass. CLI --sector and --industry options verified via --help. Deterministic seed, early return guard, Dockerfile non-root user, docker-compose healthchecks all implemented successfully. Post-review fixes applied: (1) docker-compose.yml volume mounts changed from /root/.augur to /app/.augur to match non-root user, (2) Dockerfile CMD comment corrected to 'start API server', (3) generate_sample_data now uses local random.Random(seed) instance instead of global random.seed() to prevent RNG state pollution."
 }
