@@ -55,8 +55,8 @@
         <p class="text-muted" style="font-size:0.82rem; margin:4px 0 0;">{{ personas|length }}位投资大师 - 点击行展开详情 <span class="shortcut-hint"><kbd>&uarr;</kbd><kbd>&darr;</kbd> 导航 &middot; <kbd>Enter</kbd> 展开</span></p>
     </div>
     <div class="flex gap-8">
-        <button class="btn btn-sm btn-ghost" onclick="expandAllPersonas(true)">全部展开</button>
-        <button class="btn btn-sm btn-ghost" onclick="expandAllPersonas(false)">全部收起</button>
+        <button class="btn btn-sm btn-ghost" onclick="expandAllPersonas(true)" aria-label="全部展开">全部展开</button>
+        <button class="btn btn-sm btn-ghost" onclick="expandAllPersonas(false)" aria-label="全部收起">全部收起</button>
     </div>
 </div>
 
@@ -89,7 +89,7 @@
     </table>
     <div id="persona-list">
         {% for persona in personas %}
-        <div class="persona-row" onclick="toggleRow(this)"
+        <div class="persona-row" onclick="toggleRow(this)" role="button" aria-expanded="false"
              data-name="{{ persona.name|lower }}"
              data-style="{{ persona.style|lower }}"
              data-id="{{ persona.id }}"
@@ -170,6 +170,7 @@ var activeFilter = 'all';
 
 function toggleRow(row) {
     row.classList.toggle('expanded');
+    row.setAttribute('aria-expanded', row.classList.contains('expanded') ? 'true' : 'false');
 }
 
 function filterPersonas() {
@@ -208,6 +209,7 @@ function expandAllPersonas(expand) {
         if (row.style.display === 'none') return;
         if (expand) row.classList.add('expanded');
         else row.classList.remove('expanded');
+        row.setAttribute('aria-expanded', expand ? 'true' : 'false');
     });
 }
 

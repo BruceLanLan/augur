@@ -19,7 +19,7 @@
                 <span class="logo-text">Augur</span>
             </div>
 
-            <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="折叠侧边栏">
+            <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="折叠侧边栏" aria-label="折叠侧边栏">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
 
@@ -81,7 +81,7 @@
         <div class="mobile-backdrop" id="backdrop" onclick="closeSidebar()"></div>
 
         <!-- Mobile hamburger -->
-        <button class="hamburger-btn" onclick="openSidebar()">
+        <button class="hamburger-btn" onclick="openSidebar()" aria-label="打开导航菜单">
             <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
 
@@ -338,6 +338,8 @@
         var indicator = document.querySelector('.status-indicator');
         if (!statusDot) return;
 
+        var healthCheckTimer = null;
+
         function checkHealth() {
             fetch('/health', { method: 'GET' })
                 .then(function(r) {
@@ -358,7 +360,22 @@
                 });
         }
 
-        setInterval(checkHealth, 30000);
+        function startHealthCheck() {
+            if (healthCheckTimer) clearInterval(healthCheckTimer);
+            healthCheckTimer = setInterval(checkHealth, 30000);
+        }
+
+        // Pause polling when page is hidden, resume when visible
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                if (healthCheckTimer) { clearInterval(healthCheckTimer); healthCheckTimer = null; }
+            } else {
+                checkHealth();
+                startHealthCheck();
+            }
+        });
+
+        startHealthCheck();
     })();
     </script>
     {% block extra_scripts %}{% endblock %}

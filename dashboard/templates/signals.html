@@ -81,6 +81,24 @@ var autoRefreshTimer = null;
 document.addEventListener('DOMContentLoaded', function() {
     loadWatchlist();
     startAutoRefresh();
+
+    // Event delegation for remove ticker buttons (XSS-safe)
+    document.getElementById('watchlist-body').addEventListener('click', function(e) {
+        var btn = e.target.closest('.remove-ticker-btn');
+        if (btn) {
+            var ticker = btn.getAttribute('data-ticker');
+            if (ticker) removeTicker(ticker);
+        }
+    });
+});
+
+// Pause auto-refresh when page is hidden, resume when visible
+document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+        if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
+    } else {
+        startAutoRefresh();
+    }
 });
 
 function startAutoRefresh() {
@@ -142,7 +160,7 @@ function renderWatchlist() {
             '<td style="padding:10px 16px; text-align:center;">' + scoreHtml + '</td>' +
             '<td style="padding:10px 16px; text-align:center;">' + votesHtml + '</td>' +
             '<td style="padding:10px 16px; text-align:center;">' +
-                '<button onclick="removeTicker(\'' + ticker + '\')" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1rem; padding:2px 6px;" title="移除">&times;</button>' +
+                '<button class="remove-ticker-btn" data-ticker="' + escapeHtml(ticker) + '" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1rem; padding:2px 6px;" title="移除" aria-label="移除 ' + escapeHtml(ticker) + '">&times;</button>' +
             '</td>' +
             '</tr>';
     }
