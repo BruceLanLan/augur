@@ -406,8 +406,8 @@ class DecisionCoordinator:
                 edge = max(0, (score - 5) / 5)
                 full_kelly = edge * conf
                 pct = min(20.0, round(full_kelly * 0.5 * 100, 1))
-                # Minimum 1% token position for any bullish signal passing threshold
-                if pct < 1.0:
+                # Minimum 1% token position for bullish signal with sufficient confidence
+                if pct < 1.0 and conf >= 0.5:
                     pct = 1.0
             elif sig == "bearish":
                 pct = 0.0

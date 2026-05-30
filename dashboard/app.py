@@ -653,7 +653,7 @@ async def health():
 
 # ============ Cache Management API Routes ============
 
-@app.get("/api/cache/clear")
+@app.post("/api/cache/clear")
 async def api_cache_clear():
     """Clear the data cache to force fresh fetches."""
     from augur.data import clear_cache

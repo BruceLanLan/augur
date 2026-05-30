@@ -215,6 +215,7 @@ function removeTicker(ticker) {
             if (data.status === 'ok') {
                 showToast(ticker + ' 已移除');
                 delete analysisResults[ticker];
+                sessionStorage.setItem('augur-analysis-results', JSON.stringify(analysisResults));
                 loadWatchlist();
             } else {
                 showToast(data.detail || '移除失败', 'error');
