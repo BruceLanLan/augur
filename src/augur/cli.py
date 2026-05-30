@@ -269,6 +269,76 @@ def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio
     click.echo(format_table(headers, rows))
 
 
+@main.command("report")
+@click.argument("ticker")
+@click.option("--output", "-o", default=None, help="Save report to file")
+@click.option("--pe", type=float, default=None, help="PE ratio")
+@click.option("--pb", type=float, default=None, help="PB ratio")
+@click.option("--roe", type=float, default=None, help="Return on equity (decimal)")
+@click.option("--gross-margins", type=float, default=None, help="Gross margins (decimal)")
+@click.option("--revenue-growth", type=float, default=None, help="Revenue growth (decimal)")
+@click.option("--debt-ratio", type=float, default=None, help="Debt/assets ratio (decimal)")
+@click.option("--fcf", type=float, default=None, help="Free cash flow (billions USD)")
+@click.option("--market-cap", type=float, default=None, help="Market cap (billions USD)")
+@click.option("--price", type=float, default=None, help="Current stock price")
+@click.option("--sector", default="", help="Sector name")
+@click.option("--industry", default="", help="Industry name")
+def report_cmd(ticker, output, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry):
+    """Generate a deep analysis report for a ticker.
+
+    \b
+    Examples:
+      augur report AAPL                     # Auto-fetch & generate report
+      augur report NVDA --pe 60 --roe 0.45  # Manual metrics
+      augur report TSLA -o tsla_report.md   # Save to file
+    """
+    from augur.personas.base import MarketContext
+    from augur.registry import AgentRegistry, DecisionCoordinator
+    from augur.report import generate_report
+
+    # Check if user provided any metrics
+    user_metrics = {k: v for k, v in {
+        "pe": pe, "pb": pb, "roe": roe, "gross_margins": gross_margins,
+        "revenue_growth": revenue_growth, "debt_ratio": debt_ratio,
+        "fcf": fcf, "market_cap": market_cap, "price": price,
+    }.items() if v is not None}
+
+    if not user_metrics:
+        # Auto-fetch from yfinance
+        ctx = _auto_fetch_context(ticker)
+    else:
+        ctx = MarketContext(
+            ticker=ticker.upper(),
+            pe=pe or 0,
+            pb=pb or 0,
+            roe=roe or 0,
+            gross_margins=gross_margins or 0,
+            revenue_growth=revenue_growth or 0,
+            debt_ratio=debt_ratio or 0,
+            fcf=fcf or 0,
+            market_cap=market_cap or 0,
+            price=price or 0,
+            sector=sector or "",
+            industry=industry or "",
+        )
+
+    registry = AgentRegistry()
+    coordinator = DecisionCoordinator(registry)
+
+    click.echo(f"Generating deep report for {ticker.upper()}...\n")
+    results = coordinator.analyze_with_all(ctx)
+    consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
+
+    report = generate_report(ticker.upper(), ctx, results, consensus)
+
+    if output:
+        with open(output, "w", encoding="utf-8") as f:
+            f.write(report)
+        click.echo(f"报告已保存至: {output}")
+    else:
+        click.echo(report)
+
+
 @main.command("list-personas")
 def list_personas_cmd():
     """List all available personas.

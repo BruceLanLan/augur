@@ -182,7 +182,7 @@ function heroGo() {
             document.getElementById('hr-score').textContent = (cons.score || 0).toFixed(1) + '/10';
             document.getElementById('hr-confidence').textContent = ((cons.confidence || 0) * 100).toFixed(0) + '%';
             document.getElementById('hr-reasoning').textContent = cons.reasoning || '';
-            document.getElementById('hr-link').href = '/stocks?ticker=' + t;
+            document.getElementById('hr-link').href = '/stocks?ticker=' + t + '&report=1';
 
             document.getElementById('hero-result').style.display = 'block';
 

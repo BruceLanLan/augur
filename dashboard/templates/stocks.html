@@ -209,6 +209,7 @@
                         <span class="data-label">主要风险</span>
                         <button class="copy-btn" onclick="copyConsensus(this)">复制摘要</button>
                         <button class="copy-btn" style="margin-left:8px;" onclick="exportJSON()">导出 JSON</button>
+                        <button class="copy-btn" style="margin-left:8px;" onclick="generateReport()">生成深度报告</button>
                     </div>
                     <ul id="cons-risks" style="list-style:none; padding:0; margin:0;"></ul>
                 </div>
@@ -244,6 +245,19 @@
 
 </div><!-- /results -->
 
+<!-- Deep Report Section -->
+<div id="report-section" style="display:none;" class="card mb-24">
+    <div class="flex items-center justify-between mb-12">
+        <h3 style="color:var(--accent-orange); margin:0;">深度分析报告</h3>
+        <div class="flex gap-8">
+            <button class="copy-btn" onclick="copyReport()">复制报告</button>
+            <button class="copy-btn" onclick="downloadReport()">下载 .md</button>
+            <button class="copy-btn" onclick="closeReport()">关闭</button>
+        </div>
+    </div>
+    <div id="report-content" style="font-size:0.82rem; line-height:1.8; white-space:pre-wrap; overflow-x:auto;"></div>
+</div>
+
 {% endblock %}
 {% block extra_scripts %}
 <script>
@@ -265,6 +279,10 @@ var lastAnalysisData = null;
         hint.textContent = '🎯 使用 ' + persona + ' 框架分析 (来自人格系统)';
         var container = document.getElementById('inp-ticker') ? document.getElementById('inp-ticker').closest('.card') : null;
         if (container) container.insertBefore(hint, container.firstChild);
+    }
+    // Auto-generate report if report=1 in URL params
+    if (p.get('report') === '1' && t) {
+        window._autoReport = true;
     }
     if (t) { document.getElementById('inp-ticker').value = t; runAnalysis(); }
 })();
@@ -506,6 +524,81 @@ function renderResults(data) {
             '<button class="expand-btn" onclick="toggleReasoning(this)" aria-label="展开推理">展开</button>';
         grid.appendChild(div);
     });
+
+    // Auto-generate report if report=1 in URL params
+    if (window._autoReport) {
+        window._autoReport = false;
+        setTimeout(generateReport, 500);
+    }
+}
+
+function generateReport() {
+    var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase();
+    if (!ticker) { showToast('请先输入股票代码', 'warning'); return; }
+
+    showToast('正在生成深度报告...', 'info');
+
+    var params = new URLSearchParams({auto_fetch: hasUserMetrics() ? 'false' : 'true'});
+    // Add the same manual metrics if user provided them
+    if (hasUserMetrics()) {
+        params.set('price', num('inp-price'));
+        params.set('pe', num('inp-pe'));
+        params.set('pb', num('inp-pb'));
+        params.set('gross_margins', num('inp-gm') / 100);
+        params.set('operating_margins', num('inp-om') / 100);
+        params.set('roe', num('inp-roe') / 100);
+        params.set('debt_ratio', num('inp-debt') / 100);
+        params.set('revenue_growth', num('inp-revg') / 100);
+        params.set('earnings_growth', num('inp-epsg') / 100);
+        params.set('fcf', num('inp-fcf') / 10);
+        params.set('market_cap', num('inp-mktcap') / 10);
+        params.set('sector', document.getElementById('inp-sector').value);
+        params.set('industry', document.getElementById('inp-industry').value || '');
+    }
+
+    fetch('/api/report/' + ticker + '?' + params)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status === 'ok' && data.report) {
+                document.getElementById('report-content').textContent = data.report;
+                document.getElementById('report-section').style.display = 'block';
+                document.getElementById('report-section').scrollIntoView({behavior:'smooth'});
+                showToast('深度报告已生成');
+            } else {
+                showToast('报告生成失败: ' + (data.detail || 'unknown error'), 'error');
+            }
+        })
+        .catch(function(err) {
+            showToast('报告生成失败: ' + err.message, 'error');
+        });
+}
+
+function copyReport() {
+    var content = document.getElementById('report-content').textContent;
+    if (content) {
+        navigator.clipboard.writeText(content).then(function() {
+            showToast('报告已复制到剪贴板');
+        });
+    }
+}
+
+function downloadReport() {
+    var content = document.getElementById('report-content').textContent;
+    var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase() || 'report';
+    if (content) {
+        var blob = new Blob([content], {type: 'text/markdown;charset=utf-8'});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = ticker + '-深度分析报告.md';
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('报告已下载');
+    }
+}
+
+function closeReport() {
+    document.getElementById('report-section').style.display = 'none';
 }
 </script>
 {% endblock %}
