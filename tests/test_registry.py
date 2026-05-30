@@ -87,6 +87,28 @@ class TestDecisionCoordinator:
         results = coordinator.run_debate(ctx, rounds=2)
         assert len(results) >= 17
 
+    def test_no_negative_scores_extreme_inputs(self):
+        """No persona should produce negative scores even with extreme inputs."""
+        registry = AgentRegistry()
+        coordinator = DecisionCoordinator(registry)
+        # Extreme negative context: high debt, no growth, very high PE
+        ctx = MarketContext(
+            ticker="EXTREME",
+            pe=500,
+            pb=50,
+            roe=-0.5,
+            gross_margins=-0.1,
+            revenue_growth=-0.8,
+            debt_ratio=0.99,
+            fcf=-10,
+            market_cap=1,
+            current_ratio=0.1,
+            rsi=95,
+        )
+        results = coordinator.analyze_with_all(ctx)
+        for agent_id, result in results.items():
+            assert result.score >= 0, f"Agent {agent_id} produced negative score: {result.score}"
+
 
 class TestConfig:
     def test_get_config(self):

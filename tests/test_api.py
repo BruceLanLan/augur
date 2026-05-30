@@ -187,3 +187,29 @@ class TestTickerValidation:
         resp = client.get("/api/analyze/ABCDEFGHIJKLMNOP")
         assert resp.status_code == 400
         assert "Invalid ticker" in resp.json()["detail"]
+
+
+class TestStandaloneAPIValidation:
+    """Tests for ticker validation in the standalone augur.api module."""
+
+    def test_analyze_valid_ticker(self):
+        from fastapi.testclient import TestClient
+        from augur.api import app as standalone_app
+        standalone_client = TestClient(standalone_app)
+        resp = standalone_client.get("/api/analyze/AAPL")
+        assert resp.status_code == 200
+
+    def test_analyze_invalid_ticker_special_chars(self):
+        from fastapi.testclient import TestClient
+        from augur.api import app as standalone_app
+        standalone_client = TestClient(standalone_app)
+        resp = standalone_client.get("/api/analyze/AAPL;DROP")
+        assert resp.status_code == 400
+        assert "Invalid ticker" in resp.json()["detail"]
+
+    def test_analyze_invalid_ticker_too_long(self):
+        from fastapi.testclient import TestClient
+        from augur.api import app as standalone_app
+        standalone_client = TestClient(standalone_app)
+        resp = standalone_client.get("/api/analyze/ABCDEFGHIJKLMNOP")
+        assert resp.status_code == 400

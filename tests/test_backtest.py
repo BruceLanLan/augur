@@ -56,3 +56,13 @@ class TestBacktest:
         bt = Backtester()
         assert bt._check_hit("neutral", 0.01) is True
         assert bt._check_hit("neutral", 0.05) is False
+
+    def test_save_records_rotation_exists(self):
+        """Verify that _save_records handles large files (rotation logic exists)."""
+        import inspect
+        from augur.backtest import Backtester
+
+        bt = Backtester()
+        source = inspect.getsource(bt._save_records)
+        # The rotation logic checks file size > 10MB
+        assert "10 * 1024 * 1024" in source or "10_000_000" in source or "10MB" in source

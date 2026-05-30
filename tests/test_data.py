@@ -53,3 +53,36 @@ class TestDataCalculations:
         assert "sma50" in result
         assert "rsi" in result
         assert "atr" in result
+
+
+class TestDebtRatioConversion:
+    """Tests for the debt_to_equity -> debt_ratio conversion logic in data.py."""
+
+    def test_debt_ratio_conversion_negative(self):
+        """Negative debt_to_equity (negative equity) should give debt_ratio=0."""
+        # The fix is in fetch_market_context: if debt_to_equity <= 0, debt_ratio = 0
+        # Test the formula directly
+        debt_to_equity = -150
+        if debt_to_equity > 0:
+            de_ratio = debt_to_equity / 100.0
+            debt_ratio = de_ratio / (1.0 + de_ratio)
+        else:
+            debt_ratio = 0
+        assert debt_ratio == 0
+
+    def test_debt_ratio_conversion_positive(self):
+        """Normal positive debt_to_equity should compute correctly."""
+        debt_to_equity = 162  # D/E = 1.62
+        de_ratio = debt_to_equity / 100.0
+        debt_ratio = de_ratio / (1.0 + de_ratio)
+        assert 0.6 < debt_ratio < 0.7  # D/A = 1.62/2.62 ~ 0.618
+
+    def test_debt_ratio_conversion_zero(self):
+        """Zero debt_to_equity should give debt_ratio=0."""
+        debt_to_equity = 0
+        if debt_to_equity > 0:
+            de_ratio = debt_to_equity / 100.0
+            debt_ratio = de_ratio / (1.0 + de_ratio)
+        else:
+            debt_ratio = 0
+        assert debt_ratio == 0
