@@ -62,6 +62,32 @@ def _format_signal_emoji(signal_value: str) -> str:
     return mapping.get(signal_value, "")
 
 
+def _clean_reasoning_for_table(reasoning: str) -> str:
+    """清理reasoning文本用于表格显示：移除Markdown标题、换行、多余空白、修复浮点数。"""
+    import re
+    # Remove markdown headers (## Title)
+    text = re.sub(r'^#{1,4}\s+.*$', '', reasoning, flags=re.MULTILINE)
+    # Remove bold markers
+    text = re.sub(r'\*\*([^*]+)\*\*', r'\1', text)
+    # Fix floating point display issues (e.g., 3.5999999999999996 -> 3.6)
+    def _fix_float(m):
+        try:
+            return f"{float(m.group(0)):.1f}"
+        except ValueError:
+            return m.group(0)
+    text = re.sub(r'\d+\.\d{4,}', _fix_float, text)
+    # Collapse multiple newlines/spaces
+    text = re.sub(r'\n+', ' ', text)
+    text = re.sub(r'\s{2,}', ' ', text)
+    # Remove leading dash/bullet items formatting
+    text = re.sub(r'^\s*[-•]\s*', '', text)
+    text = text.strip()
+    # Truncate
+    if len(text) > 80:
+        text = text[:77] + "..."
+    return text
+
+
 def _format_agent_table(results: Dict[str, AgentResponse]) -> str:
     """生成Agent共识表格（Markdown格式）。
 
@@ -79,7 +105,7 @@ def _format_agent_table(results: Dict[str, AgentResponse]) -> str:
         signal_str = _format_signal_chinese(response.signal.value)
         score_str = f"{response.score:.1f}/10"
         confidence_str = f"{response.confidence:.0%}"
-        reasoning_short = response.reasoning[:60] + "..." if len(response.reasoning) > 60 else response.reasoning
+        reasoning_short = _clean_reasoning_for_table(response.reasoning)
         lines.append(
             f"| {response.agent_name} | {signal_str} | {score_str} | {confidence_str} | {reasoning_short} |"
         )
@@ -136,7 +162,20 @@ def _format_theme_section(theme_name: str, agent_ids: List[str], results: Dict[s
         lines.append("")
 
         if response.reasoning:
-            reasoning_text = response.reasoning[:500] + "..." if len(response.reasoning) > 500 else response.reasoning
+            import re as _re
+            reasoning_text = response.reasoning
+            # Remove markdown headers from reasoning
+            reasoning_text = _re.sub(r'^#{1,4}\s+.*$', '', reasoning_text, flags=_re.MULTILINE)
+            # Fix floating point display
+            def _fix_float_inline(m):
+                try:
+                    return f"{float(m.group(0)):.1f}"
+                except ValueError:
+                    return m.group(0)
+            reasoning_text = _re.sub(r'\d+\.\d{4,}', _fix_float_inline, reasoning_text)
+            reasoning_text = reasoning_text.strip()
+            if len(reasoning_text) > 500:
+                reasoning_text = reasoning_text[:497] + "..."
             lines.append(f"- **核心逻辑**: {reasoning_text}")
 
         if response.key_findings:
@@ -176,14 +215,13 @@ def _format_financial_overview(context: MarketContext) -> str:
     if context.price:
         lines.append(f"| 当前价格 | ${context.price:.2f} |")
     if context.market_cap:
-        if context.market_cap >= 1e12:
-            cap_str = f"${context.market_cap / 1e12:.2f}万亿"
-        elif context.market_cap >= 1e9:
-            cap_str = f"${context.market_cap / 1e9:.2f}亿"
-        elif context.market_cap >= 1e6:
-            cap_str = f"${context.market_cap / 1e6:.2f}百万"
+        # market_cap is in billions USD
+        if context.market_cap >= 1000:
+            cap_str = f"${context.market_cap / 1000:.2f}万亿"
+        elif context.market_cap >= 1:
+            cap_str = f"${context.market_cap:.1f}B"
         else:
-            cap_str = f"${context.market_cap:.0f}"
+            cap_str = f"${context.market_cap * 1000:.0f}M"
         lines.append(f"| 市值 | {cap_str} |")
     if context.pe:
         lines.append(f"| 市盈率 (PE) | {context.pe:.1f}x |")
@@ -202,13 +240,13 @@ def _format_financial_overview(context: MarketContext) -> str:
         lines.append("| 指标 | 数值 |")
         lines.append("|------|------|")
         if context.roe:
-            lines.append(f"| ROE | {context.roe:.1f}% |")
+            lines.append(f"| ROE | {context.roe * 100:.1f}% |")
         if context.roa:
-            lines.append(f"| ROA | {context.roa:.1f}% |")
+            lines.append(f"| ROA | {context.roa * 100:.1f}% |")
         if context.gross_margins:
-            lines.append(f"| 毛利率 | {context.gross_margins:.1f}% |")
+            lines.append(f"| 毛利率 | {context.gross_margins * 100:.1f}% |")
         if context.operating_margins:
-            lines.append(f"| 营业利润率 | {context.operating_margins:.1f}% |")
+            lines.append(f"| 营业利润率 | {context.operating_margins * 100:.1f}% |")
         lines.append("")
 
     # 成长指标
@@ -219,9 +257,9 @@ def _format_financial_overview(context: MarketContext) -> str:
         lines.append("| 指标 | 数值 |")
         lines.append("|------|------|")
         if context.revenue_growth:
-            lines.append(f"| 营收增长率 | {context.revenue_growth:.1f}% |")
+            lines.append(f"| 营收增长率 | {context.revenue_growth * 100:.1f}% |")
         if context.earnings_growth:
-            lines.append(f"| 盈利增长率 | {context.earnings_growth:.1f}% |")
+            lines.append(f"| 盈利增长率 | {context.earnings_growth * 100:.1f}% |")
         lines.append("")
 
     # 财务健康
@@ -232,16 +270,17 @@ def _format_financial_overview(context: MarketContext) -> str:
         lines.append("| 指标 | 数值 |")
         lines.append("|------|------|")
         if context.debt_ratio:
-            lines.append(f"| 负债率 | {context.debt_ratio:.1f}% |")
+            lines.append(f"| 负债率 | {context.debt_ratio * 100:.1f}% |")
         if context.current_ratio:
             lines.append(f"| 流动比率 | {context.current_ratio:.2f} |")
         if context.fcf:
-            if abs(context.fcf) >= 1e9:
-                fcf_str = f"${context.fcf / 1e9:.2f}亿"
-            elif abs(context.fcf) >= 1e6:
-                fcf_str = f"${context.fcf / 1e6:.2f}百万"
+            # fcf is in billions USD
+            if abs(context.fcf) >= 1000:
+                fcf_str = f"${context.fcf / 1000:.2f}万亿"
+            elif abs(context.fcf) >= 1:
+                fcf_str = f"${context.fcf:.1f}B"
             else:
-                fcf_str = f"${context.fcf:.0f}"
+                fcf_str = f"${context.fcf * 1000:.0f}M"
             lines.append(f"| 自由现金流 | {fcf_str} |")
         lines.append("")
 
