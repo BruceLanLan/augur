@@ -43,11 +43,14 @@ CLI commands:
   augur watchlist-show - Show current watchlist
 """
 
+import logging
 import os
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 import yaml
+
+logger = logging.getLogger(__name__)
 
 WATCHLIST_PATH = Path.home() / ".augur" / "watchlist.yaml"
 
@@ -211,7 +214,7 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
 
             print(f"  {ticker}: {consensus.signal.value.upper()} ({consensus.score:.1f}/10)")
         except Exception as e:
-            print(f"  Error analyzing {ticker}: {e}")
+            logger.error("Error analyzing %s: %s", ticker, e)
             continue
 
     # Send notifications
