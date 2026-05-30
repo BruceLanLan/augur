@@ -342,3 +342,79 @@ class TestEdgeCases:
 
         assert report
         assert "仓位建议" in report
+
+
+class TestCLIReportCommand:
+    """Test CLI report command."""
+
+    def test_report_help(self):
+        from click.testing import CliRunner
+        from augur.cli import main
+        runner = CliRunner()
+        result = runner.invoke(main, ["report", "--help"])
+        assert result.exit_code == 0
+        assert "TICKER" in result.output
+        assert "--output" in result.output
+
+    def test_report_runs_with_metrics(self):
+        from click.testing import CliRunner
+        from augur.cli import main
+        runner = CliRunner()
+        result = runner.invoke(main, ["report", "AAPL", "--pe", "25", "--roe", "0.55"])
+        assert result.exit_code == 0
+        assert "AAPL" in result.output
+        assert "深度分析报告" in result.output
+
+    def test_report_save_to_file(self):
+        import tempfile
+        import os
+        from click.testing import CliRunner
+        from augur.cli import main
+        runner = CliRunner()
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.md', delete=False) as f:
+            tmppath = f.name
+        try:
+            result = runner.invoke(main, ["report", "MSFT", "--pe", "30", "--output", tmppath])
+            assert result.exit_code == 0
+            assert "保存" in result.output or tmppath in result.output
+            # File should exist and contain report
+            with open(tmppath, 'r') as f:
+                content = f.read()
+            assert "MSFT" in content
+            assert "深度分析报告" in content
+        finally:
+            os.unlink(tmppath)
+
+
+class TestReportAPIEndpoint:
+    """Test /api/report/ endpoint."""
+
+    def test_report_endpoint(self):
+        """Test the report API endpoint returns correct structure."""
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from fastapi.testclient import TestClient
+        from dashboard.app import app
+
+        client = TestClient(app)
+        response = client.get("/api/report/AAPL?pe=25&auto_fetch=false")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "ok"
+        assert data["ticker"] == "AAPL"
+        assert "report" in data
+        assert "深度分析报告" in data["report"]
+        assert "timestamp" in data
+
+    def test_report_endpoint_invalid_ticker(self):
+        """Test the report API endpoint rejects invalid tickers."""
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).parent.parent))
+        from fastapi.testclient import TestClient
+        from dashboard.app import app
+
+        client = TestClient(app)
+        response = client.get("/api/report/INVALID!!!TICKER")
+        assert response.status_code == 400

@@ -42,6 +42,8 @@ except ImportError:
     from scanner.personas.registry import AgentRegistry, DecisionCoordinator
     from scanner.personas.base import MarketContext
 
+from augur.report import generate_report
+
 from augur.config import get_config, set_config, save_config, reset_config
 from augur.errors import api_error_response
 
@@ -397,6 +399,116 @@ async def get_persona(agent_id: str):
     if not agent:
         raise HTTPException(status_code=404, detail=f"Persona '{agent_id}' not found")
     return agent.to_dict()
+
+
+@app.get("/api/report/{ticker}")
+async def report_ticker(
+    ticker: str,
+    price: float = 0,
+    pe: float = 0,
+    pb: float = 0,
+    revenue_growth: float = 0,
+    gross_margins: float = 0,
+    operating_margins: float = 0,
+    roe: float = 0,
+    debt_ratio: float = 0,
+    fcf: float = 0,
+    market_cap: float = 0,
+    institutional_ownership: float = 0,
+    insider_ownership: float = 0,
+    current_ratio: float = 0,
+    earnings_growth: float = 0,
+    sector: str = "",
+    industry: str = "",
+    auto_fetch: bool = True,
+):
+    """
+    生成深度分析报告（Markdown格式）
+
+    基本用法: GET /api/report/AAPL (自动获取实时数据)
+    手动指标: GET /api/report/AAPL?price=210&pe=32&auto_fetch=false
+    """
+    # Validate ticker format
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
+
+    # Rate limiting
+    if not _check_rate_limit(ticker):
+        raise HTTPException(status_code=429, detail="Rate limit exceeded. Max 30 requests per minute per ticker.")
+
+    # Check if any meaningful metric was provided by user
+    has_user_metrics = any([
+        price > 0, pe > 0, pb > 0, revenue_growth != 0,
+        gross_margins > 0, operating_margins != 0, roe > 0,
+        debt_ratio > 0, fcf != 0, market_cap > 0,
+    ])
+
+    data_source = "manual"
+
+    if not has_user_metrics and auto_fetch:
+        try:
+            from augur.data import fetch_market_context
+            ctx = fetch_market_context(ticker)
+            data_source = "yfinance"
+        except (ImportError, Exception):
+            data_source = "fallback"
+            ctx = MarketContext(
+                ticker=ticker.upper(),
+                price=price,
+                pe=pe,
+                pb=pb,
+                revenue_growth=revenue_growth,
+                gross_margins=gross_margins,
+                operating_margins=operating_margins,
+                roe=roe,
+                debt_ratio=debt_ratio,
+                fcf=fcf,
+                market_cap=market_cap,
+                institutional_ownership=institutional_ownership,
+                insider_ownership=insider_ownership,
+                current_ratio=current_ratio,
+                earnings_growth=earnings_growth,
+                sector=sector,
+                industry=industry,
+            )
+    else:
+        ctx = MarketContext(
+            ticker=ticker.upper(),
+            price=price,
+            pe=pe,
+            pb=pb,
+            revenue_growth=revenue_growth,
+            gross_margins=gross_margins,
+            operating_margins=operating_margins,
+            roe=roe,
+            debt_ratio=debt_ratio,
+            fcf=fcf,
+            market_cap=market_cap,
+            institutional_ownership=institutional_ownership,
+            insider_ownership=insider_ownership,
+            current_ratio=current_ratio,
+            earnings_growth=earnings_growth,
+            sector=sector,
+            industry=industry,
+        )
+
+    coord = get_coordinator()
+    agent_responses = coord.analyze_with_all(ctx)
+    consensus_resp = coord.get_consensus(
+        agent_responses,
+        ticker=ticker.upper(),
+        context=ctx,
+    )
+
+    report = generate_report(ticker.upper(), ctx, agent_responses, consensus_resp)
+
+    return {
+        "status": "ok",
+        "ticker": ticker.upper(),
+        "report": report,
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "data_source": data_source,
+    }
 
 
 # ============ Config API Routes ============
