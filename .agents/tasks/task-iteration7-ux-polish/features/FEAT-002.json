@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Error messages improvement and API response consistency: make all error messages actionable with suggested fixes, ensure consistent API response format (snake_case, ISO 8601 timestamps, standard error structure), add graceful degradation messages for missing optional dependencies",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create src/augur/errors.py module with: (1) a standard error response helper that returns {'status': 'error', 'detail': str, 'suggestion': str, 'code': str} format, (2) user-friendly error messages for common failures (network timeout, missing dependency, invalid input, rate limiting).",
     "In src/augur/cli.py, update all click.echo(f'Error: ...') and click.echo(f'Warning: ...') calls to use structured error messages that include: what went wrong, why it happened, and what the user can do. Add Chinese translations where the primary audience is Chinese (the existing pattern mixes both languages).",
@@ -23,5 +23,5 @@
     "python -m pytest tests/test_api.py tests/test_dashboard_errors.py -x -q"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 234 tests pass (18 new in test_iteration7.py). Click 8.4.0 does not support mix_stderr parameter - tests use default CliRunner(). TestClient needs raise_server_exceptions=False to test exception handlers. Added status field to standalone api.py and dashboard app.py endpoints for consistency."
 }
