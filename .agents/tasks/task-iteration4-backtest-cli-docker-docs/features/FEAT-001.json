@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Fix backtest system edge cases, CLI bugs (missing sector/industry in analyze, missing --sector in watchlist-add), and improve Dockerfile security",
+  "status": "in_progress",
+  "steps": [
+    "1. In src/augur/backtest.py: Fix generate_sample_data to use a stable seed that does not depend on Python's built-in hash() (which is randomized in Python 3.12+). Replace `random.seed(hash(ticker) % 10000)` with `random.seed(sum(ord(c) for c in ticker) % 10000)` or similar deterministic computation.",
+    "2. In src/augur/backtest.py: Add guard in run_backtest for empty historical_data or forward_returns - return an empty BacktestResult early instead of proceeding with no data.",
+    "3. In src/augur/backtest.py: In _calculate_consensus_ic, handle edge case where all agents predict NEUTRAL (all signal_scores are 0) - _rank_correlation will return 0 already due to var_x=0 check, but add a quick-return if all records for a date have neutral signal.",
+    "4. In src/augur/cli.py: Fix analyze_cmd - add sector=sector, industry=industry to the manual MarketContext construction (lines ~65-75). Currently these accepted CLI options are silently dropped.",
+    "5. In src/augur/cli.py: Add --sector and --industry options to watchlist-add command to match README documentation. Pass them into the metrics dict.",
+    "6. In Dockerfile: Add a non-root user for security. After COPY commands, add `RUN useradd -r -s /bin/false augur` and `USER augur`. Adjust mkdir to happen before USER switch.",
+    "7. In Dockerfile: The HEALTHCHECK references port 8000 but CMD runs `augur api --port 8000`. This is actually consistent (both 8000), but the api command is serving a different app than dashboard.app. Change CMD to match the HEALTHCHECK expectation or vice versa. Since the HEALTHCHECK checks /health which exists on the api app, keep CMD as api but note this clearly in a comment.",
+    "8. In docker-compose.yml: Remove the deprecated `version: '3.8'` line (docker compose v2+ ignores it and shows a warning).",
+    "9. In docker-compose.yml: Add health checks to key services (dashboard, api) using the /health endpoint pattern."
+  ],
+  "acceptance_criteria": [
+    "generate_sample_data produces deterministic results regardless of PYTHONHASHSEED",
+    "analyze_cmd passes sector and industry to MarketContext when user provides metrics manually",
+    "watchlist-add command accepts --sector and --industry options without error",
+    "Dockerfile uses a non-root user",
+    "docker-compose.yml has no version field and includes healthchecks on dashboard/api services",
+    "All existing tests still pass"
+  ],
+  "verification": [
+    "Run pytest tests/ -v and confirm all 118+ tests pass",
+    "Run augur analyze TEST --pe 25 --sector Technology --help to verify option exists",
+    "Run augur watchlist-add --help and confirm --sector is listed"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

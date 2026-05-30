@@ -1,0 +1,7 @@
+{
+  "task_id": "task-iteration4-backtest-cli-docker-docs",
+  "task_description": "Iteration 4 review-fix: Fix backtest edge cases and deterministic seed, CLI bugs (missing sector/industry params), Dockerfile security (non-root user), docker-compose modernization, documentation consistency (command count, requirements.txt sync), and add comprehensive tests.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

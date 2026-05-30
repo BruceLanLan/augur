@@ -73,6 +73,8 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
             fcf=fcf or 0,
             market_cap=market_cap or 0,
             price=price or 0,
+            sector=sector or "",
+            industry=industry or "",
         )
 
     registry = AgentRegistry()
@@ -322,7 +324,9 @@ def cron_start_cmd():
 @click.option("--fcf", type=float, default=None, help="Free cash flow")
 @click.option("--market-cap", type=float, default=None, help="Market cap")
 @click.option("--price", type=float, default=None, help="Current price")
-def watchlist_add_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price):
+@click.option("--sector", default=None, help="Sector name (e.g. Technology)")
+@click.option("--industry", default=None, help="Industry name (e.g. Semiconductor)")
+def watchlist_add_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector, industry):
     """Add a ticker to the watchlist"""
     from augur.cron import add_to_watchlist, WATCHLIST_PATH
 
@@ -345,6 +349,10 @@ def watchlist_add_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_r
         metrics["market_cap"] = market_cap
     if price is not None:
         metrics["price"] = price
+    if sector is not None:
+        metrics["sector"] = sector
+    if industry is not None:
+        metrics["industry"] = industry
 
     config = add_to_watchlist(ticker, metrics)
     watchlist = config.get("watchlist", [])
