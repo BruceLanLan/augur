@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "End-to-end integration tests exercising the full pipeline: CLI analyze/consensus, API /api/analyze, and error propagation when yfinance is unavailable. Validates the complete data flow from input to consensus output structure.",
+  "status": "in_progress",
+  "steps": [
+    "Create tests/test_e2e_pipeline.py with TestE2EAnalysisPipeline class",
+    "Test 1: Full pipeline via registry - AgentRegistry -> analyze_with_all -> get_consensus. Verify consensus response has all required fields: signal (bullish/neutral/bearish), score (0-10), confidence (0-1), reasoning, key_findings, risks, metadata.position_sizing",
+    "Test 2: CLI analyze command via Click CliRunner - invoke 'analyze AAPL --pe 32 --roe 0.15 --gross-margins 0.46 --json'. Validate JSON output structure and all 18 agents present",
+    "Test 3: CLI consensus command via Click CliRunner - invoke 'consensus AAPL --pe 32 --roe 0.15 --gross-margins 0.46 --json'. Validate consensus JSON has signal/score/confidence/individual results",
+    "Test 4: API /api/analyze/{ticker} via FastAPI TestClient with manual metrics. Validate full response structure: ticker, timestamp, data_source, consensus (with position_sizing), agents array, agent_count",
+    "Test 5: Dashboard /api/analyze/{ticker} endpoint (dashboard/app.py) via TestClient. Same validation as Test 4 but from dashboard app context",
+    "Test 6: Error propagation - mock yfinance import to raise ImportError, call API with auto_fetch=True, verify graceful fallback to empty MarketContext and data_source='fallback'",
+    "Test 7: All agents ERROR case - mock all agents to return SignalType.ERROR, verify consensus handles gracefully (no division by zero, returns neutral signal)",
+    "Test 8: Verify score clamping - create extreme MarketContext values and verify consensus.score is always in [0, 10] range",
+    "Test 9: Verify Kelly position sizing in consensus metadata - bullish signal should have position_pct > 0, bearish should have position_pct = 0",
+    "Test 10: Data type consistency - verify all AgentResponse fields have correct types (signal is SignalType enum, score is float, confidence is float 0-1)"
+  ],
+  "acceptance_criteria": [
+    "All 10 new tests pass with `python -m pytest tests/test_e2e_pipeline.py -v`",
+    "Existing 165 tests still pass (no regression)",
+    "Tests exercise real code paths (not just mocking everything away)",
+    "Tests validate actual output structures match documented format"
+  ],
+  "verification": [
+    "python -m pytest tests/test_e2e_pipeline.py -v",
+    "python -m pytest tests/ -q --tb=short"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
