@@ -52,6 +52,8 @@ import threading
 from pathlib import Path
 from typing import Optional, Dict, Any
 
+from augur.bots.utils import STOP_WORDS
+
 # Signal emoji mapping (WeCom markdown支持)
 SIGNAL_EMOJI = {
     "bullish": "\U0001f7e2",   # green circle
@@ -138,9 +140,12 @@ def _parse_metrics(text: str) -> Dict[str, float]:
 
 
 def _extract_ticker(text: str) -> Optional[str]:
-    """Extract ticker symbol from text."""
-    match = re.search(r"\b([A-Z]{1,5})\b", text.upper())
-    return match.group(1) if match else None
+    """Extract ticker symbol from text, filtering out common stop words."""
+    candidates = re.findall(r'\b([A-Z]{2,5})\b', text.upper())
+    for candidate in candidates:
+        if candidate not in STOP_WORDS:
+            return candidate
+    return None
 
 
 def _build_market_context(ticker: str, metrics: Dict[str, float]):
@@ -310,14 +315,19 @@ class GeWeChatBot:
         self.client = GewechatClient(base_url, token)
         self._logged_in = False
 
-    def login(self) -> bool:
+    def login(self, timeout: int = 120) -> bool:
         """Login via QR code. Display QR in terminal.
+
+        Args:
+            timeout: Maximum seconds to wait for login (default: 120).
 
         Returns:
             True if login successful
         """
         print("\U0001f4f1 GeWeChat Login - Scan QR Code with WeChat")
         print("=" * 50)
+
+        max_attempts = timeout // 2
 
         try:
             # If we have an app_id, try to reuse it
@@ -363,7 +373,7 @@ class GeWeChatBot:
 
                 # Poll for login status
                 import time
-                for _ in range(60):  # Wait up to 60 seconds
+                for _ in range(max_attempts):  # Wait up to timeout seconds
                     time.sleep(2)
                     try:
                         check = self.client.check_login(self.app_id)
