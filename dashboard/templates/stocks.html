@@ -491,7 +491,7 @@ function renderResults(data) {
         div.className = 'card';
         div.style.padding = '12px';
         div.innerHTML = '<div class="flex items-center justify-between mb-8">' +
-            '<span style="font-weight:600; font-size:0.82rem;">' + a.agent_name + '</span>' +
+            '<span style="font-weight:600; font-size:0.82rem;">' + escapeHtml(a.agent_name) + '</span>' +
             '<span class="signal-badge ' + signalBadgeClass(a.signal) + '" style="font-size:0.68rem;">' + signalLabel(a.signal) + '</span>' +
             '</div>' +
             '<div class="flex items-center gap-8 mb-8">' +

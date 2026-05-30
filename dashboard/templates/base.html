@@ -259,16 +259,25 @@
         }
     };
 
+    // Escape HTML entities to prevent XSS
+    function escapeHtml(str) {
+        if (!str) return '';
+        var div = document.createElement('div');
+        div.appendChild(document.createTextNode(str));
+        return div.innerHTML;
+    }
+
     // Lightweight Markdown renderer (handles bold, headers, bullets, checkmarks)
     function renderMarkdown(md) {
         if (!md) return '';
+        md = escapeHtml(md);
         return md
             // ## Headings → bold orange label
             .replace(/^#{1,3}\s+(.+)$/gm, '<strong style="color:var(--accent-orange)">$1</strong>')
             // **bold** → bold
             .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-            // ✓ ✗ lines
-            .replace(/^([•\-\*])\s+(.+)$/gm, '<span style="color:var(--text-muted)">·</span> $2')
+            // Bullet lines (escaped &bull; or plain - *)
+            .replace(/^(&bull;|\-|\*)\s+(.+)$/gm, '<span style="color:var(--text-muted)">&middot;</span> $2')
             // Line breaks
             .replace(/\n/g, '<br>');
     }
