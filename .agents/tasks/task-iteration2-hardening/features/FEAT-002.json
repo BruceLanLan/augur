@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Fix coordinator edge cases and MCP server input validation",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In src/augur/registry.py DecisionCoordinator.get_consensus(): Clamp the final consensus total_score to [0, 10] (after meta-model blending and all weighting, total_score could drift outside bounds)",
     "In src/augur/registry.py: The Kelly criterion block has `edge = max(0, (score - 5) / 5)` which is fine, but ensure pct is clamped: `pct = max(0.0, min(20.0, ...))` to handle NaN or negative edge cases",
@@ -23,5 +23,5 @@
     "python -c \"from augur.registry import DecisionCoordinator, AgentRegistry; from augur.personas.base import MarketContext, AgentResponse, SignalType; r=AgentRegistry(); c=DecisionCoordinator(r); empty={}; result=c.get_consensus(empty); print('Empty OK:', result.score); err_results={'a': AgentResponse(agent_id='a', agent_name='A', signal=SignalType.ERROR, confidence=0, score=0, reasoning='err', coverage_confidence=0.0)}; result2=c.get_consensus(err_results); print('Error OK:', result2.score)\""
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All changes implemented and verified. registry.py: added else clause for total_weight==0 (keeps score/confidence at 0), added final score clamping max(0,min(10,score)) before return, Kelly neutral case already had max(0.0,...) guard. mcp_server.py: added re import and ticker validation regex to augur_analyze, augur_consensus, augur_debate; added rounds clamping max(1,min(5,rounds)) to augur_debate; added empty/size validation to augur_create_persona. All 86 tests pass."
 }
