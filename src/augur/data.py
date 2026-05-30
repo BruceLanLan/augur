@@ -13,6 +13,8 @@ Usage:
 """
 
 import logging
+import re
+import threading
 import time
 from typing import Dict, List, Optional, Any
 
@@ -24,36 +26,60 @@ logger = logging.getLogger(__name__)
 # ============ Cache ============
 
 _cache: Dict[str, Any] = {}
+_cache_lock = threading.Lock()
 _CACHE_TTL = 180  # 3 minutes
 
 
 def _cache_get(key: str) -> Optional[Any]:
     """Get cached value if not expired."""
-    entry = _cache.get(key)
-    if entry is None:
-        return None
-    if time.time() - entry["ts"] > _CACHE_TTL:
-        del _cache[key]
-        return None
-    return entry["value"]
+    with _cache_lock:
+        entry = _cache.get(key)
+        if entry is None:
+            return None
+        if time.time() - entry["ts"] > _CACHE_TTL:
+            del _cache[key]
+            return None
+        return entry["value"]
 
 
 def _cache_set(key: str, value: Any) -> None:
     """Set cache entry."""
-    _cache[key] = {"value": value, "ts": time.time()}
+    with _cache_lock:
+        _cache[key] = {"value": value, "ts": time.time()}
 
 
 def clear_cache() -> None:
     """Clear all cached data entries."""
-    _cache.clear()
+    with _cache_lock:
+        _cache.clear()
 
 
 def cache_info() -> Dict[str, Any]:
     """Return cache metadata: current size and TTL setting."""
-    return {
-        "size": len(_cache),
-        "ttl_seconds": _CACHE_TTL,
-    }
+    with _cache_lock:
+        return {
+            "size": len(_cache),
+            "ttl_seconds": _CACHE_TTL,
+        }
+
+
+# ============ Ticker Validation ============
+
+def _normalize_ticker(ticker: str) -> str:
+    """Normalize and validate a ticker symbol.
+
+    - Strips whitespace and uppercases
+    - Validates: 1-15 chars, only alphanumeric, dots, hyphens
+    - Raises ValueError if invalid
+    """
+    ticker = ticker.strip().upper()
+    if not ticker:
+        raise ValueError("Ticker cannot be empty")
+    if len(ticker) > 15:
+        raise ValueError(f"Ticker too long (max 15 chars): {ticker}")
+    if not re.match(r'^[A-Z0-9.\-]+$', ticker):
+        raise ValueError(f"Invalid ticker format (only alphanumeric, dots, hyphens allowed): {ticker}")
+    return ticker
 
 
 # ============ yfinance Helpers ============
@@ -89,7 +115,8 @@ def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketCont
            revenue_growth, earnings_growth, debt_ratio, fcf, market_cap,
            current_ratio, sector, industry, rsi, sma50, etc.
     """
-    cache_key = f"ctx:{ticker.upper()}"
+    ticker = _normalize_ticker(ticker)
+    cache_key = f"ctx:{ticker}"
     if not force_refresh:
         cached = _cache_get(cache_key)
         if cached is not None:
@@ -223,7 +250,8 @@ def fetch_history(ticker: str, period: str = "1y") -> List[Dict]:
     Returns:
         List of {date, open, high, low, close, volume, change_pct}
     """
-    cache_key = f"hist:{ticker.upper()}:{period}"
+    ticker = _normalize_ticker(ticker)
+    cache_key = f"hist:{ticker}:{period}"
     cached = _cache_get(cache_key)
     if cached is not None:
         return cached

@@ -9,7 +9,7 @@ Provides get_config(), set_config(), save_config() API.
 import logging
 import threading
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, List, Optional
 import copy
 
 logger = logging.getLogger(__name__)
@@ -65,6 +65,9 @@ def get_config() -> Dict[str, Any]:
     with _lock:
         if _config is None:
             _load_config()
+            warnings = validate_config(_config)
+            for w in warnings:
+                logger.warning("Config validation: %s", w)
         return copy.deepcopy(_config)
 
 
@@ -108,3 +111,49 @@ def reset_config() -> None:
     with _lock:
         _config = None
         _config_path = None
+
+
+def validate_config(config: Dict[str, Any]) -> List[str]:
+    """Validate config structure and return a list of warning strings.
+
+    Checks:
+    - 'defaults' is a dict if present
+    - 'per_agent' is a dict of strings if present
+    - 'available_models' is a dict of lists if present
+
+    Returns:
+        List of warning messages (empty if all valid).
+    """
+    warnings: List[str] = []
+
+    if "defaults" in config:
+        if not isinstance(config["defaults"], dict):
+            warnings.append(
+                f"'defaults' should be a dict, got {type(config['defaults']).__name__}"
+            )
+
+    if "per_agent" in config:
+        if not isinstance(config["per_agent"], dict):
+            warnings.append(
+                f"'per_agent' should be a dict, got {type(config['per_agent']).__name__}"
+            )
+        else:
+            for key, val in config["per_agent"].items():
+                if not isinstance(val, str):
+                    warnings.append(
+                        f"'per_agent.{key}' should be a string, got {type(val).__name__}"
+                    )
+
+    if "available_models" in config:
+        if not isinstance(config["available_models"], dict):
+            warnings.append(
+                f"'available_models' should be a dict, got {type(config['available_models']).__name__}"
+            )
+        else:
+            for key, val in config["available_models"].items():
+                if not isinstance(val, list):
+                    warnings.append(
+                        f"'available_models.{key}' should be a list, got {type(val).__name__}"
+                    )
+
+    return warnings

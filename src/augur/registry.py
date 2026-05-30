@@ -287,6 +287,12 @@ class DecisionCoordinator:
         except Exception:
             pass
 
+        # Normalize rolling IC weights before blending
+        if rolling_ic_weights:
+            total_ric = sum(rolling_ic_weights.values())
+            if total_ric > 0:
+                rolling_ic_weights = {k: v / total_ric for k, v in rolling_ic_weights.items()}
+
         for agent_id, response in results.items():
             if weights and agent_id in weights:
                 w = weights[agent_id]
@@ -298,13 +304,30 @@ class DecisionCoordinator:
 
             w *= response.coverage_confidence
 
+            # Sector-aware weight boosting
+            if context and hasattr(context, 'sector') and context.sector:
+                sector_lower = (context.sector or "").lower()
+                industry_lower = (context.industry or "").lower() if hasattr(context, 'industry') else ""
+                is_tech = ("technology" in sector_lower or "tech" in sector_lower
+                           or "ai" in industry_lower or "semiconductor" in industry_lower
+                           or "software" in industry_lower)
+                is_financial = "financial" in sector_lower
+                is_healthcare = "health" in sector_lower or "medical" in sector_lower
+
+                if is_tech and agent_id in ("cathie_wood", "aschenbrenner", "thiel"):
+                    w *= 1.3
+                elif is_financial and agent_id in ("buffett", "graham", "marks"):
+                    w *= 1.2
+                elif is_healthcare and agent_id == "fisher":
+                    w *= 1.2
+
             # Diversity penalty
             penalty = 1.0
             if corr_matrix:
                 for processed_agent in adjusted_weights.keys():
                     corr = corr_matrix.get(agent_id, {}).get(processed_agent, 0)
                     if corr > 0.7:
-                        penalty *= (1.0 - (corr - 0.7))
+                        penalty *= max(0.3, 1.0 - (corr - 0.7))
 
             adjusted_w = w * penalty
             adjusted_weights[agent_id] = adjusted_w
