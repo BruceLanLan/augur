@@ -64,7 +64,7 @@ class GrahamAgent(BaseAgent):
             bs_multiplier = 1.0
 
         # 1. 估值 (0-10)
-        val_score = 0
+        val_score = 5
         if context.pe > 0:
             if context.pe <= pe_max * 0.67:
                 val_score = 10

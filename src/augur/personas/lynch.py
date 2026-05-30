@@ -91,7 +91,7 @@ class LynchAgent(BaseAgent):
 
         # 2. PEG合理性 (0-10)
         peg_score = 5
-        if context.pe > 0 and context.earnings_growth > 0:
+        if context.pe > 0 and context.earnings_growth >= 0.01:
             peg = context.pe / (context.earnings_growth * 100)
             if peg < peg_max * 0.67:
                 peg_score = 10
