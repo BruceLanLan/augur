@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "fix",
   "description": "Fix dead code in registry.py (add_debate_message after return), improve Kelly criterion calculation, add cache invalidation/force-refresh to data.py, and fix CSS z-index/overflow issues in dashboard",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. In src/augur/registry.py, fix the dead code at line 458: the add_debate_message method code appears AFTER a return statement inside get_consensus(). The code at lines 457-459 should be extracted as a proper method on DecisionCoordinator class. Move: (a) add def add_debate_message(self, msg: DebateMessage): self._debate_history.append(msg) as a separate method BEFORE get_debate_history(), and (b) remove the dead code lines from inside get_consensus().",
     "2. In src/augur/data.py, add a force_refresh parameter to fetch_market_context(ticker, force_refresh=False) that bypasses the cache when True. Also add a public clear_cache() function and a cache_info() function that returns cache size and TTL. This allows stale data to be explicitly cleared.",
@@ -30,5 +30,5 @@
     "python3 -c \"import sys; sys.path.insert(0, '/projects/sandbox/augur/src'); from augur.data import clear_cache, cache_info; clear_cache(); print(cache_info())\" should work"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "DebateMessage uses from_agent/to_agent/topic/content fields (not round_num/agent_id/position). All 264 tests pass. Toast container already had z-index:9999 in CSS; added inline style in base.html for redundancy."
 }
