@@ -29,6 +29,26 @@ app = FastAPI(
     version="6.1.0",
 )
 
+
+# Global exception handler: catch unhandled exceptions, return consistent JSON
+@app.exception_handler(Exception)
+async def global_exception_handler(request, exc: Exception):
+    """Catch all unhandled exceptions and return consistent JSON error response."""
+    import logging
+    import datetime as _dt
+    logger = logging.getLogger("augur.api")
+    logger.error(f"Unhandled exception on {request.url.path}: {type(exc).__name__}: {exc}")
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "detail": "Internal server error",
+            "timestamp": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "path": request.url.path,
+        },
+    )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -59,6 +79,7 @@ async def list_personas():
     """List all investor personas"""
     registry = get_registry()
     return {
+        "status": "ok",
         "count": len(registry.get_all()),
         "personas": [agent.to_dict() for agent in registry.get_all()],
     }
@@ -133,8 +154,9 @@ async def analyze_ticker(
 
     import datetime
     return {
+        "status": "ok",
         "ticker": ticker.upper(),
-        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z",
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "data_source": data_source,
         "consensus": consensus_resp.to_dict(),
         "agents": [r.to_dict() for r in agent_responses.values()],

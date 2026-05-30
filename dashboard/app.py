@@ -47,6 +47,28 @@ app = FastAPI(
     version="6.1.0",
 )
 
+
+# Global exception handler: catch unhandled exceptions, return consistent JSON
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Catch all unhandled exceptions and return consistent JSON error response.
+
+    Never leak stack traces to clients. Log the real error for debugging.
+    """
+    import logging
+    logger = logging.getLogger("augur.dashboard")
+    logger.error(f"Unhandled exception on {request.url.path}: {type(exc).__name__}: {exc}")
+
+    return JSONResponse(
+        status_code=500,
+        content={
+            "status": "error",
+            "detail": "Internal server error",
+            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "path": request.url.path,
+        },
+    )
+
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
@@ -191,6 +213,7 @@ async def list_personas():
     """返回所有投资人人格列表"""
     registry = get_registry()
     return {
+        "status": "ok",
         "count": len(registry.get_all()),
         "personas": [agent.to_dict() for agent in registry.get_all()],
     }
@@ -296,8 +319,9 @@ async def analyze_ticker(
     )
 
     response = {
+        "status": "ok",
         "ticker": ticker.upper(),
-        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z",
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "data_source": data_source,
         "market_data": {
             "price": ctx.price,

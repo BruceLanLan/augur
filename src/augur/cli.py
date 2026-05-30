@@ -92,7 +92,8 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
         agent = registry.get(persona)
         if not agent:
             click.echo(f"Error: Persona '{persona}' not found.", err=True)
-            click.echo(f"Available: {', '.join(a.agent_id for a in registry.get_all())}", err=True)
+            click.echo(f"  Suggestion: Run 'augur list-personas' to see available IDs.", err=True)
+            click.echo(f"  Available: {', '.join(a.agent_id for a in registry.get_all())}", err=True)
             raise SystemExit(1)
         result = agent.analyze(ctx)
         if as_json:
@@ -265,7 +266,12 @@ def api_cmd(port, host):
         click.echo(f"Starting Augur API on {host}:{port}")
         uvicorn.run(app, host=host, port=port)
     except ImportError:
-        click.echo("Error: uvicorn and fastapi required. Run: pip install fastapi uvicorn", err=True)
+        click.echo(
+            "Error: uvicorn and fastapi are not installed.\n"
+            "  Install with: pip install 'augur-agents[api]' (or: pip install fastapi uvicorn)\n"
+            "  CLI commands (analyze, consensus) still work without the API server.",
+            err=True,
+        )
         raise SystemExit(1)
 
 
@@ -449,11 +455,19 @@ def backtest_cmd(ticker, days, demo, live):
             click.echo(f"\n[数据来源: yfinance 实时历史数据]")
             return
         except ImportError as e:
-            click.echo(f"Error: {e}", err=True)
-            click.echo("Falling back to sample data...\n", err=True)
+            click.echo(
+                f"Error: {e}\n"
+                f"  Install with: pip install 'augur-agents[data]'\n"
+                f"  Falling back to sample data...\n",
+                err=True,
+            )
         except Exception as e:
-            click.echo(f"Error fetching live data: {e}", err=True)
-            click.echo("Falling back to sample data...\n", err=True)
+            click.echo(
+                f"Error fetching live data: {e}\n"
+                f"  Suggestion: Check network connection or try a different ticker.\n"
+                f"  Falling back to sample data...\n",
+                err=True,
+            )
 
     historical_data, forward_returns = generate_sample_data(ticker, days)
 
@@ -500,7 +514,12 @@ def fetch_cmd(ticker, as_json):
     try:
         from augur.data import fetch_market_context
     except ImportError:
-        click.echo("Error: yfinance is required. Install with: pip install 'augur-agents[data]'", err=True)
+        click.echo(
+            "Error: yfinance package is not installed.\n"
+            "  Install with: pip install 'augur-agents[data]'\n"
+            "  This is required for real-time market data. Core analysis still works with manual metrics.",
+            err=True,
+        )
         raise SystemExit(1)
 
     click.echo(f"Fetching data for {ticker.upper()}...\n")
@@ -553,10 +572,19 @@ def _auto_fetch_context(ticker: str):
         click.echo(f"  [数据来源: yfinance 实时]\n")
         return ctx
     except ImportError:
-        click.echo("Warning: yfinance not installed (pip install 'augur-agents[data]'). Analyzing with empty metrics.\n", err=True)
+        click.echo(
+            "Warning: yfinance not installed. Install with: pip install 'augur-agents[data]'\n"
+            "  Core analysis still works without it (using empty metrics).\n",
+            err=True,
+        )
         return MarketContext(ticker=ticker.upper())
     except Exception as e:
-        click.echo(f"Warning: Failed to fetch data: {e}. Using empty metrics.\n", err=True)
+        click.echo(
+            f"Warning: Failed to fetch data for {ticker.upper()}: {e}\n"
+            f"  Suggestion: Check your network connection or try again later.\n"
+            f"  Falling back to empty metrics.\n",
+            err=True,
+        )
         return MarketContext(ticker=ticker.upper())
 
 
