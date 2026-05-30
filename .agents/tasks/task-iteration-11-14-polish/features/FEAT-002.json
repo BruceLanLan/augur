@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Dashboard responsive design improvements and CLI help text enhancements",
+  "status": "in_progress",
+  "steps": [
+    "1. In dashboard/static/css/bloomberg.css: Add tablet breakpoint @media (max-width: 1024px) to reduce sidebar width to 200px and adjust grid layouts. Add table overflow-x: auto wrapper for data tables on mobile.",
+    "2. In dashboard/static/css/bloomberg.css: Ensure no hover-only interactions exist - add :focus-visible styles alongside :hover for all interactive elements (.btn, .card, .nav-link). Add touch-action: manipulation to buttons.",
+    "3. In dashboard/static/css/bloomberg.css: Add scroll-snap for horizontal card carousels on mobile. Add .table-responsive class with overflow-x: auto and -webkit-overflow-scrolling: touch.",
+    "4. In src/augur/cli.py: Add epilog examples to each command using click's epilog parameter. For 'analyze' command add examples like 'augur analyze AAPL', 'augur analyze NVDA --pe 60 --roe 0.45'. For 'consensus' add similar examples.",
+    "5. In src/augur/cli.py: Verify --version flag works (it already uses @click.version_option). Add short description improvements to command help strings to be more descriptive.",
+    "6. In src/augur/cli.py: Add deprecation warnings for any parameters that have been superseded - add a callback that prints 'Warning: --X is deprecated, use --Y instead' pattern if applicable."
+  ],
+  "acceptance_criteria": [
+    "CSS includes tablet breakpoint (max-width: 1024px) with adjusted sidebar",
+    "All interactive elements have :focus-visible styles for accessibility",
+    "Tables have overflow-x: auto wrapper for mobile scrolling",
+    "CLI commands have example text in their help output",
+    "--version flag works and returns current version",
+    "All existing 301 tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q",
+    "python -m pytest tests/test_iteration11.py -v",
+    "python -c \"from click.testing import CliRunner; from augur.cli import main; r = CliRunner().invoke(main, ['--version']); assert '6.1.0' in r.output; print('OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

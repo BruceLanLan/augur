@@ -1504,3 +1504,39 @@ kbd {
         font-size: 16px; /* prevents iOS zoom */
     }
 }
+
+/* --- Tablet Responsive (1024px) --- */
+@media (max-width: 1024px) {
+    :root { --sidebar-width: 200px; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    .hero-title { font-size: 1.6rem; }
+}
+
+/* --- Accessibility: Focus Visible --- */
+.btn:focus-visible,
+.card:focus-visible,
+.nav-link:focus-visible,
+.ticker-btn:focus-visible,
+.filter-tag:focus-visible,
+.preset-btn:focus-visible,
+.form-input:focus-visible,
+.form-select:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* --- Responsive Tables --- */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin-bottom: 16px;
+}
+
+.table-responsive table {
+    min-width: 600px;
+}
+
+/* --- Touch Optimization --- */
+.btn, .ticker-btn, .preset-btn, .filter-tag, .nav-link {
+    touch-action: manipulation;
+}
