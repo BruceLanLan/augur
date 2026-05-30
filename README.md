@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v7.0.0](https://img.shields.io/badge/v7.0.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.1.0](https://img.shields.io/badge/v7.1.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -482,6 +482,31 @@ Dashboard 已支持热加载（保存 YAML 后同一进程立即可用）。CLI/
 ---
 
 ## 📋 Changelog
+
+### v7.1.0
+
+新增深度分析报告功能 + 关键 UI 修复。
+
+#### 新功能
+- **深度分析报告 `augur report`**: 一键生成中文 Markdown 深度分析报告（12模块框架），包含执行摘要、Agent 共识表、分主题分析、财务概览、风险矩阵、仓位建议
+- **API 端点 `/api/report/{ticker}`**: 支持 GET（自动分析+生成报告）和 POST（复用已有分析数据）
+- **Dashboard 集成**: stocks.html 新增"生成深度报告"按钮，支持复制/下载 .md
+- 首页"查看完整分析"链接自动触发深度报告生成
+
+#### 关键修复
+- **修复 Dashboard 分析结果不显示**: `stocks.html` 中 `resultsEl.style.display` 在隐藏后未恢复为 `block`，导致用户点击分析按钮后看不到任何结果
+- 修复协调器权重行业匹配假阳性（子字符串 "ai" 不再匹配 "retail"）
+- 修复 API 速率限制内存泄漏（自动清理过期 key）
+- 修复 Lynch PEG 除零、Graham PE=0 中性评分
+- 修复 Kelly 仓位 1% 最低仓位需要 confidence >= 0.5
+- 修复 `load_watchlist()` DEFAULT_CONFIG 浅拷贝污染
+- 清理 29 个文件中的未使用 import
+
+#### 测试
+- 新增 126 个测试（从 78 增加到 372 个）
+- 涵盖深度报告生成、debate 功能、watchlist/cron、IC report
+
+---
 
 ### v7.0.0
 
