@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Dashboard error state UX improvements and tests - ensure error states are properly surfaced to users in the UI (not just console.log), and test error handling paths in the dashboard API endpoints.",
+  "status": "completed",
+  "steps": [
+    "Create tests/test_dashboard_errors.py with error state tests for dashboard endpoints",
+    "Test 1: Invalid ticker format - GET /api/analyze/<script> returns 400 with proper error message",
+    "Test 2: Invalid ticker special chars - GET /api/analyze/A@B#C$D returns 400",
+    "Test 3: Very long ticker - GET /api/analyze/AAAAAAAAAAAAAAAAAA returns 400",
+    "Test 4: Dashboard HTML pages load - verify /, /personas, /stocks, /signals, /settings, /create-persona, /backtest all return 200",
+    "Test 5: Dashboard /api/analyze with auto_fetch=False and zero metrics - verify returns valid response with manual data_source",
+    "Test 6: Watchlist endpoints - POST /api/watchlist/add with invalid ticker returns 400, valid ticker returns 200",
+    "Test 7: GET /api/persona/nonexistent returns 404 with proper error detail",
+    "Test 8: POST /api/custom-persona with invalid YAML returns 400",
+    "Test 9: POST /api/custom-persona with invalid agent_id (uppercase, spaces) returns 400",
+    "Review dashboard/templates/index.html, stocks.html - verify error display elements exist (id='hero-error', error-panel class). Add aria-live='polite' to error containers for accessibility if missing",
+    "Verify stocks.html has proper error display for failed analysis (not just console.log). The template already has error-panel elements - verify they get populated via JS"
+  ],
+  "acceptance_criteria": [
+    "All 9 new tests pass with `python -m pytest tests/test_dashboard_errors.py -v`",
+    "Error responses use proper HTTP status codes (400, 404, 500) not 200 with error body",
+    "Dashboard error containers have aria-live attribute for screen readers",
+    "Existing tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/test_dashboard_errors.py -v",
+    "python -m pytest tests/ -q --tb=short"
+  ],
+  "blocked_reason": null,
+  "findings": "All 19 tests pass (more than the 9 required). Path traversal with slashes (../../etc) is consumed by FastAPI router before reaching the endpoint (returns 404 from router), so tested with other injection chars instead. The full suite runs 211 tests in 2.2s with no regressions. Both templates had error-panel elements with proper JS population; only aria-live was missing."
+}

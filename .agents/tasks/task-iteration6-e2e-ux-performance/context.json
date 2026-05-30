@@ -1,0 +1,31 @@
+{
+  "project_type": "Python multi-agent investment analysis system with FastAPI REST API, CLI, and Jinja2 dashboard",
+  "language": "Python 3.11",
+  "build_system": "setuptools via pyproject.toml, pip editable install",
+  "test_framework": "pytest with TestClient (FastAPI), unittest.mock",
+  "build_command": "pip install -e . 2>/dev/null && python -c 'from augur.registry import AgentRegistry; print(len(AgentRegistry().get_all()))'",
+  "test_command": "python -m pytest tests/ -q --tb=short",
+  "verification_instructions": "Run pytest, confirm all tests pass including new ones. Check no regressions in existing 165 tests.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e '.[dev]' from project root. yfinance is optional (pip install 'augur-agents[data]').",
+  "environment_constraints": "OPEN_INTERNET network. yfinance available for real data tests but network calls should be mocked in unit tests. Python 3.11 default.",
+  "contribution_requirements": "Tests in tests/ directory. Use pytest fixtures. Mock external API calls (yfinance). Follow existing test patterns (see test_iteration5.py, test_registry.py).",
+  "key_patterns": "BaseAgent.analyze(MarketContext)->AgentResponse. AgentRegistry loads 18 agents. DecisionCoordinator.analyze_with_all() runs parallel ThreadPoolExecutor. get_consensus() returns weighted consensus. Dashboard at dashboard/app.py uses FastAPI TestClient in tests. CLI uses Click.",
+  "relevant_files": [
+    "src/augur/data.py",
+    "src/augur/registry.py",
+    "src/augur/cli.py",
+    "src/augur/api.py",
+    "src/augur/personas/base.py",
+    "src/augur/coordinator.py",
+    "dashboard/app.py",
+    "dashboard/templates/index.html",
+    "dashboard/templates/stocks.html",
+    "dashboard/templates/signals.html",
+    "tests/test_registry.py",
+    "tests/test_api.py",
+    "tests/test_data.py",
+    "tests/test_cli.py"
+  ],
+  "directory_structure": "src/augur/ - core library (personas/, bots/, data.py, cli.py, api.py, registry.py, coordinator.py, config.py, cron.py, backtest.py). dashboard/ - FastAPI dashboard app + templates/. tests/ - pytest tests. scanner/ - legacy/alternative persona loader."
+}
