@@ -406,6 +406,9 @@ class DecisionCoordinator:
                 edge = max(0, (score - 5) / 5)
                 full_kelly = edge * conf
                 pct = min(20.0, round(full_kelly * 0.5 * 100, 1))
+                # Minimum 1% token position for any bullish signal passing threshold
+                if pct < 1.0:
+                    pct = 1.0
             elif sig == "bearish":
                 pct = 0.0
             else:
@@ -437,11 +440,8 @@ class DecisionCoordinator:
         valid_results = {k: v for k, v in results.items() if v.signal != SignalType.ERROR}
         if valid_results and sum(1 for r in valid_results.values() if r.signal == SignalType.BULLISH) == len(valid_results):
             result.risks.append("All agents bullish - historically this consensus often means overvaluation")
-            for r in valid_results.values():
-                meta_ctx = r.metadata.get("context")
-                if meta_ctx and hasattr(meta_ctx, "pe") and meta_ctx.pe > 30:
-                    result.risks.append(f"PE={meta_ctx.pe:.1f}, valuation elevated - consider stop-loss")
-                    break
+            if ctx_for_risk and hasattr(ctx_for_risk, "pe") and ctx_for_risk.pe > 30:
+                result.risks.append(f"PE={ctx_for_risk.pe:.1f}, valuation elevated - consider stop-loss")
 
         # Clamp final score to valid range [0, 10]
         result.score = max(0.0, min(10.0, result.score))

@@ -266,3 +266,205 @@ class TestKellyCriterionEdgeCases:
             kelly_pct = consensus.metadata.get("position_sizing", {}).get("position_pct", 0)
             # Low confidence neutral should not produce large position
             assert kelly_pct <= 15
+
+
+# ============ FEAT-002: Logic Correctness Fixes ============
+
+class TestLynchPegOverflowGuard:
+    """Test that Lynch PEG calculation guards against very low earnings_growth."""
+
+    def test_lynch_peg_overflow_guard(self):
+        """When earnings_growth < 1%, PEG should stay at neutral (5) not explode."""
+        from augur.personas.lynch import LynchAgent
+        from augur.personas.base import MarketContext
+
+        agent = LynchAgent()
+        ctx = MarketContext(
+            ticker="LOWGROW",
+            pe=30,
+            earnings_growth=0.005,  # 0.5% - very low
+            revenue_growth=0.10,
+            gross_margins=0.40,
+            operating_margins=0.15,
+            roe=0.10,
+            market_cap=20.0,
+        )
+        result = agent.analyze(ctx)
+        factors = result.metadata["factors"]
+
+        # PEG should be approximately 5 (neutral), not an extreme value
+        assert abs(factors["peg"] - 5.0) <= 1.0, (
+            f"PEG factor should be ~5 (neutral) for tiny growth, got {factors['peg']}"
+        )
+
+    def test_lynch_peg_normal_growth(self):
+        """When earnings_growth >= 1%, PEG should be computed normally."""
+        from augur.personas.lynch import LynchAgent
+        from augur.personas.base import MarketContext
+
+        agent = LynchAgent()
+        ctx = MarketContext(
+            ticker="NORMGROW",
+            pe=15,
+            earnings_growth=0.15,  # 15% - healthy growth
+            revenue_growth=0.15,
+            gross_margins=0.40,
+            operating_margins=0.15,
+            roe=0.15,
+            market_cap=20.0,
+        )
+        result = agent.analyze(ctx)
+        factors = result.metadata["factors"]
+
+        # PEG = 15 / (0.15*100) = 15/15 = 1.0, which is < peg_max(1.5)
+        # So peg_score should be 7 or 10
+        assert factors["peg"] >= 7.0, (
+            f"PEG factor should be >= 7 for good PEG ratio, got {factors['peg']}"
+        )
+
+
+class TestGrahamPeZeroNeutral:
+    """Test that Graham gives neutral valuation when PE is 0 (missing data)."""
+
+    def test_graham_pe_zero_neutral(self):
+        """When PE==0 (missing), valuation should be neutral (5), not 0."""
+        from augur.personas.graham import GrahamAgent
+        from augur.personas.base import MarketContext
+
+        agent = GrahamAgent()
+        ctx = MarketContext(
+            ticker="NOPE",
+            pe=0,  # Missing PE data
+            pb=1.5,
+            current_ratio=2.0,
+            debt_ratio=0.40,
+            revenue_growth=0.05,
+            earnings_growth=0.05,
+        )
+        result = agent.analyze(ctx)
+        factors = result.metadata["factors"]
+
+        # valuation should be >= 4 (neutral territory), not 0
+        assert factors["valuation"] >= 4.0, (
+            f"Valuation should be neutral (~5) when PE=0, got {factors['valuation']}"
+        )
+
+    def test_graham_pe_positive_scored(self):
+        """When PE > 0, valuation should be scored based on PE value."""
+        from augur.personas.graham import GrahamAgent
+        from augur.personas.base import MarketContext
+
+        agent = GrahamAgent()
+        ctx = MarketContext(
+            ticker="CHEAP",
+            pe=10,  # Below pe_max of 15
+            pb=1.0,
+            current_ratio=2.5,
+            debt_ratio=0.30,
+            revenue_growth=0.05,
+            earnings_growth=0.05,
+        )
+        result = agent.analyze(ctx)
+        factors = result.metadata["factors"]
+
+        # PE=10 is <= 15*0.67=10.05, so val_score=10
+        assert factors["valuation"] >= 7.0, (
+            f"Valuation should be high for low PE=10, got {factors['valuation']}"
+        )
+
+
+class TestKellyMinimumPosition:
+    """Test that Kelly criterion gives minimum 1% for bullish signals at threshold."""
+
+    def test_kelly_minimum_position(self):
+        """Bullish signal with score=5.0 should get at least 1.0% allocation."""
+        from augur.registry import DecisionCoordinator
+        from augur.personas.base import MarketContext, AgentResponse, SignalType
+
+        coordinator = DecisionCoordinator()
+        ctx = MarketContext(ticker="MINKEL", pe=15, pb=1.5)
+
+        # All agents barely bullish with score=5.0
+        mock_results = {}
+        for agent in coordinator.registry.get_all()[:4]:
+            resp = AgentResponse(
+                agent_id=agent.agent_id,
+                agent_name=agent.name,
+                signal=SignalType.BULLISH,
+                score=5.0,
+                confidence=0.6,
+                reasoning="Barely bullish",
+                key_findings=["Marginal value"],
+            )
+            mock_results[agent.agent_id] = resp
+
+        consensus = coordinator.get_consensus(mock_results, ticker="MINKEL", context=ctx)
+        pct = consensus.metadata.get("position_pct", 0)
+
+        # Should be at least 1.0% for any bullish signal passing threshold
+        assert pct >= 1.0, (
+            f"Kelly position should be >= 1.0% for bullish score=5, got {pct}"
+        )
+
+
+class TestOverheatingUsesCtxPe:
+    """Test that overheating check uses ctx_for_risk.pe correctly."""
+
+    def test_overheating_uses_ctx_pe(self):
+        """When all agents bullish and PE>30, risks should mention overvaluation."""
+        from augur.registry import DecisionCoordinator
+        from augur.personas.base import MarketContext, AgentResponse, SignalType
+
+        coordinator = DecisionCoordinator()
+        ctx = MarketContext(ticker="OVERHEAT", pe=35, pb=3.0)
+
+        # All agents bullish
+        mock_results = {}
+        for agent in coordinator.registry.get_all()[:4]:
+            resp = AgentResponse(
+                agent_id=agent.agent_id,
+                agent_name=agent.name,
+                signal=SignalType.BULLISH,
+                score=8.0,
+                confidence=0.8,
+                reasoning="Very bullish outlook",
+                key_findings=["Strong growth"],
+            )
+            mock_results[agent.agent_id] = resp
+
+        consensus = coordinator.get_consensus(mock_results, ticker="OVERHEAT", context=ctx)
+
+        # Should contain overvaluation risk text
+        risk_text = " ".join(consensus.risks)
+        assert "valuation elevated" in risk_text.lower() or "PE=35" in risk_text, (
+            f"Risks should mention PE overvaluation with PE=35, got: {consensus.risks}"
+        )
+
+    def test_overheating_not_triggered_low_pe(self):
+        """When all agents bullish but PE<=30, no overvaluation warning."""
+        from augur.registry import DecisionCoordinator
+        from augur.personas.base import MarketContext, AgentResponse, SignalType
+
+        coordinator = DecisionCoordinator()
+        ctx = MarketContext(ticker="CHEAPBULL", pe=20, pb=2.0)
+
+        mock_results = {}
+        for agent in coordinator.registry.get_all()[:4]:
+            resp = AgentResponse(
+                agent_id=agent.agent_id,
+                agent_name=agent.name,
+                signal=SignalType.BULLISH,
+                score=8.0,
+                confidence=0.8,
+                reasoning="Bullish",
+                key_findings=["Growth"],
+            )
+            mock_results[agent.agent_id] = resp
+
+        consensus = coordinator.get_consensus(mock_results, ticker="CHEAPBULL", context=ctx)
+
+        # Should NOT contain PE overvaluation warning
+        risk_text = " ".join(consensus.risks)
+        assert "valuation elevated" not in risk_text.lower(), (
+            f"Risks should not mention PE overvaluation with PE=20, got: {consensus.risks}"
+        )
