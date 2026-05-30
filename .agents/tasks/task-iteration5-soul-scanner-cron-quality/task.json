@@ -1,0 +1,7 @@
+{
+  "task_id": "task-iteration5-soul-scanner-cron-quality",
+  "task_description": "Iteration 5: Fix security vulnerabilities (eval sandbox escape, directory traversal), cron bugs (shallow merge, no concurrency protection), and scanner backward-compat gaps (6 missing agents)",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}

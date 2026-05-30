@@ -89,6 +89,17 @@ def _ensure_config_dir():
     WATCHLIST_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 
+def _deep_merge(base: dict, override: dict) -> dict:
+    """Recursively merge override into base, preserving nested defaults."""
+    result = base.copy()
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
 def load_watchlist() -> dict:
     """Load watchlist configuration from ~/.augur/watchlist.yaml."""
     if not WATCHLIST_PATH.exists():
@@ -97,9 +108,8 @@ def load_watchlist() -> dict:
     with open(WATCHLIST_PATH, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f) or {}
 
-    # Merge with defaults
-    merged = DEFAULT_CONFIG.copy()
-    merged.update(config)
+    # Deep merge with defaults to preserve nested settings
+    merged = _deep_merge(DEFAULT_CONFIG, config)
     return merged
 
 
@@ -385,6 +395,24 @@ def start_scheduler():
         print("  or: pip install apscheduler>=3.10.0")
         raise SystemExit(1)
 
+    import signal
+
+    # Check for existing scheduler via pidfile
+    pidfile = WATCHLIST_PATH.parent / "scheduler.pid"
+    if pidfile.exists():
+        try:
+            pid = int(pidfile.read_text().strip())
+            os.kill(pid, 0)  # Check if process exists
+            print(f"Error: Another scheduler is already running (PID {pid})")
+            print(f"If this is incorrect, remove {pidfile}")
+            raise SystemExit(1)
+        except (OSError, ValueError):
+            pass  # Process not running, stale pidfile
+
+    # Write our PID
+    _ensure_config_dir()
+    pidfile.write_text(str(os.getpid()))
+
     config = load_watchlist()
     schedule = config.get("schedule", {})
     cron_expr = schedule.get("cron", "0 9 * * 1-5")
@@ -396,6 +424,7 @@ def start_scheduler():
         print(f"Error: Invalid cron expression: {cron_expr}")
         print("Expected format: 'minute hour day month day_of_week'")
         print("Example: '0 9 * * 1-5' (weekdays at 9:00 AM)")
+        pidfile.unlink(missing_ok=True)
         raise SystemExit(1)
 
     trigger = CronTrigger(
@@ -408,7 +437,9 @@ def start_scheduler():
     )
 
     scheduler = BlockingScheduler(timezone=timezone)
-    scheduler.add_job(run_watchlist_analysis, trigger, id="augur_watchlist")
+    scheduler.add_job(
+        run_watchlist_analysis, trigger, id="augur_watchlist", max_instances=1
+    )
 
     print(f"\U0001f989 Augur Cron Scheduler started!")
     print(f"   Schedule: {cron_expr} ({timezone})")
@@ -420,4 +451,5 @@ def start_scheduler():
     try:
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
+        pidfile.unlink(missing_ok=True)
         print("\nScheduler stopped.")
