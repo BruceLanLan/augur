@@ -1,0 +1,23 @@
+{
+  "id": "FEAT-005",
+  "type": "fix",
+  "description": "Fix escapeHtml breaking Markdown rendering + add MCP integration test",
+  "status": "in_progress",
+  "steps": [
+    "In dashboard/templates/base.html: Remove `md = escapeHtml(md);` from renderMarkdown() so angle brackets render correctly in persona reasoning text",
+    "In src/augur/mcp_server.py: Extract ticker validation to a helper function _validate_ticker(ticker) that returns error string or None",
+    "In tests/test_iteration2.py: Add test_mcp_validate_ticker_function() that imports and calls _validate_ticker directly"
+  ],
+  "acceptance_criteria": [
+    "renderMarkdown() does NOT call escapeHtml() - angle brackets render as intended",
+    "escapeHtml() is still used for agent_name in stocks.html (untrusted content)",
+    "A _validate_ticker helper exists in mcp_server.py and is used by all 3 ticker-accepting tools",
+    "A test imports and calls _validate_ticker directly, verifying invalid tickers are rejected"
+  ],
+  "verification": [
+    "python -m pytest tests/test_iteration2.py -v",
+    "grep -n 'escapeHtml' dashboard/templates/base.html dashboard/templates/stocks.html"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}

@@ -268,16 +268,19 @@
     }
 
     // Lightweight Markdown renderer (handles bold, headers, bullets, checkmarks)
+    // NOTE: Content comes from trusted backend Python code (persona reasoning).
+    // Do NOT blanket-escape HTML here - it breaks angle brackets in financial
+    // comparisons like "P/E < 15" or "ROE > 20%". Use escapeHtml() only for
+    // untrusted user content (e.g. custom persona names) inserted via innerHTML.
     function renderMarkdown(md) {
         if (!md) return '';
-        md = escapeHtml(md);
         return md
             // ## Headings → bold orange label
             .replace(/^#{1,3}\s+(.+)$/gm, '<strong style="color:var(--accent-orange)">$1</strong>')
             // **bold** → bold
             .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-            // Bullet lines (escaped &bull; or plain - *)
-            .replace(/^(&bull;|\-|\*)\s+(.+)$/gm, '<span style="color:var(--text-muted)">&middot;</span> $2')
+            // Bullet lines (• - *)
+            .replace(/^([•\-\*])\s+(.+)$/gm, '<span style="color:var(--text-muted)">&middot;</span> $2')
             // Line breaks
             .replace(/\n/g, '<br>');
     }
