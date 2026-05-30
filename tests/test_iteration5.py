@@ -249,3 +249,47 @@ class TestCronConcurrency:
         assert "scheduler.pid" in source
         assert "os.kill" in source
         assert "os.getpid()" in source
+
+
+class TestScannerBackwardCompat:
+    """Test scanner module exports all 18 agents."""
+
+    def test_all_agents_importable_from_scanner(self):
+        """All 18 agents should be importable from scanner.__init__."""
+        from scanner import (
+            ArpsAgent, AschenbrennerAgent, BuffettAgent, CathieWoodAgent,
+            DalioAgent, DayuAgent, FisherAgent, GrahamAgent,
+            LynchAgent, MarksAgent, MungerAgent, SorosAgent,
+            ThielAgent, DuanYongpingAgent, ZhangLeiAgent,
+            LiLuAgent, DanBinAgent, SerenityAgent,
+        )
+        # Verify they're actual classes
+        assert all(callable(cls) for cls in [
+            ArpsAgent, AschenbrennerAgent, BuffettAgent, CathieWoodAgent,
+            DalioAgent, DayuAgent, FisherAgent, GrahamAgent,
+            LynchAgent, MarksAgent, MungerAgent, SorosAgent,
+            ThielAgent, DuanYongpingAgent, ZhangLeiAgent,
+            LiLuAgent, DanBinAgent, SerenityAgent,
+        ])
+
+    def test_all_agents_importable_from_scanner_personas(self):
+        """All 18 agents should be importable from scanner.personas."""
+        from scanner.personas import (
+            BuffettAgent, GrahamAgent, LynchAgent, DalioAgent,
+            MungerAgent, SorosAgent, MarksAgent, CathieWoodAgent,
+            FisherAgent, ArpsAgent, AschenbrennerAgent,
+            ThielAgent, DuanYongpingAgent, ZhangLeiAgent,
+            LiLuAgent, DanBinAgent, SerenityAgent, DayuAgent,
+        )
+        assert all(callable(cls) for cls in [
+            BuffettAgent, GrahamAgent, LynchAgent, DalioAgent,
+            MungerAgent, SorosAgent, MarksAgent, CathieWoodAgent,
+            FisherAgent, ArpsAgent, AschenbrennerAgent,
+            ThielAgent, DuanYongpingAgent, ZhangLeiAgent,
+            LiLuAgent, DanBinAgent, SerenityAgent, DayuAgent,
+        ])
+
+    def test_serenity_shim_exists(self):
+        """scanner.personas.serenity module should exist and export SerenityAgent."""
+        from scanner.personas.serenity import SerenityAgent
+        assert callable(SerenityAgent)

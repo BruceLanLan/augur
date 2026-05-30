@@ -20,6 +20,12 @@ from augur.personas.lynch import LynchAgent
 from augur.personas.marks import MarksAgent
 from augur.personas.munger import MungerAgent
 from augur.personas.soros import SorosAgent
+from augur.personas.thiel import ThielAgent
+from augur.personas.duan_yongping import DuanYongpingAgent
+from augur.personas.zhang_lei import ZhangLeiAgent
+from augur.personas.li_lu import LiLuAgent
+from augur.personas.dan_bin import DanBinAgent
+from augur.personas.serenity import SerenityAgent
 
 __all__ = [
     "BaseAgent", "MarketContext", "AgentResponse", "SignalType", "DebateMessage",
@@ -27,4 +33,6 @@ __all__ = [
     "ArpsAgent", "AschenbrennerAgent", "BuffettAgent", "CathieWoodAgent",
     "DalioAgent", "DayuAgent", "FisherAgent", "GrahamAgent",
     "LynchAgent", "MarksAgent", "MungerAgent", "SorosAgent",
+    "ThielAgent", "DuanYongpingAgent", "ZhangLeiAgent",
+    "LiLuAgent", "DanBinAgent", "SerenityAgent",
 ]
