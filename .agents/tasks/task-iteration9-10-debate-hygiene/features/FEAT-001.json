@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Iteration 9: Deep testing of debate feature, watchlist/cron integration, and IC report. Add comprehensive tests covering: (1) augur_debate MCP tool end-to-end, (2) DebateProtocol class, (3) run_debate with minority report, (4) watchlist persistence and cron-run flow, (5) IC leaderboard calculation correctness, (6) Spearman rank correlation edge cases.",
+  "status": "in_progress",
+  "steps": [
+    "Create tests/test_iteration9.py with comprehensive tests",
+    "Test class TestDebateFeature: test augur_debate MCP tool produces valid results for a ticker with rounds=2, verify minority report in metadata when applicable, verify debate messages accumulate correctly in coordinator._debate_history, test DebateProtocol.initiate_debate() and get_debate_summary()",
+    "Test class TestWatchlistCron: test add_to_watchlist persists to YAML correctly (mock WATCHLIST_PATH to tmpdir), test add_to_watchlist updates existing entry, test run_watchlist_analysis processes all items (mock MarketContext/agents), test _send_notifications dispatches to configured channels, test cron schedule parsing with valid and invalid expressions",
+    "Test class TestICReport: test Backtester._rank_correlation with known values (e.g. [1,2,3],[1,2,3] should be 1.0, [1,2,3],[3,2,1] should be -1.0), test _check_hit logic for bullish/bearish/neutral, test get_leaderboard returns sorted by ic_20d, test run_backtest with sample data produces correct record counts, test consensus_ic calculation",
+    "Ensure all new tests pass with: python -m pytest tests/test_iteration9.py -v"
+  ],
+  "acceptance_criteria": [
+    "tests/test_iteration9.py has at least 20 tests covering debate, watchlist/cron, and IC report",
+    "All tests pass: python -m pytest tests/test_iteration9.py -v",
+    "All existing 275 tests still pass",
+    "Tests actually exercise real code paths (not just mocking everything)"
+  ],
+  "verification": [
+    "python -m pytest tests/test_iteration9.py -v --tb=short",
+    "python -m pytest tests/ -x -q --tb=short"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
