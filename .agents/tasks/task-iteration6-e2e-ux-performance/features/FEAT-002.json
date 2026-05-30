@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Data pipeline validation tests - verify type safety, unit conversions, None handling, and downstream error propagation through the MarketContext -> personas -> coordinator flow. Also add performance timing instrumentation to the coordinator.",
+  "status": "completed",
+  "steps": [
+    "Create tests/test_data_pipeline.py with comprehensive data flow validation",
+    "Test 1: MarketContext with all-zero fields - verify every persona handles gracefully (no ZeroDivisionError, no crash). Loop through all 18 agents calling analyze()",
+    "Test 2: MarketContext with None-like values - fields at 0, empty strings for sector/industry. Verify no agent crashes",
+    "Test 3: MarketContext with extreme values - pe=99999, roe=10.0, debt_ratio=5.0. Verify scores stay in [0, 10] and signals are valid enum values",
+    "Test 4: Debt ratio conversion correctness - verify data.py converts yfinance debtToEquity correctly (162 -> 0.618 debt ratio). Test edge cases: 0, negative, very large values",
+    "Test 5: Unit conversion consistency - verify fcf and market_cap are consistently in billions throughout pipeline (data.py divides by 1e9, personas expect billions)",
+    "Test 6: Ownership percentage conversion - verify institutional_ownership converts from 0-1 fraction to 0-100 percentage correctly in data.py",
+    "Test 7: Coordinator handles mixed valid/error results - some agents return ERROR, others valid. Verify consensus excludes errors from adversarial overheating check but includes them in count",
+    "Test 8: Parallel vs sequential coordinator equivalence - run analyze_with_all twice, verify results are deterministic (same agents produce same scores for same input)",
+    "Add timing instrumentation to DecisionCoordinator.analyze_with_all() in src/augur/registry.py: log elapsed time at DEBUG level, store timing_ms in consensus metadata",
+    "Add timing to get_consensus() - log how long consensus computation takes",
+    "Test 9: Verify timing metadata is present in consensus result - consensus.metadata should contain 'timing_ms' dict with 'analysis' and 'consensus' keys",
+    "Test 10: Performance baseline - verify full 18-agent analysis completes in under 2 seconds (no network calls, pure computation)"
+  ],
+  "acceptance_criteria": [
+    "All 10 new tests pass with `python -m pytest tests/test_data_pipeline.py -v`",
+    "Existing tests still pass (no regression from timing instrumentation)",
+    "Timing metadata appears in consensus response metadata",
+    "No ZeroDivisionError or TypeError with edge-case inputs"
+  ],
+  "verification": [
+    "python -m pytest tests/test_data_pipeline.py -v",
+    "python -m pytest tests/ -q --tb=short"
+  ],
+  "blocked_reason": null,
+  "findings": "All 17 tests pass (10 logical test areas, some with multiple subcases). Timing instrumentation stores _last_analysis_ms on self and adds timing_ms dict to consensus metadata. Full test suite: 211 passed in 2.17s. The initial test run had a pyc cache issue but resolved on rerun."
+}
