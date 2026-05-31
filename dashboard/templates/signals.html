@@ -125,9 +125,14 @@ function renderWatchlist() {
     var tbody = document.getElementById('watchlist-body');
     if (watchlistData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="padding:48px 16px; text-align:center; color:var(--text-muted);">' +
-            '<div style="font-size:2rem; margin-bottom:8px;">&#x1F4CB;</div>' +
-            '<div>自选股列表为空</div>' +
-            '<div style="font-size:0.78rem; margin-top:4px;">在上方输入股票代码添加</div>' +
+            '<div style="font-size:2.4rem; margin-bottom:8px;">&#x1F4CB;</div>' +
+            '<div style="font-size:1rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">自选股列表还是空的</div>' +
+            '<div style="font-size:0.82rem; margin-bottom:14px;">添加你关注的股票，一键运行 18 位大师共识分析并持续追踪信号</div>' +
+            '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">' +
+            '<button class="example-chip" onclick="quickAddExample(\'AAPL\')">+ AAPL</button>' +
+            '<button class="example-chip" onclick="quickAddExample(\'NVDA\')">+ NVDA</button>' +
+            '<button class="example-chip" onclick="quickAddExample(\'MSFT\')">+ MSFT</button>' +
+            '</div>' +
             '</td></tr>';
         return;
     }
@@ -208,6 +213,25 @@ function addTicker() {
     });
 }
 
+// One-click add an example ticker from the empty state
+function quickAddExample(ticker) {
+    fetch('/api/watchlist/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker: ticker })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status === 'ok') {
+            showToast(ticker + ' 已添加，点击右上角"运行全部分析"即可分析');
+            loadWatchlist();
+        } else {
+            showToast(data.detail || '添加失败', 'error');
+        }
+    })
+    .catch(function(e) { showToast('添加失败: ' + e.message, 'error'); });
+}
+
 function removeTicker(ticker) {
     fetch('/api/watchlist/' + ticker, { method: 'DELETE' })
         .then(function(r) { return r.json(); })
@@ -229,9 +253,9 @@ function removeTicker(ticker) {
 function runAllAnalysis() {
     var btn = document.getElementById('run-all-btn');
     btn.disabled = true;
-    btn.textContent = '分析中...';
+    btn.textContent = '分析中... (18 位大师)';
 
-    fetch('/api/watchlist/run', { method: 'POST' })
+    fetchWithTimeout('/api/watchlist/run', { method: 'POST' }, 180000)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             btn.disabled = false;
@@ -257,7 +281,10 @@ function runAllAnalysis() {
         .catch(function(e) {
             btn.disabled = false;
             btn.innerHTML = '&#x25B6; 运行全部分析';
-            showToast('分析失败: ' + e.message, 'error');
+            var msg = (e && e.name === 'AbortError')
+                ? '分析超时（超过 180 秒），自选股较多时请减少数量后重试。'
+                : '分析失败: ' + e.message;
+            showToast(msg, 'error');
         });
 }
 

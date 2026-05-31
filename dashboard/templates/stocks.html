@@ -74,7 +74,7 @@
 {% block content %}
 
 <h2 style="color:var(--accent-orange); margin-bottom:4px;">股票分析</h2>
-<p class="text-muted mb-16" style="font-size:0.82rem;">输入标的代码，获得 18 位投资大师的共识判断 <span class="shortcut-hint">按 <kbd>/</kbd> 聚焦 &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交</span></p>
+<p class="text-muted mb-16" style="font-size:0.82rem;">输入标的代码即可获得 18 位投资大师的共识判断 —— <span style="color:var(--text-secondary);">高级财务指标可留空，系统自动获取实时数据</span> <span class="shortcut-hint">按 <kbd>/</kbd> 聚焦 &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交</span></p>
 
 <!-- Input Panel -->
 <div class="card mb-24">
@@ -150,7 +150,7 @@
 <!-- Spinner -->
 <div id="spinner">
     <div class="spinner" style="margin:0 auto;"></div>
-    <p class="loading-pulse text-orange text-mono mt-16 progress-text" style="font-size:0.88rem; text-align:center;">正在分析... 18位投资大师共识决策中</p>
+    <p class="loading-pulse text-orange text-mono mt-16 progress-text" id="analyze-progress" style="font-size:0.88rem; text-align:center;">正在唤醒 18 位投资大师...</p>
     <div class="grid-3 mt-16" style="gap:12px;">
         <div class="skeleton skeleton-card"></div>
         <div class="skeleton skeleton-card"></div>
@@ -198,6 +198,17 @@
             </div>
         </div>
 
+        <!-- Prominent action bar — deep report is the headline action -->
+        <div class="flex items-center gap-8 mb-12" style="flex-wrap:wrap; border-top:1px solid var(--border-color); padding-top:12px;">
+            <button class="btn btn-primary" onclick="generateReport()" id="gen-report-btn" style="font-weight:600;">
+                &#x1F4C4; 生成深度分析报告
+            </button>
+            <span class="action-hint" style="margin:0;">逐模块解读 18 位大师观点，可复制 / 下载为 Markdown</span>
+            <span style="flex:1;"></span>
+            <button class="copy-btn" onclick="copyConsensus(this)">复制摘要</button>
+            <button class="copy-btn" onclick="exportJSON()">导出 JSON</button>
+        </div>
+
         <div style="border-top:1px solid var(--border-color); padding-top:12px;">
             <div class="grid-2" style="gap:24px;">
                 <div>
@@ -205,12 +216,7 @@
                     <ul id="cons-findings" style="list-style:none; padding:0; margin:0;"></ul>
                 </div>
                 <div>
-                    <div class="flex items-center justify-between mb-8">
-                        <span class="data-label">主要风险</span>
-                        <button class="copy-btn" onclick="copyConsensus(this)">复制摘要</button>
-                        <button class="copy-btn" style="margin-left:8px;" onclick="exportJSON()">导出 JSON</button>
-                        <button class="copy-btn" style="margin-left:8px;" onclick="generateReport()">生成深度报告</button>
-                    </div>
+                    <div class="data-label mb-8">主要风险</div>
                     <ul id="cons-risks" style="list-style:none; padding:0; margin:0;"></ul>
                 </div>
             </div>
@@ -255,7 +261,12 @@
             <button class="copy-btn" onclick="closeReport()">关闭</button>
         </div>
     </div>
-    <div id="report-content" style="font-size:0.82rem; line-height:1.8; white-space:pre-wrap; overflow-x:auto;"></div>
+    <!-- Report loading state -->
+    <div id="report-loading" class="report-loading" style="display:none;">
+        <div class="spinner" style="width:22px; height:22px; border-width:2px;"></div>
+        <span class="loading-pulse" id="report-progress">正在生成深度报告...</span>
+    </div>
+    <div id="report-content" class="md-report"></div>
 </div>
 
 {% endblock %}
@@ -263,6 +274,7 @@
 <script>
 var lastConsensusText = '';
 var lastAnalysisData = null;
+var lastReportMarkdown = '';
 
 // Pre-fill ticker and optional persona from query string
 (function(){
@@ -347,8 +359,9 @@ function runAnalysis() {
     resultsEl.classList.remove('show');
     document.getElementById('spinner').style.display = 'block';
     document.getElementById('error-panel').style.display = 'none';
+    startProgress('analyze-progress');
 
-    fetch('/api/analyze/' + ticker + '?' + params)
+    fetchWithTimeout('/api/analyze/' + ticker + '?' + params, {}, 90000)
         .then(function(r) {
             if (!r.ok) {
                 return r.json().then(function(e) {
@@ -360,6 +373,7 @@ function runAnalysis() {
             return r.json();
         })
         .then(function(data) {
+            stopProgress('analyze-progress');
             document.getElementById('spinner').style.display = 'none';
             if (submitBtn) submitBtn.disabled = false;
             if (!data || !data.consensus) {
@@ -376,10 +390,14 @@ function runAnalysis() {
             resultsEl.classList.add('show');
         })
         .catch(function(err) {
+            stopProgress('analyze-progress');
             document.getElementById('spinner').style.display = 'none';
             if (submitBtn) submitBtn.disabled = false;
             document.getElementById('error-panel').style.display = 'block';
-            document.getElementById('error-msg').textContent = '请求失败: ' + (err.message || err) + '。请检查网络连接或服务是否运行中。';
+            var msg = (err && err.name === 'AbortError')
+                ? '分析超时（超过 90 秒）。可能是后端较慢或网络问题，请稍后点击"重试"。'
+                : '请求失败: ' + (err.message || err) + '。请检查网络连接或服务是否运行中。';
+            document.getElementById('error-msg').textContent = msg;
         });
 }
 
@@ -551,15 +569,31 @@ function generateReport() {
     var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase();
     if (!ticker) { showToast('请先输入股票代码', 'warning'); return; }
 
+    // Reveal report section with an explicit loading state so the user knows
+    // generation is in progress (the report can take a while to compute).
+    var section = document.getElementById('report-section');
+    var loading = document.getElementById('report-loading');
+    var content = document.getElementById('report-content');
+    var btn = document.getElementById('gen-report-btn');
+    if (content) content.innerHTML = '';
+    if (loading) loading.style.display = 'flex';
+    if (section) { section.style.display = 'block'; section.scrollIntoView({behavior: 'smooth'}); }
+    if (btn) { btn.disabled = true; }
+    startProgress('report-progress', { stages: [
+        '正在汇总 18 位大师的分析...',
+        '正在撰写各模块深度解读...',
+        '正在整理估值与风险章节...',
+        '马上完成，正在排版报告...'
+    ]});
     showToast('正在生成深度报告...', 'info');
 
     // If we already have analysis data, use POST to avoid re-running agents
     if (lastAnalysisData && lastAnalysisData.ticker === ticker) {
-        fetch('/api/report/' + ticker, {
+        fetchWithTimeout('/api/report/' + ticker, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(lastAnalysisData)
-        })
+        }, 90000)
         .then(function(r) {
             if (!r.ok) {
                 return r.json().then(function(e) { throw new Error(e.detail || ('HTTP ' + r.status)); },
@@ -568,7 +602,7 @@ function generateReport() {
             return r.json();
         })
         .then(function(data) { handleReportResponse(data); })
-        .catch(function(err) { showReportError(err.message); });
+        .catch(function(err) { showReportError(err); });
         return;
     }
 
@@ -590,7 +624,7 @@ function generateReport() {
         params.set('industry', document.getElementById('inp-industry').value || '');
     }
 
-    fetch('/api/report/' + ticker + '?' + params)
+    fetchWithTimeout('/api/report/' + ticker + '?' + params, {}, 90000)
         .then(function(r) {
             if (!r.ok) {
                 return r.json().then(function(e) { throw new Error(e.detail || ('HTTP ' + r.status)); },
@@ -599,45 +633,61 @@ function generateReport() {
             return r.json();
         })
         .then(function(data) { handleReportResponse(data); })
-        .catch(function(err) { showReportError(err.message); });
+        .catch(function(err) { showReportError(err); });
 }
 
-function showReportError(msg) {
+function showReportError(err) {
+    stopProgress('report-progress');
+    var msg = (err && err.name === 'AbortError')
+        ? '报告生成超时（超过 90 秒），请稍后重试。'
+        : (err && err.message ? err.message : err);
     showToast('报告生成失败: ' + msg, 'error');
     var section = document.getElementById('report-section');
+    var loading = document.getElementById('report-loading');
     var content = document.getElementById('report-content');
+    var btn = document.getElementById('gen-report-btn');
+    if (loading) loading.style.display = 'none';
+    if (btn) btn.disabled = false;
     if (section && content) {
-        content.textContent = '⚠️ 报告生成失败: ' + msg + '\n\n请检查股票代码是否有效，或稍后重试。';
+        content.innerHTML = '<div class="error-panel"><div class="error-panel-title">报告生成失败</div>' +
+            '<div class="error-panel-msg">' + escapeHtml('' + msg) + '<br>请检查股票代码是否有效，或先运行一次"分析"后再试。</div>' +
+            '<div class="error-panel-retry"><button class="btn btn-sm" onclick="generateReport()">重试</button></div></div>';
         section.style.display = 'block';
         section.scrollIntoView({behavior: 'smooth'});
     }
 }
 
 function handleReportResponse(data) {
+    stopProgress('report-progress');
+    var loading = document.getElementById('report-loading');
+    var btn = document.getElementById('gen-report-btn');
+    if (loading) loading.style.display = 'none';
+    if (btn) btn.disabled = false;
     if (data.status === 'ok' && data.report) {
-        document.getElementById('report-content').textContent = data.report;
+        lastReportMarkdown = data.report;
+        document.getElementById('report-content').innerHTML = renderReportMarkdown(data.report);
         document.getElementById('report-section').style.display = 'block';
         document.getElementById('report-section').scrollIntoView({behavior:'smooth'});
         showToast('深度报告已生成');
     } else {
-        showToast('报告生成失败: ' + (data.detail || 'unknown error'), 'error');
+        showReportError(new Error(data.detail || 'unknown error'));
     }
 }
 
 function copyReport() {
-    var content = document.getElementById('report-content').textContent;
-    if (content) {
-        navigator.clipboard.writeText(content).then(function() {
+    if (lastReportMarkdown) {
+        navigator.clipboard.writeText(lastReportMarkdown).then(function() {
             showToast('报告已复制到剪贴板');
         });
+    } else {
+        showToast('暂无报告内容', 'warning');
     }
 }
 
 function downloadReport() {
-    var content = document.getElementById('report-content').textContent;
     var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase() || 'report';
-    if (content) {
-        var blob = new Blob([content], {type: 'text/markdown;charset=utf-8'});
+    if (lastReportMarkdown) {
+        var blob = new Blob([lastReportMarkdown], {type: 'text/markdown;charset=utf-8'});
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url;
@@ -645,6 +695,8 @@ function downloadReport() {
         a.click();
         URL.revokeObjectURL(url);
         showToast('报告已下载');
+    } else {
+        showToast('暂无报告内容', 'warning');
     }
 }
 

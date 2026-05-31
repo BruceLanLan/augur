@@ -287,6 +287,155 @@
             .replace(/\n/g, '<br>');
     }
 
+    // Rich Markdown renderer for deep reports — supports headings (h1-h3),
+    // GitHub-style tables, bold, bullet/numbered lists, blockquotes, hr and
+    // paragraphs so the generated report renders like the sample reports in
+    // cases/analysis-reports/ instead of a wall of raw text.
+    // Inline text is HTML-escaped first (financial "<"/">" stay literal),
+    // then a small allow-list of markdown markup is applied.
+    function renderReportMarkdown(md) {
+        if (!md) return '';
+        var esc = function(s) {
+            return String(s)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        };
+        var inline = function(s) {
+            return esc(s)
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/`([^`]+?)`/g, '<code class="md-code">$1</code>');
+        };
+        var lines = md.replace(/\r\n/g, '\n').split('\n');
+        var html = '';
+        var i = 0;
+        var listOpen = null; // 'ul' | 'ol'
+        var closeList = function() { if (listOpen) { html += '</' + listOpen + '>'; listOpen = null; } };
+
+        while (i < lines.length) {
+            var line = lines[i];
+            var trimmed = line.trim();
+
+            // Table block: header row + separator row of dashes
+            if (/^\|(.+)\|?$/.test(trimmed) && i + 1 < lines.length && /^\|?[\s:|-]+\|?$/.test(lines[i + 1].trim()) && lines[i + 1].indexOf('-') !== -1) {
+                closeList();
+                var splitRow = function(r) {
+                    return r.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map(function(c) { return c.trim(); });
+                };
+                var headers = splitRow(trimmed);
+                i += 2; // skip header + separator
+                html += '<div class="md-table-wrap"><table class="md-table"><thead><tr>';
+                headers.forEach(function(h) { html += '<th>' + inline(h) + '</th>'; });
+                html += '</tr></thead><tbody>';
+                while (i < lines.length && /^\|(.+)\|?$/.test(lines[i].trim())) {
+                    var cells = splitRow(lines[i]);
+                    html += '<tr>';
+                    cells.forEach(function(c) { html += '<td>' + inline(c) + '</td>'; });
+                    html += '</tr>';
+                    i++;
+                }
+                html += '</tbody></table></div>';
+                continue;
+            }
+
+            // Headings
+            var hMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+            if (hMatch) {
+                closeList();
+                var level = Math.min(hMatch[1].length, 4);
+                html += '<h' + level + ' class="md-h md-h' + level + '">' + inline(hMatch[2]) + '</h' + level + '>';
+                i++; continue;
+            }
+
+            // Horizontal rule
+            if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+                closeList();
+                html += '<hr class="md-hr">';
+                i++; continue;
+            }
+
+            // Blockquote
+            if (/^>\s?/.test(trimmed)) {
+                closeList();
+                html += '<blockquote class="md-quote">' + inline(trimmed.replace(/^>\s?/, '')) + '</blockquote>';
+                i++; continue;
+            }
+
+            // Unordered list
+            if (/^[-*•]\s+/.test(trimmed)) {
+                if (listOpen !== 'ul') { closeList(); html += '<ul class="md-ul">'; listOpen = 'ul'; }
+                html += '<li>' + inline(trimmed.replace(/^[-*•]\s+/, '')) + '</li>';
+                i++; continue;
+            }
+
+            // Ordered list
+            if (/^\d+\.\s+/.test(trimmed)) {
+                if (listOpen !== 'ol') { closeList(); html += '<ol class="md-ol">'; listOpen = 'ol'; }
+                html += '<li>' + inline(trimmed.replace(/^\d+\.\s+/, '')) + '</li>';
+                i++; continue;
+            }
+
+            // Blank line
+            if (trimmed === '') { closeList(); i++; continue; }
+
+            // Paragraph (gather consecutive non-empty, non-special lines)
+            closeList();
+            var para = [trimmed];
+            i++;
+            while (i < lines.length) {
+                var nxt = lines[i].trim();
+                if (nxt === '' || /^(#{1,6})\s+/.test(nxt) || /^[-*•]\s+/.test(nxt) ||
+                    /^\d+\.\s+/.test(nxt) || /^>\s?/.test(nxt) || /^\|(.+)\|?$/.test(nxt) ||
+                    /^(-{3,}|\*{3,}|_{3,})$/.test(nxt)) break;
+                para.push(nxt);
+                i++;
+            }
+            html += '<p class="md-p">' + inline(para.join(' ')) + '</p>';
+        }
+        closeList();
+        return html;
+    }
+
+    // Elapsed-time + staged progress messaging for long-running requests
+    // (analysis runs 18 agents, so feedback prevents "is it frozen?" anxiety).
+    var augurTimers = {};
+    function startProgress(elId, opts) {
+        opts = opts || {};
+        var el = document.getElementById(elId);
+        if (!el) return;
+        var stages = opts.stages || [
+            '正在唤醒 18 位投资大师...',
+            '大师们正在独立研读财务数据...',
+            '正在汇总多空观点、计算共识...',
+            '马上就好，正在生成最终结论...'
+        ];
+        var prefix = opts.prefix || '';
+        var start = Date.now();
+        if (augurTimers[elId]) clearInterval(augurTimers[elId]);
+        function tick() {
+            var secs = Math.floor((Date.now() - start) / 1000);
+            var stageIdx = Math.min(Math.floor(secs / 8), stages.length - 1);
+            el.textContent = prefix + stages[stageIdx] + ' (' + secs + 's)';
+        }
+        tick();
+        augurTimers[elId] = setInterval(tick, 1000);
+    }
+    function stopProgress(elId) {
+        if (augurTimers[elId]) { clearInterval(augurTimers[elId]); delete augurTimers[elId]; }
+    }
+
+    // fetch() wrapper with a timeout so a hung/slow backend surfaces a clear
+    // actionable error instead of an endless spinner ("点击没反应" feeling).
+    function fetchWithTimeout(url, options, timeoutMs) {
+        options = options || {};
+        timeoutMs = timeoutMs || 90000;
+        if (typeof AbortController === 'undefined') return fetch(url, options);
+        var controller = new AbortController();
+        var timer = setTimeout(function() { controller.abort(); }, timeoutMs);
+        options.signal = controller.signal;
+        return fetch(url, options).finally(function() { clearTimeout(timer); });
+    }
+
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
         var tag = (e.target.tagName || '').toLowerCase();

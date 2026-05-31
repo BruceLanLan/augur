@@ -23,6 +23,20 @@
 {% endblock %}
 {% block content %}
 
+<!-- First-run onboarding banner (dismissible, remembered via localStorage) -->
+<div class="onboard-banner" id="onboard-banner" style="display:none;">
+    <span class="onboard-icon">&#x1F44B;</span>
+    <div class="onboard-body">
+        <div class="onboard-title">欢迎使用 Augur — 你的 18 位 AI 投资大师智囊团</div>
+        <div class="onboard-desc">
+            只需输入一个股票代码（如 <strong>AAPL</strong>），系统会自动获取实时财务数据，
+            让巴菲特、芒格、段永平等 18 位大师从各自视角独立打分，并形成共识买/卖/持建议。
+            <strong>无需手动填写任何财务指标</strong>。下方点一下示例即可立即体验 &darr;
+        </div>
+    </div>
+    <button class="onboard-close" onclick="dismissOnboard()" title="不再显示" aria-label="关闭引导">&times;</button>
+</div>
+
 <!-- Status Bar -->
 <div class="status-bar">
     <div class="status-bar-item">
@@ -58,9 +72,22 @@
     </div>
     <div class="shortcut-hint" style="margin-top:8px;">按 <kbd>/</kbd> 快速聚焦 &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交</div>
 
+    <!-- One-click example tickers (no financial input required) -->
+    <div style="margin-top:20px;">
+        <div class="text-muted" style="font-size:0.78rem; margin-bottom:10px;">
+            &#x1F4A1; 第一次用？点下面任意一个，<strong style="color:var(--text-secondary);">无需填写财务指标</strong>，系统自动获取实时数据：
+        </div>
+        <div class="example-chips">
+            <button class="example-chip" onclick="tryExample('AAPL')">AAPL <span class="chip-tag">苹果</span></button>
+            <button class="example-chip" onclick="tryExample('NVDA')">NVDA <span class="chip-tag">英伟达</span></button>
+            <button class="example-chip" onclick="tryExample('TSLA')">TSLA <span class="chip-tag">特斯拉</span></button>
+            <button class="example-chip" onclick="tryExample('MSFT')">MSFT <span class="chip-tag">微软</span></button>
+        </div>
+    </div>
+
     <!-- Inline loading skeleton -->
     <div id="hero-spinner" style="display:none; margin-top:16px;">
-        <p class="loading-pulse text-orange text-mono progress-text">正在分析... 18位投资大师共识决策中</p>
+        <p class="loading-pulse text-orange text-mono progress-text" id="hero-progress">正在唤醒 18 位投资大师...</p>
         <div class="grid-3 mt-16" style="gap:12px; max-width:600px; margin:0 auto;">
             <div class="skeleton skeleton-card"></div>
             <div class="skeleton skeleton-card"></div>
@@ -85,8 +112,9 @@
             </div>
         </div>
         <div id="hr-reasoning" class="text-muted" style="font-size:0.8rem; margin-top:12px; line-height:1.6;"></div>
-        <div style="margin-top:12px; text-align:right;">
-            <a id="hr-link" href="/stocks" class="btn btn-sm">查看完整分析 &rarr;</a>
+        <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+            <a id="hr-link" href="/stocks" class="btn btn-sm">查看各位大师详情 &rarr;</a>
+            <a id="hr-report-link" href="/stocks" class="btn btn-sm btn-report-cta">&#x1F4C4; 生成深度分析报告</a>
         </div>
     </div>
 
@@ -141,8 +169,8 @@
 <div class="grid-3 mb-24">
     <div class="card" style="text-align:center; padding:24px 16px;">
         <div style="font-size:1.8rem; margin-bottom:8px;">&#x1F4CA;</div>
-        <h4 style="color:var(--accent-orange); font-size:0.88rem;">1. 输入标的</h4>
-        <p class="text-muted" style="font-size:0.78rem; margin:0;">输入股票代码和基本财务指标</p>
+        <h4 style="color:var(--accent-orange); font-size:0.88rem;">1. 输入代码</h4>
+        <p class="text-muted" style="font-size:0.78rem; margin:0;">只需股票代码，系统自动获取实时数据（也可手动填指标）</p>
     </div>
     <div class="card" style="text-align:center; padding:24px 16px;">
         <div style="font-size:1.8rem; margin-bottom:8px;">&#x1F916;</div>
@@ -167,8 +195,9 @@ function heroGo() {
     document.getElementById('hero-spinner').style.display = 'block';
     document.getElementById('hero-result').style.display = 'none';
     document.getElementById('hero-error').style.display = 'none';
+    startProgress('hero-progress');
 
-    fetch('/api/analyze/' + t)
+    fetchWithTimeout('/api/analyze/' + t, {}, 90000)
         .then(function(r) {
             if (!r.ok) {
                 return r.json().then(function(e) {
@@ -180,6 +209,7 @@ function heroGo() {
             return r.json();
         })
         .then(function(data) {
+            stopProgress('hero-progress');
             document.getElementById('hero-spinner').style.display = 'none';
             if (!data || !data.consensus) {
                 throw new Error(data && data.detail ? data.detail : '分析返回数据异常，请重试');
@@ -194,7 +224,8 @@ function heroGo() {
             document.getElementById('hr-score').textContent = (cons.score || 0).toFixed(1) + '/10';
             document.getElementById('hr-confidence').textContent = ((cons.confidence || 0) * 100).toFixed(0) + '%';
             document.getElementById('hr-reasoning').textContent = cons.reasoning || '';
-            document.getElementById('hr-link').href = '/stocks?ticker=' + t + '&report=1';
+            document.getElementById('hr-link').href = '/stocks?ticker=' + t;
+            document.getElementById('hr-report-link').href = '/stocks?ticker=' + t + '&report=1';
 
             document.getElementById('hero-result').style.display = 'block';
 
@@ -207,14 +238,46 @@ function heroGo() {
             renderRecentAnalyses();
         })
         .catch(function(err) {
+            stopProgress('hero-progress');
             document.getElementById('hero-spinner').style.display = 'none';
             document.getElementById('hero-error').style.display = 'block';
-            document.getElementById('hero-error-msg').textContent = '请求失败: ' + (err.message || err);
+            var msg = (err && err.name === 'AbortError')
+                ? '分析超时（超过 90 秒）。18 位大师分析较慢时可稍后重试，或检查后端服务与网络连接。'
+                : '请求失败: ' + (err.message || err);
+            document.getElementById('hero-error-msg').textContent = msg;
         });
+}
+
+// One-click example: fill ticker and run immediately
+function tryExample(t) {
+    var input = document.getElementById('hero-ticker');
+    if (input) input.value = t;
+    heroGo();
+    // Smooth scroll so the result/spinner is visible
+    var hero = document.querySelector('.hero-section');
+    if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Onboarding banner show/dismiss (remembered in localStorage)
+function dismissOnboard() {
+    var b = document.getElementById('onboard-banner');
+    if (b) b.style.display = 'none';
+    try { localStorage.setItem('augur-onboard-dismissed', '1'); } catch (e) {}
 }
 
 // Load model count
 document.addEventListener('DOMContentLoaded', function() {
+    // Show onboarding banner only if not previously dismissed
+    try {
+        if (localStorage.getItem('augur-onboard-dismissed') !== '1') {
+            var b = document.getElementById('onboard-banner');
+            if (b) b.style.display = 'flex';
+        }
+    } catch (e) {
+        var b2 = document.getElementById('onboard-banner');
+        if (b2) b2.style.display = 'flex';
+    }
+
     fetch('/api/models')
         .then(function(r) { return r.json(); })
         .then(function(data) {
