@@ -88,7 +88,8 @@ class TestCLI:
     def test_version(self, runner):
         result = runner.invoke(main, ["--version"])
         assert result.exit_code == 0
-        assert "6.1.0" in result.output
+        from augur import __version__
+        assert __version__ in result.output
 
     def test_no_color_flag_strips_ansi_and_emoji(self, runner):
         """Verify --no-color produces output without ANSI escape codes or emojis."""
