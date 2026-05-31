@@ -1,0 +1,23 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "UI polish and consistency: active nav highlighting fix, mobile hamburger verify, table sorting globally, consistent card/grid styles across all pages",
+  "status": "in_progress",
+  "steps": [
+    "Verify sidebar active state highlighting works correctly in base.html (it already exists - confirm the JS path matching logic handles /portfolio and /create-persona correctly). Add /portfolio to the path matching.",
+    "Verify mobile hamburger menu is already implemented in base.html (it is - openSidebar/closeSidebar/backdrop). Ensure portfolio page is included in bottom-nav.",
+    "Add a reusable table sorting utility function in base.html's script section or a new shared JS snippet. The function should: (1) Accept a table element. (2) On header click, sort rows by that column (numeric or string detection). (3) Toggle ascending/descending. (4) Show sort indicator arrow in header. Make this available globally so portfolio.html, watchlist.html, scanner.html can all use it.",
+    "Review all pages (watchlist.html, scanner.html, portfolio.html) to ensure they use the same card/grid/text CSS classes from bloomberg.css. Ensure consistency with index.html styling patterns."
+  ],
+  "acceptance_criteria": [
+    "Sidebar highlights the correct active page for all routes including /portfolio",
+    "Mobile hamburger menu works and includes portfolio in bottom-nav",
+    "Table sorting works on all tables across portfolio, watchlist, scanner pages",
+    "All pages use consistent Bloomberg dark theme styling"
+  ],
+  "verification": [
+    "pytest tests/ -x -q passes (no test modifications)"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

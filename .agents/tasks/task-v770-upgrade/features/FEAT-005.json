@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Dashboard enhancement: richer data display with more market indicators, sector performance, top movers, and professional Bloomberg-style layout",
+  "status": "in_progress",
+  "steps": [
+    "Enhance dashboard/templates/index.html to add more data sections making it feel like a Bloomberg terminal: (1) Add 'Sector Performance' heatmap section showing major sectors (Tech, Healthcare, Finance, Energy, Consumer) with color-coded performance. (2) Add 'Top Movers' section showing biggest gainers/losers from hot tickers data. (3) Add 'Market Breadth' indicator (advance/decline ratio visualization). (4) Add 'Augur Consensus Leaderboard' section showing top-rated stocks from recent analyses (from localStorage cache).",
+    "Add /api/sector-performance endpoint in dashboard/app.py that returns sector ETF performance data (XLK, XLV, XLF, XLE, XLY, XLP, XLI, XLU) via yfinance. Gracefully degrade if yfinance unavailable.",
+    "Enhance the existing market overview section with more indices: add HSI (Hang Seng), FTSE, DAX, Nikkei alongside existing SPY, QQQ, etc.",
+    "Add a 'News Sentiment' placeholder section that shows the current market mood based on VIX + market breadth indicators already fetched.",
+    "Ensure all new sections have proper skeleton loading states and graceful degradation when data is unavailable."
+  ],
+  "acceptance_criteria": [
+    "Dashboard index.html has sector performance, top movers, market breadth sections",
+    "/api/sector-performance returns sector data or graceful degradation",
+    "Market overview includes international indices",
+    "All sections have loading skeletons and error states",
+    "Overall dashboard feels data-rich like Bloomberg terminal"
+  ],
+  "verification": [
+    "pytest tests/ -x -q passes (no test modifications)",
+    "GET /api/sector-performance returns valid JSON"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
