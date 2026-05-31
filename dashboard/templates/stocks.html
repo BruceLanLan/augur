@@ -258,6 +258,8 @@
         <span class="report-title">&#x1F4CA; 深度分析报告</span>
         <button class="btn btn-sm" onclick="downloadPDF()" title="打印/导出PDF">&#x1F5A8; 下载 PDF</button>
         <button class="btn btn-sm" onclick="downloadReport()">&#x2B07; 下载 .md</button>
+        <button class="btn btn-sm" onclick="exportFullJSON()">&#x1F4E5; 导出 JSON</button>
+        <button class="btn btn-sm" onclick="exportCSV()">&#x1F4CA; 导出 CSV</button>
         <button class="btn btn-sm" onclick="copyReport()">&#x1F4CB; 复制报告</button>
         <button class="btn btn-sm" onclick="copyReportLink()">&#x1F517; 复制链接</button>
         <button class="btn btn-sm" onclick="closeReport()">&#x2715; 关闭</button>
@@ -473,6 +475,44 @@ function exportJSON() {
     a.click();
     URL.revokeObjectURL(url);
     showToast('JSON 已导出');
+}
+
+function exportFullJSON() {
+    if (!lastAnalysisData) { showToast('请先运行分析', 'warning'); return; }
+    var blob = new Blob([JSON.stringify(lastAnalysisData, null, 2)], {type: 'application/json'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (lastAnalysisData.ticker || 'augur') + '_full_report.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('JSON 报告已导出');
+}
+
+function exportCSV() {
+    if (!lastAnalysisData || !lastAnalysisData.agents) { showToast('请先运行分析', 'warning'); return; }
+    var agents = lastAnalysisData.agents;
+    var header = 'Agent ID,Agent Name,Signal,Score,Confidence,Key Findings\n';
+    var rows = agents.map(function(a) {
+        var findings = (a.key_findings || []).join('; ').replace(/"/g, '""');
+        return [
+            a.agent_id || '',
+            '"' + (a.agent_name || '').replace(/"/g, '""') + '"',
+            a.signal || '',
+            (a.score || 0).toFixed(1),
+            ((a.confidence || 0) * 100).toFixed(0) + '%',
+            '"' + findings + '"'
+        ].join(',');
+    }).join('\n');
+    var csv = header + rows;
+    var blob = new Blob(['\ufeff' + csv], {type: 'text/csv;charset=utf-8;'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (lastAnalysisData.ticker || 'augur') + '_masters_scores.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV 已导出');
 }
 
 function toggleReasoning(el) {

@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Task 4 (Report Export: JSON + CSV buttons) + Task 5 (SEO, Open Graph, robots.txt, sitemap.xml, unique page titles).",
+  "status": "in_progress",
+  "steps": [
+    "1. In dashboard/templates/stocks.html, in the report toolbar area (report-toolbar div), add two new buttons: 'Export JSON' (exports full structured analysis data as .json Blob download) and 'Export CSV' (exports 18 masters' scores as CSV with columns: agent_id, agent_name, signal, score, confidence, key_findings). Both are pure frontend Blob URL implementations.",
+    "2. In dashboard/templates/base.html <head>, add comprehensive meta tags: meta description ('Augur - 18位投资大师AI共识分析系统'), meta keywords, og:title, og:description, og:image (/docs/images/hero-banner-baoyu.svg), og:type (website), twitter:card (summary_large_image), twitter:title, twitter:description.",
+    "3. Ensure each template page sets a unique <title> via the existing {% block title %} pattern (index.html, stocks.html, personas.html, etc. already do this, verify and fix any that don't).",
+    "4. In dashboard/app.py add GET /robots.txt route returning plain text with User-agent: * / Allow: / / Sitemap: http://localhost:8000/sitemap.xml.",
+    "5. In dashboard/app.py add GET /sitemap.xml route returning XML with URLs for /, /stocks, /personas, /signals, /scanner, /backtest, /settings, /watchlist.",
+    "6. Commit with message: 'feat: 报告导出JSON/CSV+SEO元标签+robots.txt+sitemap (v7.6.0 任务4-5)'"
+  ],
+  "acceptance_criteria": [
+    "stocks.html contains Export JSON and Export CSV buttons with onclick handlers",
+    "base.html contains og:title, og:description, og:image, twitter:card meta tags",
+    "GET /robots.txt returns 200 with text/plain content",
+    "GET /sitemap.xml returns 200 with XML content",
+    "All 448 tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
