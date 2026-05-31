@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Augur — 多智能体投资分析",
     description="18位虚拟投资大师，多维度共识分析",
-    version="6.1.0",
+    version="7.3.0",
 )
 
 
@@ -179,17 +179,22 @@ def _check_rate_limit(ticker: str) -> bool:
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     agent_count = len(get_registry().get_all())
+    try:
+        from augur.datasources import available_sources
+        ds_count = len(available_sources())
+    except Exception:
+        ds_count = 2
     stats = [
-        {"value": str(agent_count), "label": "虚拟投资大师"},
-        {"value": "6", "label": "共识加权层"},
-        {"value": "40+", "label": "评分因子"},
-        {"value": "实时", "label": "yfinance 数据"},
+        {"value": str(agent_count), "label": "虚拟投资大师", "icon": "users"},
+        {"value": "6", "label": "共识加权层", "icon": "layers"},
+        {"value": "40+", "label": "评分因子", "icon": "sliders"},
+        {"value": str(ds_count), "label": "数据源链路", "icon": "database"},
     ]
     featured = [
-        {"avatar": "🏦", "name": "Warren Buffett", "style": "价值 · 护城河", "desc": "寻找具有持久竞争优势的企业，以合理价格长期持有。FCF 和 ROE 是核心衡量标准。", "tag": "价值投资"},
-        {"avatar": "📐", "name": "Benjamin Graham", "style": "安全边际 · 烟蒂股", "desc": "只在具有显著安全边际时买入，PE<15、PB<1.5 是硬性门槛。", "tag": "深度价值"},
-        {"avatar": "🚀", "name": "Cathie Wood", "style": "颠覆性创新", "desc": "专注 AI、基因组、区块链等颠覆性技术，接受高估值换取指数级成长。", "tag": "成长投资"},
-        {"avatar": "🇨🇳", "name": "段永平", "style": "本分 · 极度集中", "desc": "「本分」哲学：只做正确的事，停止做错误的事。极度集中持仓，能力圈内重仓。", "tag": "中国价值"},
+        {"avatar": "🏦", "id": "buffett", "name": "Warren Buffett", "style": "价值 · 护城河", "desc": "寻找具有持久竞争优势的企业，以合理价格长期持有。FCF 和 ROE 是核心衡量标准。", "tag": "价值投资"},
+        {"avatar": "📐", "id": "graham", "name": "Benjamin Graham", "style": "安全边际 · 烟蒂股", "desc": "只在具有显著安全边际时买入，PE<15、PB<1.5 是硬性门槛。", "tag": "深度价值"},
+        {"avatar": "🚀", "id": "cathie_wood", "name": "Cathie Wood", "style": "颠覆性创新", "desc": "专注 AI、基因组、区块链等颠覆性技术，接受高估值换取指数级成长。", "tag": "成长投资"},
+        {"avatar": "🇨🇳", "id": "duan_yongping", "name": "段永平", "style": "本分 · 极度集中", "desc": "「本分」哲学：只做正确的事，停止做错误的事。极度集中持仓，能力圈内重仓。", "tag": "中国价值"},
     ]
     return templates.TemplateResponse(request=request, name="index.html", context={
         "title": "Augur — 投资大师仪表盘",
@@ -955,6 +960,55 @@ async def api_search_tickers(q: str = ""):
         return {"status": "ok", "query": q, "results": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search failed: {e}")
+
+
+# ============ Market Overview API Routes ============
+
+@app.get("/api/market-overview")
+async def api_market_overview(refresh: bool = False):
+    """市场总览快照：主要指数、VIX、利率、商品、加密的实时价与涨跌幅。
+
+    供首页 Dashboard 的「全球市场总览」板块使用。无 yfinance 时优雅降级为空列表。
+    """
+    if not _HAS_AUGUR_DATA:
+        return {
+            "status": "degraded",
+            "as_of": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "items": [],
+            "source": "none",
+            "note": "yfinance 未安装，市场总览不可用。安装: pip install 'augur-agents[data]'",
+        }
+    try:
+        from augur.data import fetch_market_overview
+        overview = fetch_market_overview(force_refresh=refresh)
+        return {"status": "ok", **overview}
+    except Exception as e:
+        logger.warning("market overview failed: %s", e)
+        return {
+            "status": "degraded",
+            "as_of": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "items": [],
+            "source": "none",
+            "note": f"市场总览获取失败: {e}",
+        }
+
+
+@app.get("/api/datasources")
+async def api_datasources():
+    """返回当前可用的数据源链（用于 UI 展示数据来源覆盖情况）。"""
+    try:
+        from augur.datasources import available_sources
+        sources = available_sources()
+    except Exception:
+        sources = ["yfinance", "stooq"]
+    # 数据源元信息（中文展示名 + 是否需要 key + 覆盖范围）
+    catalog = {
+        "yfinance": {"label": "Yahoo Finance", "needs_key": False, "coverage": "行情+基本面+技术指标", "active": "yfinance" in sources},
+        "finnhub": {"label": "Finnhub", "needs_key": True, "coverage": "基本面+分析师评级", "active": "finnhub" in sources, "env": "FINNHUB_API_KEY"},
+        "alphavantage": {"label": "Alpha Vantage", "needs_key": True, "coverage": "基本面 OVERVIEW", "active": "alphavantage" in sources, "env": "ALPHAVANTAGE_API_KEY"},
+        "stooq": {"label": "Stooq", "needs_key": False, "coverage": "行情兜底 (CSV)", "active": "stooq" in sources},
+    }
+    return {"status": "ok", "active_chain": sources, "catalog": catalog}
 
 
 # ============ Main ============

@@ -4,6 +4,46 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v7.3.0 (2026-06-01) — 公开发布版
+
+Dashboard 全面增强 + 报告可视化升级 + 多数据源链路 + 文档完善。
+
+### 📊 Dashboard Enhancement
+
+- **数据源状态面板**：首页实时显示 yfinance / Finnhub / Alpha Vantage / Stooq 各数据源连接状态与健康度
+- **快速分析热门标的**：预置 GOOGL / BTC-USD / 00700.HK / BABA 一键分析按钮
+- **响应式移动布局**：全面适配手机端浏览，卡片网格与表格自动调整列数
+- Engine 版本状态栏更新至 v7.3.0
+
+### 📈 Report Visualization
+
+- **18 位大师评分卡片网格**：每位大师独立可视化评分卡（分数 / 信号 / 流派标签）
+- **Bull vs Bear 双栏辩论布局**：最看好 vs 最谨慎的大师观点对照展示
+- **风险矩阵卡片**：结构化风险因子（流动性/估值/周期/竞争）可视化
+- **执行摘要头部卡片**：核心结论高亮，一目了然
+- **PDF 下载**：基于 window.print 优化打印样式，隐藏导航栏/侧边栏
+- **Markdown 下载**：一键导出完整分析报告为 .md 文件
+
+### 🔗 Multi-datasource
+
+- 多数据源链路：yfinance（主） + Finnhub（可选） + Alpha Vantage（可选） + Stooq（兜底）
+- 数据源自动降级：主源请求失败或超时时自动切换至下一源
+- 新增 `src/augur/datasources/finnhub_provider.py` 和 `alphavantage_provider.py`
+
+### 📚 Documentation
+
+- 双语 README（中文 / 英文）同步至 v7.3.0
+- 新增 `docs/single-persona-integration.md`：单个投资人 Agent 接入指南（Hermes / Open Claw / Claude Desktop 三种方式）
+- 新增 `docs/data-sources.md`：数据源配置与 API Key 说明
+
+### 🐛 Bug Fixes
+
+- 修复 datasources 模块中 provider import 路径错误
+- 修复 yfinance_provider 中 NaN 值未被 safe_num 清洗的边界情况
+- 修复 base persona 类型注解兼容性（Python 3.8+）
+
+---
+
 ## v6.1.0-final (2026-05-28) — 正式发布版
 
 经过 **30 + 50 = 80 轮** 深度 Review、Debug、功能补全。
