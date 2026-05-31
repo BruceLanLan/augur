@@ -82,6 +82,10 @@
             <button class="example-chip" onclick="tryExample('NVDA')">NVDA <span class="chip-tag">英伟达</span></button>
             <button class="example-chip" onclick="tryExample('TSLA')">TSLA <span class="chip-tag">特斯拉</span></button>
             <button class="example-chip" onclick="tryExample('MSFT')">MSFT <span class="chip-tag">微软</span></button>
+            <button class="example-chip" onclick="tryExample('GOOGL')">GOOGL <span class="chip-tag">谷歌</span></button>
+            <button class="example-chip" onclick="tryExample('BTC-USD')">BTC-USD <span class="chip-tag">比特币</span></button>
+            <button class="example-chip" onclick="tryExample('00700.HK')">00700.HK <span class="chip-tag">腾讯</span></button>
+            <button class="example-chip" onclick="tryExample('BABA')">BABA <span class="chip-tag">阿里巴巴</span></button>
         </div>
     </div>
 
@@ -131,28 +135,65 @@
 <!-- Stats Grid -->
 <div class="grid-4 mb-24">
     {% for stat in stats %}
-    <div class="card" style="text-align:center; padding:20px 12px;">
+    <div class="card stat-card" style="text-align:center; padding:20px 12px;">
         <div class="data-value">{{ stat.value }}</div>
         <div class="data-label" style="margin-top:4px;">{{ stat.label }}</div>
     </div>
     {% endfor %}
 </div>
 
+<!-- Global Market Overview (Bloomberg-style live board) -->
+<div class="flex items-center justify-between mb-12" style="flex-wrap:wrap; gap:8px;">
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">全球市场总览</div>
+    <div class="flex items-center gap-12">
+        <span class="market-asof text-muted" id="market-asof" style="font-size:0.7rem;"></span>
+        <button class="btn btn-sm btn-ghost" onclick="loadMarketOverview(true)" id="market-refresh-btn" title="刷新行情">↻ 刷新</button>
+    </div>
+</div>
+<div class="market-board mb-24" id="market-board">
+    <!-- Skeleton placeholders while loading -->
+    <div class="market-tile skeleton-tile"></div>
+    <div class="market-tile skeleton-tile"></div>
+    <div class="market-tile skeleton-tile"></div>
+    <div class="market-tile skeleton-tile"></div>
+    <div class="market-tile skeleton-tile"></div>
+    <div class="market-tile skeleton-tile"></div>
+</div>
+
 <!-- Featured Personas -->
-<div class="section-title">精选投资人</div>
+<div class="flex items-center justify-between mb-12">
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">精选投资人</div>
+    <a href="/personas" class="btn btn-sm btn-ghost">查看全部 18 位 &rarr;</a>
+</div>
+
+<!-- Data Source Status (数据源状态) -->
+<div class="mb-24" id="datasource-section">
+    <div class="flex items-center justify-between mb-12">
+        <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">数据源状态</div>
+        <span class="text-muted" style="font-size:0.7rem;" id="ds-chain-label"></span>
+    </div>
+    <div class="datasource-grid" id="datasource-grid">
+        <!-- Skeleton placeholders -->
+        <div class="datasource-card skeleton" style="height:90px;"></div>
+        <div class="datasource-card skeleton" style="height:90px;"></div>
+        <div class="datasource-card skeleton" style="height:90px;"></div>
+        <div class="datasource-card skeleton" style="height:90px;"></div>
+    </div>
+</div>
 <div class="grid-4 mb-24">
     {% for p in featured %}
-    <div class="card" style="padding:14px;">
+    <a class="card featured-card" href="/stocks?persona={{ p.id }}" style="padding:14px; display:block;">
         <div class="flex items-center gap-8 mb-8">
-            <span style="font-size:1.4rem;">{{ p.avatar }}</span>
+            <img src="/docs/images/avatars/{{ p.id }}.svg" alt="{{ p.name }}" class="featured-avatar"
+                 onerror="this.outerHTML='<span style=\'font-size:1.6rem;\'>{{ p.avatar }}</span>'">
             <div>
                 <div style="font-weight:600; font-size:0.85rem;">{{ p.name }}</div>
                 <div class="text-muted" style="font-size:0.7rem;">{{ p.style }}</div>
             </div>
         </div>
-        <p class="text-muted" style="font-size:0.75rem; margin:0 0 8px;">{{ p.desc }}</p>
+        <p class="text-muted" style="font-size:0.75rem; margin:0 0 8px; line-height:1.5;">{{ p.desc }}</p>
         <span class="badge badge-orange">{{ p.tag }}</span>
-    </div>
+    </a>
     {% endfor %}
 </div>
 
@@ -287,7 +328,116 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Show recent analyses from cache
     renderRecentAnalyses();
+
+    // Load global market overview board
+    loadMarketOverview(false);
+
+    // Load datasource status
+    loadDatasources();
 });
+
+// ====== Global Market Overview board ======
+var _marketTimer = null;
+
+function loadMarketOverview(forceRefresh) {
+    var board = document.getElementById('market-board');
+    var btn = document.getElementById('market-refresh-btn');
+    if (btn) { btn.disabled = true; }
+    var url = '/api/market-overview' + (forceRefresh ? '?refresh=true' : '');
+    fetchWithTimeout(url, {}, 30000)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (btn) { btn.disabled = false; }
+            renderMarketBoard(data);
+        })
+        .catch(function() {
+            if (btn) { btn.disabled = false; }
+            if (board) {
+                board.innerHTML = '<div class="market-empty text-muted">市场行情暂不可用（需要 yfinance 实时数据）。</div>';
+            }
+        });
+}
+
+function renderMarketBoard(data) {
+    var board = document.getElementById('market-board');
+    var asof = document.getElementById('market-asof');
+    if (!board) return;
+    var items = (data && data.items) || [];
+    if (!items.length) {
+        board.innerHTML = '<div class="market-empty text-muted">' +
+            ((data && data.note) || '市场行情暂不可用。') + '</div>';
+        return;
+    }
+    board.innerHTML = '';
+    items.forEach(function(it) {
+        var up = (it.change_pct || 0) > 0;
+        var down = (it.change_pct || 0) < 0;
+        var cls = up ? 'is-up' : (down ? 'is-down' : 'is-flat');
+        var arrow = up ? '\u25B2' : (down ? '\u25BC' : '\u2014');
+        var pct = ((it.change_pct || 0) * 100).toFixed(2);
+        var priceStr = (it.price || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        var tile = document.createElement('div');
+        tile.className = 'market-tile ' + cls;
+        tile.innerHTML =
+            '<div class="market-tile-head">' +
+                '<span class="market-tile-name">' + escapeHtml(it.name) + '</span>' +
+                '<span class="market-tile-group">' + escapeHtml(it.group || '') + '</span>' +
+            '</div>' +
+            '<div class="market-tile-price">' + priceStr + '</div>' +
+            '<div class="market-tile-change">' + arrow + ' ' + (up ? '+' : '') + pct + '%</div>';
+        board.appendChild(tile);
+    });
+    if (asof && data.as_of) {
+        var d = new Date(data.as_of);
+        var srcLabel = data.source === 'partial' ? ' · 部分数据' : '';
+        asof.textContent = '更新于 ' + (isNaN(d.getTime()) ? data.as_of : d.toLocaleTimeString()) + srcLabel;
+    }
+}
+
+// ====== Data Source Status ======
+function loadDatasources() {
+    var grid = document.getElementById('datasource-grid');
+    var chainLabel = document.getElementById('ds-chain-label');
+    if (!grid) return;
+    fetchWithTimeout('/api/datasources', {}, 15000)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data || !data.catalog) {
+                grid.innerHTML = '<div class="market-empty text-muted">数据源信息不可用</div>';
+                return;
+            }
+            var catalog = data.catalog;
+            var activeChain = data.active_chain || [];
+            if (chainLabel) {
+                chainLabel.textContent = '活跃链: ' + activeChain.join(' > ');
+            }
+            grid.innerHTML = '';
+            var keys = Object.keys(catalog);
+            keys.forEach(function(key) {
+                var src = catalog[key];
+                var isActive = src.active;
+                var card = document.createElement('div');
+                card.className = 'datasource-card';
+                card.innerHTML =
+                    '<div class="ds-card-head">' +
+                        '<span class="ds-card-name">' + escapeHtml(src.label) + '</span>' +
+                        '<span class="' + (isActive ? 'ds-badge-active' : 'ds-badge-inactive') + '">' +
+                            (isActive ? 'ACTIVE' : 'INACTIVE') +
+                        '</span>' +
+                    '</div>' +
+                    '<div class="ds-card-coverage">' + escapeHtml(src.coverage || '') + '</div>' +
+                    '<div class="ds-card-footer">' +
+                        (src.needs_key
+                            ? '<span class="ds-key-badge">&#x1F511; API Key' + (src.env ? ' (' + src.env + ')' : '') + '</span>'
+                            : '<span class="ds-free-badge">&#x2705; 免费</span>') +
+                    '</div>';
+                grid.appendChild(card);
+            });
+        })
+        .catch(function() {
+            grid.innerHTML = '<div class="market-empty text-muted">数据源状态加载失败</div>';
+        });
+}
 
 function renderRecentAnalyses() {
     var recent = augurCache.getLast(5);
