@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-006",
+  "type": "feat",
+  "description": "Report visualization enhancement: professional styled report rendering in dashboard with download support (PDF-like HTML, Markdown download)",
+  "status": "in_progress",
+  "steps": [
+    "Enhance the report display in dashboard/templates/stocks.html: (1) When a deep report is generated, render it using the existing renderReportMarkdown() function but add professional styling: section dividers, colored score badges, signal gauges (SVG arc), executive summary card with key metrics prominently displayed. (2) Add a report header with ticker, date, overall signal badge, score gauge. (3) Style the agent voting table with colored signal indicators. (4) Add collapsible sections for each school of thought (value/growth/macro/quant).",
+    "Add report download functionality: (1) 'Download as Markdown' button (already partially exists - ensure it works cleanly). (2) 'Download as HTML' button that generates a self-contained HTML file with inline CSS (dark theme) that users can save/print. (3) 'Copy Report' button to copy full markdown to clipboard.",
+    "Add a dedicated /report/{ticker} page route that shows a full-page professional report view (not embedded in stocks page). This gives a clean URL for sharing.",
+    "Ensure the report rendering handles all edge cases: missing data gracefully shows '--', long reasoning text is properly truncated with expand/collapse."
+  ],
+  "acceptance_criteria": [
+    "Report in stocks.html renders with professional styling (section dividers, colored badges, score gauge)",
+    "Download as Markdown works",
+    "Download as HTML generates self-contained styled file",
+    "Copy Report copies full markdown to clipboard",
+    "/report/{ticker} route shows full-page report",
+    "Report handles missing data gracefully"
+  ],
+  "verification": [
+    "pytest tests/ -x -q passes (no test modifications)",
+    "GET /report/AAPL returns 200 with report page"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -1,0 +1,521 @@
+{% extends "base.html" %}
+{% block title %}{{ ticker }} Deep Analysis Report - Augur{% endblock %}
+{% block extra_head %}
+<style>
+.report-page-container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 16px;
+}
+.report-page-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border-color);
+}
+.report-page-ticker {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: var(--font-data);
+    color: var(--accent-orange);
+}
+.report-page-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+.report-signal-badge-lg {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.report-signal-badge-lg.buy { background: rgba(0,200,83,0.15); color: var(--signal-buy); border: 1px solid rgba(0,200,83,0.3); }
+.report-signal-badge-lg.sell { background: rgba(255,82,82,0.15); color: var(--signal-sell); border: 1px solid rgba(255,82,82,0.3); }
+.report-signal-badge-lg.neutral { background: rgba(255,202,40,0.15); color: var(--signal-neutral); border: 1px solid rgba(255,202,40,0.3); }
+.report-gauge-container { display: flex; align-items: center; gap: 12px; }
+.report-download-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    padding: 12px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+.report-download-bar .btn { font-size: 0.78rem; padding: 6px 14px; }
+.report-exec-summary {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 24px;
+}
+.report-exec-summary .exec-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--accent-orange);
+    margin-bottom: 12px;
+}
+.report-exec-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+}
+.report-exec-metrics .metric-item {
+    text-align: center;
+    padding: 8px;
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+}
+.report-exec-metrics .metric-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+.report-exec-metrics .metric-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    font-family: var(--font-data);
+    color: var(--text-primary);
+}
+.report-section-block {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+    overflow: hidden;
+}
+.report-section-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid transparent;
+    transition: background 0.2s;
+}
+.report-section-toggle:hover { background: var(--bg-card-hover); }
+.report-section-toggle .toggle-arrow {
+    transition: transform 0.3s;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+.report-section-toggle.open .toggle-arrow { transform: rotate(90deg); }
+.report-section-toggle.open { border-bottom-color: var(--border-color); }
+.report-section-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+    padding: 0 16px;
+}
+.report-section-body.open {
+    max-height: 3000px;
+    padding: 16px;
+}
+.report-voting-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+.report-voting-table th {
+    text-align: left;
+    padding: 8px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-color);
+}
+.report-voting-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+.report-voting-table .sig-buy { color: var(--signal-buy); font-weight: 600; }
+.report-voting-table .sig-sell { color: var(--signal-sell); font-weight: 600; }
+.report-voting-table .sig-neutral { color: var(--signal-neutral); font-weight: 600; }
+.report-full-md {
+    margin-top: 24px;
+    padding: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+.report-loading-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+.report-loading-state .spinner {
+    margin: 0 auto 16px;
+}
+.report-error-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--signal-sell);
+}
+.back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-bottom: 16px;
+}
+.back-link:hover { color: var(--accent-orange); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="report-page-container">
+    <a href="/stocks?ticker={{ ticker }}" class="back-link">&larr; Back to Stock Analysis</a>
+
+    <!-- Loading State -->
+    <div id="rp-loading" class="report-loading-state">
+        <div class="spinner"></div>
+        <p class="loading-pulse text-orange" id="rp-progress">Loading report for {{ ticker }}...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="rp-error" class="report-error-state" style="display:none;">
+        <p id="rp-error-msg">Failed to load report.</p>
+        <button class="btn btn-sm" onclick="loadReport()">Retry</button>
+    </div>
+
+    <!-- Report Content (hidden until loaded) -->
+    <div id="rp-content" style="display:none;">
+        <!-- Header -->
+        <div class="report-page-header">
+            <div>
+                <div class="report-page-ticker">{{ ticker }}</div>
+                <div class="report-page-date" id="rp-date"></div>
+            </div>
+            <div id="rp-signal-badge"></div>
+            <div class="report-gauge-container" id="rp-gauge"></div>
+        </div>
+
+        <!-- Download Bar -->
+        <div class="report-download-bar">
+            <button class="btn btn-sm" onclick="downloadReportMD()">&#x2B07; Download Markdown</button>
+            <button class="btn btn-sm" onclick="downloadReportHTML()">&#x1F4C4; Download HTML</button>
+            <button class="btn btn-sm" onclick="copyReportText()">&#x1F4CB; Copy Report</button>
+            <a id="rp-view-stocks-link" href="/stocks?ticker={{ ticker }}&report=1" class="btn btn-sm" style="text-decoration:none;">&#x1F4CA; View in Analysis</a>
+        </div>
+
+        <!-- Executive Summary -->
+        <div class="report-exec-summary" id="rp-exec-summary"></div>
+
+        <!-- Agent Voting Table -->
+        <div class="report-section-block">
+            <div class="report-section-toggle open" onclick="toggleReportSection(this)">
+                <span class="toggle-arrow">&#x25B6;</span>
+                <span>Agent Voting Board</span>
+            </div>
+            <div class="report-section-body open" id="rp-voting-body">
+                <table class="report-voting-table" id="rp-voting-table">
+                    <thead><tr><th>Agent</th><th>Signal</th><th>Score</th><th>Confidence</th></tr></thead>
+                    <tbody id="rp-voting-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Collapsible Sections (populated dynamically) -->
+        <div id="rp-sections"></div>
+
+        <!-- Full Markdown Rendered -->
+        <div class="report-section-block">
+            <div class="report-section-toggle" onclick="toggleReportSection(this)">
+                <span class="toggle-arrow">&#x25B6;</span>
+                <span>Full Report (Rendered Markdown)</span>
+            </div>
+            <div class="report-section-body" id="rp-full-md-body">
+                <div id="rp-full-md" class="md-report"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+var rpTicker = '{{ ticker }}';
+var rpMarkdown = '';
+var rpAnalysisData = null;
+
+function createScoreGauge(score, maxScore) {
+    maxScore = maxScore || 10;
+    var pct = Math.min(Math.max(score / maxScore, 0), 1);
+    var angle = pct * 180;
+    var r = 40, cx = 50, cy = 50;
+    // Color: red(0-3), yellow(4-6), green(7-10)
+    var color;
+    if (score <= 3) color = '#ff5252';
+    else if (score <= 6) color = '#ffca28';
+    else color = '#00c853';
+    // Arc path
+    var startAngle = Math.PI;
+    var endAngle = Math.PI + (angle * Math.PI / 180);
+    var x1 = cx + r * Math.cos(startAngle);
+    var y1 = cy + r * Math.sin(startAngle);
+    var x2 = cx + r * Math.cos(endAngle);
+    var y2 = cy + r * Math.sin(endAngle);
+    var largeArc = angle > 180 ? 1 : 0;
+    var bgX2 = cx + r * Math.cos(2 * Math.PI);
+    var bgY2 = cy + r * Math.sin(2 * Math.PI);
+    var svg = '<svg width="100" height="60" viewBox="0 0 100 60">';
+    // Background arc (full semicircle)
+    svg += '<path d="M ' + (cx - r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 0 1 ' + (cx + r) + ' ' + cy + '" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" stroke-linecap="round"/>';
+    // Score arc
+    if (angle > 0.5) {
+        svg += '<path d="M ' + x1.toFixed(2) + ' ' + y1.toFixed(2) + ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 1 ' + x2.toFixed(2) + ' ' + y2.toFixed(2) + '" fill="none" stroke="' + color + '" stroke-width="8" stroke-linecap="round"/>';
+    }
+    // Score text
+    svg += '<text x="' + cx + '" y="' + (cy - 5) + '" text-anchor="middle" fill="' + color + '" font-size="16" font-weight="700" font-family="var(--font-data)">' + score.toFixed(1) + '</text>';
+    svg += '<text x="' + cx + '" y="' + (cy + 8) + '" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8">/ ' + maxScore + '</text>';
+    svg += '</svg>';
+    return svg;
+}
+
+function toggleReportSection(el) {
+    el.classList.toggle('open');
+    var body = el.nextElementSibling;
+    if (body) body.classList.toggle('open');
+}
+
+function downloadReportMD() {
+    if (!rpMarkdown) { showToast('No report available', 'warning'); return; }
+    var date = new Date().toISOString().slice(0, 10);
+    var filename = rpTicker + '_augur_report_' + date + '.md';
+    var blob = new Blob([rpMarkdown], { type: 'text/markdown;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Markdown report downloaded');
+}
+
+function downloadReportHTML() {
+    if (!rpMarkdown) { showToast('No report available', 'warning'); return; }
+    var renderedBody = renderReportMarkdown(rpMarkdown);
+    var date = new Date().toISOString().slice(0, 10);
+    var filename = rpTicker + '_augur_report_' + date + '.html';
+    var htmlDoc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + rpTicker + ' - Augur Analysis Report</title><style>'
+        + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#c9d1d9;padding:40px;max-width:900px;margin:0 auto;line-height:1.7;}'
+        + 'h1,h2,h3,h4{color:#ff9800;margin-top:1.5em;}'
+        + 'table{width:100%;border-collapse:collapse;margin:1em 0;}'
+        + 'th,td{border:1px solid #30363d;padding:8px 12px;text-align:left;}'
+        + 'th{background:#161b22;color:#ff9800;font-size:0.8rem;text-transform:uppercase;}'
+        + 'tr:nth-child(even){background:#161b22;}'
+        + 'code{background:#161b22;padding:2px 6px;border-radius:3px;font-size:0.85em;}'
+        + 'blockquote{border-left:3px solid #ff9800;padding-left:12px;color:#8b949e;margin:1em 0;}'
+        + 'hr{border:none;border-top:1px solid #30363d;margin:2em 0;}'
+        + 'strong{color:#e6edf3;}'
+        + 'ul,ol{padding-left:1.5em;}'
+        + 'li{margin:4px 0;}'
+        + '.header{text-align:center;margin-bottom:2em;padding-bottom:1em;border-bottom:2px solid #30363d;}'
+        + '.footer{text-align:center;margin-top:3em;padding-top:1em;border-top:1px solid #30363d;color:#8b949e;font-size:0.8em;}'
+        + '</style></head><body>'
+        + '<div class="header"><h1>' + rpTicker + ' Deep Analysis Report</h1>'
+        + '<p style="color:#8b949e;">Generated by Augur Multi-Agent Investment Analysis Platform | ' + date + '</p></div>'
+        + renderedBody
+        + '<div class="footer">Augur v7.7.0 | 18 AI Investment Masters Consensus Analysis | augur-agents</div>'
+        + '</body></html>';
+    var blob = new Blob([htmlDoc], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('HTML report downloaded');
+}
+
+function copyReportText() {
+    if (!rpMarkdown) { showToast('No report available', 'warning'); return; }
+    navigator.clipboard.writeText(rpMarkdown).then(function() {
+        showToast('Report copied to clipboard');
+    }).catch(function() {
+        showToast('Copy failed', 'error');
+    });
+}
+
+function loadReport() {
+    document.getElementById('rp-loading').style.display = 'block';
+    document.getElementById('rp-error').style.display = 'none';
+    document.getElementById('rp-content').style.display = 'none';
+    startProgress('rp-progress', { stages: [
+        'Waking up 18 investment masters...',
+        'Masters are analyzing financial data...',
+        'Aggregating bull/bear opinions...',
+        'Almost done, finalizing report...'
+    ]});
+
+    fetchWithTimeout('/api/report/' + rpTicker + '?auto_fetch=true', {}, 120000)
+        .then(function(r) {
+            if (!r.ok) {
+                return r.json().then(function(e) { throw new Error(e.detail || 'HTTP ' + r.status); },
+                                     function() { throw new Error('HTTP ' + r.status); });
+            }
+            return r.json();
+        })
+        .then(function(data) {
+            stopProgress('rp-progress');
+            if (data.status === 'ok' && data.report) {
+                rpMarkdown = data.report;
+                renderReportPage(data);
+            } else {
+                throw new Error(data.detail || 'No report returned');
+            }
+        })
+        .catch(function(err) {
+            stopProgress('rp-progress');
+            document.getElementById('rp-loading').style.display = 'none';
+            document.getElementById('rp-error').style.display = 'block';
+            document.getElementById('rp-error-msg').textContent = 'Failed: ' + (err.message || err);
+        });
+}
+
+function renderReportPage(data) {
+    document.getElementById('rp-loading').style.display = 'none';
+    document.getElementById('rp-content').style.display = 'block';
+
+    // Date
+    document.getElementById('rp-date').textContent = 'Generated: ' + (data.timestamp || new Date().toISOString()).slice(0, 16).replace('T', ' ') + ' UTC';
+
+    // Parse signal and score from the markdown report
+    var signal = 'neutral', score = 5.0, confidence = 0.5;
+    var signalMatch = rpMarkdown.match(/综合信号[：:]\s*\*?\*?(\w+)/i) || rpMarkdown.match(/Signal[：:]\s*\*?\*?(\w+)/i);
+    if (signalMatch) {
+        var s = signalMatch[1].toLowerCase();
+        if (s.indexOf('bull') >= 0 || s.indexOf('buy') >= 0) signal = 'bullish';
+        else if (s.indexOf('bear') >= 0 || s.indexOf('sell') >= 0) signal = 'bearish';
+    }
+    var scoreMatch = rpMarkdown.match(/综合评分[：:]\s*\*?\*?([0-9.]+)/i) || rpMarkdown.match(/Score[：:]\s*\*?\*?([0-9.]+)/i);
+    if (scoreMatch) score = parseFloat(scoreMatch[1]) || 5.0;
+
+    // Signal badge
+    var badgeClass = signal === 'bullish' ? 'buy' : signal === 'bearish' ? 'sell' : 'neutral';
+    var badgeText = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+    document.getElementById('rp-signal-badge').innerHTML = '<span class="report-signal-badge-lg ' + badgeClass + '">' + badgeText + '</span>';
+
+    // Score gauge
+    document.getElementById('rp-gauge').innerHTML = createScoreGauge(score, 10);
+
+    // Executive summary
+    renderExecSummary(score, signal, confidence);
+
+    // Voting table (parse from markdown)
+    renderVotingTable();
+
+    // Collapsible sections
+    renderCollapsibleSections();
+
+    // Full markdown
+    document.getElementById('rp-full-md').innerHTML = renderReportMarkdown(rpMarkdown);
+}
+
+function renderExecSummary(score, signal, confidence) {
+    var container = document.getElementById('rp-exec-summary');
+    var grade = score >= 8 ? 'A+' : score >= 7 ? 'A' : score >= 6 ? 'B+' : score >= 5 ? 'B' : score >= 4 ? 'C' : 'D';
+    var signalText = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+
+    var html = '<div class="exec-title">Executive Summary</div>';
+    html += '<div class="report-exec-metrics">';
+    html += '<div class="metric-item"><div class="metric-label">Signal</div><div class="metric-value" style="color:' + (signal === 'bullish' ? 'var(--signal-buy)' : signal === 'bearish' ? 'var(--signal-sell)' : 'var(--signal-neutral)') + ';">' + signalText + '</div></div>';
+    html += '<div class="metric-item"><div class="metric-label">Score</div><div class="metric-value" style="color:var(--accent-orange);">' + score.toFixed(1) + '/10</div></div>';
+    html += '<div class="metric-item"><div class="metric-label">Grade</div><div class="metric-value">' + grade + '</div></div>';
+    html += '</div>';
+
+    // Extract first paragraph as summary text
+    var lines = rpMarkdown.split('\n').filter(function(l) { return l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('|') && !l.trim().startsWith('---'); });
+    var summaryText = lines.slice(0, 3).join(' ').replace(/\*\*/g, '').replace(/[#*_`]/g, '').trim();
+    if (summaryText) {
+        html += '<div style="margin-top:12px; font-size:0.8rem; color:var(--text-secondary); line-height:1.6;">' + escapeHtml(summaryText.substring(0, 400)) + '</div>';
+    }
+    container.innerHTML = html;
+}
+
+function renderVotingTable() {
+    var tbody = document.getElementById('rp-voting-tbody');
+    tbody.innerHTML = '';
+    // Try to parse voting table from markdown
+    var tableMatch = rpMarkdown.match(/\|.*Agent.*\|[\s\S]*?\n((?:\|.*\n?)+)/i) ||
+                     rpMarkdown.match(/\|.*投资人.*\|[\s\S]*?\n((?:\|.*\n?)+)/i) ||
+                     rpMarkdown.match(/\|.*大师.*\|[\s\S]*?\n((?:\|.*\n?)+)/i);
+    if (tableMatch) {
+        var rows = tableMatch[1].split('\n').filter(function(r) { return r.trim().startsWith('|') && r.indexOf('---') < 0; });
+        rows.forEach(function(row) {
+            var cells = row.split('|').map(function(c) { return c.trim(); }).filter(function(c) { return c; });
+            if (cells.length >= 3) {
+                var tr = document.createElement('tr');
+                var sigText = cells[1] || '';
+                var sigClass = '';
+                var sigLower = sigText.toLowerCase();
+                if (sigLower.indexOf('bull') >= 0 || sigLower.indexOf('buy') >= 0) sigClass = 'sig-buy';
+                else if (sigLower.indexOf('bear') >= 0 || sigLower.indexOf('sell') >= 0) sigClass = 'sig-sell';
+                else sigClass = 'sig-neutral';
+                tr.innerHTML = '<td>' + escapeHtml(cells[0]) + '</td>'
+                    + '<td class="' + sigClass + '">' + escapeHtml(sigText) + '</td>'
+                    + '<td>' + escapeHtml(cells[2] || '--') + '</td>'
+                    + '<td>' + escapeHtml(cells[3] || '--') + '</td>';
+                tbody.appendChild(tr);
+            }
+        });
+    }
+    if (tbody.children.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Voting data will appear in the full report below</td></tr>';
+    }
+}
+
+function renderCollapsibleSections() {
+    var container = document.getElementById('rp-sections');
+    container.innerHTML = '';
+    // Parse ## headings from markdown and create collapsible sections
+    var sections = [];
+    var lines = rpMarkdown.split('\n');
+    var currentSection = null;
+    for (var i = 0; i < lines.length; i++) {
+        var match = lines[i].match(/^##\s+(.+)$/);
+        if (match) {
+            if (currentSection) sections.push(currentSection);
+            currentSection = { title: match[1], content: [] };
+        } else if (currentSection) {
+            currentSection.content.push(lines[i]);
+        }
+    }
+    if (currentSection) sections.push(currentSection);
+
+    sections.forEach(function(sec, idx) {
+        var contentMd = sec.content.join('\n').trim();
+        if (!contentMd) return;
+        var isOpen = idx < 2 ? ' open' : '';
+        var html = '<div class="report-section-block">';
+        html += '<div class="report-section-toggle' + isOpen + '" onclick="toggleReportSection(this)">';
+        html += '<span class="toggle-arrow">&#x25B6;</span>';
+        html += '<span>' + escapeHtml(sec.title) + '</span>';
+        html += '</div>';
+        html += '<div class="report-section-body' + isOpen + '">';
+        html += renderReportMarkdown(contentMd);
+        html += '</div></div>';
+        container.innerHTML += html;
+    });
+}
+
+// Auto-load on page ready
+document.addEventListener('DOMContentLoaded', function() {
+    loadReport();
+});
+</script>
+{% endblock %}
