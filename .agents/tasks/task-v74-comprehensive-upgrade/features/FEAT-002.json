@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Backtest page enhancement + Settings page completion. Add backtest parameter config panel (time range, initial capital, position strategy), key metrics cards (annualized return, max drawdown, Sharpe ratio, win rate), and historical signal timeline. Complete Settings page with LLM model config, data source API key config, notification channels (Telegram/Slack/WeChat), test connection buttons, and export/import config.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "1. Enhance dashboard/templates/backtest.html: Add a config panel with inputs for initial_capital (default 100000), position_strategy select (equal_weight/kelly/fixed_pct), and time range selector (30/60/90/180/365 days).",
     "2. In backtest.html: After results load, add key metrics cards row showing: Annualized Return %, Max Drawdown %, Sharpe Ratio, Win Rate %. Calculate these from the backtest response data in JS (or extend the /api/backtest/run response in app.py to include them).",
