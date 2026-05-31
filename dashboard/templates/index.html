@@ -160,25 +160,44 @@
     <div class="market-tile skeleton-tile"></div>
 </div>
 
+<!-- Hot Tickers: 热门标的实时行情 -->
+<div class="flex items-center justify-between mb-12">
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">热门标的实时行情</div>
+    <button class="btn btn-sm btn-ghost" onclick="loadHotTickers(true)" id="hot-refresh-btn" title="刷新">↻ 刷新</button>
+</div>
+<div class="hot-tickers-grid mb-24" id="hot-tickers-grid">
+    <!-- Skeleton placeholders -->
+    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+</div>
+
+<!-- Fear & Greed + Macro Snapshot side by side -->
+<div class="grid-2 mb-24" id="fear-macro-row">
+    <!-- 恐慌与贪婪指标 -->
+    <div class="fear-greed-section" id="fear-greed-section">
+        <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">恐慌与贪婪指标</div>
+        <div class="card" style="padding:16px;" id="fear-greed-card">
+            <div class="text-muted" style="font-size:0.78rem;">加载中...</div>
+        </div>
+    </div>
+    <!-- 宏观经济快照 -->
+    <div class="macro-snapshot-section">
+        <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">宏观经济快照</div>
+        <div class="macro-snapshot-grid" id="macro-snapshot-grid">
+            <div class="macro-card skeleton" style="height:80px;"></div>
+            <div class="macro-card skeleton" style="height:80px;"></div>
+            <div class="macro-card skeleton" style="height:80px;"></div>
+        </div>
+    </div>
+</div>
+
 <!-- Featured Personas -->
 <div class="flex items-center justify-between mb-12">
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">精选投资人</div>
     <a href="/personas" class="btn btn-sm btn-ghost">查看全部 18 位 &rarr;</a>
-</div>
-
-<!-- Data Source Status (数据源状态) -->
-<div class="mb-24" id="datasource-section">
-    <div class="flex items-center justify-between mb-12">
-        <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">数据源状态</div>
-        <span class="text-muted" style="font-size:0.7rem;" id="ds-chain-label"></span>
-    </div>
-    <div class="datasource-grid" id="datasource-grid">
-        <!-- Skeleton placeholders -->
-        <div class="datasource-card skeleton" style="height:90px;"></div>
-        <div class="datasource-card skeleton" style="height:90px;"></div>
-        <div class="datasource-card skeleton" style="height:90px;"></div>
-        <div class="datasource-card skeleton" style="height:90px;"></div>
-    </div>
 </div>
 <div class="grid-4 mb-24">
     {% for p in featured %}
@@ -195,6 +214,21 @@
         <span class="badge badge-orange">{{ p.tag }}</span>
     </a>
     {% endfor %}
+</div>
+
+<!-- Data Source Status (数据源状态) -->
+<div class="mb-24" id="datasource-section">
+    <div class="flex items-center justify-between mb-12">
+        <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">数据源状态</div>
+        <span class="text-muted" style="font-size:0.7rem;" id="ds-chain-label"></span>
+    </div>
+    <div class="datasource-grid" id="datasource-grid">
+        <!-- Skeleton placeholders -->
+        <div class="datasource-card skeleton" style="height:90px;"></div>
+        <div class="datasource-card skeleton" style="height:90px;"></div>
+        <div class="datasource-card skeleton" style="height:90px;"></div>
+        <div class="datasource-card skeleton" style="height:90px;"></div>
+    </div>
 </div>
 
 <!-- Recent Analyses (from cache) -->
@@ -334,6 +368,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load datasource status
     loadDatasources();
+
+    // Load hot tickers
+    loadHotTickers(false);
 });
 
 // ====== Global Market Overview board ======
@@ -437,6 +474,141 @@ function loadDatasources() {
         .catch(function() {
             grid.innerHTML = '<div class="market-empty text-muted">数据源状态加载失败</div>';
         });
+}
+
+// ====== Hot Tickers Panel ======
+function loadHotTickers(forceRefresh) {
+    var grid = document.getElementById('hot-tickers-grid');
+    var btn = document.getElementById('hot-refresh-btn');
+    if (btn) btn.disabled = true;
+    var url = '/api/hot-tickers' + (forceRefresh ? '?refresh=true' : '');
+    fetchWithTimeout(url, {}, 30000)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (btn) btn.disabled = false;
+            renderHotTickers(data);
+        })
+        .catch(function() {
+            if (btn) btn.disabled = false;
+            if (grid) grid.innerHTML = '<div class="market-empty text-muted">热门标的暂不可用</div>';
+        });
+}
+
+function renderHotTickers(data) {
+    var grid = document.getElementById('hot-tickers-grid');
+    if (!grid) return;
+    var tickers = (data && data.tickers) || [];
+    if (!tickers.length) {
+        grid.innerHTML = '<div class="market-empty text-muted">热门标的暂不可用</div>';
+        return;
+    }
+    grid.innerHTML = '';
+    tickers.forEach(function(t) {
+        var up = (t.change_pct || 0) > 0;
+        var down = (t.change_pct || 0) < 0;
+        var cls = up ? 'is-up' : (down ? 'is-down' : 'is-flat');
+        var arrow = up ? '\u25B2' : (down ? '\u25BC' : '\u2014');
+        var pct = ((t.change_pct || 0) * 100).toFixed(2);
+        var priceStr = (t.price || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        var card = document.createElement('div');
+        card.className = 'hot-ticker-card ' + cls;
+        card.onclick = function() { window.location.href = '/stocks?ticker=' + t.symbol; };
+        card.innerHTML =
+            '<div class="hot-ticker-head">' +
+                '<span class="hot-ticker-symbol">' + escapeHtml(t.symbol) + '</span>' +
+                '<span class="hot-ticker-name">' + escapeHtml(t.name) + '</span>' +
+            '</div>' +
+            '<div class="hot-ticker-price">' + priceStr + '</div>' +
+            '<div class="hot-ticker-change">' + arrow + ' ' + (up ? '+' : '') + pct + '%</div>';
+        grid.appendChild(card);
+    });
+}
+
+// ====== Fear & Greed + Macro Snapshot (from market overview data) ======
+// These rely on the market overview data already loaded
+var _marketOverviewData = null;
+
+var _origRenderMarketBoard = renderMarketBoard;
+renderMarketBoard = function(data) {
+    _origRenderMarketBoard(data);
+    _marketOverviewData = data;
+    renderFearGreed(data);
+    renderMacroSnapshot(data);
+};
+
+function renderFearGreed(data) {
+    var card = document.getElementById('fear-greed-card');
+    if (!card) return;
+    var items = (data && data.items) || [];
+    var vix = null, dxy = null, us10y = null;
+    items.forEach(function(it) {
+        if (it.key === 'vix') vix = it;
+        else if (it.key === 'dxy') dxy = it;
+        else if (it.key === 'us10y') us10y = it;
+    });
+    if (!vix) {
+        card.innerHTML = '<div class="text-muted" style="font-size:0.78rem;">VIX 数据不可用</div>';
+        return;
+    }
+    var vixVal = vix.price || 0;
+    var sentiment = '';
+    var sentimentColor = '';
+    if (vixVal < 15) { sentiment = '市场偏贪婪'; sentimentColor = 'var(--signal-buy)'; }
+    else if (vixVal <= 25) { sentiment = '市场中性'; sentimentColor = 'var(--signal-neutral)'; }
+    else { sentiment = '市场偏恐慌'; sentimentColor = 'var(--signal-sell)'; }
+
+    card.innerHTML =
+        '<div class="flex items-center gap-12 mb-12">' +
+            '<div style="font-size:1.8rem; font-family:var(--font-data); font-weight:700; color:' + sentimentColor + ';">' + vixVal.toFixed(2) + '</div>' +
+            '<div>' +
+                '<div style="font-size:0.78rem; font-weight:600; color:' + sentimentColor + ';">' + sentiment + '</div>' +
+                '<div style="font-size:0.68rem; color:var(--text-muted);">VIX 恐慌指数</div>' +
+            '</div>' +
+        '</div>' +
+        '<div class="flex gap-16" style="flex-wrap:wrap;">' +
+            (dxy ? '<div><div class="data-label">美元指数 (DXY)</div><div class="text-mono" style="font-size:0.88rem; color:var(--text-primary);">' + (dxy.price || 0).toFixed(2) + ' <span style="font-size:0.72rem; color:' + ((dxy.change_pct||0) >= 0 ? 'var(--signal-buy)' : 'var(--signal-sell)') + ';">' + ((dxy.change_pct||0)*100).toFixed(2) + '%</span></div></div>' : '') +
+            (us10y ? '<div><div class="data-label">美债10年</div><div class="text-mono" style="font-size:0.88rem; color:var(--text-primary);">' + (us10y.price || 0).toFixed(2) + ' <span style="font-size:0.72rem; color:' + ((us10y.change_pct||0) >= 0 ? 'var(--signal-buy)' : 'var(--signal-sell)') + ';">' + ((us10y.change_pct||0)*100).toFixed(2) + '%</span></div></div>' : '') +
+        '</div>';
+}
+
+function renderMacroSnapshot(data) {
+    var grid = document.getElementById('macro-snapshot-grid');
+    if (!grid) return;
+    var items = (data && data.items) || [];
+    var gold = null, oil = null, btc = null;
+    items.forEach(function(it) {
+        if (it.key === 'gold') gold = it;
+        else if (it.key === 'oil') oil = it;
+        else if (it.key === 'btc') btc = it;
+    });
+    grid.innerHTML = '';
+    var macros = [gold, oil, btc].filter(function(x) { return x; });
+    if (!macros.length) {
+        grid.innerHTML = '<div class="market-empty text-muted">宏观数据不可用</div>';
+        return;
+    }
+    macros.forEach(function(m) {
+        var commentary = '';
+        var pct = m.change_pct || 0;
+        if (m.key === 'gold') {
+            commentary = pct > 0.01 ? '避险需求上升' : (pct < -0.01 ? '风险偏好回暖' : '黄金持稳');
+        } else if (m.key === 'oil') {
+            commentary = pct > 0.01 ? '能源压力上升' : (pct < -0.01 ? '能源压力下降' : '油价持稳');
+        } else if (m.key === 'btc') {
+            commentary = pct > 0.02 ? '加密情绪高涨' : (pct < -0.02 ? '加密回调' : '比特币横盘');
+        }
+        var up = pct > 0;
+        var down = pct < 0;
+        var cls = up ? 'is-up' : (down ? 'is-down' : 'is-flat');
+        var card = document.createElement('div');
+        card.className = 'macro-card ' + cls;
+        card.innerHTML =
+            '<div class="macro-card-name">' + escapeHtml(m.name) + '</div>' +
+            '<div class="macro-card-price">' + (m.price || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + '</div>' +
+            '<div class="macro-card-change">' + (up ? '+' : '') + (pct * 100).toFixed(2) + '%</div>' +
+            '<div class="macro-card-comment">' + commentary + '</div>';
+        grid.appendChild(card);
+    });
 }
 
 function renderRecentAnalyses() {

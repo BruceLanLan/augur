@@ -382,6 +382,86 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def fetch_hot_tickers(force_refresh: bool = False) -> List[Dict[str, Any]]:
+    """获取热门标的实时行情（供首页 Hot Tickers 面板使用）。
+
+    包含主要科技股及加密货币，返回每个标的的 symbol, name, price, change_pct, market_cap。
+    缓存 90 秒。yfinance 不可用时优雅降级为空列表。
+
+    Returns:
+        [{symbol, name, price, change_pct, market_cap}, ...]
+    """
+    cache_key = "hot_tickers"
+    if not force_refresh:
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
+
+    # 热门标的列表及中文名映射
+    HOT_SYMBOLS = [
+        ("AAPL", "苹果"),
+        ("NVDA", "英伟达"),
+        ("TSLA", "特斯拉"),
+        ("MSFT", "微软"),
+        ("GOOGL", "谷歌"),
+        ("AMZN", "亚马逊"),
+        ("BTC-USD", "比特币"),
+        ("ETH-USD", "以太坊"),
+        ("META", "Meta"),
+        ("AMD", "AMD"),
+    ]
+
+    try:
+        yf = _get_yfinance()
+    except Exception:
+        result: List[Dict[str, Any]] = []
+        _cache_set(cache_key, result)
+        return result
+
+    items: List[Dict[str, Any]] = []
+    for symbol, name_cn in HOT_SYMBOLS:
+        price = 0.0
+        prev = 0.0
+        market_cap = 0.0
+        try:
+            tk = yf.Ticker(symbol)
+            fi = getattr(tk, "fast_info", None)
+            if fi is not None:
+                price = _safe_float(getattr(fi, "last_price", 0)) or _safe_float(
+                    fi.get("lastPrice") if hasattr(fi, "get") else 0
+                )
+                prev = _safe_float(getattr(fi, "previous_close", 0)) or _safe_float(
+                    fi.get("previousClose") if hasattr(fi, "get") else 0
+                )
+                market_cap = _safe_float(getattr(fi, "market_cap", 0)) or _safe_float(
+                    fi.get("marketCap") if hasattr(fi, "get") else 0
+                )
+            # 回退：用历史数据
+            if price <= 0 or prev <= 0:
+                hist = tk.history(period="5d")
+                if hist is not None and not hist.empty:
+                    closes = [c for c in hist["Close"].tolist() if c and c == c]
+                    if closes:
+                        price = price or float(closes[-1])
+                        prev = prev or (float(closes[-2]) if len(closes) >= 2 else float(closes[-1]))
+        except Exception as exc:
+            logger.debug("hot ticker fetch failed for %s: %s", symbol, exc)
+
+        change_pct = ((price - prev) / prev) if prev else 0.0
+        items.append({
+            "symbol": symbol,
+            "name": name_cn,
+            "price": round(price, 2),
+            "change_pct": round(change_pct, 4),
+            "market_cap": round(market_cap, 0),
+        })
+
+    # 使用 90 秒 TTL 缓存
+    with _cache_lock:
+        _cache[cache_key] = {"value": items, "ts": time.time() - (_CACHE_TTL - 90)}
+    return items
+
+
 def search_ticker(query: str) -> List[Dict]:
     """
     Search for tickers by name/symbol.

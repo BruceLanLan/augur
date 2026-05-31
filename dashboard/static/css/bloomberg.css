@@ -2393,3 +2393,174 @@ kbd {
         gap: 12px;
     }
 }
+
+
+/* ============================================================
+   Hot Tickers Grid (v7.3.1)
+   ============================================================ */
+
+.hot-tickers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 10px;
+}
+
+.hot-ticker-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.hot-ticker-card:hover {
+    transform: translateY(-2px);
+    background: var(--bg-card-hover);
+    border-color: var(--accent-orange);
+}
+
+.hot-ticker-card.is-up { border-left-color: var(--signal-buy); }
+.hot-ticker-card.is-down { border-left-color: var(--signal-sell); }
+.hot-ticker-card.is-flat { border-left-color: var(--text-muted); }
+
+.hot-ticker-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.hot-ticker-symbol {
+    font-family: var(--font-data);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent-orange);
+}
+
+.hot-ticker-name {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hot-ticker-price {
+    font-family: var(--font-data);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.hot-ticker-change {
+    font-family: var(--font-data);
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+.hot-ticker-card.is-up .hot-ticker-change { color: var(--signal-buy); }
+.hot-ticker-card.is-down .hot-ticker-change { color: var(--signal-sell); }
+.hot-ticker-card.is-flat .hot-ticker-change { color: var(--text-muted); }
+
+@media (max-width: 992px) {
+    .hot-tickers-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .hot-tickers-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .hot-tickers-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ============================================================
+   Fear & Greed Section (v7.3.1)
+   ============================================================ */
+
+.fear-greed-section .card {
+    border-left: 3px solid var(--accent-orange);
+}
+
+
+/* ============================================================
+   Macro Snapshot Grid (v7.3.1)
+   ============================================================ */
+
+.macro-snapshot-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.macro-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.macro-card:hover {
+    transform: translateY(-1px);
+    border-color: var(--border-hover);
+}
+
+.macro-card.is-up { border-left-color: var(--signal-buy); }
+.macro-card.is-down { border-left-color: var(--signal-sell); }
+.macro-card.is-flat { border-left-color: var(--text-muted); }
+
+.macro-card-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.macro-card-price {
+    font-family: var(--font-data);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.macro-card-change {
+    font-family: var(--font-data);
+    font-size: 0.72rem;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+.macro-card.is-up .macro-card-change { color: var(--signal-buy); }
+.macro-card.is-down .macro-card-change { color: var(--signal-sell); }
+.macro-card.is-flat .macro-card-change { color: var(--text-muted); }
+
+.macro-card-comment {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .macro-snapshot-grid {
+        grid-template-columns: 1fr;
+    }
+    #fear-macro-row {
+        grid-template-columns: 1fr !important;
+    }
+}
