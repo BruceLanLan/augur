@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v7.2.0](https://img.shields.io/badge/v7.2.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.3.0](https://img.shields.io/badge/v7.3.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -162,13 +162,15 @@ python3 -m dashboard.app --port 8000 --cors
 
 | Page | Function | Highlight |
 |------|----------|-----------|
-| **Home** | Quick analysis + recent history | Press `/` to focus ticker |
-| **Stock Analysis** | 18-master consensus + detail view | yfinance auto-fill |
+| **Home** | Quick analysis + datasource status + hot tickers | Press `/` to focus, responsive mobile layout |
+| **Stock Analysis** | 18-master consensus + visual report | Score card grid + bull/bear debate + risk matrix |
 | **Personas** | 18-master cards + search/filter | Expand for factor weights |
 | **Signal Monitor** | Watchlist batch scan | Auto-refresh every 60s |
 | **Backtest** | IC leaderboard + hit rate | Track master accuracy |
 | **Settings** | Per-master model config | Saved instantly |
 | **Create Persona** | No-code YAML custom agent | Registers immediately |
+
+**Report Download**: Supports PDF (window.print) and Markdown export for offline reading or sharing.
 
 <p align="center">
   <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis Dashboard" width="100%"/>
@@ -442,6 +444,34 @@ The Dashboard supports hot-reload (saved YAML is immediately available in the sa
 ---
 
 ## 📋 Changelog
+
+### v7.3.0
+
+Dashboard enhancement + report visualization upgrade + multi-datasource chain + documentation (public release).
+
+#### Dashboard Enhancement
+- Datasource status panel: real-time display of yfinance/Finnhub/Alpha Vantage/Stooq connection status
+- Quick analysis hot tickers: home page presets for GOOGL / BTC-USD / 00700.HK / BABA one-click analysis
+- Responsive mobile layout: full mobile adaptation with auto-adjusting cards and tables
+
+#### Report Visualization
+- 18-master visual score card grid: individual score cards for each master at a glance
+- Bull vs Bear two-column debate layout: opposing viewpoints displayed side-by-side
+- Risk matrix cards: structured risk factor visualization
+- Executive summary header card: core conclusions highlighted prominently
+- PDF download (window.print with optimized print styles)
+- Markdown download: one-click export of complete analysis report
+
+#### Multi-datasource
+- yfinance (primary) + Finnhub (optional) + Alpha Vantage (optional) + Stooq (fallback)
+- Automatic datasource degradation chain: auto-switches to backup sources when primary fails
+
+#### Documentation
+- Bilingual README (CN/EN) synchronized update
+- New [Single Persona Integration Guide](docs/single-persona-integration.md): three integration methods for Hermes / Open Claw / Claude Desktop
+- New [Data Sources Guide](docs/data-sources.md)
+
+---
 
 ### v7.2.0
 

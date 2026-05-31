@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v7.2.0](https://img.shields.io/badge/v7.2.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.3.0](https://img.shields.io/badge/v7.3.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -162,13 +162,15 @@ Bloomberg Terminal 风格，**7个页面**，完整分析流程：
 
 | 页面 | 功能 | 亮点 |
 |------|------|------|
-| **首页** | 快速分析 + 历史记录 | 键盘 `/` 快速聚焦 |
-| **股票分析** | 18位共识 + 详情展开 | yfinance 自动填充 |
+| **首页** | 快速分析 + 数据源状态 + 热门标的 | 键盘 `/` 快速聚焦，响应式移动布局 |
+| **股票分析** | 18位共识 + 可视化报告 | 评分卡片网格 + 多空辩论 + 风险矩阵 |
 | **人格系统** | 18位大师卡片 + 搜索/过滤 | 展开看评分权重 |
 | **信号监控** | 自选股批量扫描 | 自动 60s 刷新 |
 | **历史回测** | IC 排行榜 + 命中率 | 评估大师准确率 |
 | **设置** | 每位大师独立配置模型 | 实时保存 |
 | **创建大师** | 无代码 YAML 自定义 | 即时注册生效 |
+
+**报告下载**：支持 PDF（window.print）和 Markdown 格式下载，方便离线阅读或分享。
 
 <p align="center">
   <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis Dashboard" width="100%"/>
@@ -509,6 +511,34 @@ Dashboard 已支持热加载（保存 YAML 后同一进程立即可用）。CLI/
 ---
 
 ## 📋 Changelog
+
+### v7.3.0
+
+Dashboard 全面增强 + 报告可视化升级 + 多数据源链路 + 文档完善（公开发布版）。
+
+#### Dashboard 增强
+- 数据源状态面板：实时显示 yfinance/Finnhub/Alpha Vantage/Stooq 各数据源连接状态
+- 快速分析热门标的：首页预置 GOOGL / BTC-USD / 00700.HK / BABA 一键分析
+- 响应式移动布局：全面适配手机端浏览，窄屏自动调整卡片与表格
+
+#### 报告可视化
+- 18 位大师可视化评分卡片网格：每位大师独立评分卡，一目了然
+- 多空辩论双栏布局：Bull vs Bear 观点对照展示
+- 风险矩阵卡片：结构化风险因子可视化
+- 执行摘要头部卡片：核心结论高亮展示
+- PDF 下载（window.print 优化打印样式）
+- Markdown 下载：一键导出完整分析报告
+
+#### 多数据源
+- yfinance（主数据源）+ Finnhub（可选）+ Alpha Vantage（可选）+ Stooq（兜底）
+- 数据源自动降级链路：主源失败时自动切换备选源，确保数据可用
+
+#### 文档
+- 双语 README（中文/英文）同步更新
+- 新增 [单个投资人接入指南](docs/single-persona-integration.md)：Hermes / Open Claw / Claude Desktop 三种接入方式
+- 新增 [数据源说明文档](docs/data-sources.md)
+
+---
 
 ### v7.2.0
 
