@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+{% block title %}市场扫描器 - Augur{% endblock %}
+{% block extra_head %}
+<style>
+/* Scanner-specific styles */
+.scanner-presets { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.preset-chip { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 8px 16px; cursor: pointer; color: var(--text-primary); font-size: 0.82rem; transition: all 0.15s; }
+.preset-chip:hover, .preset-chip.active { border-color: var(--accent-orange); color: var(--accent-orange); }
+.scanner-input { width: 100%; background: var(--bg-primary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 12px; color: var(--text-primary); font-family: var(--font-data); font-size: 0.85rem; min-height: 60px; resize: vertical; }
+.scanner-input:focus { outline: none; border-color: var(--accent-orange); }
+.heatmap-table { width: 100%; border-collapse: collapse; font-size: 0.72rem; overflow-x: auto; display: block; }
+.heatmap-table th, .heatmap-table td { padding: 6px 4px; text-align: center; border: 1px solid var(--border-color); white-space: nowrap; }
+.heatmap-table th { background: var(--bg-secondary); color: var(--text-muted); font-weight: 500; position: sticky; top: 0; }
+.heatmap-table .ticker-col { text-align: left; font-weight: 600; color: var(--accent-orange); min-width: 70px; position: sticky; left: 0; background: var(--bg-card); z-index: 1; }
+.heatmap-cell { border-radius: 3px; padding: 4px 6px; font-weight: 600; font-family: var(--font-data); }
+.heatmap-cell.bullish { background: rgba(0,200,100,0.2); color: var(--signal-buy); }
+.heatmap-cell.neutral { background: rgba(255,200,0,0.15); color: var(--signal-neutral); }
+.heatmap-cell.bearish { background: rgba(255,60,60,0.2); color: var(--signal-sell); }
+.consensus-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-weight: 700; font-size: 0.7rem; }
+.consensus-badge.bullish { background: var(--signal-buy); color: #000; }
+.consensus-badge.neutral { background: var(--signal-neutral); color: #000; }
+.consensus-badge.bearish { background: var(--signal-sell); color: #fff; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="section-title" data-i18n="scanner_title">市场扫描器</div>
+<p class="text-muted mb-16" data-i18n="scanner_desc">选择预设列表或输入自定义股票代码，一键让18位大师快速评分</p>
+
+<!-- Preset buttons -->
+<div class="scanner-presets">
+    <button class="preset-chip" onclick="loadPreset('tech_giants')" data-i18n="scanner_preset_tech">科技巨头</button>
+    <button class="preset-chip" onclick="loadPreset('china_stocks')" data-i18n="scanner_preset_china">中概股</button>
+    <button class="preset-chip" onclick="loadPreset('crypto')" data-i18n="scanner_preset_crypto">加密货币</button>
+</div>
+
+<!-- Custom input -->
+<div class="card mb-16" style="padding:16px;">
+    <label class="data-label" data-i18n="scanner_custom_label">自定义标的 (逗号分隔)</label>
+    <textarea class="scanner-input" id="scanner-tickers" placeholder="AAPL, NVDA, TSLA, BTC-USD"></textarea>
+    <div class="flex items-center justify-between mt-12">
+        <span class="text-muted" style="font-size:0.72rem;" data-i18n="scanner_limit">最多20个标的</span>
+        <button class="btn btn-primary" onclick="runScanner()" id="scanner-run-btn" data-i18n="scanner_run">开始扫描</button>
+    </div>
+</div>
+
+<!-- Loading -->
+<div id="scanner-loading" style="display:none;" class="mb-16">
+    <p class="loading-pulse text-orange text-mono" id="scanner-progress">正在扫描...</p>
+</div>
+
+<!-- Results -->
+<div id="scanner-results" style="display:none;">
+    <div class="flex items-center justify-between mb-12">
+        <div class="section-title" style="margin:0; border:none; padding:0;" data-i18n="scanner_results_title">扫描结果</div>
+        <span class="text-muted" style="font-size:0.72rem;" id="scanner-summary"></span>
+    </div>
+    <div class="card" style="padding:0; overflow:hidden;">
+        <div style="overflow-x:auto;">
+            <table class="heatmap-table" id="heatmap-table"></table>
+        </div>
+    </div>
+</div>
+
+<!-- Error -->
+<div id="scanner-error" class="error-panel" style="display:none;">
+    <div class="error-panel-title">扫描失败</div>
+    <div class="error-panel-msg" id="scanner-error-msg"></div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+var PRESETS = {
+    tech_giants: ['AAPL','NVDA','MSFT','GOOGL','TSLA','META','AMZN','AMD'],
+    china_stocks: ['BABA','PDD','JD','BIDU','NIO','LI','XPEV'],
+    crypto: ['BTC-USD','ETH-USD','SOL-USD','DOGE-USD']
+};
+
+// Agent short names for table headers
+var AGENT_SHORT = {
+    buffett:'BUF', graham:'GRA', munger:'MUN', fisher:'FIS', lynch:'LYN',
+    cathie_wood:'CW', aschenbrenner:'ASC', thiel:'THI', dalio:'DAL',
+    soros:'SOR', marks:'MAR', serenity:'SER', arps:'ARP', dayu:'DYU',
+    duan_yongping:'DYP', zhang_lei:'ZHL', li_lu:'LIL', dan_bin:'DAB'
+};
+
+function loadPreset(name) {
+    var ta = document.getElementById('scanner-tickers');
+    if (ta && PRESETS[name]) {
+        ta.value = PRESETS[name].join(', ');
+    }
+    // Highlight active preset
+    document.querySelectorAll('.preset-chip').forEach(function(el) { el.classList.remove('active'); });
+    event.target.classList.add('active');
+}
+
+function runScanner() {
+    var ta = document.getElementById('scanner-tickers');
+    var text = (ta ? ta.value : '').trim();
+    if (!text) { showToast('请输入或选择标的', 'warning'); return; }
+    var tickers = text.split(/[,\s\n]+/).filter(function(t) { return t.length > 0; });
+    if (tickers.length > 20) { showToast('最多20个标的', 'warning'); return; }
+
+    document.getElementById('scanner-loading').style.display = 'block';
+    document.getElementById('scanner-results').style.display = 'none';
+    document.getElementById('scanner-error').style.display = 'none';
+    startProgress('scanner-progress', {stages:['正在获取数据...','大师们正在评分...','正在汇总结果...']});
+
+    fetchWithTimeout('/api/scanner/run', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({tickers: tickers})
+    }, 180000)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        stopProgress('scanner-progress');
+        document.getElementById('scanner-loading').style.display = 'none';
+        if (data.status === 'ok') {
+            renderHeatmap(data.results);
+        } else {
+            document.getElementById('scanner-error').style.display = 'block';
+            document.getElementById('scanner-error-msg').textContent = data.detail || '扫描失败';
+        }
+    })
+    .catch(function(err) {
+        stopProgress('scanner-progress');
+        document.getElementById('scanner-loading').style.display = 'none';
+        document.getElementById('scanner-error').style.display = 'block';
+        document.getElementById('scanner-error-msg').textContent = err.message || '请求失败';
+    });
+}
+
+function renderHeatmap(results) {
+    var table = document.getElementById('heatmap-table');
+    if (!table || !results || !results.length) return;
+    document.getElementById('scanner-results').style.display = 'block';
+
+    // Get all agent IDs from first result
+    var agentIds = [];
+    if (results[0].agents && results[0].agents.length) {
+        agentIds = results[0].agents.map(function(a) { return a.agent_id; });
+    }
+
+    // Build header
+    var html = '<thead><tr><th class="ticker-col">Ticker</th><th>Consensus</th>';
+    agentIds.forEach(function(id) {
+        html += '<th title="' + id + '">' + (AGENT_SHORT[id] || id.substr(0,3).toUpperCase()) + '</th>';
+    });
+    html += '</tr></thead><tbody>';
+
+    // Build rows
+    results.forEach(function(row) {
+        var consCls = (row.consensus_signal || 'neutral').toLowerCase();
+        html += '<tr>';
+        html += '<td class="ticker-col">' + escapeHtml(row.ticker) + '</td>';
+        html += '<td><span class="consensus-badge ' + consCls + '">' + row.consensus_score.toFixed(1) + '</span></td>';
+        var agentMap = {};
+        (row.agents || []).forEach(function(a) { agentMap[a.agent_id] = a; });
+        agentIds.forEach(function(id) {
+            var a = agentMap[id];
+            if (a) {
+                var cls = a.signal === 'bullish' ? 'bullish' : a.signal === 'bearish' ? 'bearish' : 'neutral';
+                html += '<td><span class="heatmap-cell ' + cls + '">' + a.score.toFixed(1) + '</span></td>';
+            } else {
+                html += '<td>-</td>';
+            }
+        });
+        html += '</tr>';
+    });
+    html += '</tbody>';
+    table.innerHTML = html;
+
+    // Summary
+    var bullish = results.filter(function(r) { return r.consensus_signal === 'bullish'; }).length;
+    var bearish = results.filter(function(r) { return r.consensus_signal === 'bearish'; }).length;
+    var neutral = results.length - bullish - bearish;
+    document.getElementById('scanner-summary').textContent = results.length + ' 标的: ' + bullish + ' 看多, ' + neutral + ' 中性, ' + bearish + ' 看空';
+}
+</script>
+{% endblock %}

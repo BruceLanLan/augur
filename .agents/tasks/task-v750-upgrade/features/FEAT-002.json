@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Scanner (market scanner) feature - new /scanner page + /api/scanner/run endpoint allowing users to batch-score a list of tickers across all 18 masters, displayed as a heatmap table",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "1. In dashboard/app.py: (a) Add GET /scanner route that renders scanner.html template. (b) Add POST /api/scanner/run endpoint that accepts JSON body {tickers: [...], preset?: string}. It should run get_coordinator().analyze_with_all() for each ticker (using ThreadPoolExecutor for parallelism) and return a matrix: {tickers: [{ticker, agents: [{agent_id, signal, score}]}]}. Include preset lists: 'tech_giants' = ['AAPL','NVDA','MSFT','GOOGL','TSLA','META','AMZN','AMD'], 'china_stocks' = ['BABA','PDD','JD','BIDU','NIO','LI','XPEV','00700.HK'], 'crypto' = ['BTC-USD','ETH-USD','SOL-USD','DOGE-USD'].",
     "2. Create dashboard/templates/scanner.html extending base.html: (a) Preset buttons (Tech Giants, China Stocks, Crypto) + custom input textarea for comma-separated tickers. (b) Run button that POSTs to /api/scanner/run. (c) Results displayed as a heatmap table: rows = tickers, columns = 18 agents (abbreviated names), cells colored green/yellow/red based on signal (bullish/neutral/bearish) with score number. (d) Summary row showing consensus signal per ticker. (e) Loading skeleton during analysis.",

@@ -353,6 +353,13 @@ async def signals_page(request: Request):
     })
 
 
+@app.get("/scanner", response_class=HTMLResponse)
+async def scanner_page(request: Request):
+    return templates.TemplateResponse(request=request, name="scanner.html", context={
+        "title": "市场扫描器 - Scanner",
+    })
+
+
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
     config = get_config()
@@ -392,6 +399,74 @@ async def list_personas():
         "count": len(registry.get_all()),
         "personas": [agent.to_dict() for agent in registry.get_all()],
     }
+
+
+# ============ Scanner API ============
+
+class ScannerRunBody(BaseModel):
+    tickers: List[str] = []
+    preset: Optional[str] = None
+
+
+SCANNER_PRESETS = {
+    "tech_giants": ["AAPL", "NVDA", "MSFT", "GOOGL", "TSLA", "META", "AMZN", "AMD"],
+    "china_stocks": ["BABA", "PDD", "JD", "BIDU", "NIO", "LI", "XPEV"],
+    "crypto": ["BTC-USD", "ETH-USD", "SOL-USD", "DOGE-USD"],
+}
+
+
+@app.post("/api/scanner/run")
+async def api_scanner_run(body: ScannerRunBody):
+    """批量扫描标的，返回所有大师评分矩阵"""
+    tickers = body.tickers
+    if body.preset and body.preset in SCANNER_PRESETS:
+        tickers = SCANNER_PRESETS[body.preset]
+    if not tickers:
+        raise HTTPException(status_code=400, detail="No tickers provided")
+    if len(tickers) > 20:
+        raise HTTPException(status_code=400, detail="Maximum 20 tickers per scan")
+
+    # Validate tickers
+    for t in tickers:
+        if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', t):
+            raise HTTPException(status_code=400, detail=f"Invalid ticker: {t}")
+
+    coord = get_coordinator()
+    results = []
+    for ticker in tickers:
+        try:
+            ctx = MarketContext(ticker=ticker.upper())
+            # Try auto-fetch
+            try:
+                from augur.data import fetch_market_context
+                ctx = fetch_market_context(ticker)
+            except Exception:
+                pass
+            agent_responses = coord.analyze_with_all(ctx)
+            consensus = coord.get_consensus(agent_responses, ticker=ticker.upper(), context=ctx)
+            agents_data = []
+            for agent_id, resp in agent_responses.items():
+                agents_data.append({
+                    "agent_id": agent_id,
+                    "signal": resp.signal.value,
+                    "score": round(resp.score, 1),
+                })
+            results.append({
+                "ticker": ticker.upper(),
+                "consensus_signal": consensus.signal.value,
+                "consensus_score": round(consensus.score, 1),
+                "agents": agents_data,
+            })
+        except Exception as e:
+            results.append({
+                "ticker": ticker.upper(),
+                "consensus_signal": "error",
+                "consensus_score": 0,
+                "agents": [],
+                "error": str(e),
+            })
+
+    return {"status": "ok", "results": results, "count": len(results)}
 
 
 @app.get("/api/analyze/{ticker}")
