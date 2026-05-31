@@ -256,14 +256,18 @@
     <!-- Report Toolbar -->
     <div class="report-toolbar">
         <span class="report-title">&#x1F4CA; 深度分析报告</span>
-        <button class="btn btn-sm" onclick="downloadPDF()" title="打印/导出PDF">&#x1F5A8; 下载 PDF</button>
-        <button class="btn btn-sm" onclick="downloadReport()">&#x2B07; 下载 .md</button>
+        <a id="view-full-report-link" href="#" class="btn btn-sm btn-primary" style="text-decoration:none; font-weight:600;" target="_blank">&#x1F50D; 查看完整报告页</a>
+        <button class="btn btn-sm" onclick="downloadReport()">&#x2B07; 下载 Markdown</button>
+        <button class="btn btn-sm" onclick="downloadReportAsHTML()">&#x1F4C4; 下载 HTML</button>
+        <button class="btn btn-sm" onclick="copyReport()">&#x1F4CB; 复制报告</button>
+        <button class="btn btn-sm" onclick="downloadPDF()" title="打印/导出PDF">&#x1F5A8; 打印 PDF</button>
         <button class="btn btn-sm" onclick="exportFullJSON()">&#x1F4E5; 导出 JSON</button>
         <button class="btn btn-sm" onclick="exportCSV()">&#x1F4CA; 导出 CSV</button>
-        <button class="btn btn-sm" onclick="copyReport()">&#x1F4CB; 复制报告</button>
         <button class="btn btn-sm" onclick="copyReportLink()">&#x1F517; 复制链接</button>
         <button class="btn btn-sm" onclick="closeReport()">&#x2715; 关闭</button>
     </div>
+    <!-- Score Gauge SVG -->
+    <div id="report-score-gauge" style="display:flex; align-items:center; gap:16px; padding:12px 16px; border-bottom:1px solid var(--border-color);"></div>
     <!-- Report loading state -->
     <div id="report-loading" class="report-loading" style="display:none;">
         <div class="spinner" style="width:22px; height:22px; border-width:2px;"></div>
@@ -744,6 +748,14 @@ function handleReportResponse(data) {
     if (btn) btn.disabled = false;
     if (data.status === 'ok' && data.report) {
         lastReportMarkdown = data.report;
+        // Update the "View Full Report" link
+        var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase();
+        var fullReportLink = document.getElementById('view-full-report-link');
+        if (fullReportLink && ticker) {
+            fullReportLink.href = '/report/' + ticker;
+        }
+        // Render score gauge
+        renderReportScoreGauge(lastAnalysisData);
         // Render visual components
         renderVisualReport(data.report, lastAnalysisData);
         // Also render full markdown in the collapsible section
@@ -1031,6 +1043,87 @@ function guessSeverity(text) {
     if (lower.match(/高|high|严重|critical/)) return 'high';
     if (lower.match(/低|low|轻微|minor/)) return 'low';
     return 'medium';
+}
+
+function createScoreGauge(score, maxScore) {
+    maxScore = maxScore || 10;
+    var pct = Math.min(Math.max(score / maxScore, 0), 1);
+    var angle = pct * 180;
+    var r = 40, cx = 50, cy = 50;
+    var color;
+    if (score <= 3) color = '#ff5252';
+    else if (score <= 6) color = '#ffca28';
+    else color = '#00c853';
+    var startAngle = Math.PI;
+    var endAngle = Math.PI + (angle * Math.PI / 180);
+    var x1 = cx + r * Math.cos(startAngle);
+    var y1 = cy + r * Math.sin(startAngle);
+    var x2 = cx + r * Math.cos(endAngle);
+    var y2 = cy + r * Math.sin(endAngle);
+    var largeArc = angle > 180 ? 1 : 0;
+    var svg = '<svg width="100" height="60" viewBox="0 0 100 60">';
+    svg += '<path d="M ' + (cx - r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 0 1 ' + (cx + r) + ' ' + cy + '" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" stroke-linecap="round"/>';
+    if (angle > 0.5) {
+        svg += '<path d="M ' + x1.toFixed(2) + ' ' + y1.toFixed(2) + ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 1 ' + x2.toFixed(2) + ' ' + y2.toFixed(2) + '" fill="none" stroke="' + color + '" stroke-width="8" stroke-linecap="round"/>';
+    }
+    svg += '<text x="' + cx + '" y="' + (cy - 5) + '" text-anchor="middle" fill="' + color + '" font-size="16" font-weight="700" font-family="var(--font-data)">' + score.toFixed(1) + '</text>';
+    svg += '<text x="' + cx + '" y="' + (cy + 8) + '" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8">/ ' + maxScore + '</text>';
+    svg += '</svg>';
+    return svg;
+}
+
+function renderReportScoreGauge(data) {
+    var container = document.getElementById('report-score-gauge');
+    if (!container) return;
+    if (!data || !data.consensus) { container.style.display = 'none'; return; }
+    var score = data.consensus.score || 0;
+    var signal = data.consensus.signal || 'neutral';
+    var confidence = data.consensus.confidence || 0;
+    var ticker = data.ticker || '';
+    var signalLabel = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+    var signalColor = signal === 'bullish' ? 'var(--signal-buy)' : signal === 'bearish' ? 'var(--signal-sell)' : 'var(--signal-neutral)';
+    container.style.display = 'flex';
+    container.innerHTML = '<div style="font-weight:700; font-size:1.1rem; font-family:var(--font-data); color:var(--accent-orange);">' + escapeHtml(ticker) + '</div>'
+        + '<div style="margin-left:12px;">' + createScoreGauge(score, 10) + '</div>'
+        + '<div style="margin-left:12px;"><span style="font-size:0.9rem; font-weight:700; color:' + signalColor + ';">' + signalLabel + '</span>'
+        + '<div style="font-size:0.7rem; color:var(--text-muted);">Confidence: ' + (confidence * 100).toFixed(0) + '%</div></div>';
+}
+
+function downloadReportAsHTML() {
+    var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase() || 'report';
+    if (!lastReportMarkdown) { showToast('暂无报告内容', 'warning'); return; }
+    var renderedBody = renderReportMarkdown(lastReportMarkdown);
+    var date = new Date().toISOString().slice(0, 10);
+    var filename = ticker + '_augur_report_' + date + '.html';
+    var htmlDoc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + ticker + ' - Augur Analysis Report</title><style>'
+        + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#c9d1d9;padding:40px;max-width:900px;margin:0 auto;line-height:1.7;}'
+        + 'h1,h2,h3,h4{color:#ff9800;margin-top:1.5em;}'
+        + 'table{width:100%;border-collapse:collapse;margin:1em 0;}'
+        + 'th,td{border:1px solid #30363d;padding:8px 12px;text-align:left;}'
+        + 'th{background:#161b22;color:#ff9800;font-size:0.8rem;text-transform:uppercase;}'
+        + 'tr:nth-child(even){background:#161b22;}'
+        + 'code{background:#161b22;padding:2px 6px;border-radius:3px;font-size:0.85em;}'
+        + 'blockquote{border-left:3px solid #ff9800;padding-left:12px;color:#8b949e;margin:1em 0;}'
+        + 'hr{border:none;border-top:1px solid #30363d;margin:2em 0;}'
+        + 'strong{color:#e6edf3;}'
+        + 'ul,ol{padding-left:1.5em;}'
+        + 'li{margin:4px 0;}'
+        + '.header{text-align:center;margin-bottom:2em;padding-bottom:1em;border-bottom:2px solid #30363d;}'
+        + '.footer{text-align:center;margin-top:3em;padding-top:1em;border-top:1px solid #30363d;color:#8b949e;font-size:0.8em;}'
+        + '</style></head><body>'
+        + '<div class="header"><h1>' + escapeHtml(ticker) + ' Deep Analysis Report</h1>'
+        + '<p style="color:#8b949e;">Generated by Augur Multi-Agent Investment Analysis Platform | ' + date + '</p></div>'
+        + renderedBody
+        + '<div class="footer">Augur v7.7.0 | 18 AI Investment Masters Consensus Analysis</div>'
+        + '</body></html>';
+    var blob = new Blob([htmlDoc], { type: 'text/html;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('HTML 报告已下载');
 }
 
 function downloadPDF() {

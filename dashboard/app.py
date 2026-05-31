@@ -402,6 +402,17 @@ async def create_persona_page(request: Request):
     })
 
 
+@app.get("/report/{ticker}", response_class=HTMLResponse, summary="深度分析报告全屏页面")
+async def report_view_page(request: Request, ticker: str):
+    """Dedicated full-page report view for a ticker. Auto-fetches report on load."""
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format.")
+    return templates.TemplateResponse(request=request, name="report_view.html", context={
+        "title": f"{ticker.upper()} Deep Analysis Report - Augur",
+        "ticker": ticker.upper(),
+    })
+
+
 # ============ API Routes ============
 
 @app.get("/api/personas", summary="获取所有投资人列表")
