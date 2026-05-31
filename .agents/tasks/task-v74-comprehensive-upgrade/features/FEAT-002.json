@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Backtest page enhancement + Settings page completion. Add backtest parameter config panel (time range, initial capital, position strategy), key metrics cards (annualized return, max drawdown, Sharpe ratio, win rate), and historical signal timeline. Complete Settings page with LLM model config, data source API key config, notification channels (Telegram/Slack/WeChat), test connection buttons, and export/import config.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Enhance dashboard/templates/backtest.html: Add a config panel with inputs for initial_capital (default 100000), position_strategy select (equal_weight/kelly/fixed_pct), and time range selector (30/60/90/180/365 days).",
     "2. In backtest.html: After results load, add key metrics cards row showing: Annualized Return %, Max Drawdown %, Sharpe Ratio, Win Rate %. Calculate these from the backtest response data in JS (or extend the /api/backtest/run response in app.py to include them).",
@@ -29,5 +29,5 @@
     "python -c \"from dashboard.app import app; routes = [r.path for r in app.routes]; assert '/api/config/export' in routes or any('export' in str(r.path) for r in app.routes); print('Config routes OK')\""
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 448 tests pass. Backtest page enhanced with initial capital, position strategy (equal_weight/kelly/fixed_pct), extended time range (30/60/90/180/365 days), key metrics cards (annualized return, max drawdown, Sharpe ratio, win rate), and historical signals timeline. Settings page rewritten with 4 sections: LLM model config (preserved), data source API keys (Finnhub/AlphaVantage with test buttons), notification channels (Telegram/Slack/WeChat), and export/import config. New API endpoints added: /api/config/export, /api/config/import, /api/config/test-datasource, /api/config/test-notification. Backtest /api/backtest/run now accepts initial_capital and strategy params and returns metrics and signals_timeline."
 }
