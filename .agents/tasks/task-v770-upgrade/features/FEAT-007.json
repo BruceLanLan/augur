@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-007",
+  "type": "docs",
+  "description": "Version bump to v7.7.0 and comprehensive documentation update (README.md, README_EN.md, CHANGELOG.md)",
+  "status": "in_progress",
+  "steps": [
+    "Update version from 7.6.0 to 7.7.0 in: (1) pyproject.toml [project] version. (2) dashboard/app.py FastAPI version string. (3) dashboard/app.py all 'v7.6.0' references in templates/responses. (4) dashboard/templates/base.html version display and CSS cache busting params. (5) dashboard/static/css link references.",
+    "Update docs/CHANGELOG.md: Add v7.7.0 section at the top with all new features: portfolio management, earnings tracking charts, persona deep interaction (ask/compare), notification cron optimization, UI polish (table sorting, consistency), dashboard data enrichment (sectors, movers, breadth), report professional visualization + download.",
+    "Update README.md: (1) Change version badge to v7.7.0. (2) Add v7.7.0 features table. (3) Ensure all new routes (/portfolio, /report/{ticker}) are documented. (4) Update the feature list.",
+    "Update README_EN.md: Same as README.md but in English.",
+    "Commit all changes with message: 'docs: 升级至v7.7.0+更新文档和CHANGELOG'"
+  ],
+  "acceptance_criteria": [
+    "All version strings updated to 7.7.0",
+    "CHANGELOG.md has complete v7.7.0 section",
+    "README.md and README_EN.md reflect new features",
+    "pytest tests/ -x -q still passes"
+  ],
+  "verification": [
+    "pytest tests/ -x -q passes",
+    "grep -r '7.6.0' pyproject.toml dashboard/app.py dashboard/templates/base.html returns no results (all updated to 7.7.0)"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
