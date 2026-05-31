@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "docs",
   "description": "Version bump to v7.4.0, update README.md, README_EN.md, docs/CHANGELOG.md with all new features. Add Dashboard screenshot placeholder in README.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "1. In pyproject.toml: Change version from '7.3.0' to '7.4.0'.",
     "2. In dashboard/app.py: Update the FastAPI app version to '7.4.0'. Update the Engine version display in index.html from 'v7.3.0' to 'v7.4.0'.",
@@ -29,5 +29,5 @@
     "grep -q '7.4.0' /projects/sandbox/augur/docs/CHANGELOG.md && echo 'CHANGELOG OK'"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 448 tests pass. Version 7.4.0 confirmed via importlib.metadata. app.py already had version 7.4.0 from FEAT-004. pyproject.toml updated from 7.3.0, base.html from v7.3.1, index.html from v7.3.0."
 }
