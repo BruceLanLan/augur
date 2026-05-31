@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Portfolio management page with holdings tracking, real-time P&L, asset summary, and Augur analysis integration",
+  "status": "in_progress",
+  "steps": [
+    "Create dashboard/templates/portfolio.html extending base.html with Bloomberg dark theme styles. Include: (1) Add holding form with fields: ticker, buy price, quantity, buy date. (2) Holdings table showing: ticker, cost basis, current price (fetched from /api/fetch/{ticker}), P&L amount, P&L percentage, holding days. (3) Total asset summary section: total invested, current total value, total P&L, total return rate. (4) All data persisted in localStorage as JSON array. (5) 'Run Augur Analysis' button that calls /api/analyze/{ticker} for each holding and displays master scores.",
+    "Add /portfolio route in dashboard/app.py returning portfolio.html template, following the pattern of other page routes (e.g., watchlist_page).",
+    "Add Portfolio nav item in dashboard/templates/base.html sidebar under the 'Analysis' group, between watchlist and backtest. Use a wallet/briefcase SVG icon. Also add to bottom-nav for mobile.",
+    "Add earnings tracking chart section in portfolio.html: (a) SVG-based portfolio value line chart showing 7-day weighted net value curve using /api/sparkline/{ticker} data for each holding. Pure SVG/Canvas, no external libraries. (b) Asset allocation pie chart using SVG circle + stroke-dasharray for a donut/ring chart showing each holding's weight in the portfolio.",
+    "Ensure the page has table sorting functionality (click column headers to sort ascending/descending) using pure JS."
+  ],
+  "acceptance_criteria": [
+    "/portfolio route returns 200 with proper HTML page",
+    "Portfolio nav item appears in sidebar and mobile bottom-nav",
+    "Holdings can be added/removed via localStorage",
+    "Holdings table shows all required columns including real-time price fetch",
+    "Total asset summary calculates correctly",
+    "Run Augur Analysis button triggers analysis for each holding",
+    "SVG line chart renders weighted portfolio value curve",
+    "SVG donut chart renders asset allocation",
+    "Table columns are sortable by clicking headers"
+  ],
+  "verification": [
+    "pytest tests/ -x -q passes (no test modifications)",
+    "Start server with python -m dashboard.app and verify /portfolio returns 200"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

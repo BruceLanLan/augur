@@ -367,6 +367,13 @@ async def watchlist_page(request: Request):
     })
 
 
+@app.get("/portfolio", response_class=HTMLResponse, summary="持仓管理页面")
+async def portfolio_page(request: Request):
+    return templates.TemplateResponse(request=request, name="portfolio.html", context={
+        "title": "持仓管理 - Portfolio",
+    })
+
+
 @app.get("/settings", response_class=HTMLResponse, summary="设置页面")
 async def settings_page(request: Request):
     config = get_config()
