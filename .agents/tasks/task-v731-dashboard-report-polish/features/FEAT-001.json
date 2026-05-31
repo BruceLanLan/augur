@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Dashboard data density overhaul: Add Hot Tickers panel, Fear & Greed indicator, Macro Snapshot cards, reorder sections (personas before datasource), and ensure mobile responsiveness",
+  "status": "completed",
+  "steps": [
+    "1. In dashboard/app.py, add a new API endpoint GET /api/hot-tickers that fetches real-time data for 8-10 hot tickers (AAPL, NVDA, TSLA, MSFT, GOOGL, AMZN, BTC-USD, ETH-USD, META, AMD). Use the existing yfinance-based pattern from fetch_market_overview. Return for each: symbol, name, price, change_pct, market_cap. Include caching with 60s TTL.",
+    "2. In dashboard/templates/index.html, add a '热门标的实时行情' section AFTER the market overview board. Show a grid of 8-10 ticker cards, each with: code, company name (Chinese), current price, change percentage with color coding (green up / red down), and a direction arrow. Load from /api/hot-tickers on page load.",
+    "3. In dashboard/templates/index.html, add a '恐慌与贪婪指标' section. Extract VIX value from the existing market overview data. Show: VIX value, US Dollar Index (DXY), US 10Y yield. Add a text judgment based on VIX ranges: VIX < 15 = '市场偏贪婪', 15-25 = '市场中性', > 25 = '市场偏恐慌'. Style as a compact card with a colored indicator.",
+    "4. In dashboard/templates/index.html, add a '宏观经济快照' section. Pull gold, oil, BTC from the existing market overview items and display them as independent compact cards with brief interpretive text (e.g., if gold is up significantly, show '避险需求上升').",
+    "5. Reorder sections in index.html: Hero -> Stats -> Market Overview -> Hot Tickers -> Fear & Greed + Macro Snapshot (side by side) -> Featured Personas -> Data Sources -> Recent Analyses -> How it Works.",
+    "6. In dashboard/static/css/bloomberg.css, add CSS for the new sections: .hot-tickers-grid (responsive grid of ticker cards), .fear-greed-card, .macro-snapshot-grid. Ensure @media queries degrade gracefully: 4 cols -> 2 cols -> 1 col on mobile.",
+    "7. Update the version in base.html sidebar footer from v7.2.0 to v7.3.1. Add 'Powered by Augur v7.3.1' text in the footer area."
+  ],
+  "acceptance_criteria": [
+    "GET /api/hot-tickers returns JSON with 8-10 tickers including price and change_pct",
+    "index.html renders Hot Tickers, Fear & Greed, and Macro Snapshot sections",
+    "Featured Personas section appears BEFORE Data Sources section in the DOM order",
+    "All new sections are responsive (grid degrades on smaller screens)",
+    "base.html footer shows 'Powered by Augur v7.3.1'",
+    "python3 -c 'from dashboard.app import app' succeeds"
+  ],
+  "verification": [
+    "python3 -c \"from dashboard.app import app; print('OK')\"",
+    "python3 -m pytest tests/ -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": "All implementation verified successfully. fetch_hot_tickers returns 10 tickers with real data. Import check passes. All 448 tests pass. Note: task instructions say do NOT commit (FEAT-003 handles final commit)."
+}

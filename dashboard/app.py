@@ -962,6 +962,33 @@ async def api_search_tickers(q: str = ""):
         raise HTTPException(status_code=500, detail=f"Search failed: {e}")
 
 
+# ============ Hot Tickers API Route ============
+
+@app.get("/api/hot-tickers")
+async def api_hot_tickers(refresh: bool = False):
+    """热门标的实时行情：AAPL, NVDA, TSLA, MSFT, GOOGL, AMZN, BTC-USD, ETH-USD, META, AMD。
+
+    供首页「热门标的实时行情」面板使用。无 yfinance 时优雅降级为空列表。
+    """
+    if not _HAS_AUGUR_DATA:
+        return {
+            "status": "degraded",
+            "tickers": [],
+            "note": "yfinance 未安装，热门标的不可用。",
+        }
+    try:
+        from augur.data import fetch_hot_tickers
+        tickers = fetch_hot_tickers(force_refresh=refresh)
+        return {"status": "ok", "tickers": tickers}
+    except Exception as e:
+        logger.warning("hot tickers failed: %s", e)
+        return {
+            "status": "degraded",
+            "tickers": [],
+            "note": f"热门标的获取失败: {e}",
+        }
+
+
 # ============ Market Overview API Routes ============
 
 @app.get("/api/market-overview")
