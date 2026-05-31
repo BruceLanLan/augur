@@ -1461,6 +1461,113 @@ async def api_test_notification(request: Request):
     return {"status": "error", "detail": "测试失败"}
 
 
+# ============ Notification API Routes ============
+
+class NotificationTestBody(BaseModel):
+    channel: str  # telegram, slack, wechat, lark
+
+
+@app.post("/api/notifications/test")
+async def api_notifications_test(body: NotificationTestBody):
+    """Test notification channel by sending a test message."""
+    channel = body.channel.lower()
+    if channel not in ("telegram", "slack", "wechat", "lark"):
+        raise HTTPException(status_code=400, detail=f"Unsupported channel: {channel}")
+
+    config = get_config()
+    notifications = config.get("notifications") or {}
+
+    if channel == "telegram":
+        token = notifications.get("telegram_token", "")
+        chat_id = notifications.get("telegram_chat_id", "")
+        if not token or not chat_id:
+            return {"status": "error", "detail": "请先配置 Telegram Bot Token 和 Chat ID"}
+        try:
+            from augur.bots.telegram_bot import send_message
+            send_message(token, chat_id, "Augur 测试通知: 通道配置成功!")
+            return {"status": "ok", "detail": "Telegram 测试消息已发送"}
+        except ImportError:
+            # Fallback to direct HTTP
+            try:
+                import urllib.request
+                import json as _json
+                url = f"https://api.telegram.org/bot{token}/sendMessage"
+                data = _json.dumps({"chat_id": chat_id, "text": "Augur 测试通知: 通道配置成功!"}).encode()
+                req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    if resp.status == 200:
+                        return {"status": "ok", "detail": "Telegram 测试消息已发送"}
+            except Exception as e:
+                return {"status": "error", "detail": f"发送失败: {e}"}
+        except Exception as e:
+            return {"status": "error", "detail": f"发送失败: {e}"}
+    elif channel == "slack":
+        webhook = notifications.get("slack_webhook", "")
+        if not webhook:
+            return {"status": "error", "detail": "请先配置 Slack Webhook URL"}
+        try:
+            import urllib.request
+            import json as _json
+            data = _json.dumps({"text": "Augur 测试通知: Slack 通道配置成功!"}).encode()
+            req = urllib.request.Request(webhook, data=data, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status == 200:
+                    return {"status": "ok", "detail": "Slack 测试消息已发送"}
+        except Exception as e:
+            return {"status": "error", "detail": f"发送失败: {e}"}
+    elif channel == "lark":
+        webhook = notifications.get("lark_webhook", "")
+        if not webhook:
+            return {"status": "error", "detail": "请先配置飞书 Webhook URL"}
+        try:
+            import urllib.request
+            import json as _json
+            data = _json.dumps({"msg_type": "text", "content": {"text": "Augur 测试通知: 飞书通道配置成功!"}}).encode()
+            req = urllib.request.Request(webhook, data=data, headers={"Content-Type": "application/json"})
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                if resp.status == 200:
+                    return {"status": "ok", "detail": "飞书测试消息已发送"}
+        except Exception as e:
+            return {"status": "error", "detail": f"发送失败: {e}"}
+    elif channel == "wechat":
+        return {"status": "error", "detail": "微信通知需要企业微信配置，请参考文档"}
+
+    return {"status": "error", "detail": "测试失败"}
+
+
+@app.post("/api/notifications/config")
+async def api_notifications_config_save(request: Request):
+    """Save notification configuration to config/notifications.yaml."""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    config_dir = Path(__file__).parent.parent / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+    config_file = config_dir / "notifications.yaml"
+    config_file.write_text(yaml.dump(body, allow_unicode=True), encoding="utf-8")
+    # Also update in-memory config
+    set_config("notifications", body)
+    save_config()
+    return {"status": "ok", "message": "通知配置已保存"}
+
+
+@app.get("/api/notifications/config")
+async def api_notifications_config_get():
+    """Read notification configuration."""
+    config_dir = Path(__file__).parent.parent / "config"
+    config_file = config_dir / "notifications.yaml"
+    if config_file.exists():
+        try:
+            data = yaml.safe_load(config_file.read_text(encoding="utf-8")) or {}
+            return {"status": "ok", "config": data}
+        except Exception:
+            pass
+    # Fallback to in-memory config
+    config = get_config()
+    return {"status": "ok", "config": config.get("notifications", {})}
+
+
 # ============ Main ============
 
 def main():

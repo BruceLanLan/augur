@@ -63,6 +63,14 @@ window.I18N = {
         "scanner_run": "开始扫描",
         "scanner_results_title": "扫描结果",
         "nav_scanner": "扫描器",
+        // Alert & Notification
+        "alert_threshold_title": "监控告警设置",
+        "alert_threshold_label": "评分阈值",
+        "alert_channel_label": "通知渠道",
+        "alert_save": "保存告警设置",
+        // Report actions
+        "download_report": "下载报告",
+        "copy_report": "复制报告",
         // Lang toggle
         "lang-label": "EN"
     },
@@ -126,6 +134,14 @@ window.I18N = {
         "scanner_run": "Run Scanner",
         "scanner_results_title": "Scan Results",
         "nav_scanner": "Scanner",
+        // Alert & Notification
+        "alert_threshold_title": "Alert Threshold Settings",
+        "alert_threshold_label": "Score Threshold",
+        "alert_channel_label": "Notification Channel",
+        "alert_save": "Save Alert Settings",
+        // Report actions
+        "download_report": "Download Report",
+        "copy_report": "Copy Report",
         // Lang toggle
         "lang-label": "中"
     }

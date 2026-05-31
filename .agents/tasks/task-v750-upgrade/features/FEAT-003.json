@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Notification system completion + Dashboard enhancement (report download, richer data display) + Single persona integration guide",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "1. In dashboard/app.py: (a) Add POST /api/notifications/test endpoint that accepts {channel: 'telegram'|'slack'|'wechat'|'lark'} and dispatches test message via corresponding bot module (from augur.bots.telegram_bot, etc). Handle missing config gracefully. (b) Add POST /api/notifications/config endpoint that saves notification config to config/notifications.yaml (create config/ dir if needed). (c) Add GET /api/notifications/config to read saved notification config.",
     "2. In dashboard/templates/signals.html: Add 'Alert Threshold' section - user can set score threshold (e.g. >8) and select notification channel. Save to localStorage and/or config/notifications.yaml via API. Display a small form: threshold slider (1-10), channel selector, save button.",

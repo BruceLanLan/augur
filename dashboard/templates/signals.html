@@ -85,6 +85,39 @@
     </div>
 </div>
 
+<!-- Alert Threshold Settings -->
+<div class="card" style="margin-bottom:16px; padding:16px; border-left:3px solid var(--accent-orange);">
+    <div class="data-label" style="margin-bottom:12px; font-size:0.9rem; color:var(--accent-orange);" data-i18n="alert_threshold_title">监控告警设置</div>
+    <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
+            <label class="text-muted" style="font-size:0.75rem; display:block; margin-bottom:4px;" data-i18n="alert_threshold_label">评分阈值</label>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <input type="range" id="alert-threshold" min="1" max="10" step="1" value="8"
+                       style="flex:1; accent-color:var(--accent-orange);"
+                       oninput="document.getElementById('threshold-value').textContent=this.value">
+                <span id="threshold-value" style="font-family:var(--font-data); font-size:1rem; color:var(--accent-orange); font-weight:600; min-width:20px; text-align:center;">8</span>
+                <span class="text-muted" style="font-size:0.72rem;">/10</span>
+            </div>
+            <div class="text-muted" style="font-size:0.68rem; margin-top:2px;">评分超过此阈值时触发告警通知</div>
+        </div>
+        <div style="min-width:150px;">
+            <label class="text-muted" style="font-size:0.75rem; display:block; margin-bottom:4px;" data-i18n="alert_channel_label">通知渠道</label>
+            <select id="alert-channel" class="signal-filter-select" style="width:100%; padding:6px 10px;">
+                <option value="telegram">Telegram</option>
+                <option value="slack">Slack</option>
+                <option value="lark">飞书 (Lark)</option>
+                <option value="wechat">微信 (WeChat)</option>
+            </select>
+        </div>
+        <div style="align-self:flex-end;">
+            <button class="btn btn-primary" onclick="saveAlertSettings()" style="padding:8px 16px;" data-i18n="alert_save">保存告警设置</button>
+        </div>
+    </div>
+    <div id="alert-saved-info" style="display:none; margin-top:8px; font-size:0.72rem; color:var(--signal-buy);">
+        &#x2714; 当前设置: 阈值 <span id="saved-threshold">--</span>/10, 渠道 <span id="saved-channel">--</span>
+    </div>
+</div>
+
 <!-- Watchlist Table -->
 <div class="card" style="padding:0; overflow:hidden;">
     <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
@@ -426,5 +459,79 @@ function runAllAnalysis() {
             showToast(msg, 'error');
         });
 }
+
+// ===== Alert Threshold Settings =====
+function loadAlertSettings() {
+    // Load from localStorage first for instant display
+    var saved = localStorage.getItem('augur-alert-settings');
+    if (saved) {
+        try {
+            var s = JSON.parse(saved);
+            if (s.alert_threshold) document.getElementById('alert-threshold').value = s.alert_threshold;
+            if (s.alert_threshold) document.getElementById('threshold-value').textContent = s.alert_threshold;
+            if (s.alert_channel) document.getElementById('alert-channel').value = s.alert_channel;
+            showSavedAlertInfo(s.alert_threshold, s.alert_channel);
+        } catch(e) {}
+    }
+    // Also try to load from server
+    fetch('/api/notifications/config')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status === 'ok' && data.config) {
+                var cfg = data.config;
+                if (cfg.alert_threshold) {
+                    document.getElementById('alert-threshold').value = cfg.alert_threshold;
+                    document.getElementById('threshold-value').textContent = cfg.alert_threshold;
+                }
+                if (cfg.alert_channel) {
+                    document.getElementById('alert-channel').value = cfg.alert_channel;
+                }
+                if (cfg.alert_threshold || cfg.alert_channel) {
+                    showSavedAlertInfo(cfg.alert_threshold || 8, cfg.alert_channel || 'telegram');
+                }
+            }
+        })
+        .catch(function(e) { /* ignore */ });
+}
+
+function saveAlertSettings() {
+    var threshold = document.getElementById('alert-threshold').value;
+    var channel = document.getElementById('alert-channel').value;
+    var settings = { alert_threshold: parseInt(threshold), alert_channel: channel };
+
+    // Save to localStorage
+    localStorage.setItem('augur-alert-settings', JSON.stringify(settings));
+
+    // Save to server
+    fetch('/api/notifications/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status === 'ok') {
+            showToast('告警设置已保存');
+            showSavedAlertInfo(threshold, channel);
+        } else {
+            showToast('保存失败: ' + (data.detail || data.message), 'error');
+        }
+    })
+    .catch(function(e) {
+        showToast('保存失败: ' + e.message, 'error');
+    });
+}
+
+function showSavedAlertInfo(threshold, channel) {
+    var el = document.getElementById('alert-saved-info');
+    if (el) {
+        el.style.display = 'block';
+        document.getElementById('saved-threshold').textContent = threshold;
+        document.getElementById('saved-channel').textContent = channel;
+    }
+}
+
+// Load alert settings on page load
+loadAlertSettings();
 </script>
 {% endblock %}
