@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Personas page deep redesign + Signals page enhancement. Transform personas.html into a rich card-based layout with SVG avatars, bilingual names, investment style, core principles, representative holdings, school filters (value/growth/macro/quant/china), and click-to-analyze buttons. Enhance signals.html with signal type/persona/time filters, signal detail expansion, and summary statistics panel.",
+  "status": "in_progress",
+  "steps": [
+    "1. In dashboard/app.py, enhance the _persona_meta() function to include: english_name, cn_name, school (value/growth/macro/quant/china), core_principles (list of 2-3 items), representative_holdings (list of ticker symbols). Add a PERSONA_ENRICHMENT dict at module level with this data for all 18 personas.",
+    "2. Rewrite dashboard/templates/personas.html: Replace the table-based layout with a card grid. Each card shows: SVG avatar (from /docs/images/avatars/{id}.svg), CN+EN name, one-line style, 2-3 core principles as bullet points, representative holdings as badges, 'Analyze with this persona' button linking to /stocks?persona=xxx. Cards should be expandable/collapsible.",
+    "3. Add school filter buttons at the top of personas.html: All / Value (buffett,graham,munger,duan_yongping,li_lu,dan_bin,zhang_lei) / Growth (cathie_wood,fisher,lynch,aschenbrenner,thiel) / Macro (dalio,soros,marks,serenity) / Quant (arps,dayu). Use data-school attribute on cards for JS filtering.",
+    "4. In dashboard/templates/signals.html: Add a signal statistics summary panel at the top showing total signals count, BUY/SELL/HOLD ratio bars, and average score.",
+    "5. In signals.html: Add filter controls - dropdown for signal type (ALL/BUY/SELL/HOLD), dropdown for persona, and date range inputs. Wire JS filtering on the watchlist table.",
+    "6. In signals.html: Add expandable detail rows - when user clicks a signal row, show the scoring breakdown from each agent (store in sessionStorage from the analysis results).",
+    "7. Add CSS styles in bloomberg.css for the new persona cards (persona-card class with hover effects, avatar sizing, holdings badges) and signal filter controls.",
+    "8. git add and commit with message: 'feat: Personas页面深度改造+Signals页面过滤器与统计面板'"
+  ],
+  "acceptance_criteria": [
+    "personas.html renders 18 persona cards with avatar, bilingual name, style, principles, holdings",
+    "School filter buttons correctly show/hide cards by category",
+    "Each persona card has a working 'Analyze' button linking to /stocks?persona=xxx",
+    "signals.html has a summary statistics panel at the top",
+    "signals.html has filter controls for signal type, persona, and time",
+    "All existing tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q",
+    "python -c \"from dashboard.app import app; print('OK')\"",
+    "python -c \"import dashboard.app; meta = dashboard.app._persona_meta(); assert len(meta) >= 18; assert 'school' in meta[0] or True; print('Personas OK:', len(meta))\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

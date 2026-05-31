@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-005",
+  "type": "docs",
+  "description": "Version bump to v7.4.0, update README.md, README_EN.md, docs/CHANGELOG.md with all new features. Add Dashboard screenshot placeholder in README.",
+  "status": "pending",
+  "steps": [
+    "1. In pyproject.toml: Change version from '7.3.0' to '7.4.0'.",
+    "2. In dashboard/app.py: Update the FastAPI app version to '7.4.0'. Update the Engine version display in index.html from 'v7.3.0' to 'v7.4.0'.",
+    "3. In dashboard/templates/base.html: Update the sidebar footer version from 'v7.3.1' to 'v7.4.0'.",
+    "4. In dashboard/templates/index.html: Update the status bar Engine version to 'v7.4.0'.",
+    "5. In README.md: Update the version badge from v7.3.1 to v7.4.0. Add a Dashboard screenshot placeholder section after the '30-second quickstart' with descriptive text explaining what the Dashboard shows (ASCII art box or markdown description saying 'Screenshot coming soon').",
+    "6. In README_EN.md: Same version badge update + screenshot placeholder.",
+    "7. In docs/CHANGELOG.md: Add a new v7.4.0 section at the top documenting all changes: Personas deep redesign, Backtest enhanced metrics, Settings completion, Signals filters, Global UX (theme toggle, progress bar, hover effects), Code robustness (error handling, health endpoint), Version bump.",
+    "8. git add and commit with message: 'docs: v7.4.0版本升级+README更新+CHANGELOG补全'"
+  ],
+  "acceptance_criteria": [
+    "pyproject.toml shows version 7.4.0",
+    "Dashboard app version is 7.4.0",
+    "base.html sidebar shows v7.4.0",
+    "README.md has v7.4.0 badge and screenshot placeholder",
+    "README_EN.md has v7.4.0 badge and screenshot placeholder",
+    "docs/CHANGELOG.md has v7.4.0 entry documenting all new features",
+    "All existing tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q",
+    "python -c \"import importlib.metadata; v = importlib.metadata.version('augur-agents'); print('Version:', v); assert '7.4' in v\"",
+    "grep -q '7.4.0' /projects/sandbox/augur/pyproject.toml && echo 'pyproject OK'",
+    "grep -q '7.4.0' /projects/sandbox/augur/docs/CHANGELOG.md && echo 'CHANGELOG OK'"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

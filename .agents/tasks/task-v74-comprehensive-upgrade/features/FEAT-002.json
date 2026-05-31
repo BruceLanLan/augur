@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Backtest page enhancement + Settings page completion. Add backtest parameter config panel (time range, initial capital, position strategy), key metrics cards (annualized return, max drawdown, Sharpe ratio, win rate), and historical signal timeline. Complete Settings page with LLM model config, data source API key config, notification channels (Telegram/Slack/WeChat), test connection buttons, and export/import config.",
+  "status": "pending",
+  "steps": [
+    "1. Enhance dashboard/templates/backtest.html: Add a config panel with inputs for initial_capital (default 100000), position_strategy select (equal_weight/kelly/fixed_pct), and time range selector (30/60/90/180/365 days).",
+    "2. In backtest.html: After results load, add key metrics cards row showing: Annualized Return %, Max Drawdown %, Sharpe Ratio, Win Rate %. Calculate these from the backtest response data in JS (or extend the /api/backtest/run response in app.py to include them).",
+    "3. In backtest.html: Add a 'Historical Signals Timeline' section below the leaderboard - a chronological list/table of past buy/sell signals with date, ticker, signal, score, and outcome.",
+    "4. Extend /api/backtest/run in dashboard/app.py to return additional fields: annualized_return, max_drawdown, sharpe_ratio, win_rate, and a signals_timeline list.",
+    "5. Rewrite dashboard/templates/settings.html: Replace the current model-only config with a full settings page organized in sections: (A) LLM Model Selection (current functionality), (B) Data Source API Keys (FINNHUB_API_KEY, ALPHAVANTAGE_API_KEY with masked input + test connection button), (C) Notification Channels (Telegram bot token, Slack webhook, WeChat config with test buttons), (D) Export/Import Config buttons.",
+    "6. Add /api/config/test-datasource endpoint in app.py that tests connectivity to a given data source.",
+    "7. Add /api/config/export and /api/config/import endpoints for JSON config export/import.",
+    "8. Add /api/config/test-notification endpoint for testing notification channel connectivity.",
+    "9. Add CSS for the new backtest metrics cards and settings sections in bloomberg.css.",
+    "10. git add and commit with message: 'feat: Backtest回测参数面板+指标卡片+Settings配置完善'"
+  ],
+  "acceptance_criteria": [
+    "Backtest page has initial capital, position strategy, and extended time range controls",
+    "Backtest results show annualized return, max drawdown, Sharpe ratio, win rate cards",
+    "Settings page has sections for LLM, Data Sources, Notifications with descriptions",
+    "Settings page has export/import config buttons that work",
+    "Settings page has test connection buttons",
+    "/api/config/export returns JSON config",
+    "All existing tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q",
+    "python -c \"from dashboard.app import app; routes = [r.path for r in app.routes]; assert '/api/config/export' in routes or any('export' in str(r.path) for r in app.routes); print('Config routes OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

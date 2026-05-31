@@ -2627,3 +2627,124 @@ kbd {
     .signal-badge { border: 1px solid #333 !important; }
     a { color: #333 !important; }
 }
+
+/* ============================================================
+   Persona Card Grid (FEAT-001)
+   ============================================================ */
+.persona-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.school-filter-btn {
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    border: 1px solid var(--border-color);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.school-filter-btn:hover {
+    border-color: var(--accent-orange);
+    color: var(--text-primary);
+}
+.school-filter-btn.active {
+    background: var(--accent-orange);
+    border-color: var(--accent-orange);
+    color: #000;
+    font-weight: 600;
+}
+
+/* ============================================================
+   Signal Stats Panel + Filter Row (FEAT-001)
+   ============================================================ */
+.signal-stats-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+}
+.signal-stats-grid {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.signal-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 60px;
+}
+.signal-stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: var(--font-data);
+    color: var(--text-primary);
+}
+.signal-stat-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-top: 2px;
+}
+.signal-stat-bar {
+    width: 60px;
+    height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+.signal-stat-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+}
+.signal-stat-bar-fill.buy { background: var(--signal-buy); }
+.signal-stat-bar-fill.sell { background: var(--signal-sell); }
+.signal-stat-bar-fill.hold { background: var(--signal-neutral); }
+
+.signal-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+.signal-filter-select {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-family: var(--font-data);
+    cursor: pointer;
+}
+.signal-filter-select:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+}
+
+.signal-detail-row {
+    display: none;
+    background: var(--bg-primary);
+}
+.signal-detail-row.expanded {
+    display: table-row;
+}
+.signal-detail-content {
+    padding: 12px 0;
+    font-size: 0.78rem;
+}
+

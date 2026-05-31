@@ -18,6 +18,54 @@
     </div>
 </div>
 
+<!-- Signal Statistics Panel -->
+<div class="signal-stats-panel" id="signal-stats" style="display:none;">
+    <div class="signal-stats-grid">
+        <div class="signal-stat-item">
+            <div class="signal-stat-value" id="stat-total">0</div>
+            <div class="signal-stat-label">总信号</div>
+        </div>
+        <div class="signal-stat-item">
+            <div class="signal-stat-value" style="color:var(--signal-buy);" id="stat-buy">0</div>
+            <div class="signal-stat-label">BUY</div>
+            <div class="signal-stat-bar"><div class="signal-stat-bar-fill buy" id="bar-buy" style="width:0%;"></div></div>
+        </div>
+        <div class="signal-stat-item">
+            <div class="signal-stat-value" style="color:var(--signal-sell);" id="stat-sell">0</div>
+            <div class="signal-stat-label">SELL</div>
+            <div class="signal-stat-bar"><div class="signal-stat-bar-fill sell" id="bar-sell" style="width:0%;"></div></div>
+        </div>
+        <div class="signal-stat-item">
+            <div class="signal-stat-value" style="color:var(--signal-neutral);" id="stat-hold">0</div>
+            <div class="signal-stat-label">HOLD</div>
+            <div class="signal-stat-bar"><div class="signal-stat-bar-fill hold" id="bar-hold" style="width:0%;"></div></div>
+        </div>
+        <div class="signal-stat-item">
+            <div class="signal-stat-value" style="color:var(--accent-orange);" id="stat-avg-score">--</div>
+            <div class="signal-stat-label">平均评分</div>
+        </div>
+    </div>
+</div>
+
+<!-- Signal Filter Row -->
+<div class="signal-filter-row">
+    <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <label class="text-muted" style="font-size:0.75rem; white-space:nowrap;">信号类型:</label>
+        <select id="filter-signal-type" class="signal-filter-select" onchange="applySignalFilters()">
+            <option value="ALL">全部</option>
+            <option value="BUY">BUY</option>
+            <option value="SELL">SELL</option>
+            <option value="HOLD">HOLD</option>
+        </select>
+        <label class="text-muted" style="font-size:0.75rem; white-space:nowrap;">排序:</label>
+        <select id="filter-sort" class="signal-filter-select" onchange="applySignalFilters()">
+            <option value="score-desc">评分 高&rarr;低</option>
+            <option value="score-asc">评分 低&rarr;高</option>
+            <option value="ticker-asc">代码 A&rarr;Z</option>
+        </select>
+    </div>
+</div>
+
 <!-- Add Ticker Form -->
 <div class="card" style="margin-bottom:16px; padding:16px;">
     <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
@@ -80,7 +128,7 @@ var autoRefreshTimer = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     // Restore analysis results from sessionStorage
-    try { var saved = sessionStorage.getItem('augur-analysis-results'); if(saved) { analysisResults = JSON.parse(saved); renderWatchlist(); } } catch(e){}
+    try { var saved = sessionStorage.getItem('augur-analysis-results'); if(saved) { analysisResults = JSON.parse(saved); updateStatsPanel(); renderWatchlist(); } } catch(e){}
 
     loadWatchlist();
     startAutoRefresh();
@@ -91,6 +139,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (btn) {
             var ticker = btn.getAttribute('data-ticker');
             if (ticker) removeTicker(ticker);
+        }
+        // Expandable detail row toggle
+        var row = e.target.closest('.signal-row-main');
+        if (row) {
+            var detailRow = row.nextElementSibling;
+            if (detailRow && detailRow.classList.contains('signal-detail-row')) {
+                detailRow.classList.toggle('expanded');
+            }
         }
     });
 });
@@ -121,8 +177,71 @@ function loadWatchlist() {
         });
 }
 
+function updateStatsPanel() {
+    var keys = Object.keys(analysisResults);
+    var total = keys.length;
+    if (total === 0) {
+        document.getElementById('signal-stats').style.display = 'none';
+        return;
+    }
+    document.getElementById('signal-stats').style.display = '';
+    var buyCount = 0, sellCount = 0, holdCount = 0, totalScore = 0;
+    for (var i = 0; i < keys.length; i++) {
+        var r = analysisResults[keys[i]];
+        if (r.signal === 'bullish') buyCount++;
+        else if (r.signal === 'bearish') sellCount++;
+        else holdCount++;
+        totalScore += (r.score || 0);
+    }
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-buy').textContent = buyCount;
+    document.getElementById('stat-sell').textContent = sellCount;
+    document.getElementById('stat-hold').textContent = holdCount;
+    document.getElementById('stat-avg-score').textContent = (totalScore / total).toFixed(1);
+    document.getElementById('bar-buy').style.width = (total ? (buyCount / total * 100) : 0) + '%';
+    document.getElementById('bar-sell').style.width = (total ? (sellCount / total * 100) : 0) + '%';
+    document.getElementById('bar-hold').style.width = (total ? (holdCount / total * 100) : 0) + '%';
+}
+
+function applySignalFilters() {
+    renderWatchlist();
+}
+
+function getFilteredData() {
+    var signalType = document.getElementById('filter-signal-type').value;
+    var sortBy = document.getElementById('filter-sort').value;
+
+    var items = watchlistData.slice();
+
+    // Filter by signal type
+    if (signalType !== 'ALL') {
+        items = items.filter(function(item) {
+            var result = analysisResults[item.ticker];
+            if (!result) return false;
+            if (signalType === 'BUY') return result.signal === 'bullish';
+            if (signalType === 'SELL') return result.signal === 'bearish';
+            if (signalType === 'HOLD') return result.signal !== 'bullish' && result.signal !== 'bearish';
+            return true;
+        });
+    }
+
+    // Sort
+    items.sort(function(a, b) {
+        var ra = analysisResults[a.ticker] || {};
+        var rb = analysisResults[b.ticker] || {};
+        if (sortBy === 'score-desc') return (rb.score || 0) - (ra.score || 0);
+        if (sortBy === 'score-asc') return (ra.score || 0) - (rb.score || 0);
+        if (sortBy === 'ticker-asc') return (a.ticker || '').localeCompare(b.ticker || '');
+        return 0;
+    });
+
+    return items;
+}
+
 function renderWatchlist() {
     var tbody = document.getElementById('watchlist-body');
+    var items = getFilteredData();
+
     if (watchlistData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="padding:48px 16px; text-align:center; color:var(--text-muted);">' +
             '<div style="font-size:2.4rem; margin-bottom:8px;">&#x1F4CB;</div>' +
@@ -137,9 +256,14 @@ function renderWatchlist() {
         return;
     }
 
+    if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="padding:32px 16px; text-align:center; color:var(--text-muted);">当前筛选条件无匹配结果</td></tr>';
+        return;
+    }
+
     var html = '';
-    for (var i = 0; i < watchlistData.length; i++) {
-        var item = watchlistData[i];
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
         var ticker = item.ticker || '';
         var result = analysisResults[ticker] || null;
         var signalHtml = '<span style="color:var(--text-muted);">--</span>';
@@ -159,8 +283,8 @@ function renderWatchlist() {
                 '<span style="color:var(--signal-neutral);">' + result.hold_count + '</span></span>';
         }
 
-        html += '<tr style="border-bottom:1px solid var(--border-color); transition:background 0.2s;" onmouseover="this.style.background=\'var(--bg-card-hover)\'" onmouseout="this.style.background=\'transparent\'">' +
-            '<td style="padding:10px 16px; font-family:var(--font-data); font-weight:600; color:var(--accent-orange);">' + ticker + '</td>' +
+        html += '<tr class="signal-row-main" style="border-bottom:1px solid var(--border-color); transition:background 0.2s; cursor:pointer;" onmouseover="this.style.background=\'var(--bg-card-hover)\'" onmouseout="this.style.background=\'transparent\'">' +
+            '<td style="padding:10px 16px; font-family:var(--font-data); font-weight:600; color:var(--accent-orange);">' + escapeHtml(ticker) + '</td>' +
             '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.pe || '--') + '</td>' +
             '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.roe ? (item.roe * 100).toFixed(0) + '%' : '--') + '</td>' +
             '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.gross_margins ? (item.gross_margins * 100).toFixed(0) + '%' : '--') + '</td>' +
@@ -171,6 +295,20 @@ function renderWatchlist() {
                 '<button class="remove-ticker-btn" data-ticker="' + escapeHtml(ticker) + '" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1rem; padding:2px 6px;" title="移除" aria-label="移除 ' + escapeHtml(ticker) + '">&times;</button>' +
             '</td>' +
             '</tr>';
+
+        // Expandable detail row
+        if (result && result.details) {
+            html += '<tr class="signal-detail-row"><td colspan="8" style="padding:0 16px;"><div class="signal-detail-content">' +
+                '<div class="data-label" style="margin-bottom:6px;">各Agent评分明细</div>' +
+                '<div style="display:flex; flex-wrap:wrap; gap:8px;">';
+            var details = result.details || [];
+            for (var d = 0; d < details.length; d++) {
+                var det = details[d];
+                var detColor = det.signal === 'bullish' ? 'var(--signal-buy)' : det.signal === 'bearish' ? 'var(--signal-sell)' : 'var(--signal-neutral)';
+                html += '<span class="holdings-badge" style="border-color:' + detColor + '; color:' + detColor + ';">' + escapeHtml(det.agent || '') + ' ' + (det.score || '--') + '</span>';
+            }
+            html += '</div></div></td></tr>';
+        }
     }
     tbody.innerHTML = html;
 }
@@ -240,6 +378,7 @@ function removeTicker(ticker) {
                 showToast(ticker + ' 已移除');
                 delete analysisResults[ticker];
                 sessionStorage.setItem('augur-analysis-results', JSON.stringify(analysisResults));
+                updateStatsPanel();
                 loadWatchlist();
             } else {
                 showToast(data.detail || '移除失败', 'error');
@@ -273,8 +412,8 @@ function runAllAnalysis() {
                     analysisResults[r.ticker] = r;
                 }
                 sessionStorage.setItem('augur-analysis-results', JSON.stringify(analysisResults));
+                updateStatsPanel();
                 renderWatchlist();
-                showResultsSummary(data.results);
                 showToast('分析完成 - ' + data.results.length + ' 只股票');
             }
         })
@@ -286,28 +425,6 @@ function runAllAnalysis() {
                 : '分析失败: ' + e.message;
             showToast(msg, 'error');
         });
-}
-
-function showResultsSummary(results) {
-    var container = document.getElementById('analysis-results');
-    var content = document.getElementById('results-content');
-    container.style.display = 'block';
-
-    var buyCount = 0, sellCount = 0, holdCount = 0;
-    for (var i = 0; i < results.length; i++) {
-        if (results[i].signal === 'bullish') buyCount++;
-        else if (results[i].signal === 'bearish') sellCount++;
-        else holdCount++;
-    }
-
-    var html = '<div style="display:flex; gap:24px; flex-wrap:wrap; margin-bottom:12px;">' +
-        '<div><span style="color:var(--signal-buy); font-family:var(--font-data); font-size:1.2rem; font-weight:600;">' + buyCount + '</span> <span class="text-muted" style="font-size:0.78rem;">BUY</span></div>' +
-        '<div><span style="color:var(--signal-sell); font-family:var(--font-data); font-size:1.2rem; font-weight:600;">' + sellCount + '</span> <span class="text-muted" style="font-size:0.78rem;">SELL</span></div>' +
-        '<div><span style="color:var(--signal-neutral); font-family:var(--font-data); font-size:1.2rem; font-weight:600;">' + holdCount + '</span> <span class="text-muted" style="font-size:0.78rem;">HOLD</span></div>' +
-        '</div>';
-
-    html += '<div style="font-size:0.78rem; color:var(--text-secondary);">分析时间: ' + new Date().toLocaleString('zh-CN') + '</div>';
-    content.innerHTML = html;
 }
 </script>
 {% endblock %}

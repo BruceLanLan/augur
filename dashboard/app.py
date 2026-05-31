@@ -105,6 +105,28 @@ def get_coordinator() -> DecisionCoordinator:
     return _coordinator
 
 
+PERSONA_ENRICHMENT = {
+    "buffett": {"cn_name": "沃伦·巴菲特", "en_name": "Warren Buffett", "school": "value", "core_principles": ["护城河决定长期价值", "只买看得懂的生意", "别人恐惧时贪婪"], "holdings": ["BRK.B", "AAPL", "KO", "AXP"]},
+    "graham": {"cn_name": "本杰明·格雷厄姆", "en_name": "Benjamin Graham", "school": "value", "core_principles": ["安全边际是投资的基石", "市场先生情绪无常", "买入低于净资产的股票"], "holdings": ["GEICO", "BRK.B"]},
+    "munger": {"cn_name": "查理·芒格", "en_name": "Charlie Munger", "school": "value", "core_principles": ["多元思维模型", "用合理价格买优质企业", "避免愚蠢比追求聪明更重要"], "holdings": ["BRK.B", "COST", "BAC"]},
+    "fisher": {"cn_name": "菲利普·费雪", "en_name": "Philip Fisher", "school": "growth", "core_principles": ["成长股的真正价值在管理层", "闲聊法深入调研", "长期持有优质成长股"], "holdings": ["MOTOROLA", "TXN"]},
+    "lynch": {"cn_name": "彼得·林奇", "en_name": "Peter Lynch", "school": "growth", "core_principles": ["在生活中发现十倍股", "PEG是成长股估值核心", "分散但集中于了解的领域"], "holdings": ["SBUX", "FNM"]},
+    "cathie_wood": {"cn_name": "凯瑟琳·伍德", "en_name": "Cathie Wood", "school": "growth", "core_principles": ["颠覆性创新创造指数级增长", "5年投资视野", "拥抱波动性"], "holdings": ["TSLA", "COIN", "ROKU", "SQ"]},
+    "aschenbrenner": {"cn_name": "利奥波德·阿申布伦纳", "en_name": "Leopold Aschenbrenner", "school": "growth", "core_principles": ["AI超级周期即将到来", "算力是新石油", "AGI将重塑所有行业"], "holdings": ["NVDA", "MSFT", "GOOGL"]},
+    "thiel": {"cn_name": "彼得·蒂尔", "en_name": "Peter Thiel", "school": "growth", "core_principles": ["垄断企业才有真正价值", "从0到1比从1到N更重要", "逆向思维发现秘密"], "holdings": ["PLTR", "META", "TSLA"]},
+    "dalio": {"cn_name": "瑞·达利欧", "en_name": "Ray Dalio", "school": "macro", "core_principles": ["理解债务周期驱动一切", "全天候组合应对不确定性", "激进透明与原则决策"], "holdings": ["SPY", "GLD", "TLT"]},
+    "soros": {"cn_name": "乔治·索罗斯", "en_name": "George Soros", "school": "macro", "core_principles": ["反身性：认知影响现实", "先开枪后瞄准", "发现市场错误定价"], "holdings": ["MACRO_BETS"]},
+    "marks": {"cn_name": "霍华德·马克斯", "en_name": "Howard Marks", "school": "macro", "core_principles": ["周期是投资中最确定的事", "风险来自过高的价格", "逆向投资需要勇气"], "holdings": ["OAK", "HY_BONDS"]},
+    "serenity": {"cn_name": "宁静", "en_name": "Serenity", "school": "quant", "core_principles": ["波动率是可以管理的风险", "尾部风险对冲保护本金", "系统化消除情绪干扰"], "holdings": ["VIX_HEDGE", "OPTIONS"]},
+    "arps": {"cn_name": "马丁·阿普斯", "en_name": "Martin Arps", "school": "quant", "core_principles": ["价格包含一切信息", "趋势是你的朋友", "量价背离是最强信号"], "holdings": ["TECH_MOMENTUM"]},
+    "dayu": {"cn_name": "大宇", "en_name": "Dayu", "school": "quant", "core_principles": ["量化模型消除主观偏见", "资金流向揭示主力意图", "统计套利寻找确定性"], "holdings": ["A_SHARES"]},
+    "duan_yongping": {"cn_name": "段永平", "en_name": "Duan Yongping", "school": "china", "core_principles": ["做对的事，停止做错的事", "商业模式比什么都重要", "极度集中持仓"], "holdings": ["AAPL", "PDD", "BABA"]},
+    "zhang_lei": {"cn_name": "张磊", "en_name": "Zhang Lei", "school": "china", "core_principles": ["长期结构性价值创造", "研究驱动投资", "与伟大企业共同成长"], "holdings": ["PDD", "JD", "BYD"]},
+    "li_lu": {"cn_name": "李录", "en_name": "Li Lu", "school": "china", "core_principles": ["价值投资在中国同样适用", "理解文明的演化", "集中投资少数确定机会"], "holdings": ["BRK.B", "BYD", "BABA"]},
+    "dan_bin": {"cn_name": "但斌", "en_name": "Dan Bin", "school": "china", "core_principles": ["时间的玫瑰：长期主义", "消费龙头是最佳赛道", "长坡厚雪复利惊人"], "holdings": ["600519.SS", "AAPL", "MOUTAI"]},
+}
+
+
 def _persona_meta() -> List[Dict]:
     registry = get_registry()
     config = get_config()
@@ -115,20 +137,26 @@ def _persona_meta() -> List[Dict]:
         # Chinese mainland investors only; Serenity is excluded because
         # the persona is international (anonymous, multi-market, non-China-based).
         chinese_investors = {"duan_yongping", "zhang_lei", "li_lu", "dan_bin", "dayu"}
-        country = "🇨🇳 中国" if agent.agent_id in chinese_investors else ""
+        country = "\U0001f1e8\U0001f1f3 中国" if agent.agent_id in chinese_investors else ""
+        enrichment = PERSONA_ENRICHMENT.get(agent.agent_id, {})
         meta.append({
             "id": agent.agent_id,
             "agent_id": agent.agent_id,
             "name": agent.name,
-            "style": " · ".join(agent.philosophy[:2]) if agent.philosophy else "",
+            "cn_name": enrichment.get("cn_name", agent.name),
+            "en_name": enrichment.get("en_name", agent.name),
+            "school": enrichment.get("school", "value"),
+            "core_principles": enrichment.get("core_principles", agent.philosophy[:3] if agent.philosophy else []),
+            "holdings": enrichment.get("holdings", []),
+            "style": " \u00b7 ".join(agent.philosophy[:2]) if agent.philosophy else "",
             "description": agent.identity.strip().replace("\n", " ").replace("  ", " "),
             "scenarios": agent.philosophy,
             "scoring_weights": agent.scoring_weights if agent.scoring_weights else {},
-            "weight": f"{list(agent.scoring_weights.values())[0]:.0%}" if agent.scoring_weights else "均等",
-            "status": "已注册",
+            "weight": f"{list(agent.scoring_weights.values())[0]:.0%}" if agent.scoring_weights else "\u5747\u7b49",
+            "status": "\u5df2\u6ce8\u518c",
             "country": country,
             "is_chinese": agent.agent_id in chinese_investors,
-            "quote": agent.philosophy[0] if agent.philosophy else "投资，就是投未来。",
+            "quote": agent.philosophy[0] if agent.philosophy else "\u6295\u8d44\uff0c\u5c31\u662f\u6295\u672a\u6765\u3002",
             "model": per_agent.get(agent.agent_id, default_model),
         })
     return meta
