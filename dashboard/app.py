@@ -360,6 +360,13 @@ async def scanner_page(request: Request):
     })
 
 
+@app.get("/watchlist", response_class=HTMLResponse, summary="自选股页面")
+async def watchlist_page(request: Request):
+    return templates.TemplateResponse(request=request, name="watchlist.html", context={
+        "title": "自选股 - Watchlist",
+    })
+
+
 @app.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request):
     config = get_config()
@@ -1254,6 +1261,26 @@ async def api_search_tickers(q: str = ""):
         return {"status": "ok", "query": q, "results": results}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Search failed: {e}")
+
+
+# ============ Sparkline API Route ============
+
+@app.get("/api/sparkline/{ticker}", summary="获取7日迷你走势数据")
+async def api_sparkline(ticker: str):
+    """Return last 7 trading days close prices for sparkline rendering."""
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format")
+    try:
+        from augur.data import fetch_history
+        history = fetch_history(ticker, period="1mo")
+        # Get last 7 data points
+        prices = [h["close"] for h in history[-7:]] if history else []
+        trend = "flat"
+        if len(prices) >= 2:
+            trend = "up" if prices[-1] > prices[0] else "down" if prices[-1] < prices[0] else "flat"
+        return {"ticker": ticker.upper(), "prices": prices, "trend": trend}
+    except Exception as e:
+        return {"ticker": ticker.upper(), "prices": [], "trend": "flat", "error": str(e)}
 
 
 # ============ Hot Tickers API Route ============

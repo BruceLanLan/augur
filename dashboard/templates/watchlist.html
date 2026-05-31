@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+{% block title %}自选股 - Augur{% endblock %}
+{% block extra_head %}
+<style>
+.watchlist-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.watchlist-add-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.watchlist-add-form input {
+    width: 160px;
+    text-transform: uppercase;
+}
+.watchlist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+}
+.watchlist-card {
+    padding: 14px;
+    position: relative;
+    transition: border-color 0.2s;
+}
+.watchlist-card:hover {
+    border-color: var(--accent-orange);
+}
+.watchlist-card .wl-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.watchlist-card .wl-ticker {
+    font-family: var(--font-data);
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+    cursor: pointer;
+}
+.watchlist-card .wl-ticker:hover {
+    color: var(--accent-orange);
+}
+.watchlist-card .wl-name {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+.watchlist-card .wl-metrics {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    font-size: 0.78rem;
+}
+.watchlist-card .wl-price {
+    font-family: var(--font-data);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.watchlist-card .wl-change {
+    font-family: var(--font-data);
+    font-weight: 600;
+}
+.watchlist-card .wl-change.up { color: var(--signal-buy); }
+.watchlist-card .wl-change.down { color: var(--signal-sell); }
+.watchlist-card .wl-change.flat { color: var(--signal-neutral); }
+.watchlist-card .wl-score {
+    font-family: var(--font-data);
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+.watchlist-card .wl-remove {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    transition: color 0.2s, background 0.2s;
+}
+.watchlist-card .wl-remove:hover {
+    color: var(--signal-sell);
+    background: rgba(255,23,68,0.1);
+}
+.sparkline-wrapper {
+    margin-top: 6px;
+}
+.watchlist-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+.batch-btn {
+    margin-left: auto;
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<h2 style="color:var(--accent-orange); margin-bottom:4px;">自选股</h2>
+<p class="text-muted mb-16" style="font-size:0.82rem;">管理您的关注标的，一键批量分析所有自选股</p>
+
+<!-- Add Ticker Form + Batch Analyze -->
+<div class="card mb-24">
+    <div class="watchlist-header">
+        <div class="watchlist-add-form">
+            <input id="wl-add-input" type="text" class="form-input" placeholder="输入股票代码 (如 AAPL)"
+                   onkeydown="if(event.key==='Enter') addToWatchlist()">
+            <button class="btn btn-primary" onclick="addToWatchlist()">添加</button>
+        </div>
+        <div class="flex gap-8">
+            <button class="btn btn-sm" onclick="batchAnalyzeAll()" id="batch-btn">
+                &#x1F680; 一键全部分析
+            </button>
+            <button class="btn btn-sm btn-ghost" onclick="clearWatchlist()">清空</button>
+        </div>
+    </div>
+</div>
+
+<!-- Watchlist Grid -->
+<div class="watchlist-grid" id="watchlist-grid">
+    <!-- Rendered by JS -->
+</div>
+
+<!-- Empty State -->
+<div class="watchlist-empty card" id="watchlist-empty" style="display:none;">
+    <div style="font-size:2rem; margin-bottom:12px;">&#x1F4D1;</div>
+    <div>暂无自选股</div>
+    <div style="font-size:0.78rem; margin-top:8px; color:var(--text-muted);">在上方输入股票代码并点击"添加"开始构建您的关注列表</div>
+</div>
+
+<!-- Batch Results -->
+<div id="batch-results" style="display:none;" class="card mb-24">
+    <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">批量分析结果</div>
+    <div id="batch-results-content"></div>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+var WL_KEY = 'augur-watchlist';
+
+function getWatchlist() {
+    try {
+        return JSON.parse(localStorage.getItem(WL_KEY)) || [];
+    } catch(e) { return []; }
+}
+
+function saveWatchlist(list) {
+    localStorage.setItem(WL_KEY, JSON.stringify(list));
+}
+
+function addToWatchlist() {
+    var input = document.getElementById('wl-add-input');
+    var ticker = (input.value || '').trim().toUpperCase();
+    if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
+    if (!/^[A-Za-z0-9.\-]{1,15}$/.test(ticker)) { showToast('无效的股票代码格式', 'error'); return; }
+
+    var list = getWatchlist();
+    if (list.some(function(item) { return item.ticker === ticker; })) {
+        showToast(ticker + ' 已在自选股中', 'warning');
+        return;
+    }
+
+    list.push({ ticker: ticker, name: '', addedAt: Date.now() });
+    saveWatchlist(list);
+    input.value = '';
+    renderWatchlist();
+    showToast(ticker + ' 已添加到自选股');
+
+    // Fetch company name in background
+    fetchTickerInfo(ticker);
+}
+
+function removeFromWatchlist(ticker) {
+    var list = getWatchlist();
+    list = list.filter(function(item) { return item.ticker !== ticker; });
+    saveWatchlist(list);
+    renderWatchlist();
+    showToast(ticker + ' 已移除');
+}
+
+function clearWatchlist() {
+    if (!confirm('确定要清空所有自选股吗？')) return;
+    saveWatchlist([]);
+    renderWatchlist();
+    showToast('自选股已清空');
+}
+
+function fetchTickerInfo(ticker) {
+    fetch('/api/fetch/' + ticker)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status === 'ok' && data.data) {
+                var list = getWatchlist();
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i].ticker === ticker) {
+                        list[i].name = data.data.sector || '';
+                        list[i].price = data.data.price || 0;
+                        list[i].change_pct = data.data.revenue_growth || 0;
+                        break;
+                    }
+                }
+                saveWatchlist(list);
+                renderWatchlist();
+            }
+        })
+        .catch(function() {});
+}
+
+function createSparklineSVG(prices, trend) {
+    var w = 80, h = 28, pad = 2;
+    var min = Math.min.apply(null, prices);
+    var max = Math.max.apply(null, prices);
+    var range = max - min || 1;
+    var points = prices.map(function(p, i) {
+        var x = pad + (i / (prices.length - 1)) * (w - 2 * pad);
+        var y = pad + (1 - (p - min) / range) * (h - 2 * pad);
+        return x.toFixed(1) + ',' + y.toFixed(1);
+    }).join(' ');
+    var color = trend === 'up' ? '#00c853' : trend === 'down' ? '#ff1744' : '#ffab00';
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" style="display:block;">' +
+        '<polyline points="' + points + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>';
+}
+
+function loadSparkline(ticker, container) {
+    fetch('/api/sparkline/' + ticker)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.prices && data.prices.length >= 2) {
+                var svg = createSparklineSVG(data.prices, data.trend);
+                var wrapper = document.createElement('div');
+                wrapper.className = 'sparkline-wrapper';
+                wrapper.innerHTML = svg;
+                container.appendChild(wrapper);
+            }
+        })
+        .catch(function() {});
+}
+
+function renderWatchlist() {
+    var list = getWatchlist();
+    var grid = document.getElementById('watchlist-grid');
+    var empty = document.getElementById('watchlist-empty');
+
+    if (!list.length) {
+        grid.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+
+    empty.style.display = 'none';
+    grid.innerHTML = '';
+
+    list.forEach(function(item) {
+        var card = document.createElement('div');
+        card.className = 'card watchlist-card';
+
+        // Get cached analysis score
+        var cached = augurCache.get();
+        var cachedItem = cached.find(function(c) { return c.ticker === item.ticker; });
+        var scoreHtml = cachedItem ? '<span class="wl-score">' + (cachedItem.result.score || 0).toFixed(1) + '/10</span>' : '';
+
+        var priceHtml = item.price ? '<span class="wl-price">$' + item.price.toFixed(2) + '</span>' : '';
+
+        card.innerHTML =
+            '<button class="wl-remove" onclick="removeFromWatchlist(\'' + escapeHtml(item.ticker) + '\')" title="移除">&times;</button>' +
+            '<div class="wl-head">' +
+                '<span class="wl-ticker" onclick="window.location.href=\'/stocks?ticker=' + escapeHtml(item.ticker) + '\'">' + escapeHtml(item.ticker) + '</span>' +
+            '</div>' +
+            (item.name ? '<div class="wl-name">' + escapeHtml(item.name) + '</div>' : '') +
+            '<div class="wl-metrics">' +
+                priceHtml +
+                scoreHtml +
+            '</div>';
+
+        grid.appendChild(card);
+
+        // Load sparkline
+        loadSparkline(item.ticker, card);
+    });
+}
+
+function batchAnalyzeAll() {
+    var list = getWatchlist();
+    if (!list.length) { showToast('自选股列表为空', 'warning'); return; }
+
+    var tickers = list.map(function(item) { return item.ticker; });
+    var btn = document.getElementById('batch-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '分析中...'; }
+
+    showProgress();
+
+    fetchWithTimeout('/api/scanner/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tickers: tickers })
+    }, 120000)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (btn) { btn.disabled = false; btn.textContent = '\u{1F680} 一键全部分析'; }
+        if (data.status === 'ok' && data.results) {
+            renderBatchResults(data.results);
+            // Cache results
+            data.results.forEach(function(r) {
+                if (r.consensus_signal && r.consensus_signal !== 'error') {
+                    augurCache.add(r.ticker, {
+                        signal: r.consensus_signal,
+                        score: r.consensus_score || 0,
+                        confidence: 0
+                    });
+                }
+            });
+            renderWatchlist();
+            showToast('批量分析完成: ' + data.results.length + ' 只标的');
+        }
+    })
+    .catch(function(err) {
+        if (btn) { btn.disabled = false; btn.textContent = '\u{1F680} 一键全部分析'; }
+        showToast('批量分析失败: ' + (err.message || err), 'error');
+    });
+}
+
+function renderBatchResults(results) {
+    var section = document.getElementById('batch-results');
+    var content = document.getElementById('batch-results-content');
+    if (!section || !content) return;
+
+    section.style.display = 'block';
+    var html = '<table class="md-table" style="width:100%;"><thead><tr>' +
+        '<th>标的</th><th>信号</th><th>评分</th><th>操作</th>' +
+        '</tr></thead><tbody>';
+
+    results.forEach(function(r) {
+        var signal = r.consensus_signal || 'neutral';
+        var signalLabel = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+        var sigClass = signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral';
+        html += '<tr>' +
+            '<td style="font-weight:600; font-family:var(--font-data);">' + escapeHtml(r.ticker) + '</td>' +
+            '<td><span class="signal-badge ' + sigClass + '">' + signalLabel + '</span></td>' +
+            '<td style="font-family:var(--font-data); color:var(--accent-orange);">' + (r.consensus_score || 0).toFixed(1) + '</td>' +
+            '<td><a href="/stocks?ticker=' + escapeHtml(r.ticker) + '" class="btn btn-sm">详情</a></td>' +
+            '</tr>';
+    });
+
+    html += '</tbody></table>';
+    content.innerHTML = html;
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    renderWatchlist();
+});
+</script>
+{% endblock %}

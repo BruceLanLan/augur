@@ -521,7 +521,39 @@ function renderHotTickers(data) {
             '<div class="hot-ticker-price">' + priceStr + '</div>' +
             '<div class="hot-ticker-change">' + arrow + ' ' + (up ? '+' : '') + pct + '%</div>';
         grid.appendChild(card);
+        loadSparkline(t.symbol, card);
     });
+}
+
+function loadSparkline(symbol, container) {
+    fetch('/api/sparkline/' + symbol)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.prices && data.prices.length >= 2) {
+                var svg = createSparklineSVG(data.prices, data.trend);
+                var wrapper = document.createElement('div');
+                wrapper.className = 'sparkline-wrapper';
+                wrapper.innerHTML = svg;
+                container.appendChild(wrapper);
+            }
+        })
+        .catch(function() {});
+}
+
+function createSparklineSVG(prices, trend) {
+    var w = 80, h = 28, pad = 2;
+    var min = Math.min.apply(null, prices);
+    var max = Math.max.apply(null, prices);
+    var range = max - min || 1;
+    var points = prices.map(function(p, i) {
+        var x = pad + (i / (prices.length - 1)) * (w - 2 * pad);
+        var y = pad + (1 - (p - min) / range) * (h - 2 * pad);
+        return x.toFixed(1) + ',' + y.toFixed(1);
+    }).join(' ');
+    var color = trend === 'up' ? '#00c853' : trend === 'down' ? '#ff1744' : '#ffab00';
+    return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" style="display:block;">' +
+        '<polyline points="' + points + '" fill="none" stroke="' + color + '" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '</svg>';
 }
 
 // ====== Fear & Greed + Macro Snapshot (from market overview data) ======

@@ -281,6 +281,17 @@
     </div>
 </div>
 
+<!-- Historical Comparison Panel -->
+<div id="history-comparison" class="card mb-24" style="display:none;">
+    <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">历史对比</div>
+    <p class="text-muted" style="font-size:0.78rem; margin-bottom:12px;">展示您对同一标的在不同时间的分析结果，追踪预测变化趋势</p>
+    <table class="md-table" id="history-table" style="width:100%;">
+        <thead><tr><th>日期</th><th>评分</th><th>信号</th><th>价格</th></tr></thead>
+        <tbody id="history-tbody"></tbody>
+    </table>
+    <div id="history-empty" class="text-muted" style="font-size:0.78rem; text-align:center; padding:16px;">暂无历史分析记录</div>
+</div>
+
 {% endblock %}
 {% block extra_scripts %}
 <script>
@@ -519,6 +530,9 @@ function renderResults(data) {
         score: cons.score || 0,
         confidence: cons.confidence || 0
     });
+
+    // Render historical comparison
+    renderHistoryComparison(ticker);
 
     var posPct = cons.metadata && cons.metadata.position_sizing
         ? (cons.metadata.position_sizing.position_pct || 0).toFixed(1) + '%'
@@ -1033,6 +1047,50 @@ function copyReportLink() {
         showToast('报告链接已复制');
     }).catch(function() {
         showToast('复制失败', 'error');
+    });
+}
+
+function renderHistoryComparison(ticker) {
+    var panel = document.getElementById('history-comparison');
+    var tbody = document.getElementById('history-tbody');
+    var emptyMsg = document.getElementById('history-empty');
+    if (!panel || !tbody) return;
+
+    var cached = augurCache.get();
+    var items = cached.filter(function(c) { return c.ticker === ticker; });
+
+    if (!items.length) {
+        panel.style.display = 'none';
+        return;
+    }
+
+    panel.style.display = 'block';
+    tbody.innerHTML = '';
+
+    if (items.length === 0) {
+        if (emptyMsg) emptyMsg.style.display = 'block';
+        return;
+    }
+
+    if (emptyMsg) emptyMsg.style.display = 'none';
+
+    items.sort(function(a, b) { return (b.time || 0) - (a.time || 0); });
+
+    items.forEach(function(item) {
+        var date = item.time ? new Date(item.time).toLocaleDateString() : '--';
+        var score = (item.result && item.result.score) ? item.result.score.toFixed(1) : '--';
+        var signal = (item.result && item.result.signal) || 'neutral';
+        var signalText = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+        var sigClass = signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral';
+        var price = (item.result && item.result.price) ? '$' + item.result.price.toFixed(2) : '--';
+
+        var tr = document.createElement('tr');
+        tr.innerHTML =
+            '<td style="font-size:0.78rem;">' + escapeHtml(date) + '</td>' +
+            '<td style="font-family:var(--font-data); color:var(--accent-orange);">' + score + '</td>' +
+            '<td><span class="signal-badge ' + sigClass + '" style="font-size:0.68rem;">' + signalText + '</span></td>' +
+            '<td style="font-family:var(--font-data); font-size:0.78rem;">' + escapeHtml(price) + '</td>';
+        tbody.appendChild(tr);
     });
 }
 </script>
