@@ -301,7 +301,7 @@ def _check_rate_limit(ticker: str) -> bool:
 
 # ============ HTML Routes ============
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/", response_class=HTMLResponse, summary="首页仪表盘")
 async def index(request: Request):
     agent_count = len(get_registry().get_all())
     try:
@@ -329,7 +329,7 @@ async def index(request: Request):
     })
 
 
-@app.get("/personas", response_class=HTMLResponse)
+@app.get("/personas", response_class=HTMLResponse, summary="投资人人格系统页面")
 async def personas_page(request: Request):
     return templates.TemplateResponse(request=request, name="personas.html", context={
         "personas": _persona_meta(),
@@ -337,7 +337,7 @@ async def personas_page(request: Request):
     })
 
 
-@app.get("/stocks", response_class=HTMLResponse)
+@app.get("/stocks", response_class=HTMLResponse, summary="股票分析页面")
 async def stocks_page(request: Request):
     quick_tickers = ["AAPL", "NVDA", "MSFT", "GOOGL", "TSLA", "BRK.B", "META", "AMZN", "PDD", "BIDU"]
     return templates.TemplateResponse(request=request, name="stocks.html", context={
@@ -346,14 +346,14 @@ async def stocks_page(request: Request):
     })
 
 
-@app.get("/signals", response_class=HTMLResponse)
+@app.get("/signals", response_class=HTMLResponse, summary="信号监控页面")
 async def signals_page(request: Request):
     return templates.TemplateResponse(request=request, name="signals.html", context={
         "title": "信号监控",
     })
 
 
-@app.get("/scanner", response_class=HTMLResponse)
+@app.get("/scanner", response_class=HTMLResponse, summary="市场扫描器页面")
 async def scanner_page(request: Request):
     return templates.TemplateResponse(request=request, name="scanner.html", context={
         "title": "市场扫描器 - Scanner",
@@ -367,7 +367,7 @@ async def watchlist_page(request: Request):
     })
 
 
-@app.get("/settings", response_class=HTMLResponse)
+@app.get("/settings", response_class=HTMLResponse, summary="设置页面")
 async def settings_page(request: Request):
     config = get_config()
     available_models = config.get("available_models", {})
@@ -388,7 +388,7 @@ async def settings_page(request: Request):
     })
 
 
-@app.get("/create-persona", response_class=HTMLResponse)
+@app.get("/create-persona", response_class=HTMLResponse, summary="创建自定义投资人页面")
 async def create_persona_page(request: Request):
     return templates.TemplateResponse(request=request, name="create_persona.html", context={
         "title": "创建自定义投资人",
@@ -397,7 +397,7 @@ async def create_persona_page(request: Request):
 
 # ============ API Routes ============
 
-@app.get("/api/personas")
+@app.get("/api/personas", summary="获取所有投资人列表")
 async def list_personas():
     """返回所有投资人人格列表"""
     registry = get_registry()
@@ -422,7 +422,7 @@ SCANNER_PRESETS = {
 }
 
 
-@app.post("/api/scanner/run")
+@app.post("/api/scanner/run", summary="批量扫描标的评分")
 async def api_scanner_run(body: ScannerRunBody):
     """批量扫描标的，返回所有大师评分矩阵"""
     tickers = body.tickers
@@ -476,7 +476,7 @@ async def api_scanner_run(body: ScannerRunBody):
     return {"status": "ok", "results": results, "count": len(results)}
 
 
-@app.get("/api/analyze/{ticker}")
+@app.get("/api/analyze/{ticker}", summary="分析指定标的")
 async def analyze_ticker(
     ticker: str,
     price: float = 0,
@@ -604,7 +604,7 @@ async def analyze_ticker(
     return response
 
 
-@app.get("/api/persona/{agent_id}")
+@app.get("/api/persona/{agent_id}", summary="获取单个投资人详情")
 async def get_persona(agent_id: str):
     """获取单个投资人的详细信息"""
     agent = get_registry().get(agent_id)
@@ -613,7 +613,7 @@ async def get_persona(agent_id: str):
     return agent.to_dict()
 
 
-@app.get("/api/report/{ticker}")
+@app.get("/api/report/{ticker}", summary="生成深度分析报告")
 async def report_ticker(
     ticker: str,
     price: float = 0,
@@ -723,7 +723,7 @@ async def report_ticker(
     }
 
 
-@app.post("/api/report/{ticker}")
+@app.post("/api/report/{ticker}", summary="从已有数据生成报告")
 async def generate_report_from_data(ticker: str, request: Request):
     """Generate report from pre-computed analysis data (avoids re-running agents)."""
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
@@ -819,7 +819,7 @@ class CustomPersonaBody(BaseModel):
     agent_id: str
 
 
-@app.get("/api/config")
+@app.get("/api/config", summary="获取系统配置")
 async def api_get_config():
     """返回完整配置（敏感信息脱敏）"""
     config = get_config()
@@ -844,7 +844,7 @@ async def api_get_config():
     return _mask_sensitive(config)
 
 
-@app.put("/api/config")
+@app.put("/api/config", summary="更新系统配置")
 async def api_put_config(body: ConfigUpdateBody):
     """更新完整配置"""
     data = body.dict(exclude_none=True)
@@ -854,7 +854,7 @@ async def api_put_config(body: ConfigUpdateBody):
     return {"status": "ok", "message": "配置已更新"}
 
 
-@app.get("/api/config/persona/{agent_id}")
+@app.get("/api/config/persona/{agent_id}", summary="获取Agent模型配置")
 async def api_get_persona_config(agent_id: str):
     """获取单个 Agent 的模型配置"""
     config = get_config()
@@ -864,7 +864,7 @@ async def api_get_persona_config(agent_id: str):
     return {"agent_id": agent_id, "model": model}
 
 
-@app.put("/api/config/persona/{agent_id}")
+@app.put("/api/config/persona/{agent_id}", summary="更新Agent模型配置")
 async def api_put_persona_config(agent_id: str, body: PersonaModelBody):
     """更新单个 Agent 的模型配置"""
     agent = get_registry().get(agent_id)
@@ -875,7 +875,7 @@ async def api_put_persona_config(agent_id: str, body: PersonaModelBody):
     return {"status": "ok", "agent_id": agent_id, "model": body.model}
 
 
-@app.get("/api/models")
+@app.get("/api/models", summary="获取可用模型列表")
 async def api_get_models():
     """返回所有可用模型（扁平列表）"""
     config = get_config()
@@ -887,7 +887,7 @@ async def api_get_models():
     return {"models": models_flat}
 
 
-@app.post("/api/custom-persona")
+@app.post("/api/custom-persona", summary="创建自定义投资人")
 async def api_create_custom_persona(body: CustomPersonaBody):
     """保存自定义 Persona YAML 到 personas/custom/"""
     # Validate agent_id: only allow lowercase alphanumeric, hyphens, underscores
@@ -920,7 +920,7 @@ async def api_create_custom_persona(body: CustomPersonaBody):
     return {"status": "ok", "path": str(filepath), "hot_loaded": True}
 
 
-@app.get("/api/schema/persona")
+@app.get("/api/schema/persona", summary="获取Persona YAML结构")
 async def api_persona_schema():
     """返回 Persona YAML 结构描述"""
     return {
@@ -953,7 +953,7 @@ class WatchlistAddBody(BaseModel):
     price: Optional[float] = None
 
 
-@app.get("/api/watchlist")
+@app.get("/api/watchlist", summary="获取自选股列表")
 async def api_get_watchlist():
     """Get current watchlist from ~/.augur/watchlist.yaml"""
     from augur.cron import load_watchlist
@@ -964,7 +964,7 @@ async def api_get_watchlist():
     }
 
 
-@app.post("/api/watchlist/add")
+@app.post("/api/watchlist/add", summary="添加自选股")
 async def api_add_to_watchlist(body: WatchlistAddBody):
     """Add ticker to watchlist"""
     from augur.cron import add_to_watchlist
@@ -982,7 +982,7 @@ async def api_add_to_watchlist(body: WatchlistAddBody):
     return {"status": "ok", "ticker": body.ticker.upper(), "watchlist": config.get("watchlist", [])}
 
 
-@app.delete("/api/watchlist/{ticker}")
+@app.delete("/api/watchlist/{ticker}", summary="删除自选股")
 async def api_remove_from_watchlist(ticker: str):
     """Remove ticker from watchlist"""
     from augur.cron import remove_from_watchlist
@@ -992,7 +992,7 @@ async def api_remove_from_watchlist(ticker: str):
     return {"status": "ok", "ticker": ticker.upper(), "message": "已从自选股移除"}
 
 
-@app.post("/api/watchlist/run")
+@app.post("/api/watchlist/run", summary="批量分析自选股")
 async def api_run_watchlist_analysis():
     """Run consensus analysis on all watchlist tickers"""
     import time
@@ -1061,14 +1061,14 @@ async def api_run_watchlist_analysis():
     return {"status": "ok", "results": all_results, "processing_time_ms": round((time.time() - start_time) * 1000)}
 
 
-@app.get("/backtest", response_class=HTMLResponse)
+@app.get("/backtest", response_class=HTMLResponse, summary="历史回测页面")
 async def backtest_page(request: Request):
     return templates.TemplateResponse(request=request, name="backtest.html", context={
         "title": "历史回测 - Agent IC",
     })
 
 
-@app.get("/api/backtest/run")
+@app.get("/api/backtest/run", summary="运行历史回测")
 async def api_run_backtest(ticker: str = "AAPL", days: int = 30, initial_capital: float = 100000, strategy: str = "equal_weight"):
     """Run demo backtest, return results with metrics and signals timeline"""
     # Validate ticker format
@@ -1136,7 +1136,7 @@ async def api_run_backtest(ticker: str = "AAPL", days: int = 30, initial_capital
     }
 
 
-@app.get("/api/backtest/leaderboard")
+@app.get("/api/backtest/leaderboard", summary="获取IC排行榜")
 async def api_ic_leaderboard():
     """Get saved IC leaderboard"""
     from augur.backtest import Backtester
@@ -1151,7 +1151,7 @@ async def api_ic_leaderboard():
     }
 
 
-@app.get("/health")
+@app.get("/health", summary="健康检查")
 async def health():
     return {"status": "ok", "agents": len(get_registry().get_all())}
 
@@ -1176,7 +1176,7 @@ async def sitemap_xml():
     return Response(content=xml, media_type="application/xml")
 
 
-@app.get("/api/health")
+@app.get("/api/health", summary="扩展健康检查")
 async def api_health_extended():
     """Extended health check - returns datasource reachability, cache info, uptime."""
     # Check datasources
@@ -1214,7 +1214,7 @@ async def api_health_extended():
 
 # ============ Cache Management API Routes ============
 
-@app.post("/api/cache/clear")
+@app.post("/api/cache/clear", summary="清除数据缓存")
 async def api_cache_clear():
     """Clear the data cache to force fresh fetches."""
     from augur.data import clear_cache
@@ -1222,7 +1222,7 @@ async def api_cache_clear():
     return {"status": "ok", "message": "Cache cleared"}
 
 
-@app.get("/api/cache/info")
+@app.get("/api/cache/info", summary="缓存状态信息")
 async def api_cache_info():
     """Return cache size and TTL info."""
     from augur.data import cache_info
@@ -1237,7 +1237,7 @@ from augur.optional_deps import is_available as _is_available, get_install_hint
 _HAS_AUGUR_DATA = _is_available("augur.data")
 
 
-@app.get("/api/fetch/{ticker}")
+@app.get("/api/fetch/{ticker}", summary="获取实时行情数据")
 async def api_fetch_ticker(ticker: str):
     """Fetch real-time market data for a ticker via yfinance"""
     if not _HAS_AUGUR_DATA:
@@ -1262,7 +1262,7 @@ async def api_fetch_ticker(ticker: str):
         raise HTTPException(status_code=500, detail=f"Failed to fetch data: {e}")
 
 
-@app.get("/api/search")
+@app.get("/api/search", summary="搜索标的")
 async def api_search_tickers(q: str = ""):
     """Search for tickers by name/symbol"""
     if not q or len(q) < 1:
@@ -1305,7 +1305,7 @@ async def api_sparkline(ticker: str):
 
 # ============ Hot Tickers API Route ============
 
-@app.get("/api/hot-tickers")
+@app.get("/api/hot-tickers", summary="热门标的实时行情")
 async def api_hot_tickers(request: Request, refresh: bool = False):
     """热门标的实时行情：AAPL, NVDA, TSLA, MSFT, GOOGL, AMZN, BTC-USD, ETH-USD, META, AMD。
 
@@ -1339,7 +1339,7 @@ async def api_hot_tickers(request: Request, refresh: bool = False):
 
 # ============ Market Overview API Routes ============
 
-@app.get("/api/market-overview")
+@app.get("/api/market-overview", summary="全球市场总览")
 async def api_market_overview(request: Request, refresh: bool = False):
     """市场总览快照：主要指数、VIX、利率、商品、加密的实时价与涨跌幅。
 
@@ -1375,7 +1375,7 @@ async def api_market_overview(request: Request, refresh: bool = False):
         }
 
 
-@app.get("/api/datasources")
+@app.get("/api/datasources", summary="数据源状态")
 async def api_datasources():
     """返回当前可用的数据源链（用于 UI 展示数据来源覆盖情况）。"""
     try:
@@ -1395,14 +1395,14 @@ async def api_datasources():
 
 # ============ Config Export/Import + Test Endpoints ============
 
-@app.get("/api/config/export")
+@app.get("/api/config/export", summary="导出配置")
 async def api_config_export():
     """Export full config as JSON for backup/migration."""
     config = get_config()
     return JSONResponse(content=config)
 
 
-@app.post("/api/config/import")
+@app.post("/api/config/import", summary="导入配置")
 async def api_config_import(request: Request):
     """Import config from JSON body."""
     try:
@@ -1416,7 +1416,7 @@ async def api_config_import(request: Request):
     return {"status": "ok", "message": "配置已导入"}
 
 
-@app.post("/api/config/test-datasource")
+@app.post("/api/config/test-datasource", summary="测试数据源连接")
 async def api_test_datasource(request: Request):
     """Test datasource connectivity."""
     try:
@@ -1461,7 +1461,7 @@ async def api_test_datasource(request: Request):
     return {"status": "error", "detail": "连接测试失败"}
 
 
-@app.post("/api/config/test-notification")
+@app.post("/api/config/test-notification", summary="测试通知渠道")
 async def api_test_notification(request: Request):
     """Test notification channel connectivity."""
     try:
@@ -1514,7 +1514,7 @@ class NotificationTestBody(BaseModel):
     channel: str  # telegram, slack, wechat, lark
 
 
-@app.post("/api/notifications/test")
+@app.post("/api/notifications/test", summary="发送测试通知")
 async def api_notifications_test(body: NotificationTestBody):
     """Test notification channel by sending a test message."""
     channel = body.channel.lower()
@@ -1582,7 +1582,7 @@ async def api_notifications_test(body: NotificationTestBody):
     return {"status": "error", "detail": "测试失败"}
 
 
-@app.post("/api/notifications/config")
+@app.post("/api/notifications/config", summary="保存通知配置")
 async def api_notifications_config_save(request: Request):
     """Save notification configuration to config/notifications.yaml."""
     try:
@@ -1599,7 +1599,7 @@ async def api_notifications_config_save(request: Request):
     return {"status": "ok", "message": "通知配置已保存"}
 
 
-@app.get("/api/notifications/config")
+@app.get("/api/notifications/config", summary="获取通知配置")
 async def api_notifications_config_get():
     """Read notification configuration."""
     config_dir = Path(__file__).parent.parent / "config"
