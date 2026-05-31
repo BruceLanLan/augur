@@ -218,7 +218,15 @@ def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketCont
 
 
 def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict[str, MarketContext]:
-    """Fetch multiple tickers in parallel using ThreadPoolExecutor."""
+    """Fetch multiple tickers in parallel using ThreadPoolExecutor.
+
+    Args:
+        tickers: List of stock symbols to fetch.
+        max_workers: Maximum number of concurrent threads.
+
+    Returns:
+        Dict mapping each ticker to its MarketContext (empty context on failure).
+    """
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     results: Dict[str, MarketContext] = {}
@@ -234,7 +242,7 @@ def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict
     return results
 
 
-def fetch_history(ticker: str, period: str = "1y", force_refresh: bool = False) -> List[Dict]:
+def fetch_history(ticker: str, period: str = "1y", force_refresh: bool = False) -> List[Dict[str, Any]]:
     """
     Fetch historical price data.
 
@@ -496,12 +504,15 @@ def fetch_hot_tickers(force_refresh: bool = False) -> List[Dict[str, Any]]:
     return items
 
 
-def search_ticker(query: str) -> List[Dict]:
+def search_ticker(query: str) -> List[Dict[str, Any]]:
     """
     Search for tickers by name/symbol.
 
+    Args:
+        query: Search string (ticker symbol or company name).
+
     Returns:
-        List of {symbol, name, exchange, type}
+        List of dicts with keys: symbol, name, exchange, type.
     """
     yf = _get_yfinance()
 
