@@ -1,0 +1,618 @@
+{% extends "base.html" %}
+{% block title %}持仓管理 - Augur{% endblock %}
+{% block extra_head %}
+<style>
+.portfolio-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.portfolio-add-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.portfolio-add-form input {
+    width: 120px;
+}
+.portfolio-add-form input[type="text"] {
+    text-transform: uppercase;
+}
+.portfolio-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.summary-card {
+    padding: 16px;
+    text-align: center;
+}
+.summary-card .data-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+    font-family: var(--font-data);
+}
+.summary-card .data-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+.holdings-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+.holdings-table th {
+    text-align: left;
+    padding: 10px 8px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+}
+.holdings-table th:hover {
+    color: var(--accent-orange);
+}
+.holdings-table th .sort-arrow {
+    margin-left: 4px;
+    font-size: 0.65rem;
+}
+.holdings-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid var(--border-color);
+    font-family: var(--font-data);
+}
+.holdings-table tr:hover {
+    background: rgba(255,140,0,0.03);
+}
+.pnl-positive { color: var(--signal-buy); }
+.pnl-negative { color: var(--signal-sell); }
+.pnl-zero { color: var(--text-muted); }
+.chart-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+}
+@media (max-width: 768px) {
+    .chart-section { grid-template-columns: 1fr; }
+    .portfolio-add-form input { width: 90px; }
+}
+.chart-card {
+    padding: 16px;
+    min-height: 200px;
+}
+.chart-card h4 {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+}
+.portfolio-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+.augur-score-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: rgba(255,140,0,0.15);
+    color: var(--accent-orange);
+}
+.holding-remove {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+.holding-remove:hover {
+    color: var(--signal-sell);
+    background: rgba(255,23,68,0.1);
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<h2 style="color:var(--accent-orange); margin-bottom:4px;">持仓管理</h2>
+<p class="text-muted mb-16" style="font-size:0.82rem;">跟踪您的投资组合，实时盈亏计算与 Augur 大师分析</p>
+
+<!-- Add Holding Form -->
+<div class="card mb-24">
+    <div class="portfolio-header">
+        <div class="portfolio-add-form">
+            <input id="pf-ticker" type="text" class="form-input" placeholder="代码" title="股票代码">
+            <input id="pf-price" type="number" class="form-input" placeholder="买入价" step="0.01" min="0">
+            <input id="pf-qty" type="number" class="form-input" placeholder="数量" step="1" min="1">
+            <input id="pf-date" type="date" class="form-input" style="width:140px;">
+            <button class="btn btn-primary" onclick="addHolding()">添加</button>
+        </div>
+        <div class="flex gap-8">
+            <button class="btn btn-sm" onclick="runAugurAnalysis()" id="pf-analyze-btn">&#x1F9E0; Augur 分析</button>
+            <button class="btn btn-sm btn-ghost" onclick="clearPortfolio()">清空</button>
+        </div>
+    </div>
+</div>
+
+<!-- Total Summary -->
+<div class="portfolio-summary" id="pf-summary">
+    <div class="card summary-card">
+        <div class="data-value" id="sum-invested">--</div>
+        <div class="data-label">总投入</div>
+    </div>
+    <div class="card summary-card">
+        <div class="data-value" id="sum-current">--</div>
+        <div class="data-label">当前市值</div>
+    </div>
+    <div class="card summary-card">
+        <div class="data-value" id="sum-pnl">--</div>
+        <div class="data-label">总盈亏</div>
+    </div>
+    <div class="card summary-card">
+        <div class="data-value" id="sum-return">--</div>
+        <div class="data-label">总收益率</div>
+    </div>
+</div>
+
+<!-- Holdings Table -->
+<div class="card mb-24" id="pf-table-card">
+    <table class="holdings-table" id="holdings-table">
+        <thead>
+            <tr>
+                <th data-col="ticker" onclick="sortTable('ticker')">标的 <span class="sort-arrow"></span></th>
+                <th data-col="cost" onclick="sortTable('cost')">成本 <span class="sort-arrow"></span></th>
+                <th data-col="current" onclick="sortTable('current')">现价 <span class="sort-arrow"></span></th>
+                <th data-col="pnl" onclick="sortTable('pnl')">盈亏 <span class="sort-arrow"></span></th>
+                <th data-col="pnl_pct" onclick="sortTable('pnl_pct')">收益率 <span class="sort-arrow"></span></th>
+                <th data-col="days" onclick="sortTable('days')">持仓天数 <span class="sort-arrow"></span></th>
+                <th data-col="score" onclick="sortTable('score')">评分 <span class="sort-arrow"></span></th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="holdings-body"></tbody>
+    </table>
+</div>
+
+<!-- Empty State -->
+<div class="portfolio-empty card" id="pf-empty" style="display:none;">
+    <div style="font-size:2rem; margin-bottom:12px;">&#x1F4BC;</div>
+    <div>暂无持仓</div>
+    <div style="font-size:0.78rem; margin-top:8px; color:var(--text-muted);">在上方输入股票代码、买入价和数量来添加持仓</div>
+</div>
+
+<!-- Charts Section -->
+<div class="chart-section" id="pf-charts" style="display:none;">
+    <div class="card chart-card">
+        <h4>7日组合净值曲线</h4>
+        <div id="pf-line-chart"></div>
+    </div>
+    <div class="card chart-card">
+        <h4>资产配置</h4>
+        <div id="pf-donut-chart" style="display:flex; align-items:center; justify-content:center;"></div>
+    </div>
+</div>
+
+<!-- Augur Analysis Results -->
+<div id="pf-analysis-results" style="display:none;" class="card mb-24">
+    <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">Augur 大师评分</div>
+    <div id="pf-analysis-content"></div>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+var PF_KEY = 'augur-portfolio';
+var sortState = { col: '', asc: true };
+
+function getPortfolio() {
+    try { return JSON.parse(localStorage.getItem(PF_KEY)) || []; }
+    catch(e) { return []; }
+}
+
+function savePortfolio(list) {
+    localStorage.setItem(PF_KEY, JSON.stringify(list));
+}
+
+function addHolding() {
+    var ticker = (document.getElementById('pf-ticker').value || '').trim().toUpperCase();
+    var price = parseFloat(document.getElementById('pf-price').value);
+    var qty = parseInt(document.getElementById('pf-qty').value);
+    var date = document.getElementById('pf-date').value || new Date().toISOString().slice(0, 10);
+
+    if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
+    if (!/^[A-Za-z0-9.\-]{1,15}$/.test(ticker)) { showToast('无效代码格式', 'error'); return; }
+    if (isNaN(price) || price <= 0) { showToast('请输入有效买入价', 'warning'); return; }
+    if (isNaN(qty) || qty <= 0) { showToast('请输入有效数量', 'warning'); return; }
+
+    var list = getPortfolio();
+    list.push({ ticker: ticker, buyPrice: price, qty: qty, buyDate: date, currentPrice: 0, score: null, addedAt: Date.now() });
+    savePortfolio(list);
+
+    document.getElementById('pf-ticker').value = '';
+    document.getElementById('pf-price').value = '';
+    document.getElementById('pf-qty').value = '';
+    document.getElementById('pf-date').value = '';
+
+    renderPortfolio();
+    fetchCurrentPrice(ticker);
+    showToast(ticker + ' 已添加到持仓');
+}
+
+function removeHolding(idx) {
+    var list = getPortfolio();
+    list.splice(idx, 1);
+    savePortfolio(list);
+    renderPortfolio();
+    showToast('已移除');
+}
+
+function clearPortfolio() {
+    if (!confirm('确定要清空所有持仓吗？')) return;
+    savePortfolio([]);
+    renderPortfolio();
+    showToast('持仓已清空');
+}
+
+function fetchCurrentPrice(ticker) {
+    fetch('/api/fetch/' + ticker)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status === 'ok' && data.data && data.data.price) {
+                var list = getPortfolio();
+                for (var i = 0; i < list.length; i++) {
+                    if (list[i].ticker === ticker && list[i].currentPrice === 0) {
+                        list[i].currentPrice = data.data.price;
+                    }
+                }
+                savePortfolio(list);
+                renderPortfolio();
+            }
+        })
+        .catch(function() {});
+}
+
+function fetchAllPrices() {
+    var list = getPortfolio();
+    var tickers = [];
+    list.forEach(function(h) {
+        if (tickers.indexOf(h.ticker) === -1) tickers.push(h.ticker);
+    });
+    tickers.forEach(function(t) {
+        fetch('/api/fetch/' + t)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status === 'ok' && data.data && data.data.price) {
+                    var list2 = getPortfolio();
+                    for (var i = 0; i < list2.length; i++) {
+                        if (list2[i].ticker === t) {
+                            list2[i].currentPrice = data.data.price;
+                        }
+                    }
+                    savePortfolio(list2);
+                    renderPortfolio();
+                }
+            })
+            .catch(function() {});
+    });
+}
+
+function daysBetween(dateStr) {
+    var buy = new Date(dateStr);
+    var now = new Date();
+    var diff = now.getTime() - buy.getTime();
+    return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+}
+
+function renderPortfolio() {
+    var list = getPortfolio();
+    var body = document.getElementById('holdings-body');
+    var empty = document.getElementById('pf-empty');
+    var tableCard = document.getElementById('pf-table-card');
+    var charts = document.getElementById('pf-charts');
+
+    if (!list.length) {
+        body.innerHTML = '';
+        empty.style.display = 'block';
+        tableCard.style.display = 'none';
+        charts.style.display = 'none';
+        updateSummary(0, 0);
+        return;
+    }
+
+    empty.style.display = 'none';
+    tableCard.style.display = 'block';
+    charts.style.display = 'grid';
+
+    var totalInvested = 0, totalCurrent = 0;
+    var rows = list.map(function(h, idx) {
+        var cost = h.buyPrice * h.qty;
+        var current = (h.currentPrice || h.buyPrice) * h.qty;
+        var pnl = current - cost;
+        var pnlPct = cost > 0 ? (pnl / cost) * 100 : 0;
+        var days = daysBetween(h.buyDate);
+        totalInvested += cost;
+        totalCurrent += current;
+
+        var pnlClass = pnl > 0 ? 'pnl-positive' : pnl < 0 ? 'pnl-negative' : 'pnl-zero';
+        var scoreHtml = h.score !== null ? '<span class="augur-score-badge">' + h.score.toFixed(1) + '</span>' : '--';
+
+        return {
+            ticker: h.ticker, cost: cost, current: h.currentPrice || h.buyPrice,
+            pnl: pnl, pnl_pct: pnlPct, days: days, score: h.score || 0, idx: idx,
+            html: '<tr>' +
+                '<td style="font-weight:600;">' + escapeHtml(h.ticker) + '</td>' +
+                '<td>$' + cost.toFixed(2) + '</td>' +
+                '<td>$' + (h.currentPrice || h.buyPrice).toFixed(2) + '</td>' +
+                '<td class="' + pnlClass + '">$' + pnl.toFixed(2) + '</td>' +
+                '<td class="' + pnlClass + '">' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%</td>' +
+                '<td>' + days + '</td>' +
+                '<td>' + scoreHtml + '</td>' +
+                '<td><button class="holding-remove" onclick="removeHolding(' + idx + ')" title="删除">&times;</button></td>' +
+                '</tr>'
+        };
+    });
+
+    // Apply sorting
+    if (sortState.col) {
+        rows.sort(function(a, b) {
+            var va = a[sortState.col], vb = b[sortState.col];
+            if (typeof va === 'string') { va = va.toLowerCase(); vb = vb.toLowerCase(); }
+            if (va < vb) return sortState.asc ? -1 : 1;
+            if (va > vb) return sortState.asc ? 1 : -1;
+            return 0;
+        });
+    }
+
+    body.innerHTML = rows.map(function(r) { return r.html; }).join('');
+    updateSummary(totalInvested, totalCurrent);
+    renderDonutChart(list);
+    renderLineChart(list);
+}
+
+function updateSummary(invested, current) {
+    var pnl = current - invested;
+    var rate = invested > 0 ? (pnl / invested) * 100 : 0;
+    document.getElementById('sum-invested').textContent = invested > 0 ? '$' + invested.toFixed(0) : '--';
+    document.getElementById('sum-current').textContent = current > 0 ? '$' + current.toFixed(0) : '--';
+    var pnlEl = document.getElementById('sum-pnl');
+    pnlEl.textContent = invested > 0 ? (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(0) : '--';
+    pnlEl.style.color = pnl > 0 ? 'var(--signal-buy)' : pnl < 0 ? 'var(--signal-sell)' : '';
+    var retEl = document.getElementById('sum-return');
+    retEl.textContent = invested > 0 ? (rate >= 0 ? '+' : '') + rate.toFixed(2) + '%' : '--';
+    retEl.style.color = rate > 0 ? 'var(--signal-buy)' : rate < 0 ? 'var(--signal-sell)' : '';
+}
+
+function sortTable(col) {
+    if (sortState.col === col) {
+        sortState.asc = !sortState.asc;
+    } else {
+        sortState.col = col;
+        sortState.asc = true;
+    }
+    // Update arrows
+    document.querySelectorAll('.holdings-table th').forEach(function(th) {
+        var arrow = th.querySelector('.sort-arrow');
+        if (arrow) arrow.textContent = '';
+    });
+    var activeTh = document.querySelector('.holdings-table th[data-col="' + col + '"] .sort-arrow');
+    if (activeTh) activeTh.textContent = sortState.asc ? '\u25B2' : '\u25BC';
+    renderPortfolio();
+}
+
+function renderDonutChart(list) {
+    var container = document.getElementById('pf-donut-chart');
+    if (!container || !list.length) return;
+
+    // Calculate allocation by ticker
+    var alloc = {};
+    var total = 0;
+    list.forEach(function(h) {
+        var val = (h.currentPrice || h.buyPrice) * h.qty;
+        alloc[h.ticker] = (alloc[h.ticker] || 0) + val;
+        total += val;
+    });
+
+    if (total === 0) { container.innerHTML = ''; return; }
+
+    var colors = ['#ff9800','#00c853','#2196f3','#e91e63','#9c27b0','#00bcd4','#ff5722','#4caf50','#ffc107','#607d8b'];
+    var entries = Object.keys(alloc).map(function(k, i) {
+        return { ticker: k, value: alloc[k], pct: (alloc[k] / total) * 100, color: colors[i % colors.length] };
+    });
+    entries.sort(function(a, b) { return b.value - a.value; });
+
+    var r = 60, cx = 80, cy = 80, circumference = 2 * Math.PI * r;
+    var svg = '<svg width="160" height="160" viewBox="0 0 160 160">';
+    var offset = 0;
+    entries.forEach(function(e) {
+        var dash = (e.pct / 100) * circumference;
+        var gap = circumference - dash;
+        svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + e.color + '" stroke-width="20" ' +
+            'stroke-dasharray="' + dash.toFixed(2) + ' ' + gap.toFixed(2) + '" ' +
+            'stroke-dashoffset="' + (-offset).toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
+        offset += dash;
+    });
+    svg += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dy="0.35em" fill="var(--text-primary)" font-size="12" font-family="var(--font-data)">' + entries.length + ' 只</text>';
+    svg += '</svg>';
+
+    var legend = '<div style="margin-left:12px; font-size:0.72rem;">';
+    entries.forEach(function(e) {
+        legend += '<div style="margin-bottom:4px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + e.color + ';margin-right:6px;"></span>' +
+            escapeHtml(e.ticker) + ' <span style="color:var(--text-muted);">' + e.pct.toFixed(1) + '%</span></div>';
+    });
+    legend += '</div>';
+
+    container.innerHTML = svg + legend;
+}
+
+function renderLineChart(list) {
+    var container = document.getElementById('pf-line-chart');
+    if (!container || !list.length) { if (container) container.innerHTML = ''; return; }
+
+    // Gather unique tickers and fetch sparklines
+    var tickers = [];
+    list.forEach(function(h) { if (tickers.indexOf(h.ticker) === -1) tickers.push(h.ticker); });
+
+    var sparks = {};
+    var pending = tickers.length;
+
+    if (pending === 0) { container.innerHTML = '<span class="text-muted">无数据</span>'; return; }
+
+    tickers.forEach(function(t) {
+        fetch('/api/sparkline/' + t)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                sparks[t] = data.prices || [];
+                pending--;
+                if (pending === 0) drawLineChart(sparks, list, container);
+            })
+            .catch(function() {
+                sparks[t] = [];
+                pending--;
+                if (pending === 0) drawLineChart(sparks, list, container);
+            });
+    });
+}
+
+function drawLineChart(sparks, list, container) {
+    // Compute weighted portfolio value per day
+    var maxLen = 0;
+    Object.values(sparks).forEach(function(p) { if (p.length > maxLen) maxLen = p.length; });
+    if (maxLen < 2) { container.innerHTML = '<span class="text-muted">数据不足</span>'; return; }
+
+    var totalQty = {};
+    list.forEach(function(h) { totalQty[h.ticker] = (totalQty[h.ticker] || 0) + h.qty; });
+
+    var values = [];
+    for (var i = 0; i < maxLen; i++) {
+        var dayVal = 0;
+        Object.keys(sparks).forEach(function(t) {
+            var prices = sparks[t];
+            var pIdx = prices.length - maxLen + i;
+            if (pIdx >= 0 && pIdx < prices.length) {
+                dayVal += prices[pIdx] * (totalQty[t] || 0);
+            }
+        });
+        values.push(dayVal);
+    }
+
+    var w = 320, h = 120, pad = 20;
+    var min = Math.min.apply(null, values);
+    var max = Math.max.apply(null, values);
+    var range = max - min || 1;
+    var points = values.map(function(v, idx) {
+        var x = pad + (idx / (values.length - 1)) * (w - 2 * pad);
+        var y = pad + (1 - (v - min) / range) * (h - 2 * pad);
+        return x.toFixed(1) + ',' + y.toFixed(1);
+    });
+
+    var trend = values[values.length - 1] >= values[0] ? '#00c853' : '#ff1744';
+    var svg = '<svg width="100%" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">';
+    // Area fill
+    svg += '<polygon points="' + pad + ',' + (h - pad) + ' ' + points.join(' ') + ' ' + (w - pad) + ',' + (h - pad) + '" fill="' + trend + '" opacity="0.08"/>';
+    // Line
+    svg += '<polyline points="' + points.join(' ') + '" fill="none" stroke="' + trend + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+    // Start/end labels
+    svg += '<text x="' + pad + '" y="' + (h - 4) + '" fill="var(--text-muted)" font-size="9" font-family="var(--font-data)">$' + values[0].toFixed(0) + '</text>';
+    svg += '<text x="' + (w - pad) + '" y="' + (h - 4) + '" fill="' + trend + '" font-size="9" font-family="var(--font-data)" text-anchor="end">$' + values[values.length - 1].toFixed(0) + '</text>';
+    svg += '</svg>';
+
+    container.innerHTML = svg;
+}
+
+function runAugurAnalysis() {
+    var list = getPortfolio();
+    if (!list.length) { showToast('持仓为空', 'warning'); return; }
+
+    var btn = document.getElementById('pf-analyze-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '分析中...'; }
+    showProgress();
+
+    var tickers = [];
+    list.forEach(function(h) { if (tickers.indexOf(h.ticker) === -1) tickers.push(h.ticker); });
+
+    var results = {};
+    var pending = tickers.length;
+
+    tickers.forEach(function(t) {
+        fetchWithTimeout('/api/analyze/' + t, {}, 60000)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status === 'ok') results[t] = data;
+                pending--;
+                if (pending === 0) onAnalysisDone(results);
+            })
+            .catch(function() {
+                pending--;
+                if (pending === 0) onAnalysisDone(results);
+            });
+    });
+}
+
+function onAnalysisDone(results) {
+    var btn = document.getElementById('pf-analyze-btn');
+    if (btn) { btn.disabled = false; btn.textContent = '\u{1F9E0} Augur \u5206\u6790'; }
+    hideProgress();
+
+    // Update scores in portfolio
+    var list = getPortfolio();
+    list.forEach(function(h) {
+        if (results[h.ticker] && results[h.ticker].consensus) {
+            h.score = results[h.ticker].consensus.score || 0;
+        }
+    });
+    savePortfolio(list);
+    renderPortfolio();
+
+    // Show analysis summary
+    var section = document.getElementById('pf-analysis-results');
+    var content = document.getElementById('pf-analysis-content');
+    if (!section || !content) return;
+
+    section.style.display = 'block';
+    var html = '<table class="md-table" style="width:100%;"><thead><tr>' +
+        '<th>标的</th><th>信号</th><th>评分</th><th>置信度</th>' +
+        '</tr></thead><tbody>';
+
+    Object.keys(results).forEach(function(t) {
+        var r = results[t];
+        var signal = r.consensus.signal || 'neutral';
+        var signalLabel = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+        var sigClass = signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral';
+        html += '<tr>' +
+            '<td style="font-weight:600; font-family:var(--font-data);">' + escapeHtml(t) + '</td>' +
+            '<td><span class="signal-badge ' + sigClass + '">' + signalLabel + '</span></td>' +
+            '<td style="font-family:var(--font-data); color:var(--accent-orange);">' + (r.consensus.score || 0).toFixed(1) + '</td>' +
+            '<td style="font-family:var(--font-data);">' + ((r.consensus.confidence || 0) * 100).toFixed(0) + '%</td>' +
+            '</tr>';
+    });
+
+    html += '</tbody></table>';
+    content.innerHTML = html;
+    showToast('Augur 分析完成');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default date to today
+    var dateInput = document.getElementById('pf-date');
+    if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
+    renderPortfolio();
+    // Auto-fetch prices on load
+    setTimeout(fetchAllPrices, 500);
+});
+</script>
+{% endblock %}
