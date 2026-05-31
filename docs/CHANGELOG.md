@@ -4,6 +4,45 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v7.6.0 (2026-06-01) - 自选股 & 可视化 & 导出增强
+
+### 📋 自选股 Watchlist
+- 新增 /watchlist 页面，支持添加/删除自选股
+- 数据存储在 localStorage，无需注册登录
+- "一键全部分析" 批量对自选股运行 18 位大师共识评分
+- 每个标的展示：代码、公司名、当前价、涨跌幅、最后评分
+
+### 📈 迷你走势图 Sparkline
+- 新增 /api/sparkline/{ticker} 端点，返回最近 7 个交易日收盘价
+- 首页热门标的卡片内嵌 SVG polyline 迷你走势图
+- 自选股列表同样展示 sparkline
+- 上涨绿色、下跌红色、横盘黄色
+
+### 📊 历史分析对比
+- stocks.html 新增"历史对比"面板
+- 从 localStorage 缓存提取同一标的不同时间的分析记录
+- 表格展示：日期、评分、信号、价格
+
+### 📦 报告导出增强
+- 新增"导出为 JSON"按钮（结构化分析数据，方便程序化处理）
+- 新增"导出为 CSV"按钮（18 位大师评分表格）
+- 纯前端 Blob URL 实现，无需后端支持
+
+### 🔍 SEO & Open Graph
+- base.html 添加完整 meta 标签：description、keywords、og:title/description/image/type、Twitter Card
+- 新增 /robots.txt 和 /sitemap.xml 静态路由
+- 每个页面 <title> 确保唯一且有意义
+
+### 🏷️ 代码质量
+- data.py 所有公开函数添加完整 type hints 和 docstring
+- app.py 所有端点添加 OpenAPI summary 注释
+- 新增 py.typed 标记文件（PEP 561，支持 mypy/pyright）
+
+### 🔧 版本
+- 版本升至 v7.6.0
+
+---
+
 ## v7.5.0 (2026-06-01) - 国际化 & 安全 & Scanner 大版本升级
 
 ### 🌐 国际化 (i18n)
