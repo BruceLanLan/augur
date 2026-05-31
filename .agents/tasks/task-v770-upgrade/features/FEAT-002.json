@@ -1,0 +1,24 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Persona deep interaction: ask questions to individual masters, compare two masters, and new API endpoint for persona opinions",
+  "status": "in_progress",
+  "steps": [
+    "In dashboard/templates/personas.html, add a 'Ask Question' feature to each persona card: (1) An input field where user types a question (e.g. 'What do you think about NVDA's moat?'). (2) A submit button that calls /api/persona/{id}/opinion?ticker=XXX&question=YYY. (3) Display the persona's response (reasoning extracted from analysis) in the card's expanded section.",
+    "Add 'Compare Two Masters' feature in personas.html: (1) UI to select two personas from dropdowns. (2) Input field for a ticker. (3) Button to run comparison. (4) Display side-by-side comparison table showing: persona name, signal, score, confidence, key reasoning for both masters on the same ticker.",
+    "Add /api/persona/{agent_id}/opinion endpoint in dashboard/app.py: (1) Accept query params: ticker (required), question (optional). (2) Run analysis for the specified ticker using only that single agent. (3) Return the agent's signal, score, confidence, reasoning, and key_findings. (4) If question is provided, include it in the response context.",
+    "Add /api/persona/compare endpoint in dashboard/app.py: (1) Accept query params: persona1, persona2, ticker. (2) Run analysis with both agents. (3) Return comparison data with both agents' results side by side."
+  ],
+  "acceptance_criteria": [
+    "/api/persona/{agent_id}/opinion?ticker=AAPL returns valid analysis from single agent",
+    "/api/persona/compare?persona1=buffett&persona2=munger&ticker=AAPL returns comparison data",
+    "Personas page has question input and compare UI elements",
+    "Question responses display in the persona card"
+  ],
+  "verification": [
+    "pytest tests/ -x -q passes (no test modifications)",
+    "curl http://localhost:8888/api/persona/buffett/opinion?ticker=AAPL returns valid JSON"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
