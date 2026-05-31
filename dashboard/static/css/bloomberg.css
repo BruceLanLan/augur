@@ -2265,3 +2265,131 @@ kbd {
         page-break-inside: avoid;
     }
 }
+
+
+/* ============================================================
+   Data Source Status Panel (FEAT-003)
+   ============================================================ */
+
+.datasource-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+
+.datasource-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    transition: border-color 0.15s, transform 0.15s;
+}
+
+.datasource-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-1px);
+}
+
+.ds-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ds-card-name {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.ds-badge-active {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    font-family: var(--font-data);
+    letter-spacing: 0.3px;
+    background: rgba(0, 200, 83, 0.15);
+    color: var(--signal-buy);
+    border: 1px solid rgba(0, 200, 83, 0.3);
+}
+
+.ds-badge-inactive {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    font-family: var(--font-data);
+    letter-spacing: 0.3px;
+    background: rgba(136, 136, 160, 0.1);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.ds-card-coverage {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+.ds-card-footer {
+    font-size: 0.7rem;
+}
+
+.ds-key-badge {
+    color: var(--signal-neutral);
+    font-family: var(--font-data);
+    font-size: 0.68rem;
+}
+
+.ds-free-badge {
+    color: var(--signal-buy);
+    font-family: var(--font-data);
+    font-size: 0.68rem;
+}
+
+/* --- Responsive: Datasource grid --- */
+@media (max-width: 600px) {
+    .datasource-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- Additional responsive rules (FEAT-003) --- */
+@media (max-width: 1024px) {
+    .datasource-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .grid-4 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+
+    .hero-section {
+        padding: 24px 12px !important;
+    }
+
+    .hero-title {
+        font-size: 1.4rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.82rem;
+    }
+
+    .hero-input {
+        max-width: 100%;
+        font-size: 1rem;
+    }
+
+    .status-bar {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+}
