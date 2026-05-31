@@ -611,6 +611,76 @@ async def analyze_ticker(
     return response
 
 
+@app.get("/api/persona/compare", summary="对比两位投资大师对同一标的的观点")
+async def compare_personas(persona1: str, persona2: str, ticker: str):
+    """
+    对比两位投资大师对同一标的的分析观点。
+
+    - persona1: 第一位投资人ID
+    - persona2: 第二位投资人ID
+    - ticker: 股票代码
+    """
+    # Validate ticker format
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
+
+    # Get both agents
+    registry = get_registry()
+    agent1 = registry.get(persona1)
+    agent2 = registry.get(persona2)
+
+    if not agent1:
+        raise HTTPException(status_code=404, detail=f"Persona '{persona1}' not found")
+    if not agent2:
+        raise HTTPException(status_code=404, detail=f"Persona '{persona2}' not found")
+
+    # Build market context
+    ctx = MarketContext(ticker=ticker.upper())
+    try:
+        from augur.data import fetch_market_context
+        ctx = fetch_market_context(ticker)
+    except Exception:
+        pass
+
+    # Run both analyses
+    try:
+        resp1 = agent1.analyze(ctx)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed for {persona1}: {e}")
+
+    try:
+        resp2 = agent2.analyze(ctx)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed for {persona2}: {e}")
+
+    enrichment1 = PERSONA_ENRICHMENT.get(persona1, {})
+    enrichment2 = PERSONA_ENRICHMENT.get(persona2, {})
+
+    def _build_result(agent_id, agent, resp, enrichment):
+        return {
+            "agent_id": agent_id,
+            "agent_name": enrichment.get("cn_name", agent.name),
+            "en_name": enrichment.get("en_name", agent.name),
+            "school": enrichment.get("school", ""),
+            "signal": resp.signal.value,
+            "score": round(resp.score, 1),
+            "confidence": round(resp.confidence, 2),
+            "reasoning": resp.reasoning,
+            "key_findings": resp.key_findings,
+            "risks": resp.risks if hasattr(resp, "risks") else [],
+        }
+
+    return {
+        "status": "ok",
+        "ticker": ticker.upper(),
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "persona1": _build_result(persona1, agent1, resp1, enrichment1),
+        "persona2": _build_result(persona2, agent2, resp2, enrichment2),
+        "agreement": resp1.signal == resp2.signal,
+        "score_diff": round(abs(resp1.score - resp2.score), 1),
+    }
+
+
 @app.get("/api/persona/{agent_id}", summary="获取单个投资人详情")
 async def get_persona(agent_id: str):
     """获取单个投资人的详细信息"""
@@ -618,6 +688,56 @@ async def get_persona(agent_id: str):
     if not agent:
         raise HTTPException(status_code=404, detail=f"Persona '{agent_id}' not found")
     return agent.to_dict()
+
+
+@app.get("/api/persona/{agent_id}/opinion", summary="获取单个投资人对标的的分析观点")
+async def get_persona_opinion(agent_id: str, ticker: str, question: Optional[str] = None):
+    """
+    使用单个投资大师分析指定标的，返回其独立观点。
+
+    - agent_id: 投资人ID (如 buffett, munger, dalio)
+    - ticker: 股票代码 (如 AAPL, NVDA)
+    - question: 可选的用户问题上下文
+    """
+    # Validate ticker format
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
+
+    # Get agent
+    agent = get_registry().get(agent_id)
+    if not agent:
+        raise HTTPException(status_code=404, detail=f"Persona '{agent_id}' not found")
+
+    # Build market context
+    ctx = MarketContext(ticker=ticker.upper())
+    try:
+        from augur.data import fetch_market_context
+        ctx = fetch_market_context(ticker)
+    except Exception:
+        pass
+
+    # Run single agent analysis
+    try:
+        response = agent.analyze(ctx)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
+
+    enrichment = PERSONA_ENRICHMENT.get(agent_id, {})
+
+    return {
+        "status": "ok",
+        "agent_id": agent_id,
+        "agent_name": enrichment.get("cn_name", agent.name),
+        "ticker": ticker.upper(),
+        "signal": response.signal.value,
+        "score": round(response.score, 1),
+        "confidence": round(response.confidence, 2),
+        "reasoning": response.reasoning,
+        "key_findings": response.key_findings,
+        "risks": response.risks if hasattr(response, "risks") else [],
+        "question": question,
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    }
 
 
 @app.get("/api/report/{ticker}", summary="生成深度分析报告")

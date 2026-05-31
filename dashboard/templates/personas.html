@@ -25,7 +25,7 @@
     padding-top: 0;
 }
 .persona-card.expanded .card-detail {
-    max-height: 500px;
+    max-height: 800px;
     opacity: 1;
     padding-top: 14px;
 }
@@ -77,6 +77,164 @@
     color: var(--accent-orange);
     margin-right: 6px;
 }
+/* Compare Section */
+.compare-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    margin-bottom: 24px;
+}
+.compare-section h3 {
+    color: var(--accent-orange);
+    margin: 0 0 14px;
+    font-size: 1rem;
+}
+.compare-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.compare-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.compare-form label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+.compare-form select, .compare-form input {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    min-width: 160px;
+}
+.compare-form select:focus, .compare-form input:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+}
+.compare-results {
+    margin-top: 16px;
+    display: none;
+}
+.compare-results.visible {
+    display: block;
+}
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+.compare-table th {
+    text-align: left;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+.compare-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    vertical-align: top;
+}
+.compare-table .signal-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+.compare-table .signal-badge.bullish { background: rgba(34,197,94,0.15); color: #22c55e; }
+.compare-table .signal-badge.bearish { background: rgba(239,68,68,0.15); color: #ef4444; }
+.compare-table .signal-badge.neutral { background: rgba(234,179,8,0.15); color: #eab308; }
+/* Ask Question Section */
+.ask-section {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-color);
+}
+.ask-section .ask-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+.ask-section input {
+    flex: 1;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    padding: 6px 10px;
+    font-size: 0.76rem;
+}
+.ask-section input:focus {
+    outline: none;
+    border-color: var(--accent-orange);
+}
+.ask-section button {
+    background: var(--accent-orange);
+    border: none;
+    border-radius: var(--radius-sm);
+    color: #000;
+    padding: 6px 12px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.ask-section button:hover {
+    opacity: 0.9;
+}
+.ask-section button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+.ask-response {
+    margin-top: 10px;
+    display: none;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+}
+.ask-response.visible {
+    display: block;
+}
+.ask-response .signal-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 8px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    margin-right: 8px;
+}
+.ask-response .signal-badge.bullish { background: rgba(34,197,94,0.15); color: #22c55e; }
+.ask-response .signal-badge.bearish { background: rgba(239,68,68,0.15); color: #ef4444; }
+.ask-response .signal-badge.neutral { background: rgba(234,179,8,0.15); color: #eab308; }
+.ask-response .reasoning-text {
+    font-size: 0.74rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-top: 8px;
+}
+.ask-response .findings-list {
+    margin-top: 6px;
+    padding-left: 14px;
+}
+.ask-response .findings-list li {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -89,6 +247,49 @@
     <div class="flex gap-8">
         <button class="btn btn-sm btn-ghost" onclick="expandAllCards(true)" aria-label="全部展开">全部展开</button>
         <button class="btn btn-sm btn-ghost" onclick="expandAllCards(false)" aria-label="全部收起">全部收起</button>
+    </div>
+</div>
+
+<!-- Compare Two Masters Section -->
+<div class="compare-section">
+    <h3>&#x2694; 大师对决 - Compare Two Masters</h3>
+    <div class="compare-form">
+        <div class="form-group">
+            <label>投资大师 1</label>
+            <select id="compare-persona1">
+                {% for persona in personas %}
+                <option value="{{ persona.id }}">{{ persona.cn_name }} ({{ persona.school }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>投资大师 2</label>
+            <select id="compare-persona2">
+                {% for persona in personas %}
+                <option value="{{ persona.id }}" {% if loop.index == 2 %}selected{% endif %}>{{ persona.cn_name }} ({{ persona.school }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label>股票代码</label>
+            <input type="text" id="compare-ticker" placeholder="AAPL" value="AAPL" style="min-width:100px;">
+        </div>
+        <button class="btn btn-primary" id="compare-btn" onclick="runComparison()" style="padding:8px 18px; font-size:0.82rem;">
+            &#x1F50D; 对比分析
+        </button>
+    </div>
+    <div class="compare-results" id="compare-results">
+        <table class="compare-table">
+            <thead>
+                <tr>
+                    <th>维度</th>
+                    <th id="compare-name1">大师 1</th>
+                    <th id="compare-name2">大师 2</th>
+                </tr>
+            </thead>
+            <tbody id="compare-tbody">
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -194,6 +395,17 @@
                 </a>
                 <span class="text-mono text-muted" style="font-size:0.65rem;">{{ persona.id }}</span>
             </div>
+
+            <!-- Ask Question Section -->
+            <div class="ask-section" onclick="event.stopPropagation();">
+                <div class="data-label" style="margin-bottom:6px;">&#x1F4AC; 向大师提问</div>
+                <div class="ask-form">
+                    <input type="text" class="ask-ticker-input" placeholder="股票代码 (如 NVDA)" value="AAPL">
+                    <input type="text" class="ask-question-input" placeholder="你的问题 (可选)..." style="flex:2;">
+                    <button onclick="askPersona('{{ persona.id }}', this)" class="ask-btn">提问</button>
+                </div>
+                <div class="ask-response" id="ask-response-{{ persona.id }}"></div>
+            </div>
         </div>
     </div>
     {% endfor %}
@@ -233,6 +445,137 @@ function applyFilters() {
         var matchText = !query || name.includes(query);
         card.style.display = (matchSchool && matchText) ? '' : 'none';
     });
+}
+
+/* Ask Question Feature */
+function askPersona(agentId, btn) {
+    var card = btn.closest('.persona-card');
+    var tickerInput = card.querySelector('.ask-ticker-input');
+    var questionInput = card.querySelector('.ask-question-input');
+    var responseDiv = document.getElementById('ask-response-' + agentId);
+
+    var ticker = (tickerInput.value || '').trim().toUpperCase();
+    var question = (questionInput.value || '').trim();
+
+    if (!ticker) {
+        tickerInput.style.borderColor = '#ef4444';
+        return;
+    }
+    tickerInput.style.borderColor = '';
+
+    btn.disabled = true;
+    btn.textContent = '...';
+    responseDiv.className = 'ask-response visible';
+    responseDiv.innerHTML = '<div style="color:var(--text-muted); font-size:0.74rem;">&#x23F3; 正在分析中...</div>';
+
+    var url = '/api/persona/' + agentId + '/opinion?ticker=' + encodeURIComponent(ticker);
+    if (question) {
+        url += '&question=' + encodeURIComponent(question);
+    }
+
+    fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            btn.textContent = '提问';
+            if (data.status === 'ok') {
+                var signalClass = data.signal === 'bullish' ? 'bullish' : (data.signal === 'bearish' ? 'bearish' : 'neutral');
+                var signalText = data.signal === 'bullish' ? 'BULLISH' : (data.signal === 'bearish' ? 'BEARISH' : 'NEUTRAL');
+                var html = '<div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">';
+                html += '<span class="signal-badge ' + signalClass + '">' + signalText + '</span>';
+                html += '<span style="font-size:0.74rem; color:var(--accent-orange); font-weight:700;">Score: ' + data.score + '/10</span>';
+                html += '<span style="font-size:0.7rem; color:var(--text-muted);">Confidence: ' + Math.round(data.confidence * 100) + '%</span>';
+                html += '</div>';
+                html += '<div class="reasoning-text">' + (data.reasoning || 'No reasoning provided.') + '</div>';
+                if (data.key_findings && data.key_findings.length > 0) {
+                    html += '<ul class="findings-list">';
+                    data.key_findings.forEach(function(f) { html += '<li>' + f + '</li>'; });
+                    html += '</ul>';
+                }
+                responseDiv.innerHTML = html;
+            } else {
+                responseDiv.innerHTML = '<div style="color:#ef4444; font-size:0.74rem;">Error: ' + (data.detail || 'Unknown error') + '</div>';
+            }
+        })
+        .catch(function(err) {
+            btn.disabled = false;
+            btn.textContent = '提问';
+            responseDiv.innerHTML = '<div style="color:#ef4444; font-size:0.74rem;">Request failed: ' + err.message + '</div>';
+        });
+}
+
+/* Compare Two Masters Feature */
+function runComparison() {
+    var persona1 = document.getElementById('compare-persona1').value;
+    var persona2 = document.getElementById('compare-persona2').value;
+    var ticker = (document.getElementById('compare-ticker').value || '').trim().toUpperCase();
+    var btn = document.getElementById('compare-btn');
+    var resultsDiv = document.getElementById('compare-results');
+    var tbody = document.getElementById('compare-tbody');
+
+    if (!ticker) {
+        document.getElementById('compare-ticker').style.borderColor = '#ef4444';
+        return;
+    }
+    document.getElementById('compare-ticker').style.borderColor = '';
+
+    if (persona1 === persona2) {
+        alert('Please select two different masters to compare.');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '&#x23F3; 分析中...';
+    resultsDiv.className = 'compare-results visible';
+    tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--text-muted); padding:20px;">Loading...</td></tr>';
+
+    var url = '/api/persona/compare?persona1=' + encodeURIComponent(persona1) + '&persona2=' + encodeURIComponent(persona2) + '&ticker=' + encodeURIComponent(ticker);
+
+    fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            btn.innerHTML = '&#x1F50D; 对比分析';
+            if (data.status === 'ok') {
+                var p1 = data.persona1;
+                var p2 = data.persona2;
+                document.getElementById('compare-name1').textContent = p1.agent_name;
+                document.getElementById('compare-name2').textContent = p2.agent_name;
+
+                var signalBadge = function(signal) {
+                    var cls = signal === 'bullish' ? 'bullish' : (signal === 'bearish' ? 'bearish' : 'neutral');
+                    var txt = signal.toUpperCase();
+                    return '<span class="signal-badge ' + cls + '">' + txt + '</span>';
+                };
+
+                var html = '';
+                html += '<tr><td>Signal</td><td>' + signalBadge(p1.signal) + '</td><td>' + signalBadge(p2.signal) + '</td></tr>';
+                html += '<tr><td>Score</td><td style="color:var(--accent-orange); font-weight:700;">' + p1.score + '/10</td><td style="color:var(--accent-orange); font-weight:700;">' + p2.score + '/10</td></tr>';
+                html += '<tr><td>Confidence</td><td>' + Math.round(p1.confidence * 100) + '%</td><td>' + Math.round(p2.confidence * 100) + '%</td></tr>';
+                html += '<tr><td>School</td><td><span class="school-badge ' + p1.school + '">' + p1.school + '</span></td><td><span class="school-badge ' + p2.school + '">' + p2.school + '</span></td></tr>';
+                html += '<tr><td>Reasoning</td><td style="font-size:0.72rem; line-height:1.5;">' + (p1.reasoning || '-') + '</td><td style="font-size:0.72rem; line-height:1.5;">' + (p2.reasoning || '-') + '</td></tr>';
+
+                var findings1 = (p1.key_findings || []).map(function(f) { return '<li>' + f + '</li>'; }).join('') || '<li>-</li>';
+                var findings2 = (p2.key_findings || []).map(function(f) { return '<li>' + f + '</li>'; }).join('') || '<li>-</li>';
+                html += '<tr><td>Key Findings</td><td><ul style="padding-left:14px; margin:0; font-size:0.72rem;">' + findings1 + '</ul></td><td><ul style="padding-left:14px; margin:0; font-size:0.72rem;">' + findings2 + '</ul></td></tr>';
+
+                html += '<tr><td>Agreement</td><td colspan="2" style="text-align:center;">';
+                if (data.agreement) {
+                    html += '<span style="color:#22c55e; font-weight:600;">&#x2705; Consensus (Score diff: ' + data.score_diff + ')</span>';
+                } else {
+                    html += '<span style="color:#ef4444; font-weight:600;">&#x274C; Divergent (Score diff: ' + data.score_diff + ')</span>';
+                }
+                html += '</td></tr>';
+                tbody.innerHTML = html;
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3" style="color:#ef4444; text-align:center;">' + (data.detail || 'Error') + '</td></tr>';
+            }
+        })
+        .catch(function(err) {
+            btn.disabled = false;
+            btn.innerHTML = '&#x1F50D; 对比分析';
+            tbody.innerHTML = '<tr><td colspan="3" style="color:#ef4444; text-align:center;">Request failed: ' + err.message + '</td></tr>';
+        });
 }
 </script>
 {% endblock %}
