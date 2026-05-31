@@ -169,9 +169,21 @@ function heroGo() {
     document.getElementById('hero-error').style.display = 'none';
 
     fetch('/api/analyze/' + t)
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (!r.ok) {
+                return r.json().then(function(e) {
+                    throw new Error(e.detail || ('请求失败 (HTTP ' + r.status + ')'));
+                }, function() {
+                    throw new Error('请求失败 (HTTP ' + r.status + ')');
+                });
+            }
+            return r.json();
+        })
         .then(function(data) {
             document.getElementById('hero-spinner').style.display = 'none';
+            if (!data || !data.consensus) {
+                throw new Error(data && data.detail ? data.detail : '分析返回数据异常，请重试');
+            }
             var cons = data.consensus || {};
             var signal = (cons.signal || 'neutral').toLowerCase();
 

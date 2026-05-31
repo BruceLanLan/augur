@@ -349,10 +349,22 @@ function runAnalysis() {
     document.getElementById('error-panel').style.display = 'none';
 
     fetch('/api/analyze/' + ticker + '?' + params)
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (!r.ok) {
+                return r.json().then(function(e) {
+                    throw new Error(e.detail || ('请求失败 (HTTP ' + r.status + ')'));
+                }, function() {
+                    throw new Error('请求失败 (HTTP ' + r.status + ')');
+                });
+            }
+            return r.json();
+        })
         .then(function(data) {
             document.getElementById('spinner').style.display = 'none';
             if (submitBtn) submitBtn.disabled = false;
+            if (!data || !data.consensus) {
+                throw new Error(data && data.detail ? data.detail : '分析返回数据异常，请重试');
+            }
             // Show data source indicator if data came from yfinance
             if (data.data_source === 'yfinance') {
                 document.getElementById('data-source-indicator').style.display = 'block';
@@ -548,9 +560,15 @@ function generateReport() {
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify(lastAnalysisData)
         })
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (!r.ok) {
+                return r.json().then(function(e) { throw new Error(e.detail || ('HTTP ' + r.status)); },
+                                     function() { throw new Error('HTTP ' + r.status); });
+            }
+            return r.json();
+        })
         .then(function(data) { handleReportResponse(data); })
-        .catch(function(err) { showToast('报告生成失败: ' + err.message, 'error'); });
+        .catch(function(err) { showReportError(err.message); });
         return;
     }
 
@@ -573,9 +591,26 @@ function generateReport() {
     }
 
     fetch('/api/report/' + ticker + '?' + params)
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (!r.ok) {
+                return r.json().then(function(e) { throw new Error(e.detail || ('HTTP ' + r.status)); },
+                                     function() { throw new Error('HTTP ' + r.status); });
+            }
+            return r.json();
+        })
         .then(function(data) { handleReportResponse(data); })
-        .catch(function(err) { showToast('报告生成失败: ' + err.message, 'error'); });
+        .catch(function(err) { showReportError(err.message); });
+}
+
+function showReportError(msg) {
+    showToast('报告生成失败: ' + msg, 'error');
+    var section = document.getElementById('report-section');
+    var content = document.getElementById('report-content');
+    if (section && content) {
+        content.textContent = '⚠️ 报告生成失败: ' + msg + '\n\n请检查股票代码是否有效，或稍后重试。';
+        section.style.display = 'block';
+        section.scrollIntoView({behavior: 'smooth'});
+    }
 }
 
 function handleReportResponse(data) {
