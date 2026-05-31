@@ -11,6 +11,7 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    <div class="global-progress-bar" id="global-progress-bar"></div>
     <div class="app-layout">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
@@ -69,6 +70,10 @@
             </nav>
 
             <div class="sidebar-footer">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" title="切换主题" aria-label="切换深色/浅色主题">
+                    <span id="theme-icon">&#x1F319;</span>
+                    <span id="theme-label">深色</span>
+                </button>
                 <div class="status-indicator connected">
                     <span class="status-dot"></span>
                     <span class="status-text">系统就绪</span>
@@ -134,11 +139,55 @@
         document.getElementById('backdrop').classList.remove('visible');
     }
 
+    // Theme toggle
+    function toggleTheme() {
+        var html = document.documentElement;
+        var isDark = html.classList.contains('dark');
+        if (isDark) {
+            html.classList.remove('dark');
+            html.classList.add('light');
+            localStorage.setItem('augur-theme', 'light');
+        } else {
+            html.classList.remove('light');
+            html.classList.add('dark');
+            localStorage.setItem('augur-theme', 'dark');
+        }
+        updateThemeUI();
+    }
+
+    function updateThemeUI() {
+        var isDark = document.documentElement.classList.contains('dark');
+        var icon = document.getElementById('theme-icon');
+        var label = document.getElementById('theme-label');
+        if (icon) icon.textContent = isDark ? '\u{1F319}' : '\u2600\uFE0F';
+        if (label) label.textContent = isDark ? '\u6DF1\u8272' : '\u6D45\u8272';
+    }
+
+    // Restore theme on load
+    (function() {
+        var saved = localStorage.getItem('augur-theme');
+        if (saved === 'light') {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.add('light');
+        }
+    })();
+
+    // Global progress bar
+    function showProgress() {
+        var bar = document.getElementById('global-progress-bar');
+        if (bar) { bar.classList.remove('done'); bar.classList.add('active'); }
+    }
+    function hideProgress() {
+        var bar = document.getElementById('global-progress-bar');
+        if (bar) { bar.classList.remove('active'); bar.classList.add('done'); setTimeout(function() { bar.classList.remove('done'); }, 800); }
+    }
+
     // Restore sidebar state
     document.addEventListener('DOMContentLoaded', function() {
         if (localStorage.getItem('augur-sidebar') === 'collapsed') {
             document.getElementById('sidebar').classList.add('collapsed');
         }
+        updateThemeUI();
     });
 
     // Active nav highlight
@@ -434,7 +483,8 @@
         var controller = new AbortController();
         var timer = setTimeout(function() { controller.abort(); }, timeoutMs);
         options.signal = controller.signal;
-        return fetch(url, options).finally(function() { clearTimeout(timer); });
+        showProgress();
+        return fetch(url, options).finally(function() { clearTimeout(timer); hideProgress(); });
     }
 
     // Keyboard shortcuts

@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Global UX optimization: sidebar icons, loading progress bar, keyboard shortcuts enhancement, consistent hover animations, dark/light theme toggle with CSS variables.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "1. In dashboard/templates/base.html: The sidebar nav items already have SVG icons - verify they are consistent. Add a global top loading progress bar element (thin orange bar at top of page) that shows during page navigation/AJAX requests. Add it as a div#global-progress-bar inside .app-main with position:fixed at top.",
     "2. In base.html: Add a theme toggle button in the sidebar footer (sun/moon icon). Implement by toggling html class between 'dark' and 'light', persisted in localStorage.",

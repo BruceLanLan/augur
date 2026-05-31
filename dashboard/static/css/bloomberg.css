@@ -33,6 +33,75 @@
     --radius-lg: 12px;
 }
 
+/* --- Light Theme Override --- */
+html.light {
+    --bg-primary: #f5f5f8;
+    --bg-sidebar: #ffffff;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f0f0f5;
+    --bg-tertiary: #e8e8f0;
+    --accent-orange: #e67e00;
+    --accent-green: #2e7d32;
+    --accent-blue: #1565c0;
+    --accent-red: #c62828;
+    --accent-yellow: #e65100;
+    --signal-buy: #2e7d32;
+    --signal-sell: #c62828;
+    --signal-neutral: #f9a825;
+    --border-color: #e0e0e8;
+    --border-hover: #c0c0d0;
+    --text-primary: #1a1a2e;
+    --text-secondary: #4a4a60;
+    --text-muted: #8888a0;
+}
+
+/* --- Theme Toggle Button --- */
+.theme-toggle-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px 10px;
+    font-size: 0.82rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.theme-toggle-btn:hover {
+    border-color: var(--accent-orange);
+    color: var(--accent-orange);
+}
+
+/* --- Global Progress Bar --- */
+.global-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-orange), #ffaa33);
+    z-index: 99999;
+    transition: width 0.3s ease;
+    opacity: 0;
+    pointer-events: none;
+}
+.global-progress-bar.active {
+    opacity: 1;
+    animation: progressPulse 2s ease infinite;
+}
+@keyframes progressPulse {
+    0% { width: 10%; }
+    50% { width: 70%; }
+    100% { width: 90%; }
+}
+.global-progress-bar.done {
+    width: 100%;
+    opacity: 0;
+    transition: width 0.2s ease, opacity 0.5s ease 0.3s;
+}
+
 /* --- Reset & Base --- */
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -358,11 +427,13 @@ a:hover { color: #ffaa33; }
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
     padding: 16px;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .card:hover {
+    transform: translateY(-2px);
     border-color: var(--border-hover);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 
 .card-header {
@@ -1426,8 +1497,9 @@ kbd {
 
 /* Better card hover depth */
 .card:hover {
+    transform: translateY(-2px);
     border-color: var(--border-hover);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 /* Fade in animation */
