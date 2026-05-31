@@ -415,7 +415,7 @@
     </div>
     <div class="status-bar-item">
         <span class="label">Engine</span>
-        <span class="value">v7.7.0</span>
+        <span class="value">v7.8.0</span>
     </div>
 </div>
 
@@ -577,11 +577,11 @@
 <div class="movers-row mb-24" id="movers-row">
     <div class="movers-section">
         <div class="movers-title gainers">&#x25B2; 领涨</div>
-        <div id="gainers-list"><div class="text-muted" style="font-size:0.78rem;">加载中...</div></div>
+        <div id="gainers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C8;</div><div class="empty-msg">加载中...</div></div></div>
     </div>
     <div class="movers-section">
         <div class="movers-title losers">&#x25BC; 领跌</div>
-        <div id="losers-list"><div class="text-muted" style="font-size:0.78rem;">加载中...</div></div>
+        <div id="losers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C9;</div><div class="empty-msg">加载中...</div></div></div>
     </div>
 </div>
 
@@ -607,7 +607,7 @@
     <div class="fear-greed-section" id="fear-greed-section">
         <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;" data-i18n="section-fear-greed">恐慌与贪婪指标</div>
         <div class="card" style="padding:16px;" id="fear-greed-card">
-            <div class="text-muted" style="font-size:0.78rem;">加载中...</div>
+            <div class="panel-empty-state"><div class="empty-icon">&#x1F4CA;</div><div class="empty-msg">恐慌贪婪数据加载中...</div></div>
         </div>
     </div>
     <!-- 宏观经济快照 -->
@@ -834,7 +834,7 @@ function loadMarketOverview(forceRefresh) {
         .catch(function() {
             if (btn) { btn.disabled = false; }
             if (board) {
-                board.innerHTML = '<div class="market-empty text-muted">市场行情暂不可用（需要 yfinance 实时数据）。</div>';
+                board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">市场行情暂不可用</div><div class="empty-hint">需要 yfinance 实时数据</div></div>';
             }
         });
 }
@@ -845,8 +845,8 @@ function renderMarketBoard(data) {
     if (!board) return;
     var items = (data && data.items) || [];
     if (!items.length) {
-        board.innerHTML = '<div class="market-empty text-muted">' +
-            ((data && data.note) || '市场行情暂不可用。') + '</div>';
+        board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">' +
+            ((data && data.note) || '市场行情暂不可用') + '</div></div>';
         return;
     }
     board.innerHTML = '';
@@ -884,7 +884,7 @@ function loadDatasources() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (!data || !data.catalog) {
-                grid.innerHTML = '<div class="market-empty text-muted">数据源信息不可用</div>';
+                grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F50C;</div><div class="empty-msg">数据源信息不可用</div></div>';
                 return;
             }
             var catalog = data.catalog;
@@ -916,7 +916,7 @@ function loadDatasources() {
             });
         })
         .catch(function() {
-            grid.innerHTML = '<div class="market-empty text-muted">数据源状态加载失败</div>';
+            grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F50C;</div><div class="empty-msg">数据源状态加载失败</div></div>';
         });
 }
 
@@ -934,7 +934,7 @@ function loadHotTickers(forceRefresh) {
         })
         .catch(function() {
             if (btn) btn.disabled = false;
-            if (grid) grid.innerHTML = '<div class="market-empty text-muted">热门标的暂不可用</div>';
+            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F525;</div><div class="empty-msg">热门标的暂不可用</div></div>';
         });
 }
 
@@ -943,7 +943,7 @@ function renderHotTickers(data) {
     if (!grid) return;
     var tickers = (data && data.tickers) || [];
     if (!tickers.length) {
-        grid.innerHTML = '<div class="market-empty text-muted">热门标的暂不可用</div>';
+        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F525;</div><div class="empty-msg">热门标的暂不可用</div></div>';
         return;
     }
     grid.innerHTML = '';
@@ -1023,7 +1023,7 @@ function renderFearGreed(data) {
         if (it.key === 'vix') vix = it;
     });
     if (!vix || !vix.price) {
-        card.innerHTML = '<div class="text-muted" style="font-size:0.78rem;">VIX 数据不可用</div>';
+        card.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F628;</div><div class="empty-msg">VIX 数据不可用</div><div class="empty-hint">需要 yfinance 获取实时 VIX</div></div>';
         return;
     }
     var vixVal = vix.price || 0;
@@ -1091,7 +1091,7 @@ function renderMacroSnapshot(data) {
     grid.innerHTML = '';
     var macros = [gold, oil, btc].filter(function(x) { return x; });
     if (!macros.length) {
-        grid.innerHTML = '<div class="market-empty text-muted">宏观数据不可用</div>';
+        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F30D;</div><div class="empty-msg">宏观数据不可用</div></div>';
         return;
     }
     macros.forEach(function(m) {
@@ -1124,7 +1124,7 @@ function renderMarketPulse(data) {
     if (!strip) return;
     var items = (data && data.items) || [];
     if (!items.length) {
-        strip.innerHTML = '<div class="text-muted" style="font-size:0.72rem; padding:4px 8px;">市场数据加载中...</div>';
+        strip.innerHTML = '<div class="panel-empty-state" style="padding:8px 12px;"><span class="empty-msg">市场数据加载中...</span></div>';
         return;
     }
     // Show key metrics: S&P 500, VIX, 10Y, Gold, BTC
@@ -1137,7 +1137,7 @@ function renderMarketPulse(data) {
         if (item) pulseItems.push(item);
     });
     if (!pulseItems.length) {
-        strip.innerHTML = '<div class="text-muted" style="font-size:0.72rem; padding:4px 8px;">关键指标不可用</div>';
+        strip.innerHTML = '<div class="panel-empty-state" style="padding:8px 12px;"><span class="empty-msg">关键指标不可用</span></div>';
         return;
     }
     strip.innerHTML = '';
@@ -1184,7 +1184,7 @@ function renderIntlMarkets(data) {
         });
     });
     if (!intlItems.length) {
-        grid.innerHTML = '<div class="text-muted" style="font-size:0.78rem; grid-column:1/-1;">国际市场数据不可用</div>';
+        grid.innerHTML = '<div class="panel-empty-state" style="grid-column:1/-1;"><div class="empty-icon">&#x1F30F;</div><div class="empty-msg">国际市场数据不可用</div></div>';
         return;
     }
     grid.innerHTML = '';
@@ -1245,7 +1245,7 @@ function loadSectorPerformance(forceRefresh) {
         })
         .catch(function() {
             if (btn) btn.disabled = false;
-            if (grid) grid.innerHTML = '<div class="market-empty text-muted">板块行情暂不可用</div>';
+            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F3D7;</div><div class="empty-msg">板块行情暂不可用</div></div>';
         });
 }
 
@@ -1254,7 +1254,7 @@ function renderSectorGrid(data) {
     if (!grid) return;
     var sectors = (data && data.sectors) || [];
     if (!sectors.length) {
-        grid.innerHTML = '<div class="market-empty text-muted">板块数据暂不可用</div>';
+        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F3D7;</div><div class="empty-msg">板块数据暂不可用</div></div>';
         return;
     }
     grid.innerHTML = '';
@@ -1300,8 +1300,8 @@ function renderTopMovers(data) {
     if (!gainersList || !losersList) return;
     var tickers = (data && data.tickers) || [];
     if (!tickers.length) {
-        gainersList.innerHTML = '<div class="text-muted" style="font-size:0.78rem;">数据不可用</div>';
-        losersList.innerHTML = '<div class="text-muted" style="font-size:0.78rem;">数据不可用</div>';
+        gainersList.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">数据不可用</div></div>';
+        losersList.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">数据不可用</div></div>';
         return;
     }
     var sorted = tickers.slice().sort(function(a, b) { return (b.change_pct || 0) - (a.change_pct || 0); });

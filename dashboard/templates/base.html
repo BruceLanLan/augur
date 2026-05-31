@@ -17,7 +17,7 @@
     <meta name="twitter:image" content="/docs/images/hero-banner-baoyu.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="/static/css/bloomberg.css?v=7.7.0" rel="stylesheet">
+    <link href="/static/css/bloomberg.css?v=7.8.0" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -104,7 +104,7 @@
                     <span class="status-text" data-i18n="status-ready">系统就绪</span>
                 </div>
                 <div class="version-info" data-i18n="powered-by">Powered by Augur</div>
-                <div class="version-info">v7.7.0</div>
+                <div class="version-info">v7.8.0</div>
             </div>
         </aside>
 
@@ -157,7 +157,7 @@
     // Sidebar toggle
     function toggleSidebar() {
         document.getElementById('sidebar').classList.toggle('collapsed');
-        localStorage.setItem('augur-sidebar', document.getElementById('sidebar').classList.contains('collapsed') ? 'collapsed' : 'expanded');
+        try { localStorage.setItem('augur-sidebar', document.getElementById('sidebar').classList.contains('collapsed') ? 'collapsed' : 'expanded'); } catch(e) {}
     }
     function openSidebar() {
         document.getElementById('sidebar').classList.add('open');
@@ -175,11 +175,11 @@
         if (isDark) {
             html.classList.remove('dark');
             html.classList.add('light');
-            localStorage.setItem('augur-theme', 'light');
+            try { localStorage.setItem('augur-theme', 'light'); } catch(e) {}
         } else {
             html.classList.remove('light');
             html.classList.add('dark');
-            localStorage.setItem('augur-theme', 'dark');
+            try { localStorage.setItem('augur-theme', 'dark'); } catch(e) {}
         }
         updateThemeUI();
     }
@@ -194,11 +194,13 @@
 
     // Restore theme on load
     (function() {
-        var saved = localStorage.getItem('augur-theme');
-        if (saved === 'light') {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.classList.add('light');
-        }
+        try {
+            var saved = localStorage.getItem('augur-theme');
+            if (saved === 'light') {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+            }
+        } catch(e) {}
     })();
 
     // Global progress bar
@@ -213,9 +215,11 @@
 
     // Restore sidebar state
     document.addEventListener('DOMContentLoaded', function() {
-        if (localStorage.getItem('augur-sidebar') === 'collapsed') {
-            document.getElementById('sidebar').classList.add('collapsed');
-        }
+        try {
+            if (localStorage.getItem('augur-sidebar') === 'collapsed') {
+                document.getElementById('sidebar').classList.add('collapsed');
+            }
+        } catch(e) {}
         updateThemeUI();
     });
 
@@ -314,21 +318,28 @@
         });
     }
 
-    // LocalStorage cache for analysis results
+    // LocalStorage cache for analysis results (with safe access for private browsing)
     var augurCache = {
         KEY: 'augur-recent-analyses',
         MAX: 10,
+        _storageAvailable: (function() {
+            try { var t = '__test__'; localStorage.setItem(t, '1'); localStorage.removeItem(t); return true; } catch(e) { return false; }
+        })(),
         get: function() {
+            if (!this._storageAvailable) return [];
             try {
                 return JSON.parse(localStorage.getItem(this.KEY)) || [];
             } catch(e) { return []; }
         },
         add: function(ticker, result) {
-            var list = this.get();
-            list = list.filter(function(item) { return item.ticker !== ticker; });
-            list.unshift({ ticker: ticker, result: result, time: Date.now() });
-            if (list.length > this.MAX) list = list.slice(0, this.MAX);
-            localStorage.setItem(this.KEY, JSON.stringify(list));
+            if (!this._storageAvailable) return;
+            try {
+                var list = this.get();
+                list = list.filter(function(item) { return item.ticker !== ticker; });
+                list.unshift({ ticker: ticker, result: result, time: Date.now() });
+                if (list.length > this.MAX) list = list.slice(0, this.MAX);
+                localStorage.setItem(this.KEY, JSON.stringify(list));
+            } catch(e) { /* localStorage full or unavailable */ }
         },
         getLast: function(n) {
             var items = this.get();
@@ -336,9 +347,24 @@
             return items.slice(0, n || 5);
         },
         clear: function() {
-            localStorage.removeItem(this.KEY);
+            if (!this._storageAvailable) return;
+            try { localStorage.removeItem(this.KEY); } catch(e) {}
         }
     };
+
+    // Global error handler - show toast for uncaught errors
+    window.onerror = function(msg, url, line) {
+        if (typeof showToast === 'function') {
+            showToast('JS Error: ' + (msg || 'Unknown error'), 'error');
+        }
+        return false;
+    };
+    window.addEventListener('unhandledrejection', function(event) {
+        if (typeof showToast === 'function') {
+            var reason = event.reason ? (event.reason.message || String(event.reason)) : 'Promise rejected';
+            showToast('Error: ' + reason, 'error');
+        }
+    });
 
     // Escape HTML entities to prevent XSS
     function escapeHtml(str) {
@@ -509,25 +535,29 @@
         options = options || {};
         timeoutMs = timeoutMs || 90000;
         // Auto-attach API token from localStorage if available
-        var token = localStorage.getItem('augur_api_token');
-        if (token && url.indexOf('/api/') !== -1) {
-            if (!options.headers) options.headers = {};
-            if (options.headers instanceof Headers) {
-                if (!options.headers.has('Authorization')) {
-                    options.headers.set('Authorization', 'Bearer ' + token);
-                }
-            } else {
-                if (!options.headers['Authorization']) {
-                    options.headers['Authorization'] = 'Bearer ' + token;
+        try {
+            var token = localStorage.getItem('augur_api_token');
+            if (token && url.indexOf('/api/') !== -1) {
+                if (!options.headers) options.headers = {};
+                if (options.headers instanceof Headers) {
+                    if (!options.headers.has('Authorization')) {
+                        options.headers.set('Authorization', 'Bearer ' + token);
+                    }
+                } else {
+                    if (!options.headers['Authorization']) {
+                        options.headers['Authorization'] = 'Bearer ' + token;
+                    }
                 }
             }
-        }
+        } catch(e) { /* localStorage unavailable */ }
         if (typeof AbortController === 'undefined') return fetch(url, options);
         var controller = new AbortController();
         var timer = setTimeout(function() { controller.abort(); }, timeoutMs);
         options.signal = controller.signal;
         showProgress();
-        return fetch(url, options).finally(function() { clearTimeout(timer); hideProgress(); });
+        return fetch(url, options)
+            .then(function(r) { clearTimeout(timer); hideProgress(); return r; })
+            .catch(function(err) { clearTimeout(timer); hideProgress(); throw err; });
     }
 
     // Keyboard shortcuts
@@ -671,7 +701,7 @@
         startHealthCheck();
     })();
     </script>
-    <script src="/static/js/i18n.js?v=7.7.0"></script>
+    <script src="/static/js/i18n.js?v=7.8.0"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

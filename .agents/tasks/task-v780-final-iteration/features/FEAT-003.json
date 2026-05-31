@@ -1,0 +1,36 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "UI Polish, empty states, error handling, CSS consistency, mobile responsive check + Agent Integration Guide + Version bump to v7.8.0 + Documentation update",
+  "status": "in_progress",
+  "steps": [
+    "Step 1 - Empty States: Review all dashboard panels and ensure each has a proper empty-state message. In index.html, each panel (market-board, hot-tickers-grid, sector-grid, fear-greed-card, movers sections, leaderboard) should show a styled empty message with an icon when data is unavailable. Use a consistent pattern: a muted-color message with a subtle icon (e.g. chart icon) and helpful text like 'Install yfinance for live data' or 'Analyze a stock to see results here'.",
+    "Step 2 - JS Error Handling: In dashboard/templates/base.html (or wherever fetchWithTimeout is defined), ensure all fetch calls across all templates have proper .catch() handlers that show a user-friendly toast notification. Grep for any raw fetch() calls without error handling and add catch blocks. Add a global window.onerror handler that shows a toast for uncaught errors.",
+    "Step 3 - CSS Consistency: In dashboard/static/css/bloomberg.css, ensure all cards use the same border-radius (var(--radius-md)), all buttons use consistent padding and font, all badges use the same font-size and border-radius. Review .card, .btn, .badge, .signal-badge classes for consistency.",
+    "Step 4 - Mobile Responsive: In dashboard/static/css/bloomberg.css, add/verify @media queries for max-width: 768px and max-width: 480px. Ensure: sidebar collapses to hamburger, grid layouts go to single column, font sizes reduce slightly, hero section adjusts padding.",
+    "Step 5 - Agent Integration Guide: Create or update docs/single-persona-integration.md to include clear instructions on how to integrate a single Augur persona agent into external systems like Hermes Agent or OpenClaw. Include: MCP integration (mcp.json config), REST API integration (curl examples), Python SDK integration (code snippet showing how to import and use a single agent). Make it actionable with copy-paste code blocks.",
+    "Step 6 - Version Bump: Update version to 7.8.0 in: pyproject.toml (version field), dashboard/app.py (FastAPI version string and status bar Engine value in index.html template context), README.md badge.",
+    "Step 7 - CHANGELOG: Update docs/CHANGELOG.md with a comprehensive v7.8.0 entry covering all changes: Fear & Greed gauge, API Token auth, custom persona CRUD, international markets panel, empty states, responsive improvements, agent integration guide.",
+    "Step 8 - README: Update README.md and README_EN.md with: (a) v7.8.0 feature table at the top, (b) a comprehensive 'Feature List' section listing ALL features of the project, (c) Docker deployment section (docker-compose up), (d) API Token configuration. Keep existing content intact, just add the new sections.",
+    "Step 9 - Final commit: All changes committed with Chinese commit message."
+  ],
+  "acceptance_criteria": [
+    "All dashboard panels show graceful empty states with helpful messages",
+    "No JavaScript fetch calls without error handling",
+    "CSS uses consistent variables for spacing, colors, radii",
+    "Mobile layout works at 768px and 480px breakpoints",
+    "docs/single-persona-integration.md has complete MCP/REST/SDK integration guide",
+    "Version is 7.8.0 in pyproject.toml, app.py, README badge",
+    "docs/CHANGELOG.md has complete v7.8.0 entry",
+    "README.md and README_EN.md have complete Feature List section",
+    "No test files modified"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q --tb=short",
+    "python -c \"from dashboard.app import app; print('OK')\"",
+    "grep -q '7.8.0' /projects/sandbox/augur/pyproject.toml && echo 'version OK'",
+    "grep -q '7.8.0' /projects/sandbox/augur/docs/CHANGELOG.md && echo 'changelog OK'"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

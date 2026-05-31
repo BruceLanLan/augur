@@ -4,6 +4,66 @@
 
 > 你完全可以**只挑选自己喜欢的某一位投资大师**（比如巴菲特、段永平、大宇/dayu、查理芒格等），把他单独接入到你自己的 Hermes Agent 或 Open Claw，而**不必引入全部 18 位**。本文给出多种真实可用的接入方式，每种都有可复制的命令与配置示例。
 
+> **v7.8.0 更新**: 新增 API Token 认证、自定义 Persona CRUD、以及完整的 REST API 单人格端点 `/api/persona/{agent_id}/opinion`。
+
+---
+
+## 快速接入总览 (Quick Start Overview)
+
+### MCP Integration（推荐 - Claude Desktop / Hermes）
+
+```json
+{
+  "mcpServers": {
+    "augur": {
+      "command": "python",
+      "args": ["-m", "augur.mcp_server"],
+      "env": {
+        "AUGUR_DEFAULT_PERSONA": "buffett"
+      }
+    }
+  }
+}
+```
+
+任何支持 MCP 协议的 Agent 框架（Hermes、OpenClaw、Claude Desktop 等）都可以通过上述配置使用 Augur 单个投资人分析。
+
+### REST API Integration
+
+```bash
+# 启动服务
+python -m dashboard.app --port 8000
+
+# 单个投资人分析（v7.8.0 新增独立端点）
+curl http://localhost:8000/api/persona/buffett/opinion?ticker=AAPL
+
+# 获取全部 18 位共识（含各投资人独立结果）
+curl http://localhost:8000/api/analyze/AAPL
+```
+
+### Python SDK Integration
+
+```python
+from augur.registry import AgentRegistry
+from augur.personas.base import MarketContext
+from augur.data import fetch_market_context
+
+registry = AgentRegistry()
+buffett = registry.get("buffett")
+ctx = fetch_market_context("AAPL")
+result = buffett.analyze(ctx)
+print(f"Signal: {result.signal.value}, Score: {result.score}")
+```
+
+### OpenClaw / Hermes / 任何 MCP 兼容框架
+
+Augur 支持标准 MCP 协议，因此任何 MCP 兼容的 Agent 框架都可以直接使用：
+
+- **Hermes**: 在 `~/.hermes/config.yaml` 的 `mcp_servers` 段添加 augur 入口
+- **OpenClaw**: 在 MCP 配置中注册 augur 服务
+- **Claude Desktop**: 在 `claude_desktop_config.json` 添加 mcpServers 入口
+- **其他框架**: 任何实现了 MCP client 的系统都可以调用 `augur_analyze` 工具并传入 `persona` 参数
+
 ---
 
 ## 零、直接 Python API 调用（最简单）

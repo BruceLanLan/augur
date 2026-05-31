@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v7.7.0](https://img.shields.io/badge/v7.7.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.8.0](https://img.shields.io/badge/v7.8.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -23,6 +23,46 @@
 > **Would Buffett buy this stock?** What does Dalio think about macro risk? Is management "benfun" (principled) by Duan Yongping's standard?
 >
 > Stop guessing from one angle. Augur lets **18 legendary investors** independently analyze any stock, each producing a structured score, then aggregates them into a weighted consensus with Kelly position sizing.
+
+---
+
+## 🆕 v7.8.0 New Features
+
+| Feature | Description |
+|---------|-------------|
+| 📊 Bloomberg Dashboard Enhancement | SVG Fear & Greed Gauge, Market Pulse strip, International Markets panel, Sector heatmap mini-bar |
+| 🎭 Custom Persona CRUD | List/edit/delete custom personas, purple CUSTOM badge |
+| 🔐 API Token Authentication | AUGUR_API_TOKEN env var, Bearer Token middleware, Settings config panel |
+| 🎨 UI Polish | Panel empty states with icons, JS error handling, CSS consistency, 480px mobile breakpoint |
+| 📖 Integration Guide | MCP/REST/Python SDK/Hermes/OpenClaw single-persona integration docs |
+| 🐳 Docker Improvements | docker-compose.yml passes Token, .env.example updated |
+
+---
+
+## 📋 Feature List
+
+> Augur is a full-featured multi-agent investment analysis platform. Below are all core modules:
+
+| Module | Feature | Description |
+|--------|---------|-------------|
+| 🧠 Multi-Agent Consensus | 18 Masters | 18 investor personas independently analyze, weighted consensus + Kelly sizing |
+| 📡 Auto Data Fetch | Multi-Source | yfinance / Finnhub / Alpha Vantage / Stooq provider chain |
+| 🔥 Sector Heatmap | 11 ETFs | Sector performance with color-coded change visualization |
+| 😱 Fear & Greed | SVG Gauge | VIX-driven semi-circle gauge with gradient + needle animation |
+| 🌏 International Markets | Asia + Europe | HSI, Nikkei, CSI300, FTSE, DAX real-time |
+| 📋 Watchlist | Batch Analyze | Add/remove tickers, localStorage persistence |
+| 🔍 Scanner | Heatmap Scoring | Preset ticker lists with parallel 18-master scoring |
+| 📈 Backtest | IC Leaderboard | Hit rate + information coefficient ranking |
+| 💼 Portfolio | Holdings P&L | Track positions, real-time gains, asset allocation chart |
+| 🎭 Custom Persona | CRUD | No-code YAML creation, edit/delete management |
+| 🔐 API Token | Bearer Auth | Environment variable config, middleware protection |
+| 🤖 Multi-Platform Bots | Telegram/Slack/WeChat/Lark | Push notifications + alert thresholds |
+| 🔌 MCP Integration | Claude / Hermes | MCP protocol server, single/all persona invocation |
+| 🐳 Docker Deploy | Compose | One-command deployment with env config |
+| 💻 CLI | Commands | augur analyze / consensus / report / inject-soul |
+| ⏰ Cron Scheduler | Monitoring | Scheduled watchlist analysis, threshold alerts |
+| 📄 Deep Reports | Download | Markdown/HTML export, professional visualization |
+| 🌐 i18n | Bilingual | Chinese/English toggle with localStorage |
 
 ---
 

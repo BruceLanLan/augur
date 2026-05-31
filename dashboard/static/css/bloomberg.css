@@ -2955,3 +2955,41 @@ kbd {
     cursor: not-allowed;
 }
 
+/* --- Panel Empty State Utility --- */
+.panel-empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.6;
+}
+.panel-empty-state .empty-icon {
+    font-size: 1.8rem;
+    margin-bottom: 8px;
+    opacity: 0.6;
+}
+.panel-empty-state .empty-msg {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+.panel-empty-state .empty-hint {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    opacity: 0.7;
+    margin-top: 4px;
+}
+
+/* --- 480px Mobile Breakpoint --- */
+@media (max-width: 480px) {
+    .grid-4 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .hero-input { font-size: 0.95rem; padding: 12px 14px; }
+    .hero-title { font-size: 1.6rem; }
+    .hero-subtitle { font-size: 0.82rem; }
+    .section-title { font-size: 0.82rem; }
+    .status-bar { flex-wrap: wrap; gap: 8px; }
+    .example-chips { gap: 6px; }
+    .example-chip { font-size: 0.72rem; padding: 5px 10px; }
+}
+
