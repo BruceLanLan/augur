@@ -202,6 +202,185 @@
     font-size: 0.72rem;
     color: var(--text-muted);
 }
+
+/* Market Pulse Strip */
+.market-pulse-strip {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.pulse-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-right: 1px solid var(--border-color);
+    min-width: 0;
+    flex-shrink: 0;
+}
+.pulse-item:last-child { border-right: none; }
+.pulse-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+.pulse-value {
+    font-size: 0.82rem;
+    font-family: var(--font-data);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.pulse-arrow {
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+.pulse-arrow.up { color: var(--signal-buy); }
+.pulse-arrow.down { color: var(--signal-sell); }
+.pulse-arrow.flat { color: var(--text-muted); }
+.pulse-pct {
+    font-size: 0.68rem;
+    font-family: var(--font-data);
+}
+
+/* Sector mini bar */
+.sector-bar-wrap {
+    margin-top: 6px;
+    background: var(--bg-primary);
+    border-radius: 2px;
+    height: 4px;
+    overflow: hidden;
+    width: 100%;
+}
+.sector-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.4s ease;
+}
+
+/* International Markets Panel */
+.intl-markets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+}
+.intl-market-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    transition: transform 0.15s, border-color 0.15s;
+}
+.intl-market-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-orange);
+}
+.intl-market-region {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--accent-orange);
+    margin-bottom: 4px;
+}
+.intl-market-name {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+.intl-market-price {
+    font-size: 0.92rem;
+    font-family: var(--font-data);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.intl-market-change {
+    font-size: 0.75rem;
+    font-family: var(--font-data);
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+/* Fear Greed SVG Gauge */
+.fg-gauge-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+}
+.fg-gauge-value {
+    font-size: 1.6rem;
+    font-family: var(--font-data);
+    font-weight: 700;
+    margin-top: -30px;
+}
+.fg-gauge-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+.fg-gauge-sublabel {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+/* Skeleton for new panels */
+.pulse-skeleton {
+    height: 42px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    animation: pulse 1.5s infinite;
+}
+.intl-skeleton {
+    height: 80px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    animation: pulse 1.5s infinite;
+}
+
+/* Responsive rules for new panels */
+@media (max-width: 768px) {
+    .market-pulse-strip {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding: 8px 10px;
+    }
+    .pulse-item {
+        padding: 4px 8px;
+    }
+    .intl-markets-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+    .sector-grid {
+        grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+    }
+    .fg-gauge-wrap svg {
+        width: 160px;
+        height: 90px;
+    }
+}
+@media (max-width: 480px) {
+    .intl-markets-grid {
+        grid-template-columns: 1fr;
+    }
+    .market-pulse-strip {
+        gap: 2px;
+    }
+    .pulse-item {
+        padding: 3px 6px;
+        gap: 4px;
+    }
+    .pulse-label { font-size: 0.6rem; }
+    .pulse-value { font-size: 0.72rem; }
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -315,6 +494,11 @@
     </div>
 </div>
 
+<!-- Market Pulse Strip (compact key metrics) -->
+<div class="market-pulse-strip mb-24" id="market-pulse-strip">
+    <div class="pulse-skeleton" style="width:100%; height:32px;"></div>
+</div>
+
 <!-- Stats Grid -->
 <div class="grid-4 mb-24">
     {% for stat in stats %}
@@ -371,6 +555,19 @@
     <div class="sector-card skeleton" style="height:80px;"></div>
     <div class="sector-card skeleton" style="height:80px;"></div>
     <div class="sector-card skeleton" style="height:80px;"></div>
+</div>
+
+<!-- International Markets Panel -->
+<div class="flex items-center justify-between mb-12">
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">International Markets</div>
+    <span class="text-muted" style="font-size:0.7rem;">亚太 &middot; 欧洲</span>
+</div>
+<div class="intl-markets-grid mb-24" id="intl-markets-grid">
+    <div class="intl-skeleton"></div>
+    <div class="intl-skeleton"></div>
+    <div class="intl-skeleton"></div>
+    <div class="intl-skeleton"></div>
+    <div class="intl-skeleton"></div>
 </div>
 
 <!-- Top Movers (Gainers & Losers) -->
@@ -813,40 +1010,71 @@ renderMarketBoard = function(data) {
     _marketOverviewData = data;
     renderFearGreed(data);
     renderMacroSnapshot(data);
+    renderMarketPulse(data);
+    renderIntlMarkets(data);
 };
 
 function renderFearGreed(data) {
     var card = document.getElementById('fear-greed-card');
     if (!card) return;
     var items = (data && data.items) || [];
-    var vix = null, dxy = null, us10y = null;
+    var vix = null;
     items.forEach(function(it) {
         if (it.key === 'vix') vix = it;
-        else if (it.key === 'dxy') dxy = it;
-        else if (it.key === 'us10y') us10y = it;
     });
-    if (!vix) {
+    if (!vix || !vix.price) {
         card.innerHTML = '<div class="text-muted" style="font-size:0.78rem;">VIX 数据不可用</div>';
         return;
     }
     var vixVal = vix.price || 0;
-    var sentiment = '';
-    var sentimentColor = '';
-    if (vixVal < 15) { sentiment = '市场偏贪婪'; sentimentColor = 'var(--signal-buy)'; }
-    else if (vixVal <= 25) { sentiment = '市场中性'; sentimentColor = 'var(--signal-neutral)'; }
-    else { sentiment = '市场偏恐慌'; sentimentColor = 'var(--signal-sell)'; }
+    var index = Math.max(0, Math.min(100, Math.round(100 - ((vixVal - 12) / 38) * 100)));
+    var label = '', color = '';
+    if (index >= 75) { label = 'Extreme Greed'; color = '#00c853'; }
+    else if (index >= 55) { label = 'Greed'; color = '#76ff03'; }
+    else if (index >= 45) { label = 'Neutral'; color = '#ffd600'; }
+    else if (index >= 25) { label = 'Fear'; color = '#ff9100'; }
+    else { label = 'Extreme Fear'; color = '#ff1744'; }
+
+    // SVG semi-circle gauge
+    var cx = 100, cy = 90, r = 70;
+    var startAngle = Math.PI;
+    var endAngle = 0;
+    var needleAngle = Math.PI - (index / 100) * Math.PI;
+    // Arc segments for gradient coloring
+    var segments = [
+        { from: 0, to: 25, color: '#ff1744' },
+        { from: 25, to: 45, color: '#ff9100' },
+        { from: 45, to: 55, color: '#ffd600' },
+        { from: 55, to: 75, color: '#76ff03' },
+        { from: 75, to: 100, color: '#00c853' }
+    ];
+    var arcs = '';
+    segments.forEach(function(seg) {
+        var a1 = Math.PI - (seg.from / 100) * Math.PI;
+        var a2 = Math.PI - (seg.to / 100) * Math.PI;
+        var x1 = cx + r * Math.cos(a1);
+        var y1 = cy - r * Math.sin(a1);
+        var x2 = cx + r * Math.cos(a2);
+        var y2 = cy - r * Math.sin(a2);
+        var large = (seg.to - seg.from) > 50 ? 1 : 0;
+        arcs += '<path d="M ' + x1 + ' ' + y1 + ' A ' + r + ' ' + r + ' 0 ' + large + ' 0 ' + x2 + ' ' + y2 + '" fill="none" stroke="' + seg.color + '" stroke-width="12" stroke-linecap="butt" opacity="0.85"/>';
+    });
+    // Needle
+    var nx = cx + (r - 10) * Math.cos(needleAngle);
+    var ny = cy - (r - 10) * Math.sin(needleAngle);
+    var needle = '<line x1="' + cx + '" y1="' + cy + '" x2="' + nx + '" y2="' + ny + '" stroke="' + color + '" stroke-width="2.5" stroke-linecap="round"/>';
+    needle += '<circle cx="' + cx + '" cy="' + cy + '" r="4" fill="' + color + '"/>';
+
+    var svg = '<svg viewBox="0 0 200 110" width="200" height="110" style="display:block; margin:0 auto;">' +
+        arcs + needle +
+        '</svg>';
 
     card.innerHTML =
-        '<div class="flex items-center gap-12 mb-12">' +
-            '<div style="font-size:1.8rem; font-family:var(--font-data); font-weight:700; color:' + sentimentColor + ';">' + vixVal.toFixed(2) + '</div>' +
-            '<div>' +
-                '<div style="font-size:0.78rem; font-weight:600; color:' + sentimentColor + ';">' + sentiment + '</div>' +
-                '<div style="font-size:0.68rem; color:var(--text-muted);">VIX 恐慌指数</div>' +
-            '</div>' +
-        '</div>' +
-        '<div class="flex gap-16" style="flex-wrap:wrap;">' +
-            (dxy ? '<div><div class="data-label">美元指数 (DXY)</div><div class="text-mono" style="font-size:0.88rem; color:var(--text-primary);">' + (dxy.price || 0).toFixed(2) + ' <span style="font-size:0.72rem; color:' + ((dxy.change_pct||0) >= 0 ? 'var(--signal-buy)' : 'var(--signal-sell)') + ';">' + ((dxy.change_pct||0)*100).toFixed(2) + '%</span></div></div>' : '') +
-            (us10y ? '<div><div class="data-label">美债10年</div><div class="text-mono" style="font-size:0.88rem; color:var(--text-primary);">' + (us10y.price || 0).toFixed(2) + ' <span style="font-size:0.72rem; color:' + ((us10y.change_pct||0) >= 0 ? 'var(--signal-buy)' : 'var(--signal-sell)') + ';">' + ((us10y.change_pct||0)*100).toFixed(2) + '%</span></div></div>' : '') +
+        '<div class="fg-gauge-wrap">' +
+            svg +
+            '<div class="fg-gauge-value" style="color:' + color + ';">' + index + '</div>' +
+            '<div class="fg-gauge-label" style="color:' + color + ';">' + label + '</div>' +
+            '<div class="fg-gauge-sublabel">VIX: ' + vixVal.toFixed(2) + '</div>' +
         '</div>';
 }
 
@@ -886,6 +1114,96 @@ function renderMacroSnapshot(data) {
             '<div class="macro-card-price">' + (m.price || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + '</div>' +
             '<div class="macro-card-change">' + (up ? '+' : '') + (pct * 100).toFixed(2) + '%</div>' +
             '<div class="macro-card-comment">' + commentary + '</div>';
+        grid.appendChild(card);
+    });
+}
+
+// ====== Market Pulse Strip (key metrics at-a-glance) ======
+function renderMarketPulse(data) {
+    var strip = document.getElementById('market-pulse-strip');
+    if (!strip) return;
+    var items = (data && data.items) || [];
+    if (!items.length) {
+        strip.innerHTML = '<div class="text-muted" style="font-size:0.72rem; padding:4px 8px;">市场数据加载中...</div>';
+        return;
+    }
+    // Show key metrics: S&P 500, VIX, 10Y, Gold, BTC
+    var keys = ['sp500', 'vix', 'us10y', 'gold', 'btc'];
+    var labels = {'sp500': 'S&P 500', 'vix': 'VIX', 'us10y': '10Y', 'gold': 'GOLD', 'btc': 'BTC'};
+    var pulseItems = [];
+    keys.forEach(function(k) {
+        var item = null;
+        items.forEach(function(it) { if (it.key === k) item = it; });
+        if (item) pulseItems.push(item);
+    });
+    if (!pulseItems.length) {
+        strip.innerHTML = '<div class="text-muted" style="font-size:0.72rem; padding:4px 8px;">关键指标不可用</div>';
+        return;
+    }
+    strip.innerHTML = '';
+    pulseItems.forEach(function(it) {
+        var pct = it.change_pct || 0;
+        var up = pct > 0;
+        var down = pct < 0;
+        var arrowCls = up ? 'up' : (down ? 'down' : 'flat');
+        var arrowChar = up ? '\u25B2' : (down ? '\u25BC' : '\u2014');
+        var priceStr = (it.price || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        var pctStr = (up ? '+' : '') + (pct * 100).toFixed(2) + '%';
+        var pctColor = up ? 'var(--signal-buy)' : (down ? 'var(--signal-sell)' : 'var(--text-muted)');
+        var lbl = labels[it.key] || it.name || it.key;
+        var div = document.createElement('div');
+        div.className = 'pulse-item';
+        div.innerHTML =
+            '<span class="pulse-label">' + lbl + '</span>' +
+            '<span class="pulse-value">' + priceStr + '</span>' +
+            '<span class="pulse-arrow ' + arrowCls + '">' + arrowChar + '</span>' +
+            '<span class="pulse-pct" style="color:' + pctColor + ';">' + pctStr + '</span>';
+        strip.appendChild(div);
+    });
+}
+
+// ====== International Markets Panel ======
+function renderIntlMarkets(data) {
+    var grid = document.getElementById('intl-markets-grid');
+    if (!grid) return;
+    var items = (data && data.items) || [];
+    // International indices keys and their region
+    var intlKeys = [
+        { key: 'hsi', region: 'Asia' },
+        { key: 'nikkei', region: 'Asia' },
+        { key: 'csi300', region: 'Asia' },
+        { key: 'ftse', region: 'Europe' },
+        { key: 'dax', region: 'Europe' }
+    ];
+    var intlItems = [];
+    intlKeys.forEach(function(ik) {
+        items.forEach(function(it) {
+            if (it.key === ik.key) {
+                intlItems.push({ data: it, region: ik.region });
+            }
+        });
+    });
+    if (!intlItems.length) {
+        grid.innerHTML = '<div class="text-muted" style="font-size:0.78rem; grid-column:1/-1;">国际市场数据不可用</div>';
+        return;
+    }
+    grid.innerHTML = '';
+    intlItems.forEach(function(entry) {
+        var it = entry.data;
+        var pct = it.change_pct || 0;
+        var up = pct > 0;
+        var down = pct < 0;
+        var changeColor = up ? 'var(--signal-buy)' : (down ? 'var(--signal-sell)' : 'var(--text-muted)');
+        var arrow = up ? '\u25B2' : (down ? '\u25BC' : '');
+        var priceStr = (it.price || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+        var card = document.createElement('div');
+        card.className = 'intl-market-card';
+        card.innerHTML =
+            '<div class="intl-market-region">' + entry.region + '</div>' +
+            '<div class="intl-market-name">' + escapeHtml(it.name) + '</div>' +
+            '<div class="intl-market-price">' + priceStr + '</div>' +
+            '<div class="intl-market-change" style="color:' + changeColor + ';">' +
+                arrow + ' ' + (up ? '+' : '') + (pct * 100).toFixed(2) + '%</div>';
         grid.appendChild(card);
     });
 }
@@ -948,14 +1266,20 @@ function renderSectorGrid(data) {
         else if (pct < -0.02) heatClass = 'heat-strong-down';
         else if (pct < 0) heatClass = 'heat-down';
         var up = pct > 0;
+        // Mini bar: width proportional to |change_pct|, capped at 5%
+        var absPct = Math.abs(pct);
+        var barWidth = Math.min(absPct / 0.05, 1) * 100;
+        var barColor = up ? 'var(--signal-buy)' : (pct < 0 ? 'var(--signal-sell)' : 'var(--text-muted)');
         var card = document.createElement('div');
         card.className = 'sector-card ' + heatClass;
+        card.title = (s.name || '') + ': ' + (pct * 100).toFixed(2) + '%';
         card.innerHTML =
             '<div class="sector-name">' + escapeHtml(s.name) + '</div>' +
             '<div class="sector-ticker">' + escapeHtml(s.symbol) + '</div>' +
             '<div class="sector-price">' + (s.price || 0).toFixed(2) + '</div>' +
             '<div class="sector-change" style="color:' + (up ? 'var(--signal-buy)' : (pct < 0 ? 'var(--signal-sell)' : 'var(--text-muted)')) + ';">' +
-                (up ? '+' : '') + (pct * 100).toFixed(2) + '%</div>';
+                (up ? '+' : '') + (pct * 100).toFixed(2) + '%</div>' +
+            '<div class="sector-bar-wrap"><div class="sector-bar-fill" style="width:' + barWidth + '%; background:' + barColor + ';"></div></div>';
         grid.appendChild(card);
     });
 }
