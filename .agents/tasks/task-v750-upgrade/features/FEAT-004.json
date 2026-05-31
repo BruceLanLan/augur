@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "docs",
   "description": "Version bump to v7.5.0 + comprehensive documentation update (README.md, README_EN.md, CHANGELOG, API reference)",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Update version to 7.5.0 everywhere: pyproject.toml, src/augur/__init__.py, dashboard/app.py (FastAPI version + all 'v7.4.0' strings in code/templates).",
     "2. Update README.md: (a) Change version badge to v7.5.0. (b) Add new features section covering i18n, scanner, notifications, security, performance. (c) Update Dashboard preview ASCII art to include Scanner and new features. (d) Add section on single persona integration (brief, pointing to docs/single-persona-integration.md).",
@@ -25,5 +25,5 @@
     "test -f docs/api-reference.md && echo 'api ref exists'"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Version bumped to 7.5.0 in all locations. 2 pre-existing tests (test_cli.py::TestCLI::test_version and test_iteration11.py::TestCLIHelp::test_cli_version) hardcode '6.1.0' and now fail because they check the old version string - this is expected since the whole purpose of the feature is to bump the version. Cannot modify test files per instructions. All other 446 tests pass. egg-info regenerated correctly."
 }
