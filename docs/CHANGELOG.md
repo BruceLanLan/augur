@@ -4,6 +4,51 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v7.7.0 (2026-06-01) - 持仓管理 & 深度交互 & 专业报告
+
+### 💼 Portfolio Management (持仓管理)
+- 新增 /portfolio 页面，支持持仓追踪（标的、买入价、数量、买入日期）
+- 实时盈亏计算（通过 yfinance 获取当前价格）
+- 总资产概览（已投资、当前市值、盈亏、回报率）
+- SVG 折线图展示 7 日加权持仓价值曲线
+- SVG 环形图展示资产配置（stroke-dasharray 圆环）
+- "运行 Augur 分析" 按钮对持仓全量进行 18 大师评分
+- localStorage 数据持久化，表格排序
+
+### 🎭 Persona Deep Interaction (人格深度交互)
+- 人格卡片 "Ask Question" 功能 - 向单个大师提问
+- "Compare Two Masters" - 两位大师对同一标的的并排对比
+- GET /api/persona/{id}/opinion 端点，单 Agent 分析
+- GET /api/persona/compare 端点，双 Agent 对比
+
+### 🔔 Notification & Cron Optimization (通知与定时任务优化)
+- 修复定时通知阈值过滤逻辑（仅在评分 >= 阈值时告警）
+- 设置页新增 "定时监控" 配置区域
+- GET/PUT /api/cron/config 定时任务配置管理端点
+- POST /api/cron/run-now 立即触发自选股分析
+
+### 📊 Dashboard Data Enrichment (首页数据增强)
+- 板块表现热力图（11 个板块 ETF，颜色编码涨跌幅）
+- Top Movers（涨跌幅排行，来源于热门标的）
+- Market Breadth 市场宽度指标（上涨/下跌比率条形图）
+- Augur Consensus Leaderboard（localStorage 历史最高评分排行）
+- 国际指数新增：FTSE、DAX、Nikkei
+
+### 📄 Report Visualization (报告可视化)
+- 独立 /report/{ticker} 全页报告视图
+- 专业样式：评分仪表盘 SVG、信号徽章、可折叠区域
+- 下载为 Markdown（.md 文件）
+- 下载为 HTML（自包含内联暗色 CSS）
+- 复制报告到剪贴板
+- Agent 投票表格，带颜色信号指示
+
+### 🎨 UI Polish (界面打磨)
+- 全局表格排序工具函数 (initSortableTable)
+- 所有路由（含 /portfolio）的活跃导航高亮
+- 全部新页面统一 Bloomberg 暗色主题
+
+---
+
 ## v7.6.0 (2026-06-01) - 自选股 & 可视化 & 导出增强
 
 ### 📋 自选股 Watchlist

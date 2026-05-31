@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v7.6.0](https://img.shields.io/badge/v7.6.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.7.0](https://img.shields.io/badge/v7.7.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -23,6 +23,19 @@
 > **巴菲特会买这只股吗？达利欧怎么看宏观风险？段永平觉得管理层够不够「本分」？**
 >
 > 别再一个维度猜了。Augur 让 **18位** 顶级投资人同时为你分析，每人给出独立评分，最终汇成一个带 Kelly 仓位建议的加权共识信号。
+
+---
+
+## 🆕 v7.7.0 新功能
+
+| 功能 | 说明 |
+|------|------|
+| 💼 持仓管理 Portfolio | /portfolio 页面，持仓追踪、实时盈亏、资产饼图、7日价值曲线、一键 Augur 分析 |
+| 🎭 人格深度交互 | 向单个大师提问 (Ask Question)、两位大师并排对比 (Compare Two Masters) |
+| 🔔 定时监控优化 | 阈值过滤修复、定时任务配置 UI、GET/PUT /api/cron/config、POST /api/cron/run-now |
+| 📊 首页数据增强 | 板块热力图、涨跌幅排行、Market Breadth、Consensus Leaderboard、国际指数 |
+| 📄 专业报告 | /report/{ticker} 独立全页视图、评分仪表盘、下载 MD/HTML、复制剪贴板、投票表格 |
+| 🎨 UI 打磨 | 全局表格排序、活跃导航高亮、Bloomberg 暗色主题全覆盖 |
 
 ---
 
@@ -223,14 +236,16 @@ Dashboard 功能亮点：
 python3 -m dashboard.app --port 8000 --cors
 ```
 
-Bloomberg Terminal 风格，**7个页面**，完整分析流程：
+Bloomberg Terminal 风格，**9个页面**，完整分析流程：
 
 | 页面 | 功能 | 亮点 |
 |------|------|------|
 | **首页** | 快速分析 + 数据源状态 + 热门标的 | 键盘 `/` 快速聚焦，响应式移动布局 |
 | **股票分析** | 18位共识 + 可视化报告 | 评分卡片网格 + 多空辩论 + 风险矩阵 |
-| **人格系统** | 18位大师卡片 + 搜索/过滤 | 展开看评分权重 |
+| **人格系统** | 18位大师卡片 + 搜索/过滤 | 展开看评分权重，Ask Question + Compare |
 | **信号监控** | 自选股批量扫描 | 自动 60s 刷新 |
+| **持仓管理** | 持仓追踪 + 实时盈亏 + 资产配置图 | /portfolio，localStorage 持久化 |
+| **分析报告** | 全页专业报告 + 下载 | /report/{ticker}，MD/HTML 下载 |
 | **历史回测** | IC 排行榜 + 命中率 | 评估大师准确率 |
 | **设置** | 每位大师独立配置模型 | 实时保存 |
 | **创建大师** | 无代码 YAML 自定义 | 即时注册生效 |

@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v7.6.0](https://img.shields.io/badge/v7.6.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.7.0](https://img.shields.io/badge/v7.7.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -23,6 +23,19 @@
 > **Would Buffett buy this stock?** What does Dalio think about macro risk? Is management "benfun" (principled) by Duan Yongping's standard?
 >
 > Stop guessing from one angle. Augur lets **18 legendary investors** independently analyze any stock, each producing a structured score, then aggregates them into a weighted consensus with Kelly position sizing.
+
+---
+
+## 🆕 v7.7.0 New Features
+
+| Feature | Description |
+|---------|-------------|
+| 💼 Portfolio Management | /portfolio page with holdings tracking, real-time P&L, asset donut chart, 7-day value curve, one-click Augur analysis |
+| 🎭 Persona Deep Interaction | Ask individual masters questions (Ask Question), side-by-side comparison (Compare Two Masters) |
+| 🔔 Cron Optimization | Threshold filtering fix, scheduled monitoring config UI, GET/PUT /api/cron/config, POST /api/cron/run-now |
+| 📊 Dashboard Enrichment | Sector heatmap, top movers, Market Breadth, Consensus Leaderboard, international indices |
+| 📄 Professional Reports | /report/{ticker} full-page view, score gauge SVG, download MD/HTML, copy to clipboard, voting table |
+| 🎨 UI Polish | Global table sorting, active nav highlighting, Bloomberg dark theme consistency |
 
 ---
 
