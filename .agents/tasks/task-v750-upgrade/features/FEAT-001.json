@@ -1,0 +1,32 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "i18n internationalization support + Performance optimization (ETag, response_model, CSS versioning, concurrent data fetch) + Security hardening (IP rate limiting, CORS, input sanitization, API key masking)",
+  "status": "in_progress",
+  "steps": [
+    "1. Create dashboard/static/js/i18n.js with zh/en translation maps covering all static UI text (navigation labels, section titles, button text, descriptions, footer). Include: initI18n() that reads localStorage 'augur-lang' or browser navigator.language, applyLanguage(lang) that replaces all elements with data-i18n attributes, and toggleLanguage() function.",
+    "2. In dashboard/templates/base.html: (a) Add a language toggle button (中/EN) in the sidebar footer area above the theme toggle. (b) Add <script src='/static/js/i18n.js?v=7.5.0'></script> before the closing </body>. (c) Add data-i18n attributes to all sidebar navigation labels, group labels, footer text. (d) Update CSS/JS link hrefs to include ?v=7.5.0 query parameter for cache busting.",
+    "3. Add data-i18n attributes to static text in index.html, personas.html, stocks.html, signals.html, settings.html, backtest.html templates for all headings, descriptions, and button text.",
+    "4. In dashboard/app.py: (a) Add IP-based rate limiting middleware - a simple dict counter per IP, 30 req/min limit, returning 429 on excess. Apply to all /api/ routes. (b) Add CORS middleware unconditionally reading AUGUR_CORS_ORIGINS env var (default '*'). (c) Ensure all query parameters (ticker, q) go through sanitization (already has regex for ticker - verify q param in /api/search). (d) In /api/config endpoint, mask any API keys in response (show only last 4 chars like '***abc'). (e) Add ETag/Last-Modified headers to /api/market-overview and /api/hot-tickers responses using hashlib on the JSON content. (f) Add response_model Pydantic models for key API endpoints (health, personas list, analyze result).",
+    "5. In src/augur/data.py: Add ThreadPoolExecutor-based parallel fetching in a new function fetch_market_context_batch(tickers: List[str]) that uses concurrent.futures to fetch multiple tickers in parallel.",
+    "6. Update version strings: pyproject.toml version to '7.5.0', dashboard/app.py FastAPI version to '7.5.0', base.html footer version to v7.5.0, src/augur/__init__.py __version__ to '7.5.0'."
+  ],
+  "acceptance_criteria": [
+    "Language toggle button visible in sidebar, clicking switches all data-i18n text between Chinese and English",
+    "Language preference persists in localStorage across page reloads",
+    "All CSS/JS links have ?v=7.5.0 query parameter",
+    "IP rate limiting returns 429 after 30 requests/minute from same IP",
+    "CORS headers present in responses, configurable via AUGUR_CORS_ORIGINS",
+    "API keys in config responses are masked (***xxx format)",
+    "/api/market-overview returns ETag header",
+    "fetch_market_context_batch exists and fetches multiple tickers concurrently",
+    "All existing 448 tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -q --tb=short",
+    "python -c \"from augur.data import fetch_market_context_batch; print('OK')\"",
+    "grep -r 'v=7.5.0' dashboard/templates/base.html"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

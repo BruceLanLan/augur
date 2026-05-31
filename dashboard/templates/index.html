@@ -60,14 +60,14 @@
 <!-- Hero Quick Analysis -->
 <div class="card mb-24 hero-section" style="padding:40px 24px;">
     <h1 class="hero-title">AUGUR</h1>
-    <p class="hero-subtitle">输入股票代码，一键获得18位大师共识</p>
+    <p class="hero-subtitle" data-i18n="hero-subtitle">输入股票代码，一键获得18位大师共识</p>
     <div class="flex items-center justify-center gap-12" style="flex-wrap:wrap;">
         <input class="hero-input" id="hero-ticker" type="text"
                placeholder="输入股票代码 (AAPL / NVDA / 0700.HK)"
                aria-label="Stock ticker input"
                onkeydown="if(event.key==='Enter') heroGo()">
         <button class="btn btn-primary" onclick="heroGo()" style="padding:12px 24px; font-size:0.92rem;">
-            分析 &rarr;
+            <span data-i18n="btn-analyze">分析</span> &rarr;
         </button>
     </div>
     <div class="shortcut-hint" style="margin-top:8px;">按 <kbd>/</kbd> 快速聚焦 &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交</div>
@@ -144,7 +144,7 @@
 
 <!-- Global Market Overview (Bloomberg-style live board) -->
 <div class="flex items-center justify-between mb-12" style="flex-wrap:wrap; gap:8px;">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">全球市场总览</div>
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-market-overview">全球市场总览</div>
     <div class="flex items-center gap-12">
         <span class="market-asof text-muted" id="market-asof" style="font-size:0.7rem;"></span>
         <button class="btn btn-sm btn-ghost" onclick="loadMarketOverview(true)" id="market-refresh-btn" title="刷新行情">↻ 刷新</button>
@@ -162,7 +162,7 @@
 
 <!-- Hot Tickers: 热门标的实时行情 -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">热门标的实时行情</div>
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-hot-tickers">热门标的实时行情</div>
     <button class="btn btn-sm btn-ghost" onclick="loadHotTickers(true)" id="hot-refresh-btn" title="刷新">↻ 刷新</button>
 </div>
 <div class="hot-tickers-grid mb-24" id="hot-tickers-grid">
@@ -178,14 +178,14 @@
 <div class="grid-2 mb-24" id="fear-macro-row">
     <!-- 恐慌与贪婪指标 -->
     <div class="fear-greed-section" id="fear-greed-section">
-        <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">恐慌与贪婪指标</div>
+        <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;" data-i18n="section-fear-greed">恐慌与贪婪指标</div>
         <div class="card" style="padding:16px;" id="fear-greed-card">
             <div class="text-muted" style="font-size:0.78rem;">加载中...</div>
         </div>
     </div>
     <!-- 宏观经济快照 -->
     <div class="macro-snapshot-section">
-        <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">宏观经济快照</div>
+        <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;" data-i18n="section-macro">宏观经济快照</div>
         <div class="macro-snapshot-grid" id="macro-snapshot-grid">
             <div class="macro-card skeleton" style="height:80px;"></div>
             <div class="macro-card skeleton" style="height:80px;"></div>
@@ -196,7 +196,7 @@
 
 <!-- Featured Personas -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">精选投资人</div>
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-featured-personas">精选投资人</div>
     <a href="/personas" class="btn btn-sm btn-ghost">查看全部 18 位 &rarr;</a>
 </div>
 <div class="grid-4 mb-24">
@@ -219,7 +219,7 @@
 <!-- Data Source Status (数据源状态) -->
 <div class="mb-24" id="datasource-section">
     <div class="flex items-center justify-between mb-12">
-        <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">数据源状态</div>
+        <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-datasource">数据源状态</div>
         <span class="text-muted" style="font-size:0.7rem;" id="ds-chain-label"></span>
     </div>
     <div class="datasource-grid" id="datasource-grid">
@@ -233,29 +233,29 @@
 
 <!-- Recent Analyses (from cache) -->
 <div id="recent-section" class="mb-24" style="display:none;">
-    <div class="section-title">最近分析</div>
+    <div class="section-title" data-i18n="section-recent">最近分析</div>
     <div class="card" style="padding:0; overflow:hidden;">
         <ul class="recent-list" id="recent-list"></ul>
     </div>
 </div>
 
 <!-- How it works -->
-<div class="section-title">工作原理</div>
+<div class="section-title" data-i18n="section-how-it-works">工作原理</div>
 <div class="grid-3 mb-24">
     <div class="card" style="text-align:center; padding:24px 16px;">
         <div style="font-size:1.8rem; margin-bottom:8px;">&#x1F4CA;</div>
-        <h4 style="color:var(--accent-orange); font-size:0.88rem;">1. 输入代码</h4>
-        <p class="text-muted" style="font-size:0.78rem; margin:0;">只需股票代码，系统自动获取实时数据（也可手动填指标）</p>
+        <h4 style="color:var(--accent-orange); font-size:0.88rem;" data-i18n="how-step1-title">1. 输入代码</h4>
+        <p class="text-muted" style="font-size:0.78rem; margin:0;" data-i18n="how-step1-desc">只需股票代码，系统自动获取实时数据（也可手动填指标）</p>
     </div>
     <div class="card" style="text-align:center; padding:24px 16px;">
         <div style="font-size:1.8rem; margin-bottom:8px;">&#x1F916;</div>
-        <h4 style="color:var(--accent-orange); font-size:0.88rem;">2. 多Agent分析</h4>
-        <p class="text-muted" style="font-size:0.78rem; margin:0;">{{ agent_count }} 位投资大师从各自视角独立分析</p>
+        <h4 style="color:var(--accent-orange); font-size:0.88rem;" data-i18n="how-step2-title">2. 多Agent分析</h4>
+        <p class="text-muted" style="font-size:0.78rem; margin:0;" data-i18n="how-step2-desc">{{ agent_count }} 位投资大师从各自视角独立分析</p>
     </div>
     <div class="card" style="text-align:center; padding:24px 16px;">
         <div style="font-size:1.8rem; margin-bottom:8px;">&#x1F3AF;</div>
-        <h4 style="color:var(--accent-orange); font-size:0.88rem;">3. 共识决策</h4>
-        <p class="text-muted" style="font-size:0.78rem; margin:0;">行业加权、机制感知，形成最终共识信号</p>
+        <h4 style="color:var(--accent-orange); font-size:0.88rem;" data-i18n="how-step3-title">3. 共识决策</h4>
+        <p class="text-muted" style="font-size:0.78rem; margin:0;" data-i18n="how-step3-desc">行业加权、机制感知，形成最终共识信号</p>
     </div>
 </div>
 

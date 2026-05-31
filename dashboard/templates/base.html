@@ -7,7 +7,7 @@
     <meta name="description" content="Augur - Multi-agent investment analysis platform with 18 investor personas">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="/static/css/bloomberg.css" rel="stylesheet">
+    <link href="/static/css/bloomberg.css?v=7.5.0" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -27,59 +27,62 @@
             <nav class="sidebar-nav">
                 <!-- 分析 Group -->
                 <div class="nav-group">
-                    <div class="nav-group-label">分析</div>
+                    <div class="nav-group-label" data-i18n="group-analysis">分析</div>
                     <a class="nav-item" href="/" data-page="home">
                         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                        <span>仪表盘</span>
+                        <span data-i18n="nav-dashboard">仪表盘</span>
                     </a>
                     <a class="nav-item" href="/stocks" data-page="stocks">
                         <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
-                        <span>股票分析</span>
+                        <span data-i18n="nav-stocks">股票分析</span>
                     </a>
                     <a class="nav-item" href="/signals" data-page="signals">
                         <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                        <span>信号监控</span>
+                        <span data-i18n="nav-signals">信号监控</span>
                     </a>
                     <a class="nav-item" href="/backtest" data-page="backtest">
                         <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/><path d="M3 12h1M12 3v1M21 12h1M12 21v1"/></svg>
-                        <span>回测</span>
+                        <span data-i18n="nav-backtest">回测</span>
                     </a>
                 </div>
 
                 <!-- 投资人 Group -->
                 <div class="nav-group">
-                    <div class="nav-group-label">投资人</div>
+                    <div class="nav-group-label" data-i18n="group-investors">投资人</div>
                     <a class="nav-item" href="/personas" data-page="personas">
                         <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        <span>人格系统</span>
+                        <span data-i18n="nav-personas">人格系统</span>
                     </a>
                     <a class="nav-item" href="/create-persona" data-page="create-persona">
                         <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span>创建投资人</span>
+                        <span data-i18n="nav-create-persona">创建投资人</span>
                     </a>
                 </div>
 
                 <!-- 系统 Group -->
                 <div class="nav-group">
-                    <div class="nav-group-label">系统</div>
+                    <div class="nav-group-label" data-i18n="group-system">系统</div>
                     <a class="nav-item" href="/settings" data-page="settings">
                         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                        <span>设置</span>
+                        <span data-i18n="nav-settings">设置</span>
                     </a>
                 </div>
             </nav>
 
             <div class="sidebar-footer">
+                <button onclick="toggleLanguage()" class="lang-toggle-btn" title="切换语言" aria-label="Switch Language">
+                    <span id="lang-label">EN</span>
+                </button>
                 <button class="theme-toggle-btn" onclick="toggleTheme()" title="切换主题" aria-label="切换深色/浅色主题">
                     <span id="theme-icon">&#x1F319;</span>
-                    <span id="theme-label">深色</span>
+                    <span id="theme-label" data-i18n="theme-dark">深色</span>
                 </button>
                 <div class="status-indicator connected">
                     <span class="status-dot"></span>
-                    <span class="status-text">系统就绪</span>
+                    <span class="status-text" data-i18n="status-ready">系统就绪</span>
                 </div>
-                <div class="version-info">Powered by Augur</div>
-                <div class="version-info">v7.4.0</div>
+                <div class="version-info" data-i18n="powered-by">Powered by Augur</div>
+                <div class="version-info">v7.5.0</div>
             </div>
         </aside>
 
@@ -101,23 +104,23 @@
     <nav class="bottom-nav" id="bottom-nav">
         <a class="bottom-nav-item" href="/" data-page="home">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            <span>首页</span>
+            <span data-i18n="bottom-home">首页</span>
         </a>
         <a class="bottom-nav-item" href="/stocks" data-page="stocks">
             <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
-            <span>分析</span>
+            <span data-i18n="bottom-analysis">分析</span>
         </a>
         <a class="bottom-nav-item" href="/personas" data-page="personas">
             <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            <span>大师</span>
+            <span data-i18n="bottom-masters">大师</span>
         </a>
         <a class="bottom-nav-item" href="/backtest" data-page="backtest">
             <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
-            <span>回测</span>
+            <span data-i18n="bottom-backtest">回测</span>
         </a>
         <a class="bottom-nav-item" href="/settings" data-page="settings">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15"/></svg>
-            <span>设置</span>
+            <span data-i18n="bottom-settings">设置</span>
         </a>
     </nav>
 
@@ -580,6 +583,7 @@
         startHealthCheck();
     })();
     </script>
+    <script src="/static/js/i18n.js?v=7.5.0"></script>
     {% block extra_scripts %}{% endblock %}
 </body>
 </html>

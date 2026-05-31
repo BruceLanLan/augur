@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Notification system completion + Dashboard enhancement (report download, richer data display) + Single persona integration guide",
+  "status": "pending",
+  "steps": [
+    "1. In dashboard/app.py: (a) Add POST /api/notifications/test endpoint that accepts {channel: 'telegram'|'slack'|'wechat'|'lark'} and dispatches test message via corresponding bot module (from augur.bots.telegram_bot, etc). Handle missing config gracefully. (b) Add POST /api/notifications/config endpoint that saves notification config to config/notifications.yaml (create config/ dir if needed). (c) Add GET /api/notifications/config to read saved notification config.",
+    "2. In dashboard/templates/signals.html: Add 'Alert Threshold' section - user can set score threshold (e.g. >8) and select notification channel. Save to localStorage and/or config/notifications.yaml via API. Display a small form: threshold slider (1-10), channel selector, save button.",
+    "3. In dashboard/templates/stocks.html (or wherever report is displayed): Add a 'Download Report' button that: (a) fetches /api/report/{ticker}, (b) creates a Blob from the markdown text, (c) triggers a browser download as {TICKER}_augur_report_{date}.md file. Also add a 'Copy to Clipboard' button for the report markdown.",
+    "4. Create docs/single-persona-integration.md (if not exists, enhance existing): A comprehensive guide on how to integrate a single Augur persona agent into external systems (Hermes Agent, Open Claw, custom apps). Include: MCP server config, direct Python API usage, REST API single-persona endpoint, example configs for Claude Desktop / Hermes / Open Claw. Provide both Chinese and English.",
+    "5. Ensure the notification test endpoint works by importing from augur.bots modules (telegram_bot.py, slack_bot.py, etc) - these modules already exist. Wrap in try/except for graceful degradation if bot dependencies are not installed."
+  ],
+  "acceptance_criteria": [
+    "POST /api/notifications/test with {channel:'telegram'} returns success/error status",
+    "POST /api/notifications/config saves to config/notifications.yaml",
+    "Signals page has alert threshold UI with save capability",
+    "Report page has Download and Copy buttons that work",
+    "docs/single-persona-integration.md exists with comprehensive integration guide",
+    "All existing tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -q --tb=short",
+    "python -c \"from dashboard.app import app; print('notification endpoints OK')\"",
+    "test -f docs/single-persona-integration.md && echo 'guide exists'"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

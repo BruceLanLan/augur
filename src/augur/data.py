@@ -217,6 +217,23 @@ def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketCont
     return ctx
 
 
+def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict[str, MarketContext]:
+    """Fetch multiple tickers in parallel using ThreadPoolExecutor."""
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    results: Dict[str, MarketContext] = {}
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_ticker = {executor.submit(fetch_market_context, t): t for t in tickers}
+        for future in as_completed(future_to_ticker):
+            ticker = future_to_ticker[future]
+            try:
+                results[ticker] = future.result()
+            except Exception as e:
+                logger.warning("batch fetch failed for %s: %s", ticker, e)
+                results[ticker] = MarketContext(ticker=ticker.upper())
+    return results
+
+
 def fetch_history(ticker: str, period: str = "1y", force_refresh: bool = False) -> List[Dict]:
     """
     Fetch historical price data.
