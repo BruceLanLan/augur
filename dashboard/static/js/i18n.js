@@ -52,6 +52,17 @@ window.I18N = {
         // Hero
         "hero-subtitle": "输入股票代码，一键获得18位大师共识",
         "hero-placeholder": "输入股票代码 (AAPL / NVDA / 0700.HK)",
+        // Scanner
+        "scanner_title": "市场扫描器",
+        "scanner_desc": "选择预设列表或输入自定义股票代码，一键让18位大师快速评分",
+        "scanner_preset_tech": "科技巨头",
+        "scanner_preset_china": "中概股",
+        "scanner_preset_crypto": "加密货币",
+        "scanner_custom_label": "自定义标的 (逗号分隔)",
+        "scanner_limit": "最多20个标的",
+        "scanner_run": "开始扫描",
+        "scanner_results_title": "扫描结果",
+        "nav_scanner": "扫描器",
         // Lang toggle
         "lang-label": "EN"
     },
@@ -104,6 +115,17 @@ window.I18N = {
         // Hero
         "hero-subtitle": "Enter a ticker, get consensus from 18 masters",
         "hero-placeholder": "Enter ticker (AAPL / NVDA / 0700.HK)",
+        // Scanner
+        "scanner_title": "Market Scanner",
+        "scanner_desc": "Select a preset list or enter custom tickers for quick scoring by 18 masters",
+        "scanner_preset_tech": "Tech Giants",
+        "scanner_preset_china": "China ADRs",
+        "scanner_preset_crypto": "Crypto",
+        "scanner_custom_label": "Custom Tickers (comma separated)",
+        "scanner_limit": "Max 20 tickers",
+        "scanner_run": "Run Scanner",
+        "scanner_results_title": "Scan Results",
+        "nav_scanner": "Scanner",
         // Lang toggle
         "lang-label": "中"
     }
