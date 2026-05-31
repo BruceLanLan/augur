@@ -253,20 +253,31 @@
 
 <!-- Deep Report Section -->
 <div id="report-section" style="display:none;" class="card mb-24">
-    <div class="flex items-center justify-between mb-12">
-        <h3 style="color:var(--accent-orange); margin:0;">深度分析报告</h3>
-        <div class="flex gap-8">
-            <button class="copy-btn" onclick="copyReport()">复制报告</button>
-            <button class="copy-btn" onclick="downloadReport()">下载 .md</button>
-            <button class="copy-btn" onclick="closeReport()">关闭</button>
-        </div>
+    <!-- Report Toolbar -->
+    <div class="report-toolbar">
+        <span class="report-title">&#x1F4CA; 深度分析报告</span>
+        <button class="btn btn-sm" onclick="downloadPDF()" title="打印/导出PDF">&#x1F5A8; 下载 PDF</button>
+        <button class="btn btn-sm" onclick="downloadReport()">&#x2B07; 下载 .md</button>
+        <button class="btn btn-sm" onclick="copyReport()">&#x1F4CB; 复制报告</button>
+        <button class="btn btn-sm" onclick="closeReport()">&#x2715; 关闭</button>
     </div>
     <!-- Report loading state -->
     <div id="report-loading" class="report-loading" style="display:none;">
         <div class="spinner" style="width:22px; height:22px; border-width:2px;"></div>
         <span class="loading-pulse" id="report-progress">正在生成深度报告...</span>
     </div>
-    <div id="report-content" class="md-report"></div>
+    <!-- Visual Report Components -->
+    <div id="report-visual"></div>
+    <!-- Full text (collapsible) -->
+    <div id="report-full-text-wrapper" class="report-full-text" style="display:none;">
+        <div class="report-full-text-toggle" onclick="toggleFullReportText(this)">
+            <span class="toggle-icon">&#9654;</span>
+            <span>查看完整报告原文 (Markdown)</span>
+        </div>
+        <div class="report-full-text-content" id="report-full-text-content">
+            <div id="report-content" class="md-report"></div>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
@@ -665,13 +676,270 @@ function handleReportResponse(data) {
     if (btn) btn.disabled = false;
     if (data.status === 'ok' && data.report) {
         lastReportMarkdown = data.report;
+        // Render visual components
+        renderVisualReport(data.report, lastAnalysisData);
+        // Also render full markdown in the collapsible section
         document.getElementById('report-content').innerHTML = renderReportMarkdown(data.report);
+        document.getElementById('report-full-text-wrapper').style.display = 'block';
         document.getElementById('report-section').style.display = 'block';
         document.getElementById('report-section').scrollIntoView({behavior:'smooth'});
         showToast('深度报告已生成');
     } else {
         showReportError(new Error(data.detail || 'unknown error'));
     }
+}
+
+function renderVisualReport(markdownText, analysisData) {
+    var container = document.getElementById('report-visual');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // 1. Executive Summary - parse from markdown or use analysisData
+    var execHtml = buildExecutiveSummary(markdownText, analysisData);
+    if (execHtml) container.innerHTML += execHtml;
+
+    // 2. Score Cards Grid - use structured data from analysisData
+    var scoreHtml = buildScoreCards(analysisData);
+    if (scoreHtml) container.innerHTML += scoreHtml;
+
+    // 3. Bull vs Bear Debate
+    var debateHtml = buildDebateLayout(markdownText);
+    if (debateHtml) container.innerHTML += debateHtml;
+
+    // 4. Risk Matrix Cards
+    var riskHtml = buildRiskCards(markdownText, analysisData);
+    if (riskHtml) container.innerHTML += riskHtml;
+}
+
+function buildExecutiveSummary(md, data) {
+    // Try to extract from consensus in analysisData
+    var signal = '--', score = '--', grade = '--', position = '--';
+    if (data && data.consensus) {
+        var cons = data.consensus;
+        signal = signalLabel(cons.signal);
+        score = (cons.score || 0).toFixed(1) + '/10';
+        var s = cons.score || 0;
+        if (s >= 8) grade = 'A+';
+        else if (s >= 7) grade = 'A';
+        else if (s >= 6) grade = 'B+';
+        else if (s >= 5) grade = 'B';
+        else if (s >= 4) grade = 'C';
+        else grade = 'D';
+        if (cons.metadata && cons.metadata.position_sizing) {
+            position = (cons.metadata.position_sizing.position_pct || 0).toFixed(1) + '%';
+        }
+    }
+
+    // Also try to extract reasoning from the markdown verdict section
+    var verdictText = '';
+    var verdictMatch = md.match(/##\s*(?:投资委员会综合裁决|Executive\s+Summary)([\s\S]*?)(?=\n##\s|\n---|\n\*\*\*|$)/i);
+    if (verdictMatch) {
+        var lines = verdictMatch[1].trim().split('\n').filter(function(l) { return l.trim(); });
+        verdictText = lines.slice(0, 3).join(' ').replace(/[#*_`]/g, '').trim();
+    }
+
+    var signalClass = 'highlight';
+    if (data && data.consensus) {
+        var sig = (data.consensus.signal || '').toLowerCase();
+        if (sig === 'bullish') signalClass = 'buy';
+        else if (sig === 'bearish') signalClass = 'sell';
+        else if (sig === 'neutral') signalClass = 'neutral';
+    }
+
+    var html = '<div class="report-executive-card">';
+    html += '<div class="exec-header"><span style="font-size:1.1rem;">&#x1F3DB;</span><span class="exec-title">Investment Committee Verdict</span></div>';
+    html += '<div class="report-executive-metrics">';
+    html += '<div class="exec-metric"><div class="exec-metric-label">Signal</div><div class="exec-metric-value ' + signalClass + '">' + escapeHtml(signal) + '</div></div>';
+    html += '<div class="exec-metric"><div class="exec-metric-label">Score</div><div class="exec-metric-value highlight">' + escapeHtml(score) + '</div></div>';
+    html += '<div class="exec-metric"><div class="exec-metric-label">Grade</div><div class="exec-metric-value highlight">' + escapeHtml(grade) + '</div></div>';
+    html += '<div class="exec-metric"><div class="exec-metric-label">Position</div><div class="exec-metric-value highlight">' + escapeHtml(position) + '</div></div>';
+    if (data && data.consensus && data.consensus.confidence) {
+        html += '<div class="exec-metric"><div class="exec-metric-label">Confidence</div><div class="exec-metric-value highlight">' + ((data.consensus.confidence * 100).toFixed(0)) + '%</div></div>';
+    }
+    html += '</div>';
+    if (verdictText) {
+        html += '<div style="margin-top:14px; font-size:0.8rem; color:var(--text-secondary); line-height:1.6;">' + escapeHtml(verdictText.substring(0, 300)) + '</div>';
+    }
+    html += '</div>';
+    return html;
+}
+
+function buildScoreCards(data) {
+    if (!data || !data.agents || data.agents.length === 0) return '';
+    var agents = data.agents.slice().sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
+
+    var html = '<div class="report-section-label">&#x1F4CA; 18 Masters Score Board</div>';
+    html += '<div class="report-scorecard-grid">';
+    agents.forEach(function(agent) {
+        var score = agent.score || 0;
+        var scoreClass = score > 7 ? 'score-high' : (score >= 5 ? 'score-mid' : 'score-low');
+        var signal = signalLabel(agent.signal);
+        var sigClass = 'sig-neutral';
+        var sl = (agent.signal || '').toLowerCase();
+        if (sl === 'bullish') sigClass = 'sig-buy';
+        else if (sl === 'bearish') sigClass = 'sig-sell';
+        var conf = ((agent.confidence || 0) * 100).toFixed(0);
+        var barColor = sl === 'bullish' ? 'var(--signal-buy)' : (sl === 'bearish' ? 'var(--signal-sell)' : 'var(--signal-neutral)');
+
+        html += '<div class="report-scorecard">';
+        html += '<div class="sc-name" title="' + escapeHtml(agent.agent_name) + '">' + escapeHtml(agent.agent_name) + '</div>';
+        html += '<div class="sc-score ' + scoreClass + '">' + score.toFixed(1) + '</div>';
+        html += '<span class="sc-signal ' + sigClass + '">' + signal + '</span>';
+        html += '<div class="sc-confidence">' + conf + '% conf</div>';
+        html += '<div class="sc-bar"><div class="sc-bar-fill" style="width:' + ((score / 10) * 100).toFixed(0) + '%; background:' + barColor + ';"></div></div>';
+        html += '</div>';
+    });
+    html += '</div>';
+    return html;
+}
+
+function buildDebateLayout(md) {
+    // Look for the debate section
+    var debateMatch = md.match(/##\s*(?:多空辩论|Bull.*Bear|Debate)([\s\S]*?)(?=\n##\s|\n---|\n\*\*\*|$)/i);
+    if (!debateMatch) return '';
+
+    var debateContent = debateMatch[1];
+
+    // Extract bull points (multi-party / bullish arguments)
+    var bullPoints = [];
+    var bearPoints = [];
+
+    // Try to find subsections
+    var bullMatch = debateContent.match(/###?\s*(?:多方论点|多方|Bull|Bullish|看多)([\s\S]*?)(?=###?\s|$)/i);
+    var bearMatch = debateContent.match(/###?\s*(?:空方论点|空方|最谨慎方|Bear|Bearish|看空|Cautious)([\s\S]*?)(?=###?\s|$)/i);
+
+    if (bullMatch) {
+        bullPoints = extractListItems(bullMatch[1]);
+    }
+    if (bearMatch) {
+        bearPoints = extractListItems(bearMatch[1]);
+    }
+
+    // If no subsections found, split by numbered items or bullets
+    if (bullPoints.length === 0 && bearPoints.length === 0) {
+        var allItems = extractListItems(debateContent);
+        // Split roughly in half - first half bull, second half bear
+        var mid = Math.ceil(allItems.length / 2);
+        bullPoints = allItems.slice(0, mid);
+        bearPoints = allItems.slice(mid);
+    }
+
+    if (bullPoints.length === 0 && bearPoints.length === 0) return '';
+
+    var html = '<div class="report-debate-section">';
+    html += '<div class="debate-title">&#x2694; Bull vs Bear Debate</div>';
+    html += '<div class="report-debate-layout">';
+
+    // Bull side
+    html += '<div class="report-debate-bull">';
+    html += '<div class="debate-panel-title"><span>&#x1F4C8;</span> Bullish Arguments</div>';
+    html += '<ul class="debate-points">';
+    bullPoints.forEach(function(p) {
+        html += '<li>' + escapeHtml(p) + '</li>';
+    });
+    if (bullPoints.length === 0) html += '<li style="color:var(--text-muted);">No bull arguments found</li>';
+    html += '</ul></div>';
+
+    // Bear side
+    html += '<div class="report-debate-bear">';
+    html += '<div class="debate-panel-title"><span>&#x1F4C9;</span> Bearish Arguments</div>';
+    html += '<ul class="debate-points">';
+    bearPoints.forEach(function(p) {
+        html += '<li>' + escapeHtml(p) + '</li>';
+    });
+    if (bearPoints.length === 0) html += '<li style="color:var(--text-muted);">No bear arguments found</li>';
+    html += '</ul></div>';
+
+    html += '</div></div>';
+    return html;
+}
+
+function buildRiskCards(md, data) {
+    // Parse risk matrix from markdown
+    var riskMatch = md.match(/##\s*(?:共识与风险矩阵|风险矩阵|Risk\s*Matrix|Risks)([\s\S]*?)(?=\n##\s|\n---|\n\*\*\*|$)/i);
+    var risks = [];
+
+    if (riskMatch) {
+        // Try table format first: | risk | severity | description |
+        var tableRows = riskMatch[1].match(/\|(.+)\|/g);
+        if (tableRows && tableRows.length > 2) {
+            // Skip header and separator
+            for (var i = 2; i < tableRows.length; i++) {
+                var cells = tableRows[i].split('|').map(function(c) { return c.trim(); }).filter(function(c) { return c; });
+                if (cells.length >= 2) {
+                    risks.push({
+                        title: cells[0],
+                        desc: cells.length >= 3 ? cells[2] : cells[1],
+                        severity: cells.length >= 2 ? guessSeverity(cells[1]) : 'medium'
+                    });
+                }
+            }
+        }
+        // Fallback: extract list items as risks
+        if (risks.length === 0) {
+            var items = extractListItems(riskMatch[1]);
+            items.forEach(function(item) {
+                risks.push({title: item, desc: '', severity: 'medium'});
+            });
+        }
+    }
+
+    // Also pull risks from analysisData consensus
+    if (risks.length === 0 && data && data.consensus && data.consensus.risks) {
+        data.consensus.risks.forEach(function(r) {
+            risks.push({title: r, desc: '', severity: 'medium'});
+        });
+    }
+
+    if (risks.length === 0) return '';
+
+    var html = '<div class="report-risk-section">';
+    html += '<div class="risk-title">&#x26A0; Risk Matrix</div>';
+    html += '<div class="report-risk-grid">';
+    risks.slice(0, 8).forEach(function(risk) {
+        var sevClass = 'risk-severity-' + risk.severity;
+        html += '<div class="report-risk-card">';
+        html += '<div class="risk-card-title">' + escapeHtml(risk.title) + '</div>';
+        if (risk.desc) html += '<div class="risk-card-desc">' + escapeHtml(risk.desc) + '</div>';
+        html += '<span class="risk-card-severity ' + sevClass + '">' + risk.severity.toUpperCase() + '</span>';
+        html += '</div>';
+    });
+    html += '</div></div>';
+    return html;
+}
+
+function extractListItems(text) {
+    var items = [];
+    var lines = text.split('\n');
+    lines.forEach(function(line) {
+        var trimmed = line.trim();
+        // Match numbered items (1. ...) or bullet points (- ... / * ...)
+        var match = trimmed.match(/^(?:\d+[\.\)]\s*|[-*]\s+)(.+)/);
+        if (match) {
+            var content = match[1].replace(/\*\*/g, '').replace(/\*/g, '').trim();
+            if (content.length > 5) items.push(content);
+        }
+    });
+    return items;
+}
+
+function guessSeverity(text) {
+    var lower = (text || '').toLowerCase();
+    if (lower.match(/高|high|严重|critical/)) return 'high';
+    if (lower.match(/低|low|轻微|minor/)) return 'low';
+    return 'medium';
+}
+
+function downloadPDF() {
+    showToast('正在准备打印/PDF...', 'info');
+    setTimeout(function() { window.print(); }, 300);
+}
+
+function toggleFullReportText(el) {
+    var content = document.getElementById('report-full-text-content');
+    if (!content) return;
+    el.classList.toggle('open');
+    content.classList.toggle('expanded');
 }
 
 function copyReport() {

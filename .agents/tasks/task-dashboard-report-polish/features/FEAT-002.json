@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Report visualization upgrade in stocks.html - transform plain markdown report into professional visual components with score cards, bull/bear debate layout, risk matrix cards, and download buttons (PDF via print + Markdown via Blob)",
+  "status": "in_progress",
+  "steps": [
+    "In dashboard/templates/stocks.html, replace the simple #report-section with a professional multi-section report view that includes: (a) A report toolbar with Download PDF button (window.print() with @media print CSS) and Download Markdown button (existing downloadReport function using Blob URL), (b) A visual score card grid at the top showing each of the 18 investors as small cards with name, score (color-coded), signal badge, and confidence bar, (c) A bull vs bear debate section with two-column layout (green left for bulls, red right for bears), (d) A risk matrix section rendered as styled cards/table instead of raw markdown, (e) Keep the full markdown rendering below as a 'detailed text' expandable section",
+    "Add a new JavaScript function renderVisualReport(markdownText, analysisData) in stocks.html that parses the report markdown sections and renders them into the visual components described above. It should: parse the '18位大师评分总表' section to extract agent scores and render score cards; parse '多空辩论' to create the two-column debate view; parse '共识与风险矩阵' to create risk cards; parse '投资委员会综合裁决' for the executive summary header card",
+    "Add a downloadPDF() function that calls window.print() - add @media print CSS rules in bloomberg.css to hide sidebar/nav and format the report section nicely for print",
+    "Modify the handleReportResponse function to call renderVisualReport instead of just innerHTML = renderReportMarkdown",
+    "Add CSS classes in bloomberg.css for: .report-scorecard-grid (grid of small agent cards), .report-scorecard (individual card with score circle, name, signal), .report-debate-layout (two column), .report-debate-bull / .report-debate-bear (colored panels), .report-risk-card, .report-toolbar (download buttons bar), @media print rules"
+  ],
+  "acceptance_criteria": [
+    "Report section shows visual score cards for each of the 18 investors with color-coded scores",
+    "Bull/bear debate is displayed in a two-column layout with green/red theming",
+    "Risk matrix is displayed as styled cards rather than raw markdown tables",
+    "Download PDF button triggers window.print() with clean print styles",
+    "Download Markdown button downloads the .md file via Blob URL",
+    "The full markdown text is still accessible in an expandable section below the visual components"
+  ],
+  "verification": [
+    "python3 -c \"from dashboard.app import app; print('Dashboard loads OK')\"",
+    "Verify stocks.html contains the new report visualization code by checking for renderVisualReport function",
+    "Verify bloomberg.css contains @media print rules and .report-scorecard-grid styles"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
