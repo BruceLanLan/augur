@@ -149,6 +149,41 @@ class MarketContext:
     industry_peers: list = field(default_factory=list)   # 行业同行列表
     mcp_metrics: dict = field(default_factory=dict)       # MCP 附加指标
 
+    # ============ 新增: 公司元信息 / 行情扩展 ============
+    company_name: str = ""        # 公司全称
+    currency: str = ""            # 计价货币
+    exchange: str = ""            # 交易所
+    day_open: float = 0           # 今日开盘
+    day_high: float = 0           # 今日最高
+    day_low: float = 0            # 今日最低
+    fifty_two_week_high: float = 0  # 52周最高（绝对值）
+    fifty_two_week_low: float = 0   # 52周最低（绝对值）
+    avg_volume: float = 0         # 平均成交量
+    sma200: float = 0             # 200日均线
+
+    # ============ 新增: 估值 / 盈利扩展 ============
+    forward_pe: float = 0         # 远期市盈率
+    peg_ratio: float = 0          # PEG
+    eps: float = 0                # 每股收益（TTM）
+    forward_eps: float = 0        # 远期每股收益
+    profit_margins: float = 0     # 净利率（0-1 小数）
+    ebitda: float = 0             # EBITDA（十亿 USD）
+    enterprise_value: float = 0   # 企业价值（十亿 USD）
+    total_cash: float = 0         # 现金及等价物（十亿 USD）
+    total_debt: float = 0         # 总负债（十亿 USD）
+
+    # ============ 新增: 股息 ============
+    dividend_yield: float = 0     # 股息率（0-1 小数）
+    dividend_rate: float = 0      # 每股年度股息（货币单位）
+    payout_ratio: float = 0       # 派息率（0-1 小数）
+
+    # ============ 新增: 分析师一致预期（华尔街共识，可作参考维度）============
+    target_mean_price: float = 0  # 分析师目标均价
+    target_high_price: float = 0  # 目标最高价
+    target_low_price: float = 0   # 目标最低价
+    recommendation_key: str = ""  # 评级关键词 strong_buy/buy/hold/sell
+    num_analyst_opinions: int = 0  # 覆盖分析师数量
+
     def get(self, key: str, default: Any = None) -> Any:
         return getattr(self, key, default)
 

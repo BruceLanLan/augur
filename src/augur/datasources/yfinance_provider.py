@@ -73,12 +73,17 @@ class YFinanceProvider(DataProvider):
         pe = safe_num(info.get("trailingPE"))
         pb = safe_num(info.get("priceToBook"))
         ps = safe_num(info.get("priceToSalesTrailing12Months"))
+        forward_pe = safe_num(info.get("forwardPE"))
+        peg_ratio = safe_num(info.get("trailingPegRatio")) or safe_num(info.get("pegRatio"))
+        eps = safe_num(info.get("trailingEps"))
+        forward_eps = safe_num(info.get("forwardEps"))
 
         # ---- 盈利能力 / 增长（yfinance 原生为 0-1 小数，保持不变）----
         roe = safe_num(info.get("returnOnEquity"))
         roa = safe_num(info.get("returnOnAssets"))
         gross_margins = safe_num(info.get("grossMargins"))
         operating_margins = safe_num(info.get("operatingMargins"))
+        profit_margins = safe_num(info.get("profitMargins"))
         revenue_growth = safe_num(info.get("revenueGrowth"))
         earnings_growth = safe_num(info.get("earningsGrowth"))
 
@@ -96,12 +101,46 @@ class YFinanceProvider(DataProvider):
         fcf = safe_num(info.get("freeCashflow")) / 1e9
         market_cap = safe_num(info.get("marketCap")) / 1e9
         revenue = safe_num(info.get("totalRevenue")) / 1e9
+        ebitda = safe_num(info.get("ebitda")) / 1e9
+        enterprise_value = safe_num(info.get("enterpriseValue")) / 1e9
+        total_cash = safe_num(info.get("totalCash")) / 1e9
+        total_debt = safe_num(info.get("totalDebt")) / 1e9
 
         current_ratio = safe_num(info.get("currentRatio"))
         quick_ratio = safe_num(info.get("quickRatio"))
         sector = info.get("sector") or ""
         industry = info.get("industry") or ""
         volume = safe_num(info.get("volume")) or safe_num(info.get("regularMarketVolume"))
+        avg_volume = safe_num(info.get("averageVolume")) or safe_num(info.get("averageVolume10days"))
+
+        # ---- 公司元信息 / 行情扩展 ----
+        company_name = info.get("longName") or info.get("shortName") or ""
+        currency = info.get("currency") or ""
+        exchange = info.get("exchange") or info.get("fullExchangeName") or ""
+        day_open = safe_num(info.get("regularMarketOpen")) or safe_num(info.get("open"))
+        day_high = safe_num(info.get("regularMarketDayHigh")) or safe_num(info.get("dayHigh"))
+        day_low = safe_num(info.get("regularMarketDayLow")) or safe_num(info.get("dayLow"))
+        sma200 = safe_num(info.get("twoHundredDayAverage"))
+
+        # ---- 股息 ----
+        dividend_rate = safe_num(info.get("dividendRate"))
+        # yfinance 的 dividendYield 格式不稳定（有时是 0.35 表示 0.35%，有时是 0.0035 小数）。
+        # 最稳健的做法：当有每股股息与价格时，直接用 dividend_rate / price 计算真实收益率（小数）。
+        if dividend_rate > 0 and price > 0:
+            dividend_yield = dividend_rate / price
+        else:
+            dividend_yield = safe_num(info.get("dividendYield"))
+            if dividend_yield > 1:  # 明显是百分数形式
+                dividend_yield = dividend_yield / 100.0
+        dividend_yield = clamp(dividend_yield, 0.0, 1.0)
+        payout_ratio = clamp(safe_num(info.get("payoutRatio")), 0.0, 5.0)
+
+        # ---- 分析师一致预期 ----
+        target_mean_price = safe_num(info.get("targetMeanPrice"))
+        target_high_price = safe_num(info.get("targetHighPrice"))
+        target_low_price = safe_num(info.get("targetLowPrice"))
+        recommendation_key = info.get("recommendationKey") or ""
+        num_analyst_opinions = int(safe_num(info.get("numberOfAnalystOpinions")))
 
         # ---- 持股结构: 0-1 比例 -> 0-100 百分比，并裁剪到合理区间 ----
         institutional_ownership = clamp(safe_num(info.get("heldPercentInstitutions")) * 100, 0.0, 100.0)
@@ -150,12 +189,43 @@ class YFinanceProvider(DataProvider):
             "sector": sector,
             "industry": industry,
             "volume": volume,
+            "avg_volume": avg_volume,
             "institutional_ownership": institutional_ownership,
             "insider_ownership": insider_ownership,
             "short_interest": short_interest,
             "beta_1y": beta_1y,
             "price_vs_52w_high": price_vs_52w_high,
             "price_vs_52w_low": price_vs_52w_low,
+            # 新增: 公司元信息 / 行情扩展
+            "company_name": company_name,
+            "currency": currency,
+            "exchange": exchange,
+            "day_open": day_open,
+            "day_high": day_high,
+            "day_low": day_low,
+            "fifty_two_week_high": fifty_two_high,
+            "fifty_two_week_low": fifty_two_low,
+            "sma200": sma200,
+            # 新增: 估值 / 盈利扩展
+            "forward_pe": forward_pe,
+            "peg_ratio": peg_ratio,
+            "eps": eps,
+            "forward_eps": forward_eps,
+            "profit_margins": profit_margins,
+            "ebitda": ebitda,
+            "enterprise_value": enterprise_value,
+            "total_cash": total_cash,
+            "total_debt": total_debt,
+            # 新增: 股息
+            "dividend_yield": dividend_yield,
+            "dividend_rate": dividend_rate,
+            "payout_ratio": payout_ratio,
+            # 新增: 分析师一致预期
+            "target_mean_price": target_mean_price,
+            "target_high_price": target_high_price,
+            "target_low_price": target_low_price,
+            "recommendation_key": recommendation_key,
+            "num_analyst_opinions": num_analyst_opinions,
             "rsi": technicals.get("rsi", 50),
             "macd": technicals.get("macd", 0),
             "macd_signal": technicals.get("macd_signal", 0),

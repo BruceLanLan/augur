@@ -272,12 +272,119 @@ def calculate_technicals(prices: List[Dict]) -> Dict[str, Any]:
     return _calculate_technicals_from_prices(closes)
 
 
+def fetch_market_overview(force_refresh: bool = False) -> Dict[str, Any]:
+    """获取市场总览快照：主要指数、波动率、加密、商品的最新价与涨跌幅。
+
+    供首页 Dashboard 的「市场总览」板块使用，呈现宏观市场环境（Bloomberg 风格）。
+    使用 yfinance 的 fast_info / history 批量拉取，单条失败不影响其余条目。
+
+    Returns:
+        {
+          "as_of": ISO 时间戳,
+          "items": [{key, symbol, name, group, price, change, change_pct, currency}, ...],
+          "source": "yfinance" | "partial" | "none",
+        }
+    """
+    cache_key = "market_overview"
+    if not force_refresh:
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
+
+    # (key, yfinance symbol, 展示名, 分组)
+    instruments = [
+        ("sp500", "^GSPC", "S&P 500", "指数"),
+        ("nasdaq", "^IXIC", "纳斯达克", "指数"),
+        ("dow", "^DJI", "道琼斯", "指数"),
+        ("vix", "^VIX", "VIX 恐慌指数", "波动率"),
+        ("us10y", "^TNX", "美债10年", "利率"),
+        ("hsi", "^HSI", "恒生指数", "指数"),
+        ("csi300", "000300.SS", "沪深300", "指数"),
+        ("gold", "GC=F", "黄金", "商品"),
+        ("oil", "CL=F", "原油 WTI", "商品"),
+        ("btc", "BTC-USD", "比特币", "加密"),
+        ("eth", "ETH-USD", "以太坊", "加密"),
+        ("dxy", "DX-Y.NYB", "美元指数", "汇率"),
+    ]
+
+    items: List[Dict[str, Any]] = []
+    ok_count = 0
+    try:
+        yf = _get_yfinance()
+    except Exception:
+        result = {"as_of": _now_iso(), "items": [], "source": "none"}
+        _cache_set(cache_key, result)
+        return result
+
+    for key, symbol, name, group in instruments:
+        price = 0.0
+        prev = 0.0
+        currency = "USD"
+        try:
+            tk = yf.Ticker(symbol)
+            # fast_info 比 .info 轻量且更快
+            fi = getattr(tk, "fast_info", None)
+            if fi is not None:
+                price = _safe_float(getattr(fi, "last_price", 0)) or _safe_float(
+                    fi.get("lastPrice") if hasattr(fi, "get") else 0
+                )
+                prev = _safe_float(getattr(fi, "previous_close", 0)) or _safe_float(
+                    fi.get("previousClose") if hasattr(fi, "get") else 0
+                )
+                currency = (getattr(fi, "currency", None) or "USD")
+            # 回退：用 2 日历史
+            if price <= 0 or prev <= 0:
+                hist = tk.history(period="5d")
+                if hist is not None and not hist.empty:
+                    closes = [c for c in hist["Close"].tolist() if c and c == c]
+                    if closes:
+                        price = price or float(closes[-1])
+                        prev = prev or (float(closes[-2]) if len(closes) >= 2 else float(closes[-1]))
+        except Exception as exc:
+            logger.debug("market overview fetch failed for %s: %s", symbol, exc)
+
+        change = (price - prev) if (price and prev) else 0.0
+        change_pct = (change / prev) if prev else 0.0
+        if price > 0:
+            ok_count += 1
+        items.append({
+            "key": key,
+            "symbol": symbol,
+            "name": name,
+            "group": group,
+            "price": round(price, 2),
+            "change": round(change, 2),
+            "change_pct": round(change_pct, 4),
+            "currency": currency,
+        })
+
+    source = "yfinance" if ok_count == len(instruments) else ("partial" if ok_count else "none")
+    result = {"as_of": _now_iso(), "items": items, "source": source}
+    # 市场总览缓存时间略短（60s）以保证一定的实时性
+    with _cache_lock:
+        _cache[cache_key] = {"value": result, "ts": time.time() - (_CACHE_TTL - 60)}
+    return result
+
+
+def _safe_float(value: Any) -> float:
+    """轻量级安全 float 转换（用于市场总览）。"""
+    try:
+        f = float(value)
+        if f != f or f in (float("inf"), float("-inf")):
+            return 0.0
+        return f
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _now_iso() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
 def search_ticker(query: str) -> List[Dict]:
     """
     Search for tickers by name/symbol.
-
-    Args:
-        query: Search query (e.g. "apple", "AAPL")
 
     Returns:
         List of {symbol, name, exchange, type}

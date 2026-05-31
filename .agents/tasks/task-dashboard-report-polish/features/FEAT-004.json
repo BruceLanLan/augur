@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-004",
+  "type": "docs",
+  "description": "Complete documentation update - update README.md (Chinese), README_EN.md (English), docs/CHANGELOG.md with v7.3.0, ensure docs/single-persona-integration.md exists",
+  "status": "completed",
+  "steps": [
+    "Update README.md: bump version badge to v7.3.0, add new features in the feature list (market overview board, report visualization with score cards and debate layout, PDF/MD download, multi-datasource status display, responsive mobile layout), update the Dashboard section to mention the new visual report, update the Changelog section with v7.3.0 entry summarizing all changes",
+    "Update README_EN.md: mirror all changes from README.md in English, keep same structure and badges, translate all new feature descriptions",
+    "Update docs/CHANGELOG.md: add a v7.3.0 section at the top with detailed entries for: Dashboard Enhancement (market overview, datasource status, quick analysis, responsive), Report Visualization (score cards, bull/bear debate layout, risk matrix cards, PDF download, MD download), Bug Fixes (any import fixes from FEAT-001), Documentation (bilingual README, integration guide)",
+    "Verify docs/single-persona-integration.md exists - if not create it with instructions on how to integrate a single persona agent into external platforms like Hermes or OpenClaw",
+    "Update pyproject.toml version from 6.1.0 to 7.3.0"
+  ],
+  "acceptance_criteria": [
+    "README.md mentions v7.3.0 and all new features",
+    "README_EN.md is a complete English translation matching README.md structure",
+    "docs/CHANGELOG.md has a v7.3.0 entry with all changes listed",
+    "docs/single-persona-integration.md exists with useful integration instructions",
+    "pyproject.toml version is 7.3.0"
+  ],
+  "verification": [
+    "grep -q 'v7.3.0' README.md",
+    "grep -q 'v7.3.0' README_EN.md",
+    "grep -q '7.3.0' docs/CHANGELOG.md",
+    "test -f docs/single-persona-integration.md",
+    "grep -q '7.3.0' pyproject.toml"
+  ],
+  "blocked_reason": null,
+  "findings": "All documentation updated successfully. Version bumped from 6.1.0 to 7.3.0 in pyproject.toml, dashboard/app.py. Version badge bumped from v7.2.0 to v7.3.0 in README.md, README_EN.md, index.html. Changelog entries added in both READMEs and docs/CHANGELOG.md. docs/single-persona-integration.md already existed with comprehensive content."
+}

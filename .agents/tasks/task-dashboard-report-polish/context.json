@@ -1,0 +1,28 @@
+{
+  "project_type": "Python FastAPI + Jinja2 multi-agent investment analysis system",
+  "language": "Python 3.9+",
+  "build_system": "pip with pyproject.toml, setuptools backend",
+  "test_framework": "pytest",
+  "build_command": "pip install -e '.[data]'",
+  "test_command": "python3 -c \"import augur; from augur.data import fetch_market_context, fetch_market_overview; from augur.datasources import default_providers; from dashboard.app import app; print('All imports OK')\"",
+  "verification_instructions": "1. pip install -e '.[data]' 2. Run import checks 3. Start dashboard and verify pages load",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -e '.[data]'",
+  "environment_constraints": "OPEN_INTERNET, Python 3.11 available via pyenv, no Docker needed",
+  "contribution_requirements": "Commit messages in Chinese, work on main branch directly",
+  "key_patterns": "FastAPI + Jinja2 templates in dashboard/templates/, CSS in dashboard/static/css/bloomberg.css, personas in src/augur/personas/, data layer in src/augur/data.py and src/augur/datasources/",
+  "relevant_files": [
+    "dashboard/templates/stocks.html",
+    "dashboard/templates/index.html",
+    "dashboard/templates/base.html",
+    "dashboard/static/css/bloomberg.css",
+    "dashboard/app.py",
+    "src/augur/report.py",
+    "src/augur/data.py",
+    "src/augur/datasources/__init__.py",
+    "README.md",
+    "README_EN.md",
+    "docs/CHANGELOG.md"
+  ],
+  "directory_structure": "src/augur/ - core library, dashboard/ - FastAPI web UI, dashboard/templates/ - Jinja2 HTML, dashboard/static/css/ - styles, docs/ - documentation, tests/ - pytest tests"
+}
