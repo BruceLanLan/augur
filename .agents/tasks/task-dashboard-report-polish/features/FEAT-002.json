@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Report visualization upgrade in stocks.html - transform plain markdown report into professional visual components with score cards, bull/bear debate layout, risk matrix cards, and download buttons (PDF via print + Markdown via Blob)",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In dashboard/templates/stocks.html, replace the simple #report-section with a professional multi-section report view that includes: (a) A report toolbar with Download PDF button (window.print() with @media print CSS) and Download Markdown button (existing downloadReport function using Blob URL), (b) A visual score card grid at the top showing each of the 18 investors as small cards with name, score (color-coded), signal badge, and confidence bar, (c) A bull vs bear debate section with two-column layout (green left for bulls, red right for bears), (d) A risk matrix section rendered as styled cards/table instead of raw markdown, (e) Keep the full markdown rendering below as a 'detailed text' expandable section",
     "Add a new JavaScript function renderVisualReport(markdownText, analysisData) in stocks.html that parses the report markdown sections and renders them into the visual components described above. It should: parse the '18位大师评分总表' section to extract agent scores and render score cards; parse '多空辩论' to create the two-column debate view; parse '共识与风险矩阵' to create risk cards; parse '投资委员会综合裁决' for the executive summary header card",
@@ -24,5 +24,5 @@
     "Verify bloomberg.css contains @media print rules and .report-scorecard-grid styles"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Implemented successfully. renderVisualReport parses markdown sections and uses lastAnalysisData for structured score cards. All existing functions (copyReport, downloadReport, closeReport) preserved. Report toolbar has Download PDF, Download Markdown, Copy, and Close buttons. Full markdown text available in collapsible section. @media print CSS hides sidebar and toolbar buttons for clean printing."
 }
