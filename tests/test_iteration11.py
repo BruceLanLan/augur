@@ -684,13 +684,14 @@ class TestCLIHelp:
     """Verify CLI help text improvements."""
 
     def test_cli_version(self):
-        """--version contains 6.1.0."""
+        """--version contains current version."""
         from click.testing import CliRunner
         from augur.cli import main
+        from augur import __version__
 
         runner = CliRunner()
         result = runner.invoke(main, ["--version"])
-        assert "6.1.0" in result.output
+        assert __version__ in result.output
 
     def test_analyze_help_has_examples(self):
         """analyze --help contains Examples."""
