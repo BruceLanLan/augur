@@ -4,6 +4,47 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v7.5.0 (2026-06-01) - 国际化 & 安全 & Scanner 大版本升级
+
+### 🌐 国际化 (i18n)
+- 侧边栏语言切换按钮 (中/EN)，纯前端 JS 实现
+- 所有静态文案支持中英文切换，data-i18n 属性体系
+- 语言偏好存 localStorage，默认跟随浏览器语言
+
+### 🔍 Scanner 市场扫描器
+- 新增 /scanner 页面与 /api/scanner/run API
+- 预设列表: 科技巨头 / 中概股 / 加密货币
+- 18 位大师并行评分，结果以 heatmap 热力表展示
+- 支持自定义标的列表 (最多 20 个)
+
+### ⚡ 性能优化
+- /api/market-overview 和 /api/hot-tickers 支持 ETag + 304 条件请求
+- CSS/JS 静态资源添加 ?v=7.5.0 版本参数，解决浏览器缓存问题
+- 新增 fetch_market_context_batch() 并发数据获取 (ThreadPoolExecutor)
+
+### 🔒 安全加固
+- IP 级别全局限流: 每 IP 每分钟最多 30 次 API 请求
+- CORS 中间件: 默认允许所有来源，可通过 AUGUR_CORS_ORIGINS 环境变量配置
+- API Key 脱敏: 配置接口中的密钥仅显示尾部 4 位 (***xxxx)
+- 输入校验: ticker 格式正则验证 (防 XSS/注入)
+
+### 🔔 通知系统
+- POST /api/notifications/test 测试通知通道 (telegram/slack/lark/wechat)
+- POST /api/notifications/config 保存通知配置到 config/notifications.yaml
+- Signals 页面新增告警阈值设置 (评分 > N 时通知)
+
+### 📄 报告与文档
+- 报告页新增"下载报告"按钮 (导出为 .md 文件)
+- 报告页新增"复制报告"按钮
+- 新增 docs/api-reference.md API 完整参考文档
+- 增强 docs/single-persona-integration.md 单 Agent 集成指南
+- README.md / README_EN.md 更新
+
+### 🔧 版本
+- 版本升至 v7.5.0
+
+---
+
 ## v7.4.0 (2026-06-01) — 全面深度升级
 
 ### 🎴 Personas 页面深度改造

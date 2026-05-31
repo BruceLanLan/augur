@@ -59,7 +59,7 @@ _APP_START_TIME = _time.time()
 app = FastAPI(
     title="Augur — 多智能体投资分析",
     description="18位虚拟投资大师，多维度共识分析",
-    version="7.4.0",
+    version="7.5.0",
 )
 
 
@@ -1181,7 +1181,7 @@ async def api_health_extended():
         "datasources": datasources,
         "cache": cache,
         "uptime_seconds": round(uptime, 1),
-        "version": "7.4.0",
+        "version": "7.5.0",
     }
 
 
