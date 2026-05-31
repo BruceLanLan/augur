@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Code robustness: Complete error handling for all API endpoints, cache TTL expiration enforcement for /api/market-overview, extended /api/health endpoint returning datasource reachability status.",
+  "status": "pending",
+  "steps": [
+    "1. In dashboard/app.py: Review all API endpoints and ensure they have try/except blocks that return meaningful JSON error messages (using api_error_response from augur.errors). The global exception handler already exists - add specific HTTPException handlers for 404, 422 validation errors with user-friendly messages.",
+    "2. In dashboard/app.py: Add a 422 validation error handler that returns JSON with helpful messages instead of FastAPI's default HTML.",
+    "3. In src/augur/data.py: The cache already has TTL (_CACHE_TTL = 180s). Verify that _cache_get properly checks expiration (it does). Add a cache_stats() function that returns per-key age info so the health endpoint can report stale data. Add explicit TTL enforcement comment for market_overview (currently uses 60s effective TTL via time offset trick).",
+    "4. In dashboard/app.py: Extend the /health endpoint to /api/health (keep /health as alias) that returns: status, agent_count, datasources (list with name + reachable boolean), cache_size, uptime_seconds. Test datasource reachability by doing a lightweight check (import check + optional quick ping).",
+    "5. Add a module-level _start_time = time.time() in app.py for uptime tracking.",
+    "6. git add and commit with message: 'fix: API错误处理完善+缓存TTL检查+/api/health扩展版'"
+  ],
+  "acceptance_criteria": [
+    "All API endpoints return JSON errors (not HTML) on failure",
+    "422 validation errors return user-friendly JSON",
+    "/api/health returns datasource reachability, cache info, and uptime",
+    "/health still works as before (backward compatible)",
+    "Cache in data.py properly expires entries after TTL",
+    "All existing tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q",
+    "python -c \"from dashboard.app import app; from fastapi.testclient import TestClient; c = TestClient(app); r = c.get('/api/health'); print(r.json()); assert r.status_code == 200; assert 'datasources' in r.json()\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

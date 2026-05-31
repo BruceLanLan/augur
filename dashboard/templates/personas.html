@@ -2,48 +2,80 @@
 {% block title %}投资人系统 - Augur{% endblock %}
 {% block extra_head %}
 <style>
-.persona-detail {
+.persona-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+.persona-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    border-color: var(--accent-orange);
+}
+.persona-card .card-detail {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.4s ease, padding 0.3s ease;
-    padding: 0 12px;
-    border-top: 0 solid var(--border-color);
+    transition: max-height 0.4s ease, padding 0.3s ease, opacity 0.3s ease;
+    opacity: 0;
+    padding-top: 0;
 }
-.persona-row.expanded .persona-detail {
-    max-height: 600px;
-    padding: 12px;
-    border-top-width: 1px;
+.persona-card.expanded .card-detail {
+    max-height: 500px;
+    opacity: 1;
+    padding-top: 14px;
 }
-.persona-row.expanded {
-    background: var(--bg-card-hover);
-}
-.expand-icon {
+.persona-card .expand-icon {
     transition: transform 0.3s;
     color: var(--text-muted);
 }
-.persona-row.expanded .expand-icon {
+.persona-card.expanded .expand-icon {
     transform: rotate(180deg);
     color: var(--accent-orange);
 }
-.weight-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.school-badge {
+    font-size: 0.65rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.school-badge.value { background: rgba(34,197,94,0.15); color: #22c55e; }
+.school-badge.growth { background: rgba(59,130,246,0.15); color: #3b82f6; }
+.school-badge.macro { background: rgba(168,85,247,0.15); color: #a855f7; }
+.school-badge.quant { background: rgba(236,72,153,0.15); color: #ec4899; }
+.school-badge.china { background: rgba(239,68,68,0.15); color: #ef4444; }
+.holdings-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    padding: 1px 7px;
+    border-radius: 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-family: var(--font-data);
+    margin: 2px 3px 2px 0;
+}
+.principle-list {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0 0;
+}
+.principle-list li {
+    font-size: 0.76rem;
+    color: var(--text-secondary);
     padding: 3px 0;
-    font-size: 0.75rem;
+    line-height: 1.5;
 }
-.weight-bar-bg {
-    width: 60px;
-    height: 3px;
-    background: var(--border-color);
-    border-radius: 2px;
-    overflow: hidden;
-    margin-left: 8px;
-}
-.weight-bar-fill {
-    height: 100%;
-    background: var(--accent-orange);
-    border-radius: 2px;
+.principle-list li::before {
+    content: "\25B8";
+    color: var(--accent-orange);
+    margin-right: 6px;
 }
 </style>
 {% endblock %}
@@ -51,205 +83,156 @@
 
 <div class="flex items-center justify-between mb-16" style="flex-wrap:wrap; gap:12px;">
     <div>
-        <h2 style="color:var(--accent-orange); margin:0;">人格系统 <span class="badge badge-orange" style="vertical-align:middle; font-size:0.72rem;">{{ personas|length }} 位</span></h2>
-        <p class="text-muted" style="font-size:0.82rem; margin:4px 0 0;">{{ personas|length }}位投资大师 - 点击行展开详情 <span class="shortcut-hint"><kbd>&uarr;</kbd><kbd>&darr;</kbd> 导航 &middot; <kbd>Enter</kbd> 展开</span></p>
+        <h2 style="color:var(--accent-orange); margin:0;">投资大师系统 <span class="badge badge-orange" style="vertical-align:middle; font-size:0.72rem;">{{ personas|length }} 位</span></h2>
+        <p class="text-muted" style="font-size:0.82rem; margin:4px 0 0;">{{ personas|length }}位投资大师 &mdash; 涵盖价值/成长/宏观/量化/中国五大流派</p>
     </div>
     <div class="flex gap-8">
-        <button class="btn btn-sm btn-ghost" onclick="expandAllPersonas(true)" aria-label="全部展开">全部展开</button>
-        <button class="btn btn-sm btn-ghost" onclick="expandAllPersonas(false)" aria-label="全部收起">全部收起</button>
+        <button class="btn btn-sm btn-ghost" onclick="expandAllCards(true)" aria-label="全部展开">全部展开</button>
+        <button class="btn btn-sm btn-ghost" onclick="expandAllCards(false)" aria-label="全部收起">全部收起</button>
     </div>
 </div>
 
-<!-- Filter bar -->
-<div class="flex items-center gap-12 mb-16" style="flex-wrap:wrap;">
-    <input id="persona-filter" type="text" class="filter-input" style="max-width:280px;"
-           placeholder="搜索: 名称 / 风格 / ID"
-           oninput="filterPersonas()">
-    <div class="flex gap-8" style="flex-wrap:wrap;">
-        <button class="filter-tag active" data-filter="all" onclick="setFilter('all', this)">全部</button>
-        <button class="filter-tag" data-filter="chinese" onclick="setFilter('chinese', this)">&#x1F1E8;&#x1F1F3; 中国投资人</button>
-        <button class="filter-tag" data-filter="value" onclick="setFilter('value', this)">价值派</button>
-        <button class="filter-tag" data-filter="growth" onclick="setFilter('growth', this)">成长派</button>
-    </div>
+<!-- School Filter Buttons -->
+<div class="flex items-center gap-8 mb-16" style="flex-wrap:wrap;">
+    <button class="school-filter-btn active" data-school="all" onclick="filterBySchool('all', this)">全部</button>
+    <button class="school-filter-btn" data-school="value" onclick="filterBySchool('value', this)">
+        <span style="color:#22c55e;">&#9679;</span> 价值派
+    </button>
+    <button class="school-filter-btn" data-school="growth" onclick="filterBySchool('growth', this)">
+        <span style="color:#3b82f6;">&#9679;</span> 成长派
+    </button>
+    <button class="school-filter-btn" data-school="macro" onclick="filterBySchool('macro', this)">
+        <span style="color:#a855f7;">&#9679;</span> 宏观派
+    </button>
+    <button class="school-filter-btn" data-school="quant" onclick="filterBySchool('quant', this)">
+        <span style="color:#ec4899;">&#9679;</span> 量化派
+    </button>
+    <button class="school-filter-btn" data-school="china" onclick="filterBySchool('china', this)">
+        <span style="color:#ef4444;">&#9679;</span> 中国派
+    </button>
+    <input id="persona-search" type="text" class="filter-input" style="max-width:220px; margin-left:auto;"
+           placeholder="搜索大师..."
+           oninput="applyFilters()">
 </div>
 
-<!-- Data Table -->
-<div class="card" style="padding:0; overflow:hidden;">
-    <table class="data-table" style="width:100%;">
-        <thead>
-            <tr>
-                <th style="width:40px;"></th>
-                <th>投资人</th>
-                <th>风格</th>
-                <th>模型</th>
-                <th>状态</th>
-                <th style="width:30px;"></th>
-            </tr>
-        </thead>
-    </table>
-    <div id="persona-list">
-        {% for persona in personas %}
-        <div class="persona-row" onclick="toggleRow(this)" role="button" aria-expanded="false"
-             data-name="{{ persona.name|lower }}"
-             data-style="{{ persona.style|lower }}"
-             data-id="{{ persona.id }}"
-             data-chinese="{{ 'true' if persona.is_chinese else 'false' }}">
-            <div class="flex items-center gap-12" style="padding:10px 12px;">
-                <img src="/docs/images/avatars/{{ persona.id }}.svg"
-                     alt="{{ persona.name }}"
-                     class="persona-avatar-sm"
-                     onerror="this.style.display='none'">
-                <div style="flex:1; min-width:0;">
-                    <div class="flex items-center gap-8">
-                        <span style="font-weight:600; font-size:0.88rem;">{{ persona.name }}</span>
-                        {% if persona.is_chinese %}<span class="flag-cn"></span>{% endif %}
-                    </div>
-                    <div class="text-muted" style="font-size:0.72rem;">{{ persona.style }}</div>
+<!-- Card Grid -->
+<div class="persona-card-grid" id="persona-grid">
+    {% for persona in personas %}
+    <div class="persona-card" data-school="{{ persona.school }}" data-name="{{ persona.cn_name|lower }}{{ persona.en_name|lower }}{{ persona.id }}" onclick="toggleCard(this)">
+        <div style="display:flex; align-items:flex-start; gap:14px;">
+            <img src="/docs/images/avatars/{{ persona.id }}.svg"
+                 alt="{{ persona.cn_name }}"
+                 style="width:48px; height:48px; border-radius:50%; border:2px solid var(--border-color); flex-shrink:0;"
+                 onerror="this.style.display='none'">
+            <div style="flex:1; min-width:0;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <span style="font-weight:700; font-size:1.05rem; color:var(--text-primary);">{{ persona.cn_name }}</span>
+                    <span class="school-badge {{ persona.school }}">{{ persona.school }}</span>
                 </div>
-                <div style="min-width:100px;">
-                    {% if persona.model %}
-                    <span class="provider-badge {% if 'claude' in persona.model %}claude{% elif 'deepseek' in persona.model %}deepseek{% elif 'gpt' in persona.model %}gpt{% elif 'kimi' in persona.model %}kimi{% endif %}">{{ persona.model }}</span>
-                    {% endif %}
-                </div>
-                <div style="min-width:60px;">
-                    <span class="badge badge-green" style="font-size:0.65rem;">{{ persona.status }}</span>
-                </div>
-                <div style="min-width:40px;">
-                    <a href="/stocks?persona={{ persona.id }}" class="btn btn-sm" style="font-size:0.65rem; padding:2px 8px;" onclick="event.stopPropagation();" title="使用此大师分析">分析</a>
-                </div>
-                <span class="expand-icon">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-                </span>
+                <div class="text-muted" style="font-size:0.76rem; margin-top:2px;">{{ persona.en_name }}</div>
+                <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:6px;">{{ persona.style }}</div>
             </div>
-            <div class="persona-detail">
-                <div class="grid-2" style="gap:16px; padding:8px 0;">
-                    <div>
-                        <div class="data-label mb-8">投资哲学</div>
-                        <ul style="list-style:none; padding:0; margin:0;">
-                            {% for item in persona.scenarios %}
-                            <li style="font-size:0.78rem; color:var(--text-secondary); padding:3px 0;">
-                                <span style="color:var(--accent-orange);">&triangleright;</span> {{ item }}
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </div>
-                    <div>
-                        {% if persona.scoring_weights %}
-                        <div class="data-label mb-8">评分权重</div>
-                        {% for key, val in persona.scoring_weights.items() %}
-                        <div class="weight-row">
-                            <span style="color:var(--text-secondary);">{{ key }}</span>
-                            <div class="flex items-center">
-                                <div class="weight-bar-bg">
-                                    <div class="weight-bar-fill" style="width:{{ (val * 100)|int }}%;"></div>
-                                </div>
-                                <span class="text-mono" style="color:var(--accent-orange); font-size:0.7rem; min-width:28px; text-align:right;">{{ "%.0f"|format(val * 100) }}%</span>
-                            </div>
-                        </div>
-                        {% endfor %}
-                        {% endif %}
+            <span class="expand-icon" style="margin-top:4px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </span>
+        </div>
 
-                        <div class="data-label mb-8 mt-16">描述</div>
-                        <p style="font-size:0.76rem; color:var(--text-secondary); line-height:1.6; margin:0;">{{ persona.description }}</p>
+        <!-- Core Principles (always visible, first one) -->
+        <div style="margin-top:12px; padding-top:10px; border-top:1px solid var(--border-color);">
+            <ul class="principle-list">
+                {% for p in persona.core_principles[:2] %}
+                <li>{{ p }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Holdings badges -->
+        <div style="margin-top:10px;">
+            {% for h in persona.holdings[:4] %}
+            <span class="holdings-badge">{{ h }}</span>
+            {% endfor %}
+        </div>
+
+        <!-- Expandable Detail -->
+        <div class="card-detail">
+            {% if persona.core_principles|length > 2 %}
+            <div style="margin-bottom:8px;">
+                <div class="data-label" style="margin-bottom:4px;">更多投资原则</div>
+                <ul class="principle-list">
+                    {% for p in persona.core_principles[2:] %}
+                    <li>{{ p }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if persona.scoring_weights %}
+            <div style="margin-bottom:8px;">
+                <div class="data-label" style="margin-bottom:4px;">评分权重</div>
+                {% for key, val in persona.scoring_weights.items() %}
+                <div style="display:flex; justify-content:space-between; align-items:center; padding:2px 0; font-size:0.72rem;">
+                    <span style="color:var(--text-secondary);">{{ key }}</span>
+                    <div style="display:flex; align-items:center;">
+                        <div style="width:50px; height:3px; background:var(--border-color); border-radius:2px; overflow:hidden; margin-right:6px;">
+                            <div style="height:100%; background:var(--accent-orange); border-radius:2px; width:{{ (val * 100)|int }}%;"></div>
+                        </div>
+                        <span class="text-mono" style="color:var(--accent-orange); font-size:0.68rem;">{{ "%.0f"|format(val * 100) }}%</span>
                     </div>
                 </div>
-                <div class="flex items-center justify-between mt-8" style="padding-top:8px; border-top:1px solid var(--border-color);">
-                    <span class="text-muted text-mono" style="font-size:0.7rem;">ID: {{ persona.id }}</span>
-                    <span class="badge badge-dim" style="font-size:0.65rem;">{{ persona.quote[:60] }}{% if persona.quote|length > 60 %}...{% endif %}</span>
-                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div style="margin-bottom:10px;">
+                <div class="data-label" style="margin-bottom:4px;">描述</div>
+                <p style="font-size:0.74rem; color:var(--text-secondary); line-height:1.6; margin:0;">{{ persona.description[:200] }}{% if persona.description|length > 200 %}...{% endif %}</p>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:8px; padding-top:10px; border-top:1px solid var(--border-color);">
+                <a href="/stocks?persona={{ persona.id }}" class="btn btn-primary" style="font-size:0.78rem; padding:6px 14px; flex:1; text-align:center;" onclick="event.stopPropagation();">
+                    &#x1F50D; 一键用TA的视角分析
+                </a>
+                <span class="text-mono text-muted" style="font-size:0.65rem;">{{ persona.id }}</span>
             </div>
         </div>
-        {% endfor %}
     </div>
+    {% endfor %}
 </div>
 
 {% endblock %}
 {% block extra_scripts %}
 <script>
-var activeFilter = 'all';
+var activeSchool = 'all';
 
-function toggleRow(row) {
-    row.classList.toggle('expanded');
-    row.setAttribute('aria-expanded', row.classList.contains('expanded') ? 'true' : 'false');
+function toggleCard(card) {
+    card.classList.toggle('expanded');
 }
 
-function filterPersonas() {
-    var query = document.getElementById('persona-filter').value.toLowerCase().trim();
-    var rows = document.querySelectorAll('.persona-row');
-    rows.forEach(function(row) {
-        var name = row.dataset.name || '';
-        var style = row.dataset.style || '';
-        var id = row.dataset.id || '';
-        var isChinese = row.dataset.chinese === 'true';
-
-        var matchText = !query || name.includes(query) || style.includes(query) || id.includes(query);
-        var matchFilter = true;
-
-        if (activeFilter === 'chinese') {
-            matchFilter = isChinese;
-        } else if (activeFilter === 'value') {
-            matchFilter = style.includes('价值') || style.includes('安全') || style.includes('护城河') || style.includes('本分');
-        } else if (activeFilter === 'growth') {
-            matchFilter = style.includes('成长') || style.includes('创新') || style.includes('颠覆') || style.includes('趋势');
-        }
-
-        row.style.display = (matchText && matchFilter) ? '' : 'none';
+function expandAllCards(expand) {
+    document.querySelectorAll('.persona-card').forEach(function(card) {
+        if (card.style.display === 'none') return;
+        if (expand) card.classList.add('expanded');
+        else card.classList.remove('expanded');
     });
 }
 
-function setFilter(filter, btn) {
-    activeFilter = filter;
-    document.querySelectorAll('.filter-tag').forEach(function(b) { b.classList.remove('active'); });
+function filterBySchool(school, btn) {
+    activeSchool = school;
+    document.querySelectorAll('.school-filter-btn').forEach(function(b) { b.classList.remove('active'); });
     btn.classList.add('active');
-    filterPersonas();
+    applyFilters();
 }
 
-function expandAllPersonas(expand) {
-    document.querySelectorAll('.persona-row').forEach(function(row) {
-        if (row.style.display === 'none') return;
-        if (expand) row.classList.add('expanded');
-        else row.classList.remove('expanded');
-        row.setAttribute('aria-expanded', expand ? 'true' : 'false');
+function applyFilters() {
+    var query = (document.getElementById('persona-search').value || '').toLowerCase().trim();
+    var cards = document.querySelectorAll('.persona-card');
+    cards.forEach(function(card) {
+        var school = card.dataset.school || '';
+        var name = card.dataset.name || '';
+        var matchSchool = (activeSchool === 'all') || (school === activeSchool);
+        var matchText = !query || name.includes(query);
+        card.style.display = (matchSchool && matchText) ? '' : 'none';
     });
 }
-
-// Keyboard navigation for persona rows
-(function() {
-    var focusedIndex = -1;
-
-    function getVisibleRows() {
-        return Array.from(document.querySelectorAll('.persona-row')).filter(function(r) {
-            return r.style.display !== 'none';
-        });
-    }
-
-    function highlightRow(rows, idx) {
-        rows.forEach(function(r) { r.style.outline = ''; });
-        if (idx >= 0 && idx < rows.length) {
-            rows[idx].style.outline = '2px solid var(--accent-orange)';
-            rows[idx].scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-        }
-    }
-
-    document.addEventListener('keydown', function(e) {
-        var tag = (e.target.tagName || '').toLowerCase();
-        if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
-        if (window.location.pathname !== '/personas') return;
-
-        var rows = getVisibleRows();
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            focusedIndex = Math.min(focusedIndex + 1, rows.length - 1);
-            highlightRow(rows, focusedIndex);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            focusedIndex = Math.max(focusedIndex - 1, 0);
-            highlightRow(rows, focusedIndex);
-        } else if (e.key === 'Enter' && focusedIndex >= 0 && focusedIndex < rows.length) {
-            e.preventDefault();
-            rows[focusedIndex].classList.toggle('expanded');
-        }
-    });
-})();
 </script>
 {% endblock %}

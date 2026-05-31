@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Global UX optimization: sidebar icons, loading progress bar, keyboard shortcuts enhancement, consistent hover animations, dark/light theme toggle with CSS variables.",
+  "status": "pending",
+  "steps": [
+    "1. In dashboard/templates/base.html: The sidebar nav items already have SVG icons - verify they are consistent. Add a global top loading progress bar element (thin orange bar at top of page) that shows during page navigation/AJAX requests. Add it as a div#global-progress-bar inside .app-main with position:fixed at top.",
+    "2. In base.html: Add a theme toggle button in the sidebar footer (sun/moon icon). Implement by toggling html class between 'dark' and 'light', persisted in localStorage.",
+    "3. In dashboard/static/css/bloomberg.css: Add a complete set of light theme CSS variables under html.light { ... } - override --bg-primary, --bg-sidebar, --bg-card, --text-primary, --text-secondary, --border-color etc with appropriate light values (white backgrounds, dark text).",
+    "4. In bloomberg.css: Add the global progress bar styles (.global-progress-bar with animation). Add consistent hover micro-animations for all .card elements (translateY(-2px) + subtle shadow on hover). Ensure persona cards, stat cards, agent cards all use the same hover pattern.",
+    "5. In base.html JS: Enhance the keyboard shortcut handler - ensure / focuses the search/ticker input on any page (already partially done), Esc closes expanded cards/modals (already done). Add the progress bar JS: show on fetch start, hide on fetch end. Hook into the global fetchWithTimeout to show/hide automatically.",
+    "6. In base.html: Add the theme toggle button rendering and localStorage persistence logic.",
+    "7. git add and commit with message: 'feat: 全局UX优化 - 深色/浅色主题切换+加载进度条+hover动效统一'"
+  ],
+  "acceptance_criteria": [
+    "Theme toggle button visible in sidebar footer, toggles between dark and light mode",
+    "Light mode has readable white/light-gray backgrounds with dark text",
+    "Global progress bar appears at top during AJAX requests",
+    "All cards have consistent hover animation (slight lift + shadow)",
+    "Theme preference persists across page refreshes via localStorage",
+    "Keyboard shortcuts / and Esc work as documented",
+    "All existing tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q",
+    "python -c \"from dashboard.app import app; print('App OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

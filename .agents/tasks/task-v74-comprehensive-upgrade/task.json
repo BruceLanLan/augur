@@ -1,0 +1,7 @@
+{
+  "task_id": "task-v74-comprehensive-upgrade",
+  "task_description": "Comprehensive v7.4.0 upgrade: Personas page deep redesign, Backtest page enhancement, Settings page completion, Signals page filters, Global UX (theme toggle, loading bar, icons), Code robustness (error handling, cache TTL, health endpoint), and Docs/Version update.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005"],
+  "blocked_reason": null
+}
