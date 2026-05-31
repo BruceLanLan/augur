@@ -4,6 +4,46 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v7.8.0 (2026-06-01) - Bloomberg级可视化 & API Token & 自定义Persona CRUD
+
+### 📊 Dashboard Bloomberg-Level Enhancement
+- SVG 半圆恐慌贪婪仪表盘（Fear & Greed Gauge），颜色渐变 + 指针动画
+- Market Pulse 数据脉搏条（S&P 500, VIX, 10Y, Gold, BTC 一行速览）
+- 国际市场面板（亚洲: HSI, Nikkei, CSI300 | 欧洲: FTSE, DAX）
+- 板块热力图增强（mini-bar 涨跌幅可视化 + tooltip）
+- 新增 GET /api/fear-greed 独立端点
+
+### 🎭 Custom Persona CRUD (自定义投资人完整管理)
+- GET /api/custom-personas 列出所有自定义投资人
+- PUT /api/custom-persona/{id} 编辑更新
+- DELETE /api/custom-persona/{id} 删除
+- 创建页面显示已有自定义 Persona 列表（编辑/删除）
+- 人格列表页 "CUSTOM" 紫色徽章区分
+
+### 🔐 API Token Authentication (API 认证)
+- AUGUR_API_TOKEN 环境变量配置
+- 中间件拦截 /api/* 请求验证 Bearer Token
+- 未设置 Token 时完全开放（向后兼容）
+- GET /api/auth/verify Token 验证端点
+- 前端 fetchWithTimeout 自动携带 localStorage Token
+- Settings 页面 Token 配置面板
+
+### 🐳 Docker & Deploy
+- docker-compose.yml 传递 AUGUR_API_TOKEN
+- .env.example 补充 AUGUR_API_TOKEN 说明
+
+### 🎨 UI Polish & QoL
+- 全面板空状态优雅处理（图标 + 提示文案）
+- JS 错误处理增强（localStorage 安全访问）
+- CSS 一致性检查（统一 radius/padding/color）
+- 移动端响应式完善（768px/480px 断点）
+
+### 📖 Documentation
+- docs/single-persona-integration.md 更新：MCP/REST/Python SDK/Hermes/OpenClaw 集成指南
+- README 功能一览清单
+
+---
+
 ## v7.7.0 (2026-06-01) - 持仓管理 & 深度交互 & 专业报告
 
 ### 💼 Portfolio Management (持仓管理)

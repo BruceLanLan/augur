@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v7.7.0](https://img.shields.io/badge/v7.7.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.8.0](https://img.shields.io/badge/v7.8.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -23,6 +23,47 @@
 > **巴菲特会买这只股吗？达利欧怎么看宏观风险？段永平觉得管理层够不够「本分」？**
 >
 > 别再一个维度猜了。Augur 让 **18位** 顶级投资人同时为你分析，每人给出独立评分，最终汇成一个带 Kelly 仓位建议的加权共识信号。
+
+---
+
+## 🆕 v7.8.0 新功能
+
+| 功能 | 说明 |
+|------|------|
+| 📊 Bloomberg 仪表盘增强 | SVG 恐慌贪婪仪表盘、Market Pulse 脉搏条、国际市场面板、板块热力图 mini-bar |
+| 🎭 自定义 Persona CRUD | 列出/编辑/删除自定义投资人，紫色 CUSTOM 徽章 |
+| 🔐 API Token 认证 | AUGUR_API_TOKEN 环境变量，Bearer Token 中间件，Settings 配置面板 |
+| 🎨 UI 打磨 | 全面板空状态优雅处理、JS 错误处理增强、CSS 一致性、480px 移动端断点 |
+| 📖 集成指南 | MCP/REST/Python SDK/Hermes/OpenClaw 单投资人接入完整文档 |
+| 🐳 Docker 完善 | docker-compose.yml 传递 Token，.env.example 补充说明 |
+
+---
+
+## 📋 功能一览 (Feature List)
+
+> Augur 是一个功能完整的多智能体投资分析平台，以下为所有核心功能模块：
+
+| 模块 | 功能 | 说明 |
+|------|------|------|
+| 🧠 多智能体共识 | 18 Masters Consensus | 18 位投资大师独立分析，加权共识信号 + Kelly 仓位 |
+| 📡 自动数据获取 | Auto Data Fetch | yfinance / Finnhub / Alpha Vantage / Stooq 多源 |
+| 🔥 板块热力图 | Sector Heatmap | 11 个板块 ETF 涨跌幅可视化 |
+| 😱 恐慌贪婪指标 | Fear & Greed Gauge | VIX 驱动 SVG 半圆仪表盘 |
+| 🌏 国际市场 | International Markets | 亚太 (HSI, Nikkei, CSI300) + 欧洲 (FTSE, DAX) |
+| 📋 自选股 | Watchlist | 添加/删除，localStorage 持久化，批量分析 |
+| 🔍 市场扫描器 | Scanner | 预设标的批量评分 heatmap |
+| 📈 回测 | Backtest | IC 排行榜 + 命中率评估 |
+| 💼 持仓管理 | Portfolio | 持仓追踪、实时盈亏、资产配置图 |
+| 🎭 自定义人格 | Custom Persona | 无代码 YAML 创建、CRUD 管理 |
+| 🔐 API Token | Auth | 环境变量配置，Bearer 中间件认证 |
+| 🤖 多平台 Bot | Telegram/Slack/WeChat/Lark | 通知推送 + 告警阈值 |
+| 🔌 MCP 集成 | Claude / Hermes | MCP Server 协议，单/全投资人调用 |
+| 🐳 Docker 部署 | Docker Compose | 一键部署，环境变量配置 |
+| 💻 CLI | Command Line | augur analyze / consensus / report / inject-soul |
+| ⏰ Cron 调度 | Scheduler | 定时监控自选股，阈值触发通知 |
+| 📄 深度报告 | Reports | Markdown/HTML 下载，专业可视化 |
+| 📡 多数据源 | Multi-Source | yfinance + Finnhub + Alpha Vantage + Stooq 优先级链 |
+| 🌐 国际化 | i18n | 中英文切换，localStorage 持久化 |
 
 ---
 
