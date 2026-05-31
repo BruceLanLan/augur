@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-004",
+  "type": "docs",
+  "description": "Version bump to v7.5.0 + comprehensive documentation update (README.md, README_EN.md, CHANGELOG, API reference)",
+  "status": "pending",
+  "steps": [
+    "1. Update version to 7.5.0 everywhere: pyproject.toml, src/augur/__init__.py, dashboard/app.py (FastAPI version + all 'v7.4.0' strings in code/templates).",
+    "2. Update README.md: (a) Change version badge to v7.5.0. (b) Add new features section covering i18n, scanner, notifications, security, performance. (c) Update Dashboard preview ASCII art to include Scanner and new features. (d) Add section on single persona integration (brief, pointing to docs/single-persona-integration.md).",
+    "3. Update README_EN.md with the same changes in English.",
+    "4. Update docs/CHANGELOG.md: Add v7.5.0 section at the top with all changes grouped by category (i18n, Performance, Security, Scanner, Notifications, Documentation).",
+    "5. Create docs/api-reference.md: List ALL API endpoints (path, method, parameters, response format) in both Chinese and English. Include: /api/analyze/{ticker}, /api/report/{ticker}, /api/personas, /api/persona/{id}, /api/market-overview, /api/hot-tickers, /api/scanner/run, /api/notifications/test, /api/notifications/config, /api/config, /api/health, /api/backtest/run, /api/watchlist, /api/datasources, /api/search, /api/cache/clear, /api/cache/info.",
+    "6. Do a final git commit with message '升级至v7.5.0: i18n国际化+Scanner扫描器+性能优化+安全加固+通知系统+文档完善'"
+  ],
+  "acceptance_criteria": [
+    "Version is 7.5.0 in pyproject.toml, __init__.py, app.py, and base.html",
+    "README.md and README_EN.md reflect v7.5.0 features",
+    "docs/CHANGELOG.md has v7.5.0 entry",
+    "docs/api-reference.md exists with comprehensive endpoint listing",
+    "All existing tests still pass",
+    "Git commit made with Chinese commit message"
+  ],
+  "verification": [
+    "python -m pytest tests/ -q --tb=short",
+    "grep '7.5.0' pyproject.toml",
+    "test -f docs/api-reference.md && echo 'api ref exists'"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

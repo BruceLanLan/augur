@@ -1,0 +1,7 @@
+{
+  "task_id": "task-v750-upgrade",
+  "task_description": "v7.5.0 major upgrade: i18n internationalization, performance optimization, security hardening, scanner feature, notification system, documentation",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}

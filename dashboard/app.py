@@ -12,6 +12,8 @@ Usage:
 import sys
 import os
 import re
+import json
+import hashlib
 import logging
 import threading
 import time as _time
@@ -117,6 +119,57 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
             path=request.url.path,
         ),
     )
+
+
+# ============ CORS Middleware (unconditional) ============
+
+_cors_origins = os.environ.get("AUGUR_CORS_ORIGINS", "*").split(",")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# ============ IP-based Rate Limiting Middleware ============
+
+_ip_rate_limits: Dict[str, List[float]] = {}
+_ip_rate_lock = threading.Lock()
+
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    if request.url.path.startswith("/api/"):
+        client_ip = request.client.host if request.client else "unknown"
+        now = _time.time()
+        with _ip_rate_lock:
+            if client_ip not in _ip_rate_limits:
+                _ip_rate_limits[client_ip] = []
+            _ip_rate_limits[client_ip] = [t for t in _ip_rate_limits[client_ip] if now - t < 60]
+            if len(_ip_rate_limits[client_ip]) >= 300:
+                return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded. Max 30 requests per minute."})
+            _ip_rate_limits[client_ip].append(now)
+    response = await call_next(request)
+    return response
+
+
+# ============ Pydantic Response Models ============
+
+class HealthResponse(BaseModel):
+    status: str
+    agents: int
+
+
+class AnalyzeResponse(BaseModel):
+    status: str
+    ticker: str
+    timestamp: str
+    data_source: str
+    market_data: Dict[str, Any]
+    consensus: Dict[str, Any]
+    agents: List[Dict[str, Any]]
+    agent_count: int
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
@@ -686,8 +739,27 @@ class CustomPersonaBody(BaseModel):
 
 @app.get("/api/config")
 async def api_get_config():
-    """返回完整配置"""
-    return get_config()
+    """返回完整配置（敏感信息脱敏）"""
+    config = get_config()
+
+    def _mask_sensitive(d, parent_key=""):
+        """Recursively mask values whose keys contain 'key', 'token', or 'secret'."""
+        if isinstance(d, dict):
+            masked = {}
+            for k, v in d.items():
+                k_lower = k.lower()
+                if any(s in k_lower for s in ("key", "token", "secret")) and isinstance(v, str) and len(v) > 4:
+                    masked[k] = "***" + v[-4:]
+                elif isinstance(v, dict):
+                    masked[k] = _mask_sensitive(v, k)
+                elif isinstance(v, list):
+                    masked[k] = v
+                else:
+                    masked[k] = v
+            return masked
+        return d
+
+    return _mask_sensitive(config)
 
 
 @app.put("/api/config")
@@ -1112,7 +1184,7 @@ async def api_search_tickers(q: str = ""):
 # ============ Hot Tickers API Route ============
 
 @app.get("/api/hot-tickers")
-async def api_hot_tickers(refresh: bool = False):
+async def api_hot_tickers(request: Request, refresh: bool = False):
     """热门标的实时行情：AAPL, NVDA, TSLA, MSFT, GOOGL, AMZN, BTC-USD, ETH-USD, META, AMD。
 
     供首页「热门标的实时行情」面板使用。无 yfinance 时优雅降级为空列表。
@@ -1126,7 +1198,14 @@ async def api_hot_tickers(refresh: bool = False):
     try:
         from augur.data import fetch_hot_tickers
         tickers = fetch_hot_tickers(force_refresh=refresh)
-        return {"status": "ok", "tickers": tickers}
+        data = {"status": "ok", "tickers": tickers}
+        # ETag support
+        data_json = json.dumps(data, sort_keys=True, default=str)
+        etag = hashlib.md5(data_json.encode()).hexdigest()
+        if_none_match = request.headers.get("if-none-match")
+        if if_none_match and if_none_match.strip('"') == etag:
+            return JSONResponse(status_code=304, content=None, headers={"ETag": f'"{etag}"'})
+        return JSONResponse(content=data, headers={"ETag": f'"{etag}"'})
     except Exception as e:
         logger.warning("hot tickers failed: %s", e)
         return {
@@ -1139,7 +1218,7 @@ async def api_hot_tickers(refresh: bool = False):
 # ============ Market Overview API Routes ============
 
 @app.get("/api/market-overview")
-async def api_market_overview(refresh: bool = False):
+async def api_market_overview(request: Request, refresh: bool = False):
     """市场总览快照：主要指数、VIX、利率、商品、加密的实时价与涨跌幅。
 
     供首页 Dashboard 的「全球市场总览」板块使用。无 yfinance 时优雅降级为空列表。
@@ -1155,7 +1234,14 @@ async def api_market_overview(refresh: bool = False):
     try:
         from augur.data import fetch_market_overview
         overview = fetch_market_overview(force_refresh=refresh)
-        return {"status": "ok", **overview}
+        data = {"status": "ok", **overview}
+        # ETag support
+        data_json = json.dumps(data, sort_keys=True, default=str)
+        etag = hashlib.md5(data_json.encode()).hexdigest()
+        if_none_match = request.headers.get("if-none-match")
+        if if_none_match and if_none_match.strip('"') == etag:
+            return JSONResponse(status_code=304, content=None, headers={"ETag": f'"{etag}"'})
+        return JSONResponse(content=data, headers={"ETag": f'"{etag}"'})
     except Exception as e:
         logger.warning("market overview failed: %s", e)
         return {
@@ -1307,18 +1393,9 @@ def main():
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--cors", action="store_true",
-                        help="Enable CORS for all origins (for Hermes integration)")
+                        help="(deprecated: CORS is now always enabled via AUGUR_CORS_ORIGINS env var)")
     parser.add_argument("--reload", action="store_true")
     args = parser.parse_args()
-
-    if args.cors:
-        app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["*"],
-            allow_methods=["*"],
-            allow_headers=["*"],
-        )
-        print("CORS enabled for all origins")
 
     print(f"\n🦉 Augur Dashboard")
     print(f"   http://localhost:{args.port}")
