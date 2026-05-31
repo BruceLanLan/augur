@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v7.1.0](https://img.shields.io/badge/v7.1.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.2.0](https://img.shields.io/badge/v7.2.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -442,6 +442,33 @@ The Dashboard supports hot-reload (saved YAML is immediately available in the sa
 ---
 
 ## 📋 Changelog
+
+### v7.2.0
+
+Professional deep report + multi-source data + critical interaction fixes (pre-release hardening).
+
+#### Deep Analysis Report (professional multi-master fusion)
+- Full rewrite: executive summary is now the neutral "Investment Committee Verdict" that **fuses all 18 masters' perspectives — no longer biased toward Buffett's single framework**
+- New modules: rating card (A-E grade + consensus strength), one-line verdict, 18-master scorecard (with school/framework), **per-school deep analysis** (value/growth/macro-risk/technical), **bull-bear debate** (top 3 bullish vs most cautious), **disagreement focus** (the most valuable part: identifies the biggest contention), consensus & risk matrix, position sizing
+- Fixed financial units: ROE/margins/growth render correctly as percentages; market cap/FCF correctly scaled ($X.XXB / trillions)
+- Float precision & markdown noise cleanup; dashboard report now renders rich Markdown (headings/tables/lists)
+
+#### Data Source Expansion & Fixes
+- New `src/augur/datasources/` provider abstraction: **yfinance first → Stooq fallback → empty context**, eliminating single point of failure
+- **Fixed critical data corruption bug**: yfinance NaN values passed through `x or 0` (NaN is truthy) and polluted all metrics, corrupting persona scores — added `safe_num()` to uniformly sanitize None/NaN/inf
+- Unit conversion and ownership clamping fixes
+
+#### Interaction/UX Fixes (resolves "click analyze does nothing / can't see report")
+- **Fixed frontend fetch not checking HTTP status**: backend errors (rate limit/invalid ticker/500) no longer render a fake empty "HOLD" result; clear errors shown instead
+- Added first-run onboarding banner + one-click examples (AAPL/NVDA/TSLA/MSFT, no manual metrics needed)
+- Staged loading progress + timeout protection (no more infinite spinner)
+- "Generate Deep Report" promoted from hidden tiny button to prominent primary action; report failures show inline error + retry
+- Friendly empty states, narrow-screen adaptation, actionable error messages
+
+#### Testing
+- Tests grew from 372 to 448 (new data source 33, report enhancement, frontend error handling, etc.)
+
+---
 
 ### v7.0.0
 
