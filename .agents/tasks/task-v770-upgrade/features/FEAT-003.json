@@ -1,0 +1,23 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Notification optimization: cron integration with bots threshold alerting, and scheduled monitoring config in Settings page",
+  "status": "in_progress",
+  "steps": [
+    "Review src/augur/cron.py _send_notifications function. Ensure threshold filtering works: only send notifications when consensus score exceeds alert_threshold. Currently threshold is loaded but not used for filtering - add score-based filtering logic so only results where abs(score) >= threshold or signal is strong get notified.",
+    "In dashboard/templates/settings.html, add a 'Scheduled Monitoring' configuration section: (1) Input for cron schedule (default '0 9 * * 1-5' = weekdays 9am). (2) Timezone selector. (3) Alert threshold slider (1-10). (4) Toggle switches for each notification channel (Telegram/Slack/WeChat/Lark). (5) Save button that calls PUT /api/config with the notification settings.",
+    "Add /api/cron/config endpoint in dashboard/app.py to get/set cron configuration (reads/writes to ~/.augur/watchlist.yaml via cron module).",
+    "Add /api/cron/run-now endpoint to trigger an immediate watchlist analysis run (calls run_watchlist_analysis from cron.py)."
+  ],
+  "acceptance_criteria": [
+    "Cron notification filtering respects alert_threshold - only sends when score >= threshold",
+    "Settings page has scheduled monitoring section with all configuration options",
+    "/api/cron/config returns current cron settings",
+    "/api/cron/run-now triggers analysis and returns results"
+  ],
+  "verification": [
+    "pytest tests/ -x -q passes (no test modifications)"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

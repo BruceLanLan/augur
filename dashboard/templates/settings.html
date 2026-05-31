@@ -61,6 +61,54 @@
     color: #000;
     border-color: var(--accent-orange);
 }
+/* Toggle switch styles for cron section */
+.toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+.toggle-row:hover {
+    border-color: var(--accent-orange);
+}
+.toggle-label {
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+.toggle-switch {
+    appearance: none;
+    width: 36px;
+    height: 20px;
+    background: var(--border-color);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.toggle-switch:checked {
+    background: var(--accent-orange);
+}
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+.toggle-switch:checked::after {
+    transform: translateX(16px);
+}
+.toggle-slider { display: none; }
 </style>
 {% endblock %}
 
@@ -212,6 +260,87 @@
         </label>
     </div>
     <div id="import-status" style="font-size:0.8rem; margin-top:8px;"></div>
+</div>
+
+<!-- Section E: Scheduled Monitoring / 定时监控配置 -->
+<div class="settings-section" id="section-cron">
+    <div class="settings-section-title">
+        <span>E. 定时监控配置</span>
+        <span class="settings-section-desc">配置定时分析调度、警报阈值及通知渠道开关</span>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding:16px 0;">
+        <!-- Cron Schedule -->
+        <div>
+            <label style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px; display:block;">Cron 表达式</label>
+            <input type="text" id="cron-schedule" class="api-key-input" value="0 9 * * 1-5" placeholder="0 9 * * 1-5" style="width:100%;" autocomplete="off">
+            <div style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">格式: 分 时 日 月 星期 (默认: 工作日9:00)</div>
+        </div>
+
+        <!-- Timezone -->
+        <div>
+            <label style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px; display:block;">时区</label>
+            <select id="cron-timezone" class="form-select" style="width:100%;">
+                <option value="Asia/Shanghai">Asia/Shanghai (中国)</option>
+                <option value="Asia/Hong_Kong">Asia/Hong_Kong (香港)</option>
+                <option value="Asia/Tokyo">Asia/Tokyo (东京)</option>
+                <option value="Asia/Singapore">Asia/Singapore (新加坡)</option>
+                <option value="US/Eastern">US/Eastern (纽约)</option>
+                <option value="US/Pacific">US/Pacific (洛杉矶)</option>
+                <option value="Europe/London">Europe/London (伦敦)</option>
+                <option value="Europe/Berlin">Europe/Berlin (柏林)</option>
+                <option value="UTC">UTC</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Alert Threshold -->
+    <div style="padding:12px 0;">
+        <label style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px; display:block;">
+            警报阈值 (仅 score &ge; 此值时通知): <span id="threshold-value" style="color:var(--accent-orange); font-weight:600;">3</span>
+        </label>
+        <input type="range" id="cron-threshold" min="1" max="10" value="3" step="1"
+               style="width:100%; accent-color:var(--accent-orange);"
+               oninput="document.getElementById('threshold-value').textContent = this.value;">
+        <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:var(--text-muted);">
+            <span>1 (全部通知)</span>
+            <span>10 (仅强信号)</span>
+        </div>
+    </div>
+
+    <!-- Notification Channel Toggles -->
+    <div style="padding:12px 0;">
+        <label style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; display:block;">通知渠道开关</label>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+            <label class="toggle-row">
+                <span class="toggle-label">Telegram</span>
+                <input type="checkbox" id="cron-notify-telegram" class="toggle-switch">
+                <span class="toggle-slider"></span>
+            </label>
+            <label class="toggle-row">
+                <span class="toggle-label">Slack</span>
+                <input type="checkbox" id="cron-notify-slack" class="toggle-switch">
+                <span class="toggle-slider"></span>
+            </label>
+            <label class="toggle-row">
+                <span class="toggle-label">WeChat (微信)</span>
+                <input type="checkbox" id="cron-notify-wechat" class="toggle-switch">
+                <span class="toggle-slider"></span>
+            </label>
+            <label class="toggle-row">
+                <span class="toggle-label">Lark (飞书)</span>
+                <input type="checkbox" id="cron-notify-lark" class="toggle-switch">
+                <span class="toggle-slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <!-- Save + Run Now buttons -->
+    <div class="flex gap-12" style="padding:16px 0; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="saveCronConfig()">保存定时配置</button>
+        <button class="btn btn-sm btn-ghost" onclick="runCronNow()" id="run-now-btn">立即执行一次</button>
+    </div>
+    <div id="cron-status" style="font-size:0.8rem; margin-top:4px;"></div>
 </div>
 
 {% endblock %}
@@ -564,6 +693,128 @@ window.addEventListener('beforeunload', function(e) {
         e.preventDefault();
         e.returnValue = '';
     }
+});
+
+// ============ Cron Config Functions ============
+
+function loadCronConfig() {
+    fetch('/api/cron/config')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status !== 'ok') return;
+        var schedule = data.schedule || {};
+        var notifications = data.notifications || {};
+
+        // Populate schedule fields
+        if (schedule.cron) document.getElementById('cron-schedule').value = schedule.cron;
+        if (schedule.timezone) {
+            var tzSelect = document.getElementById('cron-timezone');
+            for (var i = 0; i < tzSelect.options.length; i++) {
+                if (tzSelect.options[i].value === schedule.timezone) {
+                    tzSelect.selectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        // Alert threshold
+        var threshold = notifications.alert_threshold || 3;
+        document.getElementById('cron-threshold').value = threshold;
+        document.getElementById('threshold-value').textContent = threshold;
+
+        // Channel toggles
+        var tg = notifications.telegram || {};
+        var slack = notifications.slack || {};
+        var wechat = notifications.wechat || {};
+        var lark = notifications.lark || {};
+        document.getElementById('cron-notify-telegram').checked = !!tg.enabled;
+        document.getElementById('cron-notify-slack').checked = !!slack.enabled;
+        document.getElementById('cron-notify-wechat').checked = !!wechat.enabled;
+        document.getElementById('cron-notify-lark').checked = !!lark.enabled;
+    })
+    .catch(function() {});
+}
+
+function saveCronConfig() {
+    var schedule = {
+        cron: document.getElementById('cron-schedule').value.trim() || '0 9 * * 1-5',
+        timezone: document.getElementById('cron-timezone').value
+    };
+
+    // Build notifications object preserving existing keys
+    fetch('/api/cron/config')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var existing = data.notifications || {};
+        var threshold = parseInt(document.getElementById('cron-threshold').value) || 3;
+
+        // Update enabled flags for each channel
+        if (!existing.telegram) existing.telegram = {};
+        existing.telegram.enabled = document.getElementById('cron-notify-telegram').checked;
+
+        if (!existing.slack) existing.slack = {};
+        existing.slack.enabled = document.getElementById('cron-notify-slack').checked;
+
+        if (!existing.wechat) existing.wechat = {};
+        existing.wechat.enabled = document.getElementById('cron-notify-wechat').checked;
+
+        if (!existing.lark) existing.lark = {};
+        existing.lark.enabled = document.getElementById('cron-notify-lark').checked;
+
+        existing.alert_threshold = threshold;
+
+        return fetch('/api/cron/config', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({schedule: schedule, notifications: existing})
+        });
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(result) {
+        if (result.status === 'ok') {
+            showToast('定时监控配置已保存');
+            var statusEl = document.getElementById('cron-status');
+            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; 配置已保存</span>';
+            setTimeout(function() { statusEl.innerHTML = ''; }, 3000);
+        } else {
+            showToast('保存失败: ' + (result.detail || ''), 'error');
+        }
+    })
+    .catch(function(err) { showToast('保存失败: ' + err.message, 'error'); });
+}
+
+function runCronNow() {
+    var btn = document.getElementById('run-now-btn');
+    var statusEl = document.getElementById('cron-status');
+    btn.disabled = true;
+    btn.textContent = '执行中...';
+    statusEl.innerHTML = '<span style="color:var(--text-muted);">正在分析自选股...</span>';
+
+    fetch('/api/cron/run-now', {method: 'POST'})
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        btn.disabled = false;
+        btn.textContent = '立即执行一次';
+        if (data.status === 'ok') {
+            var count = data.count || 0;
+            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; 分析完成，共 ' + count + ' 个标的</span>';
+            showToast('定时分析执行完成: ' + count + ' 个标的');
+        } else {
+            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + (data.detail || '执行失败') + '</span>';
+            showToast('执行失败', 'error');
+        }
+    })
+    .catch(function(err) {
+        btn.disabled = false;
+        btn.textContent = '立即执行一次';
+        statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; 请求失败</span>';
+        showToast('请求失败: ' + err.message, 'error');
+    });
+}
+
+// Load cron config on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadCronConfig();
 });
 </script>
 {% endblock %}

@@ -234,29 +234,56 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
 
 
 def _send_notifications(config: dict, results: List[Dict[str, Any]]):
-    """Send analysis results to configured notification channels."""
+    """Send analysis results to configured notification channels.
+
+    Only results whose consensus score >= alert_threshold are notified.
+    If alert_threshold is 0 or not set, all results are sent.
+    """
     notifications = config.get("notifications", {})
     threshold = notifications.get("alert_threshold", 0)
+
+    # Filter results by threshold: only notify when abs(consensus score) >= threshold
+    if threshold and threshold > 0:
+        filtered_results = []
+        for r in results:
+            consensus = r.get("consensus")
+            if consensus is not None:
+                score = abs(consensus.score) if hasattr(consensus, "score") else 0
+                if score >= threshold:
+                    filtered_results.append(r)
+                else:
+                    logger.debug(
+                        "Skipping notification for %s: score %.1f < threshold %s",
+                        r.get("ticker", "?"), score, threshold,
+                    )
+            else:
+                filtered_results.append(r)
+    else:
+        filtered_results = results
+
+    if not filtered_results:
+        logger.info("No results exceed alert_threshold=%s, skipping notifications.", threshold)
+        return
 
     # Telegram notifications
     tg_config = notifications.get("telegram", {})
     if tg_config.get("enabled") and tg_config.get("chat_id") and tg_config.get("token"):
-        _send_telegram_notifications(tg_config, results, threshold)
+        _send_telegram_notifications(tg_config, filtered_results, threshold)
 
     # Slack notifications
     slack_config = notifications.get("slack", {})
     if slack_config.get("enabled") and slack_config.get("channel") and slack_config.get("token"):
-        _send_slack_notifications(slack_config, results, threshold)
+        _send_slack_notifications(slack_config, filtered_results, threshold)
 
     # WeChat notifications
     wechat_config = notifications.get("wechat", {})
     if wechat_config.get("enabled") and wechat_config.get("webhook_url"):
-        _send_wechat_notification(wechat_config, results, threshold)
+        _send_wechat_notification(wechat_config, filtered_results, threshold)
 
     # Lark/Feishu notifications
     lark_config = notifications.get("lark", {})
     if lark_config.get("enabled") and lark_config.get("webhook_url"):
-        _send_lark_notification(lark_config, results, threshold)
+        _send_lark_notification(lark_config, filtered_results, threshold)
 
 
 def _send_telegram_notifications(

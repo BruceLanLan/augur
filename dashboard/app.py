@@ -1742,6 +1742,78 @@ async def api_notifications_config_get():
     return {"status": "ok", "config": config.get("notifications", {})}
 
 
+# ============ Cron Config API Routes ============
+
+
+class CronConfigBody(BaseModel):
+    """Request body for cron config update."""
+    schedule: Optional[Dict[str, Any]] = None
+    notifications: Optional[Dict[str, Any]] = None
+
+
+@app.get("/api/cron/config", summary="获取定时监控配置")
+async def api_get_cron_config():
+    """返回当前 cron 配置 (schedule + notifications sections from watchlist.yaml)"""
+    from augur.cron import load_watchlist
+    config = load_watchlist()
+    return {
+        "status": "ok",
+        "schedule": config.get("schedule", {}),
+        "notifications": config.get("notifications", {}),
+    }
+
+
+@app.put("/api/cron/config", summary="更新定时监控配置")
+async def api_put_cron_config(body: CronConfigBody):
+    """更新 schedule/notifications sections in watchlist.yaml"""
+    from augur.cron import load_watchlist, save_watchlist
+    config = load_watchlist()
+
+    if body.schedule is not None:
+        config["schedule"] = body.schedule
+    if body.notifications is not None:
+        config["notifications"] = body.notifications
+
+    save_watchlist(config)
+    return {
+        "status": "ok",
+        "message": "定时监控配置已更新",
+        "schedule": config.get("schedule", {}),
+        "notifications": config.get("notifications", {}),
+    }
+
+
+@app.post("/api/cron/run-now", summary="立即执行一次监控分析")
+async def api_cron_run_now():
+    """触发一次 watchlist 分析并返回结果"""
+    from augur.cron import run_watchlist_analysis
+
+    try:
+        results = run_watchlist_analysis()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"分析执行失败: {e}")
+
+    # Serialize results for JSON response
+    serialized = []
+    for r in results:
+        consensus = r.get("consensus")
+        item = {
+            "ticker": r.get("ticker", ""),
+            "message": r.get("message", ""),
+        }
+        if consensus is not None:
+            item["signal"] = consensus.signal.value if hasattr(consensus, "signal") else ""
+            item["score"] = round(consensus.score, 1) if hasattr(consensus, "score") else 0
+            item["confidence"] = round(consensus.confidence, 2) if hasattr(consensus, "confidence") else 0
+        serialized.append(item)
+
+    return {
+        "status": "ok",
+        "count": len(serialized),
+        "results": serialized,
+    }
+
+
 # ============ Main ============
 
 def main():
