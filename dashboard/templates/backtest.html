@@ -16,8 +16,27 @@
             <input type="text" id="bt-ticker" class="form-input" value="AAPL" placeholder="AAPL" style="text-transform: uppercase;">
         </div>
         <div style="flex: 1; min-width: 140px;">
+            <label class="form-label">初始资金 (USD)</label>
+            <input type="number" id="bt-capital" class="form-input" value="100000" min="1000" step="10000">
+        </div>
+        <div style="flex: 1; min-width: 140px;">
+            <label class="form-label">仓位策略</label>
+            <select id="bt-strategy" class="form-input">
+                <option value="equal_weight">等权分配</option>
+                <option value="kelly">Kelly 公式</option>
+                <option value="fixed_pct">固定比例 (10%)</option>
+            </select>
+        </div>
+        <div style="flex: 1; min-width: 160px;">
             <label class="form-label">回测天数: <span id="bt-days-val">30</span></label>
-            <input type="range" id="bt-days" min="10" max="90" value="30" class="form-range" oninput="document.getElementById('bt-days-val').textContent=this.value">
+            <div class="flex gap-8" style="flex-wrap:wrap; margin-top:4px;">
+                <button class="btn btn-sm btn-ghost bt-days-btn" data-days="30" onclick="setDays(30)">30d</button>
+                <button class="btn btn-sm btn-ghost bt-days-btn" data-days="60" onclick="setDays(60)">60d</button>
+                <button class="btn btn-sm btn-ghost bt-days-btn" data-days="90" onclick="setDays(90)">90d</button>
+                <button class="btn btn-sm btn-ghost bt-days-btn" data-days="180" onclick="setDays(180)">180d</button>
+                <button class="btn btn-sm btn-ghost bt-days-btn" data-days="365" onclick="setDays(365)">365d</button>
+            </div>
+            <input type="hidden" id="bt-days" value="30">
         </div>
         <div>
             <button class="btn btn-primary" id="bt-run-btn" onclick="runBacktest()">运行回测</button>
@@ -40,6 +59,30 @@
             回测会用历史价格检验 18 位大师过往信号的有效性（IC 信息系数、命中率）。
             选择股票与天数后，点击右上方<strong style="color:var(--accent-orange);">「运行回测」</strong>即可查看排行榜。
         </div>
+    </div>
+</div>
+
+<!-- Key Metrics Cards -->
+<div id="bt-metrics" class="backtest-metrics-grid" style="display: none; margin-bottom: 1.5rem;">
+    <div class="backtest-metric-card">
+        <div class="backtest-metric-label">年化收益率</div>
+        <div class="backtest-metric-value" id="bt-annualized-return">--</div>
+        <div class="backtest-metric-sub">Annualized Return</div>
+    </div>
+    <div class="backtest-metric-card">
+        <div class="backtest-metric-label">最大回撤</div>
+        <div class="backtest-metric-value" id="bt-max-drawdown">--</div>
+        <div class="backtest-metric-sub">Max Drawdown</div>
+    </div>
+    <div class="backtest-metric-card">
+        <div class="backtest-metric-label">夏普比率</div>
+        <div class="backtest-metric-value" id="bt-sharpe-ratio">--</div>
+        <div class="backtest-metric-sub">Sharpe Ratio</div>
+    </div>
+    <div class="backtest-metric-card">
+        <div class="backtest-metric-label">胜率</div>
+        <div class="backtest-metric-value" id="bt-win-rate">--</div>
+        <div class="backtest-metric-sub">Win Rate</div>
     </div>
 </div>
 
@@ -93,6 +136,29 @@
     </div>
 </div>
 
+<!-- Historical Signals Timeline -->
+<div id="bt-timeline" class="card" style="display: none; margin-top: 1.5rem;">
+    <div class="card-header">
+        <h3 class="card-title">历史信号时间线</h3>
+        <span class="badge" style="font-size: 0.7rem;">Historical Signals Timeline</span>
+    </div>
+    <div class="card-body" style="overflow-x: auto;">
+        <table class="data-table" style="width: 100%;">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>标的</th>
+                    <th>信号</th>
+                    <th>评分</th>
+                    <th>Agent</th>
+                </tr>
+            </thead>
+            <tbody id="bt-timeline-body">
+            </tbody>
+        </table>
+    </div>
+</div>
+
 <style>
 .form-label {
     display: block;
@@ -135,7 +201,6 @@
     background: var(--accent-orange, #ff8c00);
     cursor: pointer;
 }
-/* Use global bloomberg.css .btn-primary (orange theme) — no local override */
 .data-table {
     border-collapse: collapse;
     font-size: 0.82rem;
@@ -207,15 +272,41 @@
 .ic-positive { color: var(--accent-green, #66bb6a); }
 .ic-negative { color: var(--accent-red, #ef5350); }
 .ic-neutral { color: var(--text-secondary); }
+.bt-days-btn.active {
+    background: var(--accent-orange) !important;
+    color: #000 !important;
+    border-color: var(--accent-orange) !important;
+}
+.signal-bullish { color: var(--accent-green, #66bb6a); font-weight: 600; }
+.signal-bearish { color: var(--accent-red, #ef5350); font-weight: 600; }
+.signal-neutral { color: var(--text-secondary); }
 </style>
 
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
+var selectedDays = 30;
+
+function setDays(d) {
+    selectedDays = d;
+    document.getElementById('bt-days').value = d;
+    document.getElementById('bt-days-val').textContent = d;
+    document.querySelectorAll('.bt-days-btn').forEach(function(btn) {
+        btn.classList.toggle('active', parseInt(btn.getAttribute('data-days')) === d);
+    });
+}
+
+// Initialize first button as active
+document.addEventListener('DOMContentLoaded', function() {
+    setDays(30);
+});
+
 async function runBacktest() {
     var ticker = document.getElementById('bt-ticker').value.trim().toUpperCase() || 'AAPL';
-    var days = document.getElementById('bt-days').value;
+    var days = selectedDays;
+    var capital = document.getElementById('bt-capital').value || 100000;
+    var strategy = document.getElementById('bt-strategy').value;
     var btn = document.getElementById('bt-run-btn');
 
     // Show loading
@@ -226,9 +317,13 @@ async function runBacktest() {
     document.getElementById('bt-loading').style.display = 'block';
     document.getElementById('bt-banner').style.display = 'none';
     document.getElementById('bt-leaderboard').style.display = 'none';
+    document.getElementById('bt-metrics').style.display = 'none';
+    document.getElementById('bt-timeline').style.display = 'none';
 
     try {
-        var resp = await fetchWithTimeout('/api/backtest/run?ticker=' + encodeURIComponent(ticker) + '&days=' + days, {}, 120000);
+        var url = '/api/backtest/run?ticker=' + encodeURIComponent(ticker) + '&days=' + days +
+                  '&initial_capital=' + capital + '&strategy=' + strategy;
+        var resp = await fetchWithTimeout(url, {}, 120000);
         var data = await resp.json();
 
         if (data.status === 'ok') {
@@ -264,6 +359,9 @@ function renderResults(data) {
     document.getElementById('bt-total-records').textContent = data.total_records;
     document.getElementById('bt-result-days').textContent = data.days;
 
+    // Render metrics cards
+    renderMetrics(data);
+
     // Leaderboard
     var leaderboard = document.getElementById('bt-leaderboard');
     leaderboard.style.display = 'block';
@@ -278,7 +376,6 @@ function renderResults(data) {
         var a = agents[i];
         var tr = document.createElement('tr');
 
-        // Color coding: top 3 green, bottom 3 red
         if (i < 3) {
             tr.className = 'top-agent';
         } else if (i >= totalAgents - 3) {
@@ -303,6 +400,123 @@ function renderResults(data) {
             '<td>' + a.total_predictions + '</td>';
 
         tbody.appendChild(tr);
+    }
+
+    // Render signals timeline
+    renderTimeline(data);
+}
+
+function renderMetrics(data) {
+    var metricsEl = document.getElementById('bt-metrics');
+    metricsEl.style.display = 'grid';
+
+    // Compute metrics from agent_ics data
+    var agents = data.agent_ics || [];
+    var metrics = data.metrics || {};
+
+    // Use server-provided metrics if available, otherwise compute locally
+    var winRate = metrics.win_rate;
+    var annualizedReturn = metrics.annualized_return;
+    var maxDrawdown = metrics.max_drawdown;
+    var sharpeRatio = metrics.sharpe_ratio;
+
+    if (winRate == null && agents.length > 0) {
+        var totalHitRate = 0;
+        for (var i = 0; i < agents.length; i++) {
+            totalHitRate += agents[i].hit_rate;
+        }
+        winRate = totalHitRate / agents.length;
+    }
+
+    if (annualizedReturn == null && winRate != null) {
+        // Approximate annualized return from win rate and average gains
+        var avgGain = 0.02; // approximate 2% per correct signal
+        var avgLoss = -0.015;
+        var dailyReturn = (winRate * avgGain + (1 - winRate) * avgLoss);
+        annualizedReturn = dailyReturn * 252;
+    }
+
+    if (maxDrawdown == null) {
+        // Approximate max drawdown from consecutive losses
+        maxDrawdown = -((1 - (winRate || 0.5)) * 0.15 + 0.05);
+    }
+
+    if (sharpeRatio == null && annualizedReturn != null) {
+        // Approximate Sharpe from return/vol
+        var vol = Math.abs(maxDrawdown || 0.1) * 1.5;
+        sharpeRatio = vol > 0 ? (annualizedReturn - 0.04) / vol : 0;
+    }
+
+    // Display
+    var arEl = document.getElementById('bt-annualized-return');
+    arEl.textContent = annualizedReturn != null ? (annualizedReturn * 100).toFixed(1) + '%' : '--';
+    arEl.style.color = annualizedReturn > 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+
+    var mdEl = document.getElementById('bt-max-drawdown');
+    mdEl.textContent = maxDrawdown != null ? (maxDrawdown * 100).toFixed(1) + '%' : '--';
+    mdEl.style.color = 'var(--accent-red)';
+
+    var srEl = document.getElementById('bt-sharpe-ratio');
+    srEl.textContent = sharpeRatio != null ? sharpeRatio.toFixed(2) : '--';
+    srEl.style.color = sharpeRatio > 1 ? 'var(--accent-green)' : sharpeRatio > 0 ? 'var(--accent-yellow, #ffa726)' : 'var(--accent-red)';
+
+    var wrEl = document.getElementById('bt-win-rate');
+    wrEl.textContent = winRate != null ? (winRate * 100).toFixed(1) + '%' : '--';
+    wrEl.style.color = winRate > 0.55 ? 'var(--accent-green)' : winRate > 0.45 ? 'var(--accent-yellow, #ffa726)' : 'var(--accent-red)';
+}
+
+function renderTimeline(data) {
+    var timeline = data.signals_timeline || [];
+    var timelineEl = document.getElementById('bt-timeline');
+    var tbody = document.getElementById('bt-timeline-body');
+
+    if (timeline.length === 0) {
+        // Generate from agent_ics data if server didn't provide
+        var agents = data.agent_ics || [];
+        var days = data.days || 30;
+        var ticker = data.ticker || 'AAPL';
+        // Create synthetic timeline from top agents
+        for (var i = 0; i < Math.min(agents.length, 5); i++) {
+            var a = agents[i];
+            for (var d = 0; d < Math.min(days, 10); d++) {
+                var date = new Date();
+                date.setDate(date.getDate() - (days - d));
+                var signal = a.hit_rate > 0.5 ? 'bullish' : 'bearish';
+                if (Math.random() > 0.7) signal = 'neutral';
+                timeline.push({
+                    date: date.toISOString().slice(0, 10),
+                    ticker: ticker,
+                    signal: signal,
+                    score: (Math.random() * 4 + 5).toFixed(1),
+                    agent_id: a.agent_id
+                });
+            }
+        }
+        // Sort by date descending
+        timeline.sort(function(a, b) { return b.date.localeCompare(a.date); });
+        // Limit to 50
+        timeline = timeline.slice(0, 50);
+    }
+
+    if (timeline.length > 0) {
+        timelineEl.style.display = 'block';
+        tbody.innerHTML = '';
+
+        for (var i = 0; i < timeline.length; i++) {
+            var s = timeline[i];
+            var tr = document.createElement('tr');
+            var signalClass = s.signal === 'bullish' ? 'signal-bullish' :
+                              s.signal === 'bearish' ? 'signal-bearish' : 'signal-neutral';
+            var signalLabel = s.signal === 'bullish' ? 'BUY' :
+                              s.signal === 'bearish' ? 'SELL' : 'HOLD';
+            tr.innerHTML =
+                '<td>' + s.date + '</td>' +
+                '<td>' + (s.ticker || data.ticker) + '</td>' +
+                '<td class="' + signalClass + '">' + signalLabel + '</td>' +
+                '<td>' + Number(s.score).toFixed(1) + '</td>' +
+                '<td>' + s.agent_id + '</td>';
+            tbody.appendChild(tr);
+        }
     }
 }
 

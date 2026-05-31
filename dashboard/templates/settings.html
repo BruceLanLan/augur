@@ -66,43 +66,152 @@
 
 {% block content %}
 
-<div class="flex items-center justify-between mb-24" style="flex-wrap:wrap; gap:12px;">
-    <div>
-        <h2 style="color:var(--accent-orange); margin:0;">模型配置 <span id="unsaved-indicator" class="unsaved-dot" style="display:none;"></span><span id="unsaved-text" aria-live="polite" role="status" style="display:none; font-size:0.75rem; color:var(--signal-sell); margin-left:4px; font-weight:400;">有未保存更改</span></h2>
-        <p class="text-muted" style="font-size:0.82rem; margin:4px 0 0;">为每位投资大师分配 LLM 模型</p>
+<!-- Section A: LLM Model Config -->
+<div class="settings-section" id="section-llm">
+    <div class="settings-section-title">
+        <span>A. LLM 模型配置</span>
+        <span class="settings-section-desc">为每位投资大师分配 LLM 推理模型</span>
     </div>
-    <div class="flex gap-8">
-        <button class="btn btn-sm btn-ghost" onclick="resetAll()" title="重置所有选择为默认值">全部重置</button>
-        <button class="btn btn-primary" id="save-all-btn" onclick="saveAll()">全部保存</button>
-    </div>
-</div>
 
-<!-- Preset buttons -->
-<div class="flex gap-8 mb-16" style="flex-wrap:wrap;">
-    <button class="btn btn-sm preset-btn" onclick="applyPreset('claude')">全部 Claude</button>
-    <button class="btn btn-sm preset-btn" onclick="applyPreset('deepseek-cn')">中国投资人用 DeepSeek</button>
-    <button class="btn btn-sm preset-btn" onclick="applyPreset('best')">最强配置</button>
-</div>
-
-<div class="settings-grid" id="persona-grid">
-    {% for persona in personas %}
-    <div class="persona-config-row" data-agent-id="{{ persona.id }}">
-        <img src="/docs/images/avatars/{{ persona.id }}.svg"
-             alt="{{ persona.name }}"
-             class="persona-config-avatar"
-             onerror="this.style.display='none'">
-        <div class="persona-config-info">
-            <div class="persona-config-name">{{ persona.name }}</div>
-            <div class="persona-config-style">{{ persona.style }}</div>
+    <div class="flex items-center justify-between mb-16" style="flex-wrap:wrap; gap:12px;">
+        <div>
+            <span id="unsaved-indicator" class="unsaved-dot" style="display:none;"></span>
+            <span id="unsaved-text" aria-live="polite" role="status" style="display:none; font-size:0.75rem; color:var(--signal-sell); margin-left:4px; font-weight:400;">有未保存更改</span>
         </div>
-        <select class="form-select" data-agent-id="{{ persona.id }}" style="min-width:140px; max-width:180px;">
-            {% for model in available_models %}
-            <option value="{{ model }}" {% if model == persona.current_model %}selected{% endif %}>{{ model }}</option>
-            {% endfor %}
-        </select>
-        <button class="save-persona-btn" onclick="savePersona('{{ persona.id }}')">保存</button>
+        <div class="flex gap-8">
+            <button class="btn btn-sm btn-ghost" onclick="resetAll()" title="重置所有选择为默认值">全部重置</button>
+            <button class="btn btn-primary" id="save-all-btn" onclick="saveAll()">全部保存</button>
+        </div>
     </div>
-    {% endfor %}
+
+    <!-- Preset buttons -->
+    <div class="flex gap-8 mb-16" style="flex-wrap:wrap;">
+        <button class="btn btn-sm preset-btn" onclick="applyPreset('claude')">全部 Claude</button>
+        <button class="btn btn-sm preset-btn" onclick="applyPreset('deepseek-cn')">中国投资人用 DeepSeek</button>
+        <button class="btn btn-sm preset-btn" onclick="applyPreset('best')">最强配置</button>
+    </div>
+
+    <div class="settings-grid" id="persona-grid">
+        {% for persona in personas %}
+        <div class="persona-config-row" data-agent-id="{{ persona.id }}">
+            <img src="/docs/images/avatars/{{ persona.id }}.svg"
+                 alt="{{ persona.name }}"
+                 class="persona-config-avatar"
+                 onerror="this.style.display='none'">
+            <div class="persona-config-info">
+                <div class="persona-config-name">{{ persona.name }}</div>
+                <div class="persona-config-style">{{ persona.style }}</div>
+            </div>
+            <select class="form-select" data-agent-id="{{ persona.id }}" style="min-width:140px; max-width:180px;">
+                {% for model in available_models %}
+                <option value="{{ model }}" {% if model == persona.current_model %}selected{% endif %}>{{ model }}</option>
+                {% endfor %}
+            </select>
+            <button class="save-persona-btn" onclick="savePersona('{{ persona.id }}')">保存</button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Section B: Data Source API Keys -->
+<div class="settings-section" id="section-datasources">
+    <div class="settings-section-title">
+        <span>B. 数据源 API 配置</span>
+        <span class="settings-section-desc">管理外部数据源 API 密钥以获取更丰富的金融数据</span>
+    </div>
+
+    <div class="settings-api-row">
+        <div class="settings-api-info">
+            <div class="settings-api-name">Finnhub</div>
+            <div class="settings-api-desc">提供基本面数据、分析师评级、财报日历等。免费 Tier 支持 60次/分钟。</div>
+        </div>
+        <div class="settings-api-controls">
+            <input type="password" id="finnhub-key" class="api-key-input" placeholder="输入 Finnhub API Key" autocomplete="off">
+            <button class="test-btn" onclick="testDatasource('finnhub')">测试连接</button>
+            <button class="save-persona-btn" onclick="saveDatasourceKey('finnhub')">保存</button>
+        </div>
+        <div class="settings-api-status" id="finnhub-status"></div>
+    </div>
+
+    <div class="settings-api-row">
+        <div class="settings-api-info">
+            <div class="settings-api-name">Alpha Vantage</div>
+            <div class="settings-api-desc">全面的基本面 OVERVIEW、收益历史、资产负债表数据。免费 Tier 支持 5次/分钟。</div>
+        </div>
+        <div class="settings-api-controls">
+            <input type="password" id="alphavantage-key" class="api-key-input" placeholder="输入 Alpha Vantage API Key" autocomplete="off">
+            <button class="test-btn" onclick="testDatasource('alphavantage')">测试连接</button>
+            <button class="save-persona-btn" onclick="saveDatasourceKey('alphavantage')">保存</button>
+        </div>
+        <div class="settings-api-status" id="alphavantage-status"></div>
+    </div>
+</div>
+
+<!-- Section C: Notification Channels -->
+<div class="settings-section" id="section-notifications">
+    <div class="settings-section-title">
+        <span>C. 通知渠道</span>
+        <span class="settings-section-desc">配置信号触发时的自动通知推送</span>
+    </div>
+
+    <div class="settings-api-row">
+        <div class="settings-api-info">
+            <div class="settings-api-name">Telegram Bot</div>
+            <div class="settings-api-desc">通过 Telegram Bot 接收买卖信号推送。需先通过 @BotFather 创建 Bot 并获取 Token。</div>
+        </div>
+        <div class="settings-api-controls">
+            <input type="password" id="telegram-token" class="api-key-input" placeholder="Bot Token (123456:ABC-DEF...)" autocomplete="off">
+            <input type="text" id="telegram-chat-id" class="api-key-input" placeholder="Chat ID" style="max-width:120px;" autocomplete="off">
+            <button class="test-btn" onclick="testNotification('telegram')">测试</button>
+            <button class="save-persona-btn" onclick="saveNotification('telegram')">保存</button>
+        </div>
+        <div class="settings-api-status" id="telegram-status"></div>
+    </div>
+
+    <div class="settings-api-row">
+        <div class="settings-api-info">
+            <div class="settings-api-name">Slack Webhook</div>
+            <div class="settings-api-desc">通过 Slack Incoming Webhook 发送信号通知到指定频道。</div>
+        </div>
+        <div class="settings-api-controls">
+            <input type="password" id="slack-webhook" class="api-key-input" placeholder="https://hooks.slack.com/services/..." autocomplete="off">
+            <button class="test-btn" onclick="testNotification('slack')">测试</button>
+            <button class="save-persona-btn" onclick="saveNotification('slack')">保存</button>
+        </div>
+        <div class="settings-api-status" id="slack-status"></div>
+    </div>
+
+    <div class="settings-api-row">
+        <div class="settings-api-info">
+            <div class="settings-api-name">微信 (WeChat)</div>
+            <div class="settings-api-desc">通过企业微信机器人或 Server酱 推送信号通知。(开发中)</div>
+        </div>
+        <div class="settings-api-controls">
+            <input type="password" id="wechat-key" class="api-key-input" placeholder="Webhook Key / SendKey (开发中)" autocomplete="off" disabled>
+            <button class="test-btn" disabled>测试</button>
+            <button class="save-persona-btn" disabled>保存</button>
+        </div>
+        <div class="settings-api-status" id="wechat-status"><span style="color:var(--text-muted); font-size:0.75rem;">即将支持</span></div>
+    </div>
+</div>
+
+<!-- Section D: Export/Import Config -->
+<div class="settings-section" id="section-export">
+    <div class="settings-section-title">
+        <span>D. 配置导入/导出</span>
+        <span class="settings-section-desc">备份或迁移您的 Augur 配置</span>
+    </div>
+
+    <div class="flex gap-12" style="flex-wrap:wrap; padding: 16px 0;">
+        <button class="btn btn-primary" onclick="exportConfig()">
+            <span style="margin-right:4px;">&#x2B07;</span> 导出配置 (JSON)
+        </button>
+        <label class="btn btn-sm btn-ghost" style="cursor:pointer;">
+            <span style="margin-right:4px;">&#x2B06;</span> 导入配置
+            <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importConfig(event)">
+        </label>
+    </div>
+    <div id="import-status" style="font-size:0.8rem; margin-top:8px;"></div>
 </div>
 
 {% endblock %}
@@ -118,7 +227,25 @@ document.addEventListener('DOMContentLoaded', function() {
         originalValues[id] = sel.value;
         sel.addEventListener('change', function() { checkUnsaved(); });
     });
+
+    // Load saved API keys from config (masked)
+    loadSavedKeys();
 });
+
+function loadSavedKeys() {
+    fetch('/api/config')
+    .then(function(r) { return r.json(); })
+    .then(function(cfg) {
+        var ds = cfg.datasource_keys || {};
+        if (ds.finnhub) document.getElementById('finnhub-key').placeholder = '***已配置***';
+        if (ds.alphavantage) document.getElementById('alphavantage-key').placeholder = '***已配置***';
+        var notif = cfg.notifications || {};
+        if (notif.telegram_token) document.getElementById('telegram-token').placeholder = '***已配置***';
+        if (notif.telegram_chat_id) document.getElementById('telegram-chat-id').placeholder = '***已配置***';
+        if (notif.slack_webhook) document.getElementById('slack-webhook').placeholder = '***已配置***';
+    })
+    .catch(function() {});
+}
 
 function checkUnsaved() {
     var hasChanges = false;
@@ -191,14 +318,6 @@ function applyPreset(preset) {
     }
 }
 
-function getProviderClass(model) {
-    if (model.includes('claude')) return 'claude';
-    if (model.includes('deepseek')) return 'deepseek';
-    if (model.includes('gpt')) return 'gpt';
-    if (model.includes('kimi')) return 'kimi';
-    return '';
-}
-
 function savePersona(agentId) {
     var select = document.querySelector('select[data-agent-id="' + agentId + '"]');
     var model = select.value;
@@ -213,7 +332,6 @@ function savePersona(agentId) {
             originalValues[agentId] = model;
             checkUnsaved();
             showToast(agentId + ' 模型已更新为 ' + model);
-            // Flash success on the row
             var row = select.closest('.persona-config-row');
             if (row) {
                 row.style.borderColor = 'var(--signal-buy)';
@@ -247,7 +365,6 @@ function saveAll() {
     .then(function(results) {
         var ok = results.filter(function(r) { return r.status === 'ok'; }).length;
         var failed = results.length - ok;
-        // Update original values
         cards.forEach(function(card) {
             var agentId = card.getAttribute('data-agent-id');
             var select = card.querySelector('select');
@@ -259,7 +376,6 @@ function saveAll() {
         } else {
             showToast('已保存 ' + ok + ' 位投资大师的模型配置');
         }
-        // Success animation on button
         var btn = document.getElementById('save-all-btn');
         if (btn) {
             var orig = btn.textContent;
@@ -283,6 +399,158 @@ function resetAll() {
     });
     checkUnsaved();
     showToast('已重置为默认值，请点击"全部保存"确认', 'warning');
+}
+
+// Data source key management
+function saveDatasourceKey(source) {
+    var keyId = source === 'finnhub' ? 'finnhub-key' : 'alphavantage-key';
+    var key = document.getElementById(keyId).value.trim();
+    if (!key) { showToast('请输入 API Key', 'warning'); return; }
+    var configKey = source === 'finnhub' ? 'FINNHUB_API_KEY' : 'ALPHAVANTAGE_API_KEY';
+    fetch('/api/config', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({datasource_keys: {}})
+    });
+    // Save via config endpoint
+    fetch('/api/config/import', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({datasource_keys: {[source]: key}})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status === 'ok') {
+            showToast(source + ' API Key 已保存');
+            document.getElementById(keyId).value = '';
+            document.getElementById(keyId).placeholder = '***已配置***';
+        } else {
+            showToast('保存失败: ' + (data.detail || ''), 'error');
+        }
+    })
+    .catch(function(err) { showToast('保存失败: ' + err.message, 'error'); });
+}
+
+function testDatasource(source) {
+    var statusEl = document.getElementById(source + '-status');
+    statusEl.innerHTML = '<span style="color:var(--text-muted);">测试中...</span>';
+    fetch('/api/config/test-datasource', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({source: source})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status === 'ok') {
+            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; 连接成功</span>';
+        } else {
+            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + (data.detail || '连接失败') + '</span>';
+        }
+    })
+    .catch(function(err) {
+        statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; 测试失败</span>';
+    });
+}
+
+// Notification management
+function saveNotification(channel) {
+    var payload = {};
+    if (channel === 'telegram') {
+        payload.telegram_token = document.getElementById('telegram-token').value.trim();
+        payload.telegram_chat_id = document.getElementById('telegram-chat-id').value.trim();
+    } else if (channel === 'slack') {
+        payload.slack_webhook = document.getElementById('slack-webhook').value.trim();
+    }
+    fetch('/api/config/import', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({notifications: payload})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status === 'ok') {
+            showToast(channel + ' 通知配置已保存');
+        } else {
+            showToast('保存失败', 'error');
+        }
+    })
+    .catch(function(err) { showToast('保存失败: ' + err.message, 'error'); });
+}
+
+function testNotification(channel) {
+    var statusEl = document.getElementById(channel + '-status');
+    statusEl.innerHTML = '<span style="color:var(--text-muted);">发送测试消息...</span>';
+    fetch('/api/config/test-notification', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({channel: channel})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status === 'ok') {
+            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; 测试消息已发送</span>';
+        } else {
+            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + (data.detail || '发送失败') + '</span>';
+        }
+    })
+    .catch(function(err) {
+        statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; 测试失败</span>';
+    });
+}
+
+// Export/Import config
+function exportConfig() {
+    fetch('/api/config/export')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url;
+        a.download = 'augur-config-' + new Date().toISOString().slice(0,10) + '.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('配置已导出');
+    })
+    .catch(function(err) { showToast('导出失败: ' + err.message, 'error'); });
+}
+
+function importConfig(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+    var statusEl = document.getElementById('import-status');
+    statusEl.innerHTML = '<span style="color:var(--text-muted);">导入中...</span>';
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            var config = JSON.parse(e.target.result);
+            fetch('/api/config/import', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(config)
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status === 'ok') {
+                    statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; 配置已导入，刷新页面生效</span>';
+                    showToast('配置导入成功，请刷新页面');
+                } else {
+                    statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + (data.detail || '导入失败') + '</span>';
+                }
+            })
+            .catch(function(err) {
+                statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; 导入失败</span>';
+            });
+        } catch (parseErr) {
+            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; JSON 解析失败</span>';
+        }
+    };
+    reader.readAsText(file);
+    // Reset file input
+    event.target.value = '';
 }
 
 // Warn before leaving with unsaved changes
