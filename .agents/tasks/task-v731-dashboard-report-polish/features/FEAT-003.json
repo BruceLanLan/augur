@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "chore",
   "description": "Code quality, UX polish, page titles check, cache logic review, documentation update (README, CHANGELOG)",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. In dashboard/app.py, verify the /api/market-overview caching logic is correct. Currently it uses a custom TTL offset (_CACHE_TTL - 60 = 120s effective). This is fine but ensure that force_refresh=true actually bypasses the cache properly (it does via the if not force_refresh check).",
     "2. Check all page <title> tags across templates: index.html should be 'Augur - 多智能体投资分析仪表盘', stocks.html should be '股票分析 - Augur', personas.html should be '投资人系统 - Augur', settings.html should be '设置 - Augur', backtest.html should be '历史回测 - Augur', signals.html should be '信号监控 - Augur'. Fix any that are inconsistent.",
@@ -24,5 +24,5 @@
     "git log --oneline -3"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 448 tests pass. Version bumped to 7.3.1 in app.py. Page titles fixed: index.html, personas.html, settings.html, backtest.html, create_persona.html. README/README_EN badges updated. CHANGELOG v7.3.1 section added. Commit c3a7346 on main."
 }
