@@ -508,6 +508,20 @@
     function fetchWithTimeout(url, options, timeoutMs) {
         options = options || {};
         timeoutMs = timeoutMs || 90000;
+        // Auto-attach API token from localStorage if available
+        var token = localStorage.getItem('augur_api_token');
+        if (token && url.indexOf('/api/') !== -1) {
+            if (!options.headers) options.headers = {};
+            if (options.headers instanceof Headers) {
+                if (!options.headers.has('Authorization')) {
+                    options.headers.set('Authorization', 'Bearer ' + token);
+                }
+            } else {
+                if (!options.headers['Authorization']) {
+                    options.headers['Authorization'] = 'Bearer ' + token;
+                }
+            }
+        }
         if (typeof AbortController === 'undefined') return fetch(url, options);
         var controller = new AbortController();
         var timer = setTimeout(function() { controller.abort(); }, timeoutMs);

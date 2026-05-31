@@ -9,6 +9,7 @@ services:
       - ./config:/app/config
     environment:
       - AUGUR_CONFIG=/app/config/agents.yaml
+      - AUGUR_API_TOKEN=${AUGUR_API_TOKEN}
     command: ["python", "-m", "dashboard.app", "--port", "8000", "--cors"]
     restart: unless-stopped
     healthcheck:

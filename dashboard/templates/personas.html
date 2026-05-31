@@ -329,6 +329,9 @@
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <span style="font-weight:700; font-size:1.05rem; color:var(--text-primary);">{{ persona.cn_name }}</span>
                     <span class="school-badge {{ persona.school }}">{{ persona.school }}</span>
+                    {% if persona.is_custom %}
+                    <span class="school-badge" style="background:rgba(168,85,247,0.18); color:#a855f7;">CUSTOM</span>
+                    {% endif %}
                 </div>
                 <div class="text-muted" style="font-size:0.76rem; margin-top:2px;">{{ persona.en_name }}</div>
                 <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:6px;">{{ persona.style }}</div>

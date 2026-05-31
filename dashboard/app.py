@@ -132,6 +132,33 @@ app.add_middleware(
 )
 
 
+# ============ API Token Authentication Middleware ============
+
+_AUTH_EXEMPT_PATHS = {"/api/auth/verify", "/health", "/api/health"}
+
+
+@app.middleware("http")
+async def api_token_auth_middleware(request: Request, call_next):
+    """Enforce Bearer token auth on /api/* paths when AUGUR_API_TOKEN is set."""
+    augur_token = os.environ.get("AUGUR_API_TOKEN", "")
+    if augur_token and request.url.path.startswith("/api/"):
+        if request.url.path not in _AUTH_EXEMPT_PATHS:
+            auth_header = request.headers.get("authorization", "")
+            if not auth_header:
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "Authentication required", "code": "AUTH_REQUIRED"},
+                )
+            parts = auth_header.split(" ", 1)
+            if len(parts) != 2 or parts[0].lower() != "bearer" or parts[1] != augur_token:
+                return JSONResponse(
+                    status_code=401,
+                    content={"detail": "Invalid token", "code": "INVALID_TOKEN"},
+                )
+    response = await call_next(request)
+    return response
+
+
 # ============ IP-based Rate Limiting Middleware ============
 
 _ip_rate_limits: Dict[str, List[float]] = {}
@@ -229,6 +256,7 @@ def _persona_meta() -> List[Dict]:
     config = get_config()
     per_agent = config.get("per_agent", {})
     default_model = config.get("defaults", {}).get("model", "")
+    custom_dir = Path(__file__).parent.parent / "personas" / "custom"
     meta = []
     for agent in registry.get_all():
         # Chinese mainland investors only; Serenity is excluded because
@@ -236,6 +264,7 @@ def _persona_meta() -> List[Dict]:
         chinese_investors = {"duan_yongping", "zhang_lei", "li_lu", "dan_bin", "dayu"}
         country = "\U0001f1e8\U0001f1f3 中国" if agent.agent_id in chinese_investors else ""
         enrichment = PERSONA_ENRICHMENT.get(agent.agent_id, {})
+        is_custom = (custom_dir / f"{agent.agent_id}.yaml").exists()
         meta.append({
             "id": agent.agent_id,
             "agent_id": agent.agent_id,
@@ -253,6 +282,7 @@ def _persona_meta() -> List[Dict]:
             "status": "\u5df2\u6ce8\u518c",
             "country": country,
             "is_chinese": agent.agent_id in chinese_investors,
+            "is_custom": is_custom,
             "quote": agent.philosophy[0] if agent.philosophy else "\u6295\u8d44\uff0c\u5c31\u662f\u6295\u672a\u6765\u3002",
             "model": per_agent.get(agent.agent_id, default_model),
         })
@@ -1056,6 +1086,104 @@ async def api_create_custom_persona(body: CustomPersonaBody):
         pass  # hot-reload is best-effort; YAML is saved and will load on restart
 
     return {"status": "ok", "path": str(filepath), "hot_loaded": True}
+
+
+@app.get("/api/custom-personas", summary="列出所有自定义投资人")
+async def api_list_custom_personas():
+    """列出 personas/custom/ 目录下的所有自定义投资人"""
+    custom_dir = Path(__file__).parent.parent / "personas" / "custom"
+    custom_dir.mkdir(parents=True, exist_ok=True)
+    personas = []
+    for fp in sorted(custom_dir.glob("*.yaml")):
+        try:
+            data = yaml.safe_load(fp.read_text(encoding="utf-8")) or {}
+            personas.append({
+                "agent_id": data.get("agent_id", fp.stem),
+                "name": data.get("name", fp.stem),
+                "filepath": str(fp),
+            })
+        except Exception:
+            personas.append({
+                "agent_id": fp.stem,
+                "name": fp.stem,
+                "filepath": str(fp),
+            })
+    return {"status": "ok", "personas": personas}
+
+
+@app.delete("/api/custom-persona/{agent_id}", summary="删除自定义投资人")
+async def api_delete_custom_persona(agent_id: str):
+    """删除 personas/custom/ 下的自定义投资人 YAML 并从注册表注销"""
+    if not re.match(r'^[a-z0-9_-]+$', agent_id):
+        raise HTTPException(status_code=400, detail="Invalid agent_id format")
+    custom_dir = Path(__file__).parent.parent / "personas" / "custom"
+    filepath = custom_dir / f"{agent_id}.yaml"
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail=f"Custom persona '{agent_id}' not found")
+    filepath.unlink()
+    # Unregister from live registry
+    global _registry, _coordinator
+    if _registry is not None:
+        try:
+            _registry.unregister(agent_id)
+            _coordinator = None
+        except Exception:
+            pass
+    return {"status": "ok", "agent_id": agent_id, "message": "已删除"}
+
+
+@app.put("/api/custom-persona/{agent_id}", summary="更新自定义投资人")
+async def api_update_custom_persona(agent_id: str, body: CustomPersonaBody):
+    """更新已有的自定义投资人 YAML，热重载"""
+    if not re.match(r'^[a-z0-9_-]+$', agent_id):
+        raise HTTPException(status_code=400, detail="Invalid agent_id format")
+    custom_dir = Path(__file__).parent.parent / "personas" / "custom"
+    filepath = custom_dir / f"{agent_id}.yaml"
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail=f"Custom persona '{agent_id}' not found")
+    # Validate YAML
+    try:
+        yaml.safe_load(body.yaml_content)
+    except yaml.YAMLError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid YAML content: {e}")
+    filepath.write_text(body.yaml_content, encoding="utf-8")
+    # Hot-reload
+    global _registry, _coordinator
+    try:
+        from augur.persona_loader import load_persona_yaml
+        new_agent = load_persona_yaml(str(filepath))
+        if _registry is not None:
+            # Unregister old, register new
+            try:
+                _registry.unregister(agent_id)
+            except Exception:
+                pass
+            _registry.register(new_agent)
+            _coordinator = None
+    except Exception:
+        pass
+    return {"status": "ok", "agent_id": agent_id, "path": str(filepath), "hot_loaded": True}
+
+
+@app.get("/api/auth/verify", summary="验证API Token")
+async def api_auth_verify(request: Request):
+    """验证 API Token 有效性。当 AUGUR_API_TOKEN 未设置时返回 open 模式。"""
+    augur_token = os.environ.get("AUGUR_API_TOKEN", "")
+    if not augur_token:
+        return {"status": "ok", "authenticated": True, "mode": "open"}
+    auth_header = request.headers.get("authorization", "")
+    if not auth_header:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Authentication required", "code": "AUTH_REQUIRED"},
+        )
+    parts = auth_header.split(" ", 1)
+    if len(parts) != 2 or parts[0].lower() != "bearer" or parts[1] != augur_token:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": "Invalid token", "code": "INVALID_TOKEN"},
+        )
+    return {"status": "ok", "authenticated": True, "mode": "token"}
 
 
 @app.get("/api/schema/persona", summary="获取Persona YAML结构")
