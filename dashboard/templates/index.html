@@ -19,6 +19,189 @@
     border-color: var(--accent-orange);
     box-shadow: 0 0 0 2px rgba(255,140,0,0.15);
 }
+/* Sector Performance Heatmap */
+.sector-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+}
+.sector-card {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 10px;
+    text-align: center;
+    transition: transform 0.15s, border-color 0.15s;
+    cursor: default;
+}
+.sector-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent-orange);
+}
+.sector-card .sector-name {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+}
+.sector-card .sector-ticker {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    opacity: 0.7;
+    font-family: var(--font-data);
+}
+.sector-card .sector-price {
+    font-size: 0.88rem;
+    font-family: var(--font-data);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 4px 0 2px;
+}
+.sector-card .sector-change {
+    font-size: 0.78rem;
+    font-family: var(--font-data);
+    font-weight: 600;
+}
+/* Heatmap coloring */
+.sector-card.heat-strong-up { background: rgba(0, 200, 83, 0.15); border-color: rgba(0, 200, 83, 0.3); }
+.sector-card.heat-up { background: rgba(0, 200, 83, 0.08); border-color: rgba(0, 200, 83, 0.15); }
+.sector-card.heat-strong-down { background: rgba(255, 23, 68, 0.15); border-color: rgba(255, 23, 68, 0.3); }
+.sector-card.heat-down { background: rgba(255, 23, 68, 0.08); border-color: rgba(255, 23, 68, 0.15); }
+
+/* Top Movers */
+.movers-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+@media (max-width: 600px) {
+    .movers-row { grid-template-columns: 1fr; }
+}
+.movers-section {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+}
+.movers-title {
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.movers-title.gainers { color: var(--signal-buy); }
+.movers-title.losers { color: var(--signal-sell); }
+.mover-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+}
+.mover-item:last-child { border-bottom: none; }
+.mover-item:hover { background: var(--bg-hover); }
+.mover-symbol {
+    font-weight: 600;
+    font-family: var(--font-data);
+    font-size: 0.82rem;
+    color: var(--text-primary);
+}
+.mover-name {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    max-width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.mover-change {
+    font-weight: 600;
+    font-family: var(--font-data);
+    font-size: 0.82rem;
+}
+
+/* Consensus Leaderboard */
+.leaderboard-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+.leaderboard-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.leaderboard-item:hover { background: var(--bg-hover); }
+.leaderboard-item:last-child { border-bottom: none; }
+.leaderboard-rank {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--accent-orange);
+    min-width: 20px;
+}
+.leaderboard-ticker {
+    font-weight: 600;
+    font-family: var(--font-data);
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    min-width: 60px;
+}
+.leaderboard-score {
+    font-family: var(--font-data);
+    font-size: 0.82rem;
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+.leaderboard-time {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+/* Market Breadth */
+.breadth-bar-wrap {
+    background: var(--bg-primary);
+    border-radius: 4px;
+    height: 24px;
+    overflow: hidden;
+    display: flex;
+    border: 1px solid var(--border-color);
+}
+.breadth-bar-advance {
+    background: var(--signal-buy);
+    height: 100%;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #fff;
+}
+.breadth-bar-decline {
+    background: var(--signal-sell);
+    height: 100%;
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #fff;
+}
+.breadth-stats {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -174,6 +357,53 @@
     <div class="hot-ticker-card skeleton" style="height:90px;"></div>
 </div>
 
+<!-- Sector Performance Heatmap -->
+<div class="flex items-center justify-between mb-12">
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-sector-perf">板块行情</div>
+    <button class="btn btn-sm btn-ghost" onclick="loadSectorPerformance(true)" id="sector-refresh-btn" title="刷新">&#x21BB; 刷新</button>
+</div>
+<div class="sector-grid mb-24" id="sector-grid">
+    <div class="sector-card skeleton" style="height:80px;"></div>
+    <div class="sector-card skeleton" style="height:80px;"></div>
+    <div class="sector-card skeleton" style="height:80px;"></div>
+    <div class="sector-card skeleton" style="height:80px;"></div>
+    <div class="sector-card skeleton" style="height:80px;"></div>
+    <div class="sector-card skeleton" style="height:80px;"></div>
+    <div class="sector-card skeleton" style="height:80px;"></div>
+    <div class="sector-card skeleton" style="height:80px;"></div>
+</div>
+
+<!-- Top Movers (Gainers & Losers) -->
+<div class="flex items-center justify-between mb-12">
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-top-movers">涨跌幅领先</div>
+</div>
+<div class="movers-row mb-24" id="movers-row">
+    <div class="movers-section">
+        <div class="movers-title gainers">&#x25B2; 领涨</div>
+        <div id="gainers-list"><div class="text-muted" style="font-size:0.78rem;">加载中...</div></div>
+    </div>
+    <div class="movers-section">
+        <div class="movers-title losers">&#x25BC; 领跌</div>
+        <div id="losers-list"><div class="text-muted" style="font-size:0.78rem;">加载中...</div></div>
+    </div>
+</div>
+
+<!-- Market Breadth -->
+<div class="flex items-center justify-between mb-12">
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-market-breadth">市场宽度</div>
+</div>
+<div class="card mb-24" style="padding:16px;" id="market-breadth-card">
+    <div class="text-muted" style="font-size:0.78rem;">基于热门标的涨跌统计</div>
+    <div class="breadth-bar-wrap" style="margin-top:8px;">
+        <div class="breadth-bar-advance" id="breadth-advance" style="width:50%;">--</div>
+        <div class="breadth-bar-decline" id="breadth-decline" style="width:50%;">--</div>
+    </div>
+    <div class="breadth-stats">
+        <span id="breadth-adv-label">上涨: --</span>
+        <span id="breadth-dec-label">下跌: --</span>
+    </div>
+</div>
+
 <!-- Fear & Greed + Macro Snapshot side by side -->
 <div class="grid-2 mb-24" id="fear-macro-row">
     <!-- 恐慌与贪婪指标 -->
@@ -192,6 +422,17 @@
             <div class="macro-card skeleton" style="height:80px;"></div>
         </div>
     </div>
+</div>
+
+<!-- Augur Consensus Leaderboard -->
+<div class="flex items-center justify-between mb-12">
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-leaderboard">Augur 共识排行榜</div>
+    <span class="text-muted" style="font-size:0.7rem;">基于本地分析历史</span>
+</div>
+<div class="card mb-24" style="padding:0; overflow:hidden;" id="leaderboard-section">
+    <ul class="leaderboard-list" id="leaderboard-list">
+        <li class="leaderboard-item" style="justify-content:center;"><span class="text-muted" style="font-size:0.78rem;">尚无分析记录，去分析一只股票吧</span></li>
+    </ul>
 </div>
 
 <!-- Featured Personas -->
@@ -371,6 +612,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load hot tickers
     loadHotTickers(false);
+
+    // Load sector performance
+    loadSectorPerformance(false);
+
+    // Render leaderboard from cache
+    renderLeaderboard();
 });
 
 // ====== Global Market Overview board ======
@@ -662,6 +909,152 @@ function renderRecentAnalyses() {
             '<span class="signal-badge ' + badgeClass + ' recent-item-signal">' + signalLabel + '</span>' +
             '<span class="text-mono" style="font-size:0.78rem; color:var(--accent-orange);">' + (item.result.score || 0).toFixed(1) + '/10</span>' +
             '<span class="recent-item-time">' + relativeTime(item.time) + '</span>';
+        list.appendChild(li);
+    });
+}
+
+// ====== Sector Performance ======
+function loadSectorPerformance(forceRefresh) {
+    var grid = document.getElementById('sector-grid');
+    var btn = document.getElementById('sector-refresh-btn');
+    if (btn) btn.disabled = true;
+    var url = '/api/sector-performance' + (forceRefresh ? '?refresh=true' : '');
+    fetchWithTimeout(url, {}, 30000)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (btn) btn.disabled = false;
+            renderSectorGrid(data);
+        })
+        .catch(function() {
+            if (btn) btn.disabled = false;
+            if (grid) grid.innerHTML = '<div class="market-empty text-muted">板块行情暂不可用</div>';
+        });
+}
+
+function renderSectorGrid(data) {
+    var grid = document.getElementById('sector-grid');
+    if (!grid) return;
+    var sectors = (data && data.sectors) || [];
+    if (!sectors.length) {
+        grid.innerHTML = '<div class="market-empty text-muted">板块数据暂不可用</div>';
+        return;
+    }
+    grid.innerHTML = '';
+    sectors.forEach(function(s) {
+        var pct = s.change_pct || 0;
+        var heatClass = '';
+        if (pct > 0.02) heatClass = 'heat-strong-up';
+        else if (pct > 0) heatClass = 'heat-up';
+        else if (pct < -0.02) heatClass = 'heat-strong-down';
+        else if (pct < 0) heatClass = 'heat-down';
+        var up = pct > 0;
+        var card = document.createElement('div');
+        card.className = 'sector-card ' + heatClass;
+        card.innerHTML =
+            '<div class="sector-name">' + escapeHtml(s.name) + '</div>' +
+            '<div class="sector-ticker">' + escapeHtml(s.symbol) + '</div>' +
+            '<div class="sector-price">' + (s.price || 0).toFixed(2) + '</div>' +
+            '<div class="sector-change" style="color:' + (up ? 'var(--signal-buy)' : (pct < 0 ? 'var(--signal-sell)' : 'var(--text-muted)')) + ';">' +
+                (up ? '+' : '') + (pct * 100).toFixed(2) + '%</div>';
+        grid.appendChild(card);
+    });
+}
+
+// ====== Top Movers (derived from hot tickers) ======
+var _hotTickersDataForMovers = null;
+var _origRenderHotTickers = renderHotTickers;
+renderHotTickers = function(data) {
+    _origRenderHotTickers(data);
+    _hotTickersDataForMovers = data;
+    renderTopMovers(data);
+    renderMarketBreadth(data);
+};
+
+function renderTopMovers(data) {
+    var gainersList = document.getElementById('gainers-list');
+    var losersList = document.getElementById('losers-list');
+    if (!gainersList || !losersList) return;
+    var tickers = (data && data.tickers) || [];
+    if (!tickers.length) {
+        gainersList.innerHTML = '<div class="text-muted" style="font-size:0.78rem;">数据不可用</div>';
+        losersList.innerHTML = '<div class="text-muted" style="font-size:0.78rem;">数据不可用</div>';
+        return;
+    }
+    var sorted = tickers.slice().sort(function(a, b) { return (b.change_pct || 0) - (a.change_pct || 0); });
+    var gainers = sorted.slice(0, 3);
+    var losers = sorted.slice(-3).reverse();
+
+    function renderMoverList(container, items, isGainer) {
+        container.innerHTML = '';
+        items.forEach(function(t) {
+            var pct = ((t.change_pct || 0) * 100).toFixed(2);
+            var div = document.createElement('div');
+            div.className = 'mover-item';
+            div.onclick = function() { window.location.href = '/stocks?ticker=' + t.symbol; };
+            div.innerHTML =
+                '<div><span class="mover-symbol">' + escapeHtml(t.symbol) + '</span> <span class="mover-name">' + escapeHtml(t.name || '') + '</span></div>' +
+                '<span class="mover-change" style="color:' + (isGainer ? 'var(--signal-buy)' : 'var(--signal-sell)') + ';">' +
+                    (isGainer ? '+' : '') + pct + '%</span>';
+            container.appendChild(div);
+        });
+    }
+
+    renderMoverList(gainersList, gainers, true);
+    renderMoverList(losersList, losers, false);
+}
+
+// ====== Market Breadth (from hot tickers) ======
+function renderMarketBreadth(data) {
+    var tickers = (data && data.tickers) || [];
+    var advEl = document.getElementById('breadth-advance');
+    var decEl = document.getElementById('breadth-decline');
+    var advLabel = document.getElementById('breadth-adv-label');
+    var decLabel = document.getElementById('breadth-dec-label');
+    if (!advEl || !decEl) return;
+    if (!tickers.length) return;
+    var advancing = 0, declining = 0;
+    tickers.forEach(function(t) {
+        if ((t.change_pct || 0) > 0) advancing++;
+        else if ((t.change_pct || 0) < 0) declining++;
+    });
+    var total = advancing + declining || 1;
+    var advPct = Math.round((advancing / total) * 100);
+    var decPct = 100 - advPct;
+    advEl.style.width = advPct + '%';
+    decEl.style.width = decPct + '%';
+    advEl.textContent = advancing + ' (' + advPct + '%)';
+    decEl.textContent = declining + ' (' + decPct + '%)';
+    if (advLabel) advLabel.textContent = '上涨: ' + advancing;
+    if (decLabel) decLabel.textContent = '下跌: ' + declining;
+}
+
+// ====== Augur Consensus Leaderboard ======
+function renderLeaderboard() {
+    var list = document.getElementById('leaderboard-list');
+    if (!list) return;
+    var recent = augurCache.getLast(10);
+    // Sort by score descending
+    var scored = recent.filter(function(item) { return item.result && typeof item.result.score === 'number'; });
+    scored.sort(function(a, b) { return (b.result.score || 0) - (a.result.score || 0); });
+    var top = scored.slice(0, 5);
+    if (!top.length) {
+        list.innerHTML = '<li class="leaderboard-item" style="justify-content:center;"><span class="text-muted" style="font-size:0.78rem;">尚无分析记录，去分析一只股票吧</span></li>';
+        return;
+    }
+    list.innerHTML = '';
+    top.forEach(function(item, idx) {
+        var signal = (item.result.signal || 'neutral').toLowerCase();
+        var signalLabel = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+        var badgeClass = signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral';
+        var li = document.createElement('li');
+        li.className = 'leaderboard-item';
+        li.onclick = function() { window.location.href = '/stocks?ticker=' + item.ticker; };
+        li.innerHTML =
+            '<span class="leaderboard-rank">#' + (idx + 1) + '</span>' +
+            '<span class="leaderboard-ticker">' + escapeHtml(item.ticker) + '</span>' +
+            '<span class="signal-badge ' + badgeClass + '">' + signalLabel + '</span>' +
+            '<span class="leaderboard-score">' + (item.result.score || 0).toFixed(1) + '/10</span>' +
+            '<span class="leaderboard-time">' + relativeTime(item.time) + '</span>';
         list.appendChild(li);
     });
 }

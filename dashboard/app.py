@@ -1814,6 +1814,100 @@ async def api_cron_run_now():
     }
 
 
+# ============ Sector Performance API Route ============
+
+@app.get("/api/sector-performance", summary="板块行情")
+async def api_sector_performance(request: Request, refresh: bool = False):
+    """板块ETF行情：XLK, XLV, XLF, XLE, XLY, XLP, XLI, XLU。
+
+    供首页「板块行情」面板使用。无 yfinance 时优雅降级为空列表。
+    """
+    if not _HAS_AUGUR_DATA:
+        return {
+            "status": "degraded",
+            "sectors": [],
+            "note": "yfinance 未安装，板块行情不可用。",
+        }
+
+    sector_etfs = [
+        ("XLK", "科技", "Technology"),
+        ("XLV", "医疗", "Healthcare"),
+        ("XLF", "金融", "Financials"),
+        ("XLE", "能源", "Energy"),
+        ("XLY", "可选消费", "Consumer Disc."),
+        ("XLP", "必需消费", "Consumer Staples"),
+        ("XLI", "工业", "Industrials"),
+        ("XLU", "公用事业", "Utilities"),
+        ("XLRE", "房地产", "Real Estate"),
+        ("XLB", "材料", "Materials"),
+        ("XLC", "通信", "Communication"),
+    ]
+
+    try:
+        import yfinance as yf
+
+        sectors = []
+        for symbol, cn_name, en_name in sector_etfs:
+            try:
+                tk = yf.Ticker(symbol)
+                fi = getattr(tk, "fast_info", None)
+                price = 0.0
+                prev = 0.0
+                if fi is not None:
+                    price = float(getattr(fi, "last_price", 0) or 0)
+                    prev = float(getattr(fi, "previous_close", 0) or 0)
+                if price <= 0 or prev <= 0:
+                    hist = tk.history(period="5d")
+                    if hist is not None and not hist.empty:
+                        closes = [c for c in hist["Close"].tolist() if c and c == c]
+                        if closes:
+                            price = price or float(closes[-1])
+                            prev = prev or (float(closes[-2]) if len(closes) >= 2 else float(closes[-1]))
+                change_pct = ((price - prev) / prev) if prev else 0.0
+                sectors.append({
+                    "symbol": symbol,
+                    "name": cn_name,
+                    "en_name": en_name,
+                    "price": round(price, 2),
+                    "change_pct": round(change_pct, 4),
+                })
+            except Exception as exc:
+                logger.debug("sector fetch failed for %s: %s", symbol, exc)
+                sectors.append({
+                    "symbol": symbol,
+                    "name": cn_name,
+                    "en_name": en_name,
+                    "price": 0,
+                    "change_pct": 0,
+                })
+
+        data = {
+            "status": "ok",
+            "sectors": sectors,
+            "as_of": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        }
+        # ETag support
+        data_json = json.dumps(data, sort_keys=True, default=str)
+        etag = hashlib.md5(data_json.encode()).hexdigest()
+        if_none_match = request.headers.get("if-none-match")
+        if if_none_match and if_none_match.strip('"') == etag:
+            return JSONResponse(status_code=304, content=None, headers={"ETag": f'"{etag}"'})
+        return JSONResponse(content=data, headers={"ETag": f'"{etag}"'})
+    except ImportError:
+        return {
+            "status": "degraded",
+            "sectors": [],
+            "note": "yfinance 未安装，板块行情不可用。",
+        }
+    except Exception as e:
+        logger.warning("sector performance failed: %s", e)
+        return {
+            "status": "degraded",
+            "sectors": [],
+            "note": f"板块行情获取失败: {e}",
+        }
+
+
 # ============ Main ============
 
 def main():

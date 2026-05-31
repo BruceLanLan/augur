@@ -562,6 +562,54 @@
         }
     });
 
+    // ====== Global Table Sorting Utility ======
+    function initSortableTable(tableId) {
+        var table = document.getElementById(tableId);
+        if (!table) return;
+        var headers = table.querySelectorAll('th[data-sort]');
+        headers.forEach(function(th) {
+            th.style.cursor = 'pointer';
+            th.style.userSelect = 'none';
+            th.addEventListener('click', function() {
+                var colIdx = Array.prototype.indexOf.call(th.parentNode.children, th);
+                var tbody = table.querySelector('tbody') || table;
+                var rows = Array.prototype.slice.call(tbody.querySelectorAll('tr'));
+                var isAsc = th.getAttribute('data-sort-dir') === 'asc';
+                // Remove indicators from all headers
+                headers.forEach(function(h) {
+                    h.removeAttribute('data-sort-dir');
+                    var ind = h.querySelector('.sort-indicator');
+                    if (ind) ind.remove();
+                });
+                // Set new direction
+                var dir = isAsc ? 'desc' : 'asc';
+                th.setAttribute('data-sort-dir', dir);
+                var indicator = document.createElement('span');
+                indicator.className = 'sort-indicator';
+                indicator.textContent = dir === 'asc' ? ' \u25B2' : ' \u25BC';
+                indicator.style.fontSize = '0.7em';
+                indicator.style.opacity = '0.7';
+                th.appendChild(indicator);
+                // Sort rows
+                rows.sort(function(a, b) {
+                    var aText = (a.children[colIdx] ? a.children[colIdx].textContent : '').trim();
+                    var bText = (b.children[colIdx] ? b.children[colIdx].textContent : '').trim();
+                    var aNum = parseFloat(aText.replace(/[^0-9.\-]/g, ''));
+                    var bNum = parseFloat(bText.replace(/[^0-9.\-]/g, ''));
+                    var isNumeric = !isNaN(aNum) && !isNaN(bNum) && aText !== '' && bText !== '';
+                    var cmp;
+                    if (isNumeric) {
+                        cmp = aNum - bNum;
+                    } else {
+                        cmp = aText.localeCompare(bText, undefined, {numeric: true});
+                    }
+                    return dir === 'asc' ? cmp : -cmp;
+                });
+                rows.forEach(function(row) { tbody.appendChild(row); });
+            });
+        });
+    }
+
     // Connection status - ping /health every 30s
     (function() {
         var statusDot = document.querySelector('.status-dot');
