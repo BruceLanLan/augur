@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Report visualization deep enhancement: investor style tags, key financial metrics panel, print styles, and copy-report-link button",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. In dashboard/templates/stocks.html, inside the buildScoreCards function, add an investor style tag for each agent. Create a JS mapping object: { buffett: '价值投资', munger: '价值投资', graham: '深度价值', fisher: '成长投资', cathie_wood: '颠覆创新', soros: '宏观对冲', dalio: '全天候', marks: '逆向投资', lynch: '成长价值', ackman: '激进价值', li_lu: '价值投资', duan_yongping: '本分价值', zhang_lei: '价值成长', dan_bin: '长期价值', dayu: '趋势交易', thiel: '垄断投资', aschenbrenner: 'AI超级周期', arps: '技术分析', serenity: '量化中性' }. Display as a small colored badge below the agent name in each score card.",
     "2. In dashboard/templates/stocks.html, add a renderKeyMetricsPanel(data) function that is called inside renderResults(). This panel appears at the top of the results section (before the consensus card) and shows: PE, PB, ROE, Gross Margin, Revenue Growth, Market Cap, Sector, Industry, 52-week range (if available from market_data in the API response). Style as a compact horizontal grid of metric boxes (Bloomberg data-strip style).",
@@ -21,5 +21,5 @@
     "python3 -m pytest tests/ -x -q"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 448 tests pass. Import check OK. Added AGENT_STYLE_MAP with 19 agents, renderKeyMetricsPanel function, copyReportLink function, and CSS for .sc-style-tag, .key-metrics-strip, .km-item, .km-label, .km-value plus enhanced @media print block."
 }

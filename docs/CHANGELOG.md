@@ -4,6 +4,31 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v7.3.1 (2026-06-01) — Dashboard 数据密度 & 报告深化
+
+### 📊 Dashboard Data Density
+
+- **热门标的实时行情**：首页新增 10 大热门股票/ETF 实时卡片（AAPL, NVDA, TSLA, MSFT, GOOGL, AMZN, BTC-USD, ETH-USD, META, AMD），展示价格与涨跌幅
+- **恐慌与贪婪指标**：基于 VIX 指数自动判断市场情绪（贪婪/中性/恐慌），辅以美元指数与美债收益率
+- **宏观经济快照**：黄金、原油、BTC 独立卡片 + 自动解读文字（避险需求/能源压力等）
+- **新增 /api/hot-tickers 端点**：10 大热门标的实时数据 API
+
+### 📈 Report Visualization Enhancement
+
+- **投资风格标签**：每位大师评分卡片增加风格标签（价值投资/成长投资/宏观对冲/技术分析等）
+- **关键财务指标面板**：报告头部展示 PE、PB、ROE、毛利率、市值等核心数据
+- **打印优化**：@media print 样式隐藏导航/侧边栏，防止卡片被分页截断
+- **复制报告链接**：一键生成带 ticker + 时间戳的分享 URL
+
+### 🎨 UX Polish
+
+- 首页板块重排：精选投资人移至数据源之前
+- 版本号统一升级至 v7.3.1
+- 所有页面 <title> 统一规范化
+- Sidebar footer 添加 "Powered by Augur" 标识
+
+---
+
 ## v7.3.0 (2026-06-01) — 公开发布版
 
 Dashboard 全面增强 + 报告可视化升级 + 多数据源链路 + 文档完善。

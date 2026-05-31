@@ -1,0 +1,34 @@
+{
+  "project_type": "Python FastAPI + Jinja2 web dashboard (Bloomberg terminal style)",
+  "language": "Python 3.9+",
+  "build_system": "pip install -e '.[data]' or pip install -r requirements.txt; no special build step",
+  "test_framework": "pytest in tests/ directory",
+  "build_command": "python3 -c \"from dashboard.app import app; print('OK')\"",
+  "test_command": "python3 -m pytest tests/ -x -q",
+  "verification_instructions": "1. Run import check: python3 -c 'from dashboard.app import app'. 2. Run tests: python3 -m pytest tests/ -x -q",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pip install -r requirements.txt (dependencies already installed in sandbox)",
+  "environment_constraints": "OPEN_INTERNET network mode. Python 3.9+ available. yfinance installed for real-time data. No Docker needed for validation.",
+  "contribution_requirements": "Commit to main branch directly. Commit messages in Chinese. No PR needed.",
+  "key_patterns": {
+    "templates": "dashboard/templates/ - Jinja2 HTML, extends base.html, uses {% block content %}",
+    "css": "dashboard/static/css/bloomberg.css - single CSS file with CSS variables, dark theme",
+    "api": "dashboard/app.py - FastAPI routes, /api/* for JSON, /* for HTML pages",
+    "data": "src/augur/data.py - fetch_market_overview() returns items with price/change_pct, fetch_market_context() for individual tickers",
+    "report": "src/augur/report.py - generate_report() returns markdown",
+    "js_in_templates": "All JS is inline in template {% block extra_scripts %}, no build step",
+    "version": "Currently v7.3.0 in app.py FastAPI title and base.html sidebar"
+  },
+  "relevant_files": [
+    "dashboard/templates/index.html",
+    "dashboard/templates/stocks.html",
+    "dashboard/templates/base.html",
+    "dashboard/static/css/bloomberg.css",
+    "dashboard/app.py",
+    "src/augur/data.py",
+    "README.md",
+    "README_EN.md",
+    "docs/CHANGELOG.md"
+  ],
+  "directory_structure": "dashboard/ (app.py, templates/, static/css/), src/augur/ (core logic), tests/ (pytest), docs/ (documentation)"
+}
