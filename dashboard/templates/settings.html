@@ -243,6 +243,27 @@
     </div>
 </div>
 
+<!-- Section C-2: API Authentication -->
+<div class="settings-section" id="section-api-auth">
+    <div class="settings-section-title">
+        <span>C-2. API 认证</span>
+        <span class="settings-section-desc">配置 API Token 以安全访问 Augur API (当服务器设置了 AUGUR_API_TOKEN 时需要)</span>
+    </div>
+
+    <div class="settings-api-row">
+        <div class="settings-api-info">
+            <div class="settings-api-name">API Token</div>
+            <div class="settings-api-desc">输入服务器配置的 AUGUR_API_TOKEN 值。保存后所有 API 请求将自动携带此 Token。</div>
+        </div>
+        <div class="settings-api-controls">
+            <input type="password" id="api-auth-token" class="api-key-input" placeholder="输入 API Token" autocomplete="off">
+            <button class="save-persona-btn" onclick="saveApiToken()">保存</button>
+            <button class="test-btn" onclick="testApiToken()">测试</button>
+        </div>
+        <div class="settings-api-status" id="api-auth-status"></div>
+    </div>
+</div>
+
 <!-- Section D: Export/Import Config -->
 <div class="settings-section" id="section-export">
     <div class="settings-section-title">
@@ -815,6 +836,63 @@ function runCronNow() {
 // Load cron config on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadCronConfig();
+    loadApiAuthStatus();
 });
+
+// ============ API Auth Token Functions ============
+
+function loadApiAuthStatus() {
+    var statusEl = document.getElementById('api-auth-status');
+    var token = localStorage.getItem('augur_api_token');
+    if (token) {
+        document.getElementById('api-auth-token').placeholder = '***已配置***';
+        statusEl.innerHTML = '<span style="color:var(--accent-green); font-size:0.75rem;">&#x2713; 已配置</span>';
+    } else {
+        statusEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">未配置</span>';
+    }
+}
+
+function saveApiToken() {
+    var token = document.getElementById('api-auth-token').value.trim();
+    if (!token) {
+        // Clear token
+        localStorage.removeItem('augur_api_token');
+        document.getElementById('api-auth-token').placeholder = '输入 API Token';
+        document.getElementById('api-auth-status').innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">未配置</span>';
+        showToast('API Token 已清除');
+        return;
+    }
+    localStorage.setItem('augur_api_token', token);
+    document.getElementById('api-auth-token').value = '';
+    document.getElementById('api-auth-token').placeholder = '***已配置***';
+    document.getElementById('api-auth-status').innerHTML = '<span style="color:var(--accent-green); font-size:0.75rem;">&#x2713; 已配置</span>';
+    showToast('API Token 已保存到浏览器');
+}
+
+function testApiToken() {
+    var statusEl = document.getElementById('api-auth-status');
+    statusEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">验证中...</span>';
+    var token = document.getElementById('api-auth-token').value.trim() || localStorage.getItem('augur_api_token') || '';
+    var headers = {};
+    if (token) {
+        headers['Authorization'] = 'Bearer ' + token;
+    }
+    fetch('/api/auth/verify', { headers: headers })
+    .then(function(r) { return r.json().then(function(d) { return {status: r.status, data: d}; }); })
+    .then(function(res) {
+        if (res.status === 200 && res.data.authenticated) {
+            var mode = res.data.mode === 'open' ? '(开放模式)' : '(Token验证通过)';
+            statusEl.innerHTML = '<span style="color:var(--accent-green); font-size:0.75rem;">&#x2713; 已连接 ' + mode + '</span>';
+            showToast('API 认证验证成功');
+        } else {
+            statusEl.innerHTML = '<span style="color:var(--accent-red); font-size:0.75rem;">&#x2717; ' + (res.data.detail || '验证失败') + '</span>';
+            showToast('API Token 验证失败', 'error');
+        }
+    })
+    .catch(function(err) {
+        statusEl.innerHTML = '<span style="color:var(--accent-red); font-size:0.75rem;">&#x2717; 请求失败</span>';
+        showToast('验证请求失败: ' + err.message, 'error');
+    });
+}
 </script>
 {% endblock %}
