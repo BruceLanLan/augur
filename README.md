@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v7.1.0](https://img.shields.io/badge/v7.1.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.2.0](https://img.shields.io/badge/v7.2.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -509,6 +509,33 @@ Dashboard 已支持热加载（保存 YAML 后同一进程立即可用）。CLI/
 ---
 
 ## 📋 Changelog
+
+### v7.2.0
+
+深度报告专业化 + 多数据源 + 关键交互修复（发布前质量加固）。
+
+#### 深度分析报告（专业多大师融合研报）
+- 报告全面重写：执行摘要改为中性的「投资委员会综合裁决」，**融合全部 18 位大师视角，不再偏向巴菲特单一框架**
+- 新增模块：评级卡（A-E 评级 + 共识强度）、一句话裁决、18 位大师评分总表（含流派/框架）、**分流派深度分析**（价值/成长/宏观风险/技术量化）、**多空辩论**（最看好 vs 最谨慎 3 位）、**分歧焦点**（最有价值部分：识别最大分歧维度）、共识与风险矩阵、仓位建议
+- 财务单位修正：ROE/毛利率/增长率正确显示为百分比，市值/FCF 正确换算（$X.XXB / 万亿）
+- 浮点精度与 Markdown 噪声清理；Dashboard 报告改为富 Markdown 渲染（标题/表格/列表）
+
+#### 数据源扩展与数据修复
+- 新增 `src/augur/datasources/` 数据源抽象层：**yfinance 优先 → Stooq 兜底 → 空 context**，消除单点故障
+- **修复严重数据污染 Bug**：yfinance 返回的 NaN 经 `x or 0` 兜底失效（NaN 为 truthy），会原样灌入所有指标导致 persona 评分错乱——新增 `safe_num()` 统一清洗 None/NaN/inf
+- 单位换算与持股比例裁剪修复
+
+#### 交互/UX 修复（解决"点击分析没反应/看不到报告"）
+- **修复前端 fetch 未检查 HTTP 状态码**：后端返回错误（限流/非法代码/500）时不再渲染虚假的"HOLD"空结果，而是显示明确错误
+- 新增首次使用引导横幅 + 一键示例（AAPL/NVDA/TSLA/MSFT，无需手填指标）
+- 加载状态分阶段进度文案 + 超时保护（不再无限转圈）
+- 「生成深度分析报告」从隐蔽小按钮提升为醒目主按钮；报告失败有内联错误 + 重试
+- 空状态友好引导、窄屏适配、错误信息可操作化
+
+#### 测试
+- 测试从 372 增至 448（新增数据源 33、报告增强、前端错误处理等）
+
+---
 
 ### v7.1.0
 
