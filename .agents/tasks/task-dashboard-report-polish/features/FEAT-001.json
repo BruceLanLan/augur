@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Environment setup and bug fix pass - install deps, verify all imports work, fix any discovered issues",
+  "status": "completed",
+  "steps": [
+    "Run: pip install -e '.[data]' to install the project with data dependencies",
+    "Run: python3 -c \"import augur; from augur.data import fetch_market_context, fetch_market_overview; from augur.datasources import default_providers; print('Core OK')\"",
+    "Run: python3 -c \"from dashboard.app import app; print('Dashboard OK')\"",
+    "If any import errors occur, fix them by reading the error traceback and patching the relevant source files",
+    "Run existing tests with: python3 -m pytest tests/ -x --timeout=30 -q to identify any failures",
+    "Fix any test failures that are related to import errors or missing modules"
+  ],
+  "acceptance_criteria": [
+    "pip install -e '.[data]' completes without error",
+    "All import checks pass without error",
+    "from dashboard.app import app succeeds"
+  ],
+  "verification": [
+    "pip install -e '.[data]'",
+    "python3 -c \"import augur; from augur.data import fetch_market_context, fetch_market_overview; from augur.datasources import default_providers; from dashboard.app import app; print('ALL OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": "All imports pass cleanly - no code fixes needed. pip install -e '.[data]' installs successfully. All 448 tests pass (pytest 5.73s). The workspace has uncommitted changes from other features but they do not break imports or tests."
+}
