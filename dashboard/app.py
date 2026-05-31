@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
     from fastapi import FastAPI, HTTPException, Request
-    from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+    from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, PlainTextResponse, Response
     from fastapi.templating import Jinja2Templates
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.staticfiles import StaticFiles
@@ -1154,6 +1154,26 @@ async def api_ic_leaderboard():
 @app.get("/health")
 async def health():
     return {"status": "ok", "agents": len(get_registry().get_all())}
+
+
+@app.get("/robots.txt", response_class=PlainTextResponse, summary="Robots.txt", include_in_schema=False)
+async def robots_txt():
+    return "User-agent: *\nAllow: /\nSitemap: https://augur.example.com/sitemap.xml\n"
+
+
+@app.get("/sitemap.xml", summary="Sitemap XML", include_in_schema=False)
+async def sitemap_xml():
+    base = "https://augur.example.com"
+    urls = ["/", "/stocks", "/personas", "/signals", "/scanner", "/backtest", "/settings", "/watchlist"]
+    xml_entries = "\n".join(
+        f"  <url><loc>{base}{u}</loc><changefreq>daily</changefreq></url>"
+        for u in urls
+    )
+    xml = f'''<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{xml_entries}
+</urlset>'''
+    return Response(content=xml, media_type="application/xml")
 
 
 @app.get("/api/health")
