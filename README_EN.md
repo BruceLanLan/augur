@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v7.4.0](https://img.shields.io/badge/v7.4.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.5.0](https://img.shields.io/badge/v7.5.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -23,6 +23,20 @@
 > **Would Buffett buy this stock?** What does Dalio think about macro risk? Is management "benfun" (principled) by Duan Yongping's standard?
 >
 > Stop guessing from one angle. Augur lets **18 legendary investors** independently analyze any stock, each producing a structured score, then aggregates them into a weighted consensus with Kelly position sizing.
+
+---
+
+## 🆕 v7.5.0 New Features
+
+| Feature | Description |
+|---------|-------------|
+| 🌐 i18n Internationalization | Chinese/English toggle, sidebar language switcher, localStorage persistence |
+| 🔍 Scanner | Batch scoring heatmap, preset ticker lists, parallel 18-master scoring |
+| 🔒 Security Hardening | IP rate limiting (30/min) / CORS middleware / input sanitization / API key masking |
+| ⚡ Performance | ETag + 304 conditional requests / ThreadPoolExecutor concurrent data fetching |
+| 🔔 Notifications | Telegram / Slack / Lark / WeChat test notifications + alert threshold config |
+| 📄 Report Download | One-click Markdown export, copy to clipboard |
+| 🤖 Single Agent Integration | MCP / REST / Python SDK access to individual persona agents (see [docs/single-persona-integration.md](docs/single-persona-integration.md)) |
 
 ---
 

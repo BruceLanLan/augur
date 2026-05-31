@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "docs",
   "description": "Version bump to v7.5.0 + comprehensive documentation update (README.md, README_EN.md, CHANGELOG, API reference)",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "1. Update version to 7.5.0 everywhere: pyproject.toml, src/augur/__init__.py, dashboard/app.py (FastAPI version + all 'v7.4.0' strings in code/templates).",
     "2. Update README.md: (a) Change version badge to v7.5.0. (b) Add new features section covering i18n, scanner, notifications, security, performance. (c) Update Dashboard preview ASCII art to include Scanner and new features. (d) Add section on single persona integration (brief, pointing to docs/single-persona-integration.md).",
