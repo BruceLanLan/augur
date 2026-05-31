@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v7.5.0](https://img.shields.io/badge/v7.5.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.6.0](https://img.shields.io/badge/v7.6.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -23,6 +23,19 @@
 > **巴菲特会买这只股吗？达利欧怎么看宏观风险？段永平觉得管理层够不够「本分」？**
 >
 > 别再一个维度猜了。Augur 让 **18位** 顶级投资人同时为你分析，每人给出独立评分，最终汇成一个带 Kelly 仓位建议的加权共识信号。
+
+---
+
+## 🆕 v7.6.0 新功能
+
+| 功能 | 说明 |
+|------|------|
+| 📋 自选股 Watchlist | 添加/删除自选股，localStorage 持久化，一键批量分析 |
+| 📈 迷你走势图 Sparkline | 7 日收盘价 SVG polyline，上涨绿/下跌红，首页 + 自选股 |
+| 📊 历史对比 | 同一标的不同时间分析结果对比表格，追踪预测变化 |
+| 📦 报告导出增强 | JSON 结构化导出 + CSV 大师评分导出（纯前端 Blob） |
+| 🔍 SEO & Open Graph | og:title/description/image + Twitter Card + robots.txt + sitemap.xml |
+| 🏷️ 代码质量 | data.py 全量 type hints + docstrings，app.py OpenAPI summary，py.typed |
 
 ---
 

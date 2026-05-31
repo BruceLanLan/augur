@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v7.5.0](https://img.shields.io/badge/v7.5.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.6.0](https://img.shields.io/badge/v7.6.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -23,6 +23,19 @@
 > **Would Buffett buy this stock?** What does Dalio think about macro risk? Is management "benfun" (principled) by Duan Yongping's standard?
 >
 > Stop guessing from one angle. Augur lets **18 legendary investors** independently analyze any stock, each producing a structured score, then aggregates them into a weighted consensus with Kelly position sizing.
+
+---
+
+## 🆕 v7.6.0 New Features
+
+| Feature | Description |
+|---------|-------------|
+| 📋 Watchlist | Add/remove tickers, localStorage persistence, batch analyze all |
+| 📈 Sparkline Charts | 7-day close price SVG polyline, green for up / red for down |
+| 📊 Historical Comparison | Compare analysis results for same ticker over time |
+| 📦 Enhanced Export | JSON structured export + CSV master scores (pure frontend Blob) |
+| 🔍 SEO & Open Graph | og:title/description/image + Twitter Card + robots.txt + sitemap.xml |
+| 🏷️ Code Quality | Full type hints + docstrings in data.py, OpenAPI summaries, py.typed |
 
 ---
 
