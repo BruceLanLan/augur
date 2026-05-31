@@ -1540,3 +1540,153 @@ kbd {
 .btn, .ticker-btn, .preset-btn, .filter-tag, .nav-link {
     touch-action: manipulation;
 }
+
+
+/* ============================================
+   v6.2 UX Onboarding & Deep Report Rendering
+   ============================================ */
+
+/* --- Rendered Markdown report (deep analysis) --- */
+.md-report {
+    font-size: 0.86rem;
+    line-height: 1.75;
+    color: var(--text-primary);
+}
+.md-report .md-h {
+    color: var(--accent-orange);
+    line-height: 1.4;
+    margin: 1.4em 0 0.6em;
+}
+.md-report .md-h1 { font-size: 1.35rem; border-bottom: 2px solid var(--border-color); padding-bottom: 0.3em; }
+.md-report .md-h2 { font-size: 1.12rem; }
+.md-report .md-h3 { font-size: 1rem; color: #ffaa33; }
+.md-report .md-h4 { font-size: 0.9rem; color: var(--text-secondary); text-transform: none; }
+.md-report .md-h1:first-child { margin-top: 0; }
+.md-report .md-p { margin: 0.6em 0; }
+.md-report .md-ul, .md-report .md-ol { margin: 0.5em 0; padding-left: 1.4em; }
+.md-report .md-ul li, .md-report .md-ol li { margin: 0.25em 0; }
+.md-report .md-hr { border: none; border-top: 1px solid var(--border-color); margin: 1.4em 0; }
+.md-report .md-quote {
+    border-left: 3px solid var(--accent-orange);
+    background: rgba(255, 140, 0, 0.06);
+    margin: 0.8em 0;
+    padding: 8px 14px;
+    color: var(--text-secondary);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.md-report .md-code {
+    font-family: var(--font-data);
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 0.82em;
+    color: var(--accent-orange);
+}
+.md-report .md-table-wrap { overflow-x: auto; margin: 0.9em 0; -webkit-overflow-scrolling: touch; }
+.md-report .md-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.8rem;
+    min-width: 360px;
+}
+.md-report .md-table th,
+.md-report .md-table td {
+    border: 1px solid var(--border-color);
+    padding: 7px 10px;
+    text-align: left;
+    vertical-align: top;
+}
+.md-report .md-table th {
+    background: var(--bg-primary);
+    color: var(--accent-orange);
+    font-weight: 600;
+    white-space: nowrap;
+}
+.md-report .md-table tr:nth-child(even) td { background: rgba(255, 255, 255, 0.015); }
+
+/* --- Onboarding banner (first-run guidance) --- */
+.onboard-banner {
+    background: linear-gradient(135deg, rgba(255,140,0,0.08), rgba(255,140,0,0.02));
+    border: 1px solid rgba(255, 140, 0, 0.25);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+.onboard-banner .onboard-icon { font-size: 1.3rem; line-height: 1.4; flex-shrink: 0; }
+.onboard-banner .onboard-body { flex: 1; min-width: 0; }
+.onboard-banner .onboard-title { font-weight: 600; font-size: 0.9rem; color: var(--text-primary); margin-bottom: 2px; }
+.onboard-banner .onboard-desc { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.6; }
+.onboard-banner .onboard-close {
+    background: none; border: none; color: var(--text-muted);
+    cursor: pointer; font-size: 1.1rem; line-height: 1; padding: 0 4px; flex-shrink: 0;
+}
+.onboard-banner .onboard-close:hover { color: var(--accent-orange); }
+
+/* --- Example ticker chips (one-click try) --- */
+.example-chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center; }
+.example-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-family: var(--font-data);
+    font-weight: 600;
+    font-size: 0.85rem;
+    background: var(--bg-card);
+    border: 1px solid var(--accent-orange);
+    border-radius: 20px;
+    color: var(--accent-orange);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.example-chip:hover {
+    background: var(--accent-orange);
+    color: #000;
+    transform: translateY(-1px);
+}
+.example-chip .chip-tag { font-family: var(--font-ui); font-weight: 400; font-size: 0.72rem; opacity: 0.8; }
+
+/* --- Prominent "deep report" call-to-action --- */
+.btn-report-cta {
+    background: rgba(255, 140, 0, 0.12);
+    border: 1px solid var(--accent-orange);
+    color: var(--accent-orange);
+    font-weight: 600;
+}
+.btn-report-cta:hover {
+    background: var(--accent-orange);
+    color: #000;
+}
+
+/* --- Inline action hint --- */
+.action-hint {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+}
+
+/* --- Report inline loading --- */
+.report-loading {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px;
+    color: var(--accent-orange);
+    font-family: var(--font-data);
+    font-size: 0.85rem;
+}
+
+/* --- Field unit hint --- */
+.unit-hint { color: var(--text-muted); font-size: 0.92em; font-weight: 400; }
+
+/* --- Mobile: deep report tables stay readable --- */
+@media (max-width: 768px) {
+    .md-report { font-size: 0.82rem; }
+    .md-report .md-h1 { font-size: 1.15rem; }
+    .md-report .md-h2 { font-size: 1rem; }
+    .example-chip { padding: 10px 18px; min-height: 44px; }
+}

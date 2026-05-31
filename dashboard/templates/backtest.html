@@ -31,6 +31,18 @@
     <p style="color: var(--text-secondary); margin-top: 1rem;">正在回测 18 位投资大师...</p>
 </div>
 
+<!-- Initial guidance (hidden after first run) -->
+<div id="bt-empty" class="card" style="margin-bottom:1.5rem;">
+    <div class="empty-state" style="padding:36px 24px;">
+        <div class="empty-state-icon">&#x1F4C8;</div>
+        <div class="empty-state-title">还没有回测结果</div>
+        <div class="empty-state-desc">
+            回测会用历史价格检验 18 位大师过往信号的有效性（IC 信息系数、命中率）。
+            选择股票与天数后，点击右上方<strong style="color:var(--accent-orange);">「运行回测」</strong>即可查看排行榜。
+        </div>
+    </div>
+</div>
+
 <!-- Result Banner -->
 <div id="bt-banner" class="card" style="display: none; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-green);">
     <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
@@ -102,7 +114,8 @@
 }
 .form-input:focus {
     outline: none;
-    border-color: var(--accent-blue, #4fc3f7);
+    border-color: var(--accent-orange, #ff8c00);
+    box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.15);
 }
 .form-range {
     width: 100%;
@@ -119,7 +132,7 @@
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    background: var(--accent-blue, #4fc3f7);
+    background: var(--accent-orange, #ff8c00);
     cursor: pointer;
 }
 /* Use global bloomberg.css .btn-primary (orange theme) — no local override */
@@ -177,7 +190,7 @@
     width: 32px;
     height: 32px;
     border: 3px solid var(--border-color, #2a2a3e);
-    border-top-color: var(--accent-blue, #4fc3f7);
+    border-top-color: var(--accent-orange, #ff8c00);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
     margin: 0 auto;
@@ -208,21 +221,26 @@ async function runBacktest() {
     // Show loading
     btn.disabled = true;
     btn.textContent = '回测中...';
+    var emptyEl = document.getElementById('bt-empty');
+    if (emptyEl) emptyEl.style.display = 'none';
     document.getElementById('bt-loading').style.display = 'block';
     document.getElementById('bt-banner').style.display = 'none';
     document.getElementById('bt-leaderboard').style.display = 'none';
 
     try {
-        var resp = await fetch('/api/backtest/run?ticker=' + encodeURIComponent(ticker) + '&days=' + days);
+        var resp = await fetchWithTimeout('/api/backtest/run?ticker=' + encodeURIComponent(ticker) + '&days=' + days, {}, 120000);
         var data = await resp.json();
 
         if (data.status === 'ok') {
             renderResults(data);
         } else {
             showToast('回测失败: ' + (data.detail || 'unknown error'), 'error');
+            if (emptyEl) emptyEl.style.display = 'block';
         }
     } catch (e) {
-        showToast('请求失败: ' + e.message, 'error');
+        var msg = (e && e.name === 'AbortError') ? '回测超时（超过 120 秒），请稍后重试。' : '请求失败: ' + e.message;
+        showToast(msg, 'error');
+        if (emptyEl) emptyEl.style.display = 'block';
     } finally {
         btn.disabled = false;
         btn.textContent = '运行回测';
