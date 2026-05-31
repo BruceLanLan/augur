@@ -2,21 +2,30 @@
 """
 augur.data - 实时股票数据获取
 
-Provides MarketContext from live data via yfinance.
+Provides MarketContext from live data via a multi-source provider chain.
 Supports: US stocks, HK stocks, A-shares (via suffix).
+
+数据源链 (多数据源 fallback, 消除单点故障):
+    1. yfinance  - 主数据源（基本面 + 行情 + 技术指标）
+    2. stooq     - 备用行情数据源（免费 CSV，yfinance 失败时降级）
+    全部失败时返回带 ``data_source="none"`` 标记的空 MarketContext。
 
 Usage:
     from augur.data import fetch_market_context, fetch_history
 
     ctx = fetch_market_context("AAPL")  # Returns MarketContext with real data
     history = fetch_history("AAPL", period="1y")  # Historical prices
+
+向后兼容: ``fetch_market_context(ticker, force_refresh=False)`` 签名与行为不变，
+仅内部改为走 provider 链。
 """
 
 import logging
 import re
 import threading
 import time
-from typing import Dict, List, Optional, Any
+from dataclasses import fields as _dataclass_fields
+from typing import Any, Dict, List, Optional
 
 from augur.personas.base import MarketContext
 
@@ -96,11 +105,75 @@ def _get_yfinance() -> Any:
         )
 
 
+# ============ Provider Chain ============
+
+_providers_lock = threading.Lock()
+_providers_cache: Optional[List[Any]] = None
+
+
+def _get_providers() -> List[Any]:
+    """返回（并缓存）默认 provider 链：yfinance 优先，stooq 兜底。
+
+    provider 无状态（yfinance loader 在调用时按属性解析），可安全复用。
+    测试可通过 patch 本函数注入 mock provider 链。
+    """
+    global _providers_cache
+    with _providers_lock:
+        if _providers_cache is None:
+            from augur.datasources import default_providers
+            _providers_cache = default_providers()
+        return _providers_cache
+
+
+def _market_context_field_names() -> set:
+    """MarketContext 的合法字段名集合，用于过滤 provider 返回的字典。"""
+    return {f.name for f in _dataclass_fields(MarketContext)}
+
+
+def _build_context_from_providers(ticker: str) -> MarketContext:
+    """按 provider 链顺序尝试获取数据并构建 MarketContext。
+
+    - 第一个成功返回非空字典的 provider 胜出。
+    - 全部失败时返回仅含 ticker 的空 context，并标记 ``data_source="none"``。
+    - 返回的 context 上附带动态属性 ``data_source`` 标记来源（不修改 MarketContext 定义）。
+    """
+    valid_fields = _market_context_field_names()
+    upper = ticker.upper()
+
+    for provider in _get_providers():
+        name = getattr(provider, "name", provider.__class__.__name__)
+        try:
+            raw = provider.fetch(ticker)
+        except Exception as exc:
+            logger.warning("data provider '%s' failed for %s: %s", name, ticker, exc)
+            continue
+        if not raw:
+            logger.warning("data provider '%s' returned empty data for %s", name, ticker)
+            continue
+
+        source = raw.pop("data_source", name)
+        # 仅保留 MarketContext 合法字段，避免未知键导致 TypeError
+        kwargs = {k: v for k, v in raw.items() if k in valid_fields and k != "ticker"}
+        ctx = MarketContext(ticker=upper, **kwargs)
+        setattr(ctx, "data_source", source)
+        return ctx
+
+    # 所有数据源均失败：返回空 context，但带来源标记，便于下游识别“无数据”状态
+    logger.warning("all data providers failed for %s; returning empty context", ticker)
+    ctx = MarketContext(ticker=upper)
+    setattr(ctx, "data_source", "none")
+    return ctx
+
+
 # ============ Public API ============
 
 def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketContext:
     """
     Fetch real-time data for a ticker and return a populated MarketContext.
+
+    内部走 provider 链（yfinance -> stooq -> 空 context），对调用方完全透明。
+    返回的 MarketContext 带有动态属性 ``data_source``，标记实际命中的数据源
+    （"yfinance" / "stooq" / "none"）。
 
     Supports:
     - US stocks: AAPL, NVDA, TSLA
@@ -122,139 +195,31 @@ def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketCont
         if cached is not None:
             return cached
 
-    yf = _get_yfinance()
-    stock = yf.Ticker(ticker)
-
-    try:
-        info = stock.info or {}
-    except Exception:
-        info = {}
-
-    # If info is empty or missing 'symbol', we have no valid data from yfinance.
-    # Return a minimal MarketContext with just the ticker and zero defaults.
-    if not info or "symbol" not in info:
-        ctx = MarketContext(ticker=ticker.upper())
-        _cache_set(cache_key, ctx)
-        return ctx
-
-    # Map yfinance info to MarketContext fields
-    price = info.get("currentPrice") or info.get("regularMarketPrice", 0) or 0
-    pe = info.get("trailingPE", 0) or 0
-    pb = info.get("priceToBook", 0) or 0
-    ps = info.get("priceToSalesTrailing12Months", 0) or 0
-    roe = info.get("returnOnEquity", 0) or 0
-    gross_margins = info.get("grossMargins", 0) or 0
-    operating_margins = info.get("operatingMargins", 0) or 0
-    revenue_growth = info.get("revenueGrowth", 0) or 0
-    earnings_growth = info.get("earningsGrowth", 0) or 0
-    debt_to_equity = info.get("debtToEquity", 0) or 0
-    # yfinance debtToEquity is D/E percentage (e.g. 162 means D/E = 1.62)
-    # Convert to debt ratio (D/A = D/E / (1 + D/E))
-    # Guard: negative or zero debt_to_equity (negative shareholder equity) is invalid
-    # for this formula; de_ratio of -1.0 would cause ZeroDivisionError.
-    if debt_to_equity > 0:
-        de_ratio = debt_to_equity / 100.0  # D/E as decimal
-        debt_ratio = de_ratio / (1.0 + de_ratio)   # D/A = D/E / (1 + D/E)
-    else:
-        debt_ratio = 0
-    fcf = (info.get("freeCashflow", 0) or 0) / 1e9         # raw USD → billions
-    market_cap = (info.get("marketCap", 0) or 0) / 1e9    # raw USD → billions
-    revenue = (info.get("totalRevenue", 0) or 0) / 1e9    # raw USD → billions
-    current_ratio = info.get("currentRatio", 0) or 0
-    quick_ratio = info.get("quickRatio", 0) or 0
-    sector = info.get("sector", "") or ""
-    industry = info.get("industry", "") or ""
-
-    # Ownership data (yfinance returns as fraction 0-1, convert to percentage 0-100)
-    institutional_ownership = (info.get("heldPercentInstitutions", 0) or 0) * 100
-    insider_ownership = (info.get("heldPercentInsiders", 0) or 0) * 100
-
-    # Short interest as fraction of float (0-1), e.g. 0.05 = 5% short
-    short_interest = info.get("shortPercentOfFloat", 0) or 0
-
-    # Beta
-    beta_1y = info.get("beta", 1.0) or 1.0
-
-    # 52-week high/low distance
-    fifty_two_high = info.get("fiftyTwoWeekHigh", 0) or 0
-    fifty_two_low = info.get("fiftyTwoWeekLow", 0) or 0
-    price_vs_52w_high = ((price / fifty_two_high) - 1) * 100 if fifty_two_high and price else 0
-    price_vs_52w_low = ((price / fifty_two_low) - 1) * 100 if fifty_two_low and price else 0
-
-    # Calculate technical indicators from price history
-    technicals = {}
-    try:
-        hist = stock.history(period="3mo")
-        if hist is not None and not hist.empty:
-            closes = hist["Close"].tolist()
-            technicals = _calculate_technicals_from_prices(closes)
-    except Exception:
-        pass
-
-    rsi = technicals.get("rsi", 50)
-    macd = technicals.get("macd", 0)
-    macd_signal = technicals.get("macd_signal", 0)
-    macd_histogram = technicals.get("macd_histogram", 0)
-    sma20 = technicals.get("sma20", 0)
-    sma50 = technicals.get("sma50", 0)
-    atr = technicals.get("atr", 0)
-    volatility_20d = technicals.get("volatility_20d", 0)
-
-    ctx = MarketContext(
-        ticker=ticker.upper(),
-        price=price,
-        pe=pe,
-        pb=pb,
-        ps=ps,
-        roe=roe,
-        gross_margins=gross_margins,
-        operating_margins=operating_margins,
-        revenue_growth=revenue_growth,
-        earnings_growth=earnings_growth,
-        debt_ratio=debt_ratio,
-        fcf=fcf,
-        market_cap=market_cap,
-        current_ratio=current_ratio,
-        sector=sector,
-        industry=industry,
-        revenue=revenue,
-        quick_ratio=quick_ratio,
-        institutional_ownership=institutional_ownership,
-        insider_ownership=insider_ownership,
-        short_interest=short_interest,
-        beta_1y=beta_1y,
-        price_vs_52w_high=price_vs_52w_high,
-        price_vs_52w_low=price_vs_52w_low,
-        rsi=rsi,
-        macd=macd,
-        macd_signal=macd_signal,
-        macd_histogram=macd_histogram,
-        sma20=sma20,
-        sma50=sma50,
-        atr=atr,
-        volatility_20d=volatility_20d,
-    )
-
+    ctx = _build_context_from_providers(ticker)
     _cache_set(cache_key, ctx)
     return ctx
 
 
-def fetch_history(ticker: str, period: str = "1y") -> List[Dict]:
+def fetch_history(ticker: str, period: str = "1y", force_refresh: bool = False) -> List[Dict]:
     """
     Fetch historical price data.
 
     Args:
         ticker: Stock symbol (e.g. AAPL, 0700.HK, 600519.SS)
         period: Data period (1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, max)
+        force_refresh: If True, bypass the cache and fetch fresh data
 
     Returns:
         List of {date, open, high, low, close, volume, change_pct}
     """
+    from augur.datasources.base import safe_num
+
     ticker = _normalize_ticker(ticker)
     cache_key = f"hist:{ticker}:{period}"
-    cached = _cache_get(cache_key)
-    if cached is not None:
-        return cached
+    if not force_refresh:
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached
 
     yf = _get_yfinance()
     stock = yf.Ticker(ticker)
@@ -270,7 +235,8 @@ def fetch_history(ticker: str, period: str = "1y") -> List[Dict]:
     results = []
     prev_close = None
     for date_idx, row in hist.iterrows():
-        close = float(row.get("Close", 0))
+        # safe_num 防止 yfinance 偶发的 NaN 行污染历史序列
+        close = safe_num(row.get("Close", 0))
         change_pct = 0.0
         if prev_close and prev_close > 0:
             change_pct = (close - prev_close) / prev_close
@@ -278,11 +244,11 @@ def fetch_history(ticker: str, period: str = "1y") -> List[Dict]:
 
         results.append({
             "date": date_idx.strftime("%Y-%m-%d"),
-            "open": round(float(row.get("Open", 0)), 4),
-            "high": round(float(row.get("High", 0)), 4),
-            "low": round(float(row.get("Low", 0)), 4),
+            "open": round(safe_num(row.get("Open", 0)), 4),
+            "high": round(safe_num(row.get("High", 0)), 4),
+            "low": round(safe_num(row.get("Low", 0)), 4),
             "close": round(close, 4),
-            "volume": int(row.get("Volume", 0)),
+            "volume": int(safe_num(row.get("Volume", 0))),
             "change_pct": round(change_pct, 6),
         })
 
