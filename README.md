@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v7.3.1](https://img.shields.io/badge/v7.3.1-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.4.0](https://img.shields.io/badge/v7.4.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -74,6 +74,44 @@ augur report TSLA          # 生成深度分析报告
 python3 -m dashboard.app   # 启动 Bloomberg 风格 Dashboard
 # → 浏览器打开 http://localhost:8000
 ```
+
+---
+
+## 📸 Dashboard 预览
+
+> *完整截图待补充 (Coming Soon)*
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  🦉 Augur Dashboard                                         │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  AUGUR - 输入股票代码，一键获得18位大师共识         │    │
+│  │  [AAPL] [NVDA] [TSLA] [MSFT] [GOOGL] [BTC-USD]    │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                             │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌──────────┐      │
+│  │ S&P 500  │ │ NASDAQ   │ │ VIX      │ │ BTC      │      │
+│  │ +0.52%   │ │ +0.81%   │ │ 15.2     │ │ +1.2%    │      │
+│  └──────────┘ └──────────┘ └──────────┘ └──────────┘      │
+│                                                             │
+│  ┌─────────────────────────────────────────────────────┐    │
+│  │  恐慌与贪婪指标    │    宏观经济快照                │    │
+│  │  VIX: 15.2 偏贪婪  │    黄金 / 原油 / BTC         │    │
+│  └─────────────────────────────────────────────────────┘    │
+│                                                             │
+│  精选投资人: [Buffett] [Graham] [Cathie Wood] [段永平]      │
+│  18位大师 × 4大流派 × 实时数据 → 一键共识                   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+Dashboard 功能亮点：
+- 🌐 **全球市场总览** — 实时追踪 S&P 500、纳斯达克、恒生、沪深300、VIX、美债、黄金、原油、BTC
+- 🔥 **热门标的** — 10 大科技/加密标的实时价格与涨跌
+- 😱 **恐慌贪婪指标** — 基于 VIX 自动判断市场情绪
+- 🎴 **投资大师卡片** — 18 位大师按流派分类，一键分析
+- 🌗 **深色/浅色主题** — 一键切换，偏好自动记忆
+- 📊 **深度报告** — 支持 Markdown/PDF 下载
 
 ---
 
