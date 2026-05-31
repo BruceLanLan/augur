@@ -1004,12 +1004,16 @@ function copyReport() {
 function downloadReport() {
     var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase() || 'report';
     if (lastReportMarkdown) {
+        var date = new Date().toISOString().slice(0,10);
+        var filename = ticker + '_augur_report_' + date + '.md';
         var blob = new Blob([lastReportMarkdown], {type: 'text/markdown;charset=utf-8'});
         var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
         a.href = url;
-        a.download = ticker + '-深度分析报告.md';
+        a.download = filename;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
         showToast('报告已下载');
     } else {

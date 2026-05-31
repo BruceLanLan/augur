@@ -1,6 +1,99 @@
-# 单个投资人 Agent 接入指南（Hermes / Open Claw）
+# 单个投资人 Agent 接入指南 / Single Persona Integration Guide
 
-> 你完全可以**只挑选自己喜欢的某一位投资大师**（比如巴菲特、段永平、大宇/dayu、查理芒格等），把他单独接入到你自己的 Hermes Agent 或 Open Claw，而**不必引入全部 18 位**。本文给出三种真实可用的接入方式，每种都有可复制的命令与配置示例。
+> **中文** | [English below](#english-version)
+
+> 你完全可以**只挑选自己喜欢的某一位投资大师**（比如巴菲特、段永平、大宇/dayu、查理芒格等），把他单独接入到你自己的 Hermes Agent 或 Open Claw，而**不必引入全部 18 位**。本文给出多种真实可用的接入方式，每种都有可复制的命令与配置示例。
+
+---
+
+## 零、直接 Python API 调用（最简单）
+
+如果你只是想在自己的 Python 项目中调用某位投资人的分析逻辑，无需启动任何服务：
+
+```python
+from augur.registry import AgentRegistry
+from augur.personas.base import MarketContext
+
+# 初始化注册表，获取单个投资人
+registry = AgentRegistry()
+buffett = registry.get("buffett")  # 或 "dayu", "duan_yongping" 等
+
+# 构造市场数据上下文
+ctx = MarketContext(
+    ticker="AAPL",
+    price=210.0,
+    pe=32.0,
+    pb=48.0,
+    gross_margins=0.46,
+    roe=0.55,
+    revenue_growth=0.08,
+    market_cap=3200,  # billions
+    sector="Technology",
+    industry="Consumer Electronics",
+)
+
+# 执行单 Agent 分析
+result = buffett.analyze(ctx)
+
+print(f"Signal: {result.signal.value}")    # bullish / neutral / bearish
+print(f"Score:  {result.score}/10")
+print(f"Confidence: {result.confidence}")
+print(f"Reasoning: {result.reasoning}")
+print(f"Key Findings: {result.key_findings}")
+print(f"Risks: {result.risks}")
+```
+
+**自动获取实时数据**（需安装 `pip install -e '.[data]'`）：
+
+```python
+from augur.data import fetch_market_context
+from augur.registry import AgentRegistry
+
+registry = AgentRegistry()
+dayu = registry.get("dayu")
+
+# 自动从 yfinance 获取实时数据
+ctx = fetch_market_context("BTC-USD")
+result = dayu.analyze(ctx)
+print(f"大宇观点: {result.signal.value} ({result.score}/10)")
+```
+
+---
+
+## 零-B、REST API 单人格调用
+
+启动 Augur Dashboard 后，可通过 HTTP 接口调用单个投资人：
+
+```bash
+# 启动服务
+python -m dashboard.app --port 8000
+```
+
+**获取单个投资人信息：**
+```bash
+GET /api/persona/buffett
+```
+
+**使用全部 18 位分析（包含单人格结果）：**
+```bash
+GET /api/analyze/AAPL
+# 返回 JSON 中 agents 数组包含每位投资人的独立评分
+```
+
+**提取单人格结果示例（Python）：**
+```python
+import requests
+
+resp = requests.get("http://localhost:8000/api/analyze/AAPL")
+data = resp.json()
+
+# 从 agents 数组中筛选出巴菲特的结果
+buffett_result = next(
+    (a for a in data["agents"] if a["agent_id"] == "buffett"), None
+)
+if buffett_result:
+    print(f"Buffett: {buffett_result['signal']} ({buffett_result['score']}/10)")
+```
 
 ---
 
@@ -315,3 +408,282 @@ CLI / MCP 会直接报 `Persona '<id>' not found` 并列出全部可用 id。用
 ---
 
 *相关文档：[agent-integration-guide.md](agent-integration-guide.md)（整体接入引导）、[hermes-setup-guide.md](hermes-setup-guide.md)（Hermes 完整配置）。仅供学习研究，不构成投资建议。*
+
+---
+
+## 五、MCP 配置示例（Claude Desktop / Hermes）
+
+### Claude Desktop 配置
+
+在 `~/Library/Application Support/Claude/claude_desktop_config.json`（macOS）或 `%APPDATA%\Claude\claude_desktop_config.json`（Windows）中添加：
+
+```json
+{
+  "mcpServers": {
+    "augur": {
+      "command": "python",
+      "args": ["-m", "augur.mcp_server"],
+      "env": {
+        "AUGUR_DEFAULT_PERSONA": "buffett"
+      }
+    }
+  }
+}
+```
+
+如果使用虚拟环境：
+
+```json
+{
+  "mcpServers": {
+    "augur": {
+      "command": "/path/to/augur/.venv/bin/python",
+      "args": ["-m", "augur.mcp_server"],
+      "env": {
+        "AUGUR_DEFAULT_PERSONA": "buffett"
+      }
+    }
+  }
+}
+```
+
+### Hermes MCP 配置
+
+```yaml
+# ~/.hermes/config.yaml
+mcp_servers:
+  augur:
+    command: /path/to/augur/.venv/bin/augur
+    args: [mcp-server]
+    description: "Augur single-persona analysis (default: buffett)"
+    env:
+      AUGUR_DEFAULT_PERSONA: buffett
+```
+
+---
+
+## 六、自定义 Wrapper 示例（Open Claw / 其他框架）
+
+如果你使用 Open Claw 或其他 Agent 框架，可以创建一个简单的 wrapper：
+
+```python
+"""
+augur_wrapper.py - 将 Augur 单个投资人封装为工具函数
+适用于 Open Claw、LangChain、AutoGen 等框架
+"""
+from augur.registry import AgentRegistry
+from augur.personas.base import MarketContext
+
+class AugurPersonaTool:
+    """封装单个 Augur 投资人为可调用的工具。"""
+
+    def __init__(self, persona_id: str = "buffett"):
+        self.registry = AgentRegistry()
+        self.agent = self.registry.get(persona_id)
+        if not self.agent:
+            raise ValueError(f"Persona '{persona_id}' not found")
+        self.persona_id = persona_id
+
+    def analyze(self, ticker: str, **kwargs) -> dict:
+        """分析标的，返回结构化结果。"""
+        # 尝试自动获取数据
+        try:
+            from augur.data import fetch_market_context
+            ctx = fetch_market_context(ticker)
+        except (ImportError, Exception):
+            ctx = MarketContext(ticker=ticker.upper(), **kwargs)
+
+        result = self.agent.analyze(ctx)
+        return {
+            "persona": self.persona_id,
+            "ticker": ticker.upper(),
+            "signal": result.signal.value,
+            "score": round(result.score, 1),
+            "confidence": round(result.confidence, 2),
+            "reasoning": result.reasoning,
+            "key_findings": result.key_findings,
+            "risks": result.risks,
+        }
+
+    @property
+    def description(self) -> str:
+        return f"Augur {self.agent.name} - {self.agent.identity[:100]}"
+
+
+# === 用法示例 ===
+if __name__ == "__main__":
+    # 创建巴菲特工具
+    buffett_tool = AugurPersonaTool("buffett")
+    result = buffett_tool.analyze("AAPL")
+    print(result)
+
+    # 创建大宇工具
+    dayu_tool = AugurPersonaTool("dayu")
+    result = dayu_tool.analyze("BTC-USD")
+    print(result)
+```
+
+### Open Claw 注册示例
+
+```python
+from augur_wrapper import AugurPersonaTool
+
+# 注册为 Open Claw 工具
+tools = [
+    {
+        "name": "buffett_analyze",
+        "description": "使用巴菲特价值投资框架分析股票",
+        "function": AugurPersonaTool("buffett").analyze,
+        "parameters": {
+            "ticker": {"type": "string", "description": "Stock ticker symbol"}
+        }
+    }
+]
+```
+
+### LangChain Tool 示例
+
+```python
+from langchain.tools import tool
+from augur_wrapper import AugurPersonaTool
+
+buffett = AugurPersonaTool("buffett")
+
+@tool
+def buffett_analyze(ticker: str) -> str:
+    """使用巴菲特价值投资框架分析指定股票。"""
+    result = buffett.analyze(ticker)
+    return f"Signal: {result['signal']}, Score: {result['score']}/10\n{result['reasoning']}"
+```
+
+---
+
+<a id="english-version"></a>
+
+# English Version: Single Persona Integration Guide
+
+> You can pick **just one investment master** (e.g., Buffett, Dayu, Duan Yongping, Munger) and integrate only that persona into your Hermes Agent, Open Claw, or any custom system -- without pulling in all 18 masters. This guide provides multiple integration methods with copy-paste examples.
+
+## Direct Python API (Simplest)
+
+```python
+from augur.registry import AgentRegistry
+from augur.personas.base import MarketContext
+
+registry = AgentRegistry()
+buffett = registry.get("buffett")  # or "dayu", "duan_yongping", etc.
+
+ctx = MarketContext(
+    ticker="AAPL",
+    price=210.0,
+    pe=32.0,
+    gross_margins=0.46,
+    roe=0.55,
+    sector="Technology",
+)
+
+result = buffett.analyze(ctx)
+print(f"Signal: {result.signal.value}, Score: {result.score}/10")
+```
+
+## REST API
+
+```bash
+# Start the server
+python -m dashboard.app --port 8000
+
+# Get persona info
+curl http://localhost:8000/api/persona/buffett
+
+# Run full analysis (all 18 masters) and extract single persona result
+curl http://localhost:8000/api/analyze/AAPL | jq '.agents[] | select(.agent_id=="buffett")'
+```
+
+## MCP Server (Claude Desktop)
+
+```json
+{
+  "mcpServers": {
+    "augur": {
+      "command": "python",
+      "args": ["-m", "augur.mcp_server"],
+      "env": { "AUGUR_DEFAULT_PERSONA": "buffett" }
+    }
+  }
+}
+```
+
+## Skills (Hermes / Open Claw)
+
+Each persona has a standalone Skill at `skills/<persona_id>/SKILL.md`. Copy only the one you need:
+
+```bash
+# Install a single persona skill in Hermes
+hermes skills install ./skills/buffett/SKILL.md --name buffett
+
+# Or for Open Claw
+cp -r ./skills/buffett /your/openclaw/skills/
+```
+
+## inject-soul (Embed in any agent)
+
+```bash
+# Generate a soul file for Hermes
+augur inject-soul --profile buffett-advisor --persona buffett \
+  --format hermes --output-dir ~/.hermes/profiles/
+
+# Generate raw markdown for any system prompt
+augur inject-soul --profile buffett-advisor --persona buffett \
+  --format raw --output-dir ./
+```
+
+## Custom Wrapper for Any Framework
+
+```python
+from augur.registry import AgentRegistry
+from augur.personas.base import MarketContext
+
+class AugurPersonaTool:
+    def __init__(self, persona_id="buffett"):
+        self.agent = AgentRegistry().get(persona_id)
+
+    def analyze(self, ticker, **kwargs):
+        try:
+            from augur.data import fetch_market_context
+            ctx = fetch_market_context(ticker)
+        except Exception:
+            ctx = MarketContext(ticker=ticker.upper(), **kwargs)
+        result = self.agent.analyze(ctx)
+        return {
+            "signal": result.signal.value,
+            "score": result.score,
+            "reasoning": result.reasoning,
+        }
+```
+
+## Available Persona IDs
+
+| ID | Name | Style |
+|----|------|-------|
+| `buffett` | Warren Buffett | Value / Moat |
+| `graham` | Benjamin Graham | Deep Value / Safety Margin |
+| `munger` | Charlie Munger | Multi-disciplinary / Inverse |
+| `fisher` | Philip Fisher | Growth / Scuttlebutt |
+| `lynch` | Peter Lynch | GARP |
+| `cathie_wood` | Cathie Wood | Disruptive Innovation |
+| `dalio` | Ray Dalio | All-Weather Macro |
+| `soros` | George Soros | Reflexivity |
+| `marks` | Howard Marks | Cycles / Contrarian |
+| `thiel` | Peter Thiel | 0-to-1 Monopoly |
+| `aschenbrenner` | Leopold Aschenbrenner | AGI Infrastructure |
+| `arps` | Martin Arps | Technical / Momentum |
+| `dayu` | BTCdayu | Crypto Narrative / Sentiment |
+| `serenity` | Serenity | Quant / Volatility |
+| `duan_yongping` | Duan Yongping | Benfen / Concentration |
+| `zhang_lei` | Zhang Lei (Hillhouse) | Structural Value |
+| `li_lu` | Li Lu (Himalaya) | China Value |
+| `dan_bin` | Dan Bin (OHP) | Brand Moat / Long-term |
+
+---
+
+*Related docs: [agent-integration-guide.md](agent-integration-guide.md), [hermes-setup-guide.md](hermes-setup-guide.md). For educational purposes only, not investment advice.*
