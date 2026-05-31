@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Report visualization deep enhancement: investor style tags, key financial metrics panel, print styles, and copy-report-link button",
+  "status": "in_progress",
+  "steps": [
+    "1. In dashboard/templates/stocks.html, inside the buildScoreCards function, add an investor style tag for each agent. Create a JS mapping object: { buffett: '价值投资', munger: '价值投资', graham: '深度价值', fisher: '成长投资', cathie_wood: '颠覆创新', soros: '宏观对冲', dalio: '全天候', marks: '逆向投资', lynch: '成长价值', ackman: '激进价值', li_lu: '价值投资', duan_yongping: '本分价值', zhang_lei: '价值成长', dan_bin: '长期价值', dayu: '趋势交易', thiel: '垄断投资', aschenbrenner: 'AI超级周期', arps: '技术分析', serenity: '量化中性' }. Display as a small colored badge below the agent name in each score card.",
+    "2. In dashboard/templates/stocks.html, add a renderKeyMetricsPanel(data) function that is called inside renderResults(). This panel appears at the top of the results section (before the consensus card) and shows: PE, PB, ROE, Gross Margin, Revenue Growth, Market Cap, Sector, Industry, 52-week range (if available from market_data in the API response). Style as a compact horizontal grid of metric boxes (Bloomberg data-strip style).",
+    "3. In dashboard/static/css/bloomberg.css, add @media print styles: hide .sidebar, .hamburger-btn, .bottom-nav, .status-bar, .nav-item, .report-toolbar buttons (except title). Ensure .report-scorecard-grid and .report-risk-grid don't break mid-card with page-break-inside: avoid. Set body background to white and text to black for print.",
+    "4. In dashboard/templates/stocks.html, add a '复制报告链接' button in the report toolbar (next to existing copy/download buttons). This button generates a shareable URL: current origin + /stocks?ticker=XXXX&ts=TIMESTAMP and copies it to clipboard. Show a toast confirmation."
+  ],
+  "acceptance_criteria": [
+    "Each agent score card in the report shows an investor style badge (e.g., '价值投资', '成长投资')",
+    "A key financial metrics panel is rendered above the consensus card showing PE, PB, ROE etc.",
+    "@media print in bloomberg.css hides sidebar/nav and prevents card splitting",
+    "A 'Copy Link' button exists in the report toolbar that copies a shareable URL",
+    "python3 -c 'from dashboard.app import app' succeeds"
+  ],
+  "verification": [
+    "python3 -c \"from dashboard.app import app; print('OK')\"",
+    "python3 -m pytest tests/ -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -2564,3 +2564,66 @@ kbd {
         grid-template-columns: 1fr !important;
     }
 }
+
+/* ============================================================
+   Investor Style Tags (FEAT-002)
+   ============================================================ */
+.sc-style-tag {
+    font-size: 0.6rem;
+    background: rgba(255,140,0,0.1);
+    color: var(--accent-orange);
+    border-radius: 2px;
+    padding: 1px 5px;
+    margin-top: 2px;
+    display: inline-block;
+}
+
+/* ============================================================
+   Key Metrics Strip (FEAT-002)
+   ============================================================ */
+.key-metrics-strip {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.km-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 80px;
+}
+
+.km-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.km-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: var(--font-data);
+}
+
+/* ============================================================
+   Enhanced Print Styles (FEAT-002)
+   ============================================================ */
+@media print {
+    .sidebar, .hamburger-btn, .bottom-nav, .status-bar,
+    .mobile-backdrop, #onboard-banner { display: none !important; }
+    .app-main { margin-left: 0 !important; max-width: 100% !important; padding: 16px !important; }
+    body { background: #fff !important; color: #111 !important; }
+    .card { border: 1px solid #ddd !important; background: #fff !important; break-inside: avoid; }
+    .report-scorecard { break-inside: avoid; page-break-inside: avoid; }
+    .report-risk-card { break-inside: avoid; page-break-inside: avoid; }
+    .report-toolbar button { display: none !important; }
+    .report-toolbar .report-title { display: block !important; }
+    .signal-badge { border: 1px solid #333 !important; }
+    a { color: #333 !important; }
+}

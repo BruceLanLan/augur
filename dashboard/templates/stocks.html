@@ -259,6 +259,7 @@
         <button class="btn btn-sm" onclick="downloadPDF()" title="打印/导出PDF">&#x1F5A8; 下载 PDF</button>
         <button class="btn btn-sm" onclick="downloadReport()">&#x2B07; 下载 .md</button>
         <button class="btn btn-sm" onclick="copyReport()">&#x1F4CB; 复制报告</button>
+        <button class="btn btn-sm" onclick="copyReportLink()">&#x1F517; 复制链接</button>
         <button class="btn btn-sm" onclick="closeReport()">&#x2715; 关闭</button>
     </div>
     <!-- Report loading state -->
@@ -286,6 +287,16 @@
 var lastConsensusText = '';
 var lastAnalysisData = null;
 var lastReportMarkdown = '';
+
+var AGENT_STYLE_MAP = {
+    buffett: '价值投资', munger: '价值投资', graham: '深度价值',
+    fisher: '成长投资', cathie_wood: '颠覆创新', soros: '宏观对冲',
+    dalio: '全天候', marks: '逆向投资', lynch: '成长价值',
+    ackman: '激进价值', li_lu: '价值投资', duan_yongping: '本分价值',
+    zhang_lei: '价值成长', dan_bin: '长期价值', dayu: '趋势交易',
+    thiel: '垄断投资', aschenbrenner: 'AI超级周期', arps: '技术分析',
+    serenity: '量化中性'
+};
 
 // Pre-fill ticker and optional persona from query string
 (function(){
@@ -480,6 +491,9 @@ function renderResults(data) {
 
     lastConsensusText = ticker + ' 共识分析:\n信号: ' + signalLabel(cons.signal) + '\n评分: ' + (cons.score||0).toFixed(1) + '/10\n置信度: ' + ((cons.confidence||0)*100).toFixed(0) + '%\n' + (cons.reasoning || '');
     lastAnalysisData = data;  // save for JSON export
+
+    // Render key metrics panel at top
+    renderKeyMetricsPanel(data);
 
     // Consensus banner
     var consCard = document.getElementById('consensus-card');
@@ -689,6 +703,37 @@ function handleReportResponse(data) {
     }
 }
 
+function renderKeyMetricsPanel(data) {
+    var existing = document.getElementById('key-metrics-strip');
+    if (existing) existing.remove();
+    if (!data || !data.market_data) return;
+    var md = data.market_data;
+    var metrics = [];
+    if (md.price) metrics.push({label: 'Price', value: '$' + md.price.toFixed(2)});
+    if (md.pe) metrics.push({label: 'PE', value: md.pe.toFixed(1)});
+    if (md.pb) metrics.push({label: 'PB', value: md.pb.toFixed(2)});
+    if (md.roe) metrics.push({label: 'ROE', value: (md.roe * 100).toFixed(1) + '%'});
+    if (md.gross_margins) metrics.push({label: 'Gross Margin', value: (md.gross_margins * 100).toFixed(1) + '%'});
+    if (md.revenue_growth) metrics.push({label: 'Rev Growth', value: (md.revenue_growth * 100).toFixed(1) + '%'});
+    if (md.market_cap) {
+        var cap = md.market_cap;
+        var capStr = cap >= 1 ? cap.toFixed(1) + 'B' : (cap * 1000).toFixed(0) + 'M';
+        metrics.push({label: 'Market Cap', value: '$' + capStr});
+    }
+    if (md.sector) metrics.push({label: 'Sector', value: md.sector});
+    if (md.industry) metrics.push({label: 'Industry', value: md.industry});
+    if (metrics.length === 0) return;
+    var html = '<div class="key-metrics-strip" id="key-metrics-strip">';
+    metrics.forEach(function(m) {
+        html += '<div class="km-item"><span class="km-label">' + escapeHtml(m.label) + '</span><span class="km-value">' + escapeHtml(m.value) + '</span></div>';
+    });
+    html += '</div>';
+    var consCard = document.getElementById('consensus-card');
+    if (consCard) {
+        consCard.insertAdjacentHTML('beforebegin', html);
+    }
+}
+
 function renderVisualReport(markdownText, analysisData) {
     var container = document.getElementById('report-visual');
     if (!container) return;
@@ -783,6 +828,10 @@ function buildScoreCards(data) {
 
         html += '<div class="report-scorecard">';
         html += '<div class="sc-name" title="' + escapeHtml(agent.agent_name) + '">' + escapeHtml(agent.agent_name) + '</div>';
+        var styleTag = AGENT_STYLE_MAP[agent.agent_id] || '';
+        if (styleTag) {
+            html += '<div class="sc-style-tag">' + escapeHtml(styleTag) + '</div>';
+        }
         html += '<div class="sc-score ' + scoreClass + '">' + score.toFixed(1) + '</div>';
         html += '<span class="sc-signal ' + sigClass + '">' + signal + '</span>';
         html += '<div class="sc-confidence">' + conf + '% conf</div>';
@@ -970,6 +1019,17 @@ function downloadReport() {
 
 function closeReport() {
     document.getElementById('report-section').style.display = 'none';
+}
+
+function copyReportLink() {
+    var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase() || '';
+    var ts = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    var url = window.location.origin + '/stocks?ticker=' + ticker + '&ts=' + ts;
+    navigator.clipboard.writeText(url).then(function() {
+        showToast('报告链接已复制');
+    }).catch(function() {
+        showToast('复制失败', 'error');
+    });
 }
 </script>
 {% endblock %}
