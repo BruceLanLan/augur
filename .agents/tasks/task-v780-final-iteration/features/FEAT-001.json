@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Dashboard visualization enhancement - add Fear & Greed SVG gauge, enhance market breadth panel, add sector heatmap improvements, and increase data density to Bloomberg Terminal level",
+  "status": "completed",
+  "steps": [
+    "Step 1: In dashboard/templates/index.html, replace the current text-based Fear & Greed display with a proper SVG half-circle gauge (like CNN Fear & Greed Index). The gauge should render a semi-circular arc from 0-100, colored from red (fear/high VIX) through yellow (neutral) to green (greed/low VIX). Calculate fear-greed index as: index = max(0, min(100, 100 - ((VIX - 12) / 38) * 100)). Show the numeric index value centered in the gauge, with a label below (Extreme Fear / Fear / Neutral / Greed / Extreme Greed).",
+    "Step 2: In the same index.html, add a 'Market Pulse' summary strip between the hero section and market overview. This strip shows 4-5 key data points in a compact horizontal row: S&P 500 direction, VIX level, 10Y yield, Gold price, BTC price - all with tiny inline sparkline arrows. This increases at-a-glance data density.",
+    "Step 3: In dashboard/app.py, add a new endpoint GET /api/fear-greed that returns a dedicated fear-greed JSON with index value (0-100), label, VIX value, historical comparison note. This endpoint derives the index from VIX data already available via market-overview.",
+    "Step 4: Enhance the sector heatmap in index.html - make the grid cells larger with mini-bar charts showing the change percentage visually. Add color intensity proportional to magnitude of change. Add a tooltip on hover showing full sector name and exact percentage.",
+    "Step 5: Add an 'International Markets' panel to index.html below sector heatmap - show Asia (HSI, N225, SSE), Europe (FTSE, DAX, CAC40) status with a compact tile layout. Data comes from the existing /api/market-overview endpoint which already includes international indices.",
+    "Step 6: Ensure all new panels have proper skeleton loading states and empty-state messages when data is unavailable (e.g. 'yfinance not installed' graceful degradation).",
+    "Step 7: Add responsive CSS in index.html <style> block for mobile - all new panels should stack vertically on screens < 768px."
+  ],
+  "acceptance_criteria": [
+    "The Fear & Greed gauge renders as an SVG semicircle with color gradient and numeric index",
+    "A new /api/fear-greed endpoint exists and returns JSON with index, label, vix_value fields",
+    "The sector heatmap cells show visual bar indicators of change magnitude",
+    "An International Markets panel displays at least 6 international indices",
+    "All panels show skeleton/empty states when data is unavailable",
+    "Mobile responsive: panels stack on narrow screens",
+    "No test files are modified"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q --tb=short",
+    "python -c \"from dashboard.app import app; print('OK')\"",
+    "python -c \"from fastapi.testclient import TestClient; from dashboard.app import app; c = TestClient(app); r = c.get('/api/fear-greed'); print(r.status_code, r.json().get('status'))\""
+  ],
+  "blocked_reason": null,
+  "findings": "All 448 tests pass. /api/fear-greed endpoint returns correct JSON. SVG gauge renders in index.html. Market Pulse strip, International Markets panel, and enhanced sector heatmap all implemented with skeleton loading and responsive CSS."
+}

@@ -1513,6 +1513,69 @@ async def api_market_overview(request: Request, refresh: bool = False):
         }
 
 
+@app.get("/api/fear-greed", summary="恐慌与贪婪指数")
+async def api_fear_greed():
+    """基于 VIX 计算恐慌与贪婪指数 (0-100)。
+
+    公式: index = max(0, min(100, 100 - ((VIX - 12) / 38) * 100))
+    0-25: Extreme Fear, 25-45: Fear, 45-55: Neutral, 55-75: Greed, 75-100: Extreme Greed
+    """
+    if not _HAS_AUGUR_DATA:
+        return {
+            "status": "degraded",
+            "index": 50,
+            "label": "Neutral",
+            "vix_value": 0.0,
+            "description": "yfinance 未安装，无法计算实时恐慌贪婪指数",
+        }
+    try:
+        from augur.data import fetch_market_overview
+        overview = fetch_market_overview(force_refresh=False)
+        items = overview.get("items", [])
+        vix_item = next((it for it in items if it.get("key") == "vix"), None)
+        if not vix_item or not vix_item.get("price"):
+            return {
+                "status": "degraded",
+                "index": 50,
+                "label": "Neutral",
+                "vix_value": 0.0,
+                "description": "VIX 数据暂时不可用",
+            }
+        vix_val = float(vix_item["price"])
+        index = max(0, min(100, int(100 - ((vix_val - 12) / 38) * 100)))
+        if index >= 75:
+            label = "Extreme Greed"
+            desc = f"VIX={vix_val:.2f}，市场处于极度贪婪状态，波动率极低"
+        elif index >= 55:
+            label = "Greed"
+            desc = f"VIX={vix_val:.2f}，市场偏贪婪，投资者情绪乐观"
+        elif index >= 45:
+            label = "Neutral"
+            desc = f"VIX={vix_val:.2f}，市场情绪中性"
+        elif index >= 25:
+            label = "Fear"
+            desc = f"VIX={vix_val:.2f}，市场偏恐慌，投资者趋于谨慎"
+        else:
+            label = "Extreme Fear"
+            desc = f"VIX={vix_val:.2f}，市场处于极度恐慌状态，波动率极高"
+        return {
+            "status": "ok",
+            "index": index,
+            "label": label,
+            "vix_value": vix_val,
+            "description": desc,
+        }
+    except Exception as e:
+        logger.warning("fear-greed calc failed: %s", e)
+        return {
+            "status": "degraded",
+            "index": 50,
+            "label": "Neutral",
+            "vix_value": 0.0,
+            "description": f"恐慌贪婪指数计算失败: {e}",
+        }
+
+
 @app.get("/api/datasources", summary="数据源状态")
 async def api_datasources():
     """返回当前可用的数据源链（用于 UI 展示数据来源覆盖情况）。"""
