@@ -29,6 +29,8 @@ try:
     from fastapi.templating import Jinja2Templates
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.staticfiles import StaticFiles
+    from fastapi.exceptions import RequestValidationError
+    from starlette.exceptions import HTTPException as StarletteHTTPException
     from pydantic import BaseModel
     import uvicorn
 except ImportError:
@@ -49,10 +51,13 @@ from augur.errors import api_error_response
 
 logger = logging.getLogger(__name__)
 
+# Module-level startup time for uptime tracking
+_APP_START_TIME = _time.time()
+
 app = FastAPI(
     title="Augur — 多智能体投资分析",
     description="18位虚拟投资大师，多维度共识分析",
-    version="7.3.1",
+    version="7.4.0",
 )
 
 
@@ -70,6 +75,45 @@ async def global_exception_handler(request: Request, exc: Exception):
         content=api_error_response(
             detail="Internal server error",
             code="INTERNAL_ERROR",
+            path=request.url.path,
+        ),
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Return user-friendly JSON for validation errors instead of FastAPI default."""
+    errors = exc.errors()
+    details = "; ".join(f"{e.get('loc', ['?'])[-1]}: {e.get('msg', 'invalid')}" for e in errors)
+    return JSONResponse(
+        status_code=422,
+        content=api_error_response(
+            detail=f"Validation error: {details}",
+            code="VALIDATION_ERROR",
+            path=request.url.path,
+            suggestion="Check parameter types and values. Use /api/analyze/TICKER format.",
+        ),
+    )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Ensure HTTP exceptions also return consistent JSON."""
+    if exc.status_code == 404:
+        return JSONResponse(
+            status_code=404,
+            content=api_error_response(
+                detail=exc.detail or "Not found",
+                code="NOT_FOUND",
+                path=request.url.path,
+            ),
+        )
+    # For other HTTP exceptions (400, 429, etc.), keep consistent JSON
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=api_error_response(
+            detail=str(exc.detail) if exc.detail else f"HTTP {exc.status_code}",
+            code=f"HTTP_{exc.status_code}",
             path=request.url.path,
         ),
     )
@@ -956,6 +1000,42 @@ async def api_ic_leaderboard():
 @app.get("/health")
 async def health():
     return {"status": "ok", "agents": len(get_registry().get_all())}
+
+
+@app.get("/api/health")
+async def api_health_extended():
+    """Extended health check - returns datasource reachability, cache info, uptime."""
+    # Check datasources
+    datasources = []
+    try:
+        from augur.datasources import available_sources
+        sources = available_sources()
+        for src in sources:
+            datasources.append({"name": src, "reachable": True})
+    except Exception as e:
+        datasources.append({"name": "unknown", "reachable": False, "error": str(e)})
+
+    # Cache info
+    try:
+        from augur.data import cache_stats
+        cache = cache_stats()
+    except Exception:
+        try:
+            from augur.data import cache_info
+            cache = cache_info()
+        except Exception:
+            cache = {}
+
+    uptime = _time.time() - _APP_START_TIME
+
+    return {
+        "status": "ok",
+        "agents": len(get_registry().get_all()),
+        "datasources": datasources,
+        "cache": cache,
+        "uptime_seconds": round(uptime, 1),
+        "version": "7.4.0",
+    }
 
 
 # ============ Cache Management API Routes ============

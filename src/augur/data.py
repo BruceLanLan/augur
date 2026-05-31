@@ -72,6 +72,23 @@ def cache_info() -> Dict[str, Any]:
         }
 
 
+def cache_stats() -> Dict[str, Any]:
+    """Return detailed cache statistics including per-key age and expiration info."""
+    now = time.time()
+    with _cache_lock:
+        expired_count = 0
+        for key, entry in _cache.items():
+            age = now - entry["ts"]
+            if age > _CACHE_TTL:
+                expired_count += 1
+        return {
+            "size": len(_cache),
+            "ttl_seconds": _CACHE_TTL,
+            "expired_count": expired_count,
+            "active_count": len(_cache) - expired_count,
+        }
+
+
 # ============ Ticker Validation ============
 
 def _normalize_ticker(ticker: str) -> str:
