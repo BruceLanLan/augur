@@ -52,7 +52,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Augur — 多智能体投资分析",
     description="18位虚拟投资大师，多维度共识分析",
-    version="7.3.0",
+    version="7.3.1",
 )
 
 

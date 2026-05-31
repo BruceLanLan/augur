@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v7.3.0](https://img.shields.io/badge/v7.3.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.3.1](https://img.shields.io/badge/v7.3.1-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -444,6 +444,13 @@ The Dashboard supports hot-reload (saved YAML is immediately available in the sa
 ---
 
 ## 📋 Changelog
+
+### v7.3.1 — Dashboard Data Density & Report Enhancement
+
+- Added hot tickers real-time panel (top 10), Fear & Greed indicator, and Macro Snapshot cards to home page
+- Report visualization: investor style tags, key financial metrics panel, print optimization, copy report link
+- Unified all page `<title>` tags, version bumped to v7.3.1
+- New `/api/hot-tickers` endpoint
 
 ### v7.3.0
 

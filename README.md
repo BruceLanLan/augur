@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v7.3.0](https://img.shields.io/badge/v7.3.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.3.1](https://img.shields.io/badge/v7.3.1-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -511,6 +511,13 @@ Dashboard 已支持热加载（保存 YAML 后同一进程立即可用）。CLI/
 ---
 
 ## 📋 Changelog
+
+### v7.3.1 — Dashboard 数据密度 & 报告深化
+
+- 首页新增热门标的实时行情面板（10 大 Tickers）、恐慌与贪婪指标、宏观经济快照
+- 报告可视化增强：投资风格标签、关键财务指标面板、打印优化、复制报告链接
+- 所有页面 `<title>` 统一规范化，版本号升级至 v7.3.1
+- 新增 `/api/hot-tickers` 端点
 
 ### v7.3.0
 

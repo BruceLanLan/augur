@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-003",
+  "type": "chore",
+  "description": "Code quality, UX polish, page titles check, cache logic review, documentation update (README, CHANGELOG)",
+  "status": "in_progress",
+  "steps": [
+    "1. In dashboard/app.py, verify the /api/market-overview caching logic is correct. Currently it uses a custom TTL offset (_CACHE_TTL - 60 = 120s effective). This is fine but ensure that force_refresh=true actually bypasses the cache properly (it does via the if not force_refresh check).",
+    "2. Check all page <title> tags across templates: index.html should be 'Augur - 多智能体投资分析仪表盘', stocks.html should be '股票分析 - Augur', personas.html should be '投资人系统 - Augur', settings.html should be '设置 - Augur', backtest.html should be '历史回测 - Augur', signals.html should be '信号监控 - Augur'. Fix any that are inconsistent.",
+    "3. Update README.md: add a v7.3.1 entry in the quick features section mentioning the new dashboard panels (Hot Tickers, Fear & Greed, Macro Snapshot, investor style tags). Keep brief.",
+    "4. Update README_EN.md: same v7.3.1 entry in English.",
+    "5. Update docs/CHANGELOG.md: add v7.3.1 section at top with Dashboard Enhancement (hot tickers, fear & greed, macro snapshot), Report Visualization (style tags, key metrics panel, print styles, copy link), and UX Polish (section reorder, version bump) categories.",
+    "6. Commit all changes to main with Chinese commit message: 'feat: v7.3.1 Dashboard数据密度提升/报告可视化深化/UX优化'"
+  ],
+  "acceptance_criteria": [
+    "All page titles are consistent and descriptive",
+    "README.md and README_EN.md mention v7.3.1 features",
+    "docs/CHANGELOG.md has a v7.3.1 entry",
+    "A git commit exists on main with all changes",
+    "python3 -m pytest tests/ -x -q passes"
+  ],
+  "verification": [
+    "python3 -c \"from dashboard.app import app; print('OK')\"",
+    "python3 -m pytest tests/ -x -q",
+    "git log --oneline -3"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
