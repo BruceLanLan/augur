@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v7.3.1](https://img.shields.io/badge/v7.3.1-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.4.0](https://img.shields.io/badge/v7.4.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -74,6 +74,20 @@ augur report TSLA          # generate deep analysis report
 python3 -m dashboard.app   # launch Bloomberg-style Dashboard
 # → open http://localhost:8000
 ```
+
+---
+
+## 📸 Dashboard Preview
+
+> *Full screenshots coming soon*
+
+Dashboard highlights:
+- 🌐 **Global Market Overview** — Real-time S&P 500, NASDAQ, Hang Seng, CSI 300, VIX, Treasury, Gold, Crude, BTC
+- 🔥 **Hot Tickers** — Top 10 tech/crypto tickers with live prices
+- 😱 **Fear & Greed Indicator** — VIX-based market sentiment gauge
+- 🎴 **Master Persona Cards** — 18 masters by school (Value/Growth/Macro/Quant/China)
+- 🌗 **Dark/Light Theme** — One-click toggle with localStorage persistence
+- 📊 **Deep Reports** — Downloadable as Markdown or PDF
 
 ---
 
