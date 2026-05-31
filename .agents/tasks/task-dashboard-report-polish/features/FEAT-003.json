@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Dashboard enrichment - add datasource status panel, recent analysis history board, quick analysis entry with hot tickers, and ensure responsive layout on mobile",
+  "status": "completed",
+  "steps": [
+    "In dashboard/templates/index.html, add a 'Data Source Status' section after the market overview that calls /api/datasources and displays each source as a small status card (name, active/inactive badge, coverage description, whether API key is needed)",
+    "Add a 'Quick Analysis Entry' section above the market overview with a prominent search box and hot ticker shortcut buttons for AAPL, TSLA, NVDA, MSFT, BTC-USD, 00700.HK, BABA, GOOGL. Clicking a button navigates to /stocks?ticker=XXX",
+    "Enhance the existing 'Recent Analyses' section to also persist to localStorage and show more details: ticker, signal badge, score, time ago, and a small sparkline-like indicator",
+    "Add responsive CSS rules in bloomberg.css for all new sections - grid-4 should become grid-2 on tablets and grid-1 on mobile, market-board tiles should wrap properly, cards should stack vertically on narrow screens",
+    "Ensure the datasource status section auto-loads on page load via a fetch to /api/datasources in the DOMContentLoaded handler in index.html"
+  ],
+  "acceptance_criteria": [
+    "Index page shows datasource status cards with active/inactive indicators",
+    "Quick analysis entry with hot ticker buttons is visible and functional",
+    "Recent analyses section shows cached history from localStorage",
+    "All sections display correctly on mobile widths (320px-768px) with proper stacking"
+  ],
+  "verification": [
+    "python3 -c \"from dashboard.app import app; print('Dashboard loads OK')\"",
+    "Verify index.html contains datasource status section and quick ticker buttons",
+    "Verify bloomberg.css contains @media queries for responsive breakpoints"
+  ],
+  "blocked_reason": null,
+  "findings": "Implemented successfully. Added datasource status panel that fetches /api/datasources and renders cards with active/inactive badges, coverage info, and API key indicators. Added 4 more hot ticker chips (GOOGL, BTC-USD, 00700.HK, BABA). Added responsive CSS for datasource-grid, datasource-card, ds-badge-active, ds-badge-inactive. Added @media queries for 600px mobile breakpoint ensuring all grids stack to single column and hero section adapts properly."
+}
