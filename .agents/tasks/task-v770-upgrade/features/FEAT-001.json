@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Portfolio management page with holdings tracking, real-time P&L, asset summary, and Augur analysis integration",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create dashboard/templates/portfolio.html extending base.html with Bloomberg dark theme styles. Include: (1) Add holding form with fields: ticker, buy price, quantity, buy date. (2) Holdings table showing: ticker, cost basis, current price (fetched from /api/fetch/{ticker}), P&L amount, P&L percentage, holding days. (3) Total asset summary section: total invested, current total value, total P&L, total return rate. (4) All data persisted in localStorage as JSON array. (5) 'Run Augur Analysis' button that calls /api/analyze/{ticker} for each holding and displays master scores.",
     "Add /portfolio route in dashboard/app.py returning portfolio.html template, following the pattern of other page routes (e.g., watchlist_page).",
@@ -26,5 +26,5 @@
     "Start server with python -m dashboard.app and verify /portfolio returns 200"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 448 tests pass. /portfolio route returns 200. Portfolio page includes: add form, holdings table with sorting, total summary, donut chart for allocation, line chart for 7-day weighted value, and Augur analysis integration."
 }

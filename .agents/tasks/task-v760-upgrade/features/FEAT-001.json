@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Task 1 (Watchlist page) + Task 2 (Mini Chart sparklines) + Task 3 (Historical Analysis Comparison). Create watchlist.html, add /watchlist route, add /api/sparkline/<ticker> endpoint, add sparkline SVG rendering to hot-tickers and watchlist cards, add historical comparison panel to stocks.html.",
+  "status": "completed",
+  "steps": [
+    "1. Create dashboard/templates/watchlist.html extending base.html. Page shows user's watchlist (stored in localStorage). Each item shows: ticker, company name, current price, change%, last analysis score. Include add/remove functionality and a 'batch analyze all' button.",
+    "2. In dashboard/app.py add GET /watchlist HTML route that renders watchlist.html with title '自选股'.",
+    "3. In dashboard/templates/base.html add a Watchlist nav item in the sidebar under the '分析' group, after scanner, with an appropriate SVG icon and data-i18n='nav-watchlist' text '自选股'.",
+    "4. In dashboard/app.py add GET /api/sparkline/{ticker} endpoint. It uses augur.data.fetch_history(ticker, period='7d') to get last 7 trading days of close prices, returns JSON {ticker, prices: [float], trend: 'up'|'down'|'flat'}.",
+    "5. In index.html hot-tickers rendering (renderHotTickers function), after rendering each card, fetch /api/sparkline/<symbol> and render an inline SVG polyline (width ~80px, height ~30px). Green stroke for up trend, red for down.",
+    "6. In watchlist.html, also render sparkline SVGs for each watchlist item using the same approach.",
+    "7. In dashboard/templates/stocks.html add a '历史对比' (Historical Comparison) panel after the results section. It reads all cached analyses for the current ticker from localStorage (augurCache), displays them in a table with columns: Date, Score, Signal, Price. This lets users see how Augur's prediction changed over time.",
+    "8. Commit with message: 'feat: 自选股页面+迷你走势图+历史对比 (v7.6.0 任务1-3)'"
+  ],
+  "acceptance_criteria": [
+    "GET /watchlist returns 200 with rendered watchlist.html",
+    "GET /api/sparkline/AAPL returns JSON with prices array",
+    "Sidebar in base.html contains Watchlist nav link",
+    "stocks.html contains historical comparison panel markup",
+    "All existing 448 tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": "All 448 tests pass. Watchlist page created at /watchlist, sparkline API at /api/sparkline/{ticker}, nav item added to sidebar, historical comparison panel added to stocks.html, sparklines integrated into hot-tickers on index.html."
+}

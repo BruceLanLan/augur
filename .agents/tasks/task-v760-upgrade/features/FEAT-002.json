@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Task 4 (Report Export: JSON + CSV buttons) + Task 5 (SEO, Open Graph, robots.txt, sitemap.xml, unique page titles).",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. In dashboard/templates/stocks.html, in the report toolbar area (report-toolbar div), add two new buttons: 'Export JSON' (exports full structured analysis data as .json Blob download) and 'Export CSV' (exports 18 masters' scores as CSV with columns: agent_id, agent_name, signal, score, confidence, key_findings). Both are pure frontend Blob URL implementations.",
     "2. In dashboard/templates/base.html <head>, add comprehensive meta tags: meta description ('Augur - 18位投资大师AI共识分析系统'), meta keywords, og:title, og:description, og:image (/docs/images/hero-banner-baoyu.svg), og:type (website), twitter:card (summary_large_image), twitter:title, twitter:description.",
@@ -22,5 +22,5 @@
     "python -m pytest tests/ -x -q"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 448 tests pass. Added exportFullJSON and exportCSV functions in stocks.html toolbar, SEO meta tags (og:title, og:description, og:image, twitter:card) in base.html, GET /robots.txt and GET /sitemap.xml routes in app.py. PlainTextResponse and Response added to fastapi.responses import."
 }

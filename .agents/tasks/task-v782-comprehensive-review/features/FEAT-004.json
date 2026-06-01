@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Add comprehensive test coverage for market data endpoints and rate limiter",
+  "status": "completed",
+  "steps": [
+    "Create tests/test_market_endpoints.py with the following test cases:",
+    "(a) test_fetch_market_overview - Unit test for data.fetch_market_overview() with mocked yfinance. Verify it returns expected structure {as_of, items, source}. Mock yfinance.Ticker to return controlled prices.",
+    "(b) test_api_market_overview - Integration test for GET /api/market-overview endpoint via TestClient. Mock yfinance at module level. Verify 200 response with items array.",
+    "(c) test_api_hot_tickers - Integration test for GET /api/hot-tickers endpoint. Mock yfinance. Verify response structure {tickers: [...]} with expected fields.",
+    "(d) test_api_sparkline_valid - Integration test for GET /api/sparkline/AAPL. Mock yfinance history to return 30 days of prices. Verify response has prices array and trend field.",
+    "(e) test_api_sparkline_invalid - Test GET /api/sparkline/INVALID123456789 returns 400 or empty/error response.",
+    "(f) test_api_fear_greed - Integration test for GET /api/fear-greed endpoint. Verify response structure.",
+    "(g) test_rate_limiter - Test the IP-based rate limiter by sending 61 requests rapidly to an API endpoint and confirming the 61st returns 429. Also test that the per-ticker rate limiter (_check_rate_limit) returns False after 30 calls.",
+    "Ensure all new tests are self-contained with proper mocking (no real network calls).",
+    "Run the full test suite to confirm no regressions."
+  ],
+  "acceptance_criteria": [
+    "test_fetch_market_overview passes with mocked yfinance",
+    "test_api_market_overview passes with mocked yfinance",
+    "test_api_hot_tickers passes with mocked yfinance",
+    "test_api_sparkline_valid passes with mocked data",
+    "test_api_sparkline_invalid handles gracefully",
+    "test_api_fear_greed passes",
+    "test_rate_limiter confirms 429 after limit exceeded",
+    "Full test suite (448+ tests) passes with no regressions"
+  ],
+  "verification": [
+    "python -m pytest tests/test_market_endpoints.py -v --tb=short (all new tests pass)",
+    "python -m pytest tests/ -x -q --tb=short (full suite passes)"
+  ],
+  "blocked_reason": null,
+  "findings": "All 11 new tests pass. Full suite passes at 459 tests (448 existing + 11 new). Tests use unittest.mock.patch on augur.data._get_yfinance to avoid real network calls. Rate limiter tests work by importing _rate_limits/_rate_limit_lock from dashboard.app directly. conftest.py already resets IP rate limits between tests."
+}

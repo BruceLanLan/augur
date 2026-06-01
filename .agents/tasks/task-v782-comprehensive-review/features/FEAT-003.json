@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Backend business logic edge case fixes in coordinator, report, backtest, data, and persona modules",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In src/augur/registry.py (DecisionCoordinator.get_consensus): (a) Verify behavior when all 18 personas return neutral - the consensus should be neutral with score reflecting the average. Add a comment documenting expected behavior. (b) Verify behavior when only 1 persona has a valid response (others timed out/errored) - consensus should still be valid but with low confidence. Add minimum-response-count logic: if fewer than 3 valid responses, set confidence to max(0.2, actual_confidence) and add metadata flag 'low_participation'.",
     "In src/augur/report.py: (a) Handle case where ticker contains non-ASCII characters (e.g. Chinese company name passed as ticker) - add validation at the top of generate_report() to sanitize/reject gracefully instead of crashing.",
@@ -25,5 +25,5 @@
     "python -m pytest tests/ -x -q --tb=short (all pass)"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "safe_num already handles all edge cases (N/A, nan, inf, None, empty string). Persona PE scoring already guarded with 'if context.pe > 0'. soul.py already raises ValueError with available IDs. One pre-existing test (test_single_day_backtest) was updated to match new minimum-data requirement for backtest."
 }

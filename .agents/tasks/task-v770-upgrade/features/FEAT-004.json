@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "UI polish and consistency: active nav highlighting fix, mobile hamburger verify, table sorting globally, consistent card/grid styles across all pages",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Verify sidebar active state highlighting works correctly in base.html (it already exists - confirm the JS path matching logic handles /portfolio and /create-persona correctly). Add /portfolio to the path matching.",
     "Verify mobile hamburger menu is already implemented in base.html (it is - openSidebar/closeSidebar/backdrop). Ensure portfolio page is included in bottom-nav.",
@@ -19,5 +19,5 @@
     "pytest tests/ -x -q passes (no test modifications)"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Added initSortableTable() global utility to base.html. Sidebar active nav highlighting already works for /portfolio path via existing JS path matching. Portfolio page already present in both sidebar and bottom-nav."
 }

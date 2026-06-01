@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Persona deep interaction: ask questions to individual masters, compare two masters, and new API endpoint for persona opinions",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In dashboard/templates/personas.html, add a 'Ask Question' feature to each persona card: (1) An input field where user types a question (e.g. 'What do you think about NVDA's moat?'). (2) A submit button that calls /api/persona/{id}/opinion?ticker=XXX&question=YYY. (3) Display the persona's response (reasoning extracted from analysis) in the card's expanded section.",
     "Add 'Compare Two Masters' feature in personas.html: (1) UI to select two personas from dropdowns. (2) Input field for a ticker. (3) Button to run comparison. (4) Display side-by-side comparison table showing: persona name, signal, score, confidence, key reasoning for both masters on the same ticker.",
@@ -20,5 +20,5 @@
     "curl http://localhost:8888/api/persona/buffett/opinion?ticker=AAPL returns valid JSON"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 448 tests pass. Both /api/persona/{id}/opinion and /api/persona/compare endpoints work correctly. The compare route is registered before the {agent_id} path param route to avoid capture conflicts. Personas page has compare section at top and ask-question section in each card's expanded detail."
 }

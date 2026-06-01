@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-004",
+  "type": "docs",
+  "description": "Task 7: Version bump to v7.6.0 and update all documentation (README.md, README_EN.md, docs/CHANGELOG.md).",
+  "status": "completed",
+  "steps": [
+    "1. In pyproject.toml change version from '7.5.0' to '7.6.0'.",
+    "2. In dashboard/app.py change the FastAPI app version='7.5.0' to '7.6.0', and all other occurrences of 7.5.0 in that file (version-info div, CSS/JS query params).",
+    "3. In dashboard/templates/base.html update all v7.5.0 references to v7.6.0 (CSS link, JS link, version-info div, status-bar Engine value).",
+    "4. In dashboard/templates/index.html update the Engine v7.5.0 reference to v7.6.0.",
+    "5. In README.md: update the version badge from v7.5.0 to v7.6.0, add a v7.6.0 section listing new features (Watchlist, Mini Charts, Historical Comparison, JSON/CSV Export, SEO/OG, Code Quality).",
+    "6. In README_EN.md: mirror the same version badge and new features section in English.",
+    "7. In docs/CHANGELOG.md: prepend a v7.6.0 entry above v7.5.0 with all new features documented.",
+    "8. Commit with message: 'docs: 升级至v7.6.0+更新文档和CHANGELOG'"
+  ],
+  "acceptance_criteria": [
+    "pyproject.toml shows version 7.6.0",
+    "app.py FastAPI version is 7.6.0",
+    "base.html references v7.6.0 for CSS/JS",
+    "README.md contains v7.6.0 badge and new features section",
+    "docs/CHANGELOG.md has v7.6.0 entry at top",
+    "All 448 tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q"
+  ],
+  "blocked_reason": null,
+  "findings": "All 448 tests pass. Version bumped in pyproject.toml, dashboard/app.py (FastAPI constructor + health endpoint), base.html (CSS, JS, version-info div), index.html (status bar), src/augur/__init__.py. README.md, README_EN.md badges and new feature sections added. CHANGELOG.md prepended with v7.6.0 entry."
+}

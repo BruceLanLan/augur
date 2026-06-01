@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Custom Persona creation enhancement + API Token authentication + Docker/deploy improvements",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Step 1 - Custom Persona Enhancement: In dashboard/templates/create_persona.html, add support for editing and deleting existing custom personas. Add a list of existing custom personas at the top of the page (fetched from GET /api/custom-personas). Each item has Edit and Delete buttons.",
     "Step 2 - Custom Persona API: In dashboard/app.py, add GET /api/custom-personas (list all custom personas from personas/custom/ directory), DELETE /api/custom-persona/{agent_id} (delete the YAML file and unregister from registry), PUT /api/custom-persona/{agent_id} (update existing persona YAML).",
@@ -30,5 +30,5 @@
     "python -c \"import os; os.environ['AUGUR_API_TOKEN']='test123'; from fastapi.testclient import TestClient; from dashboard.app import app; c = TestClient(app); r = c.get('/api/personas'); print('401 without token:', r.status_code == 401); r2 = c.get('/api/auth/verify', headers={'Authorization': 'Bearer test123'}); print('verify:', r2.status_code, r2.json())\""
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 448 tests pass. Auth middleware only activates when AUGUR_API_TOKEN env var is set and non-empty, fully backward compatible. Registry has unregister() method for persona deletion. Custom personas directory already has some YAML files (dayu, thiel)."
 }

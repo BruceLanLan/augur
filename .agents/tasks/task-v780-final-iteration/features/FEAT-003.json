@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "UI Polish, empty states, error handling, CSS consistency, mobile responsive check + Agent Integration Guide + Version bump to v7.8.0 + Documentation update",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Step 1 - Empty States: Review all dashboard panels and ensure each has a proper empty-state message. In index.html, each panel (market-board, hot-tickers-grid, sector-grid, fear-greed-card, movers sections, leaderboard) should show a styled empty message with an icon when data is unavailable. Use a consistent pattern: a muted-color message with a subtle icon (e.g. chart icon) and helpful text like 'Install yfinance for live data' or 'Analyze a stock to see results here'.",
     "Step 2 - JS Error Handling: In dashboard/templates/base.html (or wherever fetchWithTimeout is defined), ensure all fetch calls across all templates have proper .catch() handlers that show a user-friendly toast notification. Grep for any raw fetch() calls without error handling and add catch blocks. Add a global window.onerror handler that shows a toast for uncaught errors.",
@@ -32,5 +32,5 @@
     "grep -q '7.8.0' /projects/sandbox/augur/docs/CHANGELOG.md && echo 'changelog OK'"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 448 tests pass. Version bumped to 7.8.0 in pyproject.toml, app.py (2 places), index.html Engine status, base.html CSS/JS cache busting, README badges. CSS: added .panel-empty-state utility + 480px breakpoint. JS: augurCache wrapped in try-catch for private browsing, global window.onerror + unhandledrejection handlers added, fetchWithTimeout localStorage access safe. All dashboard panels use consistent empty-state pattern with icons. CHANGELOG v7.8.0 entry added. README/README_EN feature list tables added. Integration guide updated with quick-start overview."
 }
