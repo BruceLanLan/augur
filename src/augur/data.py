@@ -205,7 +205,14 @@ def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketCont
            revenue_growth, earnings_growth, debt_ratio, fcf, market_cap,
            current_ratio, sector, industry, rsi, sma50, etc.
     """
-    ticker = _normalize_ticker(ticker)
+    try:
+        ticker = _normalize_ticker(ticker)
+    except ValueError as exc:
+        logger.warning("invalid ticker rejected: %s", exc)
+        ctx = MarketContext(ticker=ticker.strip().upper() or "INVALID")
+        setattr(ctx, "data_source", "error")
+        return ctx
+
     cache_key = f"ctx:{ticker}"
     if not force_refresh:
         cached = _cache_get(cache_key)
@@ -361,13 +368,16 @@ def fetch_market_overview(force_refresh: bool = False) -> Dict[str, Any]:
         _cache_set(cache_key, result)
         return result
 
-    for key, symbol, name, group in instruments:
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+
+    def _fetch_one_instrument(entry):
+        """Fetch a single instrument's price data with isolation."""
+        key, symbol, name, group = entry
         price = 0.0
         prev = 0.0
         currency = "USD"
         try:
             tk = yf.Ticker(symbol)
-            # fast_info 比 .info 轻量且更快
             fi = getattr(tk, "fast_info", None)
             if fi is not None:
                 price = _safe_float(getattr(fi, "last_price", 0)) or _safe_float(
@@ -377,7 +387,6 @@ def fetch_market_overview(force_refresh: bool = False) -> Dict[str, Any]:
                     fi.get("previousClose") if hasattr(fi, "get") else 0
                 )
                 currency = (getattr(fi, "currency", None) or "USD")
-            # 回退：用 2 日历史
             if price <= 0 or prev <= 0:
                 hist = tk.history(period="5d")
                 if hist is not None and not hist.empty:
@@ -390,9 +399,7 @@ def fetch_market_overview(force_refresh: bool = False) -> Dict[str, Any]:
 
         change = (price - prev) if (price and prev) else 0.0
         change_pct = (change / prev) if prev else 0.0
-        if price > 0:
-            ok_count += 1
-        items.append({
+        return {
             "key": key,
             "symbol": symbol,
             "name": name,
@@ -401,11 +408,33 @@ def fetch_market_overview(force_refresh: bool = False) -> Dict[str, Any]:
             "change": round(change, 2),
             "change_pct": round(change_pct, 4),
             "currency": currency,
-        })
+        }
+
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(_fetch_one_instrument, inst): inst for inst in instruments}
+        for future in futures:
+            try:
+                item = future.result(timeout=10)
+                items.append(item)
+                if item["price"] > 0:
+                    ok_count += 1
+            except (FuturesTimeoutError, Exception) as exc:
+                inst = futures[future]
+                logger.debug("market overview timeout/error for %s: %s", inst[1], exc)
+                items.append({
+                    "key": inst[0],
+                    "symbol": inst[1],
+                    "name": inst[2],
+                    "group": inst[3],
+                    "price": 0.0,
+                    "change": 0.0,
+                    "change_pct": 0.0,
+                    "currency": "USD",
+                })
 
     source = "yfinance" if ok_count == len(instruments) else ("partial" if ok_count else "none")
     result = {"as_of": _now_iso(), "items": items, "source": source}
-    # 市场总览缓存时间略短（60s）以保证一定的实时性
+    # 市场总览缓存 60 秒：通过预置时间戳老化实现（_CACHE_TTL=180, 预老化 120s, 有效剩余 60s）
     with _cache_lock:
         _cache[cache_key] = {"value": result, "ts": time.time() - (_CACHE_TTL - 60)}
     return result
@@ -463,8 +492,11 @@ def fetch_hot_tickers(force_refresh: bool = False) -> List[Dict[str, Any]]:
         _cache_set(cache_key, result)
         return result
 
-    items: List[Dict[str, Any]] = []
-    for symbol, name_cn in HOT_SYMBOLS:
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+
+    def _fetch_one_hot(entry):
+        """Fetch a single hot ticker's data with isolation."""
+        symbol, name_cn = entry
         price = 0.0
         prev = 0.0
         market_cap = 0.0
@@ -481,7 +513,6 @@ def fetch_hot_tickers(force_refresh: bool = False) -> List[Dict[str, Any]]:
                 market_cap = _safe_float(getattr(fi, "market_cap", 0)) or _safe_float(
                     fi.get("marketCap") if hasattr(fi, "get") else 0
                 )
-            # 回退：用历史数据
             if price <= 0 or prev <= 0:
                 hist = tk.history(period="5d")
                 if hist is not None and not hist.empty:
@@ -493,15 +524,33 @@ def fetch_hot_tickers(force_refresh: bool = False) -> List[Dict[str, Any]]:
             logger.debug("hot ticker fetch failed for %s: %s", symbol, exc)
 
         change_pct = ((price - prev) / prev) if prev else 0.0
-        items.append({
+        return {
             "symbol": symbol,
             "name": name_cn,
             "price": round(price, 2),
             "change_pct": round(change_pct, 4),
             "market_cap": round(market_cap, 0),
-        })
+        }
 
-    # 使用 90 秒 TTL 缓存
+    items: List[Dict[str, Any]] = []
+    with ThreadPoolExecutor(max_workers=5) as executor:
+        futures = {executor.submit(_fetch_one_hot, entry): entry for entry in HOT_SYMBOLS}
+        for future in futures:
+            try:
+                item = future.result(timeout=10)
+                items.append(item)
+            except (FuturesTimeoutError, Exception) as exc:
+                entry = futures[future]
+                logger.debug("hot ticker timeout/error for %s: %s", entry[0], exc)
+                items.append({
+                    "symbol": entry[0],
+                    "name": entry[1],
+                    "price": 0.0,
+                    "change_pct": 0.0,
+                    "market_cap": 0.0,
+                })
+
+    # 热门标的缓存 90 秒：通过预置时间戳老化实现（_CACHE_TTL=180, 预老化 90s, 有效剩余 90s）
     with _cache_lock:
         _cache[cache_key] = {"value": items, "ts": time.time() - (_CACHE_TTL - 90)}
     return items

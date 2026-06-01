@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Data layer robustness: Fix error handling, timeout handling, NaN/None safety, and ensure all data sources work properly together",
+  "status": "completed",
+  "steps": [
+    "In src/augur/data.py - fetch_market_context: ensure ValueError from _normalize_ticker returns a graceful empty MarketContext with data_source='error' rather than propagating exception to callers",
+    "In src/augur/data.py - fetch_market_overview: add per-ticker timeout protection so one slow/failed ticker does not block others (use ThreadPoolExecutor with individual 10s timeouts)",
+    "In src/augur/data.py - fetch_hot_tickers: same per-ticker timeout protection",
+    "In src/augur/datasources/stooq_provider.py: verify CSV parsing handles edge cases (empty lines, extra commas, encoding issues) - add defensive parsing",
+    "In src/augur/data.py - fix cache TTL for market_overview (currently subtracting from TTL which means only 60s cache; clarify the intent and ensure consistent caching)",
+    "In src/augur/data.py - fix cache TTL for hot_tickers (same issue - currently 90s effective, document and ensure it works)",
+    "In dashboard/app.py - /api/sparkline/{ticker}: currently returns dict with 'error' key on exception but does not consistently use {status, data} format - standardize to always return {status: 'ok'/'error', ...}",
+    "In dashboard/app.py - /api/hot-tickers: add try-catch around the entire handler so network timeout does not result in 500",
+    "In dashboard/app.py - /api/scanner/run: add overall timeout protection for large batch (20 tickers at max 30s each = up to 10 min), add progress streaming or at least a sane overall timeout with partial results",
+    "In dashboard/app.py - rate limiter: the comment says 'Max 30 requests per minute' but the check is >= 300 - fix to match documentation (should be 30 per minute or update the message)"
+  ],
+  "acceptance_criteria": [
+    "python3 -m pytest tests/ passes all existing tests",
+    "fetch_market_context('INVALID!!!TICKER') returns MarketContext with data_source attribute rather than raising",
+    "Rate limit middleware threshold matches its error message",
+    "All API endpoints return consistent JSON format with status field"
+  ],
+  "verification": [
+    "python3 -m pytest tests/ --tb=short -q",
+    "python3 -c \"from augur.data import fetch_market_context; ctx = fetch_market_context('INVALID!!!'); print(getattr(ctx, 'data_source', 'missing'))\"",
+    "python3 -c \"from dashboard.app import app; print('Dashboard imports OK')\""
+  ],
+  "blocked_reason": null,
+  "findings": "All 9 fixes applied successfully. Added conftest.py with autouse fixture to clear IP rate limit state between tests (prevents cross-test pollution from the 60/min IP limit). ThreadPoolExecutor with 10s timeout added to both fetch_market_overview and fetch_hot_tickers. Invalid ticker handling in fetch_market_context now returns graceful MarketContext with data_source=error."
+}

@@ -174,9 +174,17 @@ async def rate_limit_middleware(request: Request, call_next):
             if client_ip not in _ip_rate_limits:
                 _ip_rate_limits[client_ip] = []
             _ip_rate_limits[client_ip] = [t for t in _ip_rate_limits[client_ip] if now - t < 60]
-            if len(_ip_rate_limits[client_ip]) >= 300:
-                return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded. Max 30 requests per minute."})
+            if len(_ip_rate_limits[client_ip]) >= 60:
+                return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded. Max 60 requests per minute."})
             _ip_rate_limits[client_ip].append(now)
+            # Periodic eviction of stale IP entries to prevent unbounded memory growth
+            if len(_ip_rate_limits) > 10000:
+                stale_ips = [
+                    ip for ip, timestamps in _ip_rate_limits.items()
+                    if not timestamps or all(now - ts >= 60 for ts in timestamps)
+                ]
+                for ip in stale_ips:
+                    del _ip_rate_limits[ip]
     response = await call_next(request)
     return response
 
@@ -1564,9 +1572,9 @@ async def api_sparkline(ticker: str):
         trend = "flat"
         if len(prices) >= 2:
             trend = "up" if prices[-1] > prices[0] else "down" if prices[-1] < prices[0] else "flat"
-        return {"ticker": ticker.upper(), "prices": prices, "trend": trend}
+        return {"status": "ok", "ticker": ticker.upper(), "prices": prices, "trend": trend}
     except Exception as e:
-        return {"ticker": ticker.upper(), "prices": [], "trend": "flat", "error": str(e)}
+        return {"status": "error", "ticker": ticker.upper(), "prices": [], "trend": "flat", "error": str(e)}
 
 
 # ============ Hot Tickers API Route ============
@@ -1577,13 +1585,13 @@ async def api_hot_tickers(request: Request, refresh: bool = False):
 
     供首页「热门标的实时行情」面板使用。无 yfinance 时优雅降级为空列表。
     """
-    if not _HAS_AUGUR_DATA:
-        return {
-            "status": "degraded",
-            "tickers": [],
-            "note": "yfinance 未安装，热门标的不可用。",
-        }
     try:
+        if not _HAS_AUGUR_DATA:
+            return {
+                "status": "degraded",
+                "tickers": [],
+                "note": "yfinance 未安装，热门标的不可用。",
+            }
         from augur.data import fetch_hot_tickers
         tickers = fetch_hot_tickers(force_refresh=refresh)
         data = {"status": "ok", "tickers": tickers}
@@ -1596,11 +1604,7 @@ async def api_hot_tickers(request: Request, refresh: bool = False):
         return JSONResponse(content=data, headers={"ETag": f'"{etag}"'})
     except Exception as e:
         logger.warning("hot tickers failed: %s", e)
-        return {
-            "status": "degraded",
-            "tickers": [],
-            "note": f"热门标的获取失败: {e}",
-        }
+        return {"status": "error", "tickers": [], "error": str(e)}
 
 
 # ============ Market Overview API Routes ============
