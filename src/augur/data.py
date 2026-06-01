@@ -33,10 +33,15 @@ logger = logging.getLogger(__name__)
 
 
 # ============ Cache ============
+# Simple in-memory cache with TTL and LRU eviction.
+# Max 100 entries; when exceeded, the oldest 20+ entries (by timestamp) are
+# evicted down to 80 to provide headroom and avoid evicting on every insert.
 
 _cache: Dict[str, Any] = {}
 _cache_lock = threading.Lock()
 _CACHE_TTL = 180  # 3 minutes
+_CACHE_MAX_SIZE = 100
+_CACHE_EVICT_TARGET = 80
 
 
 def _cache_get(key: str) -> Optional[Any]:
@@ -52,9 +57,20 @@ def _cache_get(key: str) -> Optional[Any]:
 
 
 def _cache_set(key: str, value: Any) -> None:
-    """Set cache entry."""
+    """Set cache entry with LRU eviction.
+
+    Enforces a maximum of _CACHE_MAX_SIZE (100) entries. When the limit is
+    exceeded, evicts the oldest entries by timestamp down to _CACHE_EVICT_TARGET
+    (80) to provide headroom and avoid evicting on every insert.
+    """
     with _cache_lock:
         _cache[key] = {"value": value, "ts": time.time()}
+        if len(_cache) > _CACHE_MAX_SIZE:
+            # Sort entries by timestamp ascending, evict oldest
+            sorted_keys = sorted(_cache.keys(), key=lambda k: _cache[k]["ts"])
+            evict_count = len(_cache) - _CACHE_EVICT_TARGET
+            for k in sorted_keys[:evict_count]:
+                del _cache[k]
 
 
 def clear_cache() -> None:
