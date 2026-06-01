@@ -258,17 +258,30 @@ class SerenityAgent(BaseAgent):
         key_findings = []
         risks = []
 
-        # 生成发现
-        if factors["supply_chain_bottleneck"] >= 7:
-            key_findings.append(f"🔗 卡脖子位置确认: 物理不可替代的供应链垄断者（评分:{factors['supply_chain_bottleneck']}/10）")
-        if factors["options_iv_momentum"] >= 7:
-            key_findings.append(f"📈 IV Expansion机会: 动量向上+催化剂窗口（评分:{factors['options_iv_momentum']}/10）")
-        if factors["ai_compute_demand"] >= 7:
-            key_findings.append(f"⚡ AI算力直接受益: NeoCloud级增速验证（评分:{factors['ai_compute_demand']}/10）")
-        if factors["geopolitical_catalyst"] >= 7:
-            key_findings.append(f"🌍 地缘催化剂: CHIPS法案/出口管制/风险折价消除（评分:{factors['geopolitical_catalyst']}/10）")
-        if factors["risk_sizing"] >= 7:
-            key_findings.append(f"🛡️ 财务健康: 低负债高现金，流动性风险可控（评分:{factors['risk_sizing']}/10）")
+        # 模型适用性
+        if factors["supply_chain_bottleneck"] >= 7 and factors["ai_compute_demand"] >= 5:
+            coverage_confidence = 1.0
+        elif factors["supply_chain_bottleneck"] >= 5 or factors["ai_compute_demand"] >= 6:
+            coverage_confidence = 0.7
+        else:
+            coverage_confidence = 0.25
+
+        is_chokepoint_relevant = coverage_confidence >= 0.7
+
+        # 生成发现 —— 供应链特有findings只在框架适用时输出
+        if is_chokepoint_relevant:
+            if factors["supply_chain_bottleneck"] >= 7:
+                key_findings.append(f"🔗 卡脖子位置确认: 物理不可替代的供应链垄断者（评分:{factors['supply_chain_bottleneck']}/10）")
+            if factors["options_iv_momentum"] >= 7:
+                key_findings.append(f"📈 IV Expansion机会: 动量向上+催化剂窗口（评分:{factors['options_iv_momentum']}/10）")
+            if factors["ai_compute_demand"] >= 7:
+                key_findings.append(f"⚡ AI算力直接受益: NeoCloud级增速验证（评分:{factors['ai_compute_demand']}/10）")
+            if factors["geopolitical_catalyst"] >= 7:
+                key_findings.append(f"🌍 地缘催化剂: CHIPS法案/出口管制/风险折价消除（评分:{factors['geopolitical_catalyst']}/10）")
+            if factors["risk_sizing"] >= 7:
+                key_findings.append(f"🛡️ 财务健康: 低负债高现金，流动性风险可控（评分:{factors['risk_sizing']}/10）")
+        else:
+            key_findings.append(f"⚠️ Serenity框架对该公司适用性低（非AI供应链/半导体行业），评分仅供参考")
 
         # 风险
         if factors["supply_chain_bottleneck"] < 4:
@@ -284,14 +297,6 @@ class SerenityAgent(BaseAgent):
             risks.append(f"RSI={context.rsi:.0f}严重超买，散户已蜂拥，踩踏风险极高")
         if context.ps > 25:
             risks.append(f"PS={context.ps:.1f}过高，卡脖子溢价可能已被充分定价")
-
-        # 模型适用性
-        if factors["supply_chain_bottleneck"] >= 7 and factors["ai_compute_demand"] >= 5:
-            coverage_confidence = 1.0
-        elif factors["supply_chain_bottleneck"] >= 5 or factors["ai_compute_demand"] >= 6:
-            coverage_confidence = 0.7
-        else:
-            coverage_confidence = 0.25
 
         reasoning = f"""## {self.name} Chokepoint Analysis for {context.ticker}
 

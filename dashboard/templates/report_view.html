@@ -530,15 +530,15 @@ function renderReportPage(data) {
     // Date
     document.getElementById('rp-date').textContent = 'Generated: ' + (data.timestamp || new Date().toISOString()).slice(0, 16).replace('T', ' ') + ' UTC';
 
-    // Parse signal and score from the markdown report
+    // Parse signal and score from the markdown report (table format: | **key** | value |)
     var signal = 'neutral', score = 5.0, confidence = 0.5;
-    var signalMatch = rpMarkdown.match(/综合信号[：:]\s*\*?\*?(\w+)/i) || rpMarkdown.match(/Signal[：:]\s*\*?\*?(\w+)/i);
+    var signalMatch = rpMarkdown.match(/综合信号[^|]*\|\s*([^|\n]+?)\s*\|/i) || rpMarkdown.match(/Signal[：:]\s*\*?\*?(\w+)/i);
     if (signalMatch) {
-        var s = signalMatch[1].toLowerCase();
-        if (s.indexOf('bull') >= 0 || s.indexOf('buy') >= 0) signal = 'bullish';
-        else if (s.indexOf('bear') >= 0 || s.indexOf('sell') >= 0) signal = 'bearish';
+        var s = signalMatch[1];
+        if (s.indexOf('多') >= 0 || s.toLowerCase().indexOf('bull') >= 0 || s.toLowerCase().indexOf('buy') >= 0) signal = 'bullish';
+        else if (s.indexOf('空') >= 0 || s.toLowerCase().indexOf('bear') >= 0 || s.toLowerCase().indexOf('sell') >= 0) signal = 'bearish';
     }
-    var scoreMatch = rpMarkdown.match(/综合评分[：:]\s*\*?\*?([0-9.]+)/i) || rpMarkdown.match(/Score[：:]\s*\*?\*?([0-9.]+)/i);
+    var scoreMatch = rpMarkdown.match(/综合评分[^|]*\|\s*([0-9.]+)/i) || rpMarkdown.match(/Score[：:]\s*\*?\*?([0-9.]+)/i);
     if (scoreMatch) score = parseFloat(scoreMatch[1]) || 5.0;
 
     // Signal badge
@@ -595,12 +595,12 @@ function renderExecSummary(score, signal, confidence) {
     var signalText = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
     var signalColor = signal === 'bullish' ? 'var(--signal-buy)' : signal === 'bearish' ? 'var(--signal-sell)' : 'var(--signal-neutral)';
 
-    // Try to extract additional metrics from markdown
-    var confMatch = rpMarkdown.match(/置信度[：:]\s*\*?\*?([0-9.]+%?)/i) || rpMarkdown.match(/Confidence[：:]\s*\*?\*?([0-9.]+%?)/i);
+    // Extract metrics from table format: | **key** | value |
+    var confMatch = rpMarkdown.match(/置信度[^|]*\|\s*([0-9.]+%?)/i) || rpMarkdown.match(/Confidence[：:]\s*([0-9.]+%?)/i);
     var confText = confMatch ? confMatch[1] : '--';
-    var posMatch = rpMarkdown.match(/建议仓位[：:]\s*\*?\*?([0-9.]+%?)/i) || rpMarkdown.match(/Position[：:]\s*\*?\*?([0-9.]+%?)/i);
+    var posMatch = rpMarkdown.match(/建议仓位[^|]*\|\s*([0-9.]+%?)/i) || rpMarkdown.match(/Position[：:]\s*([0-9.]+%?)/i);
     var posText = posMatch ? posMatch[1] : '--';
-    var riskMatch = rpMarkdown.match(/风险等级[：:]\s*\*?\*?(\S+)/i) || rpMarkdown.match(/Risk[：:]\s*\*?\*?(\S+)/i);
+    var riskMatch = rpMarkdown.match(/风险等级[^|]*\|\s*(\S+)/i) || rpMarkdown.match(/Risk[：:]\s*(\S+)/i);
     var riskText = riskMatch ? riskMatch[1] : '--';
 
     var html = '<div class="exec-title">Executive Summary</div>';
@@ -636,24 +636,22 @@ function renderExecSummary(score, signal, confidence) {
 function renderVotingTable() {
     var tbody = document.getElementById('rp-voting-tbody');
     tbody.innerHTML = '';
-    // Try to parse voting table from markdown
-    var tableMatch = rpMarkdown.match(/\|.*Agent.*\|[\s\S]*?\n((?:\|.*\n?)+)/i) ||
-                     rpMarkdown.match(/\|.*投资人.*\|[\s\S]*?\n((?:\|.*\n?)+)/i) ||
-                     rpMarkdown.match(/\|.*大师.*\|[\s\S]*?\n((?:\|.*\n?)+)/i);
+    // Match the specific voting table header: | 大师 | 流派 | 信号 | (not | **参与大师** |)
+    var tableMatch = rpMarkdown.match(/\| *大师 *\| *流派 *\| *信号[^\n]*\n[^\n]*---[^\n]*\n((?:\|[^\n]+\n?)+)/i);
     if (tableMatch) {
         var rows = tableMatch[1].split('\n').filter(function(r) { return r.trim().startsWith('|') && r.indexOf('---') < 0; });
         rows.forEach(function(row) {
             var cells = row.split('|').map(function(c) { return c.trim(); }).filter(function(c) { return c; });
-            if (cells.length >= 3) {
+            if (cells.length >= 4) {
                 var tr = document.createElement('tr');
-                var sigText = cells[1] || '';
+                // Columns: [0]=大师 [1]=流派 [2]=信号 [3]=评分(x/10) [4]=置信度
+                var sigText = cells[2] || '';
                 var sigClass = '';
-                var sigLower = sigText.toLowerCase();
-                if (sigLower.indexOf('bull') >= 0 || sigLower.indexOf('buy') >= 0) sigClass = 'sig-buy';
-                else if (sigLower.indexOf('bear') >= 0 || sigLower.indexOf('sell') >= 0) sigClass = 'sig-sell';
+                if (sigText.indexOf('多') >= 0 || sigText.toLowerCase().indexOf('bull') >= 0) sigClass = 'sig-buy';
+                else if (sigText.indexOf('空') >= 0 || sigText.toLowerCase().indexOf('bear') >= 0) sigClass = 'sig-sell';
                 else sigClass = 'sig-neutral';
 
-                var scoreVal = parseFloat(cells[2]) || 0;
+                var scoreVal = parseFloat(cells[3]) || 0;  // "7.5/10" → 7.5
                 var scoreClass = 'score-mid';
                 var gaugeClass = 'gauge-mid';
                 var gaugeColor = 'var(--signal-neutral)';
@@ -669,7 +667,7 @@ function renderVotingTable() {
                     + '<td class="' + sigClass + '">' + escapeHtml(sigText) + '</td>'
                     + '<td class="score-cell ' + scoreClass + '">' + scoreVal.toFixed(1) + '</td>'
                     + '<td>' + gaugeHtml + '</td>'
-                    + '<td>' + escapeHtml(cells[3] || '--') + '</td>';
+                    + '<td>' + escapeHtml(cells[4] || '--') + '</td>';  // cells[4]=置信度
                 tbody.appendChild(tr);
             }
         });
@@ -681,15 +679,13 @@ function renderVotingTable() {
 
 function parseAgentsFromMarkdown() {
     var agents = [];
-    var tableMatch = rpMarkdown.match(/\|.*Agent.*\|[\s\S]*?\n((?:\|.*\n?)+)/i) ||
-                     rpMarkdown.match(/\|.*投资人.*\|[\s\S]*?\n((?:\|.*\n?)+)/i) ||
-                     rpMarkdown.match(/\|.*大师.*\|[\s\S]*?\n((?:\|.*\n?)+)/i);
+    var tableMatch = rpMarkdown.match(/\| *大师 *\| *流派 *\| *信号[^\n]*\n[^\n]*---[^\n]*\n((?:\|[^\n]+\n?)+)/i);
     if (tableMatch) {
         var rows = tableMatch[1].split('\n').filter(function(r) { return r.trim().startsWith('|') && r.indexOf('---') < 0; });
         rows.forEach(function(row) {
             var cells = row.split('|').map(function(c) { return c.trim(); }).filter(function(c) { return c; });
-            if (cells.length >= 3) {
-                var score = parseFloat(cells[2]) || 0;
+            if (cells.length >= 4) {
+                var score = parseFloat(cells[3]) || 0;  // cells[3] = "7.5/10"
                 agents.push({ name: cells[0], agent_id: cells[0], score: score });
             }
         });

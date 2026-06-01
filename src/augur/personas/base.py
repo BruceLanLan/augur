@@ -92,6 +92,7 @@ class MarketContext:
     price_vs_52w_low: float = 0
     sector: str = ""
     industry: str = ""
+    business_summary: str = ""  # yfinance longBusinessSummary，用于判断公司真实业务
 
     # 技术指标
     volume: float = 0           # 成交量

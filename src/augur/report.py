@@ -201,9 +201,13 @@ def _score_stats(results: Dict[str, AgentResponse]) -> Tuple[float, float, float
 
 
 def _aggregate_items(results: Dict[str, AgentResponse], attr: str) -> List[Tuple[str, List[str]]]:
-    """聚合所有大师提到的风险/发现，按提及频次降序返回 [(item, [agent_names])]。"""
+    """聚合所有大师提到的风险/发现，按提及频次降序返回 [(item, [agent_names])]。
+    coverage_confidence < 0.5 的 agent 不参与共识 findings 聚合，避免不相关框架污染结论。
+    """
     bag: Dict[str, List[str]] = {}
     for response in _valid_results(results).values():
+        if getattr(response, "coverage_confidence", 1.0) < 0.5:
+            continue  # 框架不适用的 agent 不贡献 findings
         for item in getattr(response, attr, []) or []:
             norm = (item or "").strip()
             if not norm:

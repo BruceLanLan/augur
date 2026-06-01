@@ -110,6 +110,7 @@ class YFinanceProvider(DataProvider):
         quick_ratio = safe_num(info.get("quickRatio"))
         sector = info.get("sector") or ""
         industry = info.get("industry") or ""
+        business_summary = info.get("longBusinessSummary") or info.get("description") or ""
         volume = safe_num(info.get("volume")) or safe_num(info.get("regularMarketVolume"))
         avg_volume = safe_num(info.get("averageVolume")) or safe_num(info.get("averageVolume10days"))
 
@@ -188,6 +189,7 @@ class YFinanceProvider(DataProvider):
             "quick_ratio": quick_ratio,
             "sector": sector,
             "industry": industry,
+            "business_summary": business_summary,
             "volume": volume,
             "avg_volume": avg_volume,
             "institutional_ownership": institutional_ownership,

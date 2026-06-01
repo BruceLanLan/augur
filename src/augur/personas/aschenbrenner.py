@@ -207,19 +207,32 @@ class AschenbrennerAgent(BaseAgent):
         key_findings = []
         risks = []
 
-        # 生成发现
-        if factors["compute_infrastructure"] >= 7:
-            key_findings.append(f"🚀 算力基础设施投资力度强，百万卡集群候选者（评分:{factors['compute_infrastructure']}/10）")
-        if factors["ai_exposure"] >= 7:
-            key_findings.append(f"⚡ AI营收高速增长，AGI商业化路径清晰（评分:{factors['ai_exposure']}/10）")
-        if factors["vertical_integration"] >= 7:
-            key_findings.append(f"🔗 垂直整合度高，芯片→云→应用全栈控制")
-        if factors["tam_expansion"] >= 7:
-            key_findings.append(f"📈 TAM在快速扩张，市场定价了AGI的未来空间")
-        if factors["management_vision"] >= 7:
-            key_findings.append(f"👁️ 管理层高持仓+机构信任，AGI愿景清晰")
-        if factors["moat_reinforcement"] >= 7:
-            key_findings.append(f"🛡️ AI正在强化护城河，竞争优势在扩大")
+        # 模型适用性：Aschenbrenner框架仅对算力/AI基础设施公司有效
+        if factors["compute_infrastructure"] >= 7 and factors["ai_exposure"] >= 5:
+            coverage_confidence = 1.0
+        elif factors["compute_infrastructure"] >= 5 or factors["ai_exposure"] >= 6:
+            coverage_confidence = 0.7
+        else:
+            coverage_confidence = 0.25
+
+        is_agi_relevant = coverage_confidence >= 0.7  # 只有真正相关的公司才生成AGI特有findings
+
+        # 生成发现 —— AGI特有的findings只在框架适用时输出
+        if is_agi_relevant:
+            if factors["compute_infrastructure"] >= 7:
+                key_findings.append(f"🚀 算力基础设施投资力度强，百万卡集群候选者（评分:{factors['compute_infrastructure']}/10）")
+            if factors["ai_exposure"] >= 7:
+                key_findings.append(f"⚡ AI营收高速增长，AGI商业化路径清晰（评分:{factors['ai_exposure']}/10）")
+            if factors["vertical_integration"] >= 7:
+                key_findings.append(f"🔗 垂直整合度高，芯片→云→应用全栈控制")
+            if factors["tam_expansion"] >= 7:
+                key_findings.append(f"📈 TAM在快速扩张，市场定价了AGI的未来空间")
+            if factors["management_vision"] >= 7:
+                key_findings.append(f"👁️ 管理层高持仓+机构信任，AGI愿景清晰")
+            if factors["moat_reinforcement"] >= 7:
+                key_findings.append(f"🛡️ AI正在强化护城河，竞争优势在扩大")
+        else:
+            key_findings.append(f"⚠️ Aschenbrenner框架对该公司适用性低（非AI/算力基础设施行业），评分仅供参考")
 
         # 风险
         if factors["compute_infrastructure"] < 4:
@@ -230,14 +243,6 @@ class AschenbrennerAgent(BaseAgent):
             risks.append(f"PE={context.pe:.1f}极高，即使AGI乐观也要考虑估值风险")
         if context.market_cap < 10:
             risks.append("市值偏小，在万亿美元AGI竞赛中缺乏资源")
-
-        # 模型适用性：Aschenbrenner框架仅对算力/AI基础设施公司有效
-        if factors["compute_infrastructure"] >= 7 and factors["ai_exposure"] >= 5:
-            coverage_confidence = 1.0
-        elif factors["compute_infrastructure"] >= 5 or factors["ai_exposure"] >= 6:
-            coverage_confidence = 0.7
-        else:
-            coverage_confidence = 0.25
 
         reasoning = f"""## {self.name} Analysis for {context.ticker}
 
