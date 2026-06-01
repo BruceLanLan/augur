@@ -26,6 +26,31 @@
 
 ---
 
+## 🆕 v7.8.3 综合审查修复 (最新)
+
+| 功能 | 说明 |
+|------|------|
+| ⚡ 性能优化 | LRU 缓存淘汰（最多 100 条）、ThreadPoolExecutor 资源管理 |
+| 🪙 加密货币面板 | 新增 /api/crypto-overview（BTC/ETH/SOL/DOGE/XRP） |
+| 🛢️ 大宗商品面板 | 新增 /api/commodities（黄金/白银/原油/天然气） |
+| 📊 国债利率面板 | 新增 /api/treasury-rates（2Y/5Y/10Y/30Y） |
+| 📄 报告增强 | 评分颜色编码、CSS 进度条、共识投票条、Download HTML/MD/Copy |
+| 📖 API 文档 | docs/api-reference.md 补充 4 个新端点 |
+
+---
+
+## 🆕 v7.8.2 前端+逻辑+测试
+
+| 功能 | 说明 |
+|------|------|
+| 🛡️ 前端健壮性 | heroGo 防抖、localStorage QuotaExceeded 保护、null-safety、IME compositionend |
+| 🎨 CSS 深度修复 | 移除死样式、z-index 层级修正、375px 响应式、rem 统一、hover 补全 |
+| 🧠 业务逻辑 | 低参与度标记、backtest 短数据降级、report 表格管道符转义 |
+| 🔒 安全 | ticker 路径遍历防护、persona id 长度限制 |
+| 🧪 测试 | 新增 11 个端点测试（459 total） |
+
+---
+
 ## 🆕 v7.8.1 修复与优化
 
 | 功能 | 说明 |

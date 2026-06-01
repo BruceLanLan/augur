@@ -26,6 +26,31 @@
 
 ---
 
+## 🆕 v7.8.3 Comprehensive Review & Fix (Latest)
+
+| Feature | Description |
+|---------|-------------|
+| ⚡ Performance | LRU cache eviction (max 100 entries), ThreadPoolExecutor resource management |
+| 🪙 Crypto Panel | New /api/crypto-overview (BTC/ETH/SOL/DOGE/XRP) |
+| 🛢️ Commodities Panel | New /api/commodities (Gold/Silver/Oil/Gas) |
+| 📊 Treasury Rates | New /api/treasury-rates (2Y/5Y/10Y/30Y) |
+| 📄 Report Enhancement | Color-coded scores, CSS progress bars, consensus strip, Download HTML/MD/Copy |
+| 📖 API Docs | docs/api-reference.md updated with 4 new endpoints |
+
+---
+
+## 🆕 v7.8.2 Frontend + Logic + Tests
+
+| Feature | Description |
+|---------|-------------|
+| 🛡️ Frontend Robustness | heroGo debounce, localStorage QuotaExceeded protection, null-safety, IME compositionend |
+| 🎨 CSS Deep Fix | Dead CSS removal, z-index hierarchy fix, 375px responsive, rem consistency |
+| 🧠 Business Logic | Low-participation flag, backtest short-data degradation, report pipe escaping |
+| 🔒 Security | Ticker path traversal prevention, persona id length limit |
+| 🧪 Tests | 11 new endpoint tests (459 total) |
+
+---
+
 ## 🆕 v7.8.1 Fixes & Improvements
 
 | Feature | Description |
