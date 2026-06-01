@@ -24,149 +24,113 @@
 >
 > Stop guessing from one angle. Augur lets **18 legendary investors** independently analyze any stock, each producing a structured score, then aggregates them into a weighted consensus with Kelly position sizing.
 
----
-
-## 🆕 v8.0.0 Intelligent Investment Platform (Latest)
-
-| Feature | Description |
-|---------|-------------|
-| 💬 AI Chat | `/chat` — 11 personas with unique voices, template-based (no LLM API needed) |
-| 📊 Portfolio Optimizer | `/optimizer` — Markowitz mean-variance optimization (pure Python) |
-| ⚔️ Master Compare | `/compare` — 2-5 personas independently analyze the same stock |
-| 🗣️ Debate Mode | `/debate` — Personas argue in sequence with rebuttals |
-| 📜 History | `/history` — Persistent analysis history, searchable by ticker |
-| 🏆 Leaderboard | `/performance` — IC-based accuracy ranking across all agents |
-| 🧠 Learning Engine | Auto-adjusts consensus weights from prediction IC feedback |
-| 😊 Social Sentiment | X/Reddit/StockTwits sentiment factor fused into consensus score |
-| ⚡ Real-time Prices | `/ws/prices` WebSocket streaming ticker tape |
-| 🔔 Alert Rules | DSL-based rule engine, multi-channel notifications |
-| 👥 Multi-User | Optional JWT + SQLite auth (`AUGUR_MULTI_USER=1`) |
-| 🔌 Plugin System | Third-party agent extensions via setuptools entry_points |
+> **🦉 Why a White Pixel Owl?**
+> In Japanese culture, the white owl (*フクロウ, fukurou*) symbolizes luck, wealth, and wisdom. Its name can be written as "不苦労" (no hardship) or "福来郎" (luck arrives). We chose it as Augur's logo to represent our mission: **using AI wisdom to make investment decisions less painful and more rewarding.**
 
 ---
 
-## 🆕 v7.8.3 Comprehensive Review & Fix
+## 💡 Why Augur?
 
-| Feature | Description |
-|---------|-------------|
-| ⚡ Performance | LRU cache eviction (max 100 entries), ThreadPoolExecutor resource management |
-| 🪙 Crypto Panel | New /api/crypto-overview (BTC/ETH/SOL/DOGE/XRP) |
-| 🛢️ Commodities Panel | New /api/commodities (Gold/Silver/Oil/Gas) |
-| 📊 Treasury Rates | New /api/treasury-rates (2Y/5Y/10Y/30Y) |
-| 📄 Report Enhancement | Color-coded scores, CSS progress bars, consensus strip, Download HTML/MD/Copy |
-| 🐛 CRCL Analysis Fix | coverage_confidence gate prevents AGI/supply-chain labels on unrelated companies |
-
----
-
-## 🆕 v7.8.2 Frontend + Logic + Tests
-
-| Feature | Description |
-|---------|-------------|
-| 🛡️ Frontend Robustness | heroGo debounce, localStorage QuotaExceeded protection, null-safety, IME compositionend |
-| 🎨 CSS Deep Fix | Dead CSS removal, z-index hierarchy fix, 375px responsive, rem consistency |
-| 🧠 Business Logic | Low-participation flag, backtest short-data degradation, report pipe escaping |
-| 🔒 Security | Ticker path traversal prevention, persona id length limit |
-| 🧪 Tests | 11 new endpoint tests (459 total) |
+| | Single Strategy | Ask ChatGPT | **Augur** |
+|--|:--:|:--:|:--:|
+| **Analysis Angles** | 1 | Random | **18 independent schools** |
+| **Quantified Score** | ✗ | ✗ | **0–10 structured score** |
+| **Chinese Investors** | ✗ | Biased | **Duan / Zhang / Li Lu / Dan Bin** |
+| **Live Data** | Manual | None | **yfinance auto-fetch** |
+| **Position Sizing** | ✗ | ✗ | **Kelly formula** |
+| **Self-Learning Weights** | ✗ | ✗ | **IC feedback auto-optimization** |
+| **System Integration** | ✗ | ✗ | **MCP Server / Hermes** |
 
 ---
 
-## 🆕 v7.8.1 Fixes & Improvements
+## 🧠 18 Investor Personas
 
-| Feature | Description |
-|---------|-------------|
-| 🔧 Data Layer Robustness | Graceful degradation for invalid tickers, parallel timeout protection for market overview/hot tickers |
-| 📊 Dashboard Enhancement | Frontend fetch error handling with retry buttons, agent score chart |
-| 📄 Report Visualization | Professional markdown table styling, print stylesheet, SVG score chart |
-| 🔐 Security Hardening | Ticker path traversal protection, rate limiter fix, agent_id length limit |
-| 🐛 Logic Fixes | Pipe character escaping in report tables, consensus zero-division guard verification |
-| 📝 Code Quality | Cache TTL documentation, IP rate limit cleanup mechanism |
+<details>
+<summary><strong>Classic Value</strong></summary>
 
----
+| Investor | Framework | Best For |
+|----------|-----------|---------|
+| 🏆 **Warren Buffett** | Moat + owner earnings + FCF | Consumer / financial blue chips |
+| 📐 **Benjamin Graham** | Margin of safety, P/E<15 P/B<1.5 | Deep value stocks |
+| 🧠 **Charlie Munger** | Latticework thinking + contrarian | Misunderstood quality businesses |
+| 🔬 **Philip Fisher** | Scuttlebutt + margin sustainability | High-quality growth companies |
 
-## 🆕 v7.8.0 New Features
+</details>
 
-| Feature | Description |
-|---------|-------------|
-| 📊 Bloomberg Dashboard Enhancement | SVG Fear & Greed Gauge, Market Pulse strip, International Markets panel, Sector heatmap mini-bar |
-| 🎭 Custom Persona CRUD | List/edit/delete custom personas, purple CUSTOM badge |
-| 🔐 API Token Authentication | AUGUR_API_TOKEN env var, Bearer Token middleware, Settings config panel |
-| 🎨 UI Polish | Panel empty states with icons, JS error handling, CSS consistency, 480px mobile breakpoint |
-| 📖 Integration Guide | MCP/REST/Python SDK/Hermes/OpenClaw single-persona integration docs |
-| 🐳 Docker Improvements | docker-compose.yml passes Token, .env.example updated |
+<details>
+<summary><strong>Growth & Innovation</strong></summary>
 
----
+| Investor | Framework | Best For |
+|----------|-----------|---------|
+| 🚀 **Peter Lynch** | PEG < 1.5 + everyday business | GARP growth stocks |
+| 💡 **Cathie Wood** | Wright's Law + TAM expansion | AI / Genomics / Blockchain |
+| 🏢 **Peter Thiel** | 0-to-1 monopoly + contrarian | Tech platforms / deep tech |
+| 🤖 **Leopold Aschenbrenner** | AGI infrastructure + compute scarcity | AI / semiconductors |
 
-## 📋 Feature List
+</details>
 
-> Augur is a full-featured multi-agent investment analysis platform. Below are all core modules:
+<details>
+<summary><strong>Macro & Cycle</strong></summary>
 
-| Module | Feature | Description |
-|--------|---------|-------------|
-| 🧠 Multi-Agent Consensus | 18 Masters | 18 investor personas independently analyze, weighted consensus + Kelly sizing |
-| 📡 Auto Data Fetch | Multi-Source | yfinance / Finnhub / Alpha Vantage / Stooq provider chain |
-| 🔥 Sector Heatmap | 11 ETFs | Sector performance with color-coded change visualization |
-| 😱 Fear & Greed | SVG Gauge | VIX-driven semi-circle gauge with gradient + needle animation |
-| 🌏 International Markets | Asia + Europe | HSI, Nikkei, CSI300, FTSE, DAX real-time |
-| 📋 Watchlist | Batch Analyze | Add/remove tickers, localStorage persistence |
-| 🔍 Scanner | Heatmap Scoring | Preset ticker lists with parallel 18-master scoring |
-| 📈 Backtest | IC Leaderboard | Hit rate + information coefficient ranking |
-| 💼 Portfolio | Holdings P&L | Track positions, real-time gains, asset allocation chart |
-| 🎭 Custom Persona | CRUD | No-code YAML creation, edit/delete management |
-| 🔐 API Token | Bearer Auth | Environment variable config, middleware protection |
-| 🤖 Multi-Platform Bots | Telegram/Slack/WeChat/Lark | Push notifications + alert thresholds |
-| 🔌 MCP Integration | Claude / Hermes | MCP protocol server, single/all persona invocation |
-| 🐳 Docker Deploy | Compose | One-command deployment with env config |
-| 💻 CLI | Commands | augur analyze / consensus / report / inject-soul |
-| ⏰ Cron Scheduler | Monitoring | Scheduled watchlist analysis, threshold alerts |
-| 📄 Deep Reports | Download | Markdown/HTML export, professional visualization |
-| 🌐 i18n | Bilingual | Chinese/English toggle with localStorage |
+| Investor | Framework | Best For |
+|----------|-----------|---------|
+| 🌐 **Ray Dalio** | All-weather + debt cycle | Macro rotation |
+| 🔄 **George Soros** | Reflexivity + self-reinforcing trends | Trend trading |
+| 📉 **Howard Marks** | Pendulum sentiment + second-level thinking | Cycle bottoms |
+| 🥇 **ARPS** | Real rates + Crypto / Gold | Inflation hedge |
 
----
+</details>
 
-## 🆕 v7.7.0 New Features
+<details>
+<summary><strong>🇨🇳 Chinese Investors (Exclusive)</strong></summary>
 
-| Feature | Description |
-|---------|-------------|
-| 💼 Portfolio Management | /portfolio page with holdings tracking, real-time P&L, asset donut chart, 7-day value curve, one-click Augur analysis |
-| 🎭 Persona Deep Interaction | Ask individual masters questions (Ask Question), side-by-side comparison (Compare Two Masters) |
-| 🔔 Cron Optimization | Threshold filtering fix, scheduled monitoring config UI, GET/PUT /api/cron/config, POST /api/cron/run-now |
-| 📊 Dashboard Enrichment | Sector heatmap, top movers, Market Breadth, Consensus Leaderboard, international indices |
-| 📄 Professional Reports | /report/{ticker} full-page view, score gauge SVG, download MD/HTML, copy to clipboard, voting table |
-| 🎨 UI Polish | Global table sorting, active nav highlighting, Bloomberg dark theme consistency |
+| Investor | Framework | Best For |
+|----------|-----------|---------|
+| 🎯 **Duan Yongping** | Benfun (principled) + extreme concentration | Consumer tech with clear model |
+| 🌏 **Zhang Lei (Hillhouse)** | Structural long-term value | Chinese growth sectors |
+| 🏔️ **Li Lu (Himalaya)** | Deep value + margin of safety | HK / A-share undervaluation |
+| 🫖 **Dan Bin (OrientalHarbour)** | Brand moat + era beta | Consumer champions |
+| ₿ **BTCdayu** | Information edge + sentiment momentum | Crypto / narrative trading |
+
+</details>
+
+<details>
+<summary><strong>Special Strategies</strong></summary>
+
+| Investor | Framework | Best For |
+|----------|-----------|---------|
+| 🔭 **Serenity** | AI / semiconductor supply chain chokepoints | Critical bottleneck plays |
+
+</details>
 
 ---
 
-## 🆕 v7.6.0 New Features
+## 🚀 30-Second Setup
 
-| Feature | Description |
-|---------|-------------|
-| 📋 Watchlist | Add/remove tickers, localStorage persistence, batch analyze all |
-| 📈 Sparkline Charts | 7-day close price SVG polyline, green for up / red for down |
-| 📊 Historical Comparison | Compare analysis results for same ticker over time |
-| 📦 Enhanced Export | JSON structured export + CSV master scores (pure frontend Blob) |
-| 🔍 SEO & Open Graph | og:title/description/image + Twitter Card + robots.txt + sitemap.xml |
-| 🏷️ Code Quality | Full type hints + docstrings in data.py, OpenAPI summaries, py.typed |
+```bash
+git clone https://github.com/BruceLanLan/augur.git && cd augur
+python3 -m venv .venv && source .venv/bin/activate
+pip install --upgrade pip && pip install -e ".[data]"
 
----
+# Analyze
+augur analyze AAPL                  # 18-master consensus, live data auto-fetch
+augur consensus NVDA                # weighted consensus + Kelly position sizing
+augur report TSLA                   # generate deep analysis report
 
-## 🆕 v7.5.0 New Features
+# v8 features
+augur chat AAPL --persona buffett   # ask Buffett about a stock
+augur sentiment NVDA                # social sentiment analysis
 
-| Feature | Description |
-|---------|-------------|
-| 🌐 i18n Internationalization | Chinese/English toggle, sidebar language switcher, localStorage persistence |
-| 🔍 Scanner | Batch scoring heatmap, preset ticker lists, parallel 18-master scoring |
-| 🔒 Security Hardening | IP rate limiting (30/min) / CORS middleware / input sanitization / API key masking |
-| ⚡ Performance | ETag + 304 conditional requests / ThreadPoolExecutor concurrent data fetching |
-| 🔔 Notifications | Telegram / Slack / Lark / WeChat test notifications + alert threshold config |
-| 📄 Report Download | One-click Markdown export, copy to clipboard |
-| 🤖 Single Agent Integration | MCP / REST / Python SDK access to individual persona agents (see [docs/single-persona-integration.md](docs/single-persona-integration.md)) |
+# Launch Dashboard
+python3 -m dashboard.app            # → open http://localhost:8000
+```
 
 ---
 
 ## ✨ See It In Action
 
-```
-$ augur analyze NVDA
+```text
+$ augur consensus NVDA
 
 Auto-fetching data for NVDA from yfinance...
   Price: 820.00 | PE: 45.0 | ROE: 65.0% | GM: 78.0%
@@ -181,8 +145,8 @@ Auto-fetching data for NVDA from yfinance...
 
   Key Findings:
     • 🛡️ AI reinforcing moat, competitive advantage expanding
-    • ⚡ Revenue 122%, clear AGI commercialisation path
-    • 🚀 S-curve early rapid expansion phase
+    • ⚡ AI revenue rapidly growing, AGI path clear
+    • 🚀 Revenue 122%, S-curve early rapid expansion
 
   BULLISH (11): buffett, fisher, aschenbrenner, cathie_wood, thiel...
   NEUTRAL  (5): dalio, marks, graham, soros, serenity
@@ -192,139 +156,66 @@ Auto-fetching data for NVDA from yfinance...
 
 ---
 
-## 🚀 30-Second Setup
+## 🆕 What's New in v8.0.0
 
-```bash
-git clone https://github.com/BruceLanLan/augur.git && cd augur
+v8 upgrades Augur from an analysis tool to an **intelligent investment platform** with 10 new modules.
 
-# Create virtual environment and upgrade pip (fixes old-version compatibility)
-python3 -m venv .venv && source .venv/bin/activate
-pip install --upgrade pip setuptools wheel
+### 🖥️ New Dashboard Pages
 
-# Install Augur
-pip install -e ".[data]"
+| Page | URL | What It Does |
+|------|-----|-------------|
+| **AI Chat** | `/chat` | 11 personas with distinct voices — no LLM API required |
+| **Portfolio Optimizer** | `/optimizer` | Markowitz mean-variance optimization, pure Python |
+| **Master Compare** | `/compare` | 2–5 personas independently analyze the same stock |
+| **Debate Mode** | `/debate` | Personas argue in sequence, each rebutting the previous |
+| **History** | `/history` | Persistent analysis history, searchable by ticker/date |
+| **Leaderboard** | `/performance` | IC-based accuracy ranking across all agents |
 
-# Start using
-augur analyze AAPL         # auto-fetch live data + 18-master analysis
-augur consensus NVDA       # consensus + Kelly position sizing
-augur report TSLA          # generate deep analysis report
-python3 -m dashboard.app   # launch Bloomberg-style Dashboard
-# → open http://localhost:8000
-```
+### 🧠 Smarter Backend
 
----
+| Module | What It Does |
+|--------|-------------|
+| **LearningEngine** | Tracks prediction accuracy, auto-adjusts consensus weights via IC feedback |
+| **SentimentAnalyzer** | Fuses X / Reddit / StockTwits sentiment into the consensus score |
+| **WebSocket Streaming** | `/ws/prices` real-time price tape, Bloomberg-style ticker |
+| **RulesEngine** | DSL-based alert conditions with multi-channel notifications |
 
-## 📸 Dashboard Preview
+### 🔧 Optional Advanced Features
 
-> *Full screenshots coming soon*
-
-Dashboard highlights:
-- 🌐 **Global Market Overview** — Real-time S&P 500, NASDAQ, Hang Seng, CSI 300, VIX, Treasury, Gold, Crude, BTC
-- 🔥 **Hot Tickers** — Top 10 tech/crypto tickers with live prices
-- 😱 **Fear & Greed Indicator** — VIX-based market sentiment gauge
-- 🎴 **Master Persona Cards** — 18 masters by school (Value/Growth/Macro/Quant/China)
-- 🌗 **Dark/Light Theme** — One-click toggle with localStorage persistence
-- 📊 **Deep Reports** — Downloadable as Markdown or PDF
-
----
-
-> **🦉 Why a White Pixel Owl?**
-> In Japanese culture, the white owl (フクロウ, *fukurou*) is a symbol of luck, wealth, and wisdom. Its pronunciation can be written as "不苦労" (no hardship) or "福来郎" (luck comes). We chose the white pixel owl as Augur's logo to represent our mission: **Using AI wisdom to make investment decisions less painful and more rewarding.**
-
-## 💡 Why Augur?
-
-| | Single Strategy | Ask ChatGPT | **Augur** |
-|--|:--:|:--:|:--:|
-| Analysis Angles | 1 | Random | **18 independent views** |
-| Quantified Score | ✗ | ✗ | **0–10 structured score** |
-| Chinese Investors | ✗ | Biased | **Duan / Zhang / Li Lu / Dan Bin** |
-| Live Data | Manual | None | **yfinance auto-fetch** |
-| Position Sizing | ✗ | ✗ | **Kelly formula** |
-| Deploy to Claude/Hermes | ✗ | ✗ | **MCP Server** |
-
----
-
-## 🧠 18 Investor Personas
-
-<details>
-<summary><strong>Classic Value</strong></summary>
-
-| Investor | Framework | Best For |
-|----------|-----------|---------|
-| 🏆 **Warren Buffett** | Moat + owner earnings + FCF | Consumer/financial blue chips |
-| 📐 **Benjamin Graham** | Margin of safety, P/E<15 P/B<1.5 | Deep value stocks |
-| 🧠 **Charlie Munger** | Latticework + contrarian | Misunderstood quality businesses |
-| 🔬 **Philip Fisher** | Scuttlebutt + margin sustainability | High-quality growth companies |
-
-</details>
-
-<details>
-<summary><strong>Growth & Innovation</strong></summary>
-
-| Investor | Framework | Best For |
-|----------|-----------|---------|
-| 🚀 **Peter Lynch** | PEG < 1.5 + everyday business | GARP growth stocks |
-| 💡 **Cathie Wood** | Wright's Law + TAM expansion | AI/Genomics/Blockchain |
-| 🏢 **Peter Thiel** | 0-to-1 monopoly + contrarian | Tech platforms / deep tech |
-| 🤖 **Leopold Aschenbrenner** | AGI infrastructure + compute scarcity | AI / semiconductors |
-
-</details>
-
-<details>
-<summary><strong>Macro & Cycle</strong></summary>
-
-| Investor | Framework | Best For |
-|----------|-----------|---------|
-| 🌐 **Ray Dalio** | All-weather + debt cycle | Macro rotation |
-| 🔄 **George Soros** | Reflexivity + self-reinforcing trends | Trend trading |
-| 📉 **Howard Marks** | Pendulum sentiment + second-level thinking | Cycle bottoms |
-| 🥇 **ARPS** | Real rates + Crypto/Gold macro | Inflation hedge |
-
-</details>
-
-<details>
-<summary><strong>🇨🇳 Chinese Investors (Exclusive)</strong></summary>
-
-| Investor | Framework | Best For |
-|----------|-----------|---------|
-| 🎯 **Duan Yongping** | Benfun (principled) + extreme concentration | Consumer tech with clear model |
-| 🌏 **Zhang Lei (Hillhouse)** | Structural long-term value | Chinese growth sectors |
-| 🏔️ **Li Lu (Himalaya)** | Deep value + margin of safety | HK/A-share undervaluation |
-| 🫖 **Dan Bin (OrientalHarbour)** | Brand moat + era beta | Consumer champions |
-| ₿ **BTCdayu** | Information edge + sentiment momentum | Crypto / narrative trading |
-
-</details>
-
-<details>
-<summary><strong>Special Strategies</strong></summary>
-
-| Investor | Framework | Best For |
-|----------|-----------|---------|
-| 🔭 **Serenity** | AI/semiconductor supply chain chokepoints | Critical bottleneck plays |
-
-</details>
+| Module | How to Enable |
+|--------|--------------|
+| Multi-user system (JWT + SQLite) | `AUGUR_MULTI_USER=1` |
+| API authentication (Bearer Token) | `AUGUR_API_TOKEN=your_token` |
+| Plugin system (third-party agents) | setuptools `entry_points` |
 
 ---
 
 ## 📊 Bloomberg Dashboard
 
 ```bash
-python3 -m dashboard.app --port 8000 --cors
+python3 -m dashboard.app --port 8000
 ```
 
-**7 pages** covering the complete analysis workflow:
+**17 pages** covering the complete investment analysis workflow:
 
-| Page | Function | Highlight |
-|------|----------|-----------|
-| **Home** | Quick analysis + datasource status + hot tickers | Press `/` to focus, responsive mobile layout |
-| **Stock Analysis** | 18-master consensus + visual report | Score card grid + bull/bear debate + risk matrix |
-| **Personas** | 18-master cards + search/filter | Expand for factor weights |
-| **Signal Monitor** | Watchlist batch scan | Auto-refresh every 60s |
-| **Backtest** | IC leaderboard + hit rate | Track master accuracy |
-| **Settings** | Per-master model config | Saved instantly |
-| **Create Persona** | No-code YAML custom agent | Registers immediately |
-
-**Report Download**: Supports PDF (window.print) and Markdown export for offline reading or sharing.
+| Group | Page | Highlights |
+|-------|------|-----------|
+| **Analysis** | Dashboard | Quick analysis + global market overview panels |
+| | Stock Analysis | 18-master consensus, score cards, bull/bear debate, deep report |
+| | Signal Monitor | Watchlist batch scan, auto-refresh every 60s |
+| | Scanner | Preset ticker scoring heatmap |
+| | Watchlist | One-click analysis, localStorage persistence |
+| | Portfolio | Position tracking, real-time P&L, asset allocation chart |
+| | Backtest | IC leaderboard + agent accuracy history |
+| **v8 Features** | AI Chat | 11 personas, each with unique voice and perspective |
+| | Portfolio Optimizer | Markowitz efficient frontier optimization |
+| | Master Compare | Side-by-side analysis from 2–5 chosen personas |
+| | Debate Mode | Sequential debate with per-persona rebuttals |
+| | History | Full analysis history with search and filtering |
+| | Leaderboard | IC-weighted accuracy tracking per agent |
+| **Investors** | Personas | 18-master cards, search and school filter |
+| | Create Persona | No-code YAML custom agent builder |
+| **System** | Settings | Per-master parameter configuration |
 
 <p align="center">
   <img src="docs/images/en/dashboard-preview.png" alt="Augur Dashboard" width="100%"/>
@@ -342,22 +233,14 @@ python3 -m dashboard.app --port 8000 --cors
   <img src="docs/images/en/architecture.png" alt="Augur Architecture" width="100%"/>
 </p>
 
-### Consensus Decision Process
-
 <p align="center">
-  <img src="docs/images/en/consensus-flow.png" alt="Consensus Flow" width="100%"/>
-</p>
-
-### Deployment Options
-
-<p align="center">
-  <img src="docs/images/en/deploy.png" alt="Deployment Guide" width="100%"/>
+  <img src="docs/images/en/consensus-flow.png" alt="Consensus Decision Flow" width="100%"/>
 </p>
 
 ### Claude Desktop / Hermes (MCP)
 
 ```bash
-# Requires Python 3.10+ for MCP support
+# Requires Python 3.10+
 uv venv --python 3.11 .venv
 uv pip install -e ".[mcp]"
 .venv/bin/augur mcp-server   # verify it starts
@@ -367,12 +250,11 @@ uv pip install -e ".[mcp]"
 ```yaml
 mcp_servers:
   augur:
-    command: /absolute/path/to/augur/.venv/bin/augur
+    command: /path/to/augur/.venv/bin/augur
     args: [mcp-server]
-
 skills:
   external_dirs:
-    - /absolute/path/to/augur/skills   # enables /skill augur-buffett etc.
+    - /path/to/augur/skills
 ```
 
 **Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
@@ -380,7 +262,7 @@ skills:
 {
   "mcpServers": {
     "augur": {
-      "command": "/absolute/path/to/augur/.venv/bin/augur",
+      "command": "/path/to/augur/.venv/bin/augur",
       "args": ["mcp-server"]
     }
   }
@@ -388,18 +270,6 @@ skills:
 ```
 
 7 MCP tools: `augur_analyze` · `augur_consensus` · `augur_fetch` · `augur_list_personas` · `augur_configure` · `augur_create_persona` · `augur_debate`
-
-| Tool | What it does |
-|------|-------------|
-| `augur_analyze` | Analyze with one or all personas. Returns signal, score, key_findings, risks, reasoning. |
-| `augur_consensus` | 18-master weighted consensus + Kelly position sizing. |
-| `augur_fetch` | Fetch live market data only (no analysis). Great for chaining with analyze. |
-| `augur_list_personas` | List all 18 investors with their ID, name, and philosophy. |
-| `augur_configure` | Set which LLM model a specific persona uses. |
-| `augur_create_persona` | Create a new YAML persona on the fly. |
-| `augur_debate` | Run multi-round debate among agents on a ticker. |
-
-> All tools auto-fetch live data from yfinance when no metrics are provided.
 
 ### Telegram / Slack / WeChat / Lark
 
@@ -419,55 +289,53 @@ docker compose --profile telegram up -d  # + Telegram Bot
 
 ---
 
-## ⚙️ Full CLI Reference (17 commands)
+## ⚙️ CLI Reference
 
 ```bash
-# ── Core Analysis ────────────────────────────────────────────────────────────
-augur analyze AAPL                            # auto live data, all 18 masters
-augur analyze NVDA --persona buffett          # specific master only
+# ── Core Analysis ─────────────────────────────────────────────────────────────
+augur analyze AAPL                            # 18-master consensus, live data
+augur analyze NVDA --persona buffett          # single master
 augur analyze TSLA --persona cathie_wood --json  # JSON output (for scripting)
-augur consensus AAPL                          # weighted consensus + Kelly size
-augur consensus NVDA --json                   # JSON output (incl. individual)
+augur consensus AAPL                          # weighted consensus + Kelly sizing
+augur report TSLA                             # generate deep Markdown report
 augur list-personas                           # list all 18 investors
 
-# ── Data ─────────────────────────────────────────────────────────────────────
-augur fetch 0700.HK                           # fetch live data (no analysis)
-augur fetch AAPL --json                       # JSON format
+# ── v8 New Commands ───────────────────────────────────────────────────────────
+augur chat AAPL --persona buffett             # ask Buffett about a stock
+augur chat NVDA                               # random persona response
+augur sentiment TSLA                          # social sentiment (X/Reddit/StockTwits)
 
-# ── Backtest & IC Tracking ───────────────────────────────────────────────────
+# ── Data ──────────────────────────────────────────────────────────────────────
+augur fetch AAPL                              # fetch live data, no analysis
+augur fetch 0700.HK --json                    # HK stocks, JSON format
+
+# ── Backtest & IC Tracking ────────────────────────────────────────────────────
 augur backtest AAPL --days 30 --live          # real yfinance history
-augur backtest AAPL --demo                    # simulated data (quick demo)
 augur ic-report                               # agent accuracy leaderboard
 
-# ── Watchlist Monitoring ─────────────────────────────────────────────────────
-augur watchlist-add AAPL --roe 0.55 --gross-margins 0.46 --sector Technology
-augur watchlist-show                          # display current watchlist
-augur cron-run                                # run watchlist analysis once
+# ── Watchlist Monitoring ──────────────────────────────────────────────────────
+augur watchlist-add AAPL --sector Technology
+augur watchlist-show
+augur cron-run                                # run watchlist analysis now
 augur cron-start                              # start scheduled daemon (weekdays 9am)
 
-# ── Services ─────────────────────────────────────────────────────────────────
-python3 -m dashboard.app --port 8000 --cors   # Bloomberg Dashboard (full API)
+# ── Services ──────────────────────────────────────────────────────────────────
+python3 -m dashboard.app --port 8000 --cors   # Bloomberg Dashboard
 augur api --port 8900                         # lightweight REST API
 augur mcp-server                              # MCP Server (stdio, Python 3.10+)
 
-# ── Hermes / Claude Integration ──────────────────────────────────────────────
-augur inject-soul --persona buffett -f hermes --profile my-buffett
-
-# ── Platform Bots ────────────────────────────────────────────────────────────
-augur telegram    # pip install -e ".[telegram]" && export TELEGRAM_TOKEN=...
-augur slack       # pip install -e ".[slack]"
-augur wechat      # pip install -e ".[wechat]" (GeWeChat personal mode)
-augur lark        # pip install -e ".[lark]"
+# ── Platform Bots ─────────────────────────────────────────────────────────────
+augur telegram / augur slack / augur wechat / augur lark
 ```
 
-**Parameter conventions (across all commands):**
+**Parameter unit conventions (critical):**
 
 | Type | Unit | Correct | Wrong |
 |------|------|---------|-------|
-| Rates / margins / growth | Decimal (0-1) | `--roe 0.55` (55%) | ~~`--roe 55`~~ |
-| Debt ratio | Decimal (0-1) | `--debt-ratio 0.35` (35%) | ~~`--debt-ratio 35`~~ |
-| Ownership | Integer percent | `--institutional-ownership 66` (66%) | ~~`--institutional-ownership 0.66`~~ |
-| Market cap / FCF | **Billions USD** | `--market-cap 2800` ($2.8T) | ~~`--market-cap 2800000000000`~~ |
+| Rates / margins / growth | Decimal (0–1) | `--roe 0.55` (= 55%) | ~~`--roe 55`~~ |
+| Debt ratio | Decimal (0–1) | `--debt-ratio 0.35` | ~~`--debt-ratio 35`~~ |
+| Ownership | Integer percent | `--institutional-ownership 66` | ~~`--institutional-ownership 0.66`~~ |
+| Market cap / FCF | **Billions USD** | `--market-cap 2800` (= $2.8T) | ~~`--market-cap 2800000000000`~~ |
 
 ---
 
@@ -500,30 +368,30 @@ factors:
       - {if: "current_ratio > 2",      add: 2}
 ```
 
+Hot-reloads in the Dashboard; CLI auto-loads on next start.
+
 ---
 
-## 📡 Dashboard API Endpoints
-
-When Dashboard is running (`python3 -m dashboard.app --port 8000`), the following endpoints are available:
+## 📡 Key API Endpoints
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/analyze/{ticker}` | GET | 18-master consensus, auto-yfinance when no metrics |
-| `/api/fetch/{ticker}` | GET | Fetch live market data only |
+| `/api/analyze/{ticker}` | GET | 18-master consensus, auto live data |
+| `/api/report/{ticker}` | GET | Deep Markdown report |
+| `/api/sentiment/{ticker}` | GET | Social sentiment scores |
+| `/api/chat` | POST | AI persona chat (body: message, agent_id) |
+| `/api/optimize` | POST | Portfolio optimization (body: tickers, risk_free_rate) |
+| `/api/compare` | POST | Master compare (body: ticker, agent_ids) |
+| `/api/debate` | POST | Debate mode (body: ticker, agent_ids) |
+| `/api/history` | GET | Analysis history list |
+| `/api/rules` | GET/POST | Alert rule management |
 | `/api/personas` | GET | List all 18 investors |
-| `/api/persona/{id}` | GET | Single investor details |
-| `/api/config` | GET/PUT | Global config read/write |
-| `/api/config/persona/{id}` | GET/PUT | Per-investor model config |
-| `/api/models` | GET | Available LLM models |
-| `/api/watchlist` | GET | Current watchlist |
-| `/api/watchlist/add` | POST | Add to watchlist |
-| `/api/watchlist/{ticker}` | DELETE | Remove from watchlist |
-| `/api/watchlist/run` | POST | Batch analyze + save last signal |
-| `/api/custom-persona` | POST | Create YAML persona (hot-reloads) |
-| `/api/backtest/run` | GET | Run IC backtest |
-| `/api/backtest/leaderboard` | GET | IC leaderboard |
-| `/api/search` | GET | Ticker search |
+| `/api/watchlist` | GET/POST | Watchlist management |
+| `/ws/prices` | WebSocket | Real-time price streaming |
+| `/ws/analyze/{ticker}` | WebSocket | Streaming analysis progress |
 | `/health` | GET | Health check |
+
+Full API reference: [docs/api-reference.md](docs/api-reference.md)
 
 ---
 
@@ -538,220 +406,96 @@ pip install -e ".[data]"
 </details>
 
 <details>
-<summary>MCP Server "No module named mcp"</summary>
+<summary>MCP Server: "No module named mcp"</summary>
 
 The `mcp` package requires Python 3.10+:
 ```bash
 uv venv --python 3.11 .venv
 uv pip install -e ".[mcp]"
-.venv/bin/augur mcp-server   # verify it starts
-# then register the absolute path in ~/.hermes/config.yaml
+.venv/bin/augur mcp-server
 ```
 </details>
 
 <details>
 <summary>Analysis always returns NEUTRAL with low scores</summary>
 
-Check parameter units (the #1 mistake):
+The #1 cause is wrong parameter units:
 - ✅ `--roe 0.55` (55%)  ❌ ~~`--roe 55`~~
-- ✅ `--debt-ratio 0.35` (35%)  ❌ ~~`--debt-ratio 35`~~
+- ✅ `--debt-ratio 0.35`  ❌ ~~`--debt-ratio 35`~~
 - ✅ `--market-cap 2800` ($2.8T)  ❌ ~~`--market-cap 2800000000000`~~
-- ✅ `--gross-margins 0.46` (46%)  ❌ ~~`--gross-margins 46`~~
 </details>
 
 <details>
-<summary>Dashboard stuck on "Loading"</summary>
+<summary>"File 'setup.py' not found" on pip install</summary>
 
+Your pip version is too old to read `pyproject.toml`:
 ```bash
-# 1. Verify service is running
-curl http://localhost:8000/health   # should return {"status":"ok","agents":18}
-
-# 2. Make sure yfinance is installed (for auto-fetch)
-pip install -e ".[data]"
-
-# 3. Enable CORS for frontend calls
-python3 -m dashboard.app --port 8000 --cors
-```
-</details>
-
-<details>
-<summary>Telegram Bot /analyze AAPL returns NEUTRAL with zero data</summary>
-
-Install yfinance:
-```bash
-pip install -e ".[data,telegram]"
-# Bot auto-fetches live data when no metrics are passed
-```
-</details>
-
-<details>
-<summary>Kelly position shows 0% or N/A</summary>
-
-Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUTRAL/BEARISH signals conservatively return 0.
-</details>
-
-<details>
-<summary>pip install error: "File 'setup.py' not found"</summary>
-
-This happens because your pip version is too old to recognize `pyproject.toml`. Fix:
-
-```bash
-# Option 1: Use a virtual environment (recommended)
 python3 -m venv .venv && source .venv/bin/activate
 pip install --upgrade pip setuptools wheel
 pip install -e ".[data]"
-
-# Option 2: Upgrade system pip directly
-python3 -m pip install --upgrade pip setuptools wheel
-pip install -e ".[data]"
 ```
-
-Note: macOS ships with an older pip (pip < 21) that doesn't support pyproject.toml. Upgrading pip resolves this.
 </details>
 
 <details>
-<summary>Custom YAML persona doesn't appear after creation</summary>
+<summary>Kelly position shows 0%</summary>
 
-The Dashboard supports hot-reload (saved YAML is immediately available in the same process). CLI/API will auto-load `personas/custom/*.yaml` on next restart.
+Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUTRAL/BEARISH conservatively return 0.
 </details>
 
 ---
 
-## 📋 Changelog
+## 📝 Changelog
 
-### v7.3.1 — Dashboard Data Density & Report Enhancement
+<details>
+<summary><strong>v8.0.0 — Intelligent Investment Platform (current)</strong></summary>
 
-- Added hot tickers real-time panel (top 10), Fear & Greed indicator, and Macro Snapshot cards to home page
-- Report visualization: investor style tags, key financial metrics panel, print optimization, copy report link
-- Unified all page `<title>` tags, version bumped to v7.3.1
-- New `/api/hot-tickers` endpoint
+- 6 new Dashboard pages: AI Chat, Portfolio Optimizer, Master Compare, Debate Mode, History, Leaderboard
+- LearningEngine: IC-based feedback auto-adjusts consensus weights for all 18 agents
+- SentimentAnalyzer: social sentiment factor fused into consensus calculation
+- WebSocket real-time price streaming
+- Multi-user system (opt-in), JWT auth, plugin system
+- Tests: 653 (vs ~160 in v7.8.3)
+</details>
 
-### v7.3.0
+<details>
+<summary><strong>v7.8.x — Visual Redesign + Bug Fixes</strong></summary>
 
-Dashboard enhancement + report visualization upgrade + multi-datasource chain + documentation (public release).
-
-#### Dashboard Enhancement
-- Datasource status panel: real-time display of yfinance/Finnhub/Alpha Vantage/Stooq connection status
-- Quick analysis hot tickers: home page presets for GOOGL / BTC-USD / 00700.HK / BABA one-click analysis
-- Responsive mobile layout: full mobile adaptation with auto-adjusting cards and tables
-
-#### Report Visualization
-- 18-master visual score card grid: individual score cards for each master at a glance
-- Bull vs Bear two-column debate layout: opposing viewpoints displayed side-by-side
-- Risk matrix cards: structured risk factor visualization
-- Executive summary header card: core conclusions highlighted prominently
-- PDF download (window.print with optimized print styles)
-- Markdown download: one-click export of complete analysis report
-
-#### Multi-datasource
-- yfinance (primary) + Finnhub (optional) + Alpha Vantage (optional) + Stooq (fallback)
-- Automatic datasource degradation chain: auto-switches to backup sources when primary fails
-
-#### Documentation
-- Bilingual README (CN/EN) synchronized update
-- New [Single Persona Integration Guide](docs/single-persona-integration.md): three integration methods for Hermes / Open Claw / Claude Desktop
-- New [Data Sources Guide](docs/data-sources.md)
+- DQ1 pixel-art brand redesign: white pixel owl logo, 18-master pixel portraits
+- Report page voting table rendering fix (regex match bug)
+- CRCL analysis fix: coverage_confidence gate prevents AGI labels on unrelated companies
+- Crypto / commodities / treasury rates panels
+- OG image path fix, bilingual README
+</details>
 
 ---
 
-### v7.2.0
+## 📈 Star History
 
-Professional deep report + multi-source data + critical interaction fixes (pre-release hardening).
-
-#### Deep Analysis Report (professional multi-master fusion)
-- Full rewrite: executive summary is now the neutral "Investment Committee Verdict" that **fuses all 18 masters' perspectives — no longer biased toward Buffett's single framework**
-- New modules: rating card (A-E grade + consensus strength), one-line verdict, 18-master scorecard (with school/framework), **per-school deep analysis** (value/growth/macro-risk/technical), **bull-bear debate** (top 3 bullish vs most cautious), **disagreement focus** (the most valuable part: identifies the biggest contention), consensus & risk matrix, position sizing
-- Fixed financial units: ROE/margins/growth render correctly as percentages; market cap/FCF correctly scaled ($X.XXB / trillions)
-- Float precision & markdown noise cleanup; dashboard report now renders rich Markdown (headings/tables/lists)
-
-#### Data Source Expansion & Fixes
-- New `src/augur/datasources/` provider abstraction: **yfinance first → Stooq fallback → empty context**, eliminating single point of failure
-- **Fixed critical data corruption bug**: yfinance NaN values passed through `x or 0` (NaN is truthy) and polluted all metrics, corrupting persona scores — added `safe_num()` to uniformly sanitize None/NaN/inf
-- Unit conversion and ownership clamping fixes
-
-#### Interaction/UX Fixes (resolves "click analyze does nothing / can't see report")
-- **Fixed frontend fetch not checking HTTP status**: backend errors (rate limit/invalid ticker/500) no longer render a fake empty "HOLD" result; clear errors shown instead
-- Added first-run onboarding banner + one-click examples (AAPL/NVDA/TSLA/MSFT, no manual metrics needed)
-- Staged loading progress + timeout protection (no more infinite spinner)
-- "Generate Deep Report" promoted from hidden tiny button to prominent primary action; report failures show inline error + retry
-- Friendly empty states, narrow-screen adaptation, actionable error messages
-
-#### Testing
-- Tests grew from 372 to 448 (new data source 33, report enhancement, frontend error handling, etc.)
-
----
-
-### v7.0.0
-
-Major version update after 7 iterations of code review, bug fixing, and optimization.
-
-#### Security Fixes (Critical)
-- **CRITICAL**: Replaced vulnerable `eval()` in `persona_loader.py` with AST-based sandbox, preventing arbitrary code execution via malicious YAML persona conditions
-- **CRITICAL**: Fixed path traversal vulnerability in `soul.py` `inject_soul()`, preventing writes to arbitrary directories
-- Fixed XSS vulnerability in Dashboard `signals.html` (inline onclick string interpolation)
-- Added ticker regex validation across API, MCP, and Dashboard endpoints
-- Added global exception handlers to prevent stack trace leakage via API responses
-
-#### Bug Fixes
-- Fixed ZeroDivisionError in `data.py` when yfinance returns negative `debt_to_equity`
-- Fixed Dayu persona momentum elif chain ordering bug (shadowed branch)
-- Fixed coordinator crash when all agents return ERROR (total_weight==0)
-- Fixed CLI missing sector/industry parameters not passed to MarketContext
-- Fixed cron config shallow merge losing nested default values (timezone, notifications)
-- All 18 persona files now clamp scores to [0, 10] range
-- Added division-by-zero guards in Munger and Dalio personas
-
-#### Performance
-- DecisionCoordinator now uses ThreadPoolExecutor for parallel 18-agent analysis (up to 8x speedup)
-- Added 30s timeout per agent to prevent hanging
-- Added performance timing instrumentation (analysis_ms + consensus_ms in metadata)
-- Dashboard uses Page Visibility API to pause polling in background tabs
-
-#### User Experience
-- New `--no-color` CLI flag (also respects NO_COLOR environment variable)
-- Improved CLI output formatting with aligned tables and bordered boxes
-- All error messages are now actionable (include pip install commands, --help suggestions)
-- Created `src/augur/errors.py` for consistent error response formatting
-- Created `src/augur/optional_deps.py` for graceful degradation when optional deps missing
-- Added ARIA accessibility labels across all Dashboard templates
-- Dashboard API responses now include consistent `status` field and ISO 8601 timestamps
-
-#### Infrastructure
-- Dockerfile: Added non-root user `augur` for security
-- docker-compose.yml: Removed deprecated `version` field, added healthchecks
-- requirements.txt: Added missing `httpx>=0.24.0`
-- Scanner module: Added 6 missing agent exports for backward compatibility
-- Cron: Added PID file concurrency protection and SIGTERM handler
-
-#### Testing
-- Added 173 new regression tests (from 78 to 251 total)
-- Full end-to-end pipeline tests (CLI + API)
-- Data pipeline validation tests
-- Dashboard error handling tests
-- Security attack vector tests (eval injection, XSS, path traversal)
-- Performance baseline tests
-
-#### Architecture
-- New modules: `cli_format.py`, `errors.py`, `optional_deps.py`, `bots/utils.py`
-- Bot shared utils module eliminates ticker extraction code duplication
+<a href="https://star-history.com/#BruceLanLan/augur&Timeline">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=BruceLanLan/augur&type=Timeline&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=BruceLanLan/augur&type=Timeline" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=BruceLanLan/augur&type=Timeline" />
+ </picture>
+</a>
 
 ---
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide: new investors (YAML/Python), bug fixes, Dashboard work, Bot work, parameter conventions.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
 
-- **New investor** → Add YAML to `personas/custom/` or write Python like `src/augur/personas/buffett.py`
-- **Algorithm** → Improve `src/augur/coordinator.py` consensus mechanism
-- **New platform** → Add to `src/augur/bots/`, reference `telegram_bot.py`
-- **UI** → Improve `dashboard/`, CSS variables in `bloomberg.css`
+- **New investor** → add YAML to `personas/custom/` or write Python like `src/augur/personas/buffett.py`
+- **Algorithm** → improve `src/augur/coordinator.py` consensus mechanism
+- **New platform** → add to `src/augur/bots/`, reference `telegram_bot.py`
+- **UI** → improve `dashboard/`, CSS variables in `bloomberg.css`
 
 ---
 
 <div align="center">
 
-MIT License · Built by [BruceLanLan](https://github.com/BruceLanLan)
+MIT License · Built by <a href="https://github.com/BruceLanLan">BruceLanLan</a>
 
-*For educational and research purposes only — not investment advice*
+<em>For educational and research purposes only — not investment advice</em>
 
 </div>
