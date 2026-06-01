@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/images/hero-banner.png" alt="Augur" width="100%"/>
+<img src="docs/images/zh/hero-banner.png" alt="Augur" width="100%"/>
 
 # 🦉 Augur
 
@@ -171,11 +171,11 @@ Bloomberg Terminal 风格，**9个页面**，完整分析流程：
 | **创建大师** | 无代码 YAML 自定义 | 即时注册生效 |
 
 <p align="center">
-  <img src="docs/images/dashboard-preview-new.png" alt="Augur Dashboard Preview" width="100%"/>
+  <img src="docs/images/zh/dashboard-preview.png" alt="Augur 仪表盘预览" width="100%"/>
 </p>
 
 <p align="center">
-  <img src="docs/images/dashboard-stocks-new.png" alt="Stock Analysis Dashboard" width="100%"/>
+  <img src="docs/images/zh/dashboard-stocks.png" alt="股票分析页面" width="100%"/>
 </p>
 
 ---
@@ -185,19 +185,19 @@ Bloomberg Terminal 风格，**9个页面**，完整分析流程：
 Augur 支持无缝接入主流 AI Agent 平台，让投资决策融入你的日常工作流。
 
 <p align="center">
-  <img src="docs/images/architecture-new.png" alt="Augur Architecture" width="100%"/>
+  <img src="docs/images/zh/architecture.png" alt="Augur 系统架构" width="100%"/>
 </p>
 
 ### 共识机制流程
 
 <p align="center">
-  <img src="docs/images/consensus-flow-new.png" alt="Consensus Flow" width="100%"/>
+  <img src="docs/images/zh/consensus-flow.png" alt="共识决策流程" width="100%"/>
 </p>
 
 ### 一键部署
 
 <p align="center">
-  <img src="docs/images/skills-deploy-new.png" alt="Skills Deploy" width="100%"/>
+  <img src="docs/images/zh/deploy.png" alt="部署指南" width="100%"/>
 </p>
 
 ### Claude Desktop / Hermes (MCP)

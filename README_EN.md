@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/images/hero-banner-baoyu.svg" alt="Augur" width="100%"/>
+<img src="docs/images/en/hero-banner.png" alt="Augur" width="100%"/>
 
 # 🦉 Augur
 
@@ -305,12 +305,32 @@ python3 -m dashboard.app --port 8000 --cors
 **Report Download**: Supports PDF (window.print) and Markdown export for offline reading or sharing.
 
 <p align="center">
-  <img src="docs/images/dashboard-stocks.svg" alt="Stock Analysis Dashboard" width="100%"/>
+  <img src="docs/images/en/dashboard-preview.png" alt="Augur Dashboard" width="100%"/>
+</p>
+
+<p align="center">
+  <img src="docs/images/en/dashboard-stocks.png" alt="Stock Analysis Dashboard" width="100%"/>
 </p>
 
 ---
 
 ## 🔌 Deploy Anywhere
+
+<p align="center">
+  <img src="docs/images/en/architecture.png" alt="Augur Architecture" width="100%"/>
+</p>
+
+### Consensus Decision Process
+
+<p align="center">
+  <img src="docs/images/en/consensus-flow.png" alt="Consensus Flow" width="100%"/>
+</p>
+
+### Deployment Options
+
+<p align="center">
+  <img src="docs/images/en/deploy.png" alt="Deployment Guide" width="100%"/>
+</p>
 
 ### Claude Desktop / Hermes (MCP)
 
