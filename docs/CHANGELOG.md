@@ -4,6 +4,29 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v7.8.1 (2025-07-xx)
+
+### 修复
+- 数据层: fetch_market_context 对无效 ticker 优雅降级而非抛异常
+- 数据层: fetch_market_overview/fetch_hot_tickers 使用 ThreadPoolExecutor 并行获取，单个超时不影响其他
+- Dashboard: 所有 fetch 调用添加 .catch() 错误处理，显示"加载失败，点击重试"
+- 报告: Markdown 表格中管道符 '|' 正确转义
+- 安全: ticker 验证拒绝 '..' 模式防止路径遍历
+- 安全: IP 限流中间件阈值从 300 修正为 60/分钟
+- 安全: 自定义 Persona agent_id 添加长度限制(50字符)
+
+### 增强
+- Dashboard 报告页: Agent 评分 SVG 横向柱状图
+- Dashboard 报告页: 打印样式表隐藏非必要 UI 元素
+- CSS: .md-report 表格专业样式（Bloomberg 暗色主题）
+- 缓存: market_overview(60s)/hot_tickers(90s) TTL 注释明确化
+
+### 文档
+- 版本升级至 v7.8.1
+- README/README_EN 添加 v7.8.1 变更说明
+
+---
+
 ## v7.8.0 (2026-06-01) - Bloomberg级可视化 & API Token & 自定义Persona CRUD
 
 ### 📊 Dashboard Bloomberg-Level Enhancement

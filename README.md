@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v7.8.0](https://img.shields.io/badge/v7.8.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v7.8.1](https://img.shields.io/badge/v7.8.1-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -23,6 +23,19 @@
 > **巴菲特会买这只股吗？达利欧怎么看宏观风险？段永平觉得管理层够不够「本分」？**
 >
 > 别再一个维度猜了。Augur 让 **18位** 顶级投资人同时为你分析，每人给出独立评分，最终汇成一个带 Kelly 仓位建议的加权共识信号。
+
+---
+
+## 🆕 v7.8.1 修复与优化
+
+| 功能 | 说明 |
+|------|------|
+| 🔧 数据层健壮性 | fetch_market_context 异常优雅降级、market_overview/hot_tickers 并行超时保护 |
+| 📊 Dashboard 增强 | 前端 fetch 错误处理优化、重试按钮、Agent 评分图表 |
+| 📄 报告可视化 | Markdown 表格专业样式、打印样式、评分 SVG 图表 |
+| 🔐 安全加固 | Ticker 路径遍历防护、rate limiter 修正、agent_id 长度限制 |
+| 🐛 逻辑修正 | 报告管道符转义、共识算法除零保护验证 |
+| 📝 代码质量 | 缓存 TTL 注释明确化、IP 限流清理机制 |
 
 ---
 
