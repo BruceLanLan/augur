@@ -4,6 +4,33 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v7.8.3 (2025-07-25)
+
+### 性能优化 (Performance)
+- _cache 添加 LRU 淘汰策略，最大 100 条，超限时淘汰最旧 20 条至 80 条
+- 确认 ThreadPoolExecutor 均使用 with 上下文管理器，无资源泄漏
+
+### Dashboard 数据丰富化 (Dashboard Enrichment)
+- 新增 /api/crypto-overview 端点：BTC, ETH, SOL, DOGE, XRP 实时行情
+- 新增 /api/commodities 端点：Gold, Silver, Oil WTI, Natural Gas
+- 新增 /api/treasury-rates 端点：US 2Y, 5Y, 10Y, 30Y 国债收益率
+- 新增 /api/market-movers 端点：涨跌幅 Top 5 领涨领跌
+- 首页新增 Crypto Overview 面板和 Commodities & Rates 面板
+
+### 报告可视化增强 (Report Enhancement)
+- 评分表格添加颜色编码（绿色看多、红色看空、琥珀中性）
+- 每个 Agent 评分行增加 CSS 横向进度条（0-10 填充色渐变）
+- 新增共识投票条（Consensus Strip）显示多/空/中性计票
+- 执行摘要卡片提取 6 大核心指标高亮展示
+- 新增 Download HTML / Download Markdown / Copy to Clipboard 三个下载按钮
+- 打印样式隐藏导航与按钮，仅保留报告正文
+
+### 文档 (Documentation)
+- 版本升级至 v7.8.3
+- CHANGELOG 更新
+
+---
+
 ## v7.8.2 (2025-07-25)
 
 ### 前端健壮性 (Frontend Robustness)

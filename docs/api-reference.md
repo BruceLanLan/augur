@@ -1,6 +1,6 @@
 # Augur API Reference / API 参考文档
 
-> Version: v7.5.0
+> Version: v7.8.3
 
 ## Base URL / 基础地址
 
@@ -244,6 +244,97 @@ Search for tickers by name or symbol.
     {"ticker": "AAPL", "name": "Apple Inc.", "exchange": "NASDAQ"},
     {"ticker": "AAPL.L", "name": "Apple Inc. (London)", "exchange": "LSE"}
   ]
+}
+```
+
+---
+
+### GET /api/market-movers
+
+**Description / 说明:**
+Get top 5 gainers and losers in the market today.
+
+获取今日涨跌幅领先标的（Top 5 领涨 / Top 5 领跌）。
+
+**Response / 响应:**
+```json
+{
+  "gainers": [
+    {"ticker": "XYZ", "name": "XYZ Corp", "price": 45.2, "change_pct": 12.5},
+    {"ticker": "ABC", "name": "ABC Inc", "price": 88.0, "change_pct": 9.8}
+  ],
+  "losers": [
+    {"ticker": "DEF", "name": "DEF Ltd", "price": 22.1, "change_pct": -8.3},
+    {"ticker": "GHI", "name": "GHI Co", "price": 15.5, "change_pct": -6.7}
+  ],
+  "updated_at": "2026-06-01T10:00:00Z"
+}
+```
+
+---
+
+### GET /api/crypto-overview
+
+**Description / 说明:**
+Get real-time price overview for major cryptocurrencies (BTC, ETH, SOL, DOGE, XRP).
+
+获取主要加密货币（BTC, ETH, SOL, DOGE, XRP）的实时行情总览。
+
+**Response / 响应:**
+```json
+{
+  "crypto": [
+    {"symbol": "BTC-USD", "name": "Bitcoin", "price": 67500.0, "change_pct": 2.1, "market_cap": "1.3T"},
+    {"symbol": "ETH-USD", "name": "Ethereum", "price": 3450.0, "change_pct": 1.5, "market_cap": "415B"},
+    {"symbol": "SOL-USD", "name": "Solana", "price": 155.0, "change_pct": 4.2, "market_cap": "68B"},
+    {"symbol": "DOGE-USD", "name": "Dogecoin", "price": 0.12, "change_pct": -0.8, "market_cap": "17B"},
+    {"symbol": "XRP-USD", "name": "XRP", "price": 0.52, "change_pct": 0.3, "market_cap": "28B"}
+  ],
+  "updated_at": "2026-06-01T10:00:00Z"
+}
+```
+
+---
+
+### GET /api/commodities
+
+**Description / 说明:**
+Get real-time prices for major commodities (Gold, Silver, Oil WTI, Natural Gas).
+
+获取主要大宗商品（黄金、白银、WTI 原油、天然气）实时行情。
+
+**Response / 响应:**
+```json
+{
+  "commodities": [
+    {"symbol": "GC=F", "name": "Gold", "price": 2350.5, "change_pct": 0.8, "unit": "USD/oz"},
+    {"symbol": "SI=F", "name": "Silver", "price": 29.8, "change_pct": 1.2, "unit": "USD/oz"},
+    {"symbol": "CL=F", "name": "Oil WTI", "price": 78.5, "change_pct": -0.5, "unit": "USD/bbl"},
+    {"symbol": "NG=F", "name": "Natural Gas", "price": 2.35, "change_pct": -1.1, "unit": "USD/MMBtu"}
+  ],
+  "updated_at": "2026-06-01T10:00:00Z"
+}
+```
+
+---
+
+### GET /api/treasury-rates
+
+**Description / 说明:**
+Get current US Treasury yield rates (2Y, 5Y, 10Y, 30Y).
+
+获取美国国债收益率（2 年期、5 年期、10 年期、30 年期）。
+
+**Response / 响应:**
+```json
+{
+  "rates": [
+    {"maturity": "2Y", "symbol": "^IRX", "yield_pct": 4.72},
+    {"maturity": "5Y", "symbol": "^FVX", "yield_pct": 4.35},
+    {"maturity": "10Y", "symbol": "^TNX", "yield_pct": 4.48},
+    {"maturity": "30Y", "symbol": "^TYX", "yield_pct": 4.62}
+  ],
+  "updated_at": "2026-06-01T10:00:00Z"
 }
 ```
 
