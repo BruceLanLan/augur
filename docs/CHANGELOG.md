@@ -4,6 +4,39 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v7.8.2 (2025-07-25)
+
+### 前端健壮性 (Frontend Robustness)
+- heroGo() 添加 2 秒防抖，防止连续快速点击
+- tryExample() 分析进行中时阻止重复触发
+- augurCache localStorage 写入添加 QuotaExceeded 异常保护
+- renderVisualReport / buildDebateLayout 添加 null 安全和 try/catch
+- watchlist/portfolio sparkline 单数据点保护，portfolio 除零保护
+- scanner heatmap agent score null 安全处理
+- personas 页面添加 IME compositionend 支持和过滤动画
+
+### CSS 深度审查 (CSS Deep Review)
+- 移除 6 个未使用的 CSS 类（dead CSS cleanup）
+- 全部 font-size 统一为 rem 单位
+- 修复 z-index 层级：toast(9999) > modal(1000) > sidebar(100) > content(1)
+- 添加 375px 响应式断点，market-tile/datasource-card/report-scorecard 不再溢出
+- 为所有可交互元素补充 :hover 和 :focus-visible 状态
+
+### 后端边缘修复 (Backend Edge Cases)
+- DecisionCoordinator: 少于 3 个有效响应时标记 low_participation 并限制 confidence
+- generate_report(): 添加 ticker 格式校验，防止非 ASCII 字符崩溃
+- backtest: 历史数据不足 5 天时优雅降级返回提示
+- 确认 safe_num 已覆盖所有异常输入（N/A, nan, inf, None）
+- 确认 persona PE<=0 评分逻辑安全，soul.py 无效 ID 错误消息清晰
+
+### 测试覆盖提升 (Test Coverage)
+- 新增 11 个测试用例覆盖 market-overview, hot-tickers, sparkline, fear-greed 端点
+- 新增 IP 速率限制器测试（61 请求触发 429）
+- 新增 per-ticker 速率限制器单元测试
+- 总测试数从 448 提升至 459
+
+---
+
 ## v7.8.1 (2025-07-xx)
 
 ### 修复
