@@ -50,6 +50,18 @@ html.light {
     opacity: 0.4;
 }
 
+.logo-icon {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 6px rgba(255, 140, 0, 0.3));
+    transition: filter var(--transition-speed, 0.2s) ease;
+}
+
+.logo-icon:hover {
+    filter: drop-shadow(0 0 10px rgba(255, 140, 0, 0.6));
+}
+
 .logo-text {
     background: var(--accent-gradient);
     -webkit-background-clip: text;
