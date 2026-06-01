@@ -158,8 +158,9 @@ function renderHeatmap(results) {
         agentIds.forEach(function(id) {
             var a = agentMap[id];
             if (a) {
+                var score = (typeof a.score === 'number') ? a.score : 0;
                 var cls = a.signal === 'bullish' ? 'bullish' : a.signal === 'bearish' ? 'bearish' : 'neutral';
-                html += '<td><span class="heatmap-cell ' + cls + '">' + a.score.toFixed(1) + '</span></td>';
+                html += '<td><span class="heatmap-cell ' + cls + '">' + score.toFixed(1) + '</span></td>';
             } else {
                 html += '<td>-</td>';
             }

@@ -242,8 +242,11 @@ function loadSparkline(ticker, container) {
     fetch('/api/sparkline/' + ticker)
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            if (data.prices && data.prices.length >= 2) {
-                var svg = createSparklineSVG(data.prices, data.trend);
+            if (data.prices && data.prices.length >= 1) {
+                var prices = data.prices;
+                // If only 1 data point, duplicate to create a flat line
+                if (prices.length === 1) prices = [prices[0], prices[0]];
+                var svg = createSparklineSVG(prices, data.trend);
                 var wrapper = document.createElement('div');
                 wrapper.className = 'sparkline-wrapper';
                 wrapper.innerHTML = svg;

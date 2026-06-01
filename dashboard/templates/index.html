@@ -700,9 +700,13 @@
 {% endblock %}
 {% block extra_scripts %}
 <script>
+var _heroGoBusy = false;
 function heroGo() {
     var t = document.getElementById('hero-ticker').value.trim().toUpperCase();
     if (!t) { showToast('请输入股票代码', 'warning'); return; }
+    if (_heroGoBusy) return;
+    _heroGoBusy = true;
+    setTimeout(function() { _heroGoBusy = false; }, 2000);
 
     // Show loading, hide previous results/errors
     document.getElementById('hero-spinner').style.display = 'block';
@@ -763,6 +767,8 @@ function heroGo() {
 
 // One-click example: fill ticker and run immediately
 function tryExample(t) {
+    // Don't fire if analysis is already in progress
+    if (document.getElementById('hero-spinner').style.display !== 'none') return;
     var input = document.getElementById('hero-ticker');
     if (input) input.value = t;
     heroGo();
@@ -830,9 +836,15 @@ function loadMarketOverview(forceRefresh) {
     if (btn) { btn.disabled = true; }
     var url = '/api/market-overview' + (forceRefresh ? '?refresh=true' : '');
     fetchWithTimeout(url, {}, 30000)
-        .then(function(r) { return r.json(); })
+        .then(function(r) { return r.json().catch(function() { return null; }); })
         .then(function(data) {
             if (btn) { btn.disabled = false; }
+            if (!data) {
+                if (board) {
+                    board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">数据格式异常，点击重试</div><button class="btn btn-sm" onclick="loadMarketOverview(true)" style="margin-top:8px;">重试</button></div>';
+                }
+                return;
+            }
             renderMarketBoard(data);
         })
         .catch(function() {
@@ -977,8 +989,10 @@ function loadSparkline(symbol, container) {
     fetch('/api/sparkline/' + symbol)
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            if (data.prices && data.prices.length >= 2) {
-                var svg = createSparklineSVG(data.prices, data.trend);
+            if (data.prices && data.prices.length >= 1) {
+                var prices = data.prices;
+                if (prices.length === 1) prices = [prices[0], prices[0]];
+                var svg = createSparklineSVG(prices, data.trend);
                 var wrapper = document.createElement('div');
                 wrapper.className = 'sparkline-wrapper';
                 wrapper.innerHTML = svg;

@@ -342,7 +342,7 @@ function renderPortfolio() {
         var cost = h.buyPrice * h.qty;
         var current = (h.currentPrice || h.buyPrice) * h.qty;
         var pnl = current - cost;
-        var pnlPct = cost > 0 ? (pnl / cost) * 100 : 0;
+        var pnlPct = (h.buyPrice > 0 && cost > 0) ? (pnl / cost) * 100 : 0;
         var days = daysBetween(h.buyDate);
         totalInvested += cost;
         totalCurrent += current;
@@ -552,10 +552,9 @@ function runAugurAnalysis() {
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.status === 'ok') results[t] = data;
-                pending--;
-                if (pending === 0) onAnalysisDone(results);
             })
-            .catch(function() {
+            .catch(function() {})
+            .then(function() {
                 pending--;
                 if (pending === 0) onAnalysisDone(results);
             });

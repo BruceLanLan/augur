@@ -803,6 +803,7 @@ function renderKeyMetricsPanel(data) {
 function renderVisualReport(markdownText, analysisData) {
     var container = document.getElementById('report-visual');
     if (!container) return;
+    if (!markdownText && !analysisData) return;
     container.innerHTML = '';
 
     // 1. Executive Summary - parse from markdown or use analysisData
@@ -909,6 +910,7 @@ function buildScoreCards(data) {
 }
 
 function buildDebateLayout(md) {
+    try {
     // Look for the debate section
     var debateMatch = md.match(/##\s*(?:多空辩论|Bull.*Bear|Debate)([\s\S]*?)(?=\n##\s|\n---|\n\*\*\*|$)/i);
     if (!debateMatch) return '';
@@ -967,6 +969,7 @@ function buildDebateLayout(md) {
 
     html += '</div></div>';
     return html;
+    } catch(e) { return ''; }
 }
 
 function buildRiskCards(md, data) {

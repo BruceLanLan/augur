@@ -294,7 +294,7 @@
 </div>
 
 <!-- School Filter Buttons -->
-<div class="flex items-center gap-8 mb-16" style="flex-wrap:wrap;">
+<div class="flex items-center gap-8 mb-16" style="flex-wrap:wrap; transition: opacity 0.3s;">
     <button class="school-filter-btn active" data-school="all" onclick="filterBySchool('all', this)">全部</button>
     <button class="school-filter-btn" data-school="value" onclick="filterBySchool('value', this)">
         <span style="color:#22c55e;">&#9679;</span> 价值派
@@ -393,7 +393,7 @@
             </div>
 
             <div style="display:flex; align-items:center; gap:8px; padding-top:10px; border-top:1px solid var(--border-color);">
-                <a href="/stocks?persona={{ persona.id }}" class="btn btn-primary" style="font-size:0.78rem; padding:6px 14px; flex:1; text-align:center;" onclick="event.stopPropagation();">
+                <a href="/stocks?persona={{ persona.id }}" class="btn btn-primary persona-analyze-btn" style="font-size:0.78rem; padding:6px 14px; flex:1; text-align:center;" onclick="event.stopPropagation(); this.style.opacity='0.6'; this.textContent='\u5206\u6790\u4E2D...';">
                     &#x1F50D; 一键用TA的视角分析
                 </a>
                 <span class="text-mono text-muted" style="font-size:0.65rem;">{{ persona.id }}</span>
@@ -418,6 +418,18 @@
 {% block extra_scripts %}
 <script>
 var activeSchool = 'all';
+var _isComposing = false;
+
+(function() {
+    var searchInput = document.getElementById('persona-search');
+    if (searchInput) {
+        searchInput.addEventListener('compositionstart', function() { _isComposing = true; });
+        searchInput.addEventListener('compositionend', function() {
+            _isComposing = false;
+            applyFilters();
+        });
+    }
+})();
 
 function toggleCard(card) {
     card.classList.toggle('expanded');
@@ -439,6 +451,7 @@ function filterBySchool(school, btn) {
 }
 
 function applyFilters() {
+    if (_isComposing) return;
     var query = (document.getElementById('persona-search').value || '').toLowerCase().trim();
     var cards = document.querySelectorAll('.persona-card');
     cards.forEach(function(card) {

@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Frontend JavaScript robustness fixes across all pages (index.html, stocks.html, watchlist.html, portfolio.html, scanner.html, personas.html)",
+  "status": "in_progress",
+  "steps": [
+    "In dashboard/templates/index.html JS: (a) Add debounce to heroGo() preventing double-clicks within 2s, (b) Make tryExample() check if analysis is in progress before triggering, (c) Wrap augurCache localStorage writes in try/catch to handle quota exceeded, (d) Ensure loadMarketOverview handles non-200 responses with fallback UI, (e) Ensure renderMarketBoard handles empty items array gracefully (already does but add null-safety for data param)",
+    "In dashboard/templates/stocks.html JS: (a) In generateReport() add a timeout handler that re-enables the button on failure/timeout (currently does via showReportError), verify catch path always re-enables btn, (b) Add null-guard in renderVisualReport if analysisData is null/undefined, (c) Ensure buildScoreCards returns empty string '' when agents array is empty (currently does), (d) Make buildDebateLayout regex resilient to non-standard markdown (add try/catch around regex and return '' on failure), (e) Disable download buttons (PDF/MD/JSON/CSV) when no data is available by checking lastAnalysisData/lastReportMarkdown before proceeding",
+    "In dashboard/templates/watchlist.html and portfolio.html JS: (a) Ensure batch analysis uses Promise.allSettled so one failure does not block others, (b) Add guards for SVG sparkline when only 1 data point (skip rendering or duplicate the point), (c) Add divide-by-zero protection in portfolio gain calculation when buy_price is 0",
+    "In dashboard/templates/scanner.html JS: (a) Handle null/undefined agent scores in heatmap rendering by treating them as 0 or N/A",
+    "In dashboard/templates/personas.html JS: (a) Add CSS transition on filter changes, (b) Add loading state (disabled+spinner) to 'one-click analyze' button, (c) Add compositionend event handler to search input for IME (Chinese) input support"
+  ],
+  "acceptance_criteria": [
+    "heroGo() cannot fire twice within 2 seconds of the first call",
+    "tryExample() is a no-op when hero-spinner is visible",
+    "augurCache.add() does not throw even if localStorage is full",
+    "buildDebateLayout() returns '' instead of crashing on malformed markdown",
+    "Portfolio gain calculation handles buy_price=0 without NaN/Infinity",
+    "Scanner heatmap renders correctly when an agent score is null",
+    "All existing 448 tests still pass"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q --tb=short (all pass)"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
