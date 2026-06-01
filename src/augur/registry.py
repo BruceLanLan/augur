@@ -20,6 +20,24 @@ logger = logging.getLogger(__name__)
 
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType, DebateMessage
 
+# ============ v8: Learning + Sentiment singletons ============
+_learning_engine = None
+_sentiment_analyzer = None
+
+def _get_learning_engine():
+    global _learning_engine
+    if _learning_engine is None:
+        from augur.learning import LearningEngine
+        _learning_engine = LearningEngine()
+    return _learning_engine
+
+def _get_sentiment_analyzer():
+    global _sentiment_analyzer
+    if _sentiment_analyzer is None:
+        from augur.sentiment import SentimentAnalyzer
+        _sentiment_analyzer = SentimentAnalyzer()
+    return _sentiment_analyzer
+
 
 # ============ AgentRegistry ============
 
@@ -287,6 +305,15 @@ class DecisionCoordinator:
         except Exception:
             pass
 
+        # v8: Learned weights from LearningEngine (60% base + 40% learned)
+        learned_weights = {}
+        try:
+            le = _get_learning_engine()
+            if le.has_learned_weights:
+                learned_weights = le.get_weights()
+        except Exception:
+            pass
+
         # Normalize rolling IC weights before blending
         if rolling_ic_weights:
             total_ric = sum(rolling_ic_weights.values())
@@ -301,6 +328,10 @@ class DecisionCoordinator:
 
             if rolling_ic_weights and agent_id in rolling_ic_weights:
                 w = 0.5 * w + 0.5 * rolling_ic_weights[agent_id]
+
+            # v8: Blend learned weights when available
+            if learned_weights and agent_id in learned_weights:
+                w = 0.6 * w + 0.4 * learned_weights[agent_id]
 
             w *= response.coverage_confidence
 
@@ -349,6 +380,14 @@ class DecisionCoordinator:
         else:
             total_score = 0.0
             total_confidence = 0.0
+
+        # v8: Apply sentiment factor (±0.5 max, clamped to [0,10])
+        if ticker:
+            try:
+                sentiment_factor = _get_sentiment_analyzer().get_sentiment_factor(ticker)
+                total_score = max(0.0, min(10.0, total_score + sentiment_factor))
+            except Exception:
+                pass
 
         # Weighted majority vote
         consensus_signal = max(signal_counts, key=signal_counts.get)

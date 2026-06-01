@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Augur{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Register</h1>
+    <p class="page-desc">Create a new Augur account</p>
+</div>
+
+<div style="max-width: 400px; margin: 2rem auto; padding: 2rem; background: var(--bg-secondary, #1e1e2e); border-radius: 12px; border: 1px solid var(--border-color, #333); width: 90%;" role="main" aria-label="Registration form">
+    <form id="register-form" onsubmit="handleRegister(event)" aria-label="Create account">
+        <div style="margin-bottom: 1.5rem;">
+            <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);">Username</label>
+            <input type="text" id="username" name="username" required minlength="3" maxlength="32"
+                   style="width: 100%; padding: 0.75rem; background: var(--bg-primary, #121212); border: 1px solid var(--border-color, #444); border-radius: 8px; color: var(--text-primary, #e0e0e0); font-size: 1rem; box-sizing: border-box;"
+                   placeholder="Choose a username (3-32 chars)" autocomplete="username" aria-required="true"
+                   aria-describedby="username-help" pattern="[a-zA-Z0-9_]+">
+            <span id="username-help" style="font-size: 0.75rem; color: var(--text-secondary, #999);">Letters, numbers, and underscores only</span>
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);">Password</label>
+            <input type="password" id="password" name="password" required minlength="6" maxlength="128"
+                   style="width: 100%; padding: 0.75rem; background: var(--bg-primary, #121212); border: 1px solid var(--border-color, #444); border-radius: 8px; color: var(--text-primary, #e0e0e0); font-size: 1rem; box-sizing: border-box;"
+                   placeholder="Choose a password (min 6 chars)" autocomplete="new-password" aria-required="true">
+        </div>
+        <div style="margin-bottom: 1.5rem;">
+            <label for="password2" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);">Confirm Password</label>
+            <input type="password" id="password2" name="password2" required minlength="6" maxlength="128"
+                   style="width: 100%; padding: 0.75rem; background: var(--bg-primary, #121212); border: 1px solid var(--border-color, #444); border-radius: 8px; color: var(--text-primary, #e0e0e0); font-size: 1rem; box-sizing: border-box;"
+                   placeholder="Confirm your password" autocomplete="new-password" aria-required="true">
+        </div>
+        <div id="register-error" style="display: none; margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); border-radius: 8px; color: #ff6b6b; font-size: 0.9rem;" role="alert"></div>
+        <div id="register-success" style="display: none; margin-bottom: 1rem; padding: 0.75rem; background: rgba(52,199,89,0.1); border: 1px solid rgba(52,199,89,0.3); border-radius: 8px; color: #34c759; font-size: 0.9rem;" role="status"></div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem;" aria-label="Create your account">
+            Create Account
+        </button>
+    </form>
+    <p style="margin-top: 1.5rem; text-align: center; color: var(--text-secondary, #999); font-size: 0.9rem;">
+        Already have an account? <a href="/login" style="color: var(--accent-color, #6366f1);">Sign In</a>
+    </p>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function handleRegister(event) {
+    event.preventDefault();
+    var errorEl = document.getElementById('register-error');
+    var successEl = document.getElementById('register-success');
+    errorEl.style.display = 'none';
+    successEl.style.display = 'none';
+
+    var username = document.getElementById('username').value.trim();
+    var password = document.getElementById('password').value;
+    var password2 = document.getElementById('password2').value;
+
+    if (!username || !password || !password2) {
+        errorEl.textContent = 'Please fill in all fields.';
+        errorEl.style.display = 'block';
+        return;
+    }
+    if (password !== password2) {
+        errorEl.textContent = 'Passwords do not match.';
+        errorEl.style.display = 'block';
+        return;
+    }
+    if (password.length < 6) {
+        errorEl.textContent = 'Password must be at least 6 characters.';
+        errorEl.style.display = 'block';
+        return;
+    }
+
+    try {
+        var resp = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({username: username, password: password})
+        });
+        var data = await resp.json();
+        if (resp.ok && data.status === 'ok') {
+            successEl.textContent = 'Account created! Redirecting to login...';
+            successEl.style.display = 'block';
+            setTimeout(function() { window.location.href = '/login'; }, 1500);
+        } else {
+            errorEl.textContent = data.detail || 'Registration failed.';
+            errorEl.style.display = 'block';
+        }
+    } catch(e) {
+        errorEl.textContent = 'Connection error. Please try again.';
+        errorEl.style.display = 'block';
+    }
+}
+</script>
+{% endblock %}

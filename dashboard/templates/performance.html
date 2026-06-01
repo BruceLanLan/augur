@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}绩效追踪 - Augur{% endblock %}
+{% block content %}
+
+<h2 style="color:var(--accent-orange); margin-bottom:4px;">绩效追踪</h2>
+<p class="text-muted mb-16" style="font-size:0.82rem;">Agent IC (Information Coefficient) 排行榜 - 基于回测数据评估各投资人预测能力</p>
+
+<!-- Leaderboard -->
+<div class="card mb-24" style="padding:0; overflow:hidden;">
+    <div style="padding:16px 16px 8px; border-bottom:1px solid var(--border-color);">
+        <div class="flex items-center justify-between">
+            <span class="data-label">IC 排行榜</span>
+            <button class="btn btn-sm" onclick="refreshLeaderboard()">刷新</button>
+        </div>
+    </div>
+    <div id="leaderboard-content">
+        <div style="padding:48px; text-align:center;">
+            <div class="spinner" style="margin:0 auto;"></div>
+            <p class="text-muted mt-16" style="font-size:0.82rem;">加载中...</p>
+        </div>
+    </div>
+</div>
+
+<!-- Run Backtest -->
+<div class="card">
+    <div class="data-label mb-12">运行新回测</div>
+    <div class="flex items-center gap-12" style="flex-wrap:wrap;">
+        <input id="perf-ticker" type="text" class="form-input" style="max-width:160px; font-family:var(--font-data); text-transform:uppercase;" placeholder="AAPL" value="AAPL">
+        <select id="perf-days" class="form-select" style="max-width:120px;">
+            <option value="30">30 天</option>
+            <option value="60">60 天</option>
+            <option value="90">90 天</option>
+        </select>
+        <button class="btn btn-primary" onclick="runBacktest()" id="run-bt-btn">运行回测</button>
+    </div>
+    <div id="backtest-result" class="mt-16" style="display:none;"></div>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    refreshLeaderboard();
+});
+
+function refreshLeaderboard() {
+    var content = document.getElementById('leaderboard-content');
+    content.innerHTML = '<div style="padding:24px; text-align:center;"><div class="spinner" style="margin:0 auto;"></div></div>';
+
+    fetch('/api/backtest/leaderboard')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            renderLeaderboard(data.leaderboard || []);
+        })
+        .catch(function(err) {
+            content.innerHTML = '<div style="padding:24px; text-align:center; color:var(--text-muted);">无数据 - 请先运行回测</div>';
+        });
+}
+
+function renderLeaderboard(items) {
+    var content = document.getElementById('leaderboard-content');
+    if (!items || items.length === 0) {
+        content.innerHTML = '<div style="padding:48px; text-align:center; color:var(--text-muted);">' +
+            '<div style="font-size:2rem; margin-bottom:8px;">&#x1F3C6;</div>' +
+            '<div>暂无排行数据</div><div style="font-size:0.78rem; margin-top:4px;">请先运行回测生成 IC 数据</div></div>';
+        return;
+    }
+
+    var sorted = items.slice().sort(function(a, b) { return (b.ic || 0) - (a.ic || 0); });
+    var html = '<table class="data-table"><thead><tr>' +
+        '<th style="width:50px;">#</th><th>Agent</th><th class="text-right">IC</th><th class="text-right">准确率</th><th class="text-right">信号数</th>' +
+        '</tr></thead><tbody>';
+
+    sorted.forEach(function(item, idx) {
+        var rank = idx + 1;
+        var rankClass = rank <= 3 ? ' top-3' : '';
+        var icColor = (item.ic || 0) > 0 ? 'var(--signal-buy)' : (item.ic || 0) < 0 ? 'var(--signal-sell)' : 'var(--text-muted)';
+        html += '<tr>' +
+            '<td><span class="leaderboard-rank' + rankClass + '">' + rank + '</span></td>' +
+            '<td style="font-weight:600;">' + (item.agent_name || item.agent_id || '--') + '</td>' +
+            '<td class="text-right text-mono" style="color:' + icColor + ';">' + (item.ic || 0).toFixed(4) + '</td>' +
+            '<td class="text-right text-mono">' + ((item.accuracy || 0) * 100).toFixed(1) + '%</td>' +
+            '<td class="text-right text-mono">' + (item.signal_count || 0) + '</td>' +
+            '</tr>';
+    });
+
+    html += '</tbody></table>';
+    content.innerHTML = html;
+}
+
+function runBacktest() {
+    var ticker = document.getElementById('perf-ticker').value.trim().toUpperCase() || 'AAPL';
+    var days = document.getElementById('perf-days').value || 30;
+    var btn = document.getElementById('run-bt-btn');
+    btn.disabled = true;
+    btn.textContent = '运行中...';
+
+    fetch('/api/backtest/run?ticker=' + ticker + '&days=' + days)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            btn.disabled = false;
+            btn.textContent = '运行回测';
+            showToast('回测完成 - ' + ticker, 'success');
+            var result = document.getElementById('backtest-result');
+            result.style.display = 'block';
+            result.innerHTML = '<div class="card" style="background:var(--bg-primary);">' +
+                '<div class="flex items-center gap-24" style="flex-wrap:wrap;">' +
+                '<div><span class="data-label">标的</span><div class="text-mono" style="color:var(--accent-orange); font-weight:700;">' + (data.ticker || ticker) + '</div></div>' +
+                '<div><span class="data-label">天数</span><div class="text-mono">' + (data.days || days) + '</div></div>' +
+                '<div><span class="data-label">共识 IC</span><div class="text-mono" style="color:var(--signal-buy);">' + (data.consensus_ic || 0).toFixed(4) + '</div></div>' +
+                '<div><span class="data-label">记录数</span><div class="text-mono">' + (data.total_records || 0) + '</div></div>' +
+                '</div></div>';
+            // Refresh leaderboard
+            refreshLeaderboard();
+        })
+        .catch(function(err) {
+            btn.disabled = false;
+            btn.textContent = '运行回测';
+            showToast('回测失败: ' + (err.message || err), 'error');
+        });
+}
+</script>
+{% endblock %}

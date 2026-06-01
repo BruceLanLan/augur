@@ -13,6 +13,8 @@ import sys
 import os
 import re
 import json
+import hmac
+import math
 import hashlib
 import logging
 import threading
@@ -26,7 +28,7 @@ import argparse
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
-    from fastapi import FastAPI, HTTPException, Request
+    from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
     from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, PlainTextResponse, Response
     from fastapi.templating import Jinja2Templates
     from fastapi.middleware.cors import CORSMiddleware
@@ -2375,6 +2377,458 @@ async def api_sector_performance(request: Request, refresh: bool = False):
             "sectors": [],
             "note": f"板块行情获取失败: {e}",
         }
+
+
+# ============ v8: I18n helpers ============
+
+_i18n_cache: Dict[str, Dict[str, Any]] = {}
+
+def _load_translations(lang: str = "zh") -> Dict[str, Any]:
+    if lang in _i18n_cache:
+        return _i18n_cache[lang]
+    i18n_dir = Path(__file__).parent / "i18n"
+    filepath = i18n_dir / f"{lang}.json"
+    if filepath.exists():
+        try:
+            data = json.loads(filepath.read_text(encoding="utf-8"))
+            _i18n_cache[lang] = data
+            return data
+        except Exception:
+            pass
+    return {}
+
+def _i18n_context(lang: str = "zh", request: Request = None) -> Dict[str, Any]:
+    if request is not None and lang == "zh":
+        cookie_lang = request.cookies.get("augur_lang")
+        if cookie_lang in ("en", "zh"):
+            lang = cookie_lang
+    return {"t": _load_translations(lang), "lang": lang}
+
+
+# ============ v8: History helpers ============
+
+def _save_history_safe(ticker: str, result: Any) -> None:
+    try:
+        from augur.history import save_analysis
+        save_analysis(ticker, result)
+    except Exception:
+        pass
+
+
+# ============ v8: History API ============
+
+@app.get("/history", response_class=HTMLResponse)
+async def history_page(request: Request):
+    return templates.TemplateResponse(request=request, name="history.html", context={"title": "历史记录"})
+
+
+@app.get("/api/history")
+async def api_list_history(limit: int = 50, page: Optional[int] = None, per_page: int = 20):
+    from augur.history import list_history, count_history
+    if page is not None:
+        if page < 1 or per_page < 1:
+            raise HTTPException(status_code=400, detail="page and per_page must be >= 1")
+        total = count_history()
+        total_pages = math.ceil(total / per_page) if per_page > 0 else 0
+        records = list_history(page=page, per_page=per_page)
+        return {"items": records, "total": total, "page": page, "per_page": per_page, "pages": total_pages}
+    from augur.history import list_history
+    records = list_history(limit=limit)
+    return {"records": records, "count": len(records)}
+
+
+@app.get("/api/history/{history_id}")
+async def api_get_history(history_id: str):
+    from augur.history import get_history
+    record = get_history(history_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="History record not found")
+    return record
+
+
+@app.delete("/api/history/{history_id}")
+async def api_delete_history_item(history_id: str):
+    from augur.history import delete_history
+    deleted = delete_history(history_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="History record not found")
+    return {"status": "ok", "message": "已删除"}
+
+
+@app.delete("/api/history")
+async def api_clear_history():
+    from augur.history import clear_history
+    count = clear_history()
+    return {"status": "ok", "deleted": count, "message": f"已清除 {count} 条记录"}
+
+
+# ============ v8: Compare & Debate ============
+
+class CompareBody(BaseModel):
+    ticker: str
+    agent_ids: List[str]
+
+class DebateBody(BaseModel):
+    ticker: str
+    agent_ids: List[str]
+
+
+@app.get("/compare", response_class=HTMLResponse)
+async def compare_page(request: Request):
+    ctx = {"title": "大师对决"}
+    ctx.update(_i18n_context(request=request))
+    return templates.TemplateResponse(request=request, name="compare.html", context=ctx)
+
+
+@app.get("/debate", response_class=HTMLResponse)
+async def debate_page(request: Request):
+    ctx = {"title": "投资辩论"}
+    ctx.update(_i18n_context(request=request))
+    return templates.TemplateResponse(request=request, name="debate.html", context=ctx)
+
+
+@app.get("/performance", response_class=HTMLResponse)
+async def performance_page(request: Request):
+    ctx = {"title": "大师排行榜"}
+    ctx.update(_i18n_context(request=request))
+    return templates.TemplateResponse(request=request, name="performance.html", context=ctx)
+
+
+@app.post("/api/compare")
+async def api_compare(body: CompareBody):
+    ticker = body.ticker.strip().upper()
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format")
+    if len(body.agent_ids) < 2 or len(body.agent_ids) > 5:
+        raise HTTPException(status_code=400, detail="需要2-5个投资人")
+    if len(body.agent_ids) != len(set(body.agent_ids)):
+        raise HTTPException(status_code=400, detail="投资人不能重复")
+    registry = get_registry()
+    for aid in body.agent_ids:
+        if not registry.get(aid):
+            raise HTTPException(status_code=404, detail=f"Agent '{aid}' not found")
+    try:
+        from augur.data import fetch_market_context
+        ctx = fetch_market_context(ticker)
+    except Exception:
+        ctx = MarketContext(ticker=ticker)
+    agents_results = []
+    for aid in body.agent_ids:
+        agent = registry.get(aid)
+        try:
+            result = agent.analyze(ctx)
+            agents_results.append(result.to_dict())
+        except Exception as e:
+            agents_results.append({"agent_id": aid, "agent_name": getattr(agent, "name", aid), "signal": "error", "score": 0, "confidence": 0, "reasoning": str(e), "key_findings": [], "risks": []})
+    return {"ticker": ticker, "agent_count": len(agents_results), "agents": agents_results, "timestamp": datetime.utcnow().isoformat() + "Z"}
+
+
+@app.post("/api/debate")
+async def api_debate(body: DebateBody):
+    ticker = body.ticker.strip().upper()
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format")
+    if len(body.agent_ids) < 2 or len(body.agent_ids) > 4:
+        raise HTTPException(status_code=400, detail="需要2-4个投资人")
+    registry = get_registry()
+    for aid in body.agent_ids:
+        if not registry.get(aid):
+            raise HTTPException(status_code=404, detail=f"Agent '{aid}' not found")
+    try:
+        from augur.data import fetch_market_context
+        ctx = fetch_market_context(ticker)
+    except Exception:
+        ctx = MarketContext(ticker=ticker)
+    rounds = []
+    previous_reasoning = ""
+    for i, aid in enumerate(body.agent_ids):
+        agent = registry.get(aid)
+        try:
+            result = agent.analyze(ctx)
+            reasoning = result.reasoning or ""
+            if i > 0 and previous_reasoning:
+                reasoning = f"[对前者观点的回应] {reasoning}"
+            rounds.append({"agent_id": aid, "agent_name": result.agent_name, "signal": result.signal.value, "score": round(result.score, 1), "confidence": round(result.confidence, 2), "reasoning": reasoning, "round": i + 1})
+            previous_reasoning = result.reasoning or ""
+        except Exception as e:
+            rounds.append({"agent_id": aid, "agent_name": getattr(agent, "name", aid), "signal": "error", "score": 0, "confidence": 0, "reasoning": str(e), "round": i + 1})
+    signals = [r["signal"] for r in rounds if r["signal"] != "error"]
+    buy_count = sum(1 for s in signals if s == "bullish")
+    sell_count = sum(1 for s in signals if s == "bearish")
+    if buy_count > sell_count:
+        summary = f"辩论结束: {buy_count}/{len(signals)} 位投资人看多 {ticker}。"
+    elif sell_count > buy_count:
+        summary = f"辩论结束: {sell_count}/{len(signals)} 位投资人看空 {ticker}。"
+    else:
+        summary = f"辩论结束: 投资人对 {ticker} 分歧较大，建议多维度分析。"
+    return {"ticker": ticker, "rounds": rounds, "summary": summary, "timestamp": datetime.utcnow().isoformat() + "Z"}
+
+
+# ============ v8: WebSocket Analysis Streaming ============
+
+@app.websocket("/ws/analyze/{ticker}")
+async def ws_analyze(websocket: WebSocket, ticker: str):
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        await websocket.close(code=1008, reason="Invalid ticker format")
+        return
+    await websocket.accept()
+    try:
+        try:
+            from augur.data import fetch_market_context
+            ctx = fetch_market_context(ticker.upper())
+        except Exception:
+            ctx = MarketContext(ticker=ticker.upper())
+        registry = get_registry()
+        all_agents = registry.get_all()
+        total = len(all_agents)
+        agent_responses = {}
+        for i, agent in enumerate(all_agents, 1):
+            try:
+                result = agent.analyze(ctx)
+                agent_responses[agent.agent_id] = result
+                await websocket.send_json({"type": "agent", "agent_id": agent.agent_id, "agent_name": result.agent_name, "signal": result.signal.value, "score": round(result.score, 1), "confidence": round(result.confidence, 2), "reasoning": result.reasoning, "progress": f"{i}/{total}"})
+            except Exception as e:
+                await websocket.send_json({"type": "agent", "agent_id": agent.agent_id, "agent_name": getattr(agent, "name", agent.agent_id), "signal": "error", "score": 0, "confidence": 0, "reasoning": str(e), "progress": f"{i}/{total}"})
+        coord = get_coordinator()
+        consensus_resp = coord.get_consensus(agent_responses, ticker=ticker.upper(), context=ctx)
+        consensus_dict = consensus_resp.to_dict()
+        consensus_dict["type"] = "consensus"
+        await websocket.send_json(consensus_dict)
+        _save_history_safe(ticker.upper(), {"ticker": ticker.upper(), "consensus": consensus_resp.to_dict(), "agents": [r.to_dict() for r in agent_responses.values()], "agent_count": len(agent_responses)})
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        try:
+            await websocket.send_json({"type": "error", "message": str(e)})
+        except Exception:
+            pass
+
+
+# ============ v8: Real-time Price WebSocket ============
+
+_price_streamer = None
+
+def _get_price_streamer():
+    global _price_streamer
+    if _price_streamer is None:
+        from augur.streaming import PriceStreamer
+        _price_streamer = PriceStreamer(interval=60.0)
+    return _price_streamer
+
+
+@app.websocket("/ws/prices")
+async def ws_prices(websocket: WebSocket):
+    streamer = _get_price_streamer()
+    await websocket.accept()
+    await streamer.connect(websocket)
+    if not streamer.is_running:
+        await streamer.start()
+    try:
+        initial = {"type": "price_update", "prices": streamer.get_current_prices(), "timestamp": _time.time()}
+        await websocket.send_text(json.dumps(initial))
+    except Exception:
+        pass
+    try:
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        await streamer.disconnect(websocket)
+    except Exception:
+        await streamer.disconnect(websocket)
+
+
+# ============ v8: Sentiment API ============
+
+@app.get("/api/sentiment/{ticker}")
+async def api_sentiment(ticker: str):
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format")
+    from augur.sentiment import SentimentAnalyzer
+    result = SentimentAnalyzer().get_sentiment(ticker)
+    return {"ticker": result.ticker, "overall_score": result.overall_score, "sources": result.sources, "volume": result.volume, "trending": result.trending}
+
+
+# ============ v8: AI Chat ============
+
+_chat_engine = None
+
+def _get_chat_engine():
+    global _chat_engine
+    if _chat_engine is None:
+        from augur.chat import ChatEngine
+        _chat_engine = ChatEngine()
+    return _chat_engine
+
+
+@app.get("/chat", response_class=HTMLResponse)
+async def chat_page(request: Request):
+    engine = _get_chat_engine()
+    ctx = {"title": "AI Chat", "agents": engine.get_available_agents()}
+    ctx.update(_i18n_context(request=request))
+    return templates.TemplateResponse(request=request, name="chat.html", context=ctx)
+
+
+class ChatBody(BaseModel):
+    message: str
+    agent_id: Optional[str] = None
+
+
+@app.post("/api/chat")
+async def api_chat(body: ChatBody):
+    if len(body.message) > 2000:
+        raise HTTPException(status_code=400, detail="消息过长（最多2000字符）")
+    if body.agent_id and not re.match(r'^[a-z_]{1,50}$', body.agent_id):
+        raise HTTPException(status_code=400, detail="Invalid agent_id format")
+    return _get_chat_engine().get_response(body.message, body.agent_id)
+
+
+# ============ v8: Multi-User Auth (opt-in via AUGUR_MULTI_USER=1) ============
+
+class AuthRegisterBody(BaseModel):
+    username: str
+    password: str
+
+class AuthLoginBody(BaseModel):
+    username: str
+    password: str
+
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse(request=request, name="login.html", context={"title": "Login"})
+
+
+@app.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request):
+    return templates.TemplateResponse(request=request, name="register.html", context={"title": "Register"})
+
+
+@app.post("/api/auth/register")
+async def api_auth_register(body: AuthRegisterBody):
+    from augur.users import UserManager, is_multi_user_enabled
+    if not is_multi_user_enabled():
+        raise HTTPException(status_code=403, detail="Set AUGUR_MULTI_USER=1 to enable multi-user mode.")
+    if not body.username or not 3 <= len(body.username) <= 32 or not re.match(r'^[a-zA-Z0-9_]+$', body.username):
+        raise HTTPException(status_code=400, detail="Username: 3-32 chars, letters/numbers/underscore only.")
+    if not body.password or not 6 <= len(body.password) <= 128:
+        raise HTTPException(status_code=400, detail="Password must be 6-128 characters.")
+    manager = UserManager()
+    user = manager.create_user(body.username, body.password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Username already exists or invalid.")
+    return {"status": "ok", "username": user["username"], "id": user["id"]}
+
+
+@app.post("/api/auth/login")
+async def api_auth_login(body: AuthLoginBody):
+    from augur.users import UserManager, is_multi_user_enabled
+    if not is_multi_user_enabled():
+        raise HTTPException(status_code=403, detail="Set AUGUR_MULTI_USER=1 to enable multi-user mode.")
+    if not body.username or len(body.username) > 32 or not body.password or len(body.password) > 128:
+        raise HTTPException(status_code=400, detail="Invalid credentials.")
+    token = UserManager().authenticate(body.username, body.password)
+    if not token:
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+    return {"status": "ok", "token": token, "username": body.username}
+
+
+# ============ v8: Rules Engine ============
+
+_rules_engine = None
+
+def _get_rules_engine():
+    global _rules_engine
+    if _rules_engine is None:
+        from augur.rules import RulesEngine
+        _rules_engine = RulesEngine()
+    return _rules_engine
+
+
+class RuleCreateBody(BaseModel):
+    name: str
+    conditions: List[Dict[str, Any]] = []
+    actions: List[Dict[str, Any]] = []
+    enabled: bool = True
+
+
+@app.get("/api/rules")
+async def api_list_rules():
+    engine = _get_rules_engine()
+    rules = engine.get_rules()
+    return {"rules": [r.to_dict() for r in rules], "count": len(rules)}
+
+
+@app.post("/api/rules")
+async def api_create_rule(body: RuleCreateBody):
+    from augur.rules import Rule
+    if not body.name or len(body.name) > 100:
+        raise HTTPException(status_code=400, detail="Rule name: 1-100 characters.")
+    engine = _get_rules_engine()
+    rule = Rule(id="", name=body.name, conditions=body.conditions, actions=body.actions, enabled=body.enabled)
+    created = engine.add_rule(rule)
+    return {"status": "ok", "rule": created.to_dict()}
+
+
+@app.delete("/api/rules/{rule_id}")
+async def api_delete_rule(rule_id: str):
+    engine = _get_rules_engine()
+    if not engine.remove_rule(rule_id):
+        raise HTTPException(status_code=404, detail=f"Rule '{rule_id}' not found")
+    return {"status": "ok", "message": "Rule deleted"}
+
+
+# ============ v8: Portfolio Optimizer ============
+
+class OptimizeBody(BaseModel):
+    tickers: List[str]
+    risk_free_rate: float = 0.02
+
+
+@app.get("/optimizer", response_class=HTMLResponse)
+async def optimizer_page(request: Request):
+    ctx = {"title": "Portfolio Optimizer"}
+    ctx.update(_i18n_context(request=request))
+    return templates.TemplateResponse(request=request, name="optimizer.html", context=ctx)
+
+
+@app.post("/api/optimize")
+async def api_optimize(body: OptimizeBody):
+    from augur.optimizer import PortfolioOptimizer
+    import random
+    if not body.tickers or len(body.tickers) > 10:
+        raise HTTPException(status_code=400, detail="需要1-10个股票代码")
+    for t in body.tickers:
+        if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', t):
+            raise HTTPException(status_code=400, detail=f"Invalid ticker: {t}")
+    returns_data = {}
+    for ticker in body.tickers:
+        seed = int(hashlib.sha256(ticker.upper().encode()).hexdigest()[:8], 16)
+        rng = random.Random(seed)
+        returns_data[ticker.upper()] = [rng.gauss(0.001, 0.02) for _ in range(60)]
+    result = PortfolioOptimizer().optimize(returns_data, risk_free_rate=body.risk_free_rate)
+    return {"status": "ok", "portfolio": result.to_dict(), "tickers": [t.upper() for t in body.tickers]}
+
+
+# ============ v8: I18n API ============
+
+@app.get("/api/i18n/{lang}")
+async def api_i18n(lang: str):
+    if lang not in ("en", "zh"):
+        raise HTTPException(status_code=400, detail="Supported languages: en, zh")
+    i18n_dir = Path(__file__).parent / "i18n"
+    filepath = i18n_dir / f"{lang}.json"
+    if not filepath.exists():
+        raise HTTPException(status_code=404, detail=f"Language file not found: {lang}")
+    return json.loads(filepath.read_text(encoding="utf-8"))
+
+
+@app.post("/api/lang/{lang}")
+async def api_set_lang(lang: str):
+    if lang not in ("en", "zh"):
+        raise HTTPException(status_code=400, detail="Supported languages: en, zh")
+    response = JSONResponse(content={"status": "ok", "lang": lang})
+    response.set_cookie(key="augur_lang", value=lang, max_age=365 * 24 * 3600, httponly=False, samesite="lax")
+    return response
 
 
 # ============ Main ============

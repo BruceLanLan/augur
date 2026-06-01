@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+{% block title %}对比分析 - Augur{% endblock %}
+{% block extra_head %}
+<style>
+.agent-checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+}
+.agent-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 0.78rem;
+    transition: all 0.2s;
+}
+.agent-checkbox-item:hover {
+    border-color: var(--accent-orange);
+    background: var(--bg-card-hover);
+}
+.agent-checkbox-item.selected {
+    border-color: var(--accent-orange);
+    background: rgba(255, 149, 0, 0.1);
+}
+.agent-checkbox-item input[type="checkbox"] {
+    accent-color: var(--accent-orange);
+}
+.compare-results {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 16px;
+}
+.compare-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 16px;
+    position: relative;
+}
+.compare-card.agree { border-color: var(--signal-buy); }
+.compare-card.disagree { border-color: var(--signal-sell); }
+.compare-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+.compare-card-name {
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+.compare-reasoning {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    max-height: 120px;
+    overflow-y: auto;
+}
+.compare-findings {
+    margin-top: 8px;
+    font-size: 0.72rem;
+}
+.compare-findings li {
+    padding: 2px 0;
+    color: var(--text-secondary);
+}
+#compare-spinner { display:none; text-align:center; padding:40px; }
+#compare-results-section { display:none; }
+.select-count {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<h2 style="color:var(--accent-orange); margin-bottom:4px;">对比分析</h2>
+<p class="text-muted mb-16" style="font-size:0.82rem;">选择 2-5 位投资大师，对比同一标的的分析差异</p>
+
+<div class="card mb-24">
+    <div class="mb-12">
+        <label class="data-label mb-4">股票代码</label>
+        <div class="flex items-center gap-12">
+            <input id="compare-ticker" type="text" class="form-input" style="max-width:200px; font-family:var(--font-data); font-size:1.1rem; font-weight:700; text-transform:uppercase;" placeholder="AAPL">
+            <button class="btn btn-primary" onclick="runCompare()" id="compare-btn" disabled>对比分析</button>
+        </div>
+    </div>
+
+    <div class="mb-8">
+        <label class="data-label mb-8">选择投资大师 (2-5 位)</label>
+        <div class="agent-checkbox-grid" id="agent-grid">
+            {% for p in personas %}
+            <label class="agent-checkbox-item" onclick="updateSelection(this)">
+                <input type="checkbox" value="{{ p.id }}" name="agents">
+                <span>{{ p.name }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        <div class="select-count agent-counter insufficient" id="select-count">2-5 位 (已选 0)</div>
+    </div>
+</div>
+
+<!-- Spinner -->
+<div id="compare-spinner">
+    <div class="spinner" style="margin:0 auto;"></div>
+    <p class="loading-pulse text-orange text-mono mt-16" style="font-size:0.88rem;">正在对比分析...</p>
+    <div class="compare-results mt-16">
+        <div class="skeleton skeleton-compare-card"></div>
+        <div class="skeleton skeleton-compare-card"></div>
+        <div class="skeleton skeleton-compare-card"></div>
+    </div>
+</div>
+
+<!-- Error Panel -->
+<div id="compare-error" class="error-panel mb-16" style="display:none;">
+    <div class="error-panel-title"><span class="error-panel-icon">&#x26A0;</span>对比分析失败</div>
+    <div class="error-panel-msg" id="compare-error-msg"></div>
+    <div class="error-panel-retry">
+        <button class="btn btn-sm" onclick="runCompare()">重试</button>
+    </div>
+</div>
+
+<!-- Results -->
+<div id="compare-results-section">
+    <div class="flex items-center justify-between mb-12">
+        <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">对比结果</div>
+        <div class="flex items-center gap-12">
+            <div id="compare-consensus" class="text-muted" style="font-size:0.78rem;"></div>
+            <div class="export-btn-group" id="compare-export" style="display:none;">
+                <button class="btn btn-sm" onclick="exportCompareJSON()">JSON</button>
+                <button class="btn btn-sm" onclick="exportCompareMD()">Markdown</button>
+                <button class="btn btn-sm" onclick="shareCompareLink()">分享</button>
+            </div>
+        </div>
+    </div>
+    <div class="compare-results" id="compare-results"></div>
+</div>
+
+<!-- Empty State (shown initially) -->
+<div id="compare-empty" class="empty-state">
+    <span class="empty-state-icon">&#128200;</span>
+    <div class="empty-state-title">Select agents to compare</div>
+    <p class="empty-state-desc">Choose 2-5 investment personas above to compare their analysis on the same stock. See where they agree and disagree.</p>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+function updateSelection(label) {
+    var checkbox = label.querySelector('input[type="checkbox"]');
+    var allChecked = document.querySelectorAll('#agent-grid input[type="checkbox"]:checked');
+    if (!checkbox.checked && allChecked.length >= 5) {
+        checkbox.checked = false;
+        showToast('最多选择 5 位投资大师', 'warning');
+        return;
+    }
+    setTimeout(function() {
+        var checked = document.querySelectorAll('#agent-grid input[type="checkbox"]:checked');
+        var count = checked.length;
+        var countEl = document.getElementById('select-count');
+        countEl.textContent = '2-5 位 (已选 ' + count + ')';
+        if (count >= 2 && count <= 5) {
+            countEl.className = 'select-count agent-counter ready';
+        } else {
+            countEl.className = 'select-count agent-counter insufficient';
+        }
+        document.querySelectorAll('.agent-checkbox-item').forEach(function(item) {
+            var cb = item.querySelector('input[type="checkbox"]');
+            if (cb.checked) item.classList.add('selected');
+            else item.classList.remove('selected');
+        });
+        validateCompareForm();
+    }, 10);
+}
+
+function validateCompareForm() {
+    var ticker = document.getElementById('compare-ticker').value.trim();
+    var checked = document.querySelectorAll('#agent-grid input[type="checkbox"]:checked');
+    var btn = document.querySelector('.btn-primary');
+    if (ticker.length > 0 && checked.length >= 2 && checked.length <= 5) {
+        btn.disabled = false;
+    } else {
+        btn.disabled = true;
+    }
+}
+
+// Real-time ticker validation
+document.addEventListener('DOMContentLoaded', function() {
+    var tickerInput = document.getElementById('compare-ticker');
+    tickerInput.addEventListener('input', function() {
+        validateCompareForm();
+    });
+    validateCompareForm();
+});
+
+function signalBadgeClass(s) {
+    if (!s) return 'signal-badge-neutral';
+    var m = {'bullish':'signal-badge-buy','neutral':'signal-badge-neutral','bearish':'signal-badge-sell'};
+    return m[s.toLowerCase()] || 'signal-badge-neutral';
+}
+
+function signalLabel(s) {
+    var m = {'bullish':'BUY','neutral':'HOLD','bearish':'SELL'};
+    return m[(s||'').toLowerCase()] || s;
+}
+
+function runCompare() {
+    var ticker = document.getElementById('compare-ticker').value.trim().toUpperCase();
+    if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
+
+    var checked = document.querySelectorAll('#agent-grid input[type="checkbox"]:checked');
+    var agentIds = [];
+    checked.forEach(function(cb) { agentIds.push(cb.value); });
+
+    if (agentIds.length < 2) { showToast('请至少选择 2 位投资大师', 'warning'); return; }
+    if (agentIds.length > 5) { showToast('最多选择 5 位投资大师', 'warning'); return; }
+
+    document.getElementById('compare-spinner').style.display = 'block';
+    document.getElementById('compare-results-section').style.display = 'none';
+    document.getElementById('compare-error').style.display = 'none';
+    document.getElementById('compare-empty').style.display = 'none';
+
+    fetch('/api/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker: ticker, agent_ids: agentIds })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        document.getElementById('compare-spinner').style.display = 'none';
+        document.getElementById('compare-results-section').style.display = 'block';
+        renderCompareResults(data);
+    })
+    .catch(function(err) {
+        document.getElementById('compare-spinner').style.display = 'none';
+        document.getElementById('compare-error').style.display = 'block';
+        document.getElementById('compare-error-msg').textContent = err.message || String(err);
+    });
+}
+
+function renderCompareResults(data) {
+    window._lastCompareData = data;
+    var agents = data.agents || [];
+    var container = document.getElementById('compare-results');
+    container.innerHTML = '';
+    document.getElementById('compare-export').style.display = 'flex';
+
+    // Determine consensus signal for highlighting
+    var signals = agents.map(function(a) { return (a.signal || '').toLowerCase(); });
+    var majoritySignal = null;
+    var signalCounts = {};
+    signals.forEach(function(s) { signalCounts[s] = (signalCounts[s] || 0) + 1; });
+    for (var s in signalCounts) {
+        if (signalCounts[s] > agents.length / 2) majoritySignal = s;
+    }
+
+    var agreeCount = 0;
+    var disagreeCount = 0;
+
+    agents.forEach(function(a) {
+        var isAgree = majoritySignal && (a.signal || '').toLowerCase() === majoritySignal;
+        var isDisagree = majoritySignal && (a.signal || '').toLowerCase() !== majoritySignal;
+        if (isAgree) agreeCount++;
+        if (isDisagree) disagreeCount++;
+
+        var card = document.createElement('div');
+        card.className = 'compare-card' + (isAgree ? ' agree' : '') + (isDisagree ? ' disagree' : '');
+        var findingsHtml = '';
+        if (a.key_findings && a.key_findings.length > 0) {
+            findingsHtml = '<ul class="compare-findings">';
+            a.key_findings.slice(0, 4).forEach(function(f) {
+                findingsHtml += '<li>' + f + '</li>';
+            });
+            findingsHtml += '</ul>';
+        }
+        card.innerHTML = '<div class="compare-card-header">' +
+            '<span class="compare-card-name">' + (a.agent_name || a.agent_id) + '</span>' +
+            '<span class="signal-badge ' + signalBadgeClass(a.signal) + '" style="font-size:0.7rem;">' + signalLabel(a.signal) + '</span>' +
+            '</div>' +
+            '<div class="flex items-center gap-12 mb-8">' +
+            '<div><span class="data-label">评分</span><div class="data-value" style="font-size:1.1rem;">' + (a.score || 0).toFixed(1) + '/10</div></div>' +
+            '<div><span class="data-label">置信度</span><div class="text-mono">' + ((a.confidence || 0) * 100).toFixed(0) + '%</div></div>' +
+            '</div>' +
+            '<div class="compare-reasoning">' + (a.reasoning || '').replace(/#+\s*/g, '').replace(/\*\*/g, '') + '</div>' +
+            findingsHtml;
+        container.appendChild(card);
+    });
+
+    var consensusEl = document.getElementById('compare-consensus');
+    if (majoritySignal) {
+        consensusEl.innerHTML = '共识: <span style="color:var(--signal-buy);">' + agreeCount + ' 一致</span>' +
+            (disagreeCount > 0 ? ' / <span style="color:var(--signal-sell);">' + disagreeCount + ' 分歧</span>' : '');
+    } else {
+        consensusEl.textContent = '无明确共识 (分歧较大)';
+    }
+}
+
+function exportCompareJSON() {
+    var data = window._lastCompareData;
+    if (!data) return;
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (data.ticker || 'compare') + '_compare.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('已导出 JSON');
+}
+
+function exportCompareMD() {
+    var data = window._lastCompareData;
+    if (!data) return;
+    var md = '# ' + data.ticker + ' - 对比分析\n\n';
+    (data.agents || []).forEach(function(a) {
+        md += '## ' + (a.agent_name || a.agent_id) + '\n';
+        md += '- 信号: ' + signalLabel(a.signal) + '\n';
+        md += '- 评分: ' + (a.score || 0).toFixed(1) + '/10\n';
+        md += '- 分析: ' + (a.reasoning || '').substring(0, 200) + '\n\n';
+    });
+    var blob = new Blob([md], { type: 'text/markdown' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = (data.ticker || 'compare') + '_compare.md';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('已导出 Markdown');
+}
+
+function shareCompareLink() {
+    var ticker = document.getElementById('compare-ticker').value.trim().toUpperCase();
+    var checked = document.querySelectorAll('#agent-grid input[type="checkbox"]:checked');
+    var ids = [];
+    checked.forEach(function(cb) { ids.push(cb.value); });
+    var url = window.location.origin + '/compare?ticker=' + ticker + '&agents=' + ids.join(',');
+    navigator.clipboard.writeText(url).then(function() {
+        showToast('分享链接已复制');
+    }).catch(function() { showToast('复制失败', 'error'); });
+}
+</script>
+{% endblock %}

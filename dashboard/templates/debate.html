@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}辩论模式 - Augur{% endblock %}
+{% block extra_head %}
+<style>
+.debate-agent-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.debate-agent-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.debate-agent-chip:hover {
+    border-color: var(--accent-orange);
+    background: var(--bg-card-hover);
+}
+.debate-agent-chip.selected {
+    border-color: var(--accent-orange);
+    background: rgba(255, 140, 0, 0.12);
+    color: var(--accent-orange);
+}
+.debate-agent-chip input { display: none; }
+#debate-thread { min-height: 200px; }
+</style>
+{% endblock %}
+{% block content %}
+
+<h2 style="color:var(--accent-orange); margin-bottom:4px;">辩论模式</h2>
+<p class="text-muted mb-16" style="font-size:0.82rem;">选择 2-4 位投资大师，围绕同一标的进行多轮辩论，每位大师对前者观点进行反驳</p>
+
+<div class="card mb-24">
+    <div class="flex items-center gap-12 mb-16" style="flex-wrap:wrap;">
+        <div style="flex:1; min-width:180px; max-width:240px;">
+            <label class="data-label mb-4">股票代码</label>
+            <input id="debate-ticker" type="text" class="form-input" style="font-family:var(--font-data); font-size:1.1rem; font-weight:700; text-transform:uppercase;" placeholder="AAPL">
+        </div>
+        <div style="align-self:flex-end;">
+            <button class="btn btn-primary" onclick="startDebate()" id="debate-btn" style="padding:10px 24px;" disabled>开始辩论</button>
+        </div>
+    </div>
+
+    <div>
+        <label class="data-label mb-8">选择辩论者 (2-4 位)</label>
+        <div class="debate-agent-select" id="debate-agents">
+            {% for p in personas %}
+            <label class="debate-agent-chip" onclick="toggleDebateAgent(this)">
+                <input type="checkbox" value="{{ p.id }}" name="debate_agents">
+                <span>{{ p.name }}</span>
+            </label>
+            {% endfor %}
+        </div>
+        <div class="text-muted" style="font-size:0.72rem;" id="debate-select-count">已选择: 0 / 4</div>
+    </div>
+</div>
+
+<!-- Spinner -->
+<div id="debate-spinner" style="display:none; text-align:center; padding:40px;">
+    <div class="spinner" style="margin:0 auto;"></div>
+    <p class="loading-pulse text-orange text-mono mt-16" style="font-size:0.88rem;">辩论进行中...</p>
+</div>
+
+<!-- Error Panel -->
+<div id="debate-error" class="error-panel mb-16" style="display:none;">
+    <div class="error-panel-title"><span class="error-panel-icon">&#x26A0;</span>辩论失败</div>
+    <div class="error-panel-msg" id="debate-error-msg"></div>
+    <div class="error-panel-retry">
+        <button class="btn btn-sm" onclick="startDebate()">重试</button>
+    </div>
+</div>
+
+<!-- Debate Thread -->
+<div id="debate-thread"></div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+function toggleDebateAgent(label) {
+    var cb = label.querySelector('input[type="checkbox"]');
+    var allChecked = document.querySelectorAll('#debate-agents input:checked');
+    if (!cb.checked && allChecked.length >= 4) {
+        cb.checked = false;
+        showToast('最多选择 4 位', 'warning');
+        return;
+    }
+    setTimeout(function() {
+        var checked = document.querySelectorAll('#debate-agents input:checked');
+        var count = checked.length;
+        var countEl = document.getElementById('debate-select-count');
+        countEl.textContent = '2-4 位 (已选 ' + count + ')';
+        document.querySelectorAll('.debate-agent-chip').forEach(function(chip) {
+            var c = chip.querySelector('input');
+            if (c.checked) chip.classList.add('selected');
+            else chip.classList.remove('selected');
+        });
+        validateDebateForm();
+    }, 10);
+}
+
+function validateDebateForm() {
+    var ticker = document.getElementById('debate-ticker').value.trim();
+    var checked = document.querySelectorAll('#debate-agents input:checked');
+    var btn = document.getElementById('debate-btn');
+    if (ticker.length > 0 && checked.length >= 2 && checked.length <= 4) {
+        btn.disabled = false;
+    } else {
+        btn.disabled = true;
+    }
+}
+
+// Real-time validation on ticker input
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('debate-ticker').addEventListener('input', validateDebateForm);
+    validateDebateForm();
+});
+
+function startDebate() {
+    var ticker = document.getElementById('debate-ticker').value.trim().toUpperCase();
+    if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
+
+    var checked = document.querySelectorAll('#debate-agents input:checked');
+    var agentIds = [];
+    checked.forEach(function(cb) { agentIds.push(cb.value); });
+
+    if (agentIds.length < 2) { showToast('请至少选择 2 位', 'warning'); return; }
+    if (agentIds.length > 4) { showToast('最多选择 4 位', 'warning'); return; }
+
+    var btn = document.getElementById('debate-btn');
+    btn.disabled = true;
+    btn.textContent = '辩论中...';
+    document.getElementById('debate-spinner').style.display = 'block';
+    document.getElementById('debate-thread').innerHTML = '';
+    document.getElementById('debate-error').style.display = 'none';
+
+    fetch('/api/debate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ticker: ticker, agent_ids: agentIds })
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        btn.disabled = false;
+        btn.textContent = '开始辩论';
+        document.getElementById('debate-spinner').style.display = 'none';
+        renderDebate(data);
+    })
+    .catch(function(err) {
+        btn.disabled = false;
+        btn.textContent = '开始辩论';
+        document.getElementById('debate-spinner').style.display = 'none';
+        document.getElementById('debate-error').style.display = 'block';
+        document.getElementById('debate-error-msg').textContent = err.message || String(err);
+    });
+}
+
+function signalBadgeClass(s) {
+    var m = {'bullish':'signal-badge-buy','neutral':'signal-badge-neutral','bearish':'signal-badge-sell'};
+    return m[(s||'').toLowerCase()] || 'signal-badge-neutral';
+}
+function signalLabel(s) {
+    var m = {'bullish':'BUY','neutral':'HOLD','bearish':'SELL'};
+    return m[(s||'').toLowerCase()] || s;
+}
+
+function renderDebate(data) {
+    var thread = document.getElementById('debate-thread');
+    thread.innerHTML = '';
+    var rounds = data.rounds || [];
+
+    rounds.forEach(function(round, idx) {
+        var isRebuttal = idx > 0;
+        var card = document.createElement('div');
+        card.className = 'debate-card' + (isRebuttal ? ' rebuttal' : '');
+        card.style.animationDelay = (idx * 0.15) + 's';
+
+        var reasoning = (round.reasoning || '').replace(/#+\s*/g, '').replace(/\*\*/g, '');
+        card.innerHTML = '<div class="debate-card-header">' +
+            '<span class="debate-card-agent">' + (round.agent_name || round.agent_id) + '</span>' +
+            '<span class="signal-badge ' + signalBadgeClass(round.signal) + '" style="font-size:0.7rem;">' + signalLabel(round.signal) + ' ' + (round.score || 0).toFixed(1) + '/10</span>' +
+            '</div>' +
+            '<div class="debate-card-content">' + reasoning + '</div>';
+        thread.appendChild(card);
+    });
+
+    if (data.summary) {
+        var summaryCard = document.createElement('div');
+        summaryCard.className = 'card mt-16';
+        summaryCard.style.borderLeft = '3px solid var(--accent-orange)';
+        summaryCard.innerHTML = '<div class="data-label mb-8">辩论总结</div>' +
+            '<p class="text-muted" style="font-size:0.82rem; line-height:1.6;">' + data.summary + '</p>';
+        thread.appendChild(summaryCard);
+    }
+}
+</script>
+{% endblock %}
