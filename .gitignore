@@ -7,3 +7,4 @@ build/
 .eggs/
 *.egg
 .pytest_cache/
+.agents/
