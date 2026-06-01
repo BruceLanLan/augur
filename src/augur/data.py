@@ -103,6 +103,8 @@ def _normalize_ticker(ticker: str) -> str:
         raise ValueError("Ticker cannot be empty")
     if len(ticker) > 15:
         raise ValueError(f"Ticker too long (max 15 chars): {ticker}")
+    if '..' in ticker:
+        raise ValueError(f"Invalid ticker format (consecutive dots not allowed): {ticker}")
     if not re.match(r'^[A-Z0-9.\-]+$', ticker):
         raise ValueError(f"Invalid ticker format (only alphanumeric, dots, hyphens allowed): {ticker}")
     return ticker

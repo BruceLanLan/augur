@@ -59,7 +59,7 @@ _APP_START_TIME = _time.time()
 app = FastAPI(
     title="Augur — 多智能体投资分析",
     description="18位虚拟投资大师，多维度共识分析",
-    version="7.8.0",
+    version="7.8.1",
 )
 
 
@@ -1072,6 +1072,12 @@ async def api_create_custom_persona(body: CustomPersonaBody):
             status_code=400,
             detail="Invalid agent_id: only lowercase letters, digits, hyphens, and underscores are allowed"
         )
+    # Length limit to prevent abuse
+    if len(body.agent_id) > 50:
+        raise HTTPException(status_code=400, detail="agent_id too long (max 50 characters)")
+    # Explicit path traversal protection
+    if '..' in body.agent_id:
+        raise HTTPException(status_code=400, detail="agent_id contains invalid characters")
     # Validate YAML content is parseable
     try:
         yaml.safe_load(body.yaml_content)
@@ -1482,7 +1488,7 @@ async def api_health_extended():
         "datasources": datasources,
         "cache": cache,
         "uptime_seconds": round(uptime, 1),
-        "version": "7.8.0",
+        "version": "7.8.1",
     }
 
 

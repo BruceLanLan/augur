@@ -129,6 +129,8 @@ def _clean_reasoning_for_table(reasoning: str, max_len: int = 80) -> str:
     text = text.strip()
     if len(text) > max_len:
         text = text[:max_len - 3] + "..."
+    # Escape pipe characters to prevent breaking markdown tables
+    text = text.replace('|', '\\|')
     return text
 
 

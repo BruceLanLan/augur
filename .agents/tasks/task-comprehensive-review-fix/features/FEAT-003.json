@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Business logic correctness, security hardening, and code quality improvements across coordinator, backtest, report, and API layers",
+  "status": "in_progress",
+  "steps": [
+    "In src/augur/registry.py (DecisionCoordinator.get_consensus): Verify the consensus algorithm has no division-by-zero risk - currently total_weight could be 0 if all agents return ERROR signal. Add guard.",
+    "In src/augur/registry.py (DecisionCoordinator.get_consensus): Ensure all agent scores are clamped to 0-10 before aggregation (some edge cases could produce out-of-range values)",
+    "In src/augur/backtest.py: Review date boundary handling - ensure generate_sample_data handles the case where days=5 (minimum) properly without index errors",
+    "In src/augur/report.py: Fix the pipe character '|' escaping issue - if any agent reasoning contains '|', it will break the markdown table. Escape '|' as '\\|' in table cells.",
+    "In dashboard/app.py - /api/custom-persona POST: Add path traversal protection - ensure agent_id cannot contain '..' or '/' even though regex already validates, add explicit check",
+    "In dashboard/app.py - /api/persona/{agent_id}/opinion: Already validates persona exists (returns 404). Verify ticker validation is present (it is). Good.",
+    "In dashboard/app.py: Fix the global _ip_rate_limits dict - it can grow unbounded if many unique IPs hit the server. Add periodic cleanup (already partially done for ticker rate limits, replicate for IP limits).",
+    "In src/augur/data.py: Add input sanitization comment and ensure _normalize_ticker catches path traversal attempts like '../etc/passwd' (the regex already blocks '/' and '..' patterns due to [A-Z0-9.\\-] but verify single dots in tickers like '0700.HK' are allowed while '..' is not)",
+    "In src/augur/cron.py: Verify watchlist YAML loading uses safe_load (not unsafe load) - check for yaml.load without Loader parameter",
+    "Remove any unused imports across key files (data.py, registry.py, dashboard/app.py) using a quick grep for common unused patterns",
+    "In src/augur/report.py generate_report: The function starts with 'section' (partial read showed incomplete) - ensure 'sections = []' initialization is correct",
+    "In dashboard/app.py: Ensure version string '7.8.0' is updated to '7.8.1' in the FastAPI app and health endpoint"
+  ],
+  "acceptance_criteria": [
+    "python3 -m pytest tests/ passes all existing tests",
+    "No division by zero possible in consensus calculation when all agents error",
+    "Pipe characters in reasoning do not break markdown table output",
+    "Version references updated to 7.8.1"
+  ],
+  "verification": [
+    "python3 -m pytest tests/ --tb=short -q",
+    "python3 -c \"from augur.report import generate_report; print('report imports OK')\"",
+    "python3 -c \"from augur.registry import DecisionCoordinator; print('coordinator imports OK')\"",
+    "grep -r '7.8.1' /projects/sandbox/augur/src/augur/__init__.py /projects/sandbox/augur/pyproject.toml"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
