@@ -1,3 +1,5 @@
+中文 | [English](README_EN.md)
+
 <div align="center">
 
 <img src="docs/images/zh/hero-banner.png" alt="Augur" width="100%"/>
