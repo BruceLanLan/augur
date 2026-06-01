@@ -209,6 +209,9 @@ Dashboard highlights:
 
 ---
 
+> **🦉 Why a White Pixel Owl?**
+> In Japanese culture, the white owl (フクロウ, *fukurou*) is a symbol of luck, wealth, and wisdom. Its pronunciation can be written as "不苦労" (no hardship) or "福来郎" (luck comes). We chose the white pixel owl as Augur's logo to represent our mission: **Using AI wisdom to make investment decisions less painful and more rewarding.**
+
 ## 💡 Why Augur?
 
 | | Single Strategy | Ask ChatGPT | **Augur** |
