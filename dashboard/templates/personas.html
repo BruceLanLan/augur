@@ -321,7 +321,7 @@
     {% for persona in personas %}
     <div class="persona-card" data-school="{{ persona.school }}" data-name="{{ persona.cn_name|lower }}{{ persona.en_name|lower }}{{ persona.id }}" onclick="toggleCard(this)">
         <div style="display:flex; align-items:flex-start; gap:14px;">
-            <img src="/docs/images/avatars/{{ persona.id }}.svg"
+            <img src="/docs/images/avatars/{{ persona.id }}.png"
                  alt="{{ persona.cn_name }}"
                  style="width:48px; height:48px; border-radius:50%; border:2px solid var(--border-color); flex-shrink:0;"
                  onerror="this.style.display='none'">
