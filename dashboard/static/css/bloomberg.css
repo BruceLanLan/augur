@@ -112,7 +112,7 @@ html, body {
     background: var(--bg-primary);
     color: var(--text-primary);
     font-family: var(--font-ui);
-    font-size: 14px;
+    font-size: 0.875rem;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -145,7 +145,7 @@ a:hover { color: #ffaa33; }
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    z-index: 1000;
+    z-index: 100;
     transition: width var(--transition-speed) ease;
     overflow: hidden;
 }
@@ -364,7 +364,7 @@ a:hover { color: #ffaa33; }
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.6);
-    z-index: 999;
+    z-index: 99;
     opacity: 0;
     transition: opacity 0.3s;
 }
@@ -378,7 +378,7 @@ a:hover { color: #ffaa33; }
     position: fixed;
     top: 16px;
     left: 16px;
-    z-index: 998;
+    z-index: 98;
     width: 40px;
     height: 40px;
     background: var(--bg-card);
@@ -477,10 +477,6 @@ a:hover { color: #ffaa33; }
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-}
-
-.data-mono {
-    font-family: var(--font-data);
 }
 
 /* --- Grid --- */
@@ -882,43 +878,6 @@ input, select, textarea {
     background: rgba(255, 140, 0, 0.15);
     color: var(--accent-orange);
     border: 1px solid rgba(255, 140, 0, 0.3);
-}
-
-.badge-green {
-    background: rgba(0, 200, 83, 0.15);
-    color: var(--signal-buy);
-}
-
-.badge-red {
-    background: rgba(255, 23, 68, 0.15);
-    color: var(--signal-sell);
-}
-
-.badge-dim {
-    background: rgba(136, 136, 160, 0.1);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-color);
-}
-
-/* --- China Flag Mini --- */
-.flag-cn {
-    display: inline-block;
-    width: 16px;
-    height: 11px;
-    background: #de2910;
-    border-radius: 2px;
-    position: relative;
-    vertical-align: middle;
-    margin-left: 4px;
-}
-.flag-cn::after {
-    content: "\2605";
-    position: absolute;
-    top: -2px;
-    left: 2px;
-    font-size: 7px;
-    color: #ffde00;
-    line-height: 11px;
 }
 
 /* --- Page Section Titles --- */
@@ -1376,7 +1335,7 @@ kbd {
     body {
         background: #fff;
         color: #000;
-        font-size: 12px;
+        font-size: 0.75rem;
     }
 
     .sidebar,
@@ -1430,7 +1389,7 @@ kbd {
         justify-content: space-around;
         align-items: center;
         padding: 8px 0;
-        z-index: 1001;
+        z-index: 100;
     }
 
     .bottom-nav-item {
@@ -1573,7 +1532,7 @@ kbd {
 
     .form-input, .form-select {
         min-height: 44px;
-        font-size: 16px; /* prevents iOS zoom */
+        font-size: 1rem; /* prevents iOS zoom */
     }
 }
 
@@ -1751,9 +1710,6 @@ kbd {
     font-family: var(--font-data);
     font-size: 0.85rem;
 }
-
-/* --- Field unit hint --- */
-.unit-hint { color: var(--text-muted); font-size: 0.92em; font-weight: 400; }
 
 /* --- Mobile: deep report tables stay readable --- */
 @media (max-width: 768px) {
@@ -3013,4 +2969,268 @@ kbd {
     body { background: white !important; color: black !important; }
     .sidebar, .top-nav, .status-bar, footer { display: none !important; }
     .card { border: 1px solid #ddd !important; box-shadow: none !important; }
+}
+
+
+/* ============================================================
+   375px Responsive Breakpoint (small phones)
+   ============================================================ */
+@media (max-width: 375px) {
+    .market-board {
+        grid-template-columns: 1fr;
+    }
+
+    .market-tile {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .market-tile-name {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .market-tile-price {
+        font-size: 1rem;
+    }
+
+    .datasource-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .datasource-card {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .ds-card-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .report-scorecard-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .report-scorecard {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .report-scorecard .sc-name {
+        max-width: 100%;
+    }
+
+    .hot-tickers-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .hot-ticker-card {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .macro-snapshot-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .report-debate-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .report-risk-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .report-executive-metrics {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .key-metrics-strip {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .backtest-metrics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .persona-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .app-main {
+        padding: 12px 10px;
+        padding-top: 56px;
+    }
+
+    .hero-title {
+        font-size: 1.3rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.78rem;
+    }
+
+    .example-chip {
+        font-size: 0.7rem;
+        padding: 6px 10px;
+    }
+
+    .status-bar {
+        padding: 8px 10px;
+        gap: 8px;
+        font-size: 0.68rem;
+    }
+
+    .grid-auto {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+/* ============================================================
+   Interactive Element Hover & Focus States
+   ============================================================ */
+
+/* .mover-item hover */
+.mover-item {
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+.mover-item:hover {
+    background: var(--bg-card-hover);
+    transform: translateX(2px);
+}
+
+/* .hot-ticker-card focus-visible */
+.hot-ticker-card:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .example-chip focus-visible */
+.example-chip:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.1);
+}
+
+/* .ticker-btn focus-visible */
+.ticker-btn:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(255, 140, 0, 0.1);
+}
+
+/* .preset-btn focus-visible */
+.preset-btn:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .school-filter-btn hover & focus */
+.school-filter-btn:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .datasource-card hover enhancement (clickable feel) */
+.datasource-card:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .report-scorecard focus-visible */
+.report-scorecard:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .market-tile hover (already has hover via transform) + focus */
+.market-tile:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .macro-card hover already defined, add focus-visible */
+.macro-card:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .backtest-metric-card focus-visible */
+.backtest-metric-card:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .filter-input hover state */
+.filter-input:hover {
+    border-color: var(--border-hover);
+}
+
+/* .form-input hover state */
+.form-input:hover {
+    border-color: var(--border-hover);
+}
+
+/* .form-select hover state */
+.form-select:hover {
+    border-color: var(--border-hover);
+}
+
+/* .onboard-close focus-visible */
+.onboard-banner .onboard-close:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .test-btn focus-visible */
+.test-btn:focus-visible {
+    outline: 2px solid var(--accent-blue, #42a5f5);
+    outline-offset: 2px;
+}
+
+/* .signal-filter-select hover/focus */
+.signal-filter-select:hover {
+    border-color: var(--border-hover);
+}
+.signal-filter-select:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .api-key-input hover */
+.api-key-input:hover:not(:disabled) {
+    border-color: var(--border-hover);
+}
+.api-key-input:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .persona-config-row hover */
+.persona-config-row:hover {
+    background: var(--bg-card-hover);
+}
+
+/* .recent-item focus-visible */
+.recent-item:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: -2px;
+}
+
+/* .bottom-nav-item focus-visible */
+.bottom-nav-item:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+/* .featured-card focus-visible */
+.featured-card:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
 }
