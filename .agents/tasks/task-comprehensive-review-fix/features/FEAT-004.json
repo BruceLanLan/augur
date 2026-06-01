@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "docs",
   "description": "Documentation completeness: Update version to 7.8.1, update README/README_EN/CHANGELOG, ensure single-persona integration guide is accurate and complete",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In pyproject.toml: Bump version from 7.8.0 to 7.8.1",
     "In src/augur/__init__.py: Bump __version__ from '7.8.0' to '7.8.1'",
@@ -27,5 +27,5 @@
     "grep -c '7.8.1' /projects/sandbox/augur/pyproject.toml /projects/sandbox/augur/README.md /projects/sandbox/augur/docs/CHANGELOG.md"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Version bumped from 7.7.0 (in __init__.py) and 7.8.0 (in pyproject.toml) to 7.8.1. Dashboard app.py and report_view.html already had 7.8.1 from previous iterations. stocks.html had 7.7.0, updated to 7.8.1. All 448 tests pass. Tests use dynamic __version__ import so no test assertions needed updating. single-persona-integration.md verified - content is accurate and comprehensive."
 }
