@@ -570,6 +570,35 @@
     <div class="intl-skeleton"></div>
 </div>
 
+<!-- Crypto Overview Panel -->
+<div class="flex items-center justify-between mb-12">
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-crypto">Crypto Overview</div>
+    <button class="btn btn-sm btn-ghost" onclick="loadCryptoOverview()" id="crypto-refresh-btn" title="刷新">&#x21BB; 刷新</button>
+</div>
+<div class="hot-tickers-grid mb-24" id="crypto-grid">
+    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+</div>
+
+<!-- Commodities & Treasury Rates Panel -->
+<div class="flex items-center justify-between mb-12">
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-commodities-rates">Commodities &amp; Treasury Rates</div>
+    <button class="btn btn-sm btn-ghost" onclick="loadCommoditiesAndRates()" id="commod-refresh-btn" title="刷新">&#x21BB; 刷新</button>
+</div>
+<div class="movers-row mb-24" id="commodities-rates-row">
+    <div class="movers-section">
+        <div class="movers-title" style="color:var(--accent-orange);">&#x1F4B0; Commodities</div>
+        <div id="commodities-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4B0;</div><div class="empty-msg">加载中...</div></div></div>
+    </div>
+    <div class="movers-section">
+        <div class="movers-title" style="color:var(--accent-orange);">&#x1F4C8; Treasury Yields</div>
+        <div id="treasury-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F3E6;</div><div class="empty-msg">加载中...</div></div></div>
+    </div>
+</div>
+
 <!-- Top Movers (Gainers & Losers) -->
 <div class="flex items-center justify-between mb-12">
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-top-movers">涨跌幅领先</div>
@@ -822,6 +851,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Load sector performance
     loadSectorPerformance(false);
+
+    // Load crypto overview
+    loadCryptoOverview();
+
+    // Load commodities and treasury rates
+    loadCommoditiesAndRates();
 
     // Render leaderboard from cache
     renderLeaderboard();
@@ -1398,6 +1433,129 @@ function renderLeaderboard() {
             '<span class="leaderboard-score">' + (item.result.score || 0).toFixed(1) + '/10</span>' +
             '<span class="leaderboard-time">' + relativeTime(item.time) + '</span>';
         list.appendChild(li);
+    });
+}
+
+// ====== Crypto Overview Panel ======
+function loadCryptoOverview() {
+    var grid = document.getElementById('crypto-grid');
+    var btn = document.getElementById('crypto-refresh-btn');
+    if (btn) btn.disabled = true;
+    fetchWithTimeout('/api/crypto-overview', {}, 30000)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (btn) btn.disabled = false;
+            renderCryptoGrid(data);
+        })
+        .catch(function() {
+            if (btn) btn.disabled = false;
+            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1FA99;</div><div class="empty-msg">加载失败，点击重试</div><button class="btn btn-sm" onclick="loadCryptoOverview()" style="margin-top:8px;">重试</button></div>';
+        });
+}
+
+function renderCryptoGrid(data) {
+    var grid = document.getElementById('crypto-grid');
+    if (!grid) return;
+    var coins = (data && data.coins) || [];
+    if (!coins.length) {
+        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1FA99;</div><div class="empty-msg">加密货币数据暂不可用</div></div>';
+        return;
+    }
+    grid.innerHTML = '';
+    coins.forEach(function(c) {
+        var up = (c.change_pct || 0) > 0;
+        var down = (c.change_pct || 0) < 0;
+        var cls = up ? 'is-up' : (down ? 'is-down' : 'is-flat');
+        var arrow = up ? '\u25B2' : (down ? '\u25BC' : '\u2014');
+        var pct = ((c.change_pct || 0) * 100).toFixed(2);
+        var priceStr = (c.price || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        var mcap = c.market_cap ? '$' + (c.market_cap / 1e9).toFixed(1) + 'B' : '';
+        var card = document.createElement('div');
+        card.className = 'hot-ticker-card ' + cls;
+        card.innerHTML =
+            '<div class="hot-ticker-head">' +
+                '<span class="hot-ticker-symbol">' + escapeHtml(c.symbol) + '</span>' +
+                '<span class="hot-ticker-name">' + escapeHtml(c.name) + '</span>' +
+            '</div>' +
+            '<div class="hot-ticker-price">' + priceStr + '</div>' +
+            '<div class="hot-ticker-change">' + arrow + ' ' + (up ? '+' : '') + pct + '%</div>' +
+            (mcap ? '<div class="text-muted" style="font-size:0.68rem; margin-top:2px;">' + mcap + '</div>' : '');
+        grid.appendChild(card);
+    });
+}
+
+// ====== Commodities & Treasury Rates Panel ======
+function loadCommoditiesAndRates() {
+    loadCommodities();
+    loadTreasuryRates();
+}
+
+function loadCommodities() {
+    var list = document.getElementById('commodities-list');
+    fetchWithTimeout('/api/commodities', {}, 30000)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            renderCommodities(data);
+        })
+        .catch(function() {
+            if (list) list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">加载失败</div></div>';
+        });
+}
+
+function renderCommodities(data) {
+    var list = document.getElementById('commodities-list');
+    if (!list) return;
+    var commodities = (data && data.commodities) || [];
+    if (!commodities.length) {
+        list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">大宗商品数据不可用</div></div>';
+        return;
+    }
+    list.innerHTML = '';
+    commodities.forEach(function(c) {
+        var pct = (c.change_pct || 0);
+        var up = pct > 0;
+        var down = pct < 0;
+        var pctStr = (up ? '+' : '') + (pct * 100).toFixed(2) + '%';
+        var color = up ? 'var(--signal-buy)' : (down ? 'var(--signal-sell)' : 'var(--text-muted)');
+        var div = document.createElement('div');
+        div.className = 'mover-item';
+        div.innerHTML =
+            '<div><span class="mover-symbol">' + escapeHtml(c.name) + '</span> <span class="mover-name">' + escapeHtml(c.symbol) + '</span></div>' +
+            '<span style="font-family:var(--font-data); font-size:0.82rem; font-weight:600; color:var(--text-primary);">$' + (c.price || 0).toFixed(2) + '</span>' +
+            '<span class="mover-change" style="color:' + color + ';">' + pctStr + '</span>';
+        list.appendChild(div);
+    });
+}
+
+function loadTreasuryRates() {
+    var list = document.getElementById('treasury-list');
+    fetchWithTimeout('/api/treasury-rates', {}, 30000)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            renderTreasuryRates(data);
+        })
+        .catch(function() {
+            if (list) list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">加载失败</div></div>';
+        });
+}
+
+function renderTreasuryRates(data) {
+    var list = document.getElementById('treasury-list');
+    if (!list) return;
+    var rates = (data && data.rates) || [];
+    if (!rates.length) {
+        list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">国债收益率数据不可用</div></div>';
+        return;
+    }
+    list.innerHTML = '';
+    rates.forEach(function(r) {
+        var yieldPct = r.yield_pct || 0;
+        var div = document.createElement('div');
+        div.className = 'mover-item';
+        div.innerHTML =
+            '<div><span class="mover-symbol">' + escapeHtml(r.maturity) + '</span> <span class="mover-name">' + escapeHtml(r.name || '') + '</span></div>' +
+            '<span class="mover-change" style="color:var(--accent-orange); font-family:var(--font-data); font-size:0.88rem; font-weight:600;">' + yieldPct.toFixed(3) + '%</span>';
+        list.appendChild(div);
     });
 }
 </script>

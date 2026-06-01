@@ -1651,6 +1651,263 @@ async def api_market_overview(request: Request, refresh: bool = False):
         }
 
 
+@app.get("/api/market-movers", summary="涨跌幅领先")
+async def api_market_movers():
+    """Top 5 gainers and top 5 losers extracted from hot tickers data.
+
+    Returns: {"status": "ok", "gainers": [...], "losers": [...]}
+    """
+    if not _HAS_AUGUR_DATA:
+        return {"status": "degraded", "gainers": [], "losers": []}
+    try:
+        from augur.data import fetch_hot_tickers
+        tickers = fetch_hot_tickers(force_refresh=False)
+        if not tickers:
+            return {"status": "degraded", "gainers": [], "losers": []}
+        sorted_tickers = sorted(tickers, key=lambda t: t.get("change_pct", 0), reverse=True)
+        gainers = sorted_tickers[:5]
+        losers = sorted_tickers[-5:][::-1]  # worst first
+        return {"status": "ok", "gainers": gainers, "losers": losers}
+    except Exception as e:
+        logger.warning("market movers failed: %s", e)
+        return {"status": "degraded", "gainers": [], "losers": [], "error": str(e)}
+
+
+@app.get("/api/crypto-overview", summary="加密货币总览")
+async def api_crypto_overview():
+    """Fetch BTC, ETH, SOL, DOGE, XRP prices and 24h change from yfinance.
+
+    Returns: {"status": "ok", "coins": [{symbol, name, price, change_pct, market_cap}]}
+    """
+    if not _HAS_AUGUR_DATA:
+        return {"status": "degraded", "coins": []}
+
+    CRYPTO_SYMBOLS = [
+        ("BTC-USD", "Bitcoin"),
+        ("ETH-USD", "Ethereum"),
+        ("SOL-USD", "Solana"),
+        ("DOGE-USD", "Dogecoin"),
+        ("XRP-USD", "XRP"),
+    ]
+
+    try:
+        yf = __import__("yfinance")
+    except ImportError:
+        return {"status": "degraded", "coins": []}
+
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+
+    def _safe_float_local(value):
+        try:
+            f = float(value)
+            if f != f or f in (float("inf"), float("-inf")):
+                return 0.0
+            return f
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _fetch_crypto(entry):
+        symbol, name = entry
+        price = 0.0
+        prev = 0.0
+        market_cap = 0.0
+        try:
+            tk = yf.Ticker(symbol)
+            fi = getattr(tk, "fast_info", None)
+            if fi is not None:
+                price = _safe_float_local(getattr(fi, "last_price", 0))
+                prev = _safe_float_local(getattr(fi, "previous_close", 0))
+                market_cap = _safe_float_local(getattr(fi, "market_cap", 0))
+            if price <= 0 or prev <= 0:
+                hist = tk.history(period="5d")
+                if hist is not None and not hist.empty:
+                    closes = [c for c in hist["Close"].tolist() if c and c == c]
+                    if closes:
+                        price = price or float(closes[-1])
+                        prev = prev or (float(closes[-2]) if len(closes) >= 2 else float(closes[-1]))
+        except Exception as exc:
+            logger.debug("crypto fetch failed for %s: %s", symbol, exc)
+        change_pct = ((price - prev) / prev) if prev else 0.0
+        return {
+            "symbol": symbol,
+            "name": name,
+            "price": round(price, 2),
+            "change_pct": round(change_pct, 4),
+            "market_cap": round(market_cap, 0),
+        }
+
+    coins = []
+    try:
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            futures = {executor.submit(_fetch_crypto, entry): entry for entry in CRYPTO_SYMBOLS}
+            for future in futures:
+                try:
+                    coin = future.result(timeout=10)
+                    coins.append(coin)
+                except (FuturesTimeoutError, Exception) as exc:
+                    entry = futures[future]
+                    logger.debug("crypto timeout for %s: %s", entry[0], exc)
+                    coins.append({"symbol": entry[0], "name": entry[1], "price": 0.0, "change_pct": 0.0, "market_cap": 0.0})
+    except Exception as e:
+        logger.warning("crypto overview failed: %s", e)
+        return {"status": "degraded", "coins": []}
+
+    return {"status": "ok", "coins": coins}
+
+
+@app.get("/api/commodities", summary="大宗商品行情")
+async def api_commodities():
+    """Fetch Gold, Silver, Oil (WTI), Natural Gas prices and changes from yfinance.
+
+    Returns: {"status": "ok", "commodities": [{symbol, name, price, change_pct}]}
+    """
+    if not _HAS_AUGUR_DATA:
+        return {"status": "degraded", "commodities": []}
+
+    COMMODITY_SYMBOLS = [
+        ("GC=F", "Gold"),
+        ("SI=F", "Silver"),
+        ("CL=F", "Oil WTI"),
+        ("NG=F", "Natural Gas"),
+    ]
+
+    try:
+        yf = __import__("yfinance")
+    except ImportError:
+        return {"status": "degraded", "commodities": []}
+
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+
+    def _safe_float_local(value):
+        try:
+            f = float(value)
+            if f != f or f in (float("inf"), float("-inf")):
+                return 0.0
+            return f
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _fetch_commodity(entry):
+        symbol, name = entry
+        price = 0.0
+        prev = 0.0
+        try:
+            tk = yf.Ticker(symbol)
+            fi = getattr(tk, "fast_info", None)
+            if fi is not None:
+                price = _safe_float_local(getattr(fi, "last_price", 0))
+                prev = _safe_float_local(getattr(fi, "previous_close", 0))
+            if price <= 0 or prev <= 0:
+                hist = tk.history(period="5d")
+                if hist is not None and not hist.empty:
+                    closes = [c for c in hist["Close"].tolist() if c and c == c]
+                    if closes:
+                        price = price or float(closes[-1])
+                        prev = prev or (float(closes[-2]) if len(closes) >= 2 else float(closes[-1]))
+        except Exception as exc:
+            logger.debug("commodity fetch failed for %s: %s", symbol, exc)
+        change_pct = ((price - prev) / prev) if prev else 0.0
+        return {
+            "symbol": symbol,
+            "name": name,
+            "price": round(price, 2),
+            "change_pct": round(change_pct, 4),
+        }
+
+    commodities = []
+    try:
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {executor.submit(_fetch_commodity, entry): entry for entry in COMMODITY_SYMBOLS}
+            for future in futures:
+                try:
+                    item = future.result(timeout=10)
+                    commodities.append(item)
+                except (FuturesTimeoutError, Exception) as exc:
+                    entry = futures[future]
+                    logger.debug("commodity timeout for %s: %s", entry[0], exc)
+                    commodities.append({"symbol": entry[0], "name": entry[1], "price": 0.0, "change_pct": 0.0})
+    except Exception as e:
+        logger.warning("commodities fetch failed: %s", e)
+        return {"status": "degraded", "commodities": []}
+
+    return {"status": "ok", "commodities": commodities}
+
+
+@app.get("/api/treasury-rates", summary="美国国债收益率")
+async def api_treasury_rates():
+    """Fetch US 2Y, 5Y, 10Y, 30Y treasury yields from yfinance.
+
+    Symbols: ^IRX (13-week as 2Y proxy), ^FVX (5Y), ^TNX (10Y), ^TYX (30Y)
+    Returns: {"status": "ok", "rates": [{maturity, symbol, yield_pct}]}
+    """
+    if not _HAS_AUGUR_DATA:
+        return {"status": "degraded", "rates": []}
+
+    TREASURY_SYMBOLS = [
+        ("^IRX", "2Y", "US 2-Year"),
+        ("^FVX", "5Y", "US 5-Year"),
+        ("^TNX", "10Y", "US 10-Year"),
+        ("^TYX", "30Y", "US 30-Year"),
+    ]
+
+    try:
+        yf = __import__("yfinance")
+    except ImportError:
+        return {"status": "degraded", "rates": []}
+
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
+
+    def _safe_float_local(value):
+        try:
+            f = float(value)
+            if f != f or f in (float("inf"), float("-inf")):
+                return 0.0
+            return f
+        except (TypeError, ValueError):
+            return 0.0
+
+    def _fetch_rate(entry):
+        symbol, maturity, name = entry
+        yield_pct = 0.0
+        try:
+            tk = yf.Ticker(symbol)
+            fi = getattr(tk, "fast_info", None)
+            if fi is not None:
+                yield_pct = _safe_float_local(getattr(fi, "last_price", 0))
+            if yield_pct <= 0:
+                hist = tk.history(period="5d")
+                if hist is not None and not hist.empty:
+                    closes = [c for c in hist["Close"].tolist() if c and c == c]
+                    if closes:
+                        yield_pct = float(closes[-1])
+        except Exception as exc:
+            logger.debug("treasury rate fetch failed for %s: %s", symbol, exc)
+        return {
+            "maturity": maturity,
+            "symbol": symbol,
+            "name": name,
+            "yield_pct": round(yield_pct, 3),
+        }
+
+    rates = []
+    try:
+        with ThreadPoolExecutor(max_workers=4) as executor:
+            futures = {executor.submit(_fetch_rate, entry): entry for entry in TREASURY_SYMBOLS}
+            for future in futures:
+                try:
+                    item = future.result(timeout=10)
+                    rates.append(item)
+                except (FuturesTimeoutError, Exception) as exc:
+                    entry = futures[future]
+                    logger.debug("treasury rate timeout for %s: %s", entry[0], exc)
+                    rates.append({"maturity": entry[1], "symbol": entry[0], "name": entry[2], "yield_pct": 0.0})
+    except Exception as e:
+        logger.warning("treasury rates fetch failed: %s", e)
+        return {"status": "degraded", "rates": []}
+
+    return {"status": "ok", "rates": rates}
+
+
 @app.get("/api/fear-greed", summary="恐慌与贪婪指数")
 async def api_fear_greed():
     """基于 VIX 计算恐慌与贪婪指数 (0-100)。
