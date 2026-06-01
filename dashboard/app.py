@@ -2475,14 +2475,14 @@ class DebateBody(BaseModel):
 
 @app.get("/compare", response_class=HTMLResponse)
 async def compare_page(request: Request):
-    ctx = {"title": "大师对决"}
+    ctx = {"title": "大师对决", "personas": _persona_meta()}
     ctx.update(_i18n_context(request=request))
     return templates.TemplateResponse(request=request, name="compare.html", context=ctx)
 
 
 @app.get("/debate", response_class=HTMLResponse)
 async def debate_page(request: Request):
-    ctx = {"title": "投资辩论"}
+    ctx = {"title": "投资辩论", "personas": _persona_meta()}
     ctx.update(_i18n_context(request=request))
     return templates.TemplateResponse(request=request, name="debate.html", context=ctx)
 

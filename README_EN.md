@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v7.8.3](https://img.shields.io/badge/v7.8.3-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v8.0.0](https://img.shields.io/badge/v8.0.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -26,7 +26,26 @@
 
 ---
 
-## 🆕 v7.8.3 Comprehensive Review & Fix (Latest)
+## 🆕 v8.0.0 Intelligent Investment Platform (Latest)
+
+| Feature | Description |
+|---------|-------------|
+| 💬 AI Chat | `/chat` — 11 personas with unique voices, template-based (no LLM API needed) |
+| 📊 Portfolio Optimizer | `/optimizer` — Markowitz mean-variance optimization (pure Python) |
+| ⚔️ Master Compare | `/compare` — 2-5 personas independently analyze the same stock |
+| 🗣️ Debate Mode | `/debate` — Personas argue in sequence with rebuttals |
+| 📜 History | `/history` — Persistent analysis history, searchable by ticker |
+| 🏆 Leaderboard | `/performance` — IC-based accuracy ranking across all agents |
+| 🧠 Learning Engine | Auto-adjusts consensus weights from prediction IC feedback |
+| 😊 Social Sentiment | X/Reddit/StockTwits sentiment factor fused into consensus score |
+| ⚡ Real-time Prices | `/ws/prices` WebSocket streaming ticker tape |
+| 🔔 Alert Rules | DSL-based rule engine, multi-channel notifications |
+| 👥 Multi-User | Optional JWT + SQLite auth (`AUGUR_MULTI_USER=1`) |
+| 🔌 Plugin System | Third-party agent extensions via setuptools entry_points |
+
+---
+
+## 🆕 v7.8.3 Comprehensive Review & Fix
 
 | Feature | Description |
 |---------|-------------|
@@ -35,7 +54,7 @@
 | 🛢️ Commodities Panel | New /api/commodities (Gold/Silver/Oil/Gas) |
 | 📊 Treasury Rates | New /api/treasury-rates (2Y/5Y/10Y/30Y) |
 | 📄 Report Enhancement | Color-coded scores, CSS progress bars, consensus strip, Download HTML/MD/Copy |
-| 📖 API Docs | docs/api-reference.md updated with 4 new endpoints |
+| 🐛 CRCL Analysis Fix | coverage_confidence gate prevents AGI/supply-chain labels on unrelated companies |
 
 ---
 

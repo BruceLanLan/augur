@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v7.8.3](https://img.shields.io/badge/v7.8.3-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v8.0.0](https://img.shields.io/badge/v8.0.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -219,7 +219,26 @@ uv pip install -e ".[mcp]"
 ## 📝 版本更新日志 (Recent Updates)
 
 <details>
-<summary><strong>v7.8.3 综合审查修复 (最新)</strong></summary>
+<summary><strong>v8.0.0 智能投资平台升级 (最新)</strong></summary>
+
+| 功能 | 说明 |
+|------|------|
+| 💬 AI 对话 | `/chat` — 11位大师独特语气模板对话，无需 LLM API |
+| 📊 组合优化 | `/optimizer` — Markowitz 有效前沿（纯Python，无numpy依赖） |
+| ⚔️ 大师对决 | `/compare` — 选 2-5 位大师对同一股票独立分析对比 |
+| 🗣️ 辩论模式 | `/debate` — 多大师辩论，顺序反驳，生成辩论摘要 |
+| 📜 历史记录 | `/history` — 分析历史持久化存储，可按时间回查 |
+| 🏆 大师排行 | `/performance` — 基于 IC 反馈的大师准确率排行榜 |
+| 🧠 自学习权重 | LearningEngine — IC 反馈自动调整共识权重（~/.augur/） |
+| 😊 社交情绪 | SentimentAnalyzer — X/Reddit/StockTwits 情绪因子融入共识 |
+| ⚡ 实时行情 | `/ws/prices` WebSocket 实时价格推送 |
+| 🔔 告警规则 | RulesEngine — DSL 条件规则，多渠道推送 |
+| 👥 多用户 | users.py + auth.py — 可选 JWT + SQLite（`AUGUR_MULTI_USER=1`） |
+| 🔌 插件系统 | plugins.py — setuptools entry_points 第三方扩展 |
+</details>
+
+<details>
+<summary><strong>v7.8.3 综合审查修复</strong></summary>
 
 | 功能 | 说明 |
 |------|------|
@@ -228,7 +247,7 @@ uv pip install -e ".[mcp]"
 | 🛢️ 大宗商品面板 | 新增 /api/commodities（黄金/白银/原油/天然气） |
 | 📊 国债利率面板 | 新增 /api/treasury-rates（2Y/5Y/10Y/30Y） |
 | 📄 报告增强 | 评分颜色编码、CSS 进度条、共识投票条、Download HTML/MD/Copy |
-| 📖 API 文档 | docs/api-reference.md 补充 4 个新端点 |
+| 🐛 CRCL 分析修复 | coverage_confidence 门控，防止 AGI/供应链标签污染非相关公司 |
 </details>
 
 <details>

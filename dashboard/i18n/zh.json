@@ -1,0 +1,100 @@
+{
+  "app_name": "Augur",
+  "app_subtitle": "多智能体投资分析平台",
+  "nav": {
+    "analysis": "分析",
+    "dashboard": "仪表盘",
+    "stocks": "股票分析",
+    "signals": "信号监控",
+    "backtest": "回测",
+    "compare": "对比分析",
+    "debate": "辩论模式",
+    "ai_chat": "AI Chat",
+    "portfolio": "组合分析",
+    "history": "历史记录",
+    "investors": "投资人",
+    "personas": "人格系统",
+    "create_persona": "创建投资人",
+    "performance": "绩效追踪",
+    "system": "系统",
+    "settings": "设置",
+    "optimizer": "组合优化"
+  },
+  "common": {
+    "submit": "提交",
+    "cancel": "取消",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "close": "关闭",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "confirm": "确认",
+    "back": "返回",
+    "search": "搜索",
+    "refresh": "刷新",
+    "export": "导出",
+    "copy": "复制",
+    "copied": "已复制"
+  },
+  "stocks": {
+    "title": "股票分析",
+    "enter_ticker": "输入股票代码",
+    "analyze": "开始分析",
+    "consensus": "共识评分",
+    "signal": "信号",
+    "confidence": "置信度",
+    "bullish": "看多",
+    "bearish": "看空",
+    "neutral": "中性"
+  },
+  "personas": {
+    "title": "投资人人格系统",
+    "registered": "已注册",
+    "total_agents": "位虚拟投资大师",
+    "philosophy": "投资哲学"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "model": "模型",
+    "default_model": "默认模型",
+    "save_success": "设置已保存"
+  },
+  "optimizer": {
+    "title": "组合优化",
+    "description": "Markowitz 均值-方差模型优化",
+    "tickers": "资产代码",
+    "optimize": "开始优化",
+    "weights": "最优权重",
+    "expected_return": "预期收益",
+    "volatility": "波动率",
+    "sharpe_ratio": "夏普比率",
+    "efficient_frontier": "有效前沿"
+  },
+  "sentiment": {
+    "title": "社交情绪",
+    "overall_score": "综合情绪",
+    "volume": "讨论量",
+    "trending": "热门",
+    "sources": "数据来源"
+  },
+  "rules": {
+    "title": "规则引擎",
+    "add_rule": "添加规则",
+    "rule_name": "规则名称",
+    "conditions": "条件",
+    "actions": "动作",
+    "enabled": "启用",
+    "disabled": "禁用"
+  },
+  "footer": {
+    "system_ready": "系统就绪",
+    "disconnected": "连接断开"
+  },
+  "language_switch": {
+    "zh": "中文",
+    "en": "English"
+  }
+}

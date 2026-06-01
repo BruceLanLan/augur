@@ -1,0 +1,100 @@
+{
+  "app_name": "Augur",
+  "app_subtitle": "Multi-Agent Investment Analysis Platform",
+  "nav": {
+    "analysis": "Analysis",
+    "dashboard": "Dashboard",
+    "stocks": "Stock Analysis",
+    "signals": "Signal Monitor",
+    "backtest": "Backtest",
+    "compare": "Compare",
+    "debate": "Debate",
+    "ai_chat": "AI Chat",
+    "portfolio": "Portfolio",
+    "history": "History",
+    "investors": "Investors",
+    "personas": "Personas",
+    "create_persona": "Create Persona",
+    "performance": "Performance",
+    "system": "System",
+    "settings": "Settings",
+    "optimizer": "Optimizer"
+  },
+  "common": {
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "back": "Back",
+    "search": "Search",
+    "refresh": "Refresh",
+    "export": "Export",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "stocks": {
+    "title": "Stock Analysis",
+    "enter_ticker": "Enter ticker symbol",
+    "analyze": "Analyze",
+    "consensus": "Consensus Score",
+    "signal": "Signal",
+    "confidence": "Confidence",
+    "bullish": "Bullish",
+    "bearish": "Bearish",
+    "neutral": "Neutral"
+  },
+  "personas": {
+    "title": "Investor Personas",
+    "registered": "Registered",
+    "total_agents": "Virtual Investment Masters",
+    "philosophy": "Investment Philosophy"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "model": "Model",
+    "default_model": "Default Model",
+    "save_success": "Settings saved"
+  },
+  "optimizer": {
+    "title": "Portfolio Optimizer",
+    "description": "Markowitz Mean-Variance Optimization",
+    "tickers": "Asset Tickers",
+    "optimize": "Optimize",
+    "weights": "Optimal Weights",
+    "expected_return": "Expected Return",
+    "volatility": "Volatility",
+    "sharpe_ratio": "Sharpe Ratio",
+    "efficient_frontier": "Efficient Frontier"
+  },
+  "sentiment": {
+    "title": "Social Sentiment",
+    "overall_score": "Overall Sentiment",
+    "volume": "Volume",
+    "trending": "Trending",
+    "sources": "Sources"
+  },
+  "rules": {
+    "title": "Rules Engine",
+    "add_rule": "Add Rule",
+    "rule_name": "Rule Name",
+    "conditions": "Conditions",
+    "actions": "Actions",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
+  },
+  "footer": {
+    "system_ready": "System Ready",
+    "disconnected": "Disconnected"
+  },
+  "language_switch": {
+    "zh": "Chinese",
+    "en": "English"
+  }
+}

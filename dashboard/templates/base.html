@@ -18,8 +18,8 @@
     <link rel="icon" type="image/png" href="/static/images/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="/static/css/bloomberg.css?v=7.8.3" rel="stylesheet">
-    <link href="/static/css/ui-enhance.css?v=7.8.3" rel="stylesheet">
+    <link href="/static/css/bloomberg.css?v=8.0.0" rel="stylesheet">
+    <link href="/static/css/ui-enhance.css?v=8.0.0" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -67,6 +67,35 @@
                     <a class="nav-item" href="/backtest" data-page="backtest">
                         <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/><path d="M3 12h1M12 3v1M21 12h1M12 21v1"/></svg>
                         <span data-i18n="nav-backtest">回测</span>
+                    </a>
+                </div>
+
+                <!-- v8 Group -->
+                <div class="nav-group">
+                    <div class="nav-group-label">v8 功能</div>
+                    <a class="nav-item" href="/chat" data-page="chat">
+                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        <span>AI 对话</span>
+                    </a>
+                    <a class="nav-item" href="/optimizer" data-page="optimizer">
+                        <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <span>组合优化</span>
+                    </a>
+                    <a class="nav-item" href="/compare" data-page="compare">
+                        <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 3v18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                        <span>大师对决</span>
+                    </a>
+                    <a class="nav-item" href="/debate" data-page="debate">
+                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <span>辩论模式</span>
+                    </a>
+                    <a class="nav-item" href="/history" data-page="history">
+                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <span>历史记录</span>
+                    </a>
+                    <a class="nav-item" href="/performance" data-page="performance">
+                        <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        <span>大师排行</span>
                     </a>
                 </div>
 
