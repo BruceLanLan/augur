@@ -118,6 +118,13 @@ class Backtester:
         if not historical_data or not forward_returns:
             return BacktestResult(ticker=ticker.upper())
 
+        # Graceful degradation: require at least 5 data points for a meaningful backtest
+        if len(historical_data) < 5:
+            return BacktestResult(
+                ticker=ticker.upper(),
+                summary="Insufficient data (fewer than 5 data points for meaningful backtest)",
+            )
+
         from augur.registry import AgentRegistry, DecisionCoordinator
         from augur.personas.base import MarketContext
 

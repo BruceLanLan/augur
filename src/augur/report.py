@@ -878,6 +878,20 @@ def generate_report(
     Returns:
         完整的Markdown格式深度分析报告字符串
     """
+    # --- Ticker validation ---
+    # Reject tickers with characters outside [A-Za-z0-9.\-] to avoid crashes
+    # from non-ASCII or special character input.
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        # Sanitize by stripping invalid characters
+        sanitized = re.sub(r'[^A-Za-z0-9.\-]', '', ticker)[:15]
+        if not sanitized:
+            return (
+                "# 分析报告错误\n\n"
+                f"> 输入的股票代码 `{ticker[:30]}` 无效。"
+                "请提供有效的股票代码（仅限英文字母、数字、点号和连字符，最长15字符）。\n"
+            )
+        ticker = sanitized
+
     sections: List[str] = []
 
     # ============ 标题与元数据 ============

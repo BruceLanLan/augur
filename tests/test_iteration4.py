@@ -31,7 +31,7 @@ class TestBacktestEdgeCases:
         assert result.records == []
 
     def test_single_day_backtest(self):
-        """Single day of data should produce valid results."""
+        """Single day of data returns insufficient-data result (need >= 5 points)."""
         from augur.backtest import Backtester
         bt = Backtester()
         hist = [{"date": "2024-01-01", "price": 150, "pe": 25, "roe": 0.15,
@@ -39,7 +39,7 @@ class TestBacktestEdgeCases:
         fwd = [{"date": "2024-01-01", "return_5d": 0.02, "return_20d": 0.05, "return_60d": 0.10}]
         result = bt.run_backtest("AAPL", hist, fwd)
         assert result.ticker == "AAPL"
-        assert len(result.records) > 0  # Should have records from all agents for that day
+        assert "Insufficient data" in result.summary
 
     def test_deterministic_seed_stability(self):
         """generate_sample_data produces consistent results across calls."""

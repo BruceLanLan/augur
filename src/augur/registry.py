@@ -461,8 +461,18 @@ class DecisionCoordinator:
         except Exception:
             pass
 
-        # --- Adversarial overheating check ---
+        # When all agents return neutral, the consensus is neutral with score reflecting
+        # the weighted average (~5.0). This is expected behavior - it indicates the
+        # committee genuinely has no strong conviction in either direction.
+
+        # --- Low participation check ---
+        # If fewer than 3 agents returned valid (non-ERROR) responses, flag
+        # low confidence since the consensus is based on insufficient diversity.
         valid_results = {k: v for k, v in results.items() if v.signal != SignalType.ERROR}
+        if len(valid_results) < 3:
+            result.metadata["low_participation"] = True
+            result.confidence = max(0.2, result.confidence)
+            calibrated_confidence = result.confidence
         if valid_results and sum(1 for r in valid_results.values() if r.signal == SignalType.BULLISH) == len(valid_results):
             result.risks.append("All agents bullish - historically this consensus often means overvaluation")
             if ctx_for_risk and hasattr(ctx_for_risk, "pe") and ctx_for_risk.pe > 30:

@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Backend business logic edge case fixes in coordinator, report, backtest, data, and persona modules",
+  "status": "in_progress",
+  "steps": [
+    "In src/augur/registry.py (DecisionCoordinator.get_consensus): (a) Verify behavior when all 18 personas return neutral - the consensus should be neutral with score reflecting the average. Add a comment documenting expected behavior. (b) Verify behavior when only 1 persona has a valid response (others timed out/errored) - consensus should still be valid but with low confidence. Add minimum-response-count logic: if fewer than 3 valid responses, set confidence to max(0.2, actual_confidence) and add metadata flag 'low_participation'.",
+    "In src/augur/report.py: (a) Handle case where ticker contains non-ASCII characters (e.g. Chinese company name passed as ticker) - add validation at the top of generate_report() to sanitize/reject gracefully instead of crashing.",
+    "In src/augur/backtest.py: (a) In the run_backtest function (or equivalent), add graceful degradation when historical data has fewer than 5 data points - return a partial result with a warning instead of crashing or returning empty.",
+    "In src/augur/datasources/base.py: (a) Verify safe_num handles string inputs like 'N/A', 'nan', 'inf', None, and NaN float correctly - it should return 0.0 for all non-numeric values. Add explicit handling if missing.",
+    "In src/augur/personas/ (base scoring logic): (a) Verify that pe=0 or pe=-1 (loss-making company) is handled gracefully in scoring - agents should not crash and should treat negative PE as a specific risk factor rather than mathematical error.",
+    "In src/augur/soul.py: (a) If inject-soul is called with a non-existent persona ID, ensure a clear ValueError with a meaningful message is raised (e.g. 'Persona X not found. Available: ...')"
+  ],
+  "acceptance_criteria": [
+    "When all 18 agents return neutral, consensus is neutral with reasonable score (around 5.0)",
+    "When only 1 agent responds, consensus has low_participation flag and reduced confidence",
+    "generate_report() does not crash on non-ASCII ticker input",
+    "Backtest with <5 data points returns partial result, not crash",
+    "safe_num('N/A') == 0.0, safe_num(float('nan')) == 0.0, safe_num(None) == 0.0",
+    "Agent scoring with pe=0 or pe=-1 does not crash or produce NaN",
+    "soul.py inject with invalid persona ID gives clear error message",
+    "All existing 448 tests still pass after changes"
+  ],
+  "verification": [
+    "python -m pytest tests/ -x -q --tb=short (all pass)"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}
