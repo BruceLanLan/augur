@@ -1,0 +1,430 @@
+/* ============================================
+   Augur UI Enhancement Layer
+   Adds visual polish on top of bloomberg.css
+   v7.8.3 — Glassmorphism, gradients, depth
+   ============================================ */
+
+/* --- Enhanced CSS Variables --- */
+:root {
+    --accent-cyan: #00d4aa;
+    --accent-purple: #a855f7;
+    --accent-gradient: linear-gradient(135deg, #ff8c00 0%, #ffaa33 50%, #00d4aa 100%);
+    --glass-bg: rgba(20, 20, 31, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-blur: blur(12px);
+    --shadow-glow-orange: 0 0 20px rgba(255, 140, 0, 0.15);
+    --shadow-glow-cyan: 0 0 20px rgba(0, 212, 170, 0.1);
+    --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+    --gradient-card: linear-gradient(145deg, rgba(255, 140, 0, 0.03) 0%, rgba(0, 212, 170, 0.02) 100%);
+}
+
+html.light {
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --glass-border: rgba(0, 0, 0, 0.06);
+    --shadow-glow-orange: 0 0 20px rgba(255, 140, 0, 0.08);
+    --shadow-glow-cyan: 0 0 20px rgba(0, 212, 170, 0.06);
+    --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+    --gradient-card: linear-gradient(145deg, rgba(255, 140, 0, 0.02) 0%, rgba(0, 212, 170, 0.01) 100%);
+}
+
+/* --- Sidebar Enhancement --- */
+.sidebar {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-right: 1px solid var(--glass-border);
+}
+
+.sidebar-logo {
+    position: relative;
+}
+
+.sidebar-logo::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 18px;
+    right: 18px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent-orange), transparent);
+    opacity: 0.4;
+}
+
+.logo-text {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.nav-item.active {
+    background: linear-gradient(90deg, rgba(255, 140, 0, 0.12), rgba(0, 212, 170, 0.04));
+    border-left-color: var(--accent-orange);
+    box-shadow: inset 0 0 12px rgba(255, 140, 0, 0.05);
+}
+
+/* --- Card Glass Enhancement --- */
+.card {
+    background: var(--gradient-card);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+    border-color: rgba(255, 140, 0, 0.2);
+    box-shadow: var(--shadow-glow-orange);
+}
+
+/* --- Hero Section Enhancement --- */
+.hero-section {
+    position: relative;
+    padding: 56px 24px 40px;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255, 140, 0, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.hero-title {
+    position: relative;
+    z-index: 1;
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 2.2rem;
+    letter-spacing: -1px;
+}
+
+.hero-subtitle {
+    position: relative;
+    z-index: 1;
+}
+
+.hero-input {
+    position: relative;
+    z-index: 1;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.hero-input:focus {
+    border-color: var(--accent-orange);
+    box-shadow: var(--shadow-glow-orange), 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Example Chips Enhancement --- */
+.example-chip {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 140, 0, 0.3);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.example-chip:hover {
+    background: var(--accent-orange);
+    color: #000;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-orange);
+}
+
+/* --- Market Tile Enhancement --- */
+.market-tile {
+    background: var(--glass-bg);
+    backdrop-filter: blur(4px);
+    border: 1px solid var(--glass-border);
+    border-left: 3px solid var(--border-color);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.market-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-elevated);
+}
+
+.market-tile.is-up:hover {
+    border-color: rgba(0, 200, 83, 0.3);
+    box-shadow: 0 8px 24px rgba(0, 200, 83, 0.1);
+}
+
+.market-tile.is-down:hover {
+    border-color: rgba(255, 23, 68, 0.3);
+    box-shadow: 0 8px 24px rgba(255, 23, 68, 0.1);
+}
+
+/* --- Signal Badge Enhancement --- */
+.signal-badge-buy {
+    background: linear-gradient(135deg, rgba(0, 200, 83, 0.15), rgba(0, 200, 83, 0.05));
+    box-shadow: 0 0 12px rgba(0, 200, 83, 0.1);
+}
+
+.signal-badge-sell {
+    background: linear-gradient(135deg, rgba(255, 23, 68, 0.15), rgba(255, 23, 68, 0.05));
+    box-shadow: 0 0 12px rgba(255, 23, 68, 0.1);
+}
+
+.signal-badge-neutral {
+    background: linear-gradient(135deg, rgba(255, 214, 0, 0.12), rgba(255, 214, 0, 0.04));
+    box-shadow: 0 0 12px rgba(255, 214, 0, 0.08);
+}
+
+/* --- Button Enhancement --- */
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-orange), #ffaa33);
+    border: none;
+    box-shadow: 0 4px 12px rgba(255, 140, 0, 0.25);
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(255, 140, 0, 0.35);
+    background: linear-gradient(135deg, #ffaa33, var(--accent-orange));
+}
+
+/* --- Score Gauge Enhancement --- */
+.score-gauge {
+    height: 10px;
+    border-radius: 5px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.score-gauge-fill {
+    border-radius: 5px;
+    box-shadow: 0 0 8px rgba(255, 140, 0, 0.3);
+}
+
+.score-gauge-circle {
+    box-shadow: 0 0 20px rgba(255, 140, 0, 0.15);
+}
+
+/* --- Data Value Enhancement --- */
+.data-value {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-card .data-value {
+    background: var(--accent-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* --- Status Bar Enhancement --- */
+.status-bar {
+    background: var(--glass-bg);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+}
+
+/* --- Onboarding Banner Enhancement --- */
+.onboard-banner {
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.08), rgba(0, 212, 170, 0.04));
+    border: 1px solid rgba(255, 140, 0, 0.2);
+    backdrop-filter: blur(8px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Persona Card Enhancement --- */
+.persona-row:hover {
+    background: linear-gradient(90deg, rgba(255, 140, 0, 0.05), transparent);
+}
+
+.featured-card {
+    background: var(--gradient-card);
+    border: 1px solid var(--glass-border);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.featured-card:hover {
+    border-color: rgba(255, 140, 0, 0.4);
+    box-shadow: var(--shadow-glow-orange);
+    transform: translateY(-3px);
+}
+
+/* --- Toast Enhancement --- */
+.toast-msg {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-elevated);
+}
+
+/* --- Table Enhancement --- */
+.data-table tr:hover td {
+    background: linear-gradient(90deg, rgba(255, 140, 0, 0.04), transparent);
+}
+
+/* --- Report Executive Card Enhancement --- */
+.report-executive-card {
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.06), rgba(0, 212, 170, 0.02));
+    border: 1px solid rgba(255, 140, 0, 0.25);
+    backdrop-filter: blur(4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* --- Scrollbar Enhancement --- */
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--border-color), rgba(255, 140, 0, 0.2));
+    border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 140, 0, 0.4);
+}
+
+/* --- Global Progress Bar Enhancement --- */
+.global-progress-bar {
+    background: var(--accent-gradient);
+    height: 2px;
+}
+
+/* --- Spinner Enhancement --- */
+.spinner {
+    border-top-color: transparent;
+    border-right-color: var(--accent-orange);
+    border-bottom-color: var(--accent-cyan);
+    border-left-color: transparent;
+}
+
+/* --- Filter Tag Enhancement --- */
+.filter-tag.active {
+    background: linear-gradient(135deg, rgba(255, 140, 0, 0.12), rgba(0, 212, 170, 0.06));
+    box-shadow: 0 0 8px rgba(255, 140, 0, 0.1);
+}
+
+/* --- Subtle Background Pattern --- */
+.app-main::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(255, 140, 0, 0.02) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(0, 212, 170, 0.015) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(168, 85, 247, 0.01) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.app-main > * {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- Smooth Page Transitions --- */
+@keyframes pageEnter {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.app-main {
+    animation: pageEnter 0.4s ease-out;
+}
+
+/* --- Selection Color --- */
+::selection {
+    background: rgba(255, 140, 0, 0.3);
+    color: var(--text-primary);
+}
+
+/* --- Focus Ring Enhancement --- */
+*:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+/* --- Hot Ticker Card Enhancement --- */
+.hot-ticker-card {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hot-ticker-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow-orange);
+    border-color: rgba(255, 140, 0, 0.3);
+}
+
+/* --- Sector Card Enhancement --- */
+.sector-card {
+    backdrop-filter: blur(4px);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sector-card:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* --- International Market Card Enhancement --- */
+.intl-market-card {
+    backdrop-filter: blur(4px);
+    background: var(--glass-bg);
+}
+
+.intl-market-card:hover {
+    box-shadow: var(--shadow-glow-orange);
+}
+
+/* --- Fear & Greed Gauge Enhancement --- */
+.fg-gauge-value {
+    text-shadow: 0 0 12px rgba(255, 140, 0, 0.3);
+}
+
+/* --- Bottom Nav Enhancement (Mobile) --- */
+.bottom-nav {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    border-top: 1px solid var(--glass-border);
+}
+
+/* --- Keyboard Shortcut Badge Enhancement --- */
+kbd {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* --- Loading Skeleton Enhancement --- */
+.skeleton {
+    background: linear-gradient(90deg,
+        var(--bg-card) 25%,
+        rgba(255, 140, 0, 0.03) 50%,
+        var(--bg-card) 75%
+    );
+    background-size: 200% 100%;
+}
+
+/* --- Print: disable enhancements --- */
+@media print {
+    .app-main::before { display: none; }
+    .card { backdrop-filter: none; }
+    .sidebar { backdrop-filter: none; }
+}
