@@ -822,5 +822,39 @@ def _print_result(result):
             click.echo(f"  - {clean_output(r)}")
 
 
+# ============ v8: Chat & Sentiment commands ============
+
+@main.command("chat")
+@click.argument("ticker")
+@click.option("--persona", "-p", default=None, help="Persona to chat as (e.g. buffett, serenity)")
+def chat_cmd(ticker, persona):
+    """Get a quick persona response about a ticker"""
+    from augur.chat import ChatEngine
+    engine = ChatEngine()
+    message = f"What do you think about {ticker.upper()}?"
+    resp = engine.get_response(message, agent_id=persona)
+    click.echo(f"\n{resp['agent_name']} on {ticker.upper()}:\n")
+    click.echo(resp["response"])
+    click.echo(f"\n[Topic: {resp.get('topic', 'general')}]")
+
+
+@main.command("sentiment")
+@click.argument("ticker")
+def sentiment_cmd(ticker):
+    """Print social sentiment scores for a ticker"""
+    from augur.sentiment import SentimentAnalyzer
+    sa = SentimentAnalyzer()
+    result = sa.get_sentiment(ticker.upper())
+    click.echo(f"\nSentiment Analysis: {result.ticker}\n")
+    click.echo(f"{'Overall Score':<20s} {result.overall_score:+.4f}")
+    click.echo(f"{'X (Twitter)':<20s} {result.sources.get('x_score', 0):+.4f}")
+    click.echo(f"{'Reddit':<20s} {result.sources.get('reddit_score', 0):+.4f}")
+    click.echo(f"{'StockTwits':<20s} {result.sources.get('stocktwits_score', 0):+.4f}")
+    click.echo(f"{'Volume':<20s} {result.volume:,}")
+    click.echo(f"{'Trending':<20s} {'Yes' if result.trending else 'No'}")
+    click.echo(f"{'Consensus Factor':<20s} {sa.get_sentiment_factor(ticker.upper()):+.4f}")
+    click.echo("\n[Note: Mock data seeded by ticker hash]")
+
+
 if __name__ == "__main__":
     main()

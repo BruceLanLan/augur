@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block title %}历史记录 - Augur{% endblock %}
+{% block extra_head %}
+<style>
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+.history-table th {
+    text-align: left;
+    padding: 10px 12px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+}
+.history-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-family: var(--font-data);
+}
+.history-table tr:hover {
+    background: var(--bg-card-hover);
+    cursor: pointer;
+}
+.history-table tr.expanded {
+    background: var(--bg-card-hover);
+}
+.history-detail {
+    display: none;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+.history-detail.show { display: table-row; }
+.history-detail td { padding: 16px; }
+.detail-agents {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 8px;
+    margin-top: 12px;
+}
+.detail-agent-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    font-size: 0.75rem;
+}
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+}
+.empty-state p { margin-top: 12px; font-size: 0.85rem; }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="flex items-center justify-between mb-16">
+    <div>
+        <h2 style="color:var(--accent-orange); margin-bottom:4px;">历史记录</h2>
+        <p class="text-muted" style="font-size:0.82rem;">查看所有分析历史</p>
+    </div>
+    <button class="btn btn-sm" onclick="clearAllHistory()" id="clear-btn" style="display:none;">清除历史</button>
+</div>
+
+<div class="card">
+    <div id="history-content">
+        <div class="empty-state" id="empty-state">
+            <span class="empty-state-icon">&#128340;</span>
+            <div class="empty-state-title">No analysis history yet</div>
+            <p class="empty-state-desc">Run your first analysis to see it here. Your results will be saved automatically.</p>
+            <div class="empty-state-action">
+                <a href="/stocks" class="btn btn-primary" style="text-decoration:none;">Start Analysis</a>
+            </div>
+        </div>
+        <!-- Skeleton loading -->
+        <div id="history-skeleton" style="display:block;">
+            <div class="skeleton-table-row"><div class="skeleton"></div><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:50px"></div><div class="skeleton" style="width:40px"></div></div>
+            <div class="skeleton-table-row"><div class="skeleton"></div><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:50px"></div><div class="skeleton" style="width:40px"></div></div>
+            <div class="skeleton-table-row"><div class="skeleton"></div><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:50px"></div><div class="skeleton" style="width:40px"></div></div>
+            <div class="skeleton-table-row"><div class="skeleton"></div><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:50px"></div><div class="skeleton" style="width:40px"></div></div>
+        </div>
+        <table class="history-table" id="history-table" style="display:none;">
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>股票</th>
+                    <th>信号</th>
+                    <th>评分</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="history-body"></tbody>
+        </table>
+        <!-- Pagination controls -->
+        <div id="pagination-controls" style="display:none; padding:12px 0; border-top:1px solid var(--border-color); margin-top:8px;">
+            <div class="flex items-center justify-between">
+                <button class="btn btn-sm" id="prev-page-btn" onclick="goToPage(currentPage - 1)" disabled>Previous</button>
+                <span id="page-indicator" class="text-muted text-mono" style="font-size:0.78rem;">Page 1 / 1</span>
+                <button class="btn btn-sm" id="next-page-btn" onclick="goToPage(currentPage + 1)" disabled>Next</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+var currentPage = 1;
+var totalPages = 1;
+var perPage = 20;
+
+function loadHistory() {
+    fetch('/api/history?page=' + currentPage + '&per_page=' + perPage)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            document.getElementById('history-skeleton').style.display = 'none';
+            var records = data.items || [];
+            totalPages = data.pages || 1;
+            var total = data.total || 0;
+
+            if (total === 0) {
+                document.getElementById('empty-state').style.display = 'block';
+                document.getElementById('history-table').style.display = 'none';
+                document.getElementById('clear-btn').style.display = 'none';
+                document.getElementById('pagination-controls').style.display = 'none';
+                return;
+            }
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('history-table').style.display = 'table';
+            document.getElementById('history-table').classList.add('fade-in');
+            document.getElementById('clear-btn').style.display = 'inline-block';
+            renderHistory(records);
+            updatePagination();
+        })
+        .catch(function(err) {
+            document.getElementById('history-skeleton').style.display = 'none';
+            showToast('加载历史记录失败', 'error');
+        });
+}
+
+function updatePagination() {
+    var controls = document.getElementById('pagination-controls');
+    if (totalPages <= 1) {
+        controls.style.display = 'none';
+        return;
+    }
+    controls.style.display = 'block';
+    document.getElementById('page-indicator').textContent = 'Page ' + currentPage + ' / ' + totalPages;
+    document.getElementById('prev-page-btn').disabled = (currentPage <= 1);
+    document.getElementById('next-page-btn').disabled = (currentPage >= totalPages);
+}
+
+function goToPage(page) {
+    if (page < 1 || page > totalPages) return;
+    currentPage = page;
+    loadHistory();
+}
+
+function signalBadgeClass(s) {
+    if (!s) return 'signal-badge-neutral';
+    var m = {'bullish':'signal-badge-buy','neutral':'signal-badge-neutral','bearish':'signal-badge-sell'};
+    return m[s.toLowerCase()] || 'signal-badge-neutral';
+}
+
+function signalLabel(s) {
+    var m = {'bullish':'BUY','neutral':'HOLD','bearish':'SELL'};
+    return m[(s||'').toLowerCase()] || s;
+}
+
+function renderHistory(records) {
+    var tbody = document.getElementById('history-body');
+    tbody.innerHTML = '';
+    records.forEach(function(rec) {
+        var tr = document.createElement('tr');
+        tr.setAttribute('data-id', rec.id);
+        var ts = rec.timestamp ? new Date(rec.timestamp).toLocaleString('zh-CN') : '--';
+        tr.innerHTML = '<td>' + ts + '</td>' +
+            '<td style="font-weight:600; color:var(--accent-orange);">' + rec.ticker + '</td>' +
+            '<td><span class="signal-badge ' + signalBadgeClass(rec.signal) + '" style="font-size:0.7rem;">' + signalLabel(rec.signal) + '</span></td>' +
+            '<td>' + (rec.score || 0).toFixed(1) + '/10</td>' +
+            '<td><button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); deleteRecord(\'' + rec.id + '\', this)">删除</button></td>';
+        tr.onclick = function() { toggleDetail(rec.id, tr); };
+        tbody.appendChild(tr);
+    });
+}
+
+function toggleDetail(id, rowEl) {
+    var existing = document.getElementById('detail-' + id);
+    if (existing) {
+        existing.remove();
+        rowEl.classList.remove('expanded');
+        return;
+    }
+    // Remove other open details
+    document.querySelectorAll('.history-detail-row').forEach(function(el) { el.remove(); });
+    document.querySelectorAll('.history-table tr.expanded').forEach(function(el) { el.classList.remove('expanded'); });
+
+    rowEl.classList.add('expanded');
+    fetch('/api/history/' + id)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (!data || !data.result) return;
+            var detailTr = document.createElement('tr');
+            detailTr.id = 'detail-' + id;
+            detailTr.className = 'history-detail-row';
+            var td = document.createElement('td');
+            td.colSpan = 5;
+            td.style.padding = '16px';
+            td.style.background = 'var(--bg-secondary)';
+
+            var agents = data.result.agents || [];
+            var html = '<div style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:8px;">共 ' + agents.length + ' 位投资大师分析结果</div>';
+            html += '<div class="detail-agents">';
+            agents.forEach(function(a) {
+                html += '<div class="detail-agent-card">' +
+                    '<div style="font-weight:600;">' + (a.agent_name || a.agent_id) + '</div>' +
+                    '<div><span class="signal-badge ' + signalBadgeClass(a.signal) + '" style="font-size:0.65rem;">' + signalLabel(a.signal) + '</span> ' + (a.score||0).toFixed(1) + '/10</div>' +
+                    '</div>';
+            });
+            html += '</div>';
+            td.innerHTML = html;
+            detailTr.appendChild(td);
+            rowEl.parentNode.insertBefore(detailTr, rowEl.nextSibling);
+        });
+}
+
+function deleteRecord(id, btn) {
+    if (!confirm('确认删除此记录?')) return;
+    fetch('/api/history/' + id, { method: 'DELETE' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status === 'ok') {
+                showToast('已删除');
+                loadHistory();
+            }
+        });
+}
+
+function clearAllHistory() {
+    if (!confirm('确认清除所有历史记录?')) return;
+    fetch('/api/history', { method: 'DELETE' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status === 'ok') {
+                showToast('历史记录已清除');
+                loadHistory();
+            }
+        });
+}
+
+document.addEventListener('DOMContentLoaded', loadHistory);
+</script>
+{% endblock %}

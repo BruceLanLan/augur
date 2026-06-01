@@ -138,7 +138,7 @@ class TestDockerfileConsistency:
 
     def test_dockerfile_has_non_root_user(self):
         """Dockerfile should contain USER directive for non-root execution."""
-        dockerfile_path = Path("/projects/sandbox/augur/Dockerfile")
+        dockerfile_path = Path(__file__).parent.parent / "Dockerfile"
         content = dockerfile_path.read_text()
         assert "USER" in content
         # Should have useradd or groupadd for creating the user
@@ -146,7 +146,7 @@ class TestDockerfileConsistency:
 
     def test_dockercompose_no_version(self):
         """docker-compose.yml should not have deprecated version field."""
-        compose_path = Path("/projects/sandbox/augur/docker-compose.yml")
+        compose_path = Path(__file__).parent.parent / "docker-compose.yml"
         content = compose_path.read_text()
         # Should not start with version:
         lines = content.strip().split("\n")
@@ -155,7 +155,7 @@ class TestDockerfileConsistency:
 
     def test_dockercompose_has_healthchecks(self):
         """docker-compose.yml should have healthcheck configurations."""
-        compose_path = Path("/projects/sandbox/augur/docker-compose.yml")
+        compose_path = Path(__file__).parent.parent / "docker-compose.yml"
         content = compose_path.read_text()
         assert "healthcheck:" in content
         assert "/health" in content
@@ -166,13 +166,13 @@ class TestRequirementsConsistency:
 
     def test_httpx_in_requirements(self):
         """requirements.txt should include httpx since pyproject.toml lists it."""
-        req_path = Path("/projects/sandbox/augur/requirements.txt")
+        req_path = Path(__file__).parent.parent / "requirements.txt"
         content = req_path.read_text()
         assert "httpx" in content
 
     def test_all_core_deps_in_requirements(self):
         """All core pyproject.toml dependencies should be in requirements.txt."""
-        req_path = Path("/projects/sandbox/augur/requirements.txt")
+        req_path = Path(__file__).parent.parent / "requirements.txt"
         content = req_path.read_text().lower()
         # Core deps from pyproject.toml
         for dep in ["click", "pyyaml", "fastapi", "uvicorn", "jinja2", "httpx"]:

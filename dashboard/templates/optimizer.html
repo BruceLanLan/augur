@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Portfolio Optimizer - Augur{% endblock %}
+
+{% block content %}
+<div class="page-content" style="padding: 2rem;" role="main" aria-label="Portfolio optimizer">
+    <div class="page-header" style="margin-bottom: 2rem;">
+        <h1 style="font-size: 1.8rem; font-weight: 700; color: var(--text-primary);">Portfolio Optimizer</h1>
+        <p style="color: var(--text-secondary); margin-top: 0.5rem;">Markowitz Mean-Variance Optimization - Find optimal portfolio weights</p>
+    </div>
+
+    <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;" role="form" aria-label="Optimization parameters">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Input Assets</h3>
+        <div style="margin-bottom: 1rem;">
+            <label for="opt-tickers" style="display: block; color: var(--text-secondary); margin-bottom: 0.5rem;">Tickers (comma-separated, max 10)</label>
+            <input type="text" id="opt-tickers" placeholder="AAPL, NVDA, MSFT, GOOGL, TSLA"
+                style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 1rem; box-sizing: border-box;"
+                aria-describedby="tickers-help" maxlength="200"
+            >
+            <span id="tickers-help" style="font-size: 0.8rem; color: var(--text-secondary);">Enter up to 10 stock ticker symbols</span>
+        </div>
+        <div style="margin-bottom: 1rem;">
+            <label for="opt-rfr" style="display: block; color: var(--text-secondary); margin-bottom: 0.5rem;">Risk-Free Rate (%)</label>
+            <input type="number" id="opt-rfr" value="2.0" step="0.1" min="0" max="20"
+                style="width: 120px; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);"
+                aria-label="Risk-free rate percentage"
+            >
+        </div>
+        <button class="btn btn-primary" onclick="runOptimize()" id="opt-btn"
+            style="padding: 0.75rem 2rem; border-radius: 8px; font-weight: 600;" aria-label="Run portfolio optimization">
+            Optimize Portfolio
+        </button>
+    </div>
+
+    <div id="opt-results" style="display: none;" role="region" aria-label="Optimization results" aria-live="polite">
+        <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Optimal Portfolio</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+                <div class="stat-box" style="text-align: center; padding: 1rem; background: var(--bg-primary); border-radius: 8px;">
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Expected Return</div>
+                    <div id="opt-return" style="font-size: 1.4rem; font-weight: 700; color: #34c759;" aria-label="Expected return value">--</div>
+                </div>
+                <div class="stat-box" style="text-align: center; padding: 1rem; background: var(--bg-primary); border-radius: 8px;">
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Volatility</div>
+                    <div id="opt-vol" style="font-size: 1.4rem; font-weight: 700; color: #ff9500;" aria-label="Volatility value">--</div>
+                </div>
+                <div class="stat-box" style="text-align: center; padding: 1rem; background: var(--bg-primary); border-radius: 8px;">
+                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Sharpe Ratio</div>
+                    <div id="opt-sharpe" style="font-size: 1.4rem; font-weight: 700; color: #5ac8fa;" aria-label="Sharpe ratio value">--</div>
+                </div>
+            </div>
+            <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">Allocation Weights</h4>
+            <div id="opt-weights" style="display: grid; gap: 0.5rem;" role="list" aria-label="Portfolio allocation weights"></div>
+        </div>
+    </div>
+
+    <div id="opt-error" style="display: none; color: #ff3b30; padding: 1rem; background: rgba(255,59,48,0.1); border-radius: 8px; margin-top: 1rem;" role="alert"></div>
+</div>
+
+<style>
+@media (max-width: 768px) {
+    .page-content { padding: 1rem !important; }
+    .page-content h1 { font-size: 1.4rem !important; }
+    .stat-box { padding: 0.75rem !important; }
+    #opt-return, #opt-vol, #opt-sharpe { font-size: 1.1rem !important; }
+}
+@media (max-width: 375px) {
+    .page-content { padding: 0.5rem !important; }
+    .card { padding: 1rem !important; }
+    .page-content h1 { font-size: 1.2rem !important; }
+    #opt-tickers { font-size: 0.9rem; }
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+async function runOptimize() {
+    var tickersInput = document.getElementById('opt-tickers').value.trim();
+    if (!tickersInput) { showToast('Please enter at least one ticker', 'error'); return; }
+
+    var tickers = tickersInput.split(',').map(function(t) { return t.trim().toUpperCase(); }).filter(Boolean);
+    if (tickers.length === 0) { showToast('Please enter valid tickers', 'error'); return; }
+
+    var rfr = parseFloat(document.getElementById('opt-rfr').value) / 100 || 0.02;
+
+    document.getElementById('opt-btn').disabled = true;
+    document.getElementById('opt-btn').textContent = 'Optimizing...';
+    document.getElementById('opt-results').style.display = 'none';
+    document.getElementById('opt-error').style.display = 'none';
+
+    try {
+        var resp = await fetch('/api/optimize', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ tickers: tickers, risk_free_rate: rfr })
+        });
+        var data = await resp.json();
+
+        if (!resp.ok) {
+            document.getElementById('opt-error').style.display = 'block';
+            document.getElementById('opt-error').textContent = data.detail || 'Optimization failed';
+            return;
+        }
+
+        var p = data.portfolio;
+        document.getElementById('opt-return').textContent = (p.expected_return * 100).toFixed(2) + '%';
+        document.getElementById('opt-vol').textContent = (p.volatility * 100).toFixed(2) + '%';
+        document.getElementById('opt-sharpe').textContent = p.sharpe_ratio.toFixed(4);
+
+        var weightsDiv = document.getElementById('opt-weights');
+        weightsDiv.innerHTML = '';
+        for (var ticker in p.weights) {
+            var w = p.weights[ticker];
+            var pct = (w * 100).toFixed(1);
+            weightsDiv.innerHTML += '<div style="display:flex; align-items:center; gap:1rem; padding:0.5rem; background:var(--bg-primary); border-radius:6px;">' +
+                '<span style="font-weight:600; width:60px; color:var(--text-primary);">' + ticker + '</span>' +
+                '<div style="flex:1; height:8px; background:var(--border-color); border-radius:4px; overflow:hidden;">' +
+                '<div style="height:100%; width:' + pct + '%; background: linear-gradient(90deg, #5ac8fa, #34c759); border-radius:4px;"></div></div>' +
+                '<span style="width:60px; text-align:right; color:var(--text-secondary);">' + pct + '%</span></div>';
+        }
+
+        document.getElementById('opt-results').style.display = 'block';
+    } catch(e) {
+        document.getElementById('opt-error').style.display = 'block';
+        document.getElementById('opt-error').textContent = 'Request failed: ' + e.message;
+    } finally {
+        document.getElementById('opt-btn').disabled = false;
+        document.getElementById('opt-btn').textContent = 'Optimize Portfolio';
+    }
+}
+</script>
+{% endblock %}
