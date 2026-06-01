@@ -3,9 +3,9 @@
 {% block extra_head %}
 <style>
 .report-page-container {
-    max-width: 960px;
+    max-width: 1000px;
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 0 20px;
 }
 .report-page-header {
     display: flex;
@@ -13,37 +13,42 @@
     gap: 20px;
     flex-wrap: wrap;
     margin-bottom: 24px;
-    padding-bottom: 16px;
-    border-bottom: 2px solid var(--border-color);
+    padding: 20px 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent-orange);
+    border-radius: var(--radius-md);
 }
 .report-page-ticker {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 700;
     font-family: var(--font-data);
     color: var(--accent-orange);
+    letter-spacing: 1px;
 }
 .report-page-date {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--text-muted);
+    margin-top: 2px;
 }
 .report-signal-badge-lg {
     display: inline-flex;
     align-items: center;
-    padding: 8px 20px;
+    padding: 10px 24px;
     border-radius: 6px;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1px;
 }
-.report-signal-badge-lg.buy { background: rgba(0,200,83,0.15); color: var(--signal-buy); border: 1px solid rgba(0,200,83,0.3); }
-.report-signal-badge-lg.sell { background: rgba(255,82,82,0.15); color: var(--signal-sell); border: 1px solid rgba(255,82,82,0.3); }
-.report-signal-badge-lg.neutral { background: rgba(255,202,40,0.15); color: var(--signal-neutral); border: 1px solid rgba(255,202,40,0.3); }
-.report-gauge-container { display: flex; align-items: center; gap: 12px; }
+.report-signal-badge-lg.buy { background: rgba(0,200,83,0.15); color: var(--signal-buy); border: 1px solid rgba(0,200,83,0.4); box-shadow: 0 0 12px rgba(0,200,83,0.1); }
+.report-signal-badge-lg.sell { background: rgba(255,23,68,0.12); color: var(--signal-sell); border: 1px solid rgba(255,23,68,0.4); box-shadow: 0 0 12px rgba(255,23,68,0.1); }
+.report-signal-badge-lg.neutral { background: rgba(255,214,0,0.12); color: var(--signal-neutral); border: 1px solid rgba(255,214,0,0.35); box-shadow: 0 0 12px rgba(255,214,0,0.08); }
+.report-gauge-container { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .report-download-bar {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
     margin-bottom: 24px;
     padding: 12px 16px;
@@ -51,40 +56,50 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
 }
-.report-download-bar .btn { font-size: 0.78rem; padding: 6px 14px; }
+.report-download-bar .btn { font-size: 0.78rem; padding: 7px 16px; border-radius: 4px; transition: all 0.2s; }
+.report-download-bar .btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 .report-exec-summary {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
+    border-left: 4px solid var(--accent-orange);
     border-radius: var(--radius-md);
-    padding: 20px;
+    padding: 24px;
     margin-bottom: 24px;
 }
 .report-exec-summary .exec-title {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--accent-orange);
-    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
 }
 .report-exec-metrics {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
     gap: 12px;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
 .report-exec-metrics .metric-item {
     text-align: center;
-    padding: 8px;
-    background: var(--bg-surface);
+    padding: 12px 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-sm);
+    transition: border-color 0.2s;
 }
+.report-exec-metrics .metric-item:hover { border-color: var(--accent-orange); }
 .report-exec-metrics .metric-label {
-    font-size: 0.68rem;
+    font-size: 0.65rem;
     color: var(--text-muted);
     text-transform: uppercase;
-    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+    margin-bottom: 6px;
 }
 .report-exec-metrics .metric-value {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 700;
     font-family: var(--font-data);
     color: var(--text-primary);
@@ -95,12 +110,14 @@
     border-radius: var(--radius-md);
     margin-bottom: 16px;
     overflow: hidden;
+    transition: border-color 0.2s;
 }
+.report-section-block:hover { border-color: rgba(255,140,0,0.3); }
 .report-section-toggle {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 14px 16px;
+    gap: 10px;
+    padding: 14px 18px;
     cursor: pointer;
     user-select: none;
     font-weight: 600;
@@ -116,37 +133,78 @@
     color: var(--text-muted);
 }
 .report-section-toggle.open .toggle-arrow { transform: rotate(90deg); }
-.report-section-toggle.open { border-bottom-color: var(--border-color); }
+.report-section-toggle.open { border-bottom-color: var(--border-color); background: rgba(255,140,0,0.03); }
 .report-section-body {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.4s ease;
-    padding: 0 16px;
+    padding: 0 18px;
 }
 .report-section-body.open {
-    max-height: 3000px;
-    padding: 16px;
+    max-height: 5000px;
+    padding: 18px;
 }
 .report-voting-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.78rem;
+    font-size: 0.8rem;
 }
 .report-voting-table th {
     text-align: left;
-    padding: 8px;
-    font-size: 0.7rem;
+    padding: 10px 12px;
+    font-size: 0.68rem;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
     color: var(--text-muted);
-    border-bottom: 1px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    background: var(--bg-primary);
 }
 .report-voting-table td {
-    padding: 8px;
+    padding: 10px 12px;
     border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
 }
-.report-voting-table .sig-buy { color: var(--signal-buy); font-weight: 600; }
-.report-voting-table .sig-sell { color: var(--signal-sell); font-weight: 600; }
-.report-voting-table .sig-neutral { color: var(--signal-neutral); font-weight: 600; }
+.report-voting-table tr:hover td { background: rgba(255,140,0,0.03); }
+.report-voting-table .sig-buy { color: var(--signal-buy); font-weight: 700; }
+.report-voting-table .sig-sell { color: var(--signal-sell); font-weight: 700; }
+.report-voting-table .sig-neutral { color: var(--signal-neutral); font-weight: 700; }
+.report-voting-table .score-cell { font-family: var(--font-data); font-weight: 600; }
+.report-voting-table .score-cell.score-high { background: rgba(0,200,83,0.12); color: var(--signal-buy); }
+.report-voting-table .score-cell.score-low { background: rgba(255,23,68,0.1); color: var(--signal-sell); }
+.report-voting-table .score-cell.score-mid { background: rgba(255,214,0,0.08); color: var(--signal-neutral); }
+
+/* Score gauge bar - CSS only horizontal bar */
+.score-gauge-bar {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 100px;
+}
+.score-gauge-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+.score-gauge-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+.score-gauge-fill.gauge-high { background: linear-gradient(90deg, #00c853, #69f0ae); }
+.score-gauge-fill.gauge-low { background: linear-gradient(90deg, #ff1744, #ff5252); }
+.score-gauge-fill.gauge-mid { background: linear-gradient(90deg, #ffd600, #ffca28); }
+.score-gauge-label {
+    font-size: 0.72rem;
+    font-family: var(--font-data);
+    font-weight: 600;
+    min-width: 28px;
+    text-align: right;
+}
+
 .report-full-md {
     margin-top: 24px;
     padding: 20px;
@@ -174,28 +232,75 @@
     color: var(--text-muted);
     text-decoration: none;
     margin-bottom: 16px;
+    transition: color 0.2s;
 }
 .back-link:hover { color: var(--accent-orange); }
 
+/* Print styles - hide all UI chrome */
 @media print {
-    .report-download-bar, .back-link, .report-section-toggle { display: none; }
-    .report-section-body { max-height: none !important; padding: 16px !important; }
+    .sidebar, #sidebar, .bottom-nav, #bottom-nav,
+    .hamburger-btn, .mobile-backdrop, #backdrop,
+    .report-download-bar, .back-link,
+    .global-progress-bar, .toast-container { display: none !important; }
+    .app-layout { display: block !important; }
+    .app-main { margin-left: 0 !important; padding: 0 !important; }
+    .report-section-toggle { pointer-events: none; }
+    .report-section-toggle .toggle-arrow { display: none; }
+    .report-section-body { max-height: none !important; padding: 16px !important; overflow: visible !important; }
+    .report-page-container { max-width: 100%; padding: 0; }
+    .report-page-header { border: none; background: transparent; padding: 0 0 12px 0; border-bottom: 2px solid #333; }
+    .report-section-block { border: 1px solid #444; page-break-inside: avoid; }
+    body { background: #fff !important; color: #222 !important; }
+    .report-page-ticker { color: #222 !important; }
+    .report-exec-summary { border-left-color: #ff8c00; }
+    * { color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
 /* Score Chart Styles */
 .score-chart-container {
     margin: 24px 0;
-    padding: 16px;
+    padding: 20px;
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
 }
 .score-chart-title {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     color: var(--accent-orange);
-    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
 }
+
+/* Verdict summary strip */
+.report-verdict-strip {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+.report-verdict-strip .verdict-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.report-verdict-strip .verdict-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+.report-verdict-strip .verdict-dot.dot-buy { background: var(--signal-buy); }
+.report-verdict-strip .verdict-dot.dot-sell { background: var(--signal-sell); }
+.report-verdict-strip .verdict-dot.dot-neutral { background: var(--signal-neutral); }
 </style>
 {% endblock %}
 {% block content %}
@@ -228,11 +333,14 @@
 
         <!-- Download Bar -->
         <div class="report-download-bar">
-            <button class="btn btn-sm" onclick="downloadReportMD()">&#x2B07; Download Markdown</button>
-            <button class="btn btn-sm" onclick="downloadReportHTML()">&#x1F4C4; Download HTML</button>
-            <button class="btn btn-sm" onclick="copyReportText()">&#x1F4CB; Copy Report</button>
+            <button class="btn btn-sm" onclick="downloadReportMD()" title="Download raw Markdown file">&#x2B07; Download Markdown</button>
+            <button class="btn btn-sm btn-primary" onclick="downloadReportHTML()" title="Download self-contained HTML report">&#x1F4C4; Download HTML</button>
+            <button class="btn btn-sm" onclick="copyReportText()" title="Copy Markdown to clipboard">&#x1F4CB; Copy to Clipboard</button>
             <a id="rp-view-stocks-link" href="/stocks?ticker={{ ticker }}&report=1" class="btn btn-sm" style="text-decoration:none;">&#x1F4CA; View in Analysis</a>
         </div>
+
+        <!-- Verdict Strip -->
+        <div class="report-verdict-strip" id="rp-verdict-strip"></div>
 
         <!-- Executive Summary -->
         <div class="report-exec-summary" id="rp-exec-summary"></div>
@@ -245,7 +353,7 @@
             </div>
             <div class="report-section-body open" id="rp-voting-body">
                 <table class="report-voting-table" id="rp-voting-table">
-                    <thead><tr><th>Agent</th><th>Signal</th><th>Score</th><th>Confidence</th></tr></thead>
+                    <thead><tr><th>Agent</th><th>Signal</th><th>Score</th><th>Gauge</th><th>Confidence</th></tr></thead>
                     <tbody id="rp-voting-tbody"></tbody>
                 </table>
             </div>
@@ -315,7 +423,7 @@ function toggleReportSection(el) {
 function downloadReportMD() {
     if (!rpMarkdown) { showToast('No report available', 'warning'); return; }
     var date = new Date().toISOString().slice(0, 10);
-    var filename = rpTicker + '_augur_report_' + date + '.md';
+    var filename = rpTicker + '_report_' + date + '.md';
     var blob = new Blob([rpMarkdown], { type: 'text/markdown;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
@@ -330,27 +438,35 @@ function downloadReportHTML() {
     if (!rpMarkdown) { showToast('No report available', 'warning'); return; }
     var renderedBody = renderReportMarkdown(rpMarkdown);
     var date = new Date().toISOString().slice(0, 10);
-    var filename = rpTicker + '_augur_report_' + date + '.html';
+    var filename = rpTicker + '_report_' + date + '.html';
     var htmlDoc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + rpTicker + ' - Augur Analysis Report</title><style>'
-        + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#c9d1d9;padding:40px;max-width:900px;margin:0 auto;line-height:1.7;}'
-        + 'h1,h2,h3,h4{color:#ff9800;margin-top:1.5em;}'
-        + 'table{width:100%;border-collapse:collapse;margin:1em 0;}'
-        + 'th,td{border:1px solid #30363d;padding:8px 12px;text-align:left;}'
-        + 'th{background:#161b22;color:#ff9800;font-size:0.8rem;text-transform:uppercase;}'
+        + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#c9d1d9;padding:40px;max-width:900px;margin:0 auto;line-height:1.8;}'
+        + 'h1{color:#ff8c00;margin-top:1.5em;font-size:1.8em;border-bottom:2px solid #30363d;padding-bottom:8px;}'
+        + 'h2{color:#ff8c00;margin-top:1.5em;font-size:1.3em;border-left:4px solid #ff8c00;padding-left:12px;}'
+        + 'h3{color:#ffa726;margin-top:1.2em;font-size:1.1em;}'
+        + 'h4{color:#ffca28;margin-top:1em;}'
+        + 'table{width:100%;border-collapse:collapse;margin:1em 0;font-size:0.9em;}'
+        + 'th,td{border:1px solid #30363d;padding:10px 14px;text-align:left;}'
+        + 'th{background:#161b22;color:#ff8c00;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;}'
         + 'tr:nth-child(even){background:#161b22;}'
-        + 'code{background:#161b22;padding:2px 6px;border-radius:3px;font-size:0.85em;}'
-        + 'blockquote{border-left:3px solid #ff9800;padding-left:12px;color:#8b949e;margin:1em 0;}'
+        + 'tr:hover{background:rgba(255,140,0,0.05);}'
+        + 'code{background:#161b22;padding:2px 6px;border-radius:3px;font-size:0.85em;font-family:"JetBrains Mono",monospace;}'
+        + 'blockquote{border-left:3px solid #ff8c00;padding-left:14px;color:#8b949e;margin:1em 0;font-style:italic;}'
         + 'hr{border:none;border-top:1px solid #30363d;margin:2em 0;}'
         + 'strong{color:#e6edf3;}'
         + 'ul,ol{padding-left:1.5em;}'
-        + 'li{margin:4px 0;}'
-        + '.header{text-align:center;margin-bottom:2em;padding-bottom:1em;border-bottom:2px solid #30363d;}'
+        + 'li{margin:6px 0;}'
+        + 'p{margin:0.8em 0;}'
+        + '.header{text-align:center;margin-bottom:2em;padding:24px 0;border-bottom:2px solid #30363d;}'
+        + '.header h1{border:none;padding:0;margin:0;}'
         + '.footer{text-align:center;margin-top:3em;padding-top:1em;border-top:1px solid #30363d;color:#8b949e;font-size:0.8em;}'
+        + '.meta{color:#8b949e;font-size:0.85em;margin-top:8px;}'
+        + '@media print{body{background:#fff;color:#222;padding:20px;}h1,h2,h3{color:#333;}th{background:#f0f0f0;color:#333;}td,th{border-color:#ccc;}}'
         + '</style></head><body>'
         + '<div class="header"><h1>' + rpTicker + ' Deep Analysis Report</h1>'
-        + '<p style="color:#8b949e;">Generated by Augur Multi-Agent Investment Analysis Platform | ' + date + '</p></div>'
+        + '<p class="meta">Generated by Augur Multi-Agent Investment Analysis Platform | ' + date + '</p></div>'
         + renderedBody
-        + '<div class="footer">Augur v7.8.1 | 18 AI Investment Masters Consensus Analysis | augur-agents</div>'
+        + '<div class="footer">Augur v7.8.2 | 18 AI Investment Masters Consensus Analysis | github.com/augur-agents</div>'
         + '</body></html>';
     var blob = new Blob([htmlDoc], { type: 'text/html;charset=utf-8' });
     var url = URL.createObjectURL(blob);
@@ -433,6 +549,25 @@ function renderReportPage(data) {
     // Score gauge
     document.getElementById('rp-gauge').innerHTML = createScoreGauge(score, 10);
 
+    // Verdict strip - count bull/bear/neutral votes
+    var votingAgents = parseAgentsFromMarkdown();
+    var bullCount = 0, bearCount = 0, neutralCount = 0;
+    votingAgents.forEach(function(a) {
+        if (a.score >= 7) bullCount++;
+        else if (a.score <= 4) bearCount++;
+        else neutralCount++;
+    });
+    var verdictStrip = document.getElementById('rp-verdict-strip');
+    if (votingAgents.length > 0) {
+        verdictStrip.innerHTML = '<span style="font-weight:600;color:var(--text-primary);">Consensus:</span>'
+            + '<span class="verdict-item"><span class="verdict-dot dot-buy"></span> Bullish: ' + bullCount + '</span>'
+            + '<span class="verdict-item"><span class="verdict-dot dot-neutral"></span> Neutral: ' + neutralCount + '</span>'
+            + '<span class="verdict-item"><span class="verdict-dot dot-sell"></span> Bearish: ' + bearCount + '</span>'
+            + '<span style="margin-left:auto; font-family:var(--font-data); color:var(--text-primary);">' + votingAgents.length + ' agents voted</span>';
+    } else {
+        verdictStrip.style.display = 'none';
+    }
+
     // Executive summary
     renderExecSummary(score, signal, confidence);
 
@@ -440,7 +575,6 @@ function renderReportPage(data) {
     renderVotingTable();
 
     // Score chart (SVG bar chart from voting data)
-    var votingAgents = parseAgentsFromMarkdown();
     if (votingAgents.length > 0) {
         var chartContainer = document.getElementById('rp-sections');
         if (chartContainer) {
@@ -459,19 +593,42 @@ function renderExecSummary(score, signal, confidence) {
     var container = document.getElementById('rp-exec-summary');
     var grade = score >= 8 ? 'A+' : score >= 7 ? 'A' : score >= 6 ? 'B+' : score >= 5 ? 'B' : score >= 4 ? 'C' : 'D';
     var signalText = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+    var signalColor = signal === 'bullish' ? 'var(--signal-buy)' : signal === 'bearish' ? 'var(--signal-sell)' : 'var(--signal-neutral)';
+
+    // Try to extract additional metrics from markdown
+    var confMatch = rpMarkdown.match(/置信度[：:]\s*\*?\*?([0-9.]+%?)/i) || rpMarkdown.match(/Confidence[：:]\s*\*?\*?([0-9.]+%?)/i);
+    var confText = confMatch ? confMatch[1] : '--';
+    var posMatch = rpMarkdown.match(/建议仓位[：:]\s*\*?\*?([0-9.]+%?)/i) || rpMarkdown.match(/Position[：:]\s*\*?\*?([0-9.]+%?)/i);
+    var posText = posMatch ? posMatch[1] : '--';
+    var riskMatch = rpMarkdown.match(/风险等级[：:]\s*\*?\*?(\S+)/i) || rpMarkdown.match(/Risk[：:]\s*\*?\*?(\S+)/i);
+    var riskText = riskMatch ? riskMatch[1] : '--';
 
     var html = '<div class="exec-title">Executive Summary</div>';
     html += '<div class="report-exec-metrics">';
-    html += '<div class="metric-item"><div class="metric-label">Signal</div><div class="metric-value" style="color:' + (signal === 'bullish' ? 'var(--signal-buy)' : signal === 'bearish' ? 'var(--signal-sell)' : 'var(--signal-neutral)') + ';">' + signalText + '</div></div>';
+    html += '<div class="metric-item"><div class="metric-label">Signal</div><div class="metric-value" style="color:' + signalColor + ';">' + signalText + '</div></div>';
     html += '<div class="metric-item"><div class="metric-label">Score</div><div class="metric-value" style="color:var(--accent-orange);">' + score.toFixed(1) + '/10</div></div>';
     html += '<div class="metric-item"><div class="metric-label">Grade</div><div class="metric-value">' + grade + '</div></div>';
+    html += '<div class="metric-item"><div class="metric-label">Confidence</div><div class="metric-value">' + escapeHtml(confText) + '</div></div>';
+    html += '<div class="metric-item"><div class="metric-label">Position</div><div class="metric-value">' + escapeHtml(posText) + '</div></div>';
+    html += '<div class="metric-item"><div class="metric-label">Risk</div><div class="metric-value">' + escapeHtml(riskText) + '</div></div>';
     html += '</div>';
 
-    // Extract first paragraph as summary text
-    var lines = rpMarkdown.split('\n').filter(function(l) { return l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('|') && !l.trim().startsWith('---'); });
-    var summaryText = lines.slice(0, 3).join(' ').replace(/\*\*/g, '').replace(/[#*_`]/g, '').trim();
+    // Extract first meaningful paragraph as summary text
+    var summarySection = rpMarkdown.match(/##\s*执行摘要\s*\n([\s\S]*?)(?=\n##|\n#[^#]|$)/i) ||
+                         rpMarkdown.match(/##\s*Executive\s+Summary\s*\n([\s\S]*?)(?=\n##|\n#[^#]|$)/i);
+    var summaryText = '';
+    if (summarySection) {
+        var sLines = summarySection[1].split('\n').filter(function(l) {
+            return l.trim() && !l.trim().startsWith('|') && !l.trim().startsWith('---');
+        });
+        summaryText = sLines.slice(0, 4).join(' ').replace(/\*\*/g, '').replace(/[#*_`]/g, '').trim();
+    }
+    if (!summaryText) {
+        var lines = rpMarkdown.split('\n').filter(function(l) { return l.trim() && !l.trim().startsWith('#') && !l.trim().startsWith('|') && !l.trim().startsWith('---'); });
+        summaryText = lines.slice(0, 3).join(' ').replace(/\*\*/g, '').replace(/[#*_`]/g, '').trim();
+    }
     if (summaryText) {
-        html += '<div style="margin-top:12px; font-size:0.8rem; color:var(--text-secondary); line-height:1.6;">' + escapeHtml(summaryText.substring(0, 400)) + '</div>';
+        html += '<div style="margin-top:14px; font-size:0.82rem; color:var(--text-secondary); line-height:1.7; padding: 12px; background: var(--bg-primary); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-orange);">' + escapeHtml(summaryText.substring(0, 500)) + '</div>';
     }
     container.innerHTML = html;
 }
@@ -495,16 +652,30 @@ function renderVotingTable() {
                 if (sigLower.indexOf('bull') >= 0 || sigLower.indexOf('buy') >= 0) sigClass = 'sig-buy';
                 else if (sigLower.indexOf('bear') >= 0 || sigLower.indexOf('sell') >= 0) sigClass = 'sig-sell';
                 else sigClass = 'sig-neutral';
+
+                var scoreVal = parseFloat(cells[2]) || 0;
+                var scoreClass = 'score-mid';
+                var gaugeClass = 'gauge-mid';
+                var gaugeColor = 'var(--signal-neutral)';
+                if (scoreVal >= 7) { scoreClass = 'score-high'; gaugeClass = 'gauge-high'; gaugeColor = 'var(--signal-buy)'; }
+                else if (scoreVal <= 4) { scoreClass = 'score-low'; gaugeClass = 'gauge-low'; gaugeColor = 'var(--signal-sell)'; }
+
+                var gaugePct = Math.min(Math.max(scoreVal / 10 * 100, 0), 100);
+                var gaugeHtml = '<div class="score-gauge-bar">'
+                    + '<div class="score-gauge-track"><div class="score-gauge-fill ' + gaugeClass + '" style="width:' + gaugePct + '%"></div></div>'
+                    + '<span class="score-gauge-label" style="color:' + gaugeColor + '">' + scoreVal.toFixed(1) + '</span></div>';
+
                 tr.innerHTML = '<td>' + escapeHtml(cells[0]) + '</td>'
                     + '<td class="' + sigClass + '">' + escapeHtml(sigText) + '</td>'
-                    + '<td>' + escapeHtml(cells[2] || '--') + '</td>'
+                    + '<td class="score-cell ' + scoreClass + '">' + scoreVal.toFixed(1) + '</td>'
+                    + '<td>' + gaugeHtml + '</td>'
                     + '<td>' + escapeHtml(cells[3] || '--') + '</td>';
                 tbody.appendChild(tr);
             }
         });
     }
     if (tbody.children.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Voting data will appear in the full report below</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Voting data will appear in the full report below</td></tr>';
     }
 }
 
@@ -544,10 +715,20 @@ function renderCollapsibleSections() {
     }
     if (currentSection) sections.push(currentSection);
 
+    // Skip sections already shown (executive summary, voting table)
+    var skipTitles = ['执行摘要', '评分总表', 'executive summary', 'scoring table', 'agent scores'];
+    sections = sections.filter(function(sec) {
+        var lower = sec.title.toLowerCase();
+        for (var k = 0; k < skipTitles.length; k++) {
+            if (lower.indexOf(skipTitles[k]) >= 0) return false;
+        }
+        return true;
+    });
+
     sections.forEach(function(sec, idx) {
         var contentMd = sec.content.join('\n').trim();
         if (!contentMd) return;
-        var isOpen = idx < 2 ? ' open' : '';
+        var isOpen = idx < 3 ? ' open' : '';
         var html = '<div class="report-section-block">';
         html += '<div class="report-section-toggle' + isOpen + '" onclick="toggleReportSection(this)">';
         html += '<span class="toggle-arrow">&#x25B6;</span>';
