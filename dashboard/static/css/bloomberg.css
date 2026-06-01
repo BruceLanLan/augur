@@ -2993,3 +2993,24 @@ kbd {
     .example-chip { font-size: 0.72rem; padding: 5px 10px; }
 }
 
+
+/* ============================================================
+   Markdown Report Table Styles (native elements)
+   ============================================================ */
+.md-report table { width: 100%; border-collapse: collapse; margin: 1em 0; font-size: 0.82rem; }
+.md-report th { background: var(--bg-surface, #161b22); color: var(--accent-orange, #ff9800); text-transform: uppercase; font-size: 0.72rem; letter-spacing: 0.3px; padding: 10px 12px; text-align: left; border-bottom: 2px solid var(--border-color, #30363d); }
+.md-report td { padding: 8px 12px; border-bottom: 1px solid var(--border-subtle, #21262d); }
+.md-report tr:nth-child(even) { background: rgba(255,255,255,0.02); }
+.md-report tr:hover { background: rgba(255,140,0,0.05); }
+.md-report blockquote { border-left: 3px solid var(--accent-orange, #ff9800); padding-left: 12px; color: var(--text-muted); margin: 1em 0; }
+.md-report h2, .md-report h3 { color: var(--accent-orange, #ff9800); margin-top: 1.5em; }
+.md-report hr { border: none; border-top: 1px solid var(--border-color, #30363d); margin: 2em 0; }
+.md-report ul, .md-report ol { padding-left: 1.5em; }
+.md-report li { margin: 4px 0; line-height: 1.6; }
+.md-report strong { color: var(--text-primary, #e6edf3); }
+
+@media print {
+    body { background: white !important; color: black !important; }
+    .sidebar, .top-nav, .status-bar, footer { display: none !important; }
+    .card { border: 1px solid #ddd !important; box-shadow: none !important; }
+}

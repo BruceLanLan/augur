@@ -794,9 +794,13 @@ document.addEventListener('DOMContentLoaded', function() {
     fetch('/api/models')
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            document.getElementById('model-count').textContent = (data.models || []).length || '--';
+            var el = document.getElementById('model-count');
+            if (el) el.textContent = (data.models || []).length || '--';
         })
-        .catch(function() {});
+        .catch(function() {
+            var el = document.getElementById('model-count');
+            if (el) el.textContent = '--';
+        });
 
     // Show recent analyses from cache
     renderRecentAnalyses();
@@ -834,7 +838,7 @@ function loadMarketOverview(forceRefresh) {
         .catch(function() {
             if (btn) { btn.disabled = false; }
             if (board) {
-                board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">市场行情暂不可用</div><div class="empty-hint">需要 yfinance 实时数据</div></div>';
+                board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">加载失败，点击重试</div><div class="empty-hint">需要 yfinance 实时数据</div><button class="btn btn-sm" onclick="loadMarketOverview(true)" style="margin-top:8px;">重试</button></div>';
             }
         });
 }
@@ -916,7 +920,7 @@ function loadDatasources() {
             });
         })
         .catch(function() {
-            grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F50C;</div><div class="empty-msg">数据源状态加载失败</div></div>';
+            grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F50C;</div><div class="empty-msg">加载失败，点击重试</div><button class="btn btn-sm" onclick="loadDatasources()" style="margin-top:8px;">重试</button></div>';
         });
 }
 
@@ -934,7 +938,7 @@ function loadHotTickers(forceRefresh) {
         })
         .catch(function() {
             if (btn) btn.disabled = false;
-            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F525;</div><div class="empty-msg">热门标的暂不可用</div></div>';
+            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F525;</div><div class="empty-msg">加载失败，点击重试</div><button class="btn btn-sm" onclick="loadHotTickers(true)" style="margin-top:8px;">重试</button></div>';
         });
 }
 
@@ -1245,7 +1249,7 @@ function loadSectorPerformance(forceRefresh) {
         })
         .catch(function() {
             if (btn) btn.disabled = false;
-            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F3D7;</div><div class="empty-msg">板块行情暂不可用</div></div>';
+            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F3D7;</div><div class="empty-msg">加载失败，点击重试</div><button class="btn btn-sm" onclick="loadSectorPerformance(true)" style="margin-top:8px;">重试</button></div>';
         });
 }
 
