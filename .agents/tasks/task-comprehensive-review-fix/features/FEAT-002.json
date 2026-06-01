@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Dashboard enhancement: Richer data display on index page, improved report visualization with professional styling, and report download UX improvements",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In dashboard/templates/index.html: Enhance the dashboard with more data panels - add a 'Market Summary' section that shows key indices inline (S&P, NASDAQ, DOW, VIX, Gold, BTC) with mini sparklines using SVG, add a 'Latest News Sentiment' placeholder section, add 'Sector Rotation' heatmap that shows all 11 GICS sectors with color-coded performance",
     "In dashboard/templates/index.html: Ensure all data fetch functions have proper .catch() handlers with user-friendly error messages shown in the UI (not just console.log)",
@@ -30,5 +30,5 @@
     "grep '7.8.1' /projects/sandbox/augur/dashboard/templates/report_view.html"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All changes completed successfully. /api/market-overview endpoint already existed in app.py. localStorage calls were already wrapped in try-catch. All fetch calls now have proper .catch() with retry buttons. Version updated to 7.8.1. Print stylesheet added. Score chart SVG function added. .md-report table styles added to bloomberg.css."
 }
