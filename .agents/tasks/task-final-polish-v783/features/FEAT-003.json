@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Report visual enhancement and download support: improve the report_view.html template to render reports with professional visualization (score gauges, tables with colored cells, section cards), and add HTML download button that generates a self-contained HTML file for offline viewing.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In dashboard/templates/report_view.html, enhance the report rendering JavaScript to parse the Markdown report and render it with styled HTML sections: executive summary card with highlighted verdict, score table with color-coded cells (green for bullish, red for bearish), section cards with proper borders and spacing.",
     "Add a 'Download HTML Report' button that uses JavaScript to create a self-contained HTML file (inline CSS + the rendered report content) and triggers a browser download via Blob URL.",
@@ -24,5 +24,5 @@
     "python3 -c \"from dashboard.app import app; print('OK')\""
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Enhanced report_view.html from 597 to 778 lines. Added color-coded score cells (green/amber/red backgrounds), CSS-only horizontal gauge bars for each agent row, verdict consensus strip, improved executive summary with 6 metrics extracted from markdown, comprehensive print styles hiding all UI chrome (sidebar, bottom nav, hamburger, etc.), improved download HTML with better typography and print support. All 459 tests pass."
 }
