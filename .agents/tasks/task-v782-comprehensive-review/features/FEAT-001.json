@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "fix",
   "description": "Frontend JavaScript robustness fixes across all pages (index.html, stocks.html, watchlist.html, portfolio.html, scanner.html, personas.html)",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In dashboard/templates/index.html JS: (a) Add debounce to heroGo() preventing double-clicks within 2s, (b) Make tryExample() check if analysis is in progress before triggering, (c) Wrap augurCache localStorage writes in try/catch to handle quota exceeded, (d) Ensure loadMarketOverview handles non-200 responses with fallback UI, (e) Ensure renderMarketBoard handles empty items array gracefully (already does but add null-safety for data param)",
     "In dashboard/templates/stocks.html JS: (a) In generateReport() add a timeout handler that re-enables the button on failure/timeout (currently does via showReportError), verify catch path always re-enables btn, (b) Add null-guard in renderVisualReport if analysisData is null/undefined, (c) Ensure buildScoreCards returns empty string '' when agents array is empty (currently does), (d) Make buildDebateLayout regex resilient to non-standard markdown (add try/catch around regex and return '' on failure), (e) Disable download buttons (PDF/MD/JSON/CSV) when no data is available by checking lastAnalysisData/lastReportMarkdown before proceeding",
@@ -23,5 +23,5 @@
     "python -m pytest tests/ -x -q --tb=short (all pass)"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 448 tests pass. augurCache in base.html already had try/catch protection for localStorage writes. downloadReport and downloadReportAsHTML already had lastReportMarkdown guards. portfolio.html gain calc already had cost>0 check but added explicit buyPrice>0 guard. watchlist batch uses single POST to /api/scanner/run (not Promise.all) so allSettled pattern not needed there; portfolio batch analysis was the one using individual fetch calls and was fixed with .then() chaining for resilience."
 }
