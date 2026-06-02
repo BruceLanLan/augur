@@ -1,6 +1,6 @@
 # Augur API Reference / API 参考文档
 
-> Version: v7.8.3
+> Version: v8.1.0
 
 ## Base URL / 基础地址
 
@@ -789,6 +789,265 @@ Get the persona performance leaderboard from backtests.
   ]
 }
 ```
+
+---
+
+## v8 Features / v8 新功能端点
+
+### POST /api/chat
+
+向投资大师提问，返回 persona 风格的回复。
+
+**Request body:**
+```json
+{
+  "message": "What do you think about NVDA?",
+  "agent_id": "buffett"   // 可选，不填则随机选取
+}
+```
+
+**Response:**
+```json
+{
+  "agent_id": "buffett",
+  "agent_name": "Warren Buffett",
+  "response": "Well, let me think about this...",
+  "topic": "value",
+  "timestamp": 1234567890.0
+}
+```
+
+支持的 `agent_id`：`buffett` · `graham` · `lynch` · `dalio` · `munger` · `soros` · `marks` · `cathie_wood` · `serenity` · `thiel` · `duan_yongping`
+
+---
+
+### POST /api/optimize
+
+Markowitz 均值方差组合优化。
+
+**Request body:**
+```json
+{
+  "tickers": ["AAPL", "NVDA", "MSFT"],
+  "risk_free_rate": 0.02
+}
+```
+
+**Response:**
+```json
+{
+  "status": "ok",
+  "data_source": "live",
+  "tickers": ["AAPL", "NVDA", "MSFT"],
+  "portfolio": {
+    "weights": {"AAPL": 0.45, "NVDA": 0.35, "MSFT": 0.20},
+    "expected_return": 0.012,
+    "volatility": 0.018,
+    "sharpe_ratio": 0.65
+  }
+}
+```
+
+`data_source` 为 `live`（yfinance 真实数据）、`partial`（部分真实）或 `mock`（全降级）。
+
+---
+
+### GET /api/sentiment/{ticker}
+
+获取社交情绪分析（StockTwits + Reddit 可选 + X mock）。
+
+**Response:**
+```json
+{
+  "ticker": "NVDA",
+  "overall_score": 0.32,
+  "sources": {
+    "stocktwits_score": 0.45,
+    "reddit_score": 0.28,
+    "x_score": -0.12
+  },
+  "volume": 8420,
+  "trending": false,
+  "data_source": "partial"
+}
+```
+
+`overall_score` 范围 `[-1.0, +1.0]`，正数看多，负数看空。
+
+---
+
+### POST /api/compare
+
+多大师对同一股票独立分析横向对比。
+
+**Request body:**
+```json
+{
+  "ticker": "AAPL",
+  "agent_ids": ["buffett", "munger", "graham"]
+}
+```
+
+`agent_ids` 须 2-5 个，不可重复。
+
+**Response:**
+```json
+{
+  "ticker": "AAPL",
+  "agent_count": 3,
+  "agents": [
+    {
+      "agent_id": "buffett",
+      "agent_name": "Warren Buffett",
+      "signal": "bullish",
+      "score": 7.5,
+      "confidence": 0.78,
+      "key_findings": ["..."],
+      "risks": ["..."]
+    }
+  ],
+  "timestamp": "2026-06-02T00:00:00Z"
+}
+```
+
+---
+
+### POST /api/debate
+
+多大师顺序辩论，每位回应前者。
+
+**Request body:**
+```json
+{
+  "ticker": "TSLA",
+  "agent_ids": ["buffett", "cathie_wood"]
+}
+```
+
+`agent_ids` 须 2-4 个。
+
+**Response:**
+```json
+{
+  "ticker": "TSLA",
+  "rounds": [
+    {
+      "agent_id": "buffett",
+      "agent_name": "Warren Buffett",
+      "signal": "bearish",
+      "score": 4.2,
+      "confidence": 0.65,
+      "reasoning": "...",
+      "round": 1
+    },
+    {
+      "agent_id": "cathie_wood",
+      "agent_name": "Cathie Wood",
+      "signal": "bullish",
+      "score": 8.8,
+      "confidence": 0.92,
+      "reasoning": "[对前者观点的回应] ...",
+      "round": 2
+    }
+  ],
+  "summary": "辩论结束: 1/2 位投资人看多 TSLA。",
+  "timestamp": "2026-06-02T00:00:00Z"
+}
+```
+
+---
+
+### GET /api/history
+
+获取分析历史列表。支持分页。
+
+**Query parameters:**
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| `limit` | int | 返回条数（默认 50，非分页模式） |
+| `page` | int | 页码（启用分页模式） |
+| `per_page` | int | 每页条数（默认 20） |
+
+**Response（非分页）:**
+```json
+{"records": [...], "count": 12}
+```
+
+**Response（分页）:**
+```json
+{"items": [...], "total": 120, "page": 2, "per_page": 20, "pages": 6}
+```
+
+---
+
+### DELETE /api/history
+
+清空所有历史记录。返回 `{"status": "ok", "deleted": 42}`
+
+### GET /api/history/{history_id}
+
+获取单条历史记录。
+
+### DELETE /api/history/{history_id}
+
+删除单条历史记录。
+
+---
+
+### GET /api/rules
+
+列出所有告警规则。
+
+### POST /api/rules
+
+创建告警规则。
+
+**Request body:**
+```json
+{
+  "name": "NVDA 看多信号",
+  "conditions": [
+    {"field": "signal", "operator": "eq", "value": "bullish"},
+    {"field": "score", "operator": "gte", "value": 7.5}
+  ],
+  "actions": [
+    {"type": "telegram", "message": "NVDA 看多，评分 {score}"}
+  ],
+  "enabled": true
+}
+```
+
+### DELETE /api/rules/{rule_id}
+
+删除指定规则。
+
+---
+
+### WebSocket /ws/analyze/{ticker}
+
+流式推送 18 位大师的分析进度，每个 agent 完成后立即发送，最后发送共识。
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws/analyze/AAPL');
+ws.onmessage = (e) => {
+  const data = JSON.parse(e.data);
+  if (data.type === 'agent') {
+    // 单个 agent 结果
+    console.log(data.agent_name, data.signal, data.score, data.progress);
+  } else if (data.type === 'consensus') {
+    // 最终共识
+    console.log('Consensus:', data.signal, data.score);
+  }
+};
+```
+
+每条消息结构：
+
+| `type` | 字段 |
+|--------|------|
+| `agent` | `agent_id`, `agent_name`, `signal`, `score`, `confidence`, `reasoning`, `progress` (如 "5/18") |
+| `consensus` | 同 `/api/analyze/{ticker}` 的共识对象 |
+| `error` | `message` |
 
 ---
 

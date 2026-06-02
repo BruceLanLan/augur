@@ -4,6 +4,84 @@ All notable changes to the Augur project are documented here.
 
 ---
 
+## v8.1.0 (2026-06-02)
+
+### Phase A — 真实数据接入
+
+- **Streaming**：`streaming.py` 用 yfinance 替代随机游走；`_fetch_yfinance_prices()` 在线程池非阻塞调用；失败降级 mock；价格记录新增 `source` 字段（`live/mock/seed`）
+- **Sentiment**：`sentiment.py` 新增 StockTwits 免认证 API（`_fetch_stocktwits`）+ Reddit PRAW 可选（`_fetch_reddit`，需 `REDDIT_CLIENT_ID/SECRET`）；实时 TTL=5min，mock TTL=1min；`SentimentResult` 新增 `data_source` 字段
+- **Optimizer**：`/api/optimize` 优先用 yfinance 真实 3 个月日收益率，回退 mock；响应新增 `data_source` 字段
+- **Learning 飞轮**：`registry.py` 在 `get_consensus()` 末尾自动 `record_prediction()`；同 ticker 再次分析时触发 `_check_and_record_outcomes()` 补录 >30 天的旧预测实际涨跌幅
+
+### Pass-2 — 全面加固（5 并行 agent × 10 轮）
+
+#### 后端核心
+
+- 共识默认权重修正：`valid_count` 仅统计非 ERROR agent，避免 0 权重除法
+- `history.py`：`_safe_ticker_label()` 过滤文件名非法字符，防路径注入
+- `registry.py`：`asyncio.Lock` 按事件循环重建，修复多测试环境绑错循环
+- `personas/graham.py`：信号改由加权 `total_score` 驱动（原用 `avg_score`）
+- `learning.py`：`record_outcome()` 增加最大年龄上限（`lookback + min_age`），超期预测跳过
+- `users.py`：登录用户名正则校验，拒绝畸形输入
+
+#### API 安全
+
+- `auth.py`：统一 `authenticate_bearer()`，接受 API Token 或 JWT 两种模式
+- 新增 `GET /api/auth/me`（当前用户信息）
+- `GET /api/auth/verify` 返回 `mode: open | token | jwt`
+- WebSocket 鉴权：`authenticate_websocket()` 支持 `?token=` 查询参数
+- 登录限速：10 次/分钟/IP（`check_auth_rate_limit`）
+
+#### Dashboard i18n / a11y
+
+- `dashboard/i18n/zh.json` + `en.json`：新增 ~80 键覆盖 index/settings/scanner/portfolio/signals
+- `dashboard/static/js/i18n.js`：`_t()` 全局翻译函数完善
+- `ui-enhance.css`：焦点环（`:focus-visible`）、`prefers-reduced-motion`、触控目标 44px、响应式断点
+
+#### 测试
+
+- 675 tests（vs v8.0.0 的 653）：新增 learning/auth/registry/rules/sentiment/optimizer 回归
+
+---
+
+## v8.0.0 (2026-06-02)
+
+### 新增 Dashboard 页面
+
+- `/chat`：AI 对话，11位大师独特语气模板，无需 LLM API
+- `/optimizer`：Markowitz 均值方差组合优化（纯 Python，无 numpy）
+- `/compare`：2-5位大师对同一股票独立分析横向对比
+- `/debate`：多大师顺序辩论，每位回应前者观点，生成辩论摘要
+- `/history`：分析历史持久化，可按 ticker/时间检索
+- `/performance`：IC 加权的大师预测准确率排行榜
+
+### 新增核心模块（10个）
+
+- `sentiment.py`：社交情绪分析（初始为 hash mock，v8.1 升级为真实 API）
+- `learning.py`：IC 反馈自动调整共识权重，持久化至 `~/.augur/learned_weights.json`
+- `optimizer.py`：Markowitz 有效前沿，纯 Python 实现，支持 2-10 个标的
+- `streaming.py`：WebSocket 实时行情推送（初始为随机游走，v8.1 升级为 yfinance）
+- `chat.py`：模板式 AI 对话，11 位大师有独特的语气和主题回复
+- `history.py`：分析历史持久化存储（SQLite/JSON）
+- `rules.py`：DSL 条件告警规则引擎，支持多渠道通知
+- `auth.py`：JWT 认证（可选，`AUGUR_MULTI_USER=1`）
+- `users.py`：多用户系统（SQLite，`AUGUR_MULTI_USER=1`）
+- `plugins.py`：第三方 Agent 插件系统（setuptools `entry_points`）
+
+### 共识层增强
+
+- `registry.py`：LearningEngine（60/40 学习权重混合）+ SentimentAnalyzer（±0.5 情绪修正）
+- `_aggregate_items`：`coverage_confidence < 0.5` 的 agent 不参与共识 findings 聚合
+
+### 修复（从 v7.8.x 升级）
+
+- 报告页投票表正则修复：`\| 大师 \| 流派 \| 信号 \|` 精确匹配，不再误匹配「参与大师」行
+- CRCL 分析修复：`aschenbrenner`/`serenity` 在 `coverage_confidence < 0.7` 时不生成领域特有 findings
+- `personas.html` 头像路径 `.svg` → `.png`（DQ1 像素风格新头像）
+- OG/Twitter 图片路径从不存在的根路径修正为 `docs/images/zh/hero-banner.png`
+
+---
+
 ## v7.8.3 (2025-07-25)
 
 ### 性能优化 (Performance)
