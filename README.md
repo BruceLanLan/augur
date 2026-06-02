@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v8.0.0](https://img.shields.io/badge/v8.0.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v8.1.0](https://img.shields.io/badge/v8.1.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -156,7 +156,7 @@ Auto-fetching data for NVDA from yfinance...
 
 ---
 
-## 🆕 v8.0.0 新功能
+## 🆕 v8.1.0 新功能
 
 v8 将 Augur 从「分析工具」升级为「智能投资平台」，新增 10 个模块：
 
@@ -447,7 +447,7 @@ Kelly 只在 BULLISH 信号且评分 > 5 时给出非零建议。NEUTRAL/BEARISH
 ## 📝 版本日志
 
 <details>
-<summary><strong>v8.0.0 — 智能投资平台（当前版本）</strong></summary>
+<summary><strong>v8.1.0 — 智能投资平台（当前版本）</strong></summary>
 
 - 新增 AI 对话、组合优化、大师对决、辩论模式、历史记录、大师排行 6 个 Dashboard 页面
 - LearningEngine：IC 反馈自动调整 18 位大师的共识权重
