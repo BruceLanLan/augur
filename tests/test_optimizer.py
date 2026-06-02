@@ -159,6 +159,17 @@ class TestPortfolioOptimizer:
         for p in points:
             assert p.volatility >= 0
 
+    def test_efficient_frontier_single_point(self):
+        """n_points=1 should not raise ZeroDivisionError."""
+        opt = PortfolioOptimizer()
+        returns_data = {
+            "A": [0.01, 0.02, -0.01, 0.03, 0.005, 0.015],
+            "B": [0.005, 0.015, 0.01, -0.005, 0.02, 0.01],
+        }
+        points = opt.efficient_frontier(returns_data, n_points=1)
+        assert len(points) == 1
+        assert points[0].volatility >= 0
+
     def test_optimize_to_dict(self):
         """OptimalPortfolio.to_dict() serializes correctly."""
         opt = PortfolioOptimizer()

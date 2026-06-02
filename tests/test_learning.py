@@ -2,6 +2,9 @@
 """Tests for augur.learning - Agent Learning Engine"""
 
 import json
+import time
+from unittest.mock import patch
+
 import pytest
 from pathlib import Path
 
@@ -98,7 +101,8 @@ def test_persistence(tmp_path):
 
 def test_reset(learning_engine):
     """Test resetting all learned data."""
-    learning_engine.record_prediction("AAPL", "buffett", "bullish", 7.5, 0.8)
+    for _ in range(4):
+        learning_engine.record_prediction("AAPL", "buffett", "bullish", 7.5, 0.8)
     learning_engine.record_outcome("AAPL", 0.05)
     assert learning_engine.has_learned_weights
 
@@ -128,3 +132,55 @@ def test_neutral_prediction_correct(learning_engine):
 
     accuracy = learning_engine.get_accuracy()
     assert accuracy["marks"]["correct_predictions"] == 1
+
+
+def test_record_outcome_min_age_days(learning_engine):
+    """Stale predictions (>= min_age_days) resolve; recent ones stay pending."""
+    now = 1_700_000_000.0  # fixed epoch — avoids boundary flakiness under load
+    learning_engine._predictions.append({
+        "ticker": "AAPL",
+        "agent_id": "buffett",
+        "signal": "bullish",
+        "score": 7.0,
+        "confidence": 0.8,
+        "timestamp": now - 35 * 86400,
+        "outcome": None,
+    })
+    learning_engine._predictions.append({
+        "ticker": "AAPL",
+        "agent_id": "graham",
+        "signal": "bearish",
+        "score": 3.0,
+        "confidence": 0.7,
+        "timestamp": now,
+        "outcome": None,
+    })
+
+    with patch("augur.learning.time.time", return_value=now):
+        learning_engine.record_outcome("AAPL", 0.04, min_age_days=30)
+
+    accuracy = learning_engine.get_accuracy()
+    assert "buffett" in accuracy
+    assert accuracy["buffett"]["total_predictions"] == 1
+    assert "graham" not in accuracy
+    assert learning_engine._predictions[-1]["outcome"] is None
+
+
+def test_record_outcome_too_stale_skipped(learning_engine):
+    """Predictions older than lookback+min_age window stay unresolved."""
+    now = 1_700_000_000.0
+    learning_engine._predictions.append({
+        "ticker": "AAPL",
+        "agent_id": "buffett",
+        "signal": "bullish",
+        "score": 7.0,
+        "confidence": 0.8,
+        "timestamp": now - 65 * 86400,
+        "outcome": None,
+    })
+
+    with patch("augur.learning.time.time", return_value=now):
+        learning_engine.record_outcome("AAPL", 0.04, min_age_days=30)
+
+    assert learning_engine.get_accuracy() == {}
+    assert learning_engine._predictions[0]["outcome"] is None

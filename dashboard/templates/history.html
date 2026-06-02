@@ -59,22 +59,22 @@
 {% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-16">
+<div class="flex items-center justify-between mb-16" style="flex-wrap:wrap; gap:12px;">
     <div>
-        <h2 style="color:var(--accent-orange); margin-bottom:4px;">历史记录</h2>
-        <p class="text-muted" style="font-size:0.82rem;">查看所有分析历史</p>
+        <h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="history-title">历史记录</h1>
+        <p class="text-muted" style="font-size:0.82rem;" data-i18n="history-desc">查看所有分析历史</p>
     </div>
-    <button class="btn btn-sm" onclick="clearAllHistory()" id="clear-btn" style="display:none;">清除历史</button>
+    <button type="button" class="btn btn-sm" onclick="clearAllHistory()" id="clear-btn" style="display:none;" data-i18n="history-clear">清除历史</button>
 </div>
 
 <div class="card">
     <div id="history-content">
         <div class="empty-state" id="empty-state">
             <span class="empty-state-icon">&#128340;</span>
-            <div class="empty-state-title">No analysis history yet</div>
-            <p class="empty-state-desc">Run your first analysis to see it here. Your results will be saved automatically.</p>
+            <div class="empty-state-title" data-i18n="history-empty-title">暂无分析历史</div>
+            <p class="empty-state-desc" data-i18n="history-empty-desc">运行首次分析后将自动保存在此</p>
             <div class="empty-state-action">
-                <a href="/stocks" class="btn btn-primary" style="text-decoration:none;">Start Analysis</a>
+                <a href="/stocks" class="btn btn-primary" style="text-decoration:none;" data-i18n="history-start">开始分析</a>
             </div>
         </div>
         <!-- Skeleton loading -->
@@ -84,24 +84,27 @@
             <div class="skeleton-table-row"><div class="skeleton"></div><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:50px"></div><div class="skeleton" style="width:40px"></div></div>
             <div class="skeleton-table-row"><div class="skeleton"></div><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:50px"></div><div class="skeleton" style="width:40px"></div></div>
         </div>
+        <div class="md-table-wrap">
         <table class="history-table" id="history-table" style="display:none;">
+            <caption class="sr-only" data-i18n="history-title">历史记录</caption>
             <thead>
                 <tr>
-                    <th>日期</th>
-                    <th>股票</th>
-                    <th>信号</th>
-                    <th>评分</th>
-                    <th>操作</th>
+                    <th scope="col" data-i18n="history-col-date">日期</th>
+                    <th scope="col" data-i18n="history-col-ticker">股票</th>
+                    <th scope="col" data-i18n="history-col-signal">信号</th>
+                    <th scope="col" data-i18n="history-col-score">评分</th>
+                    <th scope="col" data-i18n="history-col-actions">操作</th>
                 </tr>
             </thead>
             <tbody id="history-body"></tbody>
         </table>
+        </div>
         <!-- Pagination controls -->
         <div id="pagination-controls" style="display:none; padding:12px 0; border-top:1px solid var(--border-color); margin-top:8px;">
             <div class="flex items-center justify-between">
-                <button class="btn btn-sm" id="prev-page-btn" onclick="goToPage(currentPage - 1)" disabled>Previous</button>
-                <span id="page-indicator" class="text-muted text-mono" style="font-size:0.78rem;">Page 1 / 1</span>
-                <button class="btn btn-sm" id="next-page-btn" onclick="goToPage(currentPage + 1)" disabled>Next</button>
+                <button type="button" class="btn btn-sm" id="prev-page-btn" onclick="goToPage(currentPage - 1)" disabled data-i18n="history-prev">上一页</button>
+                <span id="page-indicator" class="text-muted text-mono" style="font-size:0.78rem;" aria-live="polite">Page 1 / 1</span>
+                <button type="button" class="btn btn-sm" id="next-page-btn" onclick="goToPage(currentPage + 1)" disabled data-i18n="history-next">下一页</button>
             </div>
         </div>
     </div>

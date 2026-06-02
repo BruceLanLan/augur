@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}持仓管理 - Augur{% endblock %}
+{% block title %}Portfolio - Augur{% endblock %}
 {% block extra_head %}
 <style>
 .portfolio-header {
@@ -96,12 +96,6 @@
     margin-bottom: 12px;
     text-transform: uppercase;
 }
-.portfolio-empty {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--text-muted);
-    font-size: 0.88rem;
-}
 .augur-score-badge {
     display: inline-block;
     padding: 2px 6px;
@@ -128,22 +122,26 @@
 {% endblock %}
 {% block content %}
 
-<h2 style="color:var(--accent-orange); margin-bottom:4px;">持仓管理</h2>
-<p class="text-muted mb-16" style="font-size:0.82rem;">跟踪您的投资组合，实时盈亏计算与 Augur 大师分析</p>
+<h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="portfolio-title">持仓管理</h1>
+<p class="text-muted mb-16" style="font-size:0.82rem;" data-i18n="portfolio-desc">跟踪您的投资组合，实时盈亏计算与 Augur 大师分析</p>
 
 <!-- Add Holding Form -->
 <div class="card mb-24">
     <div class="portfolio-header">
         <div class="portfolio-add-form">
-            <input id="pf-ticker" type="text" class="form-input" placeholder="代码" title="股票代码">
-            <input id="pf-price" type="number" class="form-input" placeholder="买入价" step="0.01" min="0">
-            <input id="pf-qty" type="number" class="form-input" placeholder="数量" step="1" min="1">
+            <label for="pf-ticker" class="sr-only" data-i18n="portfolio-ticker-ph">代码</label>
+            <input id="pf-ticker" type="text" class="form-input" data-i18n="portfolio-ticker-ph" placeholder="代码" title="Stock ticker">
+            <label for="pf-price" class="sr-only" data-i18n="portfolio-price-ph">买入价</label>
+            <input id="pf-price" type="number" class="form-input" data-i18n="portfolio-price-ph" placeholder="买入价" step="0.01" min="0">
+            <label for="pf-qty" class="sr-only" data-i18n="portfolio-qty-ph">数量</label>
+            <input id="pf-qty" type="number" class="form-input" data-i18n="portfolio-qty-ph" placeholder="数量" step="1" min="1">
+            <label for="pf-date" class="sr-only">Buy date</label>
             <input id="pf-date" type="date" class="form-input" style="width:140px;">
-            <button class="btn btn-primary" onclick="addHolding()">添加</button>
+            <button type="button" class="btn btn-primary" onclick="addHolding()" data-i18n="portfolio-add">添加</button>
         </div>
         <div class="flex gap-8">
-            <button class="btn btn-sm" onclick="runAugurAnalysis()" id="pf-analyze-btn">&#x1F9E0; Augur 分析</button>
-            <button class="btn btn-sm btn-ghost" onclick="clearPortfolio()">清空</button>
+            <button type="button" class="btn btn-sm" onclick="runAugurAnalysis()" id="pf-analyze-btn">&#x1F9E0; <span data-i18n="portfolio-analyze">Augur 分析</span></button>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="clearPortfolio()" data-i18n="portfolio-clear">清空</button>
         </div>
     </div>
 </div>
@@ -152,35 +150,36 @@
 <div class="portfolio-summary" id="pf-summary">
     <div class="card summary-card">
         <div class="data-value" id="sum-invested">--</div>
-        <div class="data-label">总投入</div>
+        <div class="data-label" data-i18n="portfolio-invested">总投入</div>
     </div>
     <div class="card summary-card">
         <div class="data-value" id="sum-current">--</div>
-        <div class="data-label">当前市值</div>
+        <div class="data-label" data-i18n="portfolio-current">当前市值</div>
     </div>
     <div class="card summary-card">
         <div class="data-value" id="sum-pnl">--</div>
-        <div class="data-label">总盈亏</div>
+        <div class="data-label" data-i18n="portfolio-pnl">总盈亏</div>
     </div>
     <div class="card summary-card">
         <div class="data-value" id="sum-return">--</div>
-        <div class="data-label">总收益率</div>
+        <div class="data-label" data-i18n="portfolio-return">总收益率</div>
     </div>
 </div>
 
 <!-- Holdings Table -->
-<div class="card mb-24" id="pf-table-card">
+<div class="card mb-24 md-table-wrap" id="pf-table-card">
     <table class="holdings-table" id="holdings-table">
+        <caption class="sr-only" data-i18n="portfolio-title">持仓管理</caption>
         <thead>
             <tr>
-                <th data-col="ticker" onclick="sortTable('ticker')">标的 <span class="sort-arrow"></span></th>
-                <th data-col="cost" onclick="sortTable('cost')">成本 <span class="sort-arrow"></span></th>
-                <th data-col="current" onclick="sortTable('current')">现价 <span class="sort-arrow"></span></th>
-                <th data-col="pnl" onclick="sortTable('pnl')">盈亏 <span class="sort-arrow"></span></th>
-                <th data-col="pnl_pct" onclick="sortTable('pnl_pct')">收益率 <span class="sort-arrow"></span></th>
-                <th data-col="days" onclick="sortTable('days')">持仓天数 <span class="sort-arrow"></span></th>
-                <th data-col="score" onclick="sortTable('score')">评分 <span class="sort-arrow"></span></th>
-                <th>操作</th>
+                <th data-col="ticker" onclick="sortTable('ticker')"><span data-i18n="portfolio-col-ticker">标的</span> <span class="sort-arrow"></span></th>
+                <th data-col="cost" onclick="sortTable('cost')"><span data-i18n="portfolio-col-cost">成本</span> <span class="sort-arrow"></span></th>
+                <th data-col="current" onclick="sortTable('current')"><span data-i18n="portfolio-col-current">现价</span> <span class="sort-arrow"></span></th>
+                <th data-col="pnl" onclick="sortTable('pnl')"><span data-i18n="portfolio-col-pnl">盈亏</span> <span class="sort-arrow"></span></th>
+                <th data-col="pnl_pct" onclick="sortTable('pnl_pct')"><span data-i18n="portfolio-col-return">收益率</span> <span class="sort-arrow"></span></th>
+                <th data-col="days" onclick="sortTable('days')"><span data-i18n="portfolio-col-days">持仓天数</span> <span class="sort-arrow"></span></th>
+                <th data-col="score" onclick="sortTable('score')"><span data-i18n="portfolio-col-score">评分</span> <span class="sort-arrow"></span></th>
+                <th data-i18n="portfolio-col-actions">操作</th>
             </tr>
         </thead>
         <tbody id="holdings-body"></tbody>
@@ -188,27 +187,30 @@
 </div>
 
 <!-- Empty State -->
-<div class="portfolio-empty card" id="pf-empty" style="display:none;">
-    <div style="font-size:2rem; margin-bottom:12px;">&#x1F4BC;</div>
-    <div>暂无持仓</div>
-    <div style="font-size:0.78rem; margin-top:8px; color:var(--text-muted);">在上方输入股票代码、买入价和数量来添加持仓</div>
+<div class="empty-state card" id="pf-empty" style="display:none;">
+    <span class="empty-state-icon">&#x1F4BC;</span>
+    <div class="empty-state-title" data-i18n="portfolio-empty-title">暂无持仓</div>
+    <p class="empty-state-desc" data-i18n="portfolio-empty-desc">在上方输入股票代码、买入价和数量来添加持仓</p>
+    <div class="empty-state-action">
+        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('pf-ticker').focus()" data-i18n="portfolio-empty-cta">添加第一笔持仓</button>
+    </div>
 </div>
 
 <!-- Charts Section -->
 <div class="chart-section" id="pf-charts" style="display:none;">
     <div class="card chart-card">
-        <h4>7日组合净值曲线</h4>
+        <h4 data-i18n="portfolio-chart-nav">7日组合净值曲线</h4>
         <div id="pf-line-chart"></div>
     </div>
     <div class="card chart-card">
-        <h4>资产配置</h4>
+        <h4 data-i18n="portfolio-chart-alloc">资产配置</h4>
         <div id="pf-donut-chart" style="display:flex; align-items:center; justify-content:center;"></div>
     </div>
 </div>
 
 <!-- Augur Analysis Results -->
 <div id="pf-analysis-results" style="display:none;" class="card mb-24">
-    <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">Augur 大师评分</div>
+    <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;" data-i18n="portfolio-analysis-title">Augur 大师评分</div>
     <div id="pf-analysis-content"></div>
 </div>
 
@@ -217,6 +219,7 @@
 <script>
 var PF_KEY = 'augur-portfolio';
 var sortState = { col: '', asc: true };
+function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 
 function getPortfolio() {
     try { return JSON.parse(localStorage.getItem(PF_KEY)) || []; }
@@ -233,10 +236,10 @@ function addHolding() {
     var qty = parseInt(document.getElementById('pf-qty').value);
     var date = document.getElementById('pf-date').value || new Date().toISOString().slice(0, 10);
 
-    if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
-    if (!/^[A-Za-z0-9.\-]{1,15}$/.test(ticker)) { showToast('无效代码格式', 'error'); return; }
-    if (isNaN(price) || price <= 0) { showToast('请输入有效买入价', 'warning'); return; }
-    if (isNaN(qty) || qty <= 0) { showToast('请输入有效数量', 'warning'); return; }
+    if (!ticker) { showToast(_t('msg-enter-ticker'), 'warning'); return; }
+    if (!/^[A-Za-z0-9.\-]{1,15}$/.test(ticker)) { showToast(_t('msg-invalid-ticker'), 'error'); return; }
+    if (isNaN(price) || price <= 0) { showToast(_t('portfolio-invalid-price'), 'warning'); return; }
+    if (isNaN(qty) || qty <= 0) { showToast(_t('portfolio-invalid-qty'), 'warning'); return; }
 
     var list = getPortfolio();
     list.push({ ticker: ticker, buyPrice: price, qty: qty, buyDate: date, currentPrice: 0, score: null, addedAt: Date.now() });
@@ -249,7 +252,7 @@ function addHolding() {
 
     renderPortfolio();
     fetchCurrentPrice(ticker);
-    showToast(ticker + ' 已添加到持仓');
+    showToast(ticker + ' ' + _t('portfolio-added'));
 }
 
 function removeHolding(idx) {
@@ -257,14 +260,14 @@ function removeHolding(idx) {
     list.splice(idx, 1);
     savePortfolio(list);
     renderPortfolio();
-    showToast('已移除');
+    showToast(_t('portfolio-removed'));
 }
 
 function clearPortfolio() {
-    if (!confirm('确定要清空所有持仓吗？')) return;
+    if (!confirm(_t('portfolio-clear-confirm'))) return;
     savePortfolio([]);
     renderPortfolio();
-    showToast('持仓已清空');
+    showToast(_t('portfolio-cleared'));
 }
 
 function fetchCurrentPrice(ticker) {
@@ -329,6 +332,9 @@ function renderPortfolio() {
         empty.style.display = 'block';
         tableCard.style.display = 'none';
         charts.style.display = 'none';
+        document.getElementById('pf-summary').style.display = 'none';
+        var analysisSection = document.getElementById('pf-analysis-results');
+        if (analysisSection) analysisSection.style.display = 'none';
         updateSummary(0, 0);
         return;
     }
@@ -336,6 +342,7 @@ function renderPortfolio() {
     empty.style.display = 'none';
     tableCard.style.display = 'block';
     charts.style.display = 'grid';
+    document.getElementById('pf-summary').style.display = 'grid';
 
     var totalInvested = 0, totalCurrent = 0;
     var rows = list.map(function(h, idx) {
@@ -445,7 +452,7 @@ function renderDonutChart(list) {
             'stroke-dashoffset="' + (-offset).toFixed(2) + '" transform="rotate(-90 ' + cx + ' ' + cy + ')"/>';
         offset += dash;
     });
-    svg += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dy="0.35em" fill="var(--text-primary)" font-size="12" font-family="var(--font-data)">' + entries.length + ' 只</text>';
+    svg += '<text x="' + cx + '" y="' + cy + '" text-anchor="middle" dy="0.35em" fill="var(--text-primary)" font-size="12" font-family="var(--font-data)">' + entries.length + ' ' + _t('portfolio-holdings-unit') + '</text>';
     svg += '</svg>';
 
     var legend = '<div style="margin-left:12px; font-size:0.72rem;">';
@@ -469,7 +476,7 @@ function renderLineChart(list) {
     var sparks = {};
     var pending = tickers.length;
 
-    if (pending === 0) { container.innerHTML = '<span class="text-muted">无数据</span>'; return; }
+    if (pending === 0) { container.innerHTML = '<span class="text-muted">' + _t('portfolio-no-data') + '</span>'; return; }
 
     tickers.forEach(function(t) {
         fetch('/api/sparkline/' + t)
@@ -491,7 +498,7 @@ function drawLineChart(sparks, list, container) {
     // Compute weighted portfolio value per day
     var maxLen = 0;
     Object.values(sparks).forEach(function(p) { if (p.length > maxLen) maxLen = p.length; });
-    if (maxLen < 2) { container.innerHTML = '<span class="text-muted">数据不足</span>'; return; }
+    if (maxLen < 2) { container.innerHTML = '<span class="text-muted">' + _t('portfolio-insufficient-data') + '</span>'; return; }
 
     var totalQty = {};
     list.forEach(function(h) { totalQty[h.ticker] = (totalQty[h.ticker] || 0) + h.qty; });
@@ -535,10 +542,14 @@ function drawLineChart(sparks, list, container) {
 
 function runAugurAnalysis() {
     var list = getPortfolio();
-    if (!list.length) { showToast('持仓为空', 'warning'); return; }
+    if (!list.length) { showToast(_t('portfolio-empty-warning'), 'warning'); return; }
 
     var btn = document.getElementById('pf-analyze-btn');
-    if (btn) { btn.disabled = true; btn.textContent = '分析中...'; }
+    if (btn) {
+        btn.disabled = true;
+        var span = btn.querySelector('span');
+        if (span) span.textContent = _t('btn-analyzing');
+    }
     showProgress();
 
     var tickers = [];
@@ -563,7 +574,7 @@ function runAugurAnalysis() {
 
 function onAnalysisDone(results) {
     var btn = document.getElementById('pf-analyze-btn');
-    if (btn) { btn.disabled = false; btn.textContent = '\u{1F9E0} Augur \u5206\u6790'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '&#x1F9E0; <span data-i18n="portfolio-analyze">' + _t('portfolio-analyze') + '</span>'; }
     hideProgress();
 
     // Update scores in portfolio
@@ -582,8 +593,8 @@ function onAnalysisDone(results) {
     if (!section || !content) return;
 
     section.style.display = 'block';
-    var html = '<table class="md-table" style="width:100%;"><thead><tr>' +
-        '<th>标的</th><th>信号</th><th>评分</th><th>置信度</th>' +
+    var html = '<table class="md-table" style="width:100%;"><caption class="sr-only">' + escapeHtml(_t('portfolio-analysis-title')) + '</caption><thead><tr>' +
+        '<th scope="col">' + escapeHtml(_t('portfolio-col-ticker')) + '</th><th scope="col">' + escapeHtml(_t('signals-col-signal')) + '</th><th scope="col">' + escapeHtml(_t('portfolio-col-score')) + '</th><th scope="col">' + escapeHtml(_t('index-label-confidence')) + '</th>' +
         '</tr></thead><tbody>';
 
     Object.keys(results).forEach(function(t) {
@@ -601,7 +612,7 @@ function onAnalysisDone(results) {
 
     html += '</tbody></table>';
     content.innerHTML = html;
-    showToast('Augur 分析完成');
+    showToast(_t('portfolio-analysis-done'));
 }
 
 // Initialize

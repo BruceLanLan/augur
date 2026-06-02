@@ -6,7 +6,7 @@ Provides a plugin architecture for extending Augur functionality.
 Plugins are discovered via setuptools entry_points (group 'augur.plugins').
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Dict, List, Optional
 import importlib.metadata
 
@@ -62,11 +62,9 @@ class PluginManager:
         try:
             if hasattr(importlib.metadata, 'entry_points'):
                 eps = importlib.metadata.entry_points()
-                # Python 3.9 returns a dict, Python 3.10+ returns SelectableGroups
-                if isinstance(eps, dict):
-                    group_eps = eps.get(self.ENTRY_POINT_GROUP, [])
+                if hasattr(eps, "select"):
+                    group_eps = eps.select(group=self.ENTRY_POINT_GROUP)
                 else:
-                    # Python 3.10+
                     group_eps = eps.get(self.ENTRY_POINT_GROUP, [])
         except Exception:
             group_eps = []

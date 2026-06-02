@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List
 
 from augur.personas.base import AgentResponse, BaseAgent, MarketContext, SignalType
 
@@ -146,8 +146,9 @@ Philosophy: {', '.join(self.philosophy)}
             )
 
         total_score = sum(factors[k] * self.scoring_weights.get(k, 1.0 / len(factors)) for k in factors)
+        total_score = max(0.0, min(10.0, total_score))
         avg_score = sum(factors.values()) / len(factors)
-        signal = self._calculate_signal(avg_score)
+        signal = self._calculate_signal(total_score)
         confidence = min(0.80, 0.4 + avg_score / 20.0)
 
         bullish_th = self.thresholds.get("bullish_threshold", 7.0)
@@ -161,7 +162,7 @@ Philosophy: {', '.join(self.philosophy)}
 {factor_lines}
 
 **Score: {total_score:.1f}/10**
-Signal: {'Bullish' if avg_score >= bullish_th else 'Bearish' if avg_score <= bearish_th else 'Neutral'}
+Signal: {'Bullish' if total_score >= bullish_th else 'Bearish' if total_score <= bearish_th else 'Neutral'}
 """
         coverage_confidence = min(1.0, len(self._factor_defs) / max(1, len(self.scoring_weights)))
 

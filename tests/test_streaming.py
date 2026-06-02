@@ -5,7 +5,7 @@ import asyncio
 import pytest
 from unittest.mock import AsyncMock, MagicMock
 
-from augur.streaming import PriceStreamer, DEFAULT_TICKERS, _BASE_PRICES
+from augur.streaming import PriceStreamer, DEFAULT_TICKERS, _SEED_PRICES
 
 
 def test_price_streamer_init():
@@ -39,12 +39,12 @@ def test_price_streamer_get_current_prices():
         assert p["price"] > 0
 
 
-def test_price_streamer_generate_price_update():
+def test_price_streamer_apply_random_walk():
     """Test that price updates produce valid data with random walk."""
     streamer = PriceStreamer(tickers=["AAPL"])
     initial_price = streamer._prices["AAPL"]["price"]
 
-    update = streamer._generate_price_update("AAPL")
+    update = streamer._apply_random_walk("AAPL")
     assert update["ticker"] == "AAPL"
     assert update["price"] > 0
     assert isinstance(update["change"], float)
@@ -56,8 +56,8 @@ def test_price_streamer_generate_price_update():
 def test_price_streamer_initialize_prices():
     """Test that initial prices are set from base prices."""
     streamer = PriceStreamer(tickers=["AAPL", "NVDA"])
-    assert streamer._prices["AAPL"]["price"] == _BASE_PRICES["AAPL"]
-    assert streamer._prices["NVDA"]["price"] == _BASE_PRICES["NVDA"]
+    assert streamer._prices["AAPL"]["price"] == _SEED_PRICES["AAPL"]
+    assert streamer._prices["NVDA"]["price"] == _SEED_PRICES["NVDA"]
 
 
 def test_price_streamer_connect_disconnect():

@@ -34,7 +34,7 @@ Usage:
 
 import random
 import time
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Any
 
 
 # Persona response templates: each agent has a distinct speaking style
@@ -192,6 +192,9 @@ def _detect_topic(message: str) -> str:
     return "general"
 
 
+_MAX_HISTORY_ENTRIES = 200
+
+
 class ChatEngine:
     """
     AI Natural Language Chat Engine.
@@ -203,6 +206,11 @@ class ChatEngine:
     def __init__(self):
         """Initialize the ChatEngine."""
         self._history: List[Dict[str, Any]] = []
+
+    def _append_history(self, entry: Dict[str, Any]) -> None:
+        self._history.append(entry)
+        if len(self._history) > _MAX_HISTORY_ENTRIES:
+            self._history = self._history[-_MAX_HISTORY_ENTRIES:]
 
     def get_response(self, message: str, agent_id: str = None) -> Dict[str, Any]:
         """
@@ -255,12 +263,12 @@ class ChatEngine:
         }
 
         # Store in history
-        self._history.append({
+        self._append_history({
             "role": "user",
             "message": message,
             "timestamp": time.time(),
         })
-        self._history.append({
+        self._append_history({
             "role": "assistant",
             "agent_id": agent_id,
             "message": response_text,

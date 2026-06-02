@@ -23,20 +23,21 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    <div class="global-progress-bar" id="global-progress-bar"></div>
+    <a href="#main-content" class="skip-link" data-i18n="a11y-skip-main">跳到主内容</a>
+    <div class="global-progress-bar" id="global-progress-bar" role="progressbar" aria-hidden="true"></div>
     <div class="app-layout">
         <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar">
+        <aside class="sidebar" id="sidebar" aria-label="Main navigation">
             <div class="sidebar-logo">
                 <img class="logo-icon" src="/static/images/augur-logo-64.png" alt="Augur" width="32" height="32">
                 <span class="logo-text">Augur</span>
             </div>
 
-            <button class="sidebar-collapse-btn" onclick="toggleSidebar()" title="折叠侧边栏" aria-label="折叠侧边栏">
+            <button type="button" class="sidebar-collapse-btn" onclick="toggleSidebar()" data-i18n-aria="a11y-collapse-sidebar" aria-label="折叠侧边栏">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
 
-            <nav class="sidebar-nav">
+            <nav class="sidebar-nav" aria-label="Primary">
                 <!-- 分析 Group -->
                 <div class="nav-group">
                     <div class="nav-group-label" data-i18n="group-analysis">分析</div>
@@ -62,7 +63,7 @@
                     </a>
                     <a class="nav-item" href="/portfolio" data-page="portfolio">
                         <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 3v4M8 3v4M2 11h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span data-i18n="nav-portfolio">持仓</span>
+                        <span data-i18n="nav-portfolio">组合分析</span>
                     </a>
                     <a class="nav-item" href="/backtest" data-page="backtest">
                         <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/><path d="M3 12h1M12 3v1M21 12h1M12 21v1"/></svg>
@@ -72,30 +73,30 @@
 
                 <!-- v8 Group -->
                 <div class="nav-group">
-                    <div class="nav-group-label">v8 功能</div>
+                    <div class="nav-group-label" data-i18n="group-v8">v8 功能</div>
                     <a class="nav-item" href="/chat" data-page="chat">
-                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                        <span>AI 对话</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        <span data-i18n="nav-chat">AI 对话</span>
                     </a>
                     <a class="nav-item" href="/optimizer" data-page="optimizer">
-                        <svg viewBox="0 0 24 24"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span>组合优化</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <span data-i18n="nav-optimizer">组合优化</span>
                     </a>
                     <a class="nav-item" href="/compare" data-page="compare">
-                        <svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 3v18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                        <span>大师对决</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 3v18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                        <span data-i18n="nav-compare">大师对决</span>
                     </a>
                     <a class="nav-item" href="/debate" data-page="debate">
-                        <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span>辩论模式</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <span data-i18n="nav-debate">辩论模式</span>
                     </a>
                     <a class="nav-item" href="/history" data-page="history">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span>历史记录</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                        <span data-i18n="nav-history">历史记录</span>
                     </a>
                     <a class="nav-item" href="/performance" data-page="performance">
-                        <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                        <span>大师排行</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                        <span data-i18n="nav-performance">大师排行</span>
                     </a>
                 </div>
 
@@ -123,10 +124,10 @@
             </nav>
 
             <div class="sidebar-footer">
-                <button onclick="toggleLanguage()" class="lang-toggle-btn" title="切换语言" aria-label="Switch Language">
+                <button type="button" onclick="toggleLanguage()" class="lang-toggle-btn" data-i18n-aria="a11y-toggle-lang" aria-label="切换语言">
                     <span id="lang-label">EN</span>
                 </button>
-                <button class="theme-toggle-btn" onclick="toggleTheme()" title="切换主题" aria-label="切换深色/浅色主题">
+                <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" data-i18n-aria="a11y-toggle-theme" aria-label="切换深色/浅色主题">
                     <span id="theme-icon">&#x1F319;</span>
                     <span id="theme-label" data-i18n="theme-dark">深色</span>
                 </button>
@@ -140,21 +141,21 @@
         </aside>
 
         <!-- Mobile backdrop -->
-        <div class="mobile-backdrop" id="backdrop" onclick="closeSidebar()"></div>
+        <div class="mobile-backdrop" id="backdrop" onclick="closeSidebar()" aria-hidden="true"></div>
 
         <!-- Mobile hamburger -->
-        <button class="hamburger-btn" onclick="openSidebar()" aria-label="打开导航菜单">
+        <button type="button" class="hamburger-btn" onclick="openSidebar()" data-i18n-aria="a11y-open-menu" aria-label="打开导航菜单" aria-expanded="false" aria-controls="sidebar">
             <svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
 
         <!-- Main content -->
-        <main class="app-main">
+        <main class="app-main" id="main-content" tabindex="-1">
             {% block content %}{% endblock %}
         </main>
     </div>
 
     <!-- Bottom nav for mobile -->
-    <nav class="bottom-nav" id="bottom-nav">
+    <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile navigation">
         <a class="bottom-nav-item" href="/" data-page="home">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             <span data-i18n="bottom-home">首页</span>
@@ -182,7 +183,7 @@
     </nav>
 
     <!-- Toast container -->
-    <div class="toast-container" id="toast-container" style="position:fixed;z-index:9999;top:16px;right:16px;"></div>
+    <div class="toast-container" id="toast-container" role="status" aria-live="polite" aria-atomic="true" style="position:fixed;z-index:9999;top:16px;right:16px;"></div>
 
     <script>
     // Sidebar toggle
@@ -193,10 +194,14 @@
     function openSidebar() {
         document.getElementById('sidebar').classList.add('open');
         document.getElementById('backdrop').classList.add('visible');
+        var hb = document.querySelector('.hamburger-btn');
+        if (hb) hb.setAttribute('aria-expanded', 'true');
     }
     function closeSidebar() {
         document.getElementById('sidebar').classList.remove('open');
         document.getElementById('backdrop').classList.remove('visible');
+        var hb = document.querySelector('.hamburger-btn');
+        if (hb) hb.setAttribute('aria-expanded', 'false');
     }
 
     // Theme toggle
@@ -220,7 +225,14 @@
         var icon = document.getElementById('theme-icon');
         var label = document.getElementById('theme-label');
         if (icon) icon.textContent = isDark ? '\u{1F319}' : '\u2600\uFE0F';
-        if (label) label.textContent = isDark ? '\u6DF1\u8272' : '\u6D45\u8272';
+        if (label) {
+            var dict = window.I18N && window.I18N[window._augurLang || 'zh'];
+            if (dict) {
+                label.textContent = isDark ? (dict['theme-dark'] || '\u6DF1\u8272') : (dict['theme-light'] || '\u6D45\u8272');
+            } else {
+                label.textContent = isDark ? '\u6DF1\u8272' : '\u6D45\u8272';
+            }
+        }
     }
 
     // Restore theme on load
@@ -273,6 +285,12 @@
             } else if (href === '/' && path === '/') {
                 item.classList.add('active');
             }
+        });
+        // Close mobile sidebar after navigation tap
+        document.querySelectorAll('.nav-item').forEach(function(item) {
+            item.addEventListener('click', function() {
+                if (window.innerWidth <= 768) closeSidebar();
+            });
         });
     });
 
@@ -403,6 +421,39 @@
         var div = document.createElement('div');
         div.appendChild(document.createTextNode(str));
         return div.innerHTML;
+    }
+
+    // Inline ticker validation with visual feedback (hero + stocks pages)
+    function validateTickerInput(inputId, hintId) {
+        var input = document.getElementById(inputId);
+        if (!input) return null;
+        var hint = hintId ? document.getElementById(hintId) : null;
+        var ticker = (input.value || '').trim().toUpperCase();
+        var msgEnter = (typeof t === 'function' ? t('msg-enter-ticker') : '请输入股票代码');
+        var msgInvalid = (typeof t === 'function' ? t('msg-invalid-ticker') : '无效的股票代码格式');
+        if (!ticker) {
+            input.classList.add('is-invalid');
+            input.setAttribute('aria-invalid', 'true');
+            if (hint) { hint.textContent = msgEnter; hint.style.display = 'block'; }
+            showToast(msgEnter, 'warning');
+            input.focus();
+            return null;
+        }
+        if (!/^[A-Za-z0-9.\-]{1,15}$/.test(ticker)) {
+            input.classList.add('is-invalid');
+            input.setAttribute('aria-invalid', 'true');
+            if (hint) { hint.textContent = msgInvalid; hint.style.display = 'block'; }
+            showToast(msgInvalid, 'error');
+            input.focus();
+            return null;
+        }
+        clearTickerInvalid(inputId, hintId);
+        return ticker;
+    }
+    function clearTickerInvalid(inputId, hintId) {
+        var input = document.getElementById(inputId);
+        if (input) { input.classList.remove('is-invalid'); input.removeAttribute('aria-invalid'); }
+        if (hintId) { var h = document.getElementById(hintId); if (h) h.style.display = 'none'; }
     }
 
     // Lightweight Markdown renderer (handles bold, headers, bullets, checkmarks)
@@ -567,7 +618,7 @@
         timeoutMs = timeoutMs || 90000;
         // Auto-attach API token from localStorage if available
         try {
-            var token = localStorage.getItem('augur_api_token');
+            var token = localStorage.getItem('augur_api_token') || localStorage.getItem('augur-token');
             if (token && url.indexOf('/api/') !== -1) {
                 if (!options.headers) options.headers = {};
                 if (options.headers instanceof Headers) {
@@ -700,17 +751,17 @@
                     if (r.ok) {
                         indicator.classList.add('connected');
                         indicator.classList.remove('disconnected');
-                        statusText.textContent = '系统就绪';
+                        statusText.textContent = (typeof t === 'function') ? t('status-connected') : '系统就绪';
                     } else {
                         indicator.classList.remove('connected');
                         indicator.classList.add('disconnected');
-                        statusText.textContent = '连接异常';
+                        statusText.textContent = (typeof t === 'function') ? t('status-error') : '连接异常';
                     }
                 })
                 .catch(function() {
                     indicator.classList.remove('connected');
                     indicator.classList.add('disconnected');
-                    statusText.textContent = '连接断开';
+                    statusText.textContent = (typeof t === 'function') ? t('status-disconnected') : '连接断开';
                 });
         }
 

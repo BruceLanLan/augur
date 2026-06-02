@@ -13,7 +13,6 @@ import sys
 import os
 import re
 import json
-import hmac
 import math
 import hashlib
 import logging
@@ -52,6 +51,14 @@ from augur.report import generate_report
 
 from augur.config import get_config, set_config, save_config, reset_config
 from augur.errors import api_error_response
+from augur.auth import (
+    authenticate_request,
+    authenticate_websocket,
+    auth_required,
+    check_auth_rate_limit,
+    extract_bearer_token,
+    verify_jwt,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -136,26 +143,25 @@ app.add_middleware(
 
 # ============ API Token Authentication Middleware ============
 
-_AUTH_EXEMPT_PATHS = {"/api/auth/verify", "/health", "/api/health"}
+_AUTH_EXEMPT_PATHS = {
+    "/api/auth/verify",
+    "/api/auth/register",
+    "/api/auth/login",
+    "/health",
+    "/api/health",
+}
 
 
 @app.middleware("http")
 async def api_token_auth_middleware(request: Request, call_next):
-    """Enforce Bearer token auth on /api/* paths when AUGUR_API_TOKEN is set."""
-    augur_token = os.environ.get("AUGUR_API_TOKEN", "")
-    if augur_token and request.url.path.startswith("/api/"):
-        if request.url.path not in _AUTH_EXEMPT_PATHS:
-            auth_header = request.headers.get("authorization", "")
-            if not auth_header:
+    """Enforce Bearer token or JWT auth on /api/* when configured."""
+    if request.url.path.startswith("/api/") and request.url.path not in _AUTH_EXEMPT_PATHS:
+        if auth_required():
+            ok, _mode = authenticate_request(request)
+            if not ok:
                 return JSONResponse(
                     status_code=401,
                     content={"detail": "Authentication required", "code": "AUTH_REQUIRED"},
-                )
-            parts = auth_header.split(" ", 1)
-            if len(parts) != 2 or parts[0].lower() != "bearer" or parts[1] != augur_token:
-                return JSONResponse(
-                    status_code=401,
-                    content={"detail": "Invalid token", "code": "INVALID_TOKEN"},
                 )
     response = await call_next(request)
     return response
@@ -169,6 +175,7 @@ _ip_rate_lock = threading.Lock()
 
 @app.middleware("http")
 async def rate_limit_middleware(request: Request, call_next):
+    remaining = None
     if request.url.path.startswith("/api/"):
         client_ip = request.client.host if request.client else "unknown"
         now = _time.time()
@@ -177,8 +184,13 @@ async def rate_limit_middleware(request: Request, call_next):
                 _ip_rate_limits[client_ip] = []
             _ip_rate_limits[client_ip] = [t for t in _ip_rate_limits[client_ip] if now - t < 60]
             if len(_ip_rate_limits[client_ip]) >= 60:
-                return JSONResponse(status_code=429, content={"detail": "Rate limit exceeded. Max 60 requests per minute."})
+                return JSONResponse(
+                    status_code=429,
+                    content={"detail": "Rate limit exceeded. Max 60 requests per minute."},
+                    headers={"X-RateLimit-Remaining": "0"},
+                )
             _ip_rate_limits[client_ip].append(now)
+            remaining = str(max(0, 60 - len(_ip_rate_limits[client_ip])))
             # Periodic eviction of stale IP entries to prevent unbounded memory growth
             if len(_ip_rate_limits) > 10000:
                 stale_ips = [
@@ -188,6 +200,8 @@ async def rate_limit_middleware(request: Request, call_next):
                 for ip in stale_ips:
                     del _ip_rate_limits[ip]
     response = await call_next(request)
+    if remaining is not None and response.status_code != 429:
+        response.headers["X-RateLimit-Remaining"] = remaining
     return response
 
 
@@ -1183,23 +1197,31 @@ async def api_update_custom_persona(agent_id: str, body: CustomPersonaBody):
 
 @app.get("/api/auth/verify", summary="验证API Token")
 async def api_auth_verify(request: Request):
-    """验证 API Token 有效性。当 AUGUR_API_TOKEN 未设置时返回 open 模式。"""
-    augur_token = os.environ.get("AUGUR_API_TOKEN", "")
-    if not augur_token:
+    """验证 API Token 或 JWT 有效性。未启用认证时返回 open 模式。"""
+    if not auth_required():
         return {"status": "ok", "authenticated": True, "mode": "open"}
-    auth_header = request.headers.get("authorization", "")
-    if not auth_header:
+    ok, mode = authenticate_request(request)
+    if not ok:
         return JSONResponse(
             status_code=401,
             content={"detail": "Authentication required", "code": "AUTH_REQUIRED"},
         )
-    parts = auth_header.split(" ", 1)
-    if len(parts) != 2 or parts[0].lower() != "bearer" or parts[1] != augur_token:
-        return JSONResponse(
-            status_code=401,
-            content={"detail": "Invalid token", "code": "INVALID_TOKEN"},
-        )
-    return {"status": "ok", "authenticated": True, "mode": "token"}
+    return {"status": "ok", "authenticated": True, "mode": mode}
+
+
+@app.get("/api/auth/me", summary="获取当前登录用户")
+async def api_auth_me(request: Request):
+    """Return the authenticated multi-user JWT identity."""
+    from augur.users import is_multi_user_enabled
+    if not is_multi_user_enabled():
+        raise HTTPException(status_code=403, detail="Set AUGUR_MULTI_USER=1 to enable multi-user mode.")
+    token = extract_bearer_token(request.headers.get("authorization", ""))
+    if not token:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    payload = verify_jwt(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return {"status": "ok", "user_id": payload["user_id"], "username": payload["username"]}
 
 
 @app.get("/api/schema/persona", summary="获取Persona YAML结构")
@@ -2425,14 +2447,17 @@ async def history_page(request: Request):
 @app.get("/api/history")
 async def api_list_history(limit: int = 50, page: Optional[int] = None, per_page: int = 20):
     from augur.history import list_history, count_history
+    if limit < 1 or limit > 500:
+        raise HTTPException(status_code=400, detail="limit must be between 1 and 500")
     if page is not None:
         if page < 1 or per_page < 1:
             raise HTTPException(status_code=400, detail="page and per_page must be >= 1")
+        if per_page > 100:
+            raise HTTPException(status_code=400, detail="per_page must be <= 100")
         total = count_history()
         total_pages = math.ceil(total / per_page) if per_page > 0 else 0
         records = list_history(page=page, per_page=per_page)
         return {"items": records, "total": total, "page": page, "per_page": per_page, "pages": total_pages}
-    from augur.history import list_history
     records = list_history(limit=limit)
     return {"records": records, "count": len(records)}
 
@@ -2530,6 +2555,8 @@ async def api_debate(body: DebateBody):
         raise HTTPException(status_code=400, detail="Invalid ticker format")
     if len(body.agent_ids) < 2 or len(body.agent_ids) > 4:
         raise HTTPException(status_code=400, detail="需要2-4个投资人")
+    if len(body.agent_ids) != len(set(body.agent_ids)):
+        raise HTTPException(status_code=400, detail="投资人不能重复")
     registry = get_registry()
     for aid in body.agent_ids:
         if not registry.get(aid):
@@ -2568,6 +2595,9 @@ async def api_debate(body: DebateBody):
 
 @app.websocket("/ws/analyze/{ticker}")
 async def ws_analyze(websocket: WebSocket, ticker: str):
+    if not _ws_api_token_ok(websocket):
+        await websocket.close(code=1008, reason="Unauthorized")
+        return
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         await websocket.close(code=1008, reason="Invalid ticker format")
         return
@@ -2616,25 +2646,37 @@ def _get_price_streamer():
     return _price_streamer
 
 
+def _ws_api_token_ok(websocket: WebSocket) -> bool:
+    """WebSocket handshake bypasses HTTP middleware; enforce auth here."""
+    return authenticate_websocket(websocket)
+
+
 @app.websocket("/ws/prices")
 async def ws_prices(websocket: WebSocket):
+    if not _ws_api_token_ok(websocket):
+        await websocket.close(code=1008, reason="Unauthorized")
+        return
     streamer = _get_price_streamer()
-    await websocket.accept()
-    await streamer.connect(websocket)
-    if not streamer.is_running:
-        await streamer.start()
+    if not await streamer.connect(websocket):
+        await websocket.close(code=1008, reason="Too many connections")
+        return
+    registered = True
     try:
-        initial = {"type": "price_update", "prices": streamer.get_current_prices(), "timestamp": _time.time()}
-        await websocket.send_text(json.dumps(initial))
-    except Exception:
-        pass
-    try:
+        await websocket.accept()
+        if not streamer.is_running:
+            await streamer.start()
+        try:
+            initial = {"type": "price_update", "prices": streamer.get_current_prices(), "timestamp": _time.time()}
+            await websocket.send_text(json.dumps(initial))
+        except Exception:
+            pass
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
-        await streamer.disconnect(websocket)
-    except Exception:
-        await streamer.disconnect(websocket)
+        pass
+    finally:
+        if registered:
+            await streamer.disconnect(websocket)
 
 
 # ============ v8: Sentiment API ============
@@ -2704,10 +2746,13 @@ async def register_page(request: Request):
 
 
 @app.post("/api/auth/register")
-async def api_auth_register(body: AuthRegisterBody):
+async def api_auth_register(body: AuthRegisterBody, request: Request):
     from augur.users import UserManager, is_multi_user_enabled
     if not is_multi_user_enabled():
         raise HTTPException(status_code=403, detail="Set AUGUR_MULTI_USER=1 to enable multi-user mode.")
+    client_ip = request.client.host if request.client else "unknown"
+    if not check_auth_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail="Too many auth attempts. Try again later.")
     if not body.username or not 3 <= len(body.username) <= 32 or not re.match(r'^[a-zA-Z0-9_]+$', body.username):
         raise HTTPException(status_code=400, detail="Username: 3-32 chars, letters/numbers/underscore only.")
     if not body.password or not 6 <= len(body.password) <= 128:
@@ -2720,10 +2765,13 @@ async def api_auth_register(body: AuthRegisterBody):
 
 
 @app.post("/api/auth/login")
-async def api_auth_login(body: AuthLoginBody):
+async def api_auth_login(body: AuthLoginBody, request: Request):
     from augur.users import UserManager, is_multi_user_enabled
     if not is_multi_user_enabled():
         raise HTTPException(status_code=403, detail="Set AUGUR_MULTI_USER=1 to enable multi-user mode.")
+    client_ip = request.client.host if request.client else "unknown"
+    if not check_auth_rate_limit(client_ip):
+        raise HTTPException(status_code=429, detail="Too many auth attempts. Try again later.")
     if not body.username or len(body.username) > 32 or not body.password or len(body.password) > 128:
         raise HTTPException(status_code=400, detail="Invalid credentials.")
     token = UserManager().authenticate(body.username, body.password)
@@ -2800,13 +2848,46 @@ async def api_optimize(body: OptimizeBody):
     for t in body.tickers:
         if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', t):
             raise HTTPException(status_code=400, detail=f"Invalid ticker: {t}")
+
     returns_data = {}
+    data_source = "mock"
+
+    # Phase A: try to fetch real 3-month daily returns from yfinance
+    try:
+        from augur.data import fetch_history
+        real_count = 0
+        for ticker in body.tickers:
+            hist = fetch_history(ticker.upper(), period="3mo")
+            if hist and len(hist) >= 10:
+                closes = [h["close"] for h in hist if h.get("close") and h["close"] > 0]
+                if len(closes) >= 10:
+                    daily_returns = [
+                        (closes[i] - closes[i - 1]) / closes[i - 1]
+                        for i in range(1, len(closes))
+                    ]
+                    returns_data[ticker.upper()] = daily_returns
+                    real_count += 1
+        if real_count == len(body.tickers):
+            data_source = "live"
+        elif real_count > 0:
+            data_source = "partial"
+    except Exception:
+        pass
+
+    # Fallback: deterministic mock for any ticker still missing
     for ticker in body.tickers:
-        seed = int(hashlib.sha256(ticker.upper().encode()).hexdigest()[:8], 16)
-        rng = random.Random(seed)
-        returns_data[ticker.upper()] = [rng.gauss(0.001, 0.02) for _ in range(60)]
+        if ticker.upper() not in returns_data:
+            seed = int(hashlib.sha256(ticker.upper().encode()).hexdigest()[:8], 16)
+            rng = random.Random(seed)
+            returns_data[ticker.upper()] = [rng.gauss(0.001, 0.02) for _ in range(60)]
+
     result = PortfolioOptimizer().optimize(returns_data, risk_free_rate=body.risk_free_rate)
-    return {"status": "ok", "portfolio": result.to_dict(), "tickers": [t.upper() for t in body.tickers]}
+    return {
+        "status": "ok",
+        "portfolio": result.to_dict(),
+        "tickers": [t.upper() for t in body.tickers],
+        "data_source": data_source,
+    }
 
 
 # ============ v8: I18n API ============

@@ -255,15 +255,31 @@ def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     results: Dict[str, MarketContext] = {}
+    norm_to_origs: Dict[str, List[str]] = {}
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        future_to_ticker = {executor.submit(fetch_market_context, t): t for t in tickers}
-        for future in as_completed(future_to_ticker):
-            ticker = future_to_ticker[future]
+        future_to_ticker = {}
+        for t in tickers:
             try:
-                results[ticker] = future.result()
+                norm = _normalize_ticker(t)
+            except ValueError as exc:
+                logger.warning("batch fetch skipped invalid ticker %s: %s", t, exc)
+                ctx = MarketContext(ticker=t.strip().upper() or "INVALID")
+                setattr(ctx, "data_source", "error")
+                results[t] = ctx
+                continue
+            norm_to_origs.setdefault(norm, []).append(t)
+            if norm not in future_to_ticker.values():
+                future_to_ticker[executor.submit(fetch_market_context, norm)] = norm
+        for future in as_completed(future_to_ticker):
+            norm = future_to_ticker[future]
+            try:
+                ctx = future.result()
             except Exception as e:
-                logger.warning("batch fetch failed for %s: %s", ticker, e)
-                results[ticker] = MarketContext(ticker=ticker.upper())
+                logger.warning("batch fetch failed for %s: %s", norm, e)
+                ctx = MarketContext(ticker=norm)
+                setattr(ctx, "data_source", "error")
+            for orig in norm_to_origs.get(norm, []):
+                results[orig] = ctx
     return results
 
 
@@ -281,7 +297,12 @@ def fetch_history(ticker: str, period: str = "1y", force_refresh: bool = False) 
     """
     from augur.datasources.base import safe_num
 
-    ticker = _normalize_ticker(ticker)
+    try:
+        ticker = _normalize_ticker(ticker)
+    except ValueError as exc:
+        logger.warning("invalid ticker rejected for history: %s", exc)
+        return []
+
     cache_key = f"hist:{ticker}:{period}"
     if not force_refresh:
         cached = _cache_get(cache_key)

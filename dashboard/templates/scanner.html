@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}市场扫描器 - Augur{% endblock %}
+{% block title %}Scanner - Augur{% endblock %}
 {% block extra_head %}
 <style>
 /* Scanner-specific styles */
@@ -23,11 +23,11 @@
 </style>
 {% endblock %}
 {% block content %}
-<div class="section-title" data-i18n="scanner_title">市场扫描器</div>
+<h1 class="section-title" style="margin-top:0;" data-i18n="scanner_title">市场扫描器</h1>
 <p class="text-muted mb-16" data-i18n="scanner_desc">选择预设列表或输入自定义股票代码，一键让18位大师快速评分</p>
 
 <!-- Preset buttons -->
-<div class="scanner-presets">
+<div class="scanner-presets" role="group" aria-label="Scanner presets">
     <button class="preset-chip" onclick="loadPreset('tech_giants')" data-i18n="scanner_preset_tech">科技巨头</button>
     <button class="preset-chip" onclick="loadPreset('china_stocks')" data-i18n="scanner_preset_china">中概股</button>
     <button class="preset-chip" onclick="loadPreset('crypto')" data-i18n="scanner_preset_crypto">加密货币</button>
@@ -35,17 +35,24 @@
 
 <!-- Custom input -->
 <div class="card mb-16" style="padding:16px;">
-    <label class="data-label" data-i18n="scanner_custom_label">自定义标的 (逗号分隔)</label>
-    <textarea class="scanner-input" id="scanner-tickers" placeholder="AAPL, NVDA, TSLA, BTC-USD"></textarea>
+    <label class="data-label" for="scanner-tickers" data-i18n="scanner_custom_label">自定义标的 (逗号分隔)</label>
+    <textarea class="scanner-input" id="scanner-tickers" placeholder="AAPL, NVDA, TSLA, BTC-USD" aria-describedby="scanner-limit-hint"></textarea>
     <div class="flex items-center justify-between mt-12">
-        <span class="text-muted" style="font-size:0.72rem;" data-i18n="scanner_limit">最多20个标的</span>
-        <button class="btn btn-primary" onclick="runScanner()" id="scanner-run-btn" data-i18n="scanner_run">开始扫描</button>
+        <span id="scanner-limit-hint" class="text-muted" style="font-size:0.72rem;" data-i18n="scanner_limit">最多20个标的</span>
+        <button type="button" class="btn btn-primary" onclick="runScanner()" id="scanner-run-btn" data-i18n="scanner_run">开始扫描</button>
     </div>
+</div>
+
+<!-- Idle empty state -->
+<div id="scanner-idle" class="empty-state card mb-16">
+    <span class="empty-state-icon">&#x1F50D;</span>
+    <div class="empty-state-title" data-i18n="scanner-empty-title">选择预设或输入代码开始扫描</div>
+    <p class="empty-state-desc" data-i18n="scanner-empty-desc">18 位大师将对每个标的独立评分，生成共识热力图</p>
 </div>
 
 <!-- Loading -->
 <div id="scanner-loading" style="display:none;" class="mb-16">
-    <p class="loading-pulse text-orange text-mono" id="scanner-progress">正在扫描...</p>
+    <p class="loading-pulse text-orange text-mono" id="scanner-progress" data-i18n="scanner-loading">正在扫描...</p>
 </div>
 
 <!-- Results -->
@@ -62,9 +69,12 @@
 </div>
 
 <!-- Error -->
-<div id="scanner-error" class="error-panel" style="display:none;">
-    <div class="error-panel-title">扫描失败</div>
+<div id="scanner-error" class="error-panel" style="display:none;" role="alert" aria-live="polite">
+    <div class="error-panel-title" data-i18n="scanner-error-title">扫描失败</div>
     <div class="error-panel-msg" id="scanner-error-msg"></div>
+    <div class="error-panel-retry">
+        <button class="btn btn-sm" onclick="runScanner()" data-i18n="btn-retry">重试</button>
+    </div>
 </div>
 {% endblock %}
 {% block extra_scripts %}
@@ -74,6 +84,8 @@ var PRESETS = {
     china_stocks: ['BABA','PDD','JD','BIDU','NIO','LI','XPEV'],
     crypto: ['BTC-USD','ETH-USD','SOL-USD','DOGE-USD']
 };
+
+function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 
 // Agent short names for table headers
 var AGENT_SHORT = {
@@ -88,22 +100,26 @@ function loadPreset(name) {
     if (ta && PRESETS[name]) {
         ta.value = PRESETS[name].join(', ');
     }
-    // Highlight active preset
     document.querySelectorAll('.preset-chip').forEach(function(el) { el.classList.remove('active'); });
-    event.target.classList.add('active');
+    if (event && event.target) event.target.classList.add('active');
 }
 
 function runScanner() {
     var ta = document.getElementById('scanner-tickers');
     var text = (ta ? ta.value : '').trim();
-    if (!text) { showToast('请输入或选择标的', 'warning'); return; }
+    if (!text) { showToast(_t('scanner-enter-tickers'), 'warning'); return; }
     var tickers = text.split(/[,\s\n]+/).filter(function(t) { return t.length > 0; });
-    if (tickers.length > 20) { showToast('最多20个标的', 'warning'); return; }
+    if (tickers.length > 20) { showToast(_t('scanner-max-warning'), 'warning'); return; }
 
+    document.getElementById('scanner-idle').style.display = 'none';
     document.getElementById('scanner-loading').style.display = 'block';
     document.getElementById('scanner-results').style.display = 'none';
     document.getElementById('scanner-error').style.display = 'none';
-    startProgress('scanner-progress', {stages:['正在获取数据...','大师们正在评分...','正在汇总结果...']});
+    startProgress('scanner-progress', {stages:[
+        _t('scanner-stage-fetch'),
+        _t('scanner-stage-score'),
+        _t('scanner-stage-summary')
+    ]});
 
     fetchWithTimeout('/api/scanner/run', {
         method: 'POST',
@@ -118,36 +134,36 @@ function runScanner() {
             renderHeatmap(data.results);
         } else {
             document.getElementById('scanner-error').style.display = 'block';
-            document.getElementById('scanner-error-msg').textContent = data.detail || '扫描失败';
+            document.getElementById('scanner-error-msg').textContent = data.detail || _t('scanner-error-title');
         }
     })
     .catch(function(err) {
         stopProgress('scanner-progress');
         document.getElementById('scanner-loading').style.display = 'none';
         document.getElementById('scanner-error').style.display = 'block';
-        document.getElementById('scanner-error-msg').textContent = err.message || '请求失败';
+        document.getElementById('scanner-error-msg').textContent = err.message || _t('hero-error-request', 'Request failed');
     });
 }
 
 function renderHeatmap(results) {
     var table = document.getElementById('heatmap-table');
-    if (!table || !results || !results.length) return;
+    if (!table || !results || !results.length) {
+        document.getElementById('scanner-idle').style.display = 'block';
+        return;
+    }
     document.getElementById('scanner-results').style.display = 'block';
 
-    // Get all agent IDs from first result
     var agentIds = [];
     if (results[0].agents && results[0].agents.length) {
         agentIds = results[0].agents.map(function(a) { return a.agent_id; });
     }
 
-    // Build header
     var html = '<thead><tr><th class="ticker-col">Ticker</th><th>Consensus</th>';
     agentIds.forEach(function(id) {
         html += '<th title="' + id + '">' + (AGENT_SHORT[id] || id.substr(0,3).toUpperCase()) + '</th>';
     });
     html += '</tr></thead><tbody>';
 
-    // Build rows
     results.forEach(function(row) {
         var consCls = (row.consensus_signal || 'neutral').toLowerCase();
         html += '<tr>';
@@ -170,11 +186,15 @@ function renderHeatmap(results) {
     html += '</tbody>';
     table.innerHTML = html;
 
-    // Summary
     var bullish = results.filter(function(r) { return r.consensus_signal === 'bullish'; }).length;
     var bearish = results.filter(function(r) { return r.consensus_signal === 'bearish'; }).length;
     var neutral = results.length - bullish - bearish;
-    document.getElementById('scanner-summary').textContent = results.length + ' 标的: ' + bullish + ' 看多, ' + neutral + ' 中性, ' + bearish + ' 看空';
+    var summaryTpl = _t('scanner-summary');
+    document.getElementById('scanner-summary').textContent = summaryTpl
+        .replace('{n}', results.length)
+        .replace('{bull}', bullish)
+        .replace('{neutral}', neutral)
+        .replace('{bear}', bearish);
 }
 </script>
 {% endblock %}

@@ -31,8 +31,8 @@ Usage:
 """
 
 import math
-from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, List
 
 
 # ============ Matrix Operations (Pure Python) ============
@@ -373,7 +373,10 @@ class PortfolioOptimizer:
 
         points = []
         for i in range(n_points):
-            target_ret = min_ret + (max_ret - min_ret) * i / (n_points - 1)
+            if n_points == 1:
+                target_ret = min_ret
+            else:
+                target_ret = min_ret + (max_ret - min_ret) * i / (n_points - 1)
 
             # Find minimum variance portfolio for target return
             # using a simple grid/iterative approach for small portfolios

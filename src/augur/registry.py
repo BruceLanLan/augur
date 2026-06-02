@@ -11,14 +11,15 @@ Contains:
 
 import logging
 import time
-from typing import Dict, List, Optional, Any
+from datetime import datetime
+from typing import Dict, List, Optional
 from threading import RLock
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-logger = logging.getLogger(__name__)
-
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType, DebateMessage
+
+logger = logging.getLogger(__name__)
 
 # ============ v8: Learning + Sentiment singletons ============
 _learning_engine = None
@@ -30,6 +31,57 @@ def _get_learning_engine():
         from augur.learning import LearningEngine
         _learning_engine = LearningEngine()
     return _learning_engine
+
+
+def _check_and_record_outcomes(le, ticker: str) -> None:
+    """
+    For any unresolved predictions on `ticker` older than 30 days,
+    fetch the actual price change via yfinance and call record_outcome().
+    Runs silently — never raises.
+    """
+    try:
+        cutoff = time.time() - 30 * 86400
+        pending = [
+            p for p in le._predictions
+            if p.get("ticker") == ticker
+            and p.get("outcome") is None
+            and p.get("timestamp", 0) <= cutoff
+        ]
+        if not pending:
+            return
+
+        # Fetch 35-day history to cover the 30-day window
+        from augur.data import fetch_history
+        hist = fetch_history(ticker, period="2mo")
+        if not hist or len(hist) < 5:
+            return
+
+        closes_by_ts = {h.get("date"): h.get("close") for h in hist if h.get("close")}
+        if not closes_by_ts:
+            return
+
+        sorted_closes = sorted(closes_by_ts.items())   # [(date_str, price), ...]
+        last_close = sorted_closes[-1][1]
+        if not last_close:
+            return
+
+        # Use ~30-day return (closest available bar to 30 days ago vs latest)
+        target_ts = time.time() - 30 * 86400
+        ref_close = sorted_closes[0][1]
+        for date_str, close in sorted_closes:
+            try:
+                bar_ts = datetime.strptime(date_str, "%Y-%m-%d").timestamp()
+            except ValueError:
+                continue
+            if bar_ts <= target_ts:
+                ref_close = close
+        if not ref_close or ref_close == 0:
+            return
+        actual_return = (last_close - ref_close) / ref_close
+        le.record_outcome(ticker, actual_return, min_age_days=30)
+    except Exception:
+        pass
+
 
 def _get_sentiment_analyzer():
     global _sentiment_analyzer
@@ -147,6 +199,10 @@ class DecisionCoordinator:
         t0 = time.perf_counter()
         results = {}
         agents = self.registry.get_all()
+
+        if not agents:
+            self._last_analysis_ms = 0.0
+            return results
 
         try:
             with ThreadPoolExecutor(max_workers=min(len(agents), 8)) as executor:
@@ -320,11 +376,18 @@ class DecisionCoordinator:
             if total_ric > 0:
                 rolling_ic_weights = {k: v / total_ric for k, v in rolling_ic_weights.items()}
 
+        valid_count = sum(
+            1 for r in results.values() if r.signal != SignalType.ERROR
+        )
+        default_weight = 1.0 / valid_count if valid_count else 1.0
+
         for agent_id, response in results.items():
+            if response.signal == SignalType.ERROR:
+                continue
             if weights and agent_id in weights:
                 w = weights[agent_id]
             else:
-                w = global_weights.get(agent_id, 1.0 / len(results))
+                w = global_weights.get(agent_id, default_weight)
 
             if rolling_ic_weights and agent_id in rolling_ic_weights:
                 w = 0.5 * w + 0.5 * rolling_ic_weights[agent_id]
@@ -390,7 +453,10 @@ class DecisionCoordinator:
                 pass
 
         # Weighted majority vote
-        consensus_signal = max(signal_counts, key=signal_counts.get)
+        if sum(signal_counts.values()) <= 0:
+            consensus_signal = SignalType.NEUTRAL
+        else:
+            consensus_signal = max(signal_counts, key=signal_counts.get)
 
         # Regime note
         regime_note = ""
@@ -528,6 +594,22 @@ class DecisionCoordinator:
             "consensus_ms": consensus_ms,
         }
 
+        # v8 Phase A: auto-record predictions + check past outcomes
+        if ticker:
+            try:
+                le = _get_learning_engine()
+                # Check if old predictions (>30d) for this ticker need outcomes recorded
+                _check_and_record_outcomes(le, ticker)
+                # Record each agent's current prediction for future accuracy tracking
+                for agent_id, resp in results.items():
+                    if resp.signal != SignalType.ERROR:
+                        le.record_prediction(
+                            ticker, agent_id,
+                            resp.signal.value, resp.score, resp.confidence,
+                        )
+            except Exception:
+                pass
+
         return result
 
     def add_debate_message(self, msg: DebateMessage) -> None:
@@ -558,7 +640,10 @@ class DecisionCoordinator:
                 if result.signal == SignalType.ERROR:
                     continue
                 dissent = self._find_disagreement(current_results, agent_id)
-                result.key_findings.append(f"[Debate {round_num+1}] Considering {dissent} viewpoint")
+                result.key_findings.append(
+                    f"[Debate {round_num+1}] {debate_summary.splitlines()[0]}; "
+                    f"considering {dissent} viewpoint"
+                )
 
         # Minority report
         valid_results = {k: v for k, v in current_results.items() if v.signal != SignalType.ERROR}

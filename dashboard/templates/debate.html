@@ -28,29 +28,44 @@
     background: rgba(255, 140, 0, 0.12);
     color: var(--accent-orange);
 }
-.debate-agent-chip input { display: none; }
+.debate-agent-chip input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+.debate-agent-chip input:focus-visible + span,
+.debate-agent-chip:has(input:focus-visible) {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
 #debate-thread { min-height: 200px; }
 </style>
 {% endblock %}
 {% block content %}
 
-<h2 style="color:var(--accent-orange); margin-bottom:4px;">辩论模式</h2>
-<p class="text-muted mb-16" style="font-size:0.82rem;">选择 2-4 位投资大师，围绕同一标的进行多轮辩论，每位大师对前者观点进行反驳</p>
+<h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="debate-title">辩论模式</h1>
+<p class="text-muted mb-16" style="font-size:0.82rem;" data-i18n="debate-desc">选择 2-4 位投资大师，围绕同一标的进行多轮辩论，每位大师对前者观点进行反驳</p>
 
 <div class="card mb-24">
     <div class="flex items-center gap-12 mb-16" style="flex-wrap:wrap;">
         <div style="flex:1; min-width:180px; max-width:240px;">
-            <label class="data-label mb-4">股票代码</label>
-            <input id="debate-ticker" type="text" class="form-input" style="font-family:var(--font-data); font-size:1.1rem; font-weight:700; text-transform:uppercase;" placeholder="AAPL">
+            <label class="data-label mb-4" for="debate-ticker" data-i18n="debate-ticker-label">股票代码</label>
+            <input id="debate-ticker" type="text" class="form-input" style="font-family:var(--font-data); font-size:1.1rem; font-weight:700; text-transform:uppercase;" placeholder="AAPL" aria-required="true" autocomplete="off">
         </div>
         <div style="align-self:flex-end;">
-            <button class="btn btn-primary" onclick="startDebate()" id="debate-btn" style="padding:10px 24px;" disabled>开始辩论</button>
+            <button type="button" class="btn btn-primary" onclick="startDebate()" id="debate-btn" style="padding:10px 24px;" disabled data-i18n="debate-start">开始辩论</button>
         </div>
     </div>
 
     <div>
-        <label class="data-label mb-8">选择辩论者 (2-4 位)</label>
-        <div class="debate-agent-select" id="debate-agents">
+        <span class="data-label mb-8" id="debate-agents-label" data-i18n="debate-agents-label">选择辩手 (2-4 位)</span>
+        <div class="debate-agent-select" id="debate-agents" role="group" aria-labelledby="debate-agents-label">
             {% for p in personas %}
             <label class="debate-agent-chip" onclick="toggleDebateAgent(this)">
                 <input type="checkbox" value="{{ p.id }}" name="debate_agents">

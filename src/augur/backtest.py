@@ -125,11 +125,10 @@ class Backtester:
                 summary="Insufficient data (fewer than 5 data points for meaningful backtest)",
             )
 
-        from augur.registry import AgentRegistry, DecisionCoordinator
+        from augur.registry import AgentRegistry
         from augur.personas.base import MarketContext
 
         registry = AgentRegistry()
-        coordinator = DecisionCoordinator(registry)
         agents = registry.get_all()
 
         records: List[BacktestRecord] = []

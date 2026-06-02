@@ -10,7 +10,7 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v8.0.0](https://img.shields.io/badge/v8.0.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v8.1.0](https://img.shields.io/badge/v8.1.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -156,7 +156,7 @@ Auto-fetching data for NVDA from yfinance...
 
 ---
 
-## 🆕 What's New in v8.0.0
+## 🆕 What's New in v8.1.0
 
 v8 upgrades Augur from an analysis tool to an **intelligent investment platform** with 10 new modules.
 
@@ -447,7 +447,7 @@ Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUT
 ## 📝 Changelog
 
 <details>
-<summary><strong>v8.0.0 — Intelligent Investment Platform (current)</strong></summary>
+<summary><strong>v8.1.0 — Intelligent Investment Platform (current)</strong></summary>
 
 - 6 new Dashboard pages: AI Chat, Portfolio Optimizer, Master Compare, Debate Mode, History, Leaderboard
 - LearningEngine: IC-based feedback auto-adjusts consensus weights for all 18 agents

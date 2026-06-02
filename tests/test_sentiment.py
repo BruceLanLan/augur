@@ -87,3 +87,18 @@ class TestSentimentAnalyzer:
         analyzer.get_sentiment("AAPL")
         analyzer.clear_cache()
         assert "AAPL" not in analyzer._cache
+
+    def test_empty_ticker_returns_neutral(self):
+        """Empty ticker should not hit external APIs or crash."""
+        analyzer = SentimentAnalyzer()
+        result = analyzer.get_sentiment("  ")
+        assert result.ticker == ""
+        assert result.overall_score == 0.0
+        assert result.volume == 0
+
+    def test_whitespace_ticker_normalized(self):
+        """Leading/trailing whitespace is stripped before lookup."""
+        analyzer = SentimentAnalyzer()
+        result = analyzer.get_sentiment("  nvda  ")
+        assert result.ticker == "NVDA"
+        assert -1.0 <= result.overall_score <= 1.0

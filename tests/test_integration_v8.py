@@ -15,7 +15,7 @@ import json
 import tempfile
 import time
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -94,20 +94,33 @@ class TestSentimentIntegration:
     """Verify that sentiment analysis affects the consensus score."""
 
     def test_sentiment_factor_applied_to_consensus(self):
-        """Consensus score should be adjusted by sentiment factor."""
-        from augur.sentiment import SentimentAnalyzer
+        """Consensus score shifts by patched sentiment factor (registry v8 hook)."""
         from augur.registry import AgentRegistry, DecisionCoordinator
         from augur.personas.base import MarketContext
 
         registry = AgentRegistry()
         coordinator = DecisionCoordinator(registry)
         ctx = MarketContext(ticker="NVDA", pe=60, roe=0.50, gross_margins=0.75, price=135)
-
         results = coordinator.analyze_with_all(ctx)
-        consensus = coordinator.get_consensus(results, ticker="NVDA", context=ctx)
 
-        # The consensus score should be in valid bounds after sentiment
-        assert 0.0 <= consensus.score <= 10.0
+        mock_sa = MagicMock()
+        mock_sa.get_sentiment_factor.return_value = 0.0
+        with patch("augur.registry._get_sentiment_analyzer", return_value=mock_sa):
+            baseline = coordinator.get_consensus(results, ticker="NVDA", context=ctx)
+
+        mock_sa.get_sentiment_factor.return_value = 0.5
+        with patch("augur.registry._get_sentiment_analyzer", return_value=mock_sa):
+            boosted = coordinator.get_consensus(results, ticker="NVDA", context=ctx)
+
+        assert boosted.score == pytest.approx(baseline.score + 0.5, abs=1e-4)
+        assert 0.0 <= boosted.score <= 10.0
+
+        mock_sa.get_sentiment_factor.return_value = -0.5
+        with patch("augur.registry._get_sentiment_analyzer", return_value=mock_sa):
+            dampened = coordinator.get_consensus(results, ticker="NVDA", context=ctx)
+
+        assert dampened.score == pytest.approx(max(0.0, baseline.score - 0.5), abs=1e-4)
+        assert 0.0 <= dampened.score <= 10.0
 
     def test_sentiment_score_bounded(self):
         """Verify score stays within [0, 10] even with extreme sentiment."""

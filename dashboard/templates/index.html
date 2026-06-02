@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Augur - 多智能体投资分析仪表盘{% endblock %}
+{% block title %}Augur - Dashboard{% endblock %}
 {% block extra_head %}
 <style>
 .hero-input {
@@ -389,14 +389,10 @@
 <div class="onboard-banner" id="onboard-banner" style="display:none;">
     <span class="onboard-icon">&#x1F44B;</span>
     <div class="onboard-body">
-        <div class="onboard-title">欢迎使用 Augur — 你的 18 位 AI 投资大师智囊团</div>
-        <div class="onboard-desc">
-            只需输入一个股票代码（如 <strong>AAPL</strong>），系统会自动获取实时财务数据，
-            让巴菲特、芒格、段永平等 18 位大师从各自视角独立打分，并形成共识买/卖/持建议。
-            <strong>无需手动填写任何财务指标</strong>。下方点一下示例即可立即体验 &darr;
-        </div>
+        <div class="onboard-title" data-i18n="onboard-title">欢迎使用 Augur — 你的 18 位 AI 投资大师智囊团</div>
+        <div class="onboard-desc" data-i18n="onboard-desc">只需输入一个股票代码（如 AAPL），系统会自动获取实时财务数据，让 18 位大师从各自视角独立打分，并形成共识买/卖/持建议。无需手动填写任何财务指标。下方点一下示例即可立即体验 ↓</div>
     </div>
-    <button class="onboard-close" onclick="dismissOnboard()" title="不再显示" aria-label="关闭引导">&times;</button>
+    <button class="onboard-close" onclick="dismissOnboard()" data-i18n-title="onboard-close-aria" title="不再显示" data-i18n-aria="onboard-close-aria" aria-label="关闭引导">&times;</button>
 </div>
 
 <!-- Status Bar -->
@@ -415,7 +411,7 @@
     </div>
     <div class="status-bar-item">
         <span class="label">Engine</span>
-        <span class="value">v8.0.0</span>
+        <span class="value">v8.1.0</span>
     </div>
 </div>
 
@@ -425,19 +421,24 @@
     <p class="hero-subtitle" data-i18n="hero-subtitle">输入股票代码，一键获得18位大师共识</p>
     <div class="flex items-center justify-center gap-12" style="flex-wrap:wrap;">
         <input class="hero-input" id="hero-ticker" type="text"
+               data-i18n="hero-placeholder"
                placeholder="输入股票代码 (AAPL / NVDA / 0700.HK)"
+               data-i18n-aria="a11y-hero-ticker"
                aria-label="Stock ticker input"
+               aria-describedby="hero-ticker-hint"
+               oninput="clearTickerInvalid('hero-ticker')"
                onkeydown="if(event.key==='Enter') heroGo()">
-        <button class="btn btn-primary" onclick="heroGo()" style="padding:12px 24px; font-size:0.92rem;">
+        <button class="btn btn-primary" id="hero-analyze-btn" onclick="heroGo()" style="padding:12px 24px; font-size:0.92rem;">
             <span data-i18n="btn-analyze">分析</span> &rarr;
         </button>
     </div>
-    <div class="shortcut-hint" style="margin-top:8px;">按 <kbd>/</kbd> 快速聚焦 &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交</div>
+    <p id="hero-ticker-hint" class="field-hint" style="display:none; margin-top:6px; font-size:0.75rem; color:var(--signal-sell);"></p>
+    <div class="shortcut-hint" style="margin-top:8px;" data-i18n="hero-shortcut-hint">按 / 快速聚焦 · Ctrl+Enter 提交</div>
 
     <!-- One-click example tickers (no financial input required) -->
     <div style="margin-top:20px;">
-        <div class="text-muted" style="font-size:0.78rem; margin-bottom:10px;">
-            &#x1F4A1; 第一次用？点下面任意一个，<strong style="color:var(--text-secondary);">无需填写财务指标</strong>，系统自动获取实时数据：
+        <div class="text-muted" style="font-size:0.78rem; margin-bottom:10px;" data-i18n="hero-examples-hint">
+            💡 第一次用？点下面任意一个，无需填写财务指标，系统自动获取实时数据：
         </div>
         <div class="example-chips">
             <button class="example-chip" onclick="tryExample('AAPL')">AAPL <span class="chip-tag">苹果</span></button>
@@ -453,7 +454,7 @@
 
     <!-- Inline loading skeleton -->
     <div id="hero-spinner" style="display:none; margin-top:16px;">
-        <p class="loading-pulse text-orange text-mono progress-text" id="hero-progress">正在唤醒 18 位投资大师...</p>
+        <p class="loading-pulse text-orange text-mono progress-text" id="hero-progress" data-i18n="hero-progress">正在唤醒 18 位投资大师...</p>
         <div class="grid-3 mt-16" style="gap:12px; max-width:600px; margin:0 auto;">
             <div class="skeleton skeleton-card"></div>
             <div class="skeleton skeleton-card"></div>
@@ -465,31 +466,31 @@
     <div id="hero-result" class="inline-result" style="display:none; max-width:600px; margin:16px auto 0;">
         <div class="flex items-center gap-24" style="flex-wrap:wrap;">
             <div>
-                <div class="data-label">信号</div>
+                <div class="data-label" data-i18n="index-label-signal">信号</div>
                 <span id="hr-signal" class="signal-badge signal-badge-neutral signal-big">--</span>
             </div>
             <div>
-                <div class="data-label">评分</div>
+                <div class="data-label" data-i18n="index-label-score">评分</div>
                 <span id="hr-score" class="data-value" style="font-size:1.4rem;">--</span>
             </div>
             <div>
-                <div class="data-label">置信度</div>
+                <div class="data-label" data-i18n="index-label-confidence">置信度</div>
                 <span id="hr-confidence" class="text-mono" style="color:var(--signal-neutral); font-weight:600; font-size:1.1rem;">--</span>
             </div>
         </div>
         <div id="hr-reasoning" class="text-muted" style="font-size:0.8rem; margin-top:12px; line-height:1.6;"></div>
         <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-            <a id="hr-link" href="/stocks" class="btn btn-sm">查看各位大师详情 &rarr;</a>
-            <a id="hr-report-link" href="/stocks" class="btn btn-sm btn-report-cta">&#x1F4C4; 生成深度分析报告</a>
+            <a id="hr-link" href="/stocks" class="btn btn-sm"><span data-i18n="btn-detail">查看各位大师详情</span> &rarr;</a>
+            <a id="hr-report-link" href="/stocks" class="btn btn-sm btn-report-cta">&#x1F4C4; <span data-i18n="btn-report">生成深度分析报告</span></a>
         </div>
     </div>
 
     <!-- Inline error -->
     <div id="hero-error" class="error-panel" aria-live="polite" style="display:none; max-width:600px; margin:16px auto 0;">
-        <div class="error-panel-title">分析失败</div>
+        <div class="error-panel-title" data-i18n="hero-error-title">分析失败</div>
         <div class="error-panel-msg" id="hero-error-msg"></div>
         <div class="error-panel-retry">
-            <button class="btn btn-sm" onclick="heroGo()">重试</button>
+            <button class="btn btn-sm" onclick="heroGo()" data-i18n="btn-retry">重试</button>
         </div>
     </div>
 </div>
@@ -514,7 +515,7 @@
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-market-overview">全球市场总览</div>
     <div class="flex items-center gap-12">
         <span class="market-asof text-muted" id="market-asof" style="font-size:0.7rem;"></span>
-        <button class="btn btn-sm btn-ghost" onclick="loadMarketOverview(true)" id="market-refresh-btn" title="刷新行情">↻ 刷新</button>
+        <button class="btn btn-sm btn-ghost" onclick="loadMarketOverview(true)" id="market-refresh-btn" data-i18n-title="btn-refresh" title="刷新">↻ <span data-i18n="btn-refresh">刷新</span></button>
     </div>
 </div>
 <div class="market-board mb-24" id="market-board">
@@ -530,7 +531,7 @@
 <!-- Hot Tickers: 热门标的实时行情 -->
 <div class="flex items-center justify-between mb-12">
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-hot-tickers">热门标的实时行情</div>
-    <button class="btn btn-sm btn-ghost" onclick="loadHotTickers(true)" id="hot-refresh-btn" title="刷新">↻ 刷新</button>
+    <button class="btn btn-sm btn-ghost" onclick="loadHotTickers(true)" id="hot-refresh-btn" data-i18n-title="btn-refresh" title="刷新">↻ <span data-i18n="btn-refresh">刷新</span></button>
 </div>
 <div class="hot-tickers-grid mb-24" id="hot-tickers-grid">
     <!-- Skeleton placeholders -->
@@ -544,7 +545,7 @@
 <!-- Sector Performance Heatmap -->
 <div class="flex items-center justify-between mb-12">
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-sector-perf">板块行情</div>
-    <button class="btn btn-sm btn-ghost" onclick="loadSectorPerformance(true)" id="sector-refresh-btn" title="刷新">&#x21BB; 刷新</button>
+    <button class="btn btn-sm btn-ghost" onclick="loadSectorPerformance(true)" id="sector-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
 </div>
 <div class="sector-grid mb-24" id="sector-grid">
     <div class="sector-card skeleton" style="height:80px;"></div>
@@ -559,8 +560,8 @@
 
 <!-- International Markets Panel -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">International Markets</div>
-    <span class="text-muted" style="font-size:0.7rem;">亚太 &middot; 欧洲</span>
+    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-intl-markets">国际市场</div>
+    <span class="text-muted" style="font-size:0.7rem;" data-i18n="intl-regions">亚太 · 欧洲</span>
 </div>
 <div class="intl-markets-grid mb-24" id="intl-markets-grid">
     <div class="intl-skeleton"></div>
@@ -573,7 +574,7 @@
 <!-- Crypto Overview Panel -->
 <div class="flex items-center justify-between mb-12">
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-crypto">Crypto Overview</div>
-    <button class="btn btn-sm btn-ghost" onclick="loadCryptoOverview()" id="crypto-refresh-btn" title="刷新">&#x21BB; 刷新</button>
+    <button class="btn btn-sm btn-ghost" onclick="loadCryptoOverview()" id="crypto-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
 </div>
 <div class="hot-tickers-grid mb-24" id="crypto-grid">
     <div class="hot-ticker-card skeleton" style="height:90px;"></div>
@@ -586,16 +587,16 @@
 <!-- Commodities & Treasury Rates Panel -->
 <div class="flex items-center justify-between mb-12">
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-commodities-rates">Commodities &amp; Treasury Rates</div>
-    <button class="btn btn-sm btn-ghost" onclick="loadCommoditiesAndRates()" id="commod-refresh-btn" title="刷新">&#x21BB; 刷新</button>
+    <button class="btn btn-sm btn-ghost" onclick="loadCommoditiesAndRates()" id="commod-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
 </div>
 <div class="movers-row mb-24" id="commodities-rates-row">
     <div class="movers-section">
-        <div class="movers-title" style="color:var(--accent-orange);">&#x1F4B0; Commodities</div>
-        <div id="commodities-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4B0;</div><div class="empty-msg">加载中...</div></div></div>
+        <div class="movers-title" style="color:var(--accent-orange);" data-i18n="commodities-label">💰 大宗商品</div>
+        <div id="commodities-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4B0;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
     </div>
     <div class="movers-section">
-        <div class="movers-title" style="color:var(--accent-orange);">&#x1F4C8; Treasury Yields</div>
-        <div id="treasury-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F3E6;</div><div class="empty-msg">加载中...</div></div></div>
+        <div class="movers-title" style="color:var(--accent-orange);" data-i18n="treasury-label">📈 国债收益率</div>
+        <div id="treasury-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F3E6;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
     </div>
 </div>
 
@@ -605,12 +606,12 @@
 </div>
 <div class="movers-row mb-24" id="movers-row">
     <div class="movers-section">
-        <div class="movers-title gainers">&#x25B2; 领涨</div>
-        <div id="gainers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C8;</div><div class="empty-msg">加载中...</div></div></div>
+        <div class="movers-title gainers" data-i18n="movers-gainers">▲ 领涨</div>
+        <div id="gainers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C8;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
     </div>
     <div class="movers-section">
-        <div class="movers-title losers">&#x25BC; 领跌</div>
-        <div id="losers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C9;</div><div class="empty-msg">加载中...</div></div></div>
+        <div class="movers-title losers" data-i18n="movers-losers">▼ 领跌</div>
+        <div id="losers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C9;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
     </div>
 </div>
 
@@ -619,14 +620,14 @@
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-market-breadth">市场宽度</div>
 </div>
 <div class="card mb-24" style="padding:16px;" id="market-breadth-card">
-    <div class="text-muted" style="font-size:0.78rem;">基于热门标的涨跌统计</div>
+    <div class="text-muted" style="font-size:0.78rem;" data-i18n="market-breadth-note">基于热门标的涨跌统计</div>
     <div class="breadth-bar-wrap" style="margin-top:8px;">
         <div class="breadth-bar-advance" id="breadth-advance" style="width:50%;">--</div>
         <div class="breadth-bar-decline" id="breadth-decline" style="width:50%;">--</div>
     </div>
     <div class="breadth-stats">
-        <span id="breadth-adv-label">上涨: --</span>
-        <span id="breadth-dec-label">下跌: --</span>
+        <span id="breadth-adv-label" data-i18n="breadth-advancing">上涨: --</span>
+        <span id="breadth-dec-label" data-i18n="breadth-declining">下跌: --</span>
     </div>
 </div>
 
@@ -636,7 +637,7 @@
     <div class="fear-greed-section" id="fear-greed-section">
         <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;" data-i18n="section-fear-greed">恐慌与贪婪指标</div>
         <div class="card" style="padding:16px;" id="fear-greed-card">
-            <div class="panel-empty-state"><div class="empty-icon">&#x1F4CA;</div><div class="empty-msg">恐慌贪婪数据加载中...</div></div>
+            <div class="panel-empty-state"><div class="empty-icon">&#x1F4CA;</div><div class="empty-msg" data-i18n="msg-fear-greed-loading">恐慌贪婪数据加载中...</div></div>
         </div>
     </div>
     <!-- 宏观经济快照 -->
@@ -653,18 +654,18 @@
 <!-- Augur Consensus Leaderboard -->
 <div class="flex items-center justify-between mb-12">
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-leaderboard">Augur 共识排行榜</div>
-    <span class="text-muted" style="font-size:0.7rem;">基于本地分析历史</span>
+    <span class="text-muted" style="font-size:0.7rem;" data-i18n="leaderboard-note">基于本地分析历史</span>
 </div>
 <div class="card mb-24" style="padding:0; overflow:hidden;" id="leaderboard-section">
     <ul class="leaderboard-list" id="leaderboard-list">
-        <li class="leaderboard-item" style="justify-content:center;"><span class="text-muted" style="font-size:0.78rem;">尚无分析记录，去分析一只股票吧</span></li>
+        <li class="leaderboard-item" style="justify-content:center;"><span class="text-muted" style="font-size:0.78rem;" data-i18n="leaderboard-empty">尚无分析记录，去分析一只股票吧</span></li>
     </ul>
 </div>
 
 <!-- Featured Personas -->
 <div class="flex items-center justify-between mb-12">
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-featured-personas">精选投资人</div>
-    <a href="/personas" class="btn btn-sm btn-ghost">查看全部 18 位 &rarr;</a>
+    <a href="/personas" class="btn btn-sm btn-ghost"><span data-i18n="btn-view-all-personas">查看全部 18 位</span> &rarr;</a>
 </div>
 <div class="grid-4 mb-24">
     {% for p in featured %}
@@ -730,12 +731,28 @@
 {% block extra_scripts %}
 <script>
 var _heroGoBusy = false;
+function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 function heroGo() {
-    var t = document.getElementById('hero-ticker').value.trim().toUpperCase();
-    if (!t) { showToast('请输入股票代码', 'warning'); return; }
+    var ticker = validateTickerInput('hero-ticker', 'hero-ticker-hint');
+    if (!ticker) return;
     if (_heroGoBusy) return;
     _heroGoBusy = true;
-    setTimeout(function() { _heroGoBusy = false; }, 2000);
+    var heroBtn = document.getElementById('hero-analyze-btn');
+    var heroBtnLabel = heroBtn ? heroBtn.querySelector('[data-i18n]') : null;
+    var origBtnText = heroBtnLabel ? heroBtnLabel.textContent : '';
+    if (heroBtn) {
+        heroBtn.disabled = true;
+        heroBtn.classList.add('is-loading');
+        if (heroBtnLabel) heroBtnLabel.textContent = (typeof window.t === 'function' ? window.t('btn-analyzing') : '分析中…');
+    }
+    function resetHeroBtn() {
+        _heroGoBusy = false;
+        if (heroBtn) {
+            heroBtn.disabled = false;
+            heroBtn.classList.remove('is-loading');
+            if (heroBtnLabel) heroBtnLabel.textContent = origBtnText || (typeof window.t === 'function' ? window.t('btn-analyze') : '分析');
+        }
+    }
 
     // Show loading, hide previous results/errors
     document.getElementById('hero-spinner').style.display = 'block';
@@ -743,7 +760,7 @@ function heroGo() {
     document.getElementById('hero-error').style.display = 'none';
     startProgress('hero-progress');
 
-    fetchWithTimeout('/api/analyze/' + t, {}, 90000)
+    fetchWithTimeout('/api/analyze/' + ticker, {}, 90000)
         .then(function(r) {
             if (!r.ok) {
                 return r.json().then(function(e) {
@@ -770,26 +787,28 @@ function heroGo() {
             document.getElementById('hr-score').textContent = (cons.score || 0).toFixed(1) + '/10';
             document.getElementById('hr-confidence').textContent = ((cons.confidence || 0) * 100).toFixed(0) + '%';
             document.getElementById('hr-reasoning').textContent = cons.reasoning || '';
-            document.getElementById('hr-link').href = '/stocks?ticker=' + t;
-            document.getElementById('hr-report-link').href = '/stocks?ticker=' + t + '&report=1';
+            document.getElementById('hr-link').href = '/stocks?ticker=' + ticker;
+            document.getElementById('hr-report-link').href = '/stocks?ticker=' + ticker + '&report=1';
 
             document.getElementById('hero-result').style.display = 'block';
 
             // Cache the result
-            augurCache.add(t, {
+            augurCache.add(ticker, {
                 signal: cons.signal || 'neutral',
                 score: cons.score || 0,
                 confidence: cons.confidence || 0
             });
             renderRecentAnalyses();
+            resetHeroBtn();
         })
         .catch(function(err) {
             stopProgress('hero-progress');
             document.getElementById('hero-spinner').style.display = 'none';
             document.getElementById('hero-error').style.display = 'block';
+            resetHeroBtn();
             var msg = (err && err.name === 'AbortError')
-                ? '分析超时（超过 90 秒）。18 位大师分析较慢时可稍后重试，或检查后端服务与网络连接。'
-                : '请求失败: ' + (err.message || err);
+                ? _t('hero-error-timeout', 'Analysis timed out (90s). Try again or check backend/network.')
+                : _t('hero-error-request', 'Request failed: ') + (err.message || err);
             document.getElementById('hero-error-msg').textContent = msg;
         });
 }
@@ -868,24 +887,24 @@ var _marketTimer = null;
 function loadMarketOverview(forceRefresh) {
     var board = document.getElementById('market-board');
     var btn = document.getElementById('market-refresh-btn');
-    if (btn) { btn.disabled = true; }
+    if (btn) { btn.disabled = true; btn.classList.add('is-refreshing'); }
     var url = '/api/market-overview' + (forceRefresh ? '?refresh=true' : '');
     fetchWithTimeout(url, {}, 30000)
         .then(function(r) { return r.json().catch(function() { return null; }); })
         .then(function(data) {
-            if (btn) { btn.disabled = false; }
+            if (btn) { btn.disabled = false; btn.classList.remove('is-refreshing'); }
             if (!data) {
                 if (board) {
-                    board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">数据格式异常，点击重试</div><button class="btn btn-sm" onclick="loadMarketOverview(true)" style="margin-top:8px;">重试</button></div>';
+                    board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">' + _t('msg-data-format-error') + '</div><button class="btn btn-sm" onclick="loadMarketOverview(true)" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
                 }
                 return;
             }
             renderMarketBoard(data);
         })
         .catch(function() {
-            if (btn) { btn.disabled = false; }
+            if (btn) { btn.disabled = false; btn.classList.remove('is-refreshing'); }
             if (board) {
-                board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">加载失败，点击重试</div><div class="empty-hint">需要 yfinance 实时数据</div><button class="btn btn-sm" onclick="loadMarketOverview(true)" style="margin-top:8px;">重试</button></div>';
+                board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><div class="empty-hint">' + _t('msg-yfinance-hint') + '</div><button class="btn btn-sm" onclick="loadMarketOverview(true)" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
             }
         });
 }
@@ -897,7 +916,7 @@ function renderMarketBoard(data) {
     var items = (data && data.items) || [];
     if (!items.length) {
         board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">' +
-            ((data && data.note) || '市场行情暂不可用') + '</div></div>';
+            ((data && data.note) || _t('msg-market-unavailable')) + '</div></div>';
         return;
     }
     board.innerHTML = '';
@@ -921,8 +940,8 @@ function renderMarketBoard(data) {
     });
     if (asof && data.as_of) {
         var d = new Date(data.as_of);
-        var srcLabel = data.source === 'partial' ? ' · 部分数据' : '';
-        asof.textContent = '更新于 ' + (isNaN(d.getTime()) ? data.as_of : d.toLocaleTimeString()) + srcLabel;
+        var srcLabel = data.source === 'partial' ? _t('msg-partial-data') : '';
+        asof.textContent = _t('msg-updated-at') + (isNaN(d.getTime()) ? data.as_of : d.toLocaleTimeString()) + srcLabel;
     }
 }
 
@@ -935,13 +954,13 @@ function loadDatasources() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (!data || !data.catalog) {
-                grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F50C;</div><div class="empty-msg">数据源信息不可用</div></div>';
+                grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F50C;</div><div class="empty-msg">' + _t('msg-datasource-unavailable') + '</div></div>';
                 return;
             }
             var catalog = data.catalog;
             var activeChain = data.active_chain || [];
             if (chainLabel) {
-                chainLabel.textContent = '活跃链: ' + activeChain.join(' > ');
+                chainLabel.textContent = _t('ds-active-chain') + activeChain.join(' > ');
             }
             grid.innerHTML = '';
             var keys = Object.keys(catalog);
@@ -961,13 +980,13 @@ function loadDatasources() {
                     '<div class="ds-card-footer">' +
                         (src.needs_key
                             ? '<span class="ds-key-badge">&#x1F511; API Key' + (src.env ? ' (' + src.env + ')' : '') + '</span>'
-                            : '<span class="ds-free-badge">&#x2705; 免费</span>') +
+                            : '<span class="ds-free-badge">&#x2705; ' + _t('ds-free') + '</span>') +
                     '</div>';
                 grid.appendChild(card);
             });
         })
         .catch(function() {
-            grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F50C;</div><div class="empty-msg">加载失败，点击重试</div><button class="btn btn-sm" onclick="loadDatasources()" style="margin-top:8px;">重试</button></div>';
+            grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F50C;</div><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><button class="btn btn-sm" onclick="loadDatasources()" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
         });
 }
 
@@ -985,7 +1004,7 @@ function loadHotTickers(forceRefresh) {
         })
         .catch(function() {
             if (btn) btn.disabled = false;
-            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F525;</div><div class="empty-msg">加载失败，点击重试</div><button class="btn btn-sm" onclick="loadHotTickers(true)" style="margin-top:8px;">重试</button></div>';
+            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F525;</div><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><button class="btn btn-sm" onclick="loadHotTickers(true)" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
         });
 }
 
@@ -994,7 +1013,7 @@ function renderHotTickers(data) {
     if (!grid) return;
     var tickers = (data && data.tickers) || [];
     if (!tickers.length) {
-        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F525;</div><div class="empty-msg">热门标的暂不可用</div></div>';
+        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F525;</div><div class="empty-msg">' + _t('msg-hot-unavailable') + '</div></div>';
         return;
     }
     grid.innerHTML = '';
@@ -1076,7 +1095,7 @@ function renderFearGreed(data) {
         if (it.key === 'vix') vix = it;
     });
     if (!vix || !vix.price) {
-        card.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F628;</div><div class="empty-msg">VIX 数据不可用</div><div class="empty-hint">需要 yfinance 获取实时 VIX</div></div>';
+        card.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F628;</div><div class="empty-msg">' + _t('msg-vix-unavailable') + '</div><div class="empty-hint">' + _t('msg-vix-hint') + '</div></div>';
         return;
     }
     var vixVal = vix.price || 0;
@@ -1144,7 +1163,7 @@ function renderMacroSnapshot(data) {
     grid.innerHTML = '';
     var macros = [gold, oil, btc].filter(function(x) { return x; });
     if (!macros.length) {
-        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F30D;</div><div class="empty-msg">宏观数据不可用</div></div>';
+        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F30D;</div><div class="empty-msg">' + _t('msg-macro-unavailable') + '</div></div>';
         return;
     }
     macros.forEach(function(m) {
@@ -1177,7 +1196,7 @@ function renderMarketPulse(data) {
     if (!strip) return;
     var items = (data && data.items) || [];
     if (!items.length) {
-        strip.innerHTML = '<div class="panel-empty-state" style="padding:8px 12px;"><span class="empty-msg">市场数据加载中...</span></div>';
+        strip.innerHTML = '<div class="panel-empty-state" style="padding:8px 12px;"><span class="empty-msg">' + _t('msg-market-loading') + '</span></div>';
         return;
     }
     // Show key metrics: S&P 500, VIX, 10Y, Gold, BTC
@@ -1190,7 +1209,7 @@ function renderMarketPulse(data) {
         if (item) pulseItems.push(item);
     });
     if (!pulseItems.length) {
-        strip.innerHTML = '<div class="panel-empty-state" style="padding:8px 12px;"><span class="empty-msg">关键指标不可用</span></div>';
+        strip.innerHTML = '<div class="panel-empty-state" style="padding:8px 12px;"><span class="empty-msg">' + _t('msg-metrics-unavailable') + '</span></div>';
         return;
     }
     strip.innerHTML = '';
@@ -1237,7 +1256,7 @@ function renderIntlMarkets(data) {
         });
     });
     if (!intlItems.length) {
-        grid.innerHTML = '<div class="panel-empty-state" style="grid-column:1/-1;"><div class="empty-icon">&#x1F30F;</div><div class="empty-msg">国际市场数据不可用</div></div>';
+        grid.innerHTML = '<div class="panel-empty-state" style="grid-column:1/-1;"><div class="empty-icon">&#x1F30F;</div><div class="empty-msg">' + _t('msg-intl-unavailable') + '</div></div>';
         return;
     }
     grid.innerHTML = '';
@@ -1298,7 +1317,7 @@ function loadSectorPerformance(forceRefresh) {
         })
         .catch(function() {
             if (btn) btn.disabled = false;
-            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F3D7;</div><div class="empty-msg">加载失败，点击重试</div><button class="btn btn-sm" onclick="loadSectorPerformance(true)" style="margin-top:8px;">重试</button></div>';
+            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F3D7;</div><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><button class="btn btn-sm" onclick="loadSectorPerformance(true)" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
         });
 }
 
@@ -1307,7 +1326,7 @@ function renderSectorGrid(data) {
     if (!grid) return;
     var sectors = (data && data.sectors) || [];
     if (!sectors.length) {
-        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F3D7;</div><div class="empty-msg">板块数据暂不可用</div></div>';
+        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F3D7;</div><div class="empty-msg">' + _t('msg-sector-unavailable') + '</div></div>';
         return;
     }
     grid.innerHTML = '';
@@ -1353,8 +1372,8 @@ function renderTopMovers(data) {
     if (!gainersList || !losersList) return;
     var tickers = (data && data.tickers) || [];
     if (!tickers.length) {
-        gainersList.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">数据不可用</div></div>';
-        losersList.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">数据不可用</div></div>';
+        gainersList.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">' + _t('msg-data-unavailable') + '</div></div>';
+        losersList.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">' + _t('msg-data-unavailable') + '</div></div>';
         return;
     }
     var sorted = tickers.slice().sort(function(a, b) { return (b.change_pct || 0) - (a.change_pct || 0); });
@@ -1401,8 +1420,8 @@ function renderMarketBreadth(data) {
     decEl.style.width = decPct + '%';
     advEl.textContent = advancing + ' (' + advPct + '%)';
     decEl.textContent = declining + ' (' + decPct + '%)';
-    if (advLabel) advLabel.textContent = '上涨: ' + advancing;
-    if (decLabel) decLabel.textContent = '下跌: ' + declining;
+    if (advLabel) advLabel.textContent = _t('breadth-advancing') + ' ' + advancing;
+    if (decLabel) decLabel.textContent = _t('breadth-declining') + ' ' + declining;
 }
 
 // ====== Augur Consensus Leaderboard ======
@@ -1415,7 +1434,7 @@ function renderLeaderboard() {
     scored.sort(function(a, b) { return (b.result.score || 0) - (a.result.score || 0); });
     var top = scored.slice(0, 5);
     if (!top.length) {
-        list.innerHTML = '<li class="leaderboard-item" style="justify-content:center;"><span class="text-muted" style="font-size:0.78rem;">尚无分析记录，去分析一只股票吧</span></li>';
+        list.innerHTML = '<li class="leaderboard-item" style="justify-content:center;"><span class="text-muted" style="font-size:0.78rem;">' + _t('leaderboard-empty') + '</span></li>';
         return;
     }
     list.innerHTML = '';
@@ -1449,7 +1468,7 @@ function loadCryptoOverview() {
         })
         .catch(function() {
             if (btn) btn.disabled = false;
-            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1FA99;</div><div class="empty-msg">加载失败，点击重试</div><button class="btn btn-sm" onclick="loadCryptoOverview()" style="margin-top:8px;">重试</button></div>';
+            if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1FA99;</div><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><button class="btn btn-sm" onclick="loadCryptoOverview()" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
         });
 }
 
@@ -1458,7 +1477,7 @@ function renderCryptoGrid(data) {
     if (!grid) return;
     var coins = (data && data.coins) || [];
     if (!coins.length) {
-        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1FA99;</div><div class="empty-msg">加密货币数据暂不可用</div></div>';
+        grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1FA99;</div><div class="empty-msg">' + _t('msg-crypto-unavailable') + '</div></div>';
         return;
     }
     grid.innerHTML = '';
@@ -1498,7 +1517,7 @@ function loadCommodities() {
             renderCommodities(data);
         })
         .catch(function() {
-            if (list) list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">加载失败</div></div>';
+            if (list) list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div></div>';
         });
 }
 
@@ -1507,7 +1526,7 @@ function renderCommodities(data) {
     if (!list) return;
     var commodities = (data && data.commodities) || [];
     if (!commodities.length) {
-        list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">大宗商品数据不可用</div></div>';
+        list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">' + _t('msg-commodities-unavailable') + '</div></div>';
         return;
     }
     list.innerHTML = '';
@@ -1535,7 +1554,7 @@ function loadTreasuryRates() {
             renderTreasuryRates(data);
         })
         .catch(function() {
-            if (list) list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">加载失败</div></div>';
+            if (list) list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div></div>';
         });
 }
 
@@ -1544,7 +1563,7 @@ function renderTreasuryRates(data) {
     if (!list) return;
     var rates = (data && data.rates) || [];
     if (!rates.length) {
-        list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">国债收益率数据不可用</div></div>';
+        list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">' + _t('msg-treasury-unavailable') + '</div></div>';
         return;
     }
     list.innerHTML = '';
