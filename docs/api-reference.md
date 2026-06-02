@@ -883,15 +883,105 @@ Get cache statistics and status.
 
 ---
 
+## Authentication / 认证
+
+Two optional auth modes can be enabled independently or together:
+
+| Mode | Env var | Credential |
+|------|---------|------------|
+| API token | `AUGUR_API_TOKEN=your_secret` | Static Bearer token |
+| Multi-user JWT | `AUGUR_MULTI_USER=1` | JWT from `POST /api/auth/login` |
+
+When either mode is active, all `/api/*` endpoints require `Authorization: Bearer <token>` except:
+- `GET /api/auth/verify`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /health`, `GET /api/health`
+
+Either credential satisfies auth when both modes are enabled.
+
+### GET /api/auth/verify
+
+Verify the current Bearer token (API token or JWT).
+
+**Response / 响应:**
+```json
+{"status": "ok", "authenticated": true, "mode": "token"}
+```
+`mode` is one of: `open`, `token`, `jwt`.
+
+### GET /api/auth/me
+
+Return the authenticated user (requires `AUGUR_MULTI_USER=1` and a valid JWT).
+
+**Response / 响应:**
+```json
+{"status": "ok", "user_id": 1, "username": "alice"}
+```
+
+### POST /api/auth/login
+
+**Request / 请求:**
+```json
+{"username": "alice", "password": "secret123"}
+```
+
+**Response / 响应:**
+```json
+{"status": "ok", "token": "<jwt>", "username": "alice"}
+```
+
+Login and register are rate-limited to **10 attempts per minute per IP**.
+
+---
+
+## WebSocket / 实时推送
+
+WebSocket endpoints bypass HTTP middleware and enforce the same auth rules separately.
+
+| Endpoint | Description |
+|----------|-------------|
+| `/ws/prices` | Real-time price tape |
+| `/ws/analyze/{ticker}` | Streaming analysis progress |
+
+### WebSocket authentication
+
+When `AUGUR_API_TOKEN` or `AUGUR_MULTI_USER=1` is set, pass the token using either:
+
+1. **Authorization header** (recommended for server-side clients):
+   ```
+   Authorization: Bearer <token>
+   ```
+
+2. **Query parameter** (required for browser `WebSocket` API, which cannot set headers):
+   ```
+   ws://localhost:8000/ws/prices?token=<token>
+   ws://localhost:8000/ws/analyze/AAPL?token=<token>
+   ```
+
+JavaScript example:
+```javascript
+var token = localStorage.getItem('augur_api_token') || localStorage.getItem('augur-token');
+var ws = new WebSocket('ws://localhost:8000/ws/prices?token=' + encodeURIComponent(token));
+```
+
+Unauthorized connections are closed with WebSocket code `1008`.
+
+---
+
 ## Rate Limiting / 限流
 
-All API endpoints are subject to IP-based rate limiting:
-- **Limit**: 30 requests per minute per IP
+All `/api/*` endpoints are subject to IP-based rate limiting:
+- **Limit**: 60 requests per minute per IP
 - **Header**: `X-RateLimit-Remaining` indicates remaining quota
 - **429 Response**: When limit exceeded
 
+Per-ticker analyze endpoints also enforce **30 requests per minute per ticker** (`GET /api/analyze/{ticker}`, etc.).
+
+Auth endpoints (`/api/auth/login`, `/api/auth/register`) are limited to **10 attempts per minute per IP**.
+
 所有 API 接口均受 IP 级别限流保护:
-- **限制**: 每 IP 每分钟最多 30 次请求
+- **限制**: 每 IP 每分钟最多 60 次请求
 - **响应头**: `X-RateLimit-Remaining` 显示剩余配额
 - **429 响应**: 超出限制时返回
 

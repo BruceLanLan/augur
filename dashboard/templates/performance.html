@@ -2,37 +2,39 @@
 {% block title %}绩效追踪 - Augur{% endblock %}
 {% block content %}
 
-<h2 style="color:var(--accent-orange); margin-bottom:4px;">绩效追踪</h2>
-<p class="text-muted mb-16" style="font-size:0.82rem;">Agent IC (Information Coefficient) 排行榜 - 基于回测数据评估各投资人预测能力</p>
+<h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="perf-title">绩效追踪</h1>
+<p class="text-muted mb-16" style="font-size:0.82rem;" data-i18n="perf-desc">Agent IC (Information Coefficient) 排行榜 - 基于回测数据评估各投资人预测能力</p>
 
 <!-- Leaderboard -->
 <div class="card mb-24" style="padding:0; overflow:hidden;">
     <div style="padding:16px 16px 8px; border-bottom:1px solid var(--border-color);">
-        <div class="flex items-center justify-between">
-            <span class="data-label">IC 排行榜</span>
-            <button class="btn btn-sm" onclick="refreshLeaderboard()">刷新</button>
+        <div class="flex items-center justify-between" style="flex-wrap:wrap; gap:8px;">
+            <h2 class="data-label" style="margin:0; font-size:inherit;" data-i18n="perf-leaderboard">IC 排行榜</h2>
+            <button type="button" class="btn btn-sm" onclick="refreshLeaderboard()" data-i18n="perf-refresh">刷新</button>
         </div>
     </div>
-    <div id="leaderboard-content">
-        <div style="padding:48px; text-align:center;">
-            <div class="spinner" style="margin:0 auto;"></div>
-            <p class="text-muted mt-16" style="font-size:0.82rem;">加载中...</p>
+    <div id="leaderboard-content" role="region" aria-live="polite" aria-label="Leaderboard">
+        <div style="padding:48px; text-align:center;" role="status">
+            <div class="spinner" style="margin:0 auto;" aria-hidden="true"></div>
+            <p class="text-muted mt-16" style="font-size:0.82rem;" data-i18n="perf-loading">加载中...</p>
         </div>
     </div>
 </div>
 
 <!-- Run Backtest -->
 <div class="card">
-    <div class="data-label mb-12">运行新回测</div>
-    <div class="flex items-center gap-12" style="flex-wrap:wrap;">
-        <input id="perf-ticker" type="text" class="form-input" style="max-width:160px; font-family:var(--font-data); text-transform:uppercase;" placeholder="AAPL" value="AAPL">
-        <select id="perf-days" class="form-select" style="max-width:120px;">
+    <h2 class="data-label mb-12" style="margin:0 0 12px; font-size:inherit;" data-i18n="perf-new-backtest">运行新回测</h2>
+    <form class="flex items-center gap-12" style="flex-wrap:wrap;" onsubmit="event.preventDefault(); runBacktest();" aria-label="Run backtest">
+        <label for="perf-ticker" class="sr-only">Ticker</label>
+        <input id="perf-ticker" type="text" class="form-input" style="max-width:160px; font-family:var(--font-data); text-transform:uppercase;" placeholder="AAPL" value="AAPL" aria-required="true" autocomplete="off">
+        <label for="perf-days" class="sr-only">Days</label>
+        <select id="perf-days" class="form-select" style="max-width:120px;" aria-label="Backtest period in days">
             <option value="30">30 天</option>
             <option value="60">60 天</option>
             <option value="90">90 天</option>
         </select>
-        <button class="btn btn-primary" onclick="runBacktest()" id="run-bt-btn">运行回测</button>
-    </div>
+        <button type="submit" class="btn btn-primary" id="run-bt-btn" data-i18n="perf-run">运行回测</button>
+    </form>
     <div id="backtest-result" class="mt-16" style="display:none;"></div>
 </div>
 

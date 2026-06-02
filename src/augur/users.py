@@ -38,11 +38,14 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import secrets
 import sqlite3
 import time
 from pathlib import Path
 from typing import Optional, Dict, Any, Tuple
+
+_USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]{3,32}$")
 
 
 # JWT secret - require from env or persist to disk (survives restarts)
@@ -65,8 +68,12 @@ def _get_jwt_secret() -> str:
 
     # Generate and persist a new secret
     new_secret = secrets.token_hex(32)
-    secret_path.parent.mkdir(parents=True, exist_ok=True)
+    secret_path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     secret_path.write_text(new_secret, encoding="utf-8")
+    try:
+        secret_path.chmod(0o600)
+    except OSError:
+        pass
     return new_secret
 
 
@@ -151,6 +158,16 @@ def _decode_token(token: str) -> Optional[Dict[str, Any]]:
             return None
 
         header_b64, payload_b64, sig_b64 = parts
+
+        # Reject unexpected algorithms (e.g. alg=none)
+        padding = 4 - len(header_b64) % 4
+        if padding != 4:
+            header_b64_padded = header_b64 + "=" * padding
+        else:
+            header_b64_padded = header_b64
+        header = json.loads(base64.urlsafe_b64decode(header_b64_padded))
+        if header.get("alg") != "HS256" or header.get("typ") != "JWT":
+            return None
 
         # Verify signature
         signing_input = f"{header_b64}.{payload_b64}"
@@ -244,7 +261,7 @@ class UserManager:
         Returns:
             User dict with id, username, created_at, or None if username exists.
         """
-        if not username or len(username) < 3 or len(username) > 32:
+        if not username or not _USERNAME_RE.match(username):
             return None
         if not password or len(password) < 6:
             return None
@@ -287,7 +304,12 @@ class UserManager:
         Returns:
             JWT token string if authentication succeeds, None otherwise.
         """
-        conn = sqlite3.connect(str(self.db_path))
+        if not username or not _USERNAME_RE.match(username):
+            return None
+        if not password:
+            return None
+
+        conn = sqlite3.connect(str(self.db_path), timeout=10)
         try:
             row = conn.execute(
                 "SELECT id, password_hash, salt FROM users WHERE username = ?",
@@ -312,7 +334,7 @@ class UserManager:
 
     def get_user(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Get user by ID."""
-        conn = sqlite3.connect(str(self.db_path))
+        conn = sqlite3.connect(str(self.db_path), timeout=10)
         try:
             row = conn.execute(
                 "SELECT id, username, created_at FROM users WHERE id = ?",
@@ -330,7 +352,7 @@ class UserManager:
 
     def get_user_by_username(self, username: str) -> Optional[Dict[str, Any]]:
         """Get user by username."""
-        conn = sqlite3.connect(str(self.db_path))
+        conn = sqlite3.connect(str(self.db_path), timeout=10)
         try:
             row = conn.execute(
                 "SELECT id, username, created_at FROM users WHERE username = ?",
@@ -357,7 +379,7 @@ class UserManager:
 
     def user_count(self) -> int:
         """Get total user count."""
-        conn = sqlite3.connect(str(self.db_path))
+        conn = sqlite3.connect(str(self.db_path), timeout=10)
         try:
             row = conn.execute("SELECT COUNT(*) FROM users").fetchone()
             return row[0] if row else 0

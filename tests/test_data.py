@@ -55,6 +55,15 @@ class TestDataCalculations:
         assert "atr" in result
 
 
+class TestFetchHistoryValidation:
+    def test_invalid_ticker_returns_empty(self):
+        """Invalid tickers should return [] instead of raising."""
+        from augur.data import fetch_history
+
+        assert fetch_history("") == []
+        assert fetch_history("INVALID..TICKER") == []
+
+
 class TestDebtRatioConversion:
     """Tests for the debt_to_equity -> debt_ratio conversion logic in data.py."""
 

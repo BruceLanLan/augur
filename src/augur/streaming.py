@@ -85,11 +85,21 @@ class PriceStreamer:
         self.interval = interval
         self.max_clients = max_clients
         self._clients: Set[WebSocket] = set()
+        self._client_lock: Optional[asyncio.Lock] = None
+        self._client_lock_loop: Optional[asyncio.AbstractEventLoop] = None
         self._running = False
         self._task: Optional[asyncio.Task] = None
         self._prices: Dict[str, Dict[str, Any]] = {}
         self._last_real_fetch: float = 0.0
         self._initialize_prices()
+
+    def _client_lock_for_loop(self) -> asyncio.Lock:
+        """Create asyncio.Lock lazily, rebound when the event loop changes."""
+        loop = asyncio.get_running_loop()
+        if self._client_lock is None or self._client_lock_loop is not loop:
+            self._client_lock = asyncio.Lock()
+            self._client_lock_loop = loop
+        return self._client_lock
 
     def _initialize_prices(self):
         """Seed with known base prices; real values will be fetched on first update."""
@@ -170,14 +180,19 @@ class PriceStreamer:
     def get_current_prices(self) -> List[Dict[str, Any]]:
         return list(self._prices.values())
 
-    async def connect(self, websocket: WebSocket):
-        if len(self._clients) >= self.max_clients:
-            return
-        self._clients.add(websocket)
+    async def connect(self, websocket: WebSocket) -> bool:
+        """Register a client. Returns False if max_clients reached."""
+        async with self._client_lock_for_loop():
+            if len(self._clients) >= self.max_clients:
+                return False
+            self._clients.add(websocket)
+            return True
 
     async def disconnect(self, websocket: WebSocket):
-        self._clients.discard(websocket)
-        if not self._clients and self._running:
+        async with self._client_lock_for_loop():
+            self._clients.discard(websocket)
+            should_stop = not self._clients and self._running
+        if should_stop:
             await self.stop()
 
     async def broadcast(self, data: Dict[str, Any]):
@@ -185,12 +200,16 @@ class PriceStreamer:
             return
         message = json.dumps(data)
         disconnected = set()
-        for client in self._clients.copy():
+        async with self._client_lock_for_loop():
+            clients = list(self._clients)
+        for client in clients:
             try:
                 await client.send_text(message)
             except Exception:
                 disconnected.add(client)
-        self._clients -= disconnected
+        if disconnected:
+            async with self._client_lock_for_loop():
+                self._clients -= disconnected
 
     async def _stream_loop(self):
         while self._running:

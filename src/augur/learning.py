@@ -125,26 +125,44 @@ class LearningEngine:
             "outcome": None,  # To be filled in later
         })
 
-    def record_outcome(self, ticker: str, actual_return: float, lookback_days: int = 30):
+    def record_outcome(
+        self,
+        ticker: str,
+        actual_return: float,
+        lookback_days: int = 30,
+        min_age_days: Optional[int] = None,
+    ):
         """
         Record the actual outcome for predictions and update accuracy.
 
         Args:
             ticker: Stock ticker.
             actual_return: The actual return (e.g., 0.05 for +5%).
-            lookback_days: How far back to look for matching predictions.
+            lookback_days: How far back to look for matching predictions (recent window).
+            min_age_days: When set, only resolve predictions at least this many days old
+                          (used by auto-outcome checks for stale predictions).
         """
-        cutoff = time.time() - (lookback_days * 86400)
+        now = time.time()
+        cutoff = now - (lookback_days * 86400)
+        min_age_cutoff = now - (min_age_days * 86400) if min_age_days is not None else None
         updated = False
 
         for pred in self._predictions:
             if pred["ticker"] == ticker and pred["outcome"] is None:
-                if pred["timestamp"] >= cutoff:
-                    pred["outcome"] = actual_return
-                    # Determine if prediction was correct
-                    was_correct = self._evaluate_prediction(pred, actual_return)
-                    self._update_accuracy(pred["agent_id"], was_correct, actual_return, pred["score"])
-                    updated = True
+                ts = pred["timestamp"]
+                if min_age_cutoff is not None:
+                    if ts > min_age_cutoff:
+                        continue  # prediction not old enough yet
+                    max_age_cutoff = now - ((lookback_days + min_age_days) * 86400)
+                    if ts < max_age_cutoff:
+                        continue  # too stale to auto-resolve
+                elif ts < cutoff:
+                    continue  # outside recent lookback window
+                pred["outcome"] = actual_return
+                # Determine if prediction was correct
+                was_correct = self._evaluate_prediction(pred, actual_return)
+                self._update_accuracy(pred["agent_id"], was_correct, actual_return, pred["score"])
+                updated = True
 
         if updated:
             self._recalculate_weights()
@@ -242,8 +260,10 @@ class LearningEngine:
 
     @property
     def has_learned_weights(self) -> bool:
-        """Check if there are any learned weights available."""
-        return bool(self._weights)
+        """Check if there are meaningful learned weights (>=3 outcomes per agent)."""
+        if not self._weights:
+            return False
+        return any(acc.get("total", 0) >= 3 for acc in self._accuracy.values())
 
     @property
     def prediction_count(self) -> int:

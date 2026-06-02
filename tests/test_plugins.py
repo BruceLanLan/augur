@@ -110,3 +110,27 @@ class TestPluginManager:
         """activate_plugin returns False for unknown plugin."""
         manager = PluginManager()
         assert manager.activate_plugin("nope") is False
+
+    def test_activate_failure_returns_false(self):
+        """activate_plugin returns False when plugin.activate() raises."""
+        class BrokenPlugin(PluginBase):
+            name = "broken"
+            version = "0.0.1"
+            description = "raises on activate"
+
+            def activate(self):
+                raise RuntimeError("activate failed")
+
+        manager = PluginManager()
+        manager.register_plugin(BrokenPlugin())
+        assert manager.activate_plugin("broken") is False
+        assert manager.get_plugin("broken").active is False
+
+    def test_load_plugins_marks_loaded_once(self):
+        """Repeated load_plugins calls are idempotent for is_loaded."""
+        manager = PluginManager()
+        manager.load_plugins()
+        assert manager.is_loaded()
+        again = manager.load_plugins()
+        assert isinstance(again, list)
+        assert manager.is_loaded()

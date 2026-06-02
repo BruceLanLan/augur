@@ -83,7 +83,10 @@
             <label class="data-label mb-4">股票代码</label>
             <input id="inp-ticker" type="text" class="form-input" style="font-family:var(--font-data); font-size:1.2rem; font-weight:700; text-transform:uppercase; padding:12px 16px;"
                    placeholder="AAPL / NVDA / 0700.HK"
+                   aria-describedby="inp-ticker-hint"
+                   oninput="clearTickerInvalid('inp-ticker', 'inp-ticker-hint')"
                    onkeydown="if(event.key==='Enter') runAnalysis()">
+            <p id="inp-ticker-hint" class="field-hint" style="display:none; margin-top:4px; font-size:0.72rem; color:var(--signal-sell);"></p>
         </div>
         <div style="min-width:100px;">
             <label class="data-label mb-4">价格 (USD)</label>
@@ -360,12 +363,27 @@ function hasUserMetrics() {
 }
 
 function runAnalysis() {
-    var ticker = document.getElementById('inp-ticker').value.trim().toUpperCase();
-    if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
+    var ticker = (typeof validateTickerInput === 'function')
+        ? validateTickerInput('inp-ticker', 'inp-ticker-hint')
+        : document.getElementById('inp-ticker').value.trim().toUpperCase();
+    if (!ticker) return;
 
     // Disable submit button to prevent double-submit
     var submitBtn = document.getElementById('analyze-btn') || document.querySelector('[onclick="runAnalysis()"]');
-    if (submitBtn) submitBtn.disabled = true;
+    var submitBtnLabel = submitBtn ? submitBtn.querySelector('[data-i18n]') : null;
+    var origBtnText = submitBtn ? submitBtn.textContent : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('is-loading');
+        submitBtn.textContent = (typeof window.t === 'function' ? window.t('btn-analyzing') : '分析中…');
+    }
+    function resetSubmitBtn() {
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.classList.remove('is-loading');
+            submitBtn.textContent = origBtnText;
+        }
+    }
 
     var params = new URLSearchParams({
         price: num('inp-price'),
@@ -414,7 +432,7 @@ function runAnalysis() {
         .then(function(data) {
             stopProgress('analyze-progress');
             document.getElementById('spinner').style.display = 'none';
-            if (submitBtn) submitBtn.disabled = false;
+            resetSubmitBtn();
             if (!data || !data.consensus) {
                 throw new Error(data && data.detail ? data.detail : '分析返回数据异常，请重试');
             }
@@ -431,7 +449,7 @@ function runAnalysis() {
         .catch(function(err) {
             stopProgress('analyze-progress');
             document.getElementById('spinner').style.display = 'none';
-            if (submitBtn) submitBtn.disabled = false;
+            resetSubmitBtn();
             document.getElementById('error-panel').style.display = 'block';
             var msg = (err && err.name === 'AbortError')
                 ? '分析超时（超过 90 秒）。可能是后端较慢或网络问题，请稍后点击"重试"。'

@@ -4,31 +4,31 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>Login</h1>
-    <p class="page-desc">Sign in to access your Augur dashboard</p>
+    <h1 data-i18n="login-title">登录</h1>
+    <p class="page-desc" data-i18n="login-desc">登录以访问 Augur 仪表盘</p>
 </div>
 
-<div style="max-width: 400px; margin: 2rem auto; padding: 2rem; background: var(--bg-secondary, #1e1e2e); border-radius: 12px; border: 1px solid var(--border-color, #333); width: 90%;" role="main" aria-label="Login form">
-    <form id="login-form" onsubmit="handleLogin(event)" aria-label="Sign in">
+<div style="max-width: 400px; margin: 2rem auto; padding: 2rem; background: var(--bg-secondary, #1e1e2e); border-radius: 12px; border: 1px solid var(--border-color, #333); width: 90%;">
+    <form id="login-form" onsubmit="handleLogin(event)" aria-labelledby="login-title">
         <div style="margin-bottom: 1.5rem;">
-            <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);">Username</label>
+            <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);" data-i18n="login-username">用户名</label>
             <input type="text" id="username" name="username" required
                    style="width: 100%; padding: 0.75rem; background: var(--bg-primary, #121212); border: 1px solid var(--border-color, #444); border-radius: 8px; color: var(--text-primary, #e0e0e0); font-size: 1rem; box-sizing: border-box;"
                    placeholder="Enter your username" autocomplete="username" maxlength="32" aria-required="true">
         </div>
         <div style="margin-bottom: 1.5rem;">
-            <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);">Password</label>
+            <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);" data-i18n="login-password">密码</label>
             <input type="password" id="password" name="password" required
                    style="width: 100%; padding: 0.75rem; background: var(--bg-primary, #121212); border: 1px solid var(--border-color, #444); border-radius: 8px; color: var(--text-primary, #e0e0e0); font-size: 1rem; box-sizing: border-box;"
                    placeholder="Enter your password" autocomplete="current-password" maxlength="128" aria-required="true">
         </div>
         <div id="login-error" style="display: none; margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); border-radius: 8px; color: #ff6b6b; font-size: 0.9rem;" role="alert"></div>
-        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem;" aria-label="Sign in to your account">
-            Sign In
+        <button type="submit" id="login-submit-btn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem;" data-i18n="login-submit">
+            登录
         </button>
     </form>
     <p style="margin-top: 1.5rem; text-align: center; color: var(--text-secondary, #999); font-size: 0.9rem;">
-        Don't have an account? <a href="/register" style="color: var(--accent-color, #6366f1);">Register</a>
+        <span data-i18n="login-register-link">还没有账号？</span> <a href="/register" style="color: var(--accent-orange);">Register</a>
     </p>
 </div>
 {% endblock %}
@@ -38,6 +38,7 @@
 async function handleLogin(event) {
     event.preventDefault();
     var errorEl = document.getElementById('login-error');
+    var submitBtn = document.getElementById('login-submit-btn');
     errorEl.style.display = 'none';
 
     var username = document.getElementById('username').value.trim();
@@ -47,6 +48,13 @@ async function handleLogin(event) {
         errorEl.textContent = 'Please fill in all fields.';
         errorEl.style.display = 'block';
         return;
+    }
+
+    var origLabel = submitBtn ? submitBtn.textContent : '';
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.classList.add('is-loading');
+        submitBtn.textContent = (typeof window.t === 'function' ? window.t('login-signing-in') : 'Signing in…');
     }
 
     try {
@@ -63,10 +71,12 @@ async function handleLogin(event) {
         } else {
             errorEl.textContent = data.detail || 'Login failed. Please check your credentials.';
             errorEl.style.display = 'block';
+            if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('is-loading'); submitBtn.textContent = origLabel; }
         }
     } catch(e) {
         errorEl.textContent = 'Connection error. Please try again.';
         errorEl.style.display = 'block';
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.classList.remove('is-loading'); submitBtn.textContent = origLabel; }
     }
 }
 </script>

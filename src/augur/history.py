@@ -14,7 +14,6 @@ Functions:
 """
 
 import json
-import os
 import time as _time
 from datetime import datetime
 from pathlib import Path
@@ -28,9 +27,25 @@ _count_cache_time: float = 0.0
 _COUNT_CACHE_TTL: float = 5.0  # seconds
 
 
+def _invalidate_count_cache() -> None:
+    """Force count_history() to refresh on next call."""
+    global _count_cache_time
+    _count_cache_time = 0.0
+
+
 def _ensure_dir():
     """Ensure history directory exists."""
     HISTORY_DIR.mkdir(parents=True, exist_ok=True)
+
+
+def _safe_ticker_label(ticker: str) -> str:
+    """Return a filesystem-safe ticker label for history filenames."""
+    label = (ticker or "").strip().upper()
+    if not label or any(c in label for c in ('/', '\\', '..', '\0')):
+        return "INVALID"
+    if len(label) > 15:
+        label = label[:15]
+    return label
 
 
 def save_analysis(ticker: str, result_dict: Dict[str, Any]) -> str:
@@ -44,13 +59,14 @@ def save_analysis(ticker: str, result_dict: Dict[str, Any]) -> str:
         The history_id (filename without extension).
     """
     _ensure_dir()
-    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-    history_id = f"{timestamp}_{ticker.upper()}"
+    safe_ticker = _safe_ticker_label(ticker)
+    timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S_%f")
+    history_id = f"{timestamp}_{safe_ticker}"
     filepath = HISTORY_DIR / f"{history_id}.json"
 
     record = {
         "id": history_id,
-        "ticker": ticker.upper(),
+        "ticker": safe_ticker,
         "timestamp": datetime.utcnow().isoformat() + "Z",
         "result": result_dict,
     }
@@ -58,6 +74,7 @@ def save_analysis(ticker: str, result_dict: Dict[str, Any]) -> str:
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(record, f, ensure_ascii=False, indent=2)
 
+    _invalidate_count_cache()
     return history_id
 
 
@@ -131,7 +148,7 @@ def get_history(history_id: str) -> Optional[Dict[str, Any]]:
         Full record dict, or None if not found.
     """
     # Path traversal protection: basic char check + resolved path validation
-    if any(c in history_id for c in ['/', '\\', '..']) :
+    if not history_id or any(c in history_id for c in ('/', '\\', '..', '\0')):
         return None
 
     _ensure_dir()
@@ -164,6 +181,7 @@ def clear_history() -> int:
             count += 1
         except OSError:
             continue
+    _invalidate_count_cache()
     return count
 
 
@@ -177,7 +195,7 @@ def delete_history(history_id: str) -> bool:
         True if deleted, False if not found.
     """
     # Path traversal protection: basic char check + resolved path validation
-    if any(c in history_id for c in ['/', '\\', '..']) :
+    if not history_id or any(c in history_id for c in ('/', '\\', '..', '\0')):
         return False
 
     _ensure_dir()
@@ -190,6 +208,7 @@ def delete_history(history_id: str) -> bool:
 
     try:
         filepath.unlink()
+        _invalidate_count_cache()
         return True
     except OSError:
         return False

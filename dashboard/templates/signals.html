@@ -1,29 +1,70 @@
 {% extends "base.html" %}
 {% block title %}信号监控 - Augur{% endblock %}
+{% block extra_head %}
+<style>
+.signals-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.signals-add-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.signals-add-row input[type="text"],
+.signals-add-row input[type="number"] {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-data);
+    font-size: 0.85rem;
+}
+.signals-add-row input[type="text"] {
+    width: 140px;
+    text-transform: uppercase;
+}
+.signals-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 768px) {
+    .signal-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+    .signals-add-row input[type="text"],
+    .signals-add-row input[type="number"] { width: 100%; max-width: 160px; }
+}
+</style>
+{% endblock %}
 {% block content %}
 
-<div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+<div class="signals-header">
     <div>
-        <h2 style="color:var(--accent-orange); margin-bottom:4px;">信号监控</h2>
-        <p class="text-muted" style="font-size:0.82rem; margin:0;">自选股实时信号追踪，多Agent共识预警</p>
+        <h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="signals-title">信号监控</h1>
+        <p class="text-muted" style="font-size:0.82rem; margin:0;" data-i18n="signals-desc">自选股实时信号追踪，多Agent共识预警</p>
     </div>
-    <div style="display:flex; align-items:center; gap:12px;">
-        <span id="refresh-indicator" class="text-muted" style="font-size:0.75rem;">
-            <span class="status-dot" style="background:var(--signal-buy); display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px;"></span>
-            列表刷新: 60s
+    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <span id="refresh-indicator" class="text-muted" style="font-size:0.75rem;" aria-live="polite">
+            <span class="status-dot" style="background:var(--signal-buy); display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px;" aria-hidden="true"></span>
+            <span data-i18n="signals-refresh-label">列表刷新: 60s</span>
         </span>
-        <button class="btn btn-primary" onclick="runAllAnalysis()" id="run-all-btn">
-            &#x25B6; 运行全部分析
+        <button type="button" class="btn btn-primary" onclick="runAllAnalysis()" id="run-all-btn">
+            &#x25B6; <span data-i18n="signals-run-all">运行全部分析</span>
         </button>
     </div>
 </div>
 
 <!-- Signal Statistics Panel -->
-<div class="signal-stats-panel" id="signal-stats" style="display:none;">
+<div class="signal-stats-panel" id="signal-stats" style="display:none;" aria-live="polite">
     <div class="signal-stats-grid">
         <div class="signal-stat-item">
             <div class="signal-stat-value" id="stat-total">0</div>
-            <div class="signal-stat-label">总信号</div>
+            <div class="signal-stat-label" data-i18n="signals-stat-total">总信号</div>
         </div>
         <div class="signal-stat-item">
             <div class="signal-stat-value" style="color:var(--signal-buy);" id="stat-buy">0</div>
@@ -42,7 +83,7 @@
         </div>
         <div class="signal-stat-item">
             <div class="signal-stat-value" style="color:var(--accent-orange);" id="stat-avg-score">--</div>
-            <div class="signal-stat-label">平均评分</div>
+            <div class="signal-stat-label" data-i18n="signals-stat-avg-score">平均评分</div>
         </div>
     </div>
 </div>
@@ -50,38 +91,34 @@
 <!-- Signal Filter Row -->
 <div class="signal-filter-row">
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-        <label class="text-muted" style="font-size:0.75rem; white-space:nowrap;">信号类型:</label>
-        <select id="filter-signal-type" class="signal-filter-select" onchange="applySignalFilters()">
-            <option value="ALL">全部</option>
+        <label for="filter-signal-type" class="text-muted" style="font-size:0.75rem; white-space:nowrap;" data-i18n="signals-filter-type">信号类型:</label>
+        <select id="filter-signal-type" class="signal-filter-select" onchange="applySignalFilters()" aria-label="Signal type filter">
+            <option value="ALL" data-i18n="signals-filter-all">全部</option>
             <option value="BUY">BUY</option>
             <option value="SELL">SELL</option>
             <option value="HOLD">HOLD</option>
         </select>
-        <label class="text-muted" style="font-size:0.75rem; white-space:nowrap;">排序:</label>
-        <select id="filter-sort" class="signal-filter-select" onchange="applySignalFilters()">
-            <option value="score-desc">评分 高&rarr;低</option>
-            <option value="score-asc">评分 低&rarr;高</option>
-            <option value="ticker-asc">代码 A&rarr;Z</option>
+        <label for="filter-sort" class="text-muted" style="font-size:0.75rem; white-space:nowrap;" data-i18n="signals-filter-sort">排序:</label>
+        <select id="filter-sort" class="signal-filter-select" onchange="applySignalFilters()" aria-label="Sort order">
+            <option value="score-desc" data-i18n="signals-sort-score-desc">评分 高→低</option>
+            <option value="score-asc" data-i18n="signals-sort-score-asc">评分 低→高</option>
+            <option value="ticker-asc" data-i18n="signals-sort-ticker-asc">代码 A→Z</option>
         </select>
     </div>
 </div>
 
 <!-- Add Ticker Form -->
 <div class="card" style="margin-bottom:16px; padding:16px;">
-    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-        <div class="data-label" style="margin:0; white-space:nowrap;">添加自选股</div>
-        <input type="text" id="add-ticker-input" placeholder="股票代码 (如 AAPL)" 
-               style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:140px; text-transform:uppercase;"
+    <div class="signals-add-row">
+        <label for="add-ticker-input" class="data-label" style="margin:0; white-space:nowrap;" data-i18n="signals-add-label">添加自选股</label>
+        <input type="text" id="add-ticker-input" data-i18n="signals-add-placeholder" placeholder="股票代码 (如 AAPL)"
+               aria-describedby="add-ticker-hint"
                onkeydown="if(event.key==='Enter')addTicker()">
-        <input type="number" id="add-pe-input" placeholder="PE" step="0.1"
-               style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:80px;">
-        <input type="number" id="add-roe-input" placeholder="ROE%" step="0.1" min="0" max="200"
-               title="ROE 百分比，如 55 表示 55%"
-               style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:80px;">
-        <input type="number" id="add-gm-input" placeholder="毛利率%" step="0.1" min="0" max="100"
-               title="毛利率百分比，如 46 表示 46%"
-               style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem; width:90px;">
-        <button class="btn btn-primary" onclick="addTicker()" style="padding:6px 16px;">+ 添加</button>
+        <span id="add-ticker-hint" class="sr-only">Enter ticker symbol and optional metrics</span>
+        <input type="number" id="add-pe-input" placeholder="PE" step="0.1" aria-label="PE ratio">
+        <input type="number" id="add-roe-input" placeholder="ROE%" step="0.1" min="0" max="200" aria-label="ROE percent">
+        <input type="number" id="add-gm-input" placeholder="毛利率%" step="0.1" min="0" max="100" aria-label="Gross margin percent">
+        <button type="button" class="btn btn-primary" onclick="addTicker()" style="padding:6px 16px;" data-i18n="signals-add-btn">+ 添加</button>
     </div>
 </div>
 
@@ -90,18 +127,19 @@
     <div class="data-label" style="margin-bottom:12px; font-size:0.9rem; color:var(--accent-orange);" data-i18n="alert_threshold_title">监控告警设置</div>
     <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
         <div style="flex:1; min-width:200px;">
-            <label class="text-muted" style="font-size:0.75rem; display:block; margin-bottom:4px;" data-i18n="alert_threshold_label">评分阈值</label>
+            <label for="alert-threshold" class="text-muted" style="font-size:0.75rem; display:block; margin-bottom:4px;" data-i18n="alert_threshold_label">评分阈值</label>
             <div style="display:flex; align-items:center; gap:8px;">
                 <input type="range" id="alert-threshold" min="1" max="10" step="1" value="8"
                        style="flex:1; accent-color:var(--accent-orange);"
-                       oninput="document.getElementById('threshold-value').textContent=this.value">
-                <span id="threshold-value" style="font-family:var(--font-data); font-size:1rem; color:var(--accent-orange); font-weight:600; min-width:20px; text-align:center;">8</span>
+                       oninput="document.getElementById('threshold-value').textContent=this.value"
+                       aria-valuemin="1" aria-valuemax="10" aria-valuenow="8">
+                <span id="threshold-value" style="font-family:var(--font-data); font-size:1rem; color:var(--accent-orange); font-weight:600; min-width:20px; text-align:center;" aria-hidden="true">8</span>
                 <span class="text-muted" style="font-size:0.72rem;">/10</span>
             </div>
-            <div class="text-muted" style="font-size:0.68rem; margin-top:2px;">评分超过此阈值时触发告警通知</div>
+            <div class="text-muted" style="font-size:0.68rem; margin-top:2px;" data-i18n="signals-alert-hint">评分超过此阈值时触发告警通知</div>
         </div>
         <div style="min-width:150px;">
-            <label class="text-muted" style="font-size:0.75rem; display:block; margin-bottom:4px;" data-i18n="alert_channel_label">通知渠道</label>
+            <label for="alert-channel" class="text-muted" style="font-size:0.75rem; display:block; margin-bottom:4px;" data-i18n="alert_channel_label">通知渠道</label>
             <select id="alert-channel" class="signal-filter-select" style="width:100%; padding:6px 10px;">
                 <option value="telegram">Telegram</option>
                 <option value="slack">Slack</option>
@@ -110,43 +148,44 @@
             </select>
         </div>
         <div style="align-self:flex-end;">
-            <button class="btn btn-primary" onclick="saveAlertSettings()" style="padding:8px 16px;" data-i18n="alert_save">保存告警设置</button>
+            <button type="button" class="btn btn-primary" onclick="saveAlertSettings()" style="padding:8px 16px;" data-i18n="alert_save">保存告警设置</button>
         </div>
     </div>
-    <div id="alert-saved-info" style="display:none; margin-top:8px; font-size:0.72rem; color:var(--signal-buy);">
-        &#x2714; 当前设置: 阈值 <span id="saved-threshold">--</span>/10, 渠道 <span id="saved-channel">--</span>
+    <div id="alert-saved-info" style="display:none; margin-top:8px; font-size:0.72rem; color:var(--signal-buy);" aria-live="polite">
+        &#x2714; <span id="alert-saved-text"></span>
     </div>
 </div>
 
 <!-- Watchlist Table -->
 <div class="card" style="padding:0; overflow:hidden;">
-    <table style="width:100%; border-collapse:collapse; font-size:0.85rem;">
-        <thead>
-            <tr style="background:var(--bg-primary); border-bottom:1px solid var(--border-color);">
-                <th style="padding:12px 16px; text-align:left; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">代码</th>
-                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">PE</th>
-                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">ROE</th>
-                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">毛利率</th>
-                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">信号</th>
-                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">评分</th>
-                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">多/空/持</th>
-                <th style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;">操作</th>
-            </tr>
-        </thead>
-        <tbody id="watchlist-body">
-            <tr>
-                <td colspan="8" style="padding:48px 16px; text-align:center; color:var(--text-muted);">
-                    加载中...
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="signals-table-wrap">
+        <table style="width:100%; border-collapse:collapse; font-size:0.85rem; min-width:640px;">
+            <caption class="sr-only" data-i18n="signals-watchlist-caption">自选股信号列表</caption>
+            <thead>
+                <tr style="background:var(--bg-primary); border-bottom:1px solid var(--border-color);">
+                    <th scope="col" style="padding:12px 16px; text-align:left; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;" data-i18n="signals-col-ticker">代码</th>
+                    <th scope="col" style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;" data-i18n="signals-col-pe">PE</th>
+                    <th scope="col" style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;" data-i18n="signals-col-roe">ROE</th>
+                    <th scope="col" style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;" data-i18n="signals-col-margin">毛利率</th>
+                    <th scope="col" style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;" data-i18n="signals-col-signal">信号</th>
+                    <th scope="col" style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;" data-i18n="signals-col-score">评分</th>
+                    <th scope="col" style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;" data-i18n="signals-col-votes">多/空/持</th>
+                    <th scope="col" style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;" data-i18n="signals-col-actions">操作</th>
+                </tr>
+            </thead>
+            <tbody id="watchlist-body">
+                <tr>
+                    <td colspan="8" style="padding:48px 16px; text-align:center; color:var(--text-muted);" data-i18n="signals-loading">加载中...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <!-- Analysis Results -->
 <div id="analysis-results" style="margin-top:16px; display:none;">
     <div class="card" style="padding:16px; border-left:3px solid var(--accent-orange);">
-        <div class="data-label" style="margin-bottom:8px;">最近分析结果</div>
+        <div class="data-label" style="margin-bottom:8px;" data-i18n="signals-recent-results">最近分析结果</div>
         <div id="results-content"></div>
     </div>
 </div>
@@ -158,22 +197,20 @@
 var watchlistData = [];
 var analysisResults = {};
 var autoRefreshTimer = null;
+function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Restore analysis results from sessionStorage
     try { var saved = sessionStorage.getItem('augur-analysis-results'); if(saved) { analysisResults = JSON.parse(saved); updateStatsPanel(); renderWatchlist(); } } catch(e){}
 
     loadWatchlist();
     startAutoRefresh();
 
-    // Event delegation for remove ticker buttons (XSS-safe)
     document.getElementById('watchlist-body').addEventListener('click', function(e) {
         var btn = e.target.closest('.remove-ticker-btn');
         if (btn) {
             var ticker = btn.getAttribute('data-ticker');
             if (ticker) removeTicker(ticker);
         }
-        // Expandable detail row toggle
         var row = e.target.closest('.signal-row-main');
         if (row) {
             var detailRow = row.nextElementSibling;
@@ -184,7 +221,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Pause auto-refresh when page is hidden, resume when visible
 document.addEventListener('visibilitychange', function() {
     if (document.hidden) {
         if (autoRefreshTimer) { clearInterval(autoRefreshTimer); autoRefreshTimer = null; }
@@ -246,7 +282,6 @@ function getFilteredData() {
 
     var items = watchlistData.slice();
 
-    // Filter by signal type
     if (signalType !== 'ALL') {
         items = items.filter(function(item) {
             var result = analysisResults[item.ticker];
@@ -258,7 +293,6 @@ function getFilteredData() {
         });
     }
 
-    // Sort
     items.sort(function(a, b) {
         var ra = analysisResults[a.ticker] || {};
         var rb = analysisResults[b.ticker] || {};
@@ -277,20 +311,21 @@ function renderWatchlist() {
 
     if (watchlistData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="padding:48px 16px; text-align:center; color:var(--text-muted);">' +
-            '<div style="font-size:2.4rem; margin-bottom:8px;">&#x1F4CB;</div>' +
-            '<div style="font-size:1rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">自选股列表还是空的</div>' +
-            '<div style="font-size:0.82rem; margin-bottom:14px;">添加你关注的股票，一键运行 18 位大师共识分析并持续追踪信号</div>' +
+            '<div style="font-size:2.4rem; margin-bottom:8px;" aria-hidden="true">&#x1F4CB;</div>' +
+            '<div style="font-size:1rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">' + escapeHtml(_t('signals-empty-title')) + '</div>' +
+            '<div style="font-size:0.82rem; margin-bottom:14px;">' + escapeHtml(_t('signals-empty-desc')) + '</div>' +
             '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">' +
-            '<button class="example-chip" onclick="quickAddExample(\'AAPL\')">+ AAPL</button>' +
-            '<button class="example-chip" onclick="quickAddExample(\'NVDA\')">+ NVDA</button>' +
-            '<button class="example-chip" onclick="quickAddExample(\'MSFT\')">+ MSFT</button>' +
+            '<button type="button" class="example-chip" onclick="quickAddExample(\'AAPL\')">+ AAPL</button>' +
+            '<button type="button" class="example-chip" onclick="quickAddExample(\'NVDA\')">+ NVDA</button>' +
+            '<button type="button" class="example-chip" onclick="quickAddExample(\'MSFT\')">+ MSFT</button>' +
             '</div>' +
             '</td></tr>';
         return;
     }
 
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="padding:32px 16px; text-align:center; color:var(--text-muted);">当前筛选条件无匹配结果</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="padding:32px 16px; text-align:center; color:var(--text-muted);">' +
+            escapeHtml(_t('signals-no-filter-match')) + '</td></tr>';
         return;
     }
 
@@ -325,14 +360,13 @@ function renderWatchlist() {
             '<td style="padding:10px 16px; text-align:center;">' + scoreHtml + '</td>' +
             '<td style="padding:10px 16px; text-align:center;">' + votesHtml + '</td>' +
             '<td style="padding:10px 16px; text-align:center;">' +
-                '<button class="remove-ticker-btn" data-ticker="' + escapeHtml(ticker) + '" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1rem; padding:2px 6px;" title="移除" aria-label="移除 ' + escapeHtml(ticker) + '">&times;</button>' +
+                '<button type="button" class="remove-ticker-btn" data-ticker="' + escapeHtml(ticker) + '" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1rem; padding:2px 6px;" data-i18n-title="signals-remove-aria" title="移除" aria-label="' + escapeHtml(_t('signals-remove-aria') + ' ' + ticker) + '">&times;</button>' +
             '</td>' +
             '</tr>';
 
-        // Expandable detail row
         if (result && result.details) {
             html += '<tr class="signal-detail-row"><td colspan="8" style="padding:0 16px;"><div class="signal-detail-content">' +
-                '<div class="data-label" style="margin-bottom:6px;">各Agent评分明细</div>' +
+                '<div class="data-label" style="margin-bottom:6px;">' + escapeHtml(_t('signals-agent-details')) + '</div>' +
                 '<div style="display:flex; flex-wrap:wrap; gap:8px;">';
             var details = result.details || [];
             for (var d = 0; d < details.length; d++) {
@@ -349,7 +383,7 @@ function renderWatchlist() {
 function addTicker() {
     var ticker = document.getElementById('add-ticker-input').value.trim().toUpperCase();
     if (!ticker) {
-        showToast('请输入股票代码', 'warning');
+        showToast(_t('msg-enter-ticker'), 'warning');
         return;
     }
 
@@ -358,8 +392,8 @@ function addTicker() {
     var roe = document.getElementById('add-roe-input').value;
     var gm = document.getElementById('add-gm-input').value;
     if (pe) body.pe = parseFloat(pe);
-    if (roe) body.roe = parseFloat(roe) / 100;        // user enters %, API expects decimal
-    if (gm) body.gross_margins = parseFloat(gm) / 100; // same
+    if (roe) body.roe = parseFloat(roe) / 100;
+    if (gm) body.gross_margins = parseFloat(gm) / 100;
 
     fetch('/api/watchlist/add', {
         method: 'POST',
@@ -369,22 +403,21 @@ function addTicker() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
-            showToast(ticker + ' 已添加到自选股');
+            showToast(ticker + ' added');
             document.getElementById('add-ticker-input').value = '';
             document.getElementById('add-pe-input').value = '';
             document.getElementById('add-roe-input').value = '';
             document.getElementById('add-gm-input').value = '';
             loadWatchlist();
         } else {
-            showToast(data.detail || '添加失败', 'error');
+            showToast(data.detail || 'Add failed', 'error');
         }
     })
     .catch(function(e) {
-        showToast('添加失败: ' + e.message, 'error');
+        showToast('Add failed: ' + e.message, 'error');
     });
 }
 
-// One-click add an example ticker from the empty state
 function quickAddExample(ticker) {
     fetch('/api/watchlist/add', {
         method: 'POST',
@@ -394,13 +427,13 @@ function quickAddExample(ticker) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
-            showToast(ticker + ' 已添加，点击右上角"运行全部分析"即可分析');
+            showToast(ticker + ' added');
             loadWatchlist();
         } else {
-            showToast(data.detail || '添加失败', 'error');
+            showToast(data.detail || 'Add failed', 'error');
         }
     })
-    .catch(function(e) { showToast('添加失败: ' + e.message, 'error'); });
+    .catch(function(e) { showToast('Add failed: ' + e.message, 'error'); });
 }
 
 function removeTicker(ticker) {
@@ -408,33 +441,33 @@ function removeTicker(ticker) {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.status === 'ok') {
-                showToast(ticker + ' 已移除');
+                showToast(ticker + ' removed');
                 delete analysisResults[ticker];
                 sessionStorage.setItem('augur-analysis-results', JSON.stringify(analysisResults));
                 updateStatsPanel();
                 loadWatchlist();
             } else {
-                showToast(data.detail || '移除失败', 'error');
+                showToast(data.detail || 'Remove failed', 'error');
             }
         })
         .catch(function(e) {
-            showToast('移除失败: ' + e.message, 'error');
+            showToast('Remove failed: ' + e.message, 'error');
         });
 }
 
 function runAllAnalysis() {
     var btn = document.getElementById('run-all-btn');
     btn.disabled = true;
-    btn.textContent = '分析中... (18 位大师)';
+    btn.innerHTML = '&#x25B6; <span>' + escapeHtml(_t('signals-run-all-running')) + '</span>';
 
     fetchWithTimeout('/api/watchlist/run', { method: 'POST' }, 180000)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             btn.disabled = false;
-            btn.innerHTML = '&#x25B6; 运行全部分析';
+            btn.innerHTML = '&#x25B6; <span data-i18n="signals-run-all">' + escapeHtml(_t('signals-run-all')) + '</span>';
 
             if (data.status === 'empty') {
-                showToast('自选股列表为空，请先添加', 'warning');
+                showToast(_t('signals-empty-title'), 'warning');
                 return;
             }
 
@@ -447,22 +480,20 @@ function runAllAnalysis() {
                 sessionStorage.setItem('augur-analysis-results', JSON.stringify(analysisResults));
                 updateStatsPanel();
                 renderWatchlist();
-                showToast('分析完成 - ' + data.results.length + ' 只股票');
+                showToast('Analysis complete - ' + data.results.length + ' tickers');
             }
         })
         .catch(function(e) {
             btn.disabled = false;
-            btn.innerHTML = '&#x25B6; 运行全部分析';
+            btn.innerHTML = '&#x25B6; <span data-i18n="signals-run-all">' + escapeHtml(_t('signals-run-all')) + '</span>';
             var msg = (e && e.name === 'AbortError')
-                ? '分析超时（超过 180 秒），自选股较多时请减少数量后重试。'
-                : '分析失败: ' + e.message;
+                ? _t('hero-error-timeout')
+                : _t('hero-error-request') + e.message;
             showToast(msg, 'error');
         });
 }
 
-// ===== Alert Threshold Settings =====
 function loadAlertSettings() {
-    // Load from localStorage first for instant display
     var saved = localStorage.getItem('augur-alert-settings');
     if (saved) {
         try {
@@ -473,7 +504,6 @@ function loadAlertSettings() {
             showSavedAlertInfo(s.alert_threshold, s.alert_channel);
         } catch(e) {}
     }
-    // Also try to load from server
     fetch('/api/notifications/config')
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -499,10 +529,8 @@ function saveAlertSettings() {
     var channel = document.getElementById('alert-channel').value;
     var settings = { alert_threshold: parseInt(threshold), alert_channel: channel };
 
-    // Save to localStorage
     localStorage.setItem('augur-alert-settings', JSON.stringify(settings));
 
-    // Save to server
     fetch('/api/notifications/config', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -511,27 +539,28 @@ function saveAlertSettings() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
-            showToast('告警设置已保存');
+            showToast(_t('alert_save'));
             showSavedAlertInfo(threshold, channel);
         } else {
-            showToast('保存失败: ' + (data.detail || data.message), 'error');
+            showToast('Save failed: ' + (data.detail || data.message), 'error');
         }
     })
     .catch(function(e) {
-        showToast('保存失败: ' + e.message, 'error');
+        showToast('Save failed: ' + e.message, 'error');
     });
 }
 
 function showSavedAlertInfo(threshold, channel) {
     var el = document.getElementById('alert-saved-info');
-    if (el) {
+    var textEl = document.getElementById('alert-saved-text');
+    if (el && textEl) {
         el.style.display = 'block';
-        document.getElementById('saved-threshold').textContent = threshold;
-        document.getElementById('saved-channel').textContent = channel;
+        textEl.textContent = _t('signals-alert-saved')
+            .replace('{threshold}', threshold)
+            .replace('{channel}', channel);
     }
 }
 
-// Load alert settings on page load
 loadAlertSettings();
 </script>
 {% endblock %}

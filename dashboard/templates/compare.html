@@ -82,21 +82,21 @@
 {% endblock %}
 {% block content %}
 
-<h2 style="color:var(--accent-orange); margin-bottom:4px;">对比分析</h2>
-<p class="text-muted mb-16" style="font-size:0.82rem;">选择 2-5 位投资大师，对比同一标的的分析差异</p>
+<h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="compare-title">对比分析</h1>
+<p class="text-muted mb-16" style="font-size:0.82rem;" data-i18n="compare-desc">选择 2-5 位投资大师，对比同一标的的分析差异</p>
 
 <div class="card mb-24">
     <div class="mb-12">
-        <label class="data-label mb-4">股票代码</label>
-        <div class="flex items-center gap-12">
-            <input id="compare-ticker" type="text" class="form-input" style="max-width:200px; font-family:var(--font-data); font-size:1.1rem; font-weight:700; text-transform:uppercase;" placeholder="AAPL">
-            <button class="btn btn-primary" onclick="runCompare()" id="compare-btn" disabled>对比分析</button>
+        <label class="data-label mb-4" for="compare-ticker" data-i18n="compare-ticker-label">股票代码</label>
+        <div class="flex items-center gap-12" style="flex-wrap:wrap;">
+            <input id="compare-ticker" type="text" class="form-input" style="max-width:200px; font-family:var(--font-data); font-size:1.1rem; font-weight:700; text-transform:uppercase;" placeholder="AAPL" aria-required="true" autocomplete="off">
+            <button type="button" class="btn btn-primary" onclick="runCompare()" id="compare-btn" disabled data-i18n="compare-run">对比分析</button>
         </div>
     </div>
 
     <div class="mb-8">
-        <label class="data-label mb-8">选择投资大师 (2-5 位)</label>
-        <div class="agent-checkbox-grid" id="agent-grid">
+        <span class="data-label mb-8" id="compare-agents-label" data-i18n="compare-agents-label">选择投资大师 (2-5 位)</span>
+        <div class="agent-checkbox-grid" id="agent-grid" role="group" aria-labelledby="compare-agents-label">
             {% for p in personas %}
             <label class="agent-checkbox-item" onclick="updateSelection(this)">
                 <input type="checkbox" value="{{ p.id }}" name="agents">
@@ -109,9 +109,9 @@
 </div>
 
 <!-- Spinner -->
-<div id="compare-spinner">
-    <div class="spinner" style="margin:0 auto;"></div>
-    <p class="loading-pulse text-orange text-mono mt-16" style="font-size:0.88rem;">正在对比分析...</p>
+<div id="compare-spinner" role="status" aria-live="polite" aria-busy="true">
+    <div class="spinner" style="margin:0 auto;" aria-hidden="true"></div>
+    <p class="loading-pulse text-orange text-mono mt-16" style="font-size:0.88rem;" data-i18n="compare-loading">正在对比分析...</p>
     <div class="compare-results mt-16">
         <div class="skeleton skeleton-compare-card"></div>
         <div class="skeleton skeleton-compare-card"></div>
@@ -120,18 +120,18 @@
 </div>
 
 <!-- Error Panel -->
-<div id="compare-error" class="error-panel mb-16" style="display:none;">
-    <div class="error-panel-title"><span class="error-panel-icon">&#x26A0;</span>对比分析失败</div>
+<div id="compare-error" class="error-panel mb-16" style="display:none;" role="alert">
+    <div class="error-panel-title"><span class="error-panel-icon" aria-hidden="true">&#x26A0;</span><span data-i18n="compare-error-title">对比分析失败</span></div>
     <div class="error-panel-msg" id="compare-error-msg"></div>
     <div class="error-panel-retry">
-        <button class="btn btn-sm" onclick="runCompare()">重试</button>
+        <button type="button" class="btn btn-sm" onclick="runCompare()" data-i18n="compare-retry">重试</button>
     </div>
 </div>
 
 <!-- Results -->
 <div id="compare-results-section">
     <div class="flex items-center justify-between mb-12">
-        <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">对比结果</div>
+        <h2 class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0; font-size:1rem;" data-i18n="compare-results">对比结果</h2>
         <div class="flex items-center gap-12">
             <div id="compare-consensus" class="text-muted" style="font-size:0.78rem;"></div>
             <div class="export-btn-group" id="compare-export" style="display:none;">

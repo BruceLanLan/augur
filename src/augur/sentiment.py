@@ -164,6 +164,15 @@ class SentimentAnalyzer:
 
     def get_sentiment(self, ticker: str) -> SentimentResult:
         ticker = ticker.upper().strip()
+        if not ticker:
+            return SentimentResult(
+                ticker="",
+                overall_score=0.0,
+                sources={"stocktwits_score": 0.0, "reddit_score": 0.0, "x_score": 0.0},
+                volume=0,
+                trending=False,
+                data_source="mock",
+            )
         if self._is_cached(ticker):
             return self._cache[ticker]
 

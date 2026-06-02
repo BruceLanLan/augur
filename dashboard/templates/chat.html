@@ -138,9 +138,15 @@ async function sendMessage(event) {
         var body = {message: message};
         if (selectedAgent) body.agent_id = selectedAgent;
 
+        var headers = {'Content-Type': 'application/json'};
+        try {
+            var token = localStorage.getItem('augur_api_token') || localStorage.getItem('augur-token');
+            if (token) headers['Authorization'] = 'Bearer ' + token;
+        } catch(e) {}
+
         var resp = await fetch('/api/chat', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: headers,
             body: JSON.stringify(body)
         });
         var data = await resp.json();

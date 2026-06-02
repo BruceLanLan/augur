@@ -1,11 +1,17 @@
 {% extends "base.html" %}
-{% block title %}系统设置 - Augur{% endblock %}
+{% block title %}Settings - Augur{% endblock %}
 {% block extra_head %}
 <style>
 .settings-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
     gap: 12px;
+}
+@media (max-width: 768px) {
+    .settings-grid { grid-template-columns: 1fr; }
+    .settings-cron-grid { grid-template-columns: 1fr !important; }
+    .settings-toggle-grid { grid-template-columns: 1fr !important; }
+    .settings-api-controls { flex-wrap: wrap; }
 }
 .persona-config-row {
     display: flex;
@@ -114,29 +120,31 @@
 
 {% block content %}
 
+<h1 class="sr-only" data-i18n="settings-title">系统设置</h1>
+
 <!-- Section A: LLM Model Config -->
 <div class="settings-section" id="section-llm">
     <div class="settings-section-title">
-        <span>A. LLM 模型配置</span>
-        <span class="settings-section-desc">为每位投资大师分配 LLM 推理模型</span>
+        <span data-i18n="settings-section-a-title">A. LLM 模型配置</span>
+        <span class="settings-section-desc" data-i18n="settings-section-a-desc">为每位投资大师分配 LLM 推理模型</span>
     </div>
 
     <div class="flex items-center justify-between mb-16" style="flex-wrap:wrap; gap:12px;">
         <div>
             <span id="unsaved-indicator" class="unsaved-dot" style="display:none;"></span>
-            <span id="unsaved-text" aria-live="polite" role="status" style="display:none; font-size:0.75rem; color:var(--signal-sell); margin-left:4px; font-weight:400;">有未保存更改</span>
+            <span id="unsaved-text" aria-live="polite" role="status" data-i18n="settings-unsaved" style="display:none; font-size:0.75rem; color:var(--signal-sell); margin-left:4px; font-weight:400;">有未保存更改</span>
         </div>
         <div class="flex gap-8">
-            <button class="btn btn-sm btn-ghost" onclick="resetAll()" title="重置所有选择为默认值">全部重置</button>
-            <button class="btn btn-primary" id="save-all-btn" onclick="saveAll()">全部保存</button>
+            <button class="btn btn-sm btn-ghost" onclick="resetAll()" data-i18n="settings-reset-all">全部重置</button>
+            <button class="btn btn-primary" id="save-all-btn" onclick="saveAll()" data-i18n="settings-save-all">全部保存</button>
         </div>
     </div>
 
     <!-- Preset buttons -->
     <div class="flex gap-8 mb-16" style="flex-wrap:wrap;">
-        <button class="btn btn-sm preset-btn" onclick="applyPreset('claude')">全部 Claude</button>
-        <button class="btn btn-sm preset-btn" onclick="applyPreset('deepseek-cn')">中国投资人用 DeepSeek</button>
-        <button class="btn btn-sm preset-btn" onclick="applyPreset('best')">最强配置</button>
+        <button class="btn btn-sm preset-btn" onclick="applyPreset('claude')" data-i18n="settings-preset-claude">全部 Claude</button>
+        <button class="btn btn-sm preset-btn" onclick="applyPreset('deepseek-cn')" data-i18n="settings-preset-deepseek">中国投资人用 DeepSeek</button>
+        <button class="btn btn-sm preset-btn" onclick="applyPreset('best')" data-i18n="settings-preset-best">最强配置</button>
     </div>
 
     <div class="settings-grid" id="persona-grid">
@@ -155,7 +163,7 @@
                 <option value="{{ model }}" {% if model == persona.current_model %}selected{% endif %}>{{ model }}</option>
                 {% endfor %}
             </select>
-            <button class="save-persona-btn" onclick="savePersona('{{ persona.id }}')">保存</button>
+            <button class="save-persona-btn" onclick="savePersona('{{ persona.id }}')" data-i18n="settings-save">保存</button>
         </div>
         {% endfor %}
     </div>
@@ -164,8 +172,8 @@
 <!-- Section B: Data Source API Keys -->
 <div class="settings-section" id="section-datasources">
     <div class="settings-section-title">
-        <span>B. 数据源 API 配置</span>
-        <span class="settings-section-desc">管理外部数据源 API 密钥以获取更丰富的金融数据</span>
+        <span data-i18n="settings-section-b-title">B. 数据源 API 配置</span>
+        <span class="settings-section-desc" data-i18n="settings-section-b-desc">管理外部数据源 API 密钥以获取更丰富的金融数据</span>
     </div>
 
     <div class="settings-api-row">
@@ -175,8 +183,8 @@
         </div>
         <div class="settings-api-controls">
             <input type="password" id="finnhub-key" class="api-key-input" placeholder="输入 Finnhub API Key" autocomplete="off">
-            <button class="test-btn" onclick="testDatasource('finnhub')">测试连接</button>
-            <button class="save-persona-btn" onclick="saveDatasourceKey('finnhub')">保存</button>
+            <button class="test-btn" onclick="testDatasource('finnhub')" data-i18n="settings-test">测试连接</button>
+            <button class="save-persona-btn" onclick="saveDatasourceKey('finnhub')" data-i18n="settings-save">保存</button>
         </div>
         <div class="settings-api-status" id="finnhub-status"></div>
     </div>
@@ -188,8 +196,8 @@
         </div>
         <div class="settings-api-controls">
             <input type="password" id="alphavantage-key" class="api-key-input" placeholder="输入 Alpha Vantage API Key" autocomplete="off">
-            <button class="test-btn" onclick="testDatasource('alphavantage')">测试连接</button>
-            <button class="save-persona-btn" onclick="saveDatasourceKey('alphavantage')">保存</button>
+            <button class="test-btn" onclick="testDatasource('alphavantage')" data-i18n="settings-test">测试连接</button>
+            <button class="save-persona-btn" onclick="saveDatasourceKey('alphavantage')" data-i18n="settings-save">保存</button>
         </div>
         <div class="settings-api-status" id="alphavantage-status"></div>
     </div>
@@ -198,8 +206,8 @@
 <!-- Section C: Notification Channels -->
 <div class="settings-section" id="section-notifications">
     <div class="settings-section-title">
-        <span>C. 通知渠道</span>
-        <span class="settings-section-desc">配置信号触发时的自动通知推送</span>
+        <span data-i18n="settings-section-c-title">C. 通知渠道</span>
+        <span class="settings-section-desc" data-i18n="settings-section-c-desc">配置信号触发时的自动通知推送</span>
     </div>
 
     <div class="settings-api-row">
@@ -211,7 +219,7 @@
             <input type="password" id="telegram-token" class="api-key-input" placeholder="Bot Token (123456:ABC-DEF...)" autocomplete="off">
             <input type="text" id="telegram-chat-id" class="api-key-input" placeholder="Chat ID" style="max-width:120px;" autocomplete="off">
             <button class="test-btn" onclick="testNotification('telegram')">测试</button>
-            <button class="save-persona-btn" onclick="saveNotification('telegram')">保存</button>
+            <button class="save-persona-btn" onclick="saveNotification('telegram')" data-i18n="settings-save">保存</button>
         </div>
         <div class="settings-api-status" id="telegram-status"></div>
     </div>
@@ -224,7 +232,7 @@
         <div class="settings-api-controls">
             <input type="password" id="slack-webhook" class="api-key-input" placeholder="https://hooks.slack.com/services/..." autocomplete="off">
             <button class="test-btn" onclick="testNotification('slack')">测试</button>
-            <button class="save-persona-btn" onclick="saveNotification('slack')">保存</button>
+            <button class="save-persona-btn" onclick="saveNotification('slack')" data-i18n="settings-save">保存</button>
         </div>
         <div class="settings-api-status" id="slack-status"></div>
     </div>
@@ -239,15 +247,15 @@
             <button class="test-btn" disabled>测试</button>
             <button class="save-persona-btn" disabled>保存</button>
         </div>
-        <div class="settings-api-status" id="wechat-status"><span style="color:var(--text-muted); font-size:0.75rem;">即将支持</span></div>
+        <div class="settings-api-status" id="wechat-status"><span style="color:var(--text-muted); font-size:0.75rem;" data-i18n="settings-coming-soon">即将支持</span></div>
     </div>
 </div>
 
 <!-- Section C-2: API Authentication -->
 <div class="settings-section" id="section-api-auth">
     <div class="settings-section-title">
-        <span>C-2. API 认证</span>
-        <span class="settings-section-desc">配置 API Token 以安全访问 Augur API (当服务器设置了 AUGUR_API_TOKEN 时需要)</span>
+        <span data-i18n="settings-section-c2-title">C-2. API 认证</span>
+        <span class="settings-section-desc" data-i18n="settings-section-c2-desc">配置 API Token 以安全访问 Augur API</span>
     </div>
 
     <div class="settings-api-row">
@@ -257,7 +265,7 @@
         </div>
         <div class="settings-api-controls">
             <input type="password" id="api-auth-token" class="api-key-input" placeholder="输入 API Token" autocomplete="off">
-            <button class="save-persona-btn" onclick="saveApiToken()">保存</button>
+            <button class="save-persona-btn" onclick="saveApiToken()" data-i18n="settings-save">保存</button>
             <button class="test-btn" onclick="testApiToken()">测试</button>
         </div>
         <div class="settings-api-status" id="api-auth-status"></div>
@@ -267,30 +275,30 @@
 <!-- Section D: Export/Import Config -->
 <div class="settings-section" id="section-export">
     <div class="settings-section-title">
-        <span>D. 配置导入/导出</span>
-        <span class="settings-section-desc">备份或迁移您的 Augur 配置</span>
+        <span data-i18n="settings-section-d-title">D. 配置导入/导出</span>
+        <span class="settings-section-desc" data-i18n="settings-section-d-desc">备份或迁移您的 Augur 配置</span>
     </div>
 
     <div class="flex gap-12" style="flex-wrap:wrap; padding: 16px 0;">
         <button class="btn btn-primary" onclick="exportConfig()">
-            <span style="margin-right:4px;">&#x2B07;</span> 导出配置 (JSON)
+            <span style="margin-right:4px;">&#x2B07;</span> <span data-i18n="settings-export">导出配置 (JSON)</span>
         </button>
         <label class="btn btn-sm btn-ghost" style="cursor:pointer;">
-            <span style="margin-right:4px;">&#x2B06;</span> 导入配置
+            <span style="margin-right:4px;">&#x2B06;</span> <span data-i18n="settings-import">导入配置</span>
             <input type="file" id="import-file" accept=".json" style="display:none;" onchange="importConfig(event)">
         </label>
     </div>
     <div id="import-status" style="font-size:0.8rem; margin-top:8px;"></div>
 </div>
 
-<!-- Section E: Scheduled Monitoring / 定时监控配置 -->
+<!-- Section E: Scheduled Monitoring -->
 <div class="settings-section" id="section-cron">
     <div class="settings-section-title">
-        <span>E. 定时监控配置</span>
-        <span class="settings-section-desc">配置定时分析调度、警报阈值及通知渠道开关</span>
+        <span data-i18n="settings-section-e-title">E. 定时监控配置</span>
+        <span class="settings-section-desc" data-i18n="settings-section-e-desc">配置定时分析调度、警报阈值及通知渠道开关</span>
     </div>
 
-    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding:16px 0;">
+    <div class="settings-cron-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; padding:16px 0;">
         <!-- Cron Schedule -->
         <div>
             <label style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px; display:block;">Cron 表达式</label>
@@ -332,7 +340,7 @@
     <!-- Notification Channel Toggles -->
     <div style="padding:12px 0;">
         <label style="font-size:0.8rem; color:var(--text-muted); margin-bottom:8px; display:block;">通知渠道开关</label>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;" class="settings-toggle-grid">
             <label class="toggle-row">
                 <span class="toggle-label">Telegram</span>
                 <input type="checkbox" id="cron-notify-telegram" class="toggle-switch">
@@ -358,8 +366,8 @@
 
     <!-- Save + Run Now buttons -->
     <div class="flex gap-12" style="padding:16px 0; flex-wrap:wrap;">
-        <button class="btn btn-primary" onclick="saveCronConfig()">保存定时配置</button>
-        <button class="btn btn-sm btn-ghost" onclick="runCronNow()" id="run-now-btn">立即执行一次</button>
+        <button class="btn btn-primary" onclick="saveCronConfig()" data-i18n="settings-save-cron">保存定时配置</button>
+        <button class="btn btn-sm btn-ghost" onclick="runCronNow()" id="run-now-btn" data-i18n="settings-run-now">立即执行一次</button>
     </div>
     <div id="cron-status" style="font-size:0.8rem; margin-top:4px;"></div>
 </div>
@@ -369,6 +377,7 @@
 {% block extra_scripts %}
 <script>
 var originalValues = {};
+function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 
 // Track original values on load for unsaved detection
 document.addEventListener('DOMContentLoaded', function() {
@@ -387,12 +396,12 @@ function loadSavedKeys() {
     .then(function(r) { return r.json(); })
     .then(function(cfg) {
         var ds = cfg.datasource_keys || {};
-        if (ds.finnhub) document.getElementById('finnhub-key').placeholder = '***已配置***';
-        if (ds.alphavantage) document.getElementById('alphavantage-key').placeholder = '***已配置***';
+        if (ds.finnhub) document.getElementById('finnhub-key').placeholder = _t('settings-configured');
+        if (ds.alphavantage) document.getElementById('alphavantage-key').placeholder = _t('settings-configured');
         var notif = cfg.notifications || {};
-        if (notif.telegram_token) document.getElementById('telegram-token').placeholder = '***已配置***';
-        if (notif.telegram_chat_id) document.getElementById('telegram-chat-id').placeholder = '***已配置***';
-        if (notif.slack_webhook) document.getElementById('slack-webhook').placeholder = '***已配置***';
+        if (notif.telegram_token) document.getElementById('telegram-token').placeholder = _t('settings-configured');
+        if (notif.telegram_chat_id) document.getElementById('telegram-chat-id').placeholder = _t('settings-configured');
+        if (notif.slack_webhook) document.getElementById('slack-webhook').placeholder = _t('settings-configured');
     })
     .catch(function() {});
 }

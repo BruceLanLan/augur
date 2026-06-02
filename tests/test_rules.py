@@ -189,3 +189,31 @@ class TestRulesEngine:
         cond = {"field": "consensus.score", "op": ">", "value": 7}
         data = {"consensus": {"score": 8.5}}
         assert engine.evaluate_condition(cond, data) is True
+
+    def test_multi_condition_and_requires_all(self, tmp_path):
+        """All conditions must match (AND); one failure blocks the rule."""
+        engine = self._make_engine(str(tmp_path))
+        rule = Rule(
+            id="and-1",
+            name="Score and Signal",
+            conditions=[
+                {"field": "consensus_score", "op": ">", "value": 7},
+                {"field": "signal", "op": "==", "value": "bullish"},
+            ],
+            actions=[{"channel": "slack", "message": "Both matched"}],
+        )
+        engine.add_rule(rule)
+
+        partial = engine.evaluate({"consensus_score": 8.5, "signal": "bearish"})
+        assert len(partial) == 0
+
+        full = engine.evaluate({"consensus_score": 8.5, "signal": "bullish"})
+        assert len(full) == 1
+        assert full[0]["rule_name"] == "Score and Signal"
+
+    def test_malformed_yaml_starts_empty(self, tmp_path):
+        """Corrupt rules YAML must not crash; engine loads zero rules."""
+        path = tmp_path / "rules.yaml"
+        path.write_text("rules:\n  - id: [broken\n    name: oops", encoding="utf-8")
+        engine = RulesEngine(rules_path=str(path))
+        assert engine.get_rules() == []

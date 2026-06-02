@@ -56,6 +56,19 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius-md);
 }
+.report-download-bar.is-sticky {
+    position: sticky;
+    top: 8px;
+    z-index: 20;
+    background: var(--glass-bg, var(--bg-card));
+    backdrop-filter: blur(8px);
+    box-shadow: var(--shadow-elevated, 0 4px 16px rgba(0,0,0,0.2));
+}
+.report-section-controls {
+    display: flex;
+    gap: 6px;
+    margin-left: auto;
+}
 .report-download-bar .btn { font-size: 0.78rem; padding: 7px 16px; border-radius: 4px; transition: all 0.2s; }
 .report-download-bar .btn:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
 .report-exec-summary {
@@ -305,18 +318,18 @@
 {% endblock %}
 {% block content %}
 <div class="report-page-container">
-    <a href="/stocks?ticker={{ ticker }}" class="back-link">&larr; Back to Stock Analysis</a>
+    <a href="/stocks?ticker={{ ticker }}" class="back-link" data-i18n="report-back">&larr; 返回股票分析</a>
 
     <!-- Loading State -->
-    <div id="rp-loading" class="report-loading-state">
-        <div class="spinner"></div>
+    <div id="rp-loading" class="report-loading-state" role="status" aria-live="polite" aria-busy="true">
+        <div class="spinner" aria-hidden="true"></div>
         <p class="loading-pulse text-orange" id="rp-progress">Loading report for {{ ticker }}...</p>
     </div>
 
     <!-- Error State -->
-    <div id="rp-error" class="report-error-state" style="display:none;">
+    <div id="rp-error" class="report-error-state" style="display:none;" role="alert">
         <p id="rp-error-msg">Failed to load report.</p>
-        <button class="btn btn-sm" onclick="loadReport()">Retry</button>
+        <button type="button" class="btn btn-sm" onclick="loadReport()" data-i18n="btn-retry">重试</button>
     </div>
 
     <!-- Report Content (hidden until loaded) -->
@@ -332,11 +345,15 @@
         </div>
 
         <!-- Download Bar -->
-        <div class="report-download-bar">
-            <button class="btn btn-sm" onclick="downloadReportMD()" title="Download raw Markdown file">&#x2B07; Download Markdown</button>
-            <button class="btn btn-sm btn-primary" onclick="downloadReportHTML()" title="Download self-contained HTML report">&#x1F4C4; Download HTML</button>
-            <button class="btn btn-sm" onclick="copyReportText()" title="Copy Markdown to clipboard">&#x1F4CB; Copy to Clipboard</button>
+        <div class="report-download-bar" id="rp-download-bar">
+            <button type="button" class="btn btn-sm" onclick="downloadReportMD()" data-i18n="download_report" data-i18n-title="download_report">&#x2B07; 下载报告</button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="downloadReportHTML()" data-i18n-title="download_report">&#x1F4C4; HTML</button>
+            <button type="button" class="btn btn-sm" onclick="copyReportText()" data-i18n="copy_report" data-i18n-title="copy_report">&#x1F4CB; 复制报告</button>
             <a id="rp-view-stocks-link" href="/stocks?ticker={{ ticker }}&report=1" class="btn btn-sm" style="text-decoration:none;">&#x1F4CA; View in Analysis</a>
+            <div class="report-section-controls">
+                <button type="button" class="btn btn-sm btn-ghost" onclick="expandAllReportSections()" data-i18n="report-expand-all">展开全部</button>
+                <button type="button" class="btn btn-sm btn-ghost" onclick="collapseAllReportSections()" data-i18n="report-collapse-all">收起全部</button>
+            </div>
         </div>
 
         <!-- Verdict Strip -->
@@ -352,10 +369,19 @@
                 <span>Agent Voting Board</span>
             </div>
             <div class="report-section-body open" id="rp-voting-body">
+                <div class="md-table-wrap">
                 <table class="report-voting-table" id="rp-voting-table">
-                    <thead><tr><th>Agent</th><th>Signal</th><th>Score</th><th>Gauge</th><th>Confidence</th></tr></thead>
+                    <caption class="sr-only">Agent voting board for {{ ticker }}</caption>
+                    <thead><tr>
+                        <th scope="col">Agent</th>
+                        <th scope="col">Signal</th>
+                        <th scope="col">Score</th>
+                        <th scope="col">Gauge</th>
+                        <th scope="col">Confidence</th>
+                    </tr></thead>
                     <tbody id="rp-voting-tbody"></tbody>
                 </table>
+                </div>
             </div>
         </div>
 
@@ -418,6 +444,34 @@ function toggleReportSection(el) {
     el.classList.toggle('open');
     var body = el.nextElementSibling;
     if (body) body.classList.toggle('open');
+}
+
+function setAllReportSections(open) {
+    document.querySelectorAll('.report-section-toggle').forEach(function(el) {
+        var body = el.nextElementSibling;
+        if (open) {
+            el.classList.add('open');
+            if (body) body.classList.add('open');
+        } else {
+            el.classList.remove('open');
+            if (body) body.classList.remove('open');
+        }
+    });
+}
+function expandAllReportSections() { setAllReportSections(true); }
+function collapseAllReportSections() { setAllReportSections(false); }
+
+function initReportStickyBar() {
+    var bar = document.getElementById('rp-download-bar');
+    if (!bar || bar.getAttribute('data-sticky-init') === '1' || !('IntersectionObserver' in window)) return;
+    bar.setAttribute('data-sticky-init', '1');
+    var sentinel = document.createElement('div');
+    sentinel.style.height = '1px';
+    bar.parentNode.insertBefore(sentinel, bar);
+    var obs = new IntersectionObserver(function(entries) {
+        bar.classList.toggle('is-sticky', !entries[0].isIntersecting);
+    }, { threshold: 0, rootMargin: '-8px 0px 0px 0px' });
+    obs.observe(sentinel);
 }
 
 function downloadReportMD() {
@@ -526,6 +580,7 @@ function loadReport() {
 function renderReportPage(data) {
     document.getElementById('rp-loading').style.display = 'none';
     document.getElementById('rp-content').style.display = 'block';
+    initReportStickyBar();
 
     // Date
     document.getElementById('rp-date').textContent = 'Generated: ' + (data.timestamp || new Date().toISOString()).slice(0, 16).replace('T', ' ') + ' UTC';

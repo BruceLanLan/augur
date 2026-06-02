@@ -117,8 +117,8 @@ class GrahamAgent(BaseAgent):
 
         # 计算综合评分 - 只使用factors中存在的因子
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)
-        avg_score = sum(factors.values()) / len(factors)
-        signal = self._calculate_signal(avg_score)
+        total_score = max(0.0, min(10.0, total_score))
+        signal = self._calculate_signal(total_score)
         confidence = min(0.90, 0.5 + factors["margin_of_safety"] / 20)
 
         # 生成推理

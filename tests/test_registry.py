@@ -109,6 +109,36 @@ class TestDecisionCoordinator:
         for agent_id, result in results.items():
             assert result.score >= 0, f"Agent {agent_id} produced negative score: {result.score}"
 
+    def test_consensus_all_error_is_neutral(self):
+        """When every agent returns ERROR, consensus must not default to bullish."""
+        from augur.personas.base import AgentResponse
+
+        coordinator = DecisionCoordinator(AgentRegistry())
+        error_results = {
+            "buffett": AgentResponse(
+                agent_id="buffett", agent_name="Buffett",
+                signal=SignalType.ERROR, confidence=0, score=0,
+                reasoning="failed",
+            ),
+            "graham": AgentResponse(
+                agent_id="graham", agent_name="Graham",
+                signal=SignalType.ERROR, confidence=0, score=0,
+                reasoning="failed",
+            ),
+        }
+        consensus = coordinator.get_consensus(error_results, ticker="AAPL")
+        assert consensus.signal == SignalType.NEUTRAL
+        assert consensus.metadata.get("low_participation") is True
+
+    def test_analyze_with_empty_registry(self):
+        """Empty registry should not crash ThreadPoolExecutor."""
+        registry = AgentRegistry()
+        for agent in list(registry.get_all()):
+            registry.unregister(agent.agent_id)
+        coordinator = DecisionCoordinator(registry)
+        ctx = MarketContext(ticker="AAPL")
+        assert coordinator.analyze_with_all(ctx) == {}
+
 
 class TestConfig:
     def test_get_config(self):
