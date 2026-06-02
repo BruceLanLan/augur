@@ -403,18 +403,18 @@ function addTicker() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
-            showToast(ticker + ' added');
+            showToast(ticker + ' ' + _t('signals-added'));
             document.getElementById('add-ticker-input').value = '';
             document.getElementById('add-pe-input').value = '';
             document.getElementById('add-roe-input').value = '';
             document.getElementById('add-gm-input').value = '';
             loadWatchlist();
         } else {
-            showToast(data.detail || 'Add failed', 'error');
+            showToast(data.detail || _t('signals-add-failed'), 'error');
         }
     })
     .catch(function(e) {
-        showToast('Add failed: ' + e.message, 'error');
+        showToast(_t('signals-add-failed') + ': ' + e.message, 'error');
     });
 }
 
@@ -427,13 +427,13 @@ function quickAddExample(ticker) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
-            showToast(ticker + ' added');
+            showToast(ticker + ' ' + _t('signals-added'));
             loadWatchlist();
         } else {
-            showToast(data.detail || 'Add failed', 'error');
+            showToast(data.detail || _t('signals-add-failed'), 'error');
         }
     })
-    .catch(function(e) { showToast('Add failed: ' + e.message, 'error'); });
+    .catch(function(e) { showToast(_t('signals-add-failed') + ': ' + e.message, 'error'); });
 }
 
 function removeTicker(ticker) {
@@ -441,17 +441,17 @@ function removeTicker(ticker) {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.status === 'ok') {
-                showToast(ticker + ' removed');
+                showToast(ticker + ' ' + _t('signals-removed'));
                 delete analysisResults[ticker];
                 sessionStorage.setItem('augur-analysis-results', JSON.stringify(analysisResults));
                 updateStatsPanel();
                 loadWatchlist();
             } else {
-                showToast(data.detail || 'Remove failed', 'error');
+                showToast(data.detail || _t('signals-remove-failed'), 'error');
             }
         })
         .catch(function(e) {
-            showToast('Remove failed: ' + e.message, 'error');
+            showToast(_t('signals-remove-failed') + ': ' + e.message, 'error');
         });
 }
 
@@ -480,7 +480,7 @@ function runAllAnalysis() {
                 sessionStorage.setItem('augur-analysis-results', JSON.stringify(analysisResults));
                 updateStatsPanel();
                 renderWatchlist();
-                showToast('Analysis complete - ' + data.results.length + ' tickers');
+                showToast(_t('signals-analysis-done').replace('{n}', data.results.length));
             }
         })
         .catch(function(e) {
@@ -542,11 +542,11 @@ function saveAlertSettings() {
             showToast(_t('alert_save'));
             showSavedAlertInfo(threshold, channel);
         } else {
-            showToast('Save failed: ' + (data.detail || data.message), 'error');
+            showToast(_t('signals-save-failed') + (data.detail || data.message), 'error');
         }
     })
     .catch(function(e) {
-        showToast('Save failed: ' + e.message, 'error');
+        showToast(_t('signals-save-failed') + e.message, 'error');
     });
 }
 

@@ -470,10 +470,10 @@ function applyPreset(preset) {
         }
     });
     checkUnsaved();
-    var presetLabel = preset === 'claude' ? '全部Claude' : preset === 'deepseek-cn' ? '中国投资人用DeepSeek' : '最强配置';
-    showToast('已应用预设: ' + presetLabel, 'info');
+    var presetLabel = preset === 'claude' ? _t('settings-preset-claude') : preset === 'deepseek-cn' ? _t('settings-preset-deepseek') : _t('settings-preset-best');
+    showToast(_t('settings-toast-preset-applied') + presetLabel, 'info');
     if (unmatchedCount > 0) {
-        showToast('部分投资人未找到匹配模型 (' + unmatchedCount + '位)', 'warning');
+        showToast(_t('settings-toast-preset-unmatched').replace('{n}', unmatchedCount), 'warning');
     }
 }
 
@@ -490,18 +490,18 @@ function savePersona(agentId) {
         if (data.status === 'ok') {
             originalValues[agentId] = model;
             checkUnsaved();
-            showToast(agentId + ' 模型已更新为 ' + model);
+            showToast(agentId + _t('settings-toast-model-updated') + model);
             var row = select.closest('.persona-config-row');
             if (row) {
                 row.style.borderColor = 'var(--signal-buy)';
                 setTimeout(function() { row.style.borderColor = ''; }, 1500);
             }
         } else {
-            showToast('保存失败: ' + (data.detail || '未知错误'), 'error');
+            showToast(_t('settings-toast-save-failed') + (data.detail || ''), 'error');
         }
     })
     .catch(function(err) {
-        showToast('请求失败: ' + err.message, 'error');
+        showToast(_t('settings-toast-request-failed') + err.message, 'error');
     });
 }
 
@@ -531,14 +531,14 @@ function saveAll() {
         });
         checkUnsaved();
         if (failed > 0) {
-            showToast('已保存 ' + ok + ' 位，' + failed + ' 位保存失败', 'warning');
+            showToast(_t('settings-toast-saved-partial').replace('{ok}', ok).replace('{failed}', failed), 'warning');
         } else {
-            showToast('已保存 ' + ok + ' 位投资大师的模型配置');
+            showToast(_t('settings-toast-saved-all').replace('{n}', ok));
         }
         var btn = document.getElementById('save-all-btn');
         if (btn) {
             var orig = btn.textContent;
-            btn.textContent = '\u2713 已保存';
+            btn.textContent = _t('settings-saved-checkmark');
             btn.classList.add('check-pop');
             setTimeout(function() {
                 btn.textContent = orig;
@@ -547,24 +547,24 @@ function saveAll() {
         }
     })
     .catch(function(err) {
-        showToast('批量保存失败: ' + err.message, 'error');
+        showToast(_t('settings-toast-batch-save-failed') + err.message, 'error');
     });
 }
 
 function resetAll() {
-    if (!confirm('确定要重置所有模型为默认值吗？')) return;
+    if (!confirm(_t('settings-toast-reset-confirm'))) return;
     document.querySelectorAll('.persona-config-row select').forEach(function(sel) {
         sel.selectedIndex = 0;
     });
     checkUnsaved();
-    showToast('已重置为默认值，请点击"全部保存"确认', 'warning');
+    showToast(_t('settings-toast-reset-done'), 'warning');
 }
 
 // Data source key management
 function saveDatasourceKey(source) {
     var keyId = source === 'finnhub' ? 'finnhub-key' : 'alphavantage-key';
     var key = document.getElementById(keyId).value.trim();
-    if (!key) { showToast('请输入 API Key', 'warning'); return; }
+    if (!key) { showToast(_t('settings-toast-enter-api-key'), 'warning'); return; }
     var configKey = source === 'finnhub' ? 'FINNHUB_API_KEY' : 'ALPHAVANTAGE_API_KEY';
     fetch('/api/config', {
         method: 'PUT',
@@ -580,19 +580,19 @@ function saveDatasourceKey(source) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
-            showToast(source + ' API Key 已保存');
+            showToast(source + _t('settings-toast-api-key-saved'));
             document.getElementById(keyId).value = '';
-            document.getElementById(keyId).placeholder = '***已配置***';
+            document.getElementById(keyId).placeholder = _t('settings-configured');
         } else {
-            showToast('保存失败: ' + (data.detail || ''), 'error');
+            showToast(_t('settings-toast-save-failed') + (data.detail || ''), 'error');
         }
     })
-    .catch(function(err) { showToast('保存失败: ' + err.message, 'error'); });
+    .catch(function(err) { showToast(_t('settings-toast-save-failed') + err.message, 'error'); });
 }
 
 function testDatasource(source) {
     var statusEl = document.getElementById(source + '-status');
-    statusEl.innerHTML = '<span style="color:var(--text-muted);">测试中...</span>';
+    statusEl.innerHTML = '<span style="color:var(--text-muted);">' + escapeHtml(_t('settings-status-testing')) + '</span>';
     fetch('/api/config/test-datasource', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -601,13 +601,13 @@ function testDatasource(source) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
-            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; 连接成功</span>';
+            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; ' + escapeHtml(_t('settings-status-connected')) + '</span>';
         } else {
-            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + (data.detail || '连接失败') + '</span>';
+            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + escapeHtml(data.detail || _t('settings-status-failed')) + '</span>';
         }
     })
     .catch(function(err) {
-        statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; 测试失败</span>';
+        statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + escapeHtml(_t('settings-status-test-failed')) + '</span>';
     });
 }
 
@@ -628,17 +628,17 @@ function saveNotification(channel) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
-            showToast(channel + ' 通知配置已保存');
+            showToast(channel + _t('settings-toast-notif-saved'));
         } else {
-            showToast('保存失败', 'error');
+            showToast(_t('settings-toast-save-failed').replace(': ', ''), 'error');
         }
     })
-    .catch(function(err) { showToast('保存失败: ' + err.message, 'error'); });
+    .catch(function(err) { showToast(_t('settings-toast-save-failed') + err.message, 'error'); });
 }
 
 function testNotification(channel) {
     var statusEl = document.getElementById(channel + '-status');
-    statusEl.innerHTML = '<span style="color:var(--text-muted);">发送测试消息...</span>';
+    statusEl.innerHTML = '<span style="color:var(--text-muted);">' + escapeHtml(_t('settings-status-testing')) + '</span>';
     fetch('/api/config/test-notification', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -647,13 +647,13 @@ function testNotification(channel) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
-            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; 测试消息已发送</span>';
+            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; ' + escapeHtml(_t('settings-status-test-sent')) + '</span>';
         } else {
-            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + (data.detail || '发送失败') + '</span>';
+            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + escapeHtml(data.detail || _t('settings-status-send-failed')) + '</span>';
         }
     })
     .catch(function(err) {
-        statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; 测试失败</span>';
+        statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + escapeHtml(_t('settings-status-test-failed')) + '</span>';
     });
 }
 
@@ -671,16 +671,16 @@ function exportConfig() {
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        showToast('配置已导出');
+        showToast(_t('settings-toast-exported'));
     })
-    .catch(function(err) { showToast('导出失败: ' + err.message, 'error'); });
+    .catch(function(err) { showToast(_t('settings-toast-export-failed') + err.message, 'error'); });
 }
 
 function importConfig(event) {
     var file = event.target.files[0];
     if (!file) return;
     var statusEl = document.getElementById('import-status');
-    statusEl.innerHTML = '<span style="color:var(--text-muted);">导入中...</span>';
+    statusEl.innerHTML = '<span style="color:var(--text-muted);">' + escapeHtml(_t('settings-status-importing')) + '</span>';
 
     var reader = new FileReader();
     reader.onload = function(e) {
@@ -694,17 +694,17 @@ function importConfig(event) {
             .then(function(r) { return r.json(); })
             .then(function(data) {
                 if (data.status === 'ok') {
-                    statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; 配置已导入，刷新页面生效</span>';
-                    showToast('配置导入成功，请刷新页面');
+                    statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; ' + escapeHtml(_t('settings-status-imported')) + '</span>';
+                    showToast(_t('settings-toast-import-success'));
                 } else {
-                    statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + (data.detail || '导入失败') + '</span>';
+                    statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + escapeHtml(data.detail || _t('settings-status-import-failed')) + '</span>';
                 }
             })
             .catch(function(err) {
-                statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; 导入失败</span>';
+                statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + escapeHtml(_t('settings-status-import-failed')) + '</span>';
             });
         } catch (parseErr) {
-            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; JSON 解析失败</span>';
+            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + escapeHtml(_t('settings-status-json-failed')) + '</span>';
         }
     };
     reader.readAsText(file);
@@ -802,43 +802,43 @@ function saveCronConfig() {
     .then(function(r) { return r.json(); })
     .then(function(result) {
         if (result.status === 'ok') {
-            showToast('定时监控配置已保存');
+            showToast(_t('settings-toast-cron-saved'));
             var statusEl = document.getElementById('cron-status');
-            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; 配置已保存</span>';
+            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; ' + escapeHtml(_t('settings-status-config-saved')) + '</span>';
             setTimeout(function() { statusEl.innerHTML = ''; }, 3000);
         } else {
-            showToast('保存失败: ' + (result.detail || ''), 'error');
+            showToast(_t('settings-toast-save-failed') + (result.detail || ''), 'error');
         }
     })
-    .catch(function(err) { showToast('保存失败: ' + err.message, 'error'); });
+    .catch(function(err) { showToast(_t('settings-toast-save-failed') + err.message, 'error'); });
 }
 
 function runCronNow() {
     var btn = document.getElementById('run-now-btn');
     var statusEl = document.getElementById('cron-status');
     btn.disabled = true;
-    btn.textContent = '执行中...';
-    statusEl.innerHTML = '<span style="color:var(--text-muted);">正在分析自选股...</span>';
+    btn.textContent = _t('perf-running');
+    statusEl.innerHTML = '<span style="color:var(--text-muted);">' + escapeHtml(_t('settings-status-running')) + '</span>';
 
     fetch('/api/cron/run-now', {method: 'POST'})
     .then(function(r) { return r.json(); })
     .then(function(data) {
         btn.disabled = false;
-        btn.textContent = '立即执行一次';
+        btn.textContent = _t('settings-run-now');
         if (data.status === 'ok') {
             var count = data.count || 0;
-            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; 分析完成，共 ' + count + ' 个标的</span>';
-            showToast('定时分析执行完成: ' + count + ' 个标的');
+            statusEl.innerHTML = '<span style="color:var(--accent-green);">&#x2713; ' + escapeHtml(_t('settings-status-cron-done').replace('{n}', count)) + '</span>';
+            showToast(_t('settings-toast-cron-done').replace('{n}', count));
         } else {
-            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + (data.detail || '执行失败') + '</span>';
-            showToast('执行失败', 'error');
+            statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + escapeHtml(data.detail || _t('settings-toast-run-failed')) + '</span>';
+            showToast(_t('settings-toast-run-failed'), 'error');
         }
     })
     .catch(function(err) {
         btn.disabled = false;
-        btn.textContent = '立即执行一次';
-        statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; 请求失败</span>';
-        showToast('请求失败: ' + err.message, 'error');
+        btn.textContent = _t('settings-run-now');
+        statusEl.innerHTML = '<span style="color:var(--accent-red);">&#x2717; ' + escapeHtml(_t('settings-toast-request-failed').replace(': ', '')) + '</span>';
+        showToast(_t('settings-toast-request-failed') + err.message, 'error');
     });
 }
 
@@ -854,33 +854,32 @@ function loadApiAuthStatus() {
     var statusEl = document.getElementById('api-auth-status');
     var token = localStorage.getItem('augur_api_token');
     if (token) {
-        document.getElementById('api-auth-token').placeholder = '***已配置***';
-        statusEl.innerHTML = '<span style="color:var(--accent-green); font-size:0.75rem;">&#x2713; 已配置</span>';
+        document.getElementById('api-auth-token').placeholder = _t('settings-configured');
+        statusEl.innerHTML = '<span style="color:var(--accent-green); font-size:0.75rem;">&#x2713; ' + escapeHtml(_t('settings-status-configured')) + '</span>';
     } else {
-        statusEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">未配置</span>';
+        statusEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">' + escapeHtml(_t('settings-status-not-configured')) + '</span>';
     }
 }
 
 function saveApiToken() {
     var token = document.getElementById('api-auth-token').value.trim();
     if (!token) {
-        // Clear token
         localStorage.removeItem('augur_api_token');
-        document.getElementById('api-auth-token').placeholder = '输入 API Token';
-        document.getElementById('api-auth-status').innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">未配置</span>';
-        showToast('API Token 已清除');
+        document.getElementById('api-auth-token').placeholder = 'API Token';
+        document.getElementById('api-auth-status').innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">' + escapeHtml(_t('settings-status-not-configured')) + '</span>';
+        showToast(_t('settings-toast-token-cleared'));
         return;
     }
     localStorage.setItem('augur_api_token', token);
     document.getElementById('api-auth-token').value = '';
-    document.getElementById('api-auth-token').placeholder = '***已配置***';
-    document.getElementById('api-auth-status').innerHTML = '<span style="color:var(--accent-green); font-size:0.75rem;">&#x2713; 已配置</span>';
-    showToast('API Token 已保存到浏览器');
+    document.getElementById('api-auth-token').placeholder = _t('settings-configured');
+    document.getElementById('api-auth-status').innerHTML = '<span style="color:var(--accent-green); font-size:0.75rem;">&#x2713; ' + escapeHtml(_t('settings-status-configured')) + '</span>';
+    showToast(_t('settings-toast-token-saved'));
 }
 
 function testApiToken() {
     var statusEl = document.getElementById('api-auth-status');
-    statusEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">验证中...</span>';
+    statusEl.innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">' + escapeHtml(_t('settings-status-verifying')) + '</span>';
     var token = document.getElementById('api-auth-token').value.trim() || localStorage.getItem('augur_api_token') || '';
     var headers = {};
     if (token) {
@@ -890,17 +889,17 @@ function testApiToken() {
     .then(function(r) { return r.json().then(function(d) { return {status: r.status, data: d}; }); })
     .then(function(res) {
         if (res.status === 200 && res.data.authenticated) {
-            var mode = res.data.mode === 'open' ? '(开放模式)' : '(Token验证通过)';
-            statusEl.innerHTML = '<span style="color:var(--accent-green); font-size:0.75rem;">&#x2713; 已连接 ' + mode + '</span>';
-            showToast('API 认证验证成功');
+            var mode = res.data.mode === 'open' ? _t('settings-status-connected-mode-open') : _t('settings-status-connected-mode-token');
+            statusEl.innerHTML = '<span style="color:var(--accent-green); font-size:0.75rem;">&#x2713; ' + escapeHtml(_t('settings-status-connected')) + ' ' + escapeHtml(mode) + '</span>';
+            showToast(_t('settings-toast-auth-success'));
         } else {
-            statusEl.innerHTML = '<span style="color:var(--accent-red); font-size:0.75rem;">&#x2717; ' + (res.data.detail || '验证失败') + '</span>';
-            showToast('API Token 验证失败', 'error');
+            statusEl.innerHTML = '<span style="color:var(--accent-red); font-size:0.75rem;">&#x2717; ' + escapeHtml(res.data.detail || _t('settings-toast-auth-failed')) + '</span>';
+            showToast(_t('settings-toast-auth-failed'), 'error');
         }
     })
     .catch(function(err) {
-        statusEl.innerHTML = '<span style="color:var(--accent-red); font-size:0.75rem;">&#x2717; 请求失败</span>';
-        showToast('验证请求失败: ' + err.message, 'error');
+        statusEl.innerHTML = '<span style="color:var(--accent-red); font-size:0.75rem;">&#x2717; ' + escapeHtml(_t('settings-toast-request-failed').replace(': ', '')) + '</span>';
+        showToast(_t('settings-toast-verify-failed') + err.message, 'error');
     });
 }
 </script>

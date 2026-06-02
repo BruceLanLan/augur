@@ -135,9 +135,9 @@
         <div class="flex items-center gap-12">
             <div id="compare-consensus" class="text-muted" style="font-size:0.78rem;"></div>
             <div class="export-btn-group" id="compare-export" style="display:none;">
-                <button class="btn btn-sm" onclick="exportCompareJSON()">JSON</button>
-                <button class="btn btn-sm" onclick="exportCompareMD()">Markdown</button>
-                <button class="btn btn-sm" onclick="shareCompareLink()">分享</button>
+                <button type="button" class="btn btn-sm" onclick="exportCompareJSON()" data-i18n="compare-export-json">JSON</button>
+                <button type="button" class="btn btn-sm" onclick="exportCompareMD()" data-i18n="compare-export-md">Markdown</button>
+                <button type="button" class="btn btn-sm" onclick="shareCompareLink()" data-i18n="compare-export-share">分享</button>
             </div>
         </div>
     </div>
@@ -146,27 +146,29 @@
 
 <!-- Empty State (shown initially) -->
 <div id="compare-empty" class="empty-state">
-    <span class="empty-state-icon">&#128200;</span>
-    <div class="empty-state-title">Select agents to compare</div>
-    <p class="empty-state-desc">Choose 2-5 investment personas above to compare their analysis on the same stock. See where they agree and disagree.</p>
+    <span class="empty-state-icon" aria-hidden="true">&#128200;</span>
+    <div class="empty-state-title" data-i18n="compare-empty-title">选择大师开始对比</div>
+    <p class="empty-state-desc" data-i18n="compare-empty-desc">在上方选择 2-5 位投资大师，对比同一标的的分析差异，查看一致与分歧</p>
 </div>
 
 {% endblock %}
 {% block extra_scripts %}
 <script>
+function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
+
 function updateSelection(label) {
     var checkbox = label.querySelector('input[type="checkbox"]');
     var allChecked = document.querySelectorAll('#agent-grid input[type="checkbox"]:checked');
     if (!checkbox.checked && allChecked.length >= 5) {
         checkbox.checked = false;
-        showToast('最多选择 5 位投资大师', 'warning');
+        showToast(_t('compare-max-agents'), 'warning');
         return;
     }
     setTimeout(function() {
         var checked = document.querySelectorAll('#agent-grid input[type="checkbox"]:checked');
         var count = checked.length;
         var countEl = document.getElementById('select-count');
-        countEl.textContent = '2-5 位 (已选 ' + count + ')';
+        countEl.textContent = _t('compare-select-count').replace('{n}', count);
         if (count >= 2 && count <= 5) {
             countEl.className = 'select-count agent-counter ready';
         } else {
@@ -214,14 +216,14 @@ function signalLabel(s) {
 
 function runCompare() {
     var ticker = document.getElementById('compare-ticker').value.trim().toUpperCase();
-    if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
+    if (!ticker) { showToast(_t('msg-enter-ticker'), 'warning'); return; }
 
     var checked = document.querySelectorAll('#agent-grid input[type="checkbox"]:checked');
     var agentIds = [];
     checked.forEach(function(cb) { agentIds.push(cb.value); });
 
-    if (agentIds.length < 2) { showToast('请至少选择 2 位投资大师', 'warning'); return; }
-    if (agentIds.length > 5) { showToast('最多选择 5 位投资大师', 'warning'); return; }
+    if (agentIds.length < 2) { showToast(_t('compare-min-agents'), 'warning'); return; }
+    if (agentIds.length > 5) { showToast(_t('compare-max-agents'), 'warning'); return; }
 
     document.getElementById('compare-spinner').style.display = 'block';
     document.getElementById('compare-results-section').style.display = 'none';
@@ -286,8 +288,8 @@ function renderCompareResults(data) {
             '<span class="signal-badge ' + signalBadgeClass(a.signal) + '" style="font-size:0.7rem;">' + signalLabel(a.signal) + '</span>' +
             '</div>' +
             '<div class="flex items-center gap-12 mb-8">' +
-            '<div><span class="data-label">评分</span><div class="data-value" style="font-size:1.1rem;">' + (a.score || 0).toFixed(1) + '/10</div></div>' +
-            '<div><span class="data-label">置信度</span><div class="text-mono">' + ((a.confidence || 0) * 100).toFixed(0) + '%</div></div>' +
+            '<div><span class="data-label">' + escapeHtml(_t('compare-label-score')) + '</span><div class="data-value" style="font-size:1.1rem;">' + (a.score || 0).toFixed(1) + '/10</div></div>' +
+            '<div><span class="data-label">' + escapeHtml(_t('compare-label-confidence')) + '</span><div class="text-mono">' + ((a.confidence || 0) * 100).toFixed(0) + '%</div></div>' +
             '</div>' +
             '<div class="compare-reasoning">' + (a.reasoning || '').replace(/#+\s*/g, '').replace(/\*\*/g, '') + '</div>' +
             findingsHtml;
@@ -296,10 +298,10 @@ function renderCompareResults(data) {
 
     var consensusEl = document.getElementById('compare-consensus');
     if (majoritySignal) {
-        consensusEl.innerHTML = '共识: <span style="color:var(--signal-buy);">' + agreeCount + ' 一致</span>' +
-            (disagreeCount > 0 ? ' / <span style="color:var(--signal-sell);">' + disagreeCount + ' 分歧</span>' : '');
+        consensusEl.innerHTML = escapeHtml(_t('compare-consensus-label')) + ' <span style="color:var(--signal-buy);">' + escapeHtml(_t('compare-consensus-agree').replace('{n}', agreeCount)) + '</span>' +
+            (disagreeCount > 0 ? ' / <span style="color:var(--signal-sell);">' + escapeHtml(_t('compare-consensus-disagree').replace('{n}', disagreeCount)) + '</span>' : '');
     } else {
-        consensusEl.textContent = '无明确共识 (分歧较大)';
+        consensusEl.textContent = _t('compare-consensus-none');
     }
 }
 
@@ -313,7 +315,7 @@ function exportCompareJSON() {
     a.download = (data.ticker || 'compare') + '_compare.json';
     a.click();
     URL.revokeObjectURL(url);
-    showToast('已导出 JSON');
+    showToast(_t('compare-toast-json'));
 }
 
 function exportCompareMD() {
@@ -333,7 +335,7 @@ function exportCompareMD() {
     a.download = (data.ticker || 'compare') + '_compare.md';
     a.click();
     URL.revokeObjectURL(url);
-    showToast('已导出 Markdown');
+    showToast(_t('compare-toast-md'));
 }
 
 function shareCompareLink() {
@@ -343,8 +345,8 @@ function shareCompareLink() {
     checked.forEach(function(cb) { ids.push(cb.value); });
     var url = window.location.origin + '/compare?ticker=' + ticker + '&agents=' + ids.join(',');
     navigator.clipboard.writeText(url).then(function() {
-        showToast('分享链接已复制');
-    }).catch(function() { showToast('复制失败', 'error'); });
+        showToast(_t('compare-toast-share'));
+    }).catch(function() { showToast(_t('compare-toast-copy-failed'), 'error'); });
 }
 </script>
 {% endblock %}

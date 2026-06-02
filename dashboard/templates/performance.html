@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 {% block title %}绩效追踪 - Augur{% endblock %}
+{% block extra_head %}
+<style>
+@media (max-width: 768px) {
+    .perf-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    .perf-table-wrap table { min-width: 480px; }
+}
+</style>
+{% endblock %}
 {% block content %}
 
 <h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="perf-title">绩效追踪</h1>
@@ -9,11 +17,11 @@
 <div class="card mb-24" style="padding:0; overflow:hidden;">
     <div style="padding:16px 16px 8px; border-bottom:1px solid var(--border-color);">
         <div class="flex items-center justify-between" style="flex-wrap:wrap; gap:8px;">
-            <h2 class="data-label" style="margin:0; font-size:inherit;" data-i18n="perf-leaderboard">IC 排行榜</h2>
+            <h2 id="perf-leaderboard-heading" class="data-label" style="margin:0; font-size:inherit;" data-i18n="perf-leaderboard">IC 排行榜</h2>
             <button type="button" class="btn btn-sm" onclick="refreshLeaderboard()" data-i18n="perf-refresh">刷新</button>
         </div>
     </div>
-    <div id="leaderboard-content" role="region" aria-live="polite" aria-label="Leaderboard">
+    <div id="leaderboard-content" class="perf-table-wrap" role="region" aria-live="polite" aria-labelledby="perf-leaderboard-heading">
         <div style="padding:48px; text-align:center;" role="status">
             <div class="spinner" style="margin:0 auto;" aria-hidden="true"></div>
             <p class="text-muted mt-16" style="font-size:0.82rem;" data-i18n="perf-loading">加载中...</p>
@@ -25,29 +33,31 @@
 <div class="card">
     <h2 class="data-label mb-12" style="margin:0 0 12px; font-size:inherit;" data-i18n="perf-new-backtest">运行新回测</h2>
     <form class="flex items-center gap-12" style="flex-wrap:wrap;" onsubmit="event.preventDefault(); runBacktest();" aria-label="Run backtest">
-        <label for="perf-ticker" class="sr-only">Ticker</label>
+        <label for="perf-ticker" class="sr-only" data-i18n="perf-ticker-label">股票代码</label>
         <input id="perf-ticker" type="text" class="form-input" style="max-width:160px; font-family:var(--font-data); text-transform:uppercase;" placeholder="AAPL" value="AAPL" aria-required="true" autocomplete="off">
-        <label for="perf-days" class="sr-only">Days</label>
+        <label for="perf-days" class="sr-only" data-i18n="perf-days-label">回测天数</label>
         <select id="perf-days" class="form-select" style="max-width:120px;" aria-label="Backtest period in days">
-            <option value="30">30 天</option>
-            <option value="60">60 天</option>
-            <option value="90">90 天</option>
+            <option value="30" data-i18n="perf-days-30">30 天</option>
+            <option value="60" data-i18n="perf-days-60">60 天</option>
+            <option value="90" data-i18n="perf-days-90">90 天</option>
         </select>
         <button type="submit" class="btn btn-primary" id="run-bt-btn" data-i18n="perf-run">运行回测</button>
     </form>
-    <div id="backtest-result" class="mt-16" style="display:none;"></div>
+    <div id="backtest-result" class="mt-16" style="display:none;" aria-live="polite"></div>
 </div>
 
 {% endblock %}
 {% block extra_scripts %}
 <script>
+function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
+
 document.addEventListener('DOMContentLoaded', function() {
     refreshLeaderboard();
 });
 
 function refreshLeaderboard() {
     var content = document.getElementById('leaderboard-content');
-    content.innerHTML = '<div style="padding:24px; text-align:center;"><div class="spinner" style="margin:0 auto;"></div></div>';
+    content.innerHTML = '<div style="padding:24px; text-align:center;"><div class="spinner" style="margin:0 auto;" aria-hidden="true"></div></div>';
 
     fetch('/api/backtest/leaderboard')
         .then(function(r) { return r.json(); })
@@ -55,7 +65,7 @@ function refreshLeaderboard() {
             renderLeaderboard(data.leaderboard || []);
         })
         .catch(function(err) {
-            content.innerHTML = '<div style="padding:24px; text-align:center; color:var(--text-muted);">无数据 - 请先运行回测</div>';
+            content.innerHTML = '<div style="padding:24px; text-align:center; color:var(--text-muted);">' + escapeHtml(_t('perf-no-data')) + '</div>';
         });
 }
 
@@ -63,14 +73,19 @@ function renderLeaderboard(items) {
     var content = document.getElementById('leaderboard-content');
     if (!items || items.length === 0) {
         content.innerHTML = '<div style="padding:48px; text-align:center; color:var(--text-muted);">' +
-            '<div style="font-size:2rem; margin-bottom:8px;">&#x1F3C6;</div>' +
-            '<div>暂无排行数据</div><div style="font-size:0.78rem; margin-top:4px;">请先运行回测生成 IC 数据</div></div>';
+            '<div style="font-size:2rem; margin-bottom:8px;" aria-hidden="true">&#x1F3C6;</div>' +
+            '<div>' + escapeHtml(_t('perf-empty-title')) + '</div>' +
+            '<div style="font-size:0.78rem; margin-top:4px;">' + escapeHtml(_t('perf-empty-desc')) + '</div></div>';
         return;
     }
 
     var sorted = items.slice().sort(function(a, b) { return (b.ic || 0) - (a.ic || 0); });
-    var html = '<table class="data-table"><thead><tr>' +
-        '<th style="width:50px;">#</th><th>Agent</th><th class="text-right">IC</th><th class="text-right">准确率</th><th class="text-right">信号数</th>' +
+    var html = '<table class="data-table"><caption class="sr-only">' + escapeHtml(_t('perf-leaderboard')) + '</caption><thead><tr>' +
+        '<th style="width:50px;">' + escapeHtml(_t('perf-col-rank')) + '</th>' +
+        '<th>' + escapeHtml(_t('perf-col-agent')) + '</th>' +
+        '<th class="text-right">' + escapeHtml(_t('perf-col-ic')) + '</th>' +
+        '<th class="text-right">' + escapeHtml(_t('perf-col-accuracy')) + '</th>' +
+        '<th class="text-right">' + escapeHtml(_t('perf-col-signals')) + '</th>' +
         '</tr></thead><tbody>';
 
     sorted.forEach(function(item, idx) {
@@ -79,7 +94,7 @@ function renderLeaderboard(items) {
         var icColor = (item.ic || 0) > 0 ? 'var(--signal-buy)' : (item.ic || 0) < 0 ? 'var(--signal-sell)' : 'var(--text-muted)';
         html += '<tr>' +
             '<td><span class="leaderboard-rank' + rankClass + '">' + rank + '</span></td>' +
-            '<td style="font-weight:600;">' + (item.agent_name || item.agent_id || '--') + '</td>' +
+            '<td style="font-weight:600;">' + escapeHtml(item.agent_name || item.agent_id || '--') + '</td>' +
             '<td class="text-right text-mono" style="color:' + icColor + ';">' + (item.ic || 0).toFixed(4) + '</td>' +
             '<td class="text-right text-mono">' + ((item.accuracy || 0) * 100).toFixed(1) + '%</td>' +
             '<td class="text-right text-mono">' + (item.signal_count || 0) + '</td>' +
@@ -95,30 +110,29 @@ function runBacktest() {
     var days = document.getElementById('perf-days').value || 30;
     var btn = document.getElementById('run-bt-btn');
     btn.disabled = true;
-    btn.textContent = '运行中...';
+    btn.textContent = _t('perf-running');
 
     fetch('/api/backtest/run?ticker=' + ticker + '&days=' + days)
         .then(function(r) { return r.json(); })
         .then(function(data) {
             btn.disabled = false;
-            btn.textContent = '运行回测';
-            showToast('回测完成 - ' + ticker, 'success');
+            btn.textContent = _t('perf-run');
+            showToast(_t('perf-done').replace('{ticker}', ticker), 'success');
             var result = document.getElementById('backtest-result');
             result.style.display = 'block';
             result.innerHTML = '<div class="card" style="background:var(--bg-primary);">' +
                 '<div class="flex items-center gap-24" style="flex-wrap:wrap;">' +
-                '<div><span class="data-label">标的</span><div class="text-mono" style="color:var(--accent-orange); font-weight:700;">' + (data.ticker || ticker) + '</div></div>' +
-                '<div><span class="data-label">天数</span><div class="text-mono">' + (data.days || days) + '</div></div>' +
-                '<div><span class="data-label">共识 IC</span><div class="text-mono" style="color:var(--signal-buy);">' + (data.consensus_ic || 0).toFixed(4) + '</div></div>' +
-                '<div><span class="data-label">记录数</span><div class="text-mono">' + (data.total_records || 0) + '</div></div>' +
+                '<div><span class="data-label">' + escapeHtml(_t('perf-result-ticker')) + '</span><div class="text-mono" style="color:var(--accent-orange); font-weight:700;">' + escapeHtml(data.ticker || ticker) + '</div></div>' +
+                '<div><span class="data-label">' + escapeHtml(_t('perf-result-days')) + '</span><div class="text-mono">' + (data.days || days) + '</div></div>' +
+                '<div><span class="data-label">' + escapeHtml(_t('perf-result-ic')) + '</span><div class="text-mono" style="color:var(--signal-buy);">' + (data.consensus_ic || 0).toFixed(4) + '</div></div>' +
+                '<div><span class="data-label">' + escapeHtml(_t('perf-result-records')) + '</span><div class="text-mono">' + (data.total_records || 0) + '</div></div>' +
                 '</div></div>';
-            // Refresh leaderboard
             refreshLeaderboard();
         })
         .catch(function(err) {
             btn.disabled = false;
-            btn.textContent = '运行回测';
-            showToast('回测失败: ' + (err.message || err), 'error');
+            btn.textContent = _t('perf-run');
+            showToast(_t('perf-failed') + (err.message || err), 'error');
         });
 }
 </script>
