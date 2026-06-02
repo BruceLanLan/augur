@@ -2800,13 +2800,46 @@ async def api_optimize(body: OptimizeBody):
     for t in body.tickers:
         if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', t):
             raise HTTPException(status_code=400, detail=f"Invalid ticker: {t}")
+
     returns_data = {}
+    data_source = "mock"
+
+    # Phase A: try to fetch real 3-month daily returns from yfinance
+    try:
+        from augur.data import fetch_history
+        real_count = 0
+        for ticker in body.tickers:
+            hist = fetch_history(ticker.upper(), period="3mo")
+            if hist and len(hist) >= 10:
+                closes = [h["close"] for h in hist if h.get("close") and h["close"] > 0]
+                if len(closes) >= 10:
+                    daily_returns = [
+                        (closes[i] - closes[i - 1]) / closes[i - 1]
+                        for i in range(1, len(closes))
+                    ]
+                    returns_data[ticker.upper()] = daily_returns
+                    real_count += 1
+        if real_count == len(body.tickers):
+            data_source = "live"
+        elif real_count > 0:
+            data_source = "partial"
+    except Exception:
+        pass
+
+    # Fallback: deterministic mock for any ticker still missing
     for ticker in body.tickers:
-        seed = int(hashlib.sha256(ticker.upper().encode()).hexdigest()[:8], 16)
-        rng = random.Random(seed)
-        returns_data[ticker.upper()] = [rng.gauss(0.001, 0.02) for _ in range(60)]
+        if ticker.upper() not in returns_data:
+            seed = int(hashlib.sha256(ticker.upper().encode()).hexdigest()[:8], 16)
+            rng = random.Random(seed)
+            returns_data[ticker.upper()] = [rng.gauss(0.001, 0.02) for _ in range(60)]
+
     result = PortfolioOptimizer().optimize(returns_data, risk_free_rate=body.risk_free_rate)
-    return {"status": "ok", "portfolio": result.to_dict(), "tickers": [t.upper() for t in body.tickers]}
+    return {
+        "status": "ok",
+        "portfolio": result.to_dict(),
+        "tickers": [t.upper() for t in body.tickers],
+        "data_source": data_source,
+    }
 
 
 # ============ v8: I18n API ============

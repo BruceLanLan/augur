@@ -374,12 +374,12 @@ class TestStreamingEdgeCases:
             assert p["price"] > 0
             assert "ticker" in p
 
-    def test_generate_price_update(self):
+    def test_apply_random_walk(self):
         """Price update should produce reasonable changes."""
         from augur.streaming import PriceStreamer
         streamer = PriceStreamer(tickers=["AAPL"], interval=60)
         initial = streamer.get_current_prices()[0]["price"]
-        update = streamer._generate_price_update("AAPL")
+        update = streamer._apply_random_walk("AAPL")
         # Price should not deviate more than 2% per update
         assert abs(update["price"] - initial) / initial < 0.03
 

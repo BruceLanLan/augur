@@ -31,6 +31,46 @@ def _get_learning_engine():
         _learning_engine = LearningEngine()
     return _learning_engine
 
+
+def _check_and_record_outcomes(le, ticker: str) -> None:
+    """
+    For any unresolved predictions on `ticker` older than 30 days,
+    fetch the actual price change via yfinance and call record_outcome().
+    Runs silently — never raises.
+    """
+    try:
+        cutoff = time.time() - 30 * 86400
+        pending = [
+            p for p in le._predictions
+            if p.get("ticker") == ticker
+            and p.get("outcome") is None
+            and p.get("timestamp", 0) <= cutoff
+        ]
+        if not pending:
+            return
+
+        # Fetch 35-day history to cover the 30-day window
+        from augur.data import fetch_history
+        hist = fetch_history(ticker, period="2mo")
+        if not hist or len(hist) < 5:
+            return
+
+        closes_by_ts = {h.get("date"): h.get("close") for h in hist if h.get("close")}
+        if not closes_by_ts:
+            return
+
+        sorted_closes = sorted(closes_by_ts.items())   # [(date_str, price), ...]
+        first_close = sorted_closes[0][1]
+        last_close = sorted_closes[-1][1]
+        if not first_close or first_close == 0:
+            return
+
+        actual_return = (last_close - first_close) / first_close
+        le.record_outcome(ticker, actual_return, lookback_days=40)
+    except Exception:
+        pass
+
+
 def _get_sentiment_analyzer():
     global _sentiment_analyzer
     if _sentiment_analyzer is None:
@@ -527,6 +567,22 @@ class DecisionCoordinator:
             "analysis_ms": self._last_analysis_ms,
             "consensus_ms": consensus_ms,
         }
+
+        # v8 Phase A: auto-record predictions + check past outcomes
+        if ticker:
+            try:
+                le = _get_learning_engine()
+                # Check if old predictions (>30d) for this ticker need outcomes recorded
+                _check_and_record_outcomes(le, ticker)
+                # Record each agent's current prediction for future accuracy tracking
+                for agent_id, resp in results.items():
+                    if resp.signal != SignalType.ERROR:
+                        le.record_prediction(
+                            ticker, agent_id,
+                            resp.signal.value, resp.score, resp.confidence,
+                        )
+            except Exception:
+                pass
 
         return result
 

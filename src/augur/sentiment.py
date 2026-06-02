@@ -2,137 +2,225 @@
 """
 augur.sentiment - Social Sentiment Analysis
 
-Provides mock sentiment data for social platforms (X, Reddit, StockTwits).
-Uses ticker hash for deterministic but realistic random scores.
+Fetches real sentiment from StockTwits (no auth) and optionally Reddit (PRAW).
+Falls back to hash-based mock when network unavailable or rate-limited.
 
-Architecture:
-    - SentimentAnalyzer: Main class that generates per-ticker sentiment scores
-    - SentimentResult: Dataclass holding overall score, per-source scores, volume
-    - Hash-based determinism: same ticker always produces same scores (testable)
+Sources and weights:
+    StockTwits  50%  — free, no auth, bullish/bearish tags per message
+    Reddit      30%  — optional, needs REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET env vars
+    X (Twitter) 20%  — hash mock (X API free tier too restrictive for real use)
 
-Score Ranges:
-    - overall_score: [-1.0, +1.0] (aggregated weighted sentiment)
-    - per-source scores: [-1.0, +1.0] for X, Reddit, StockTwits
-    - sentiment_factor: [-0.5, +0.5] (used as consensus score adjustment)
-    - Source weights: X=40%, Reddit=35%, StockTwits=25%
+Score ranges:
+    overall_score: [-1.0, +1.0]
+    sentiment_factor: [-0.5, +0.5] added to consensus score in registry.py
 
-Integration:
-    - get_sentiment_factor() returns a value added to consensus score in registry.py
-    - Score is clamped to [0, 10] after sentiment adjustment (review fix #3)
+Cache TTL: 5 minutes (real API); 60 seconds (mock fallback)
 
-Usage:
-    sa = SentimentAnalyzer()
-    result = sa.get_sentiment("NVDA")
-    factor = sa.get_sentiment_factor("NVDA")  # [-0.5, 0.5]
+Environment variables (optional):
+    REDDIT_CLIENT_ID      — Reddit app client ID
+    REDDIT_CLIENT_SECRET  — Reddit app client secret
+    REDDIT_USER_AGENT     — defaults to "augur-sentiment/8.0"
 """
 
 import hashlib
+import os
+import time
 from dataclasses import dataclass, field
-from typing import Dict, Optional
+from typing import Dict, Optional, Tuple
 
 
 @dataclass
 class SentimentResult:
-    """Result of sentiment analysis for a ticker."""
     ticker: str
-    overall_score: float  # -1.0 to 1.0
-    sources: Dict[str, float] = field(default_factory=dict)  # x_score, reddit_score, stocktwits_score
-    volume: int = 0  # Number of mentions
-    trending: bool = False  # Whether the ticker is trending
+    overall_score: float          # -1.0 to 1.0
+    sources: Dict[str, float] = field(default_factory=dict)
+    volume: int = 0
+    trending: bool = False
+    data_source: str = "mock"     # "live" | "partial" | "mock"
 
+
+# ── StockTwits ────────────────────────────────────────────────────────────────
+
+def _fetch_stocktwits(ticker: str) -> Tuple[float, int]:
+    """
+    Fetch StockTwits stream for ticker. No authentication required.
+    Returns (score [-1,1], message_count).
+    StockTwits messages optionally include a 'sentiment' tag: Bullish or Bearish.
+    """
+    try:
+        import urllib.request
+        import json as _json
+
+        sym = ticker.replace("-", ".")          # StockTwits uses dots for crypto pairs
+        url = f"https://api.stocktwits.com/api/2/streams/symbol/{sym}.json"
+        req = urllib.request.Request(url, headers={"User-Agent": "augur-sentiment/8.0"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            data = _json.loads(resp.read())
+
+        messages = data.get("messages", [])
+        if not messages:
+            return 0.0, 0
+
+        bullish = sum(
+            1 for m in messages
+            if m.get("entities", {}).get("sentiment", {}).get("basic") == "Bullish"
+        )
+        bearish = sum(
+            1 for m in messages
+            if m.get("entities", {}).get("sentiment", {}).get("basic") == "Bearish"
+        )
+        total = bullish + bearish
+        if total == 0:
+            return 0.0, len(messages)
+
+        score = (bullish - bearish) / total   # -1 to +1
+        return round(score, 4), len(messages)
+
+    except Exception:
+        return None, 0     # None signals fetch failure → fall back to mock
+
+
+# ── Reddit (optional) ─────────────────────────────────────────────────────────
+
+def _fetch_reddit(ticker: str) -> Optional[float]:
+    """
+    Fetch Reddit sentiment from r/stocks and r/wallstreetbets.
+    Requires REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET env vars.
+    Returns score [-1,1] or None if unavailable.
+    """
+    client_id = os.environ.get("REDDIT_CLIENT_ID", "").strip()
+    client_secret = os.environ.get("REDDIT_CLIENT_SECRET", "").strip()
+    if not client_id or not client_secret:
+        return None
+
+    try:
+        import praw  # type: ignore
+        user_agent = os.environ.get("REDDIT_USER_AGENT", "augur-sentiment/8.0")
+        reddit = praw.Reddit(
+            client_id=client_id,
+            client_secret=client_secret,
+            user_agent=user_agent,
+        )
+
+        positive_words = {"bull", "bullish", "buy", "long", "moon", "up", "gain",
+                          "strong", "growth", "beat", "upgrade", "outperform"}
+        negative_words = {"bear", "bearish", "sell", "short", "crash", "down", "loss",
+                          "weak", "miss", "downgrade", "underperform", "dump"}
+
+        pos = neg = 0
+        for sub in ("stocks", "wallstreetbets", "investing"):
+            try:
+                for post in reddit.subreddit(sub).search(ticker, limit=20, time_filter="week"):
+                    text = (post.title + " " + (post.selftext or "")).lower()
+                    words = set(text.split())
+                    pos += len(words & positive_words)
+                    neg += len(words & negative_words)
+            except Exception:
+                continue
+
+        total = pos + neg
+        if total == 0:
+            return 0.0
+        return round((pos - neg) / total, 4)
+
+    except ImportError:
+        return None
+    except Exception:
+        return None
+
+
+# ── Hash-based mock (deterministic fallback) ──────────────────────────────────
+
+def _mock_score(ticker: str, salt: str) -> float:
+    h = hashlib.sha256(f"{ticker.upper()}{salt}".encode()).hexdigest()
+    seed = int(h[:8], 16) / 0xFFFFFFFF
+    return round((seed * 2) - 1, 4)
+
+
+# ── Main Analyzer ─────────────────────────────────────────────────────────────
 
 class SentimentAnalyzer:
-    """Analyzes social sentiment for tickers using mock data.
-
-    Generates deterministic mock scores seeded by ticker hash to simulate
-    real social sentiment from X (Twitter), Reddit, and StockTwits.
-    Results are cached with a 60-second TTL for performance.
     """
+    Fetches real social sentiment and caches results.
+
+    Real API calls: StockTwits (always attempted), Reddit (if env vars set).
+    Falls back to deterministic hash mock on network failure.
+    """
+
+    REAL_CACHE_TTL = 300.0   # 5 min for live data
+    MOCK_CACHE_TTL = 60.0    # 1 min for mock data
 
     def __init__(self):
         self._cache: Dict[str, SentimentResult] = {}
         self._cache_timestamps: Dict[str, float] = {}
-        self._cache_ttl: float = 60.0  # seconds
+        self._cache_source: Dict[str, str] = {}
 
-    def _hash_seed(self, ticker: str, salt: str = "") -> float:
-        """Generate a deterministic float from ticker hash."""
-        h = hashlib.sha256(f"{ticker.upper()}{salt}".encode()).hexdigest()
-        # Convert first 8 hex chars to a float in [0, 1)
-        return int(h[:8], 16) / 0xFFFFFFFF
-
-    def _score_from_seed(self, seed: float) -> float:
-        """Convert a [0, 1) seed to a score in [-1, 1]."""
-        return round((seed * 2) - 1, 4)
+    def _is_cached(self, ticker: str) -> bool:
+        if ticker not in self._cache:
+            return False
+        src = self._cache_source.get(ticker, "mock")
+        ttl = self.REAL_CACHE_TTL if src == "live" else self.MOCK_CACHE_TTL
+        return (time.time() - self._cache_timestamps.get(ticker, 0)) < ttl
 
     def get_sentiment(self, ticker: str) -> SentimentResult:
-        """Get sentiment for a ticker. Uses mock data seeded by ticker hash.
-
-        Results are cached with a 60-second TTL for performance.
-
-        Args:
-            ticker: Stock ticker symbol (e.g. 'AAPL', 'NVDA')
-
-        Returns:
-            SentimentResult with overall score, per-source scores, volume, trending.
-        """
         ticker = ticker.upper().strip()
+        if self._is_cached(ticker):
+            return self._cache[ticker]
 
-        # Check cache with TTL
-        import time as _time
-        now = _time.time()
-        if ticker in self._cache:
-            cache_time = self._cache_timestamps.get(ticker, 0)
-            if (now - cache_time) < self._cache_ttl:
-                return self._cache[ticker]
+        st_score, st_volume = _fetch_stocktwits(ticker)
+        reddit_score = _fetch_reddit(ticker)
+        x_score_mock = _mock_score(ticker, "x_twitter")   # X stays mock
 
-        # Generate deterministic but varied scores
-        x_seed = self._hash_seed(ticker, "x_twitter")
-        reddit_seed = self._hash_seed(ticker, "reddit")
-        stocktwits_seed = self._hash_seed(ticker, "stocktwits")
+        live_sources = {}
+        data_source = "mock"
 
-        x_score = self._score_from_seed(x_seed)
-        reddit_score = self._score_from_seed(reddit_seed)
-        stocktwits_score = self._score_from_seed(stocktwits_seed)
+        if st_score is not None:
+            live_sources["stocktwits_score"] = st_score
+            data_source = "partial"
+        else:
+            live_sources["stocktwits_score"] = _mock_score(ticker, "stocktwits")
 
-        # Overall is weighted average
-        overall_score = round(
-            x_score * 0.4 + reddit_score * 0.35 + stocktwits_score * 0.25,
-            4
+        if reddit_score is not None:
+            live_sources["reddit_score"] = reddit_score
+            if data_source == "partial":
+                data_source = "live"
+        else:
+            live_sources["reddit_score"] = _mock_score(ticker, "reddit")
+
+        live_sources["x_score"] = x_score_mock
+
+        # Weighted average: StockTwits 50%, Reddit 30%, X 20%
+        overall = round(
+            live_sources["stocktwits_score"] * 0.50
+            + live_sources["reddit_score"] * 0.30
+            + live_sources["x_score"] * 0.20,
+            4,
         )
 
-        # Volume based on hash
-        vol_seed = self._hash_seed(ticker, "volume")
-        volume = int(vol_seed * 50000) + 100
-
-        # Trending if volume > 30000 or overall_score > 0.5
-        trending = volume > 30000 or abs(overall_score) > 0.5
+        volume = st_volume if st_volume > 0 else (
+            int(abs(int(hashlib.sha256(ticker.encode()).hexdigest()[:8], 16) % 40000) + 100)
+        )
+        trending = volume > 15000 or abs(overall) > 0.4
 
         result = SentimentResult(
             ticker=ticker,
-            overall_score=overall_score,
-            sources={
-                "x_score": x_score,
-                "reddit_score": reddit_score,
-                "stocktwits_score": stocktwits_score,
-            },
+            overall_score=overall,
+            sources=live_sources,
             volume=volume,
             trending=trending,
+            data_source=data_source,
         )
 
         self._cache[ticker] = result
-        self._cache_timestamps[ticker] = now
+        self._cache_timestamps[ticker] = time.time()
+        self._cache_source[ticker] = data_source
         return result
 
     def get_sentiment_factor(self, ticker: str) -> float:
-        """Get a sentiment adjustment factor for use by DecisionCoordinator.
-
-        Returns a value in [-0.5, 0.5] that can be added to consensus scores.
-        """
-        result = self.get_sentiment(ticker)
-        # Scale overall_score to a smaller adjustment factor
-        return round(result.overall_score * 0.5, 4)
+        """Return a score adjustment in [-0.5, +0.5] for use in consensus."""
+        return round(self.get_sentiment(ticker).overall_score * 0.5, 4)
 
     def clear_cache(self) -> None:
-        """Clear the internal sentiment cache."""
         self._cache.clear()
         self._cache_timestamps.clear()
+        self._cache_source.clear()
