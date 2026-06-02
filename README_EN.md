@@ -24,6 +24,14 @@
 >
 > Stop guessing from one angle. Augur lets **18 legendary investors** independently analyze any stock, each producing a structured score, then aggregates them into a weighted consensus with Kelly position sizing.
 
+## One analysis. 18 perspectives.
+
+<p align="center">
+  <img src="docs/images/screenshots/report-nvda.png" alt="NVDA deep analysis — BUY signal, 7.6/10, 18 agents voted" width="100%"/>
+</p>
+
+> NVDA live analysis: BUY · Score 7.6/10 · Confidence 81% · Kelly position 20% · All 18 masters voted
+
 > **🦉 Why a White Pixel Owl?**
 > In Japanese culture, the white owl (*フクロウ, fukurou*) symbolizes luck, wealth, and wisdom. Its name can be written as "不苦労" (no hardship) or "福来郎" (luck arrives). We chose it as Augur's logo to represent our mission: **using AI wisdom to make investment decisions less painful and more rewarding.**
 
@@ -44,6 +52,10 @@
 ---
 
 ## 🧠 18 Investor Personas
+
+<p align="center">
+  <img src="docs/images/screenshots/personas.png" alt="18 investor personas — Value / Growth / Macro / China" width="100%"/>
+</p>
 
 <details>
 <summary><strong>Classic Value</strong></summary>
@@ -180,6 +192,44 @@ v8 upgrades Augur from an analysis tool to an **intelligent investment platform*
 | **WebSocket Streaming** | `/ws/prices` real-time price tape, Bloomberg-style ticker |
 | **RulesEngine** | DSL-based alert conditions with multi-channel notifications |
 
+<table>
+<tr>
+<td width="50%">
+
+**AI Chat** — ask any master anything
+
+<img src="docs/images/screenshots/chat.png" alt="AI Chat — ask Buffett, Graham or 9 other personas" width="100%"/>
+
+</td>
+<td width="50%">
+
+**Master Compare** — side-by-side analysis
+
+<img src="docs/images/screenshots/compare.png" alt="Master Compare — 2-5 personas on the same stock" width="100%"/>
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**History** — every analysis, tracked
+
+<img src="docs/images/screenshots/history.png" alt="Analysis history with signals and scores" width="100%"/>
+
+</td>
+<td width="50%">
+
+**v8.1 real data**
+
+- 📡 Streaming: yfinance live prices
+- 😊 Sentiment: StockTwits real API
+- 📊 Optimizer: real 3-month returns
+- 🧠 Learning: auto-records predictions + outcomes
+
+</td>
+</tr>
+</table>
+
 ### 🔧 Optional Advanced Features
 
 | Module | How to Enable |
@@ -218,11 +268,7 @@ python3 -m dashboard.app --port 8000
 | **System** | Settings | Per-master parameter configuration |
 
 <p align="center">
-  <img src="docs/images/en/dashboard-preview.png" alt="Augur Dashboard" width="100%"/>
-</p>
-
-<p align="center">
-  <img src="docs/images/en/dashboard-stocks.png" alt="Stock Analysis Dashboard" width="100%"/>
+  <img src="docs/images/screenshots/dashboard.png" alt="Augur Dashboard — Bloomberg Terminal style" width="100%"/>
 </p>
 
 ---
