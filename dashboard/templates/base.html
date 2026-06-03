@@ -139,6 +139,14 @@
         </main>
     </div>
 
+    <!-- Ticker Tape — position:fixed, right of sidebar -->
+    <div class="ticker-tape-wrap" id="ticker-tape-wrap" aria-label="实时行情" aria-live="off">
+        <div class="ticker-tape-track" id="ticker-tape-track">
+            <span class="ticker-tape-loading">行情加载中…</span>
+        </div>
+        <button class="ticker-tape-pause" id="ticker-tape-pause" aria-label="暂停滚动" title="暂停/继续">⏸</button>
+    </div>
+
     <!-- Bottom nav for mobile -->
     <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile navigation">
         <a class="bottom-nav-item" href="/" data-page="home">
@@ -770,5 +778,90 @@
     </script>
     <script src="/static/js/i18n.js?v=7.8.0"></script>
     {% block extra_scripts %}{% endblock %}
+
+    <!-- Phase B: Ticker Tape -->
+    <script>
+    (function() {
+        var wrap = document.getElementById('ticker-tape-wrap');
+        var track = document.getElementById('ticker-tape-track');
+        var pauseBtn = document.getElementById('ticker-tape-pause');
+        if (!wrap || !track) return;
+
+        var paused = false;
+        pauseBtn && pauseBtn.addEventListener('click', function() {
+            paused = !paused;
+            wrap.classList.toggle('paused', paused);
+            pauseBtn.textContent = paused ? '▶' : '⏸';
+            pauseBtn.title = paused ? '继续' : '暂停';
+        });
+
+        function buildTape(prices, pctIsDecimal) {
+            if (!prices || !prices.length) return;
+            var html = '';
+            prices.forEach(function(p) {
+                // market-movers returns decimal (0.04 = 4%), WS returns pct (4.0 = 4%)
+                var rawPct = p.change_pct || 0;
+                var pct = pctIsDecimal ? rawPct * 100 : rawPct;
+                var dir = pct > 0 ? 'tape-up' : pct < 0 ? 'tape-down' : 'tape-flat';
+                var sign = pct > 0 ? '+' : '';
+                var src = (p.source === 'live') ? '' : ' tape-mock';
+                var sym = p.ticker || p.symbol || '';
+                var price = typeof p.price === 'number' ? p.price.toFixed(2) : '--';
+                html += '<span class="tape-item ' + dir + src + '">' +
+                    '<span class="tape-source-dot"></span>' +
+                    '<span class="tape-ticker">' + sym + '</span>' +
+                    '<span class="tape-price">$' + price + '</span>' +
+                    '<span class="tape-change">' + sign + Math.abs(pct).toFixed(2) + '%</span>' +
+                    '</span>';
+            });
+            // Duplicate for seamless loop
+            track.innerHTML = html + html;
+            // Reset animation
+            track.style.animation = 'none';
+            track.offsetHeight; // reflow
+            track.style.animation = '';
+        }
+
+        function fetchPrices() {
+            fetch('/api/market-movers')
+                .then(function(r) { return r.json(); })
+                .then(function(d) {
+                    var items = [];
+                    (d.gainers || []).forEach(function(g) { items.push(g); });
+                    (d.losers  || []).forEach(function(l) { items.push(l); });
+                    // market-movers change_pct is decimal fraction (0.04 = 4%)
+                    if (items.length) buildTape(items, true);
+                })
+                .catch(function() {});
+        }
+
+        // WebSocket price updates (change_pct already in %)
+        function connectWS() {
+            try {
+                var proto = location.protocol === 'https:' ? 'wss' : 'ws';
+                var ws = new WebSocket(proto + '://' + location.host + '/ws/prices');
+                ws.onmessage = function(e) {
+                    try {
+                        var d = JSON.parse(e.data);
+                        if (d.type === 'price_update' && d.prices && d.prices.length) {
+                            buildTape(d.prices, false);
+                        }
+                    } catch(err) {}
+                };
+                ws.onerror = function() {};
+                ws.onclose = function() {
+                    // Reconnect after 10s on unexpected close
+                    setTimeout(connectWS, 10000);
+                };
+            } catch(err) {}
+        }
+
+        // Initial load via REST (fast), then upgrade to WS
+        fetchPrices();
+        connectWS();
+        // Refresh every 60s as fallback
+        setInterval(fetchPrices, 60000);
+    })();
+    </script>
 </body>
 </html>

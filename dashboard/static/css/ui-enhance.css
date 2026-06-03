@@ -560,3 +560,119 @@ kbd {
 @keyframes spin {
     to { transform: rotate(360deg); }
 }
+
+/* ============================================
+   Phase B: Ticker Tape
+   ============================================ */
+.ticker-tape-wrap {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width, 220px);
+    right: 0;
+    height: 32px;
+    background: rgba(10, 10, 20, 0.97);
+    border-bottom: 1px solid rgba(255, 140, 0, 0.25);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    z-index: 60;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+}
+
+/* Shrink offset when sidebar collapses */
+.sidebar.collapsed ~ .ticker-tape-wrap,
+body.sidebar-collapsed .ticker-tape-wrap {
+    left: var(--sidebar-collapsed, 56px);
+}
+
+/* Push app-main down so content starts below ticker tape */
+.app-main {
+    padding-top: calc(24px + 32px) !important;
+}
+
+.ticker-tape-track {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    will-change: transform;
+    animation: tape-scroll 60s linear infinite;
+    gap: 0;
+}
+
+.ticker-tape-wrap.paused .ticker-tape-track {
+    animation-play-state: paused;
+}
+
+@keyframes tape-scroll {
+    0%   { transform: translateX(100vw); }
+    100% { transform: translateX(-100%); }
+}
+
+.tape-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 18px;
+    font-size: 0.72rem;
+    font-family: var(--font-data, 'JetBrains Mono', monospace);
+    border-right: 1px solid rgba(255,255,255,0.06);
+    cursor: default;
+}
+
+.tape-item .tape-ticker {
+    color: var(--text-primary, #e8e8e8);
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.tape-item .tape-price {
+    color: var(--text-secondary, #a0a0a0);
+}
+
+.tape-item .tape-change {
+    font-size: 0.68rem;
+}
+
+.tape-item.tape-up .tape-change   { color: var(--signal-buy, #00c853); }
+.tape-item.tape-down .tape-change { color: var(--signal-sell, #ff1744); }
+.tape-item.tape-flat .tape-change { color: var(--text-muted, #666); }
+
+.tape-item .tape-source-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--signal-buy, #00c853);
+    opacity: 0.5;
+}
+.tape-item.tape-mock .tape-source-dot { background: var(--text-muted, #555); }
+
+.ticker-tape-loading {
+    padding: 0 16px;
+    font-size: 0.7rem;
+    color: var(--text-muted, #555);
+    font-family: var(--font-data);
+}
+
+.ticker-tape-pause {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.06);
+    border: none;
+    color: var(--text-muted, #555);
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    z-index: 2;
+    transition: color 0.2s, background 0.2s;
+    line-height: 1;
+}
+.ticker-tape-pause:hover {
+    color: var(--accent-orange, #ff8c00);
+    background: rgba(255,140,0,0.1);
+}
+
+/* Ensure app-main sits below ticker tape */
+.app-main { flex: 1; overflow-y: auto; }
