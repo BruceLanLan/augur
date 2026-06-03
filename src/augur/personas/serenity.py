@@ -19,7 +19,7 @@ class SerenityAgent(BaseAgent):
     def __init__(self):
         super().__init__(
             agent_id="serenity",
-            name="Serenity (@aleabitoreddit)",
+            name="Serenity",
             identity="""Reddit WSB传奇交易者(AleaBito)转X平台，352K+粉丝，30K+付费订阅者。
 前RISC-V基金会成员，前AI研究科学家，Nature论文作者。
 核心方法论: 自下而上供应链逆向工程(Chokepoint Theory)。

@@ -91,13 +91,17 @@ function renderLeaderboard(items) {
     sorted.forEach(function(item, idx) {
         var rank = idx + 1;
         var rankClass = rank <= 3 ? ' top-3' : '';
-        var icColor = (item.ic || 0) > 0 ? 'var(--signal-buy)' : (item.ic || 0) < 0 ? 'var(--signal-sell)' : 'var(--text-muted)';
+        // API fields: ic_60d, hit_rate, total_predictions
+        var ic = item.ic_60d || item.ic || 0;
+        var accuracy = item.hit_rate || item.accuracy || 0;
+        var signals = item.total_predictions || item.signal_count || 0;
+        var icColor = ic > 0 ? 'var(--signal-buy)' : ic < 0 ? 'var(--signal-sell)' : 'var(--text-muted)';
         html += '<tr>' +
             '<td><span class="leaderboard-rank' + rankClass + '">' + rank + '</span></td>' +
             '<td style="font-weight:600;">' + escapeHtml(item.agent_name || item.agent_id || '--') + '</td>' +
-            '<td class="text-right text-mono" style="color:' + icColor + ';">' + (item.ic || 0).toFixed(4) + '</td>' +
-            '<td class="text-right text-mono">' + ((item.accuracy || 0) * 100).toFixed(1) + '%</td>' +
-            '<td class="text-right text-mono">' + (item.signal_count || 0) + '</td>' +
+            '<td class="text-right text-mono" style="color:' + icColor + ';">' + ic.toFixed(4) + '</td>' +
+            '<td class="text-right text-mono">' + (accuracy * 100).toFixed(1) + '%</td>' +
+            '<td class="text-right text-mono">' + signals + '</td>' +
             '</tr>';
     });
 
