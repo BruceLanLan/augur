@@ -664,6 +664,11 @@ async def analyze_ticker(
             "gross_margins": ctx.gross_margins,
             "sector": ctx.sector,
             "industry": ctx.industry,
+            "business_summary": ctx.business_summary,
+            "market_cap": ctx.market_cap,
+            "fcf": ctx.fcf,
+            "revenue_growth": ctx.revenue_growth,
+            "debt_ratio": ctx.debt_ratio,
         },
         "consensus": consensus_resp.to_dict(),
         "agents": [r.to_dict() for r in agent_responses.values()],
@@ -1448,9 +1453,16 @@ async def api_ic_leaderboard():
     backtester = Backtester()
     ics = backtester.get_leaderboard()
 
+    registry = get_registry()
+    def _enrich(d: dict) -> dict:
+        agent = registry.get(d.get("agent_id", ""))
+        if agent:
+            d["agent_name"] = agent.name
+        return d
+
     return {
         "status": "ok",
-        "leaderboard": [a.to_dict() for a in ics],
+        "leaderboard": [_enrich(a.to_dict()) for a in ics],
         "count": len(ics),
     }
 
@@ -2687,7 +2699,7 @@ async def api_sentiment(ticker: str):
         raise HTTPException(status_code=400, detail="Invalid ticker format")
     from augur.sentiment import SentimentAnalyzer
     result = SentimentAnalyzer().get_sentiment(ticker)
-    return {"ticker": result.ticker, "overall_score": result.overall_score, "sources": result.sources, "volume": result.volume, "trending": result.trending}
+    return {"ticker": result.ticker, "overall_score": result.overall_score, "sources": result.sources, "volume": result.volume, "trending": result.trending, "data_source": result.data_source}
 
 
 # ============ v8: AI Chat ============
