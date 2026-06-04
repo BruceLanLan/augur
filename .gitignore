@@ -8,3 +8,10 @@ build/
 *.egg
 .pytest_cache/
 .agents/
+
+# Test caches
+.pytest-home/
+.pytest-tmp-home/
+
+# OS generated files
+.DS_Store
