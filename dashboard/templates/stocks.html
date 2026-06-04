@@ -173,120 +173,108 @@
 <!-- Results -->
 <div id="results">
 
-    <!-- Consensus Banner -->
-    <div class="card mb-16" id="consensus-card" style="border-width:2px;">
-        <div class="flex items-center gap-24" style="flex-wrap:wrap; margin-bottom:16px;">
-            <div>
-                <div class="data-label">共识信号</div>
-                <span id="cons-signal" class="signal-badge signal-badge-neutral" style="font-size:1.1rem; margin-top:4px;">--</span>
+    <!-- Header -->
+    <div class="an-head mb-24">
+        <div>
+            <div style="display:flex;align-items:center;gap:12px">
+                <span id="an-ticker" style="font:700 1.9rem/1 var(--font-mono);color:var(--fg-1);letter-spacing:-1px"></span>
+                <span id="an-name" style="font:600 0.7rem/1 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase"></span>
             </div>
-            <div style="border-left:1px solid var(--border-color); padding-left:20px;">
-                <div class="data-label">综合评分</div>
-                <div id="cons-score" class="data-value">--</div>
-                <div class="score-gauge mt-8" style="width:120px;">
-                    <div class="score-gauge-fill" id="cons-score-gauge" style="width:0%;"></div>
-                </div>
-            </div>
-            <div style="border-left:1px solid var(--border-color); padding-left:20px;">
-                <div class="data-label">置信度</div>
-                <div id="cons-confidence" class="text-mono" style="font-size:1.2rem; font-weight:600; color:var(--signal-neutral);">--</div>
-            </div>
-            <div style="border-left:1px solid var(--border-color); padding-left:20px; flex:1; min-width:200px;">
-                <div class="data-label">分析依据</div>
-                <div id="cons-reasoning" class="text-muted" style="font-size:0.8rem; margin-top:4px;"></div>
-            </div>
-            <div style="text-align:right;">
-                <div class="data-label">建议仓位</div>
-                <div id="cons-position" class="data-value">--</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+                <span id="an-price" style="font:var(--data-lg);color:var(--fg-1)"></span>
             </div>
         </div>
-
-        <!-- Prominent action bar — deep report is the headline action -->
-        <div class="flex items-center gap-8 mb-12" style="flex-wrap:wrap; border-top:1px solid var(--border-color); padding-top:12px;">
-            <button class="btn btn-primary" onclick="generateReport()" id="gen-report-btn" style="font-weight:600;">
-                &#x1F4C4; 生成深度分析报告
-            </button>
-            <span class="action-hint" style="margin:0;">逐模块解读 18 位大师观点，可复制 / 下载为 Markdown</span>
-            <span style="flex:1;"></span>
-            <button class="copy-btn" onclick="copyConsensus(this)">复制摘要</button>
-            <button class="copy-btn" onclick="exportJSON()">导出 JSON</button>
-        </div>
-
-        <div style="border-top:1px solid var(--border-color); padding-top:12px;">
-            <div class="grid-2" style="gap:24px;">
-                <div>
-                    <div class="data-label mb-8">关键发现</div>
-                    <ul id="cons-findings" style="list-style:none; padding:0; margin:0;"></ul>
-                </div>
-                <div>
-                    <div class="data-label mb-8">主要风险</div>
-                    <ul id="cons-risks" style="list-style:none; padding:0; margin:0;"></ul>
-                </div>
-            </div>
+        <div style="display:flex;gap:8px">
+            <button class="pixel-btn dark" onclick="runAnalysis()">↻ Re-run</button>
+            <button class="pixel-btn dark" onclick="exportJSON()">⤓ Export</button>
+            <button class="pixel-btn" onclick="generateReport()" id="gen-report-btn">Deep Report</button>
         </div>
     </div>
 
-    <!-- Signal Distribution -->
-    <div class="grid-3 mb-16">
-        <div class="card" style="text-align:center;">
-            <div class="data-label mb-4">看多 BUY</div>
-            <div id="cnt-bullish" class="text-mono" style="font-size:1.6rem; font-weight:700; color:var(--signal-buy);">0</div>
+    <!-- ExecCard -->
+    <div class="exec gilt-edge">
+        <div class="exec-glow"></div>
+        <div class="ring" id="exec-ring" style="--pct: 0">
+            <div class="ring-in">
+                <span class="ring-v" id="exec-score">--</span>
+                <span class="ring-l">/10</span>
+            </div>
         </div>
-        <div class="card" style="text-align:center;">
-            <div class="data-label mb-4">中性 HOLD</div>
-            <div id="cnt-neutral" class="text-mono" style="font-size:1.6rem; font-weight:700; color:var(--signal-neutral);">0</div>
+        <div class="exec-mid">
+            <div class="t-eyebrow" style="color:var(--gilt)">◈ Council Consensus</div>
+            <div id="exec-signal" class="verdict neutral" style="margin:6px 0 10px">--</div>
+            <div class="exec-metrics">
+                <div><span class="l">Confidence</span><span class="v" id="exec-conf">--%</span></div>
+                <div><span class="l">Kelly Size</span><span class="v" id="exec-kelly" style="color:var(--amber)">--%</span></div>
+                <div><span class="l">P/E</span><span class="v" id="exec-pe">--</span></div>
+            </div>
         </div>
-        <div class="card" style="text-align:center;">
-            <div class="data-label mb-4">看空 SELL</div>
-            <div id="cnt-bearish" class="text-mono" style="font-size:1.6rem; font-weight:700; color:var(--signal-sell);">0</div>
+        <div class="exec-votes">
+            <div class="vote buy"><b id="vote-bull">0</b><span>BULLISH</span></div>
+            <div class="vote neutral"><b id="vote-neu">0</b><span>NEUTRAL</span></div>
+            <div class="vote sell"><b id="vote-bear">0</b><span>BEARISH</span></div>
         </div>
     </div>
 
-    <!-- Agent Grid -->
-    <div class="flex items-center justify-between mb-12">
-        <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;">各位投资大师评分</div>
-        <div class="flex gap-8">
-            <button class="btn btn-sm btn-ghost" onclick="toggleAllAgents(true)" aria-label="全部展开">全部展开</button>
-            <button class="btn btn-sm btn-ghost" onclick="toggleAllAgents(false)" aria-label="全部收起">全部收起</button>
+    <!-- OracleSays -->
+    <div class="dialogue" style="margin-top:16px">
+        <div class="speaker"><img src="/static/images/augur-owl-64.png" class="pixelated" width="20" height="20" alt="Oracle"/> The Oracle of Augur</div>
+        <div id="oracle-says" style="font-size:0.85rem;line-height:1.6;"></div>
+        <span class="chevron">▼</span>
+    </div>
+
+    <!-- ScorecardGrid -->
+    <div style="margin-top:24px">
+        <div class="sec-title">18-Master Scorecard</div>
+        <div class="sc-grid" id="sc-grid"></div>
+    </div>
+
+    <!-- Debate -->
+    <div style="margin-top:24px">
+        <div class="sec-title">Bull vs. Bear Debate</div>
+        <div class="debate">
+            <div class="d-panel bull">
+                <div class="d-head" style="color:var(--signal-buy)">▲ The Bull Case</div>
+                <ul id="debate-bull"></ul>
+            </div>
+            <div class="d-panel bear">
+                <div class="d-head" style="color:var(--signal-sell)">▼ The Bear Case</div>
+                <ul id="debate-bear"></ul>
+            </div>
         </div>
     </div>
-    <div class="grid-auto" id="agent-grid"></div>
 
 </div><!-- /results -->
 
 <!-- Deep Report Section -->
-<div id="report-section" style="display:none;" class="card mb-24">
+<div id="report-section" style="display:none; margin-top:24px;">
     <!-- Report Toolbar -->
-    <div class="report-toolbar">
-        <span class="report-title">&#x1F4CA; 深度分析报告</span>
-        <a id="view-full-report-link" href="#" class="btn btn-sm btn-primary" style="text-decoration:none; font-weight:600;" target="_blank">&#x1F50D; 查看完整报告页</a>
-        <button class="btn btn-sm" onclick="downloadReport()">&#x2B07; 下载 Markdown</button>
-        <button class="btn btn-sm" onclick="downloadReportAsHTML()">&#x1F4C4; 下载 HTML</button>
-        <button class="btn btn-sm" onclick="copyReport()">&#x1F4CB; 复制报告</button>
-        <button class="btn btn-sm" onclick="downloadPDF()" title="打印/导出PDF">&#x1F5A8; 打印 PDF</button>
-        <button class="btn btn-sm" onclick="exportFullJSON()">&#x1F4E5; 导出 JSON</button>
-        <button class="btn btn-sm" onclick="exportCSV()">&#x1F4CA; 导出 CSV</button>
-        <button class="btn btn-sm" onclick="copyReportLink()">&#x1F517; 复制链接</button>
-        <button class="btn btn-sm" onclick="closeReport()">&#x2715; 关闭</button>
+    <div class="report-toolbar mb-12 flex gap-8 items-center" style="flex-wrap:wrap">
+        <span class="report-title t-eyebrow" style="color:var(--gilt);">&#x1F4CA; Deep Prophecy</span>
+        <a id="view-full-report-link" href="#" class="pixel-btn" style="text-decoration:none; font-weight:600;" target="_blank">Full Report Page</a>
+        <button class="pixel-btn dark" onclick="downloadReport()">Download MD</button>
+        <button class="pixel-btn dark" onclick="downloadReportAsHTML()">Download HTML</button>
+        <button class="pixel-btn dark" onclick="copyReport()">Copy</button>
+        <button class="pixel-btn dark" onclick="downloadPDF()" title="Print/Export PDF">Print PDF</button>
+        <button class="pixel-btn dark" onclick="exportFullJSON()">Export JSON</button>
+        <button class="pixel-btn dark" onclick="exportCSV()">Export CSV</button>
+        <button class="pixel-btn dark" onclick="copyReportLink()">Copy Link</button>
+        <button class="pixel-btn dark" onclick="closeReport()">✕ Close</button>
     </div>
+    
     <!-- Score Gauge SVG -->
-    <div id="report-score-gauge" style="display:flex; align-items:center; gap:16px; padding:12px 16px; border-bottom:1px solid var(--border-color);"></div>
+    <div id="report-score-gauge" style="display:none;"></div>
+    
     <!-- Report loading state -->
-    <div id="report-loading" class="report-loading" style="display:none;">
-        <div class="spinner" style="width:22px; height:22px; border-width:2px;"></div>
-        <span class="loading-pulse" id="report-progress">正在生成深度报告...</span>
+    <div id="report-loading" class="loading" style="display:none;">
+        <img src="/static/images/augur-owl-128.png" class="pixelated owl-spin" width="80" height="80"/>
+        <div style="font:500 0.82rem/1 var(--font-mono);color:var(--amber);margin-top:10px" id="report-progress">Sealing the prophecy...</div>
     </div>
-    <!-- Visual Report Components -->
-    <div id="report-visual"></div>
-    <!-- Full text (collapsible) -->
-    <div id="report-full-text-wrapper" class="report-full-text" style="display:none;">
-        <div class="report-full-text-toggle" onclick="toggleFullReportText(this)">
-            <span class="toggle-icon">&#9654;</span>
-            <span>查看完整报告原文 (Markdown)</span>
-        </div>
-        <div class="report-full-text-content" id="report-full-text-content">
-            <div id="report-content" class="md-report"></div>
-        </div>
+    
+    <div class="sec-title">Generated Report</div>
+    <!-- Full text -->
+    <div id="report-full-text-wrapper" class="scroll" style="margin-top:14px;">
+        <div id="report-content" class="md-report"></div>
     </div>
 </div>
 
@@ -565,61 +553,31 @@ function renderResults(data) {
     lastConsensusText = ticker + ' 共识分析:\n信号: ' + signalLabel(cons.signal) + '\n评分: ' + (cons.score||0).toFixed(1) + '/10\n置信度: ' + ((cons.confidence||0)*100).toFixed(0) + '%\n' + (cons.reasoning || '');
     lastAnalysisData = data;  // save for JSON export
 
-    // Render key metrics panel at top
-    renderKeyMetricsPanel(data);
-
-    // Consensus banner
-    var consCard = document.getElementById('consensus-card');
-    var borderColor = {'bullish':'var(--signal-buy)','bearish':'var(--signal-sell)'}[(cons.signal||'').toLowerCase()] || 'var(--signal-neutral)';
-    consCard.style.borderColor = borderColor;
-
-    var sigEl = document.getElementById('cons-signal');
-    sigEl.className = 'signal-badge ' + signalBadgeClass(cons.signal);
+    // Header updates
+    document.getElementById('an-ticker').textContent = ticker;
+    document.getElementById('an-name').textContent = data.market_data ? (data.market_data.name || ticker) : ticker;
+    document.getElementById('an-price').textContent = data.market_data && data.market_data.price ? '$' + data.market_data.price.toFixed(2) : '--';
+    
+    // ExecCard updates
+    var score = cons.score || 0;
+    var pct = Math.round(score * 10);
+    document.getElementById('exec-ring').style.setProperty('--pct', pct);
+    document.getElementById('exec-score').textContent = score.toFixed(1);
+    
+    var sigEl = document.getElementById('exec-signal');
+    var sigClass = (cons.signal==='bullish')?'buy':(cons.signal==='bearish')?'sell':'neutral';
+    sigEl.className = 'verdict ' + sigClass;
     sigEl.textContent = signalLabel(cons.signal);
-    sigEl.style.fontSize = '1.1rem';
-
-    document.getElementById('cons-score').textContent = (cons.score||0).toFixed(1) + ' / 10';
-    document.getElementById('cons-confidence').textContent = ((cons.confidence||0)*100).toFixed(0) + '%';
-    document.getElementById('cons-reasoning').innerHTML = renderMarkdown(cons.reasoning || '');
-
-    // Score gauge
-    var gaugeEl = document.getElementById('cons-score-gauge');
-    if (gaugeEl) gaugeEl.style.width = ((cons.score||0)/10*100).toFixed(0) + '%';
-
-    // Cache this analysis
-    augurCache.add(ticker, {
-        signal: cons.signal || 'neutral',
-        score: cons.score || 0,
-        confidence: cons.confidence || 0
-    });
-
-    // Render historical comparison
-    renderHistoryComparison(ticker);
-
+    
+    document.getElementById('exec-conf').textContent = ((cons.confidence||0)*100).toFixed(0) + '%';
+    
     var posPct = cons.metadata && cons.metadata.position_sizing
         ? (cons.metadata.position_sizing.position_pct || 0).toFixed(1) + '%'
         : '--';
-    document.getElementById('cons-position').textContent = posPct;
-
-    // Findings & risks
-    var findEl = document.getElementById('cons-findings');
-    findEl.innerHTML = '';
-    (cons.key_findings || []).slice(0,6).forEach(function(f) {
-        var li = document.createElement('li');
-        li.style.cssText = 'font-size:0.78rem; color:var(--signal-buy); padding:2px 0;';
-        li.textContent = '\u25B8 ' + f;
-        findEl.appendChild(li);
-    });
-
-    var riskEl = document.getElementById('cons-risks');
-    riskEl.innerHTML = '';
-    (cons.risks || []).slice(0,4).forEach(function(r) {
-        var li = document.createElement('li');
-        li.style.cssText = 'font-size:0.78rem; color:var(--signal-sell); padding:2px 0;';
-        li.textContent = '\u25B8 ' + r;
-        riskEl.appendChild(li);
-    });
-
+    document.getElementById('exec-kelly').textContent = posPct;
+    
+    document.getElementById('exec-pe').textContent = data.market_data && data.market_data.pe ? data.market_data.pe.toFixed(1) : '--';
+    
     // Signal counts
     var bull=0, neu=0, bear=0;
     agents.forEach(function(a) {
@@ -628,36 +586,51 @@ function renderResults(data) {
         else if (s==='bearish') bear++;
         else if (s==='neutral') neu++;
     });
-    document.getElementById('cnt-bullish').textContent = bull;
-    document.getElementById('cnt-neutral').textContent = neu;
-    document.getElementById('cnt-bearish').textContent = bear;
+    document.getElementById('vote-bull').textContent = bull;
+    document.getElementById('vote-neu').textContent = neu;
+    document.getElementById('vote-bear').textContent = bear;
 
-    // Agent grid
+    // OracleSays
+    var oracleMsg = 'The council has spoken. <b style="color:var(--gilt-bright)">' + ticker + '</b> draws a <b style="color:var(--signal-' + (sigClass==='neutral'?'warn':sigClass) + ')">' + signalLabel(cons.signal) + '</b> omen — score ' + score.toFixed(1) + ', confidence ' + ((cons.confidence||0)*100).toFixed(0) + '%. The Kelly oracle counsels a <b style="color:var(--gilt-bright)">' + posPct + '</b> position. <br><br>' + escapeHtml(cons.reasoning || '');
+    document.getElementById('oracle-says').innerHTML = oracleMsg;
+
+    // ScorecardGrid
+    var scGrid = document.getElementById('sc-grid');
+    scGrid.innerHTML = '';
     var sortedAgents = agents.slice().sort(function(a,b) { return (b.score||0)-(a.score||0); });
-    var grid = document.getElementById('agent-grid');
-    grid.innerHTML = '';
-    sortedAgents.forEach(function(a) {
-        var scoreColor = signalColor(a.signal);
-        var scoreWidth = ((a.score||0)/10*100).toFixed(0);
-        var reasoning = renderMarkdown((a.reasoning||'').slice(0, 500));
-
-        var div = document.createElement('div');
-        div.className = 'card';
-        div.style.padding = '12px';
-        div.innerHTML = '<div class="flex items-center justify-between mb-8">' +
-            '<span style="font-weight:600; font-size:0.82rem;">' + escapeHtml(a.agent_name) + '</span>' +
-            '<span class="signal-badge ' + signalBadgeClass(a.signal) + '" style="font-size:0.68rem;">' + signalLabel(a.signal) + '</span>' +
-            '</div>' +
-            '<div class="flex items-center gap-8 mb-8">' +
-            '<div class="score-gauge-circle" style="--score-pct:' + scoreWidth + '; width:48px; height:48px;">' +
-            '<span class="score-gauge-circle-value" style="font-size:0.82rem;">' + (a.score||0).toFixed(1) + '</span></div>' +
-            '<div style="flex:1;"><div class="score-gauge"><div class="score-gauge-fill" style="width:' + scoreWidth + '%;"></div></div>' +
-            '<div class="text-muted" style="font-size:0.65rem; margin-top:2px;">置信度 ' + ((a.confidence||0)*100).toFixed(0) + '%</div></div>' +
-            '</div>' +
-            '<div class="agent-reasoning"><div class="text-muted" style="font-size:0.75rem; line-height:1.6; margin:0;">' + reasoning + '</div></div>' +
-            '<button class="expand-btn" onclick="toggleReasoning(this)" aria-label="展开推理">展开</button>';
-        grid.appendChild(div);
+    sortedAgents.forEach(function(m) {
+        var cls = m.score>=6.5?'score-high':m.score>=4.5?'score-mid':'score-low';
+        var sigCls = m.signal==='bullish'?'buy':m.signal==='bearish'?'sell':'neutral';
+        var sigLbl = signalLabel(m.signal);
+        
+        var d = document.createElement('div');
+        d.className = 'sc';
+        d.innerHTML = '<img src="/docs/images/avatars/' + m.agent_id + '.png" class="avatar" width="34" height="34" alt="" onerror="this.src=\'/static/images/augur-owl-64.png\'"/>' +
+            '<div class="sc-nm">' + escapeHtml(m.agent_name) + '</div>' +
+            '<div class="sc-score ' + cls + '">' + (m.score||0).toFixed(1) + '</div>' +
+            '<span class="signal-badge ' + sigCls + '" style="font-size:0.56rem;padding:1px 7px">' + sigLbl + '</span>';
+        scGrid.appendChild(d);
     });
+
+    // Debate (Findings vs Risks)
+    var dBull = document.getElementById('debate-bull');
+    dBull.innerHTML = '';
+    (cons.key_findings || []).forEach(function(f) {
+        var li = document.createElement('li');
+        li.textContent = f;
+        dBull.appendChild(li);
+    });
+    
+    var dBear = document.getElementById('debate-bear');
+    dBear.innerHTML = '';
+    (cons.risks || []).forEach(function(r) {
+        var li = document.createElement('li');
+        li.textContent = r;
+        dBear.appendChild(li);
+    });
+
+    // Render historical comparison (hidden div but kept functional)
+    renderHistoryComparison(ticker);
 
     // Auto-generate report if requested via URL param
     if (window._autoReport) {

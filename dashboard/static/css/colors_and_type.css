@@ -1,0 +1,208 @@
+/* ============================================================
+   AUGUR — Design System Foundations
+   colors_and_type.css
+
+   The fusion: BLOOMBERG TERMINAL (the data substrate) ×
+   DRAGON QUEST HD-2D / OCTOPATH (the oracle narrative layer).
+
+   Rule of thumb encoded below:
+     • Numbers, tables, dense UI  → terminal tokens (mono, amber, sharp)
+     • Brand, names, verdicts, lore → oracle tokens (pixel font, gold, parchment)
+
+   Import this file, then use the semantic vars (--h1, --eyebrow, --signal-buy…).
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Press+Start+2P&family=Silkscreen:wght@400;700&display=swap');
+
+:root {
+  /* ---------------------------------------------------------
+     1 · TERMINAL CANVAS — near-black trading-desk surfaces
+     --------------------------------------------------------- */
+  --bg-void:        #0a0a0f;   /* app background, the dark hall   */
+  --bg-panel:       #10101a;   /* sidebar, rails, sticky chrome   */
+  --bg-card:        #14141f;   /* default card / tile             */
+  --bg-card-hover:  #1a1a2a;   /* card hover                      */
+  --bg-tertiary:    #1a1a2e;   /* inset wells, inputs             */
+  --bg-elevated:    #1e1e2e;   /* popovers, menus                 */
+
+  /* ---------------------------------------------------------
+     2 · AMBER — the terminal accent (Bloomberg signature)
+     --------------------------------------------------------- */
+  --amber:          #ff8c00;   /* primary accent / links / focus  */
+  --amber-bright:   #ffaa33;   /* hover, brighter amber           */
+  --amber-glow:     rgba(255,140,0,0.15);  /* focus ring / wash   */
+  --amber-wash:     rgba(255,140,0,0.08);  /* tint backgrounds    */
+
+  /* ---------------------------------------------------------
+     3 · SIGNALS — buy / sell / neutral (tape colors)
+     --------------------------------------------------------- */
+  --signal-buy:     #00c853;   /* BULLISH / long / up             */
+  --signal-sell:    #ff1744;   /* BEARISH / short / down          */
+  --signal-neutral: #ffd600;   /* HOLD / flat                     */
+  --signal-buy-bg:     rgba(0,200,83,0.15);
+  --signal-sell-bg:    rgba(255,23,68,0.15);
+  --signal-neutral-bg: rgba(255,214,0,0.12);
+
+  /* supporting data hues (charts, providers, spardevelopers) */
+  --data-green:  #66bb6a;
+  --data-blue:   #4fc3f7;
+  --data-red:    #ef5350;
+  --data-yellow: #ffa726;
+
+  /* ---------------------------------------------------------
+     4 · ORACLE — HD-2D fantasy layer (used for brand moments)
+     parchment scrolls · royal banner · gilt scales · crystal
+     --------------------------------------------------------- */
+  --parchment:      #e8dcc0;   /* scroll / report paper           */
+  --parchment-deep: #d4c4a0;   /* aged paper edge / shadow band   */
+  --parchment-ink:  #2a2118;   /* text written on parchment       */
+  --oracle-purple:  #3a2c6e;   /* the temple banner, regalia      */
+  --oracle-purple-d:#241a46;   /* deep shadow of the banner       */
+  --gilt:           #d4af37;   /* scales-of-justice gold, framing */
+  --gilt-bright:    #f0d573;   /* highlight on gold               */
+  --crystal:        #5cc8ff;   /* crystal-ball glow, holo charts  */
+  --crystal-deep:   #1b4a7a;   /* crystal shadow                  */
+
+  /* ---------------------------------------------------------
+     5 · BORDERS & TEXT
+     --------------------------------------------------------- */
+  --border:        #1e1e2e;
+  --border-hover:  #2e2e3e;
+  --border-gilt:   rgba(212,175,55,0.45);  /* HD-2D framed border */
+
+  --fg-1: #e8e8f0;   /* primary text                              */
+  --fg-2: #8888a0;   /* secondary / labels                        */
+  --fg-3: #5a5a70;   /* muted / disabled / hint                   */
+
+  /* ---------------------------------------------------------
+     6 · TYPE FAMILIES
+     - sans  : Inter        (UI chrome, prose)
+     - mono  : JetBrains    (ALL numbers, tickers, data)
+     - pixel : Press Start 2P (wordmark, big verdicts — sparingly)
+     - pixfin: Silkscreen   (master names, eyebrows, tags, dialogue)
+     --------------------------------------------------------- */
+  --font-sans:  'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono:  'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
+  --font-pixel: 'Press Start 2P', 'Silkscreen', monospace;
+  --font-pixfin:'Silkscreen', 'Press Start 2P', monospace;
+
+  /* ---------------------------------------------------------
+     7 · RADII — terminal is sharp; oracle frames are square-cut
+     --------------------------------------------------------- */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-pixel: 0px;   /* HD-2D panels are hard-edged, no rounding   */
+
+  /* ---------------------------------------------------------
+     8 · ELEVATION — flat terminal + one HD-2D "stone" shadow
+     --------------------------------------------------------- */
+  --shadow-card:  0 4px 16px rgba(0,0,0,0.15);
+  --shadow-pop:   0 8px 28px rgba(0,0,0,0.45);
+  --shadow-glow:  0 0 0 2px var(--amber-glow), 0 0 18px rgba(255,140,0,0.18);
+  /* HD-2D dialogue/scroll: chunky offset "drop" like a JRPG box  */
+  --shadow-pixel: 4px 4px 0 0 rgba(0,0,0,0.55);
+  --shadow-gilt:  0 0 0 2px var(--gilt), 0 0 24px rgba(212,175,55,0.25);
+
+  /* ---------------------------------------------------------
+     9 · SPACING & MOTION
+     --------------------------------------------------------- */
+  --space-1: 4px;  --space-2: 8px;  --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 48px; --space-8: 64px;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --dur-fast: 0.15s;
+  --dur:      0.25s;
+  /* HD-2D "stepped" easing — motion that snaps like sprite frames */
+  --ease-step: steps(4, end);
+
+  /* ===========================================================
+     SEMANTIC TYPE SCALE
+     =========================================================== */
+  /* Pixel wordmark / hero verdict — Press Start 2P, tracked open */
+  --display:       700 2.2rem/1.25 var(--font-pixel);
+  --display-track: 0;
+
+  /* Headings — Inter, tight, the workhorse titles */
+  --h1: 700 1.65rem/1.3  var(--font-sans);
+  --h2: 700 1.25rem/1.35 var(--font-sans);
+  --h3: 600 1.02rem/1.4  var(--font-sans);
+  --h4: 600 0.9rem/1.45  var(--font-sans);
+
+  /* Eyebrow / section kicker — pixel, uppercase, wide tracking */
+  --eyebrow: 400 0.62rem/1.4 var(--font-pixfin);
+  --eyebrow-track: 1.5px;
+
+  /* Body */
+  --body:       400 0.875rem/1.6 var(--font-sans);
+  --body-sm:    400 0.78rem/1.55 var(--font-sans);
+  --label:      600 0.72rem/1.4  var(--font-sans);
+
+  /* Data — every number, ticker, score, price */
+  --data-xl: 700 1.7rem/1.1  var(--font-mono);
+  --data-lg: 700 1.3rem/1.15 var(--font-mono);
+  --data-md: 600 0.95rem/1.3 var(--font-mono);
+  --data-sm: 500 0.78rem/1.3 var(--font-mono);
+
+  /* Master name / oracle dialogue — Silkscreen pixel */
+  --name:   700 0.95rem/1.3 var(--font-pixfin);
+  --dialog: 400 0.95rem/1.7 var(--font-mono);
+}
+
+/* ============================================================
+   LIGHT MODE — "Daylight Terminal" (parchment-leaning)
+   The product ships a light theme; oracle tokens warm up.
+   ============================================================ */
+:root.light, html.light {
+  --bg-void:       #f4f1ea;
+  --bg-panel:      #ffffff;
+  --bg-card:       #ffffff;
+  --bg-card-hover: #f0ece2;
+  --bg-tertiary:   #ece7da;
+  --bg-elevated:   #ffffff;
+
+  --amber:        #cf6f00;
+  --amber-bright: #e67e00;
+
+  --signal-buy:     #1b8a4b;
+  --signal-sell:    #c62828;
+  --signal-neutral: #b58100;
+
+  --border:       #ddd6c6;
+  --border-hover: #c4bba6;
+
+  --fg-1: #20180e;
+  --fg-2: #5a5142;
+  --fg-3: #8a8270;
+
+  --parchment: #fbf7ee;
+  --parchment-deep: #ece2cc;
+  --parchment-ink: #2a2118;
+}
+
+/* ============================================================
+   READY-MADE SEMANTIC CLASSES
+   (use these directly, or apply the vars in your own rules)
+   ============================================================ */
+.t-display  { font: var(--display); letter-spacing: var(--display-track); color: var(--amber); text-transform: uppercase; }
+.t-h1       { font: var(--h1); letter-spacing: -0.4px; color: var(--fg-1); }
+.t-h2       { font: var(--h2); letter-spacing: -0.3px; color: var(--fg-1); }
+.t-h3       { font: var(--h3); color: var(--fg-1); }
+.t-h4       { font: var(--h4); color: var(--fg-1); }
+.t-eyebrow  { font: var(--eyebrow); letter-spacing: var(--eyebrow-track); text-transform: uppercase; color: var(--amber); }
+.t-body     { font: var(--body); color: var(--fg-1); }
+.t-body-sm  { font: var(--body-sm); color: var(--fg-2); }
+.t-label    { font: var(--label); text-transform: uppercase; letter-spacing: 0.8px; color: var(--fg-3); }
+.t-data-xl  { font: var(--data-xl); color: var(--fg-1); font-variant-numeric: tabular-nums; }
+.t-data-lg  { font: var(--data-lg); color: var(--fg-1); font-variant-numeric: tabular-nums; }
+.t-data-md  { font: var(--data-md); color: var(--fg-1); font-variant-numeric: tabular-nums; }
+.t-data-sm  { font: var(--data-sm); color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.t-name     { font: var(--name); color: var(--fg-1); }
+.t-dialog   { font: var(--dialog); color: var(--fg-1); }
+
+.fg-1 { color: var(--fg-1); } .fg-2 { color: var(--fg-2); } .fg-3 { color: var(--fg-3); }
+.c-buy { color: var(--signal-buy); } .c-sell { color: var(--signal-sell); } .c-neutral { color: var(--signal-neutral); }
+.c-amber { color: var(--amber); } .c-gilt { color: var(--gilt); } .c-crystal { color: var(--crystal); }
+
+/* Pixel-perfect image rendering — keep sprites crisp, never blurred */
+.pixelated { image-rendering: pixelated; image-rendering: crisp-edges; }

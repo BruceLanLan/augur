@@ -27,9 +27,10 @@
 ## One analysis. 18 perspectives.
 
 <p align="center">
-  <img src="docs/images/screenshots/report-nvda.png" alt="NVDA deep analysis — BUY signal, 7.6/10, 18 agents voted" width="100%"/>
+  <img src="docs/images/screenshots/01-council-awakens.png" alt="NVDA deep analysis — HD-2D Style Council" width="100%"/>
 </p>
 
+> **All-New HD-2D Visual System**: Fusing the data density of a Bloomberg Terminal with the "Gilt-Edged" parchment aesthetic of a classic JRPG.
 > NVDA live analysis: BUY · Score 7.6/10 · Confidence 81% · Kelly position 20% · All 18 masters voted
 
 > **🦉 Why a White Pixel Owl?**
@@ -54,7 +55,7 @@
 ## 🧠 18 Investor Personas
 
 <p align="center">
-  <img src="docs/images/screenshots/personas.png" alt="18 investor personas — Value / Growth / Macro / China" width="100%"/>
+  <img src="docs/images/screenshots/03-choose-party.png" alt="18 investor personas — Value / Growth / Macro / China" width="100%"/>
 </p>
 
 <details>
@@ -196,16 +197,16 @@ v8 upgrades Augur from an analysis tool to an **intelligent investment platform*
 <tr>
 <td width="50%">
 
-**AI Chat** — ask any master anything
+**Crystal Clear Bull/Bear Debate**
 
-<img src="docs/images/screenshots/chat.png" alt="AI Chat — ask Buffett, Graham or 9 other personas" width="100%"/>
+<img src="docs/images/screenshots/04-bullish-critical.png" alt="Bull vs Bear Debate — Integrated HD-2D Style" width="100%"/>
 
 </td>
 <td width="50%">
 
-**Master Compare** — side-by-side analysis
+**Available Everywhere (Multi-Platform)**
 
-<img src="docs/images/screenshots/compare.png" alt="Master Compare — 2-5 personas on the same stock" width="100%"/>
+<img src="docs/images/screenshots/05-available-everywhere.png" alt="Multi-device support" width="100%"/>
 
 </td>
 </tr>
@@ -240,7 +241,7 @@ v8 upgrades Augur from an analysis tool to an **intelligent investment platform*
 
 ---
 
-## 📊 Bloomberg Dashboard
+## 📊 Bloomberg Terminal × JRPG Dashboard
 
 ```bash
 python3 -m dashboard.app --port 8000
@@ -268,7 +269,7 @@ python3 -m dashboard.app --port 8000
 | **System** | Settings | Per-master parameter configuration |
 
 <p align="center">
-  <img src="docs/images/screenshots/dashboard.png" alt="Augur Dashboard — Bloomberg Terminal style" width="100%"/>
+  <img src="docs/images/screenshots/02-live-data.png" alt="Augur Dashboard — Bloomberg Terminal style meets HD-2D aesthetics" width="100%"/>
 </p>
 
 ---
@@ -493,7 +494,15 @@ Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUT
 ## 📝 Changelog
 
 <details>
-<summary><strong>v8.1.0 — Intelligent Investment Platform (current)</strong></summary>
+<summary><strong>v8.1.0 — HD-2D Stunning Design System Integration (current)</strong></summary>
+
+- Fully integrated the "Bloomberg Terminal × JRPG HD-2D" frontend visual architecture.
+- Introduced `ExecCard`, `OracleSays`, and `ScorecardGrid` components.
+- Stripped and optimized core rendering logic to match the new aesthetics.
+</details>
+
+<details>
+<summary><strong>v8.0.0 — Intelligent Investment Platform</strong></summary>
 
 - 6 new Dashboard pages: AI Chat, Portfolio Optimizer, Master Compare, Debate Mode, History, Leaderboard
 - LearningEngine: IC-based feedback auto-adjusts consensus weights for all 18 agents

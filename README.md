@@ -32,9 +32,10 @@
 ## 一次分析，18个视角
 
 <p align="center">
-  <img src="docs/images/screenshots/report-nvda.png" alt="NVDA 深度分析报告 — BUY 信号，7.6/10，18位大师投票" width="100%"/>
+  <img src="docs/images/screenshots/01-council-awakens.png" alt="NVDA 深度分析报告 — HD-2D 风格委员会" width="100%"/>
 </p>
 
+> **全新 HD-2D 视觉系统**：在彭博终端的数据密度中，融合了 JRPG 的「Gilt-Edged」羊皮纸叙事美学。
 > NVDA 实时分析：BUY 信号 · 评分 7.6/10 · 置信度 81% · Kelly 仓位 20% · 18位大师全部投票
 
 ---
@@ -56,7 +57,7 @@
 ## 🧠 18位投资大师
 
 <p align="center">
-  <img src="docs/images/screenshots/personas.png" alt="18位投资大师 — 价值派/成长派/宏观派/中国派" width="100%"/>
+  <img src="docs/images/screenshots/03-choose-party.png" alt="18位投资大师 — 价值派/成长派/宏观派/中国派" width="100%"/>
 </p>
 
 <details>
@@ -157,14 +158,14 @@ Auto-fetching data for NVDA from yfinance...
 
 ---
 
-## 📊 Bloomberg 风格 Dashboard
+## 📊 Bloomberg Terminal × JRPG Dashboard
 
 ```bash
 python3 -m dashboard.app --port 8000
 ```
 
 <p align="center">
-  <img src="docs/images/screenshots/dashboard.png" alt="Augur Dashboard — Bloomberg Terminal 风格" width="100%"/>
+  <img src="docs/images/screenshots/02-live-data.png" alt="Augur Dashboard — Bloomberg Terminal 风格结合 HD-2D 美学" width="100%"/>
 </p>
 
 **17 个页面**，覆盖完整投资分析流程：
@@ -196,16 +197,16 @@ python3 -m dashboard.app --port 8000
 <tr>
 <td width="50%">
 
-**AI 对话** — 向投资大师提问
+**极度清晰的多空辩论**
 
-<img src="docs/images/screenshots/chat.png" alt="AI 对话 — 向巴菲特/格雷厄姆等11位大师提问" width="100%"/>
+<img src="docs/images/screenshots/04-bullish-critical.png" alt="多空辩论 — 结合 HD-2D 风格" width="100%"/>
 
 </td>
 <td width="50%">
 
-**大师对决** — 多角度横向对比
+**随时随地访问（多平台）**
 
-<img src="docs/images/screenshots/compare.png" alt="大师对决 — 选2-5位大师对同一股票独立分析" width="100%"/>
+<img src="docs/images/screenshots/05-available-everywhere.png" alt="多终端支持" width="100%"/>
 
 </td>
 </tr>
@@ -381,20 +382,19 @@ Kelly 只在 BULLISH 且评分 > 5 时给出非零建议。
 ## 📝 版本日志
 
 <details>
-<summary><strong>v8.1.0 — 真实数据接入 + 全面加固</strong></summary>
+<summary><strong>v8.1.0 — HD-2D 绝美设计系统集成</strong></summary>
 
-- Streaming / Sentiment / Optimizer 升级为真实 yfinance + StockTwits 数据
-- Learning 飞轮：分析时自动记录预测，再次分析同 ticker 时补录真实收益
-- 共识权重修正：valid_count 排除 ERROR agent
-- JWT + WebSocket 鉴权统一，登录限速 10次/分钟/IP
-- Dashboard 全站 i18n（~80 新键），a11y 焦点环/响应式
-- 675 tests
+- 全面集成了 "Bloomberg Terminal × JRPG HD-2D" 前端视觉体系。
+- 引入 `ExecCard`、`OracleSays` 和 `ScorecardGrid` 等组件。
+- 剥离并优化了核心渲染逻辑以匹配全新的美学。
 </details>
 
 <details>
-<summary><strong>v8.0.0 — 智能投资平台</strong></summary>
+<summary><strong>v8.0.0 — 真实数据与智能投资平台</strong></summary>
 
-- 6个新 Dashboard 页面：AI对话/组合优化/大师对决/辩论/历史/排行榜
+- Streaming / Sentiment / Optimizer 升级为真实 yfinance + StockTwits 数据。
+- Learning 飞轮：分析时自动记录预测，再次分析同 ticker 时补录真实收益。
+- 6个新 Dashboard 页面：AI对话/组合优化/大师对决/辩论/历史/排行榜。
 - 10个新模块：sentiment/learning/optimizer/streaming/chat/history/rules/auth/users/plugins
 - 报告页投票表修复，CRCL 分析修复（coverage_confidence 门控）
 </details>

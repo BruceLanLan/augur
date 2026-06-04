@@ -1,0 +1,271 @@
+/* ============================================================
+   AUGUR — Component Library  (augur.css)
+   Depends on colors_and_type.css (import it first).
+
+   Two visual registers:
+     · TERMINAL  — flat, sharp, amber-on-black, data-dense
+     · ORACLE    — HD-2D: parchment scrolls, JRPG dialogue,
+                   gilt frames, pixel buttons, crystal orbs
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+body.augur {
+  margin: 0;
+  background: var(--bg-void);
+  color: var(--fg-1);
+  font: var(--body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle pixel-grid texture for the "stone hall" backdrop.
+   Apply to a full-bleed section to evoke the HD-2D tiled floor. */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.022) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+/* Faint amber CRT scanlines for terminal panels */
+.bg-scan {
+  background-image: repeating-linear-gradient(
+    to bottom, rgba(255,140,0,0.025) 0 1px, transparent 1px 3px);
+}
+
+/* ============================================================
+   TERMINAL · cards, panels
+   ============================================================ */
+.aug-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: var(--space-4);
+  transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+.aug-card:hover { border-color: var(--border-hover); box-shadow: var(--shadow-card); }
+.aug-card.clickable { cursor: pointer; }
+.aug-card.clickable:hover { transform: translateY(-2px); border-color: var(--amber); }
+
+.aug-card-head {
+  font: var(--label); text-transform: uppercase; letter-spacing: 0.8px;
+  color: var(--fg-3); margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+/* Stat block — a labelled number */
+.aug-stat { display: flex; flex-direction: column; gap: 2px; }
+.aug-stat .v { font: var(--data-lg); color: var(--amber); font-variant-numeric: tabular-nums; }
+.aug-stat .l { font: var(--label); text-transform: uppercase; letter-spacing: 0.5px; color: var(--fg-3); }
+
+/* ============================================================
+   TERMINAL · buttons
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--r-sm);
+  font: 600 0.82rem/1 var(--font-sans);
+  cursor: pointer; border: 1px solid var(--border);
+  background: transparent; color: var(--fg-1);
+  transition: all var(--dur-fast) var(--ease); white-space: nowrap;
+}
+.btn:hover { border-color: var(--amber); color: var(--amber); }
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--amber); color: #000; border-color: var(--amber); }
+.btn-primary:hover { background: var(--amber-bright); border-color: var(--amber-bright); color: #000; }
+.btn-ghost { border-color: transparent; color: var(--fg-2); }
+.btn-ghost:hover { color: var(--amber); background: var(--amber-wash); }
+.btn-sm { padding: 4px 10px; font-size: 0.72rem; }
+
+/* ============================================================
+   ORACLE · pixel button — chunky HD-2D menu button with hard
+   drop-shadow that "presses in" on click (sprite-style)
+   ============================================================ */
+.pixel-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: 400 0.7rem/1 var(--font-pixfin); letter-spacing: 0.5px;
+  text-transform: uppercase; color: var(--parchment-ink);
+  background: var(--parchment); border: 2px solid var(--parchment-ink);
+  border-radius: var(--r-pixel); padding: 11px 16px; cursor: pointer;
+  box-shadow: var(--shadow-pixel);
+  transition: transform var(--dur-fast) var(--ease-step), box-shadow var(--dur-fast) var(--ease-step);
+}
+.pixel-btn:hover { background: var(--gilt-bright); }
+.pixel-btn:active { transform: translate(4px,4px); box-shadow: 0 0 0 0 rgba(0,0,0,0.55); }
+.pixel-btn.dark { background: var(--oracle-purple); color: var(--parchment); border-color: #000; }
+.pixel-btn.dark:hover { background: #4c3a8c; }
+
+/* ============================================================
+   SIGNALS · badges & verdicts
+   ============================================================ */
+.signal-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 12px; border-radius: var(--r-sm);
+  font: 600 0.78rem/1 var(--font-mono); letter-spacing: 0.5px;
+  border: 1px solid transparent;
+}
+.signal-badge.buy     { background: var(--signal-buy-bg);     color: var(--signal-buy);     border-color: rgba(0,200,83,0.35); }
+.signal-badge.sell    { background: var(--signal-sell-bg);    color: var(--signal-sell);    border-color: rgba(255,23,68,0.35); }
+.signal-badge.neutral { background: var(--signal-neutral-bg); color: var(--signal-neutral); border-color: rgba(255,214,0,0.35); }
+
+/* Big oracle verdict — pixel font, the "prophecy" headline */
+.verdict { font: 400 1.4rem/1 var(--font-pixel); text-transform: uppercase; letter-spacing: 1px; }
+.verdict.buy { color: var(--signal-buy); } .verdict.sell { color: var(--signal-sell); } .verdict.neutral { color: var(--signal-neutral); }
+
+/* Score gauge — sentiment bar */
+.gauge { position: relative; width: 100%; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.gauge > i { display: block; height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--signal-sell) 0%, var(--signal-neutral) 50%, var(--signal-buy) 100%); }
+
+/* ============================================================
+   ORACLE · JRPG dialogue box  ("the owl speaks")
+   Black box, gilt double border, ▼ continue chevron.
+   ============================================================ */
+.dialogue {
+  position: relative;
+  background: rgba(8,8,14,0.94);
+  border: 2px solid var(--gilt);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,0.8), var(--shadow-pop);
+  padding: 18px 22px 22px;
+  color: var(--parchment);
+  font: var(--dialog);
+}
+.dialogue .speaker {
+  font: 700 0.72rem/1 var(--font-pixfin); letter-spacing: 1px; text-transform: uppercase;
+  color: var(--gilt-bright); margin-bottom: 8px; display: inline-flex; gap: 8px; align-items: center;
+}
+.dialogue .chevron {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  color: var(--gilt-bright); font-size: 0.8rem; animation: chevBounce 1s steps(2,end) infinite;
+}
+@keyframes chevBounce { 0%,100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 4px); } }
+
+/* ============================================================
+   ORACLE · parchment scroll  (the "prophecy / deep report")
+   ============================================================ */
+.scroll {
+  position: relative;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0 2px, transparent 2px 4px),
+    linear-gradient(180deg, var(--parchment) 0%, var(--parchment-deep) 100%);
+  color: var(--parchment-ink);
+  border-radius: 4px;
+  padding: 22px 26px;
+  box-shadow: var(--shadow-pop);
+  font: 400 0.86rem/1.7 var(--font-mono);
+}
+/* rolled top & bottom bands of the scroll */
+.scroll::before, .scroll::after {
+  content: ''; position: absolute; left: -6px; right: -6px; height: 14px;
+  background: linear-gradient(180deg, #b6a079, #8f7c56); border-radius: 7px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.scroll::before { top: -7px; } .scroll::after { bottom: -7px; }
+.scroll h4 { font: 700 0.7rem/1.4 var(--font-pixfin); letter-spacing: 1px; text-transform: uppercase; color: #6b4f1d; margin: 0 0 8px; }
+
+/* ============================================================
+   ORACLE · gilt frame  (HD-2D "portrait / relic" border)
+   ============================================================ */
+.gilt-frame {
+  border: 2px solid var(--gilt);
+  border-radius: 6px;
+  box-shadow: var(--shadow-gilt), inset 0 0 0 1px rgba(0,0,0,0.6);
+  background: var(--bg-card);
+}
+
+/* ============================================================
+   ORACLE · master card  (a pixel-portrait investor "hero")
+   ============================================================ */
+.master {
+  background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  transition: transform var(--dur) var(--ease), border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+  cursor: pointer;
+}
+.master:hover { transform: translateY(-3px); border-color: var(--border-gilt); box-shadow: var(--shadow-gilt); }
+.master .portrait {
+  position: relative; aspect-ratio: 1; background:
+    radial-gradient(120% 90% at 50% 0%, rgba(212,175,55,0.10), transparent 60%),
+    linear-gradient(180deg, #1d1d2c, #0d0d15);
+  display: flex; align-items: flex-end; justify-content: center; overflow: hidden;
+}
+.master .portrait img { width: 96%; height: auto; image-rendering: auto; filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5)); }
+.master .meta { padding: 10px 12px 12px; }
+.master .meta .nm { font: var(--name); color: var(--fg-1); display: block; }
+.master .meta .sch { font: 600 0.62rem/1.3 var(--font-pixfin); letter-spacing: 0.5px; color: var(--amber); text-transform: uppercase; }
+/* small avatar chip */
+.avatar { border-radius: 50%; object-fit: cover; border: 1px solid var(--border); background: var(--bg-tertiary); }
+
+/* school / faction tag */
+.tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  font: 700 0.58rem/1 var(--font-pixfin); letter-spacing: 0.5px; text-transform: uppercase;
+  padding: 4px 8px; border-radius: var(--r-sm);
+  color: var(--amber); background: var(--amber-wash); border: 1px solid var(--border-gilt);
+}
+
+/* ============================================================
+   DATA · tables, ticker tape, market tiles
+   ============================================================ */
+.data-table { width: 100%; border-collapse: collapse; font: var(--data-sm); }
+.data-table th {
+  text-align: left; padding: 8px 12px; font: 600 0.62rem/1.4 var(--font-sans);
+  text-transform: uppercase; letter-spacing: 0.8px; color: var(--fg-3);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.data-table td { padding: 9px 12px; border-bottom: 1px solid var(--border); color: var(--fg-1); vertical-align: middle; }
+.data-table tr:hover td { background: var(--amber-wash); }
+.data-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.data-table .pos { color: var(--signal-buy); } .data-table .neg { color: var(--signal-sell); }
+
+/* ticker tape strip */
+.tape { display: flex; align-items: center; gap: 22px; overflow: hidden;
+  background: var(--bg-panel); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  padding: 7px 14px; font: var(--data-sm); white-space: nowrap; }
+.tape .sym { color: var(--fg-2); margin-right: 6px; }
+.tape .up { color: var(--signal-buy); } .tape .down { color: var(--signal-sell); }
+
+/* market tile */
+.mtile {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-left: 3px solid var(--border); border-radius: var(--r-sm); padding: 12px 14px;
+  transition: transform var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+.mtile:hover { transform: translateY(-2px); background: var(--bg-card-hover); }
+.mtile.up   { border-left-color: var(--signal-buy); }
+.mtile.down { border-left-color: var(--signal-sell); }
+.mtile .nm { font: 600 0.78rem/1.2 var(--font-sans); color: var(--fg-1); }
+.mtile .px { font: var(--data-lg); color: var(--fg-1); margin-top: 6px; }
+.mtile .ch { font: var(--data-sm); margin-top: 2px; }
+.mtile.up .ch { color: var(--signal-buy); } .mtile.down .ch { color: var(--signal-sell); }
+
+/* ============================================================
+   FORMS
+   ============================================================ */
+.field {
+  width: 100%; background: var(--bg-void); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 9px 12px; color: var(--fg-1);
+  font: 400 0.88rem/1.3 var(--font-sans); transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.field::placeholder { color: var(--fg-3); }
+.field:focus { outline: none; border-color: var(--amber); box-shadow: var(--shadow-glow); }
+.field.mono { font-family: var(--font-mono); letter-spacing: 0.5px; }
+
+/* chip / quick ticker */
+.chip {
+  font: 600 0.75rem/1 var(--font-mono); color: var(--amber);
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+  padding: 7px 14px; cursor: pointer; transition: all var(--dur-fast) var(--ease);
+}
+.chip:hover { background: var(--amber); color: #000; border-color: var(--amber); transform: translateY(-1px); }
+
+/* status dot */
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; background: var(--fg-3); }
+.dot.live { background: var(--signal-buy); box-shadow: 0 0 6px rgba(0,200,83,0.6); animation: dotPulse 1.6s ease infinite; }
+@keyframes dotPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+/* pixel divider — a row of square "pixels" */
+.pixel-rule { height: 4px; background-image: linear-gradient(90deg, var(--gilt) 0 4px, transparent 4px 8px); background-size: 8px 4px; opacity: 0.5; }
