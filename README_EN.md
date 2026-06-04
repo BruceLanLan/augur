@@ -27,7 +27,7 @@
 ## One analysis. 18 perspectives.
 
 <p align="center">
-  <img src="docs/images/screenshots/01-council-awakens.png" alt="NVDA deep analysis — HD-2D Style Council" width="100%"/>
+  <img src="docs/images/screenshots/report-hd2d.png" alt="NVDA deep analysis — HD-2D Style Council" width="100%"/>
 </p>
 
 > **All-New HD-2D Visual System**: Fusing the data density of a Bloomberg Terminal with the "Gilt-Edged" parchment aesthetic of a classic JRPG.
@@ -55,7 +55,7 @@
 ## 🧠 18 Investor Personas
 
 <p align="center">
-  <img src="docs/images/screenshots/03-choose-party.png" alt="18 investor personas — Value / Growth / Macro / China" width="100%"/>
+  <img src="docs/images/screenshots/personas-hd2d.png" alt="18 investor personas — Value / Growth / Macro / China" width="100%"/>
 </p>
 
 <details>
@@ -269,7 +269,7 @@ python3 -m dashboard.app --port 8000
 | **System** | Settings | Per-master parameter configuration |
 
 <p align="center">
-  <img src="docs/images/screenshots/02-live-data.png" alt="Augur Dashboard — Bloomberg Terminal style meets HD-2D aesthetics" width="100%"/>
+  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard — Bloomberg Terminal style meets HD-2D aesthetics" width="100%"/>
 </p>
 
 ---

@@ -32,7 +32,7 @@
 ## 一次分析，18个视角
 
 <p align="center">
-  <img src="docs/images/screenshots/01-council-awakens.png" alt="NVDA 深度分析报告 — HD-2D 风格委员会" width="100%"/>
+  <img src="docs/images/screenshots/report-hd2d.png" alt="NVDA 深度分析报告 — HD-2D 风格委员会" width="100%"/>
 </p>
 
 > **全新 HD-2D 视觉系统**：在彭博终端的数据密度中，融合了 JRPG 的「Gilt-Edged」羊皮纸叙事美学。
@@ -57,7 +57,7 @@
 ## 🧠 18位投资大师
 
 <p align="center">
-  <img src="docs/images/screenshots/03-choose-party.png" alt="18位投资大师 — 价值派/成长派/宏观派/中国派" width="100%"/>
+  <img src="docs/images/screenshots/personas-hd2d.png" alt="18位投资大师 — 价值派/成长派/宏观派/中国派" width="100%"/>
 </p>
 
 <details>
@@ -165,7 +165,7 @@ python3 -m dashboard.app --port 8000
 ```
 
 <p align="center">
-  <img src="docs/images/screenshots/02-live-data.png" alt="Augur Dashboard — Bloomberg Terminal 风格结合 HD-2D 美学" width="100%"/>
+  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard — Bloomberg Terminal 风格结合 HD-2D 美学" width="100%"/>
 </p>
 
 **17 个页面**，覆盖完整投资分析流程：
