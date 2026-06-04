@@ -1,0 +1,68 @@
+<!DOCTYPE html><html class="dark"><head><meta charset="utf-8">
+<link rel="stylesheet" href="../colors_and_type.css">
+<link rel="stylesheet" href="../augur.css">
+<style>
+html,body{margin:0}body{padding:20px;background:var(--bg-void);width:700px}
+.lab{font:var(--eyebrow);letter-spacing:1.5px;text-transform:uppercase;color:var(--amber);margin-bottom:14px;display:block}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+
+/* HD-2D character card — gilt medallion cameo + nameplate + RPG stat line */
+.mcard{position:relative;background:linear-gradient(180deg,#16141f 0%,#0d0d15 100%);
+  border:1px solid var(--border);border-radius:10px;padding:16px 12px 13px;text-align:center;
+  transition:transform .25s var(--ease),border-color .25s,box-shadow .25s;cursor:pointer}
+.mcard:hover{transform:translateY(-3px);border-color:var(--border-gilt);box-shadow:var(--shadow-gilt)}
+
+/* the coin */
+.medallion{position:relative;width:88px;height:88px;margin:2px auto 0;border-radius:50%;
+  padding:3px;background:conic-gradient(from 220deg,#f0d573,#a9842a,#f0d573,#7c5e18,#f0d573);
+  box-shadow:0 4px 14px rgba(0,0,0,.55),0 0 0 1px rgba(0,0,0,.6)}
+.medallion .disc{width:100%;height:100%;border-radius:50%;overflow:hidden;
+  background:radial-gradient(120% 120% at 50% 18%,#efe7d2,#cdbf9c);
+  display:flex;align-items:flex-end;justify-content:center;box-shadow:inset 0 0 0 2px rgba(0,0,0,.55)}
+.medallion .disc img{width:118%;margin-bottom:-6%;image-rendering:auto}
+/* school crest badge clipped to corner of coin */
+.crest{position:absolute;right:-2px;bottom:-2px;width:28px;height:28px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;font-size:.82rem;
+  background:var(--bg-void);border:2px solid var(--gilt);box-shadow:0 2px 6px rgba(0,0,0,.6)}
+
+/* parchment nameplate */
+.plate{margin:13px auto 0;display:inline-block;padding:5px 12px;border-radius:3px;
+  background:linear-gradient(180deg,var(--parchment),var(--parchment-deep));
+  border:1px solid #b39a63;box-shadow:0 2px 0 rgba(0,0,0,.4);
+  font:700 .72rem/1 var(--font-pixfin);color:var(--parchment-ink);letter-spacing:.5px}
+.zh{font:600 .58rem/1.3 var(--font-pixfin);color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-top:7px}
+
+/* RPG stat line */
+.stats{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;
+  padding-top:10px;border-top:1px solid var(--border)}
+.stats .sc{font:700 1.05rem/1 var(--font-mono);color:var(--amber)}
+.stats .sc small{font-size:.5em;color:var(--fg-3)}
+.conv{letter-spacing:1px;font-size:.6rem;color:var(--gilt)}
+.conv .off{color:var(--border-hover)}
+.note{font:500 .62rem/1.5 var(--font-mono);color:var(--fg-3);margin-top:13px;text-align:left}
+</style></head><body class="augur">
+<span class="lab">Oracle · Master Cards (HD-2D pixel-portrait medallions)</span>
+<div class="grid">
+  <div class="mcard">
+    <div class="medallion"><div class="disc"><img src="../assets/avatars/buffett.png" alt="Buffett"></div><div class="crest">⚔</div></div>
+    <div class="plate">BUFFETT</div><div class="zh">巴菲特 · Value</div>
+    <div class="stats"><span class="sc">8.4<small>/10</small></span><span class="conv">●●●●<span class="off">●</span></span></div>
+  </div>
+  <div class="mcard">
+    <div class="medallion"><div class="disc"><img src="../assets/avatars/munger.png" alt="Munger"></div><div class="crest">⚔</div></div>
+    <div class="plate">MUNGER</div><div class="zh">芒格 · Value</div>
+    <div class="stats"><span class="sc">7.8<small>/10</small></span><span class="conv">●●●●<span class="off">●</span></span></div>
+  </div>
+  <div class="mcard">
+    <div class="medallion"><div class="disc"><img src="../assets/avatars/cathie_wood.png" alt="Wood"></div><div class="crest">🚀</div></div>
+    <div class="plate">C. WOOD</div><div class="zh">伍德 · Growth</div>
+    <div class="stats"><span class="sc">7.9<small>/10</small></span><span class="conv">●●●●<span class="off">●</span></span></div>
+  </div>
+  <div class="mcard">
+    <div class="medallion"><div class="disc"><img src="../assets/avatars/duan_yongping.png" alt="Duan"></div><div class="crest">🇨🇳</div></div>
+    <div class="plate">段永平</div><div class="zh">DUAN · 本分</div>
+    <div class="stats"><span class="sc">8.1<small>/10</small></span><span class="conv">●●●●<span class="off">●</span></span></div>
+  </div>
+</div>
+<div class="note">▸ Pixel-portrait busts in gilt oracle medallions + school crest &amp; RPG stat line. To sharpen a likeness, drop a corrected pixel bust into <b>assets/avatars/</b> (same filename) — it wires in here automatically.</div>
+</body></html>

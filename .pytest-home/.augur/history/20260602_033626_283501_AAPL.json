@@ -1,0 +1,641 @@
+{
+  "id": "20260602_033626_283501_AAPL",
+  "ticker": "AAPL",
+  "timestamp": "2026-06-02T03:36:26.283512Z",
+  "result": {
+    "ticker": "AAPL",
+    "consensus": {
+      "agent_id": "consensus",
+      "agent_name": "Multi-Agent Consensus",
+      "signal": "bullish",
+      "confidence": 0.7926501035196687,
+      "score": 6.719450310559004,
+      "reasoning": "Consensus from 18 agents",
+      "key_findings": [
+        "护城河强大：毛利率48%, ROE141%",
+        "盈利增长超过收入增长（正向经营杠杆）",
+        "上升趋势确认",
+        "MACD柱状图为正，动能向上",
+        "ROE=141%，管理层资本配置能力突出(>15%)"
+      ],
+      "risks": [
+        "情绪钟摆偏向贪婪端，风险未被充分定价",
+        "PE=37.0偏高，二阶思维提示当心过度乐观",
+        "估值偏高(PE=37)，安全边际不足，与李录偏好相悖"
+      ],
+      "timestamp": "2026-06-02 11:36",
+      "metadata": {
+        "position_sizing": {
+          "position_pct": 13.6,
+          "signal": "bullish",
+          "score": 6.72,
+          "confidence": 0.793,
+          "rationale": "half-Kelly: 13.6% (score=6.7, conf=79%)"
+        },
+        "position_pct": 13.6,
+        "timing_ms": {
+          "analysis_ms": 0.8369169663637877,
+          "consensus_ms": 0.409458065405488
+        }
+      },
+      "risk_adjusted_score": 0,
+      "alpha": 0,
+      "beta": 1.0,
+      "coverage_confidence": 1.0
+    },
+    "agents": [
+      {
+        "agent_id": "buffett",
+        "agent_name": "Warren Buffett",
+        "signal": "bullish",
+        "confidence": 0.95,
+        "score": 8.649999999999999,
+        "reasoning": "## Warren Buffett Analysis for AAPL\n\n**护城河 (Moat): 10/10**\n- 毛利率: 47.9% ✓\n- 营业利润率: 32.3%\n- ROE: 141.5% ✓\n\n**盈利可预测性: 10/10**\n**财务实力: 8/10**\n- 负债率: 44.3% ✓\n- 流动比率: 1.07\n\n**管理质量: 8/10**\n- 机构持股: 65.8%\n\n**估值: 3.5/10**\n- PE: 37.0\n- FCF收益率: 2.25%\n\n**综合评分: 8.6/10**\n投资哲学：护城河 + owner earnings\n",
+        "key_findings": [
+          "护城河强大：毛利率48%, ROE141%"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "moat": 10,
+            "earnings_predictability": 10,
+            "financial_strength": 8,
+            "management_quality": 8,
+            "valuation": 3.5
+          },
+          "philosophy": [
+            "护城河",
+            "owner earnings",
+            "安全边际",
+            "优质管理层"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "graham",
+        "agent_name": "Benjamin Graham",
+        "signal": "neutral",
+        "confidence": 0.55,
+        "score": 4.175000000000001,
+        "reasoning": "## Benjamin Graham Analysis for AAPL\n\n**估值: 0.7/10**\n- PE: 37.0 ✗ 偏高\n- PS: 9.97\n\n**安全边际: 1/10**\n- P/B: 42.19 ✗\n\n**资产负债表: 8.4/10**\n- 流动比率: 1.07 ✗\n- 速动比率: 0.91\n- 负债率: 44.3% ✓ 低负债\n\n**盈利稳定性: 10/10**\n- 收入增长: 16.6%\n- 盈利增长: 21.8%\n\n**综合评分: 4.2/10**\n投资哲学：安全边际 + 清算价值\n",
+        "key_findings": [],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "valuation": 0.7,
+            "margin_of_safety": 1,
+            "balance_sheet": 8.4,
+            "earnings_stability": 10
+          },
+          "philosophy": [
+            "安全边际",
+            "清算价值",
+            "低PE",
+            "资产负债表强度"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "lynch",
+        "agent_name": "Peter Lynch",
+        "signal": "bullish",
+        "confidence": 0.9,
+        "score": 7.305,
+        "reasoning": "## Peter Lynch Analysis for AAPL\n\n**成长性: 9.6/10**\n- 收入增长: 16.6% \n- 盈利增长: 21.8%\n- 毛利率: 47.9%\n\n**PEG合理性: 4.5/10**\n- PE: 37.0\n- PEG: 1.70 ✗\n\n**业务质量: 10/10**\n- 营业利润率: 32.3%\n- ROE: 141.5%\n\n**可理解性: 4/10**\n- 市值: 4498.9B\n- 行业: Consumer Electronics\n\n**综合评分: 7.3/10**\n投资哲学：PEG比率 + 盈利增长\n",
+        "key_findings": [
+          "盈利增长超过收入增长（正向经营杠杆）"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "growth": 9.6,
+            "peg": 4.5,
+            "quality": 10,
+            "understandability": 4
+          },
+          "philosophy": [
+            "PEG比率",
+            "盈利增长",
+            "业务可理解性",
+            "十倍股"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "dalio",
+        "agent_name": "Ray Dalio",
+        "signal": "neutral",
+        "confidence": 0.75,
+        "score": 6.1,
+        "reasoning": "## Ray Dalio Analysis for AAPL\n\n**宏观前景: 1/10**\n- 距52周高点: -2.8%\n- RSI: 70.6 超买\n\n**趋势强度: 10/10**\n- MACD: 9.86 ✓ 金叉\n- 价格 vs SMA20: ✓\n- 价格 vs SMA50: ✓\n\n**风险调整: 6.8/10**\n- ATR: 2.37\n- ATR/价格: 0.77%\n\n**动量: 8/10**\n- Stochastic K: 50.0\n\n**综合评分: 6.1/10**\n宏观/风险平价结论：中性，维持分散\n投资哲学：风险平价 + 全球宏观\n",
+        "key_findings": [
+          "上升趋势确认",
+          "MACD柱状图为正，动能向上"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "macro_outlook": 1,
+            "trend_strength": 10,
+            "risk_adjusted": 6.8,
+            "momentum": 8
+          },
+          "philosophy": [
+            "风险平价",
+            "全球宏观",
+            "周期分析",
+            "分散化"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 0.9
+      },
+      {
+        "agent_id": "munger",
+        "agent_name": "Charlie Munger",
+        "signal": "neutral",
+        "confidence": 0.475,
+        "score": 6.35,
+        "reasoning": "## Charlie Munger Analysis for AAPL\n\n**逆向程度: 4.5/10**\n- 距52周高点: -2.8% \n- 机构持股: 65.8% \n- RSI: 70.6\n\n**心理因素: 5/10**\n- ATR/价格: 0.77%\n- 距52周低点: 57.0%\n\n**选择严格性: 7/10**\n- ROE: 141.5% ✓\n- PEG: 1.6990225688073393\n\n**护城河持久性: 10/10**\n- 毛利率: 47.9%\n- 负债率: 44.3%\n\n**综合评分: 6.3/10**\n投资哲学：逆向投资 + 心理学误判\n",
+        "key_findings": [],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "contra_bet": 4.5,
+            "psychological": 5,
+            "selection_rigor": 7,
+            "moat_durability": 10
+          },
+          "philosophy": [
+            "逆向投资",
+            "心理学误判",
+            "Lollapalooza",
+            "超级选择性"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "soros",
+        "agent_name": "George Soros",
+        "signal": "neutral",
+        "confidence": 0.85,
+        "score": 5.6000000000000005,
+        "reasoning": "## George Soros Analysis for AAPL\n\n**市场偏见强度: 6.0/10**\n- PE: 37.0 （高估值=强烈偏见）\n- 20日波动率: 16.5%\n\n**趋势强化阶段: 7.0/10**\n- 收入增速: 16.6% \n- MACD: 金叉\n\n**拐点条件: 3.0/10**\n- RSI: 70.6 中性\n- 距52周高点: -2.8%\n\n**流动性条件: 7.0/10**\n- 市值: 4498.9B\n- Beta: 1.06\n\n**退出信号: 5.0/10**\n- MACD柱: 0.002\n\n**综合评分: 5.6/10**\n反身性判断：趋势中性\n",
+        "key_findings": [],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "market_bias": 6,
+            "trend_reinforcement": 7,
+            "inflection_condition": 3,
+            "liquidity": 7,
+            "exit_signal": 5
+          },
+          "philosophy": [
+            "反身性",
+            "市场偏见",
+            "趋势加速",
+            "自我颠覆"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 0.9
+      },
+      {
+        "agent_id": "marks",
+        "agent_name": "Howard Marks",
+        "signal": "bearish",
+        "confidence": 0.65,
+        "score": 2.5,
+        "reasoning": "## Howard Marks Analysis for AAPL\n\n**情绪钟摆位置: 0/10**\n- PE: 37.0 vs 历史均值 25.0 （贪婪端）\n- RSI: 70.6\n\n**风险定价: 3/10**\n- 波动率代理(IV): 16.5%\n- ⚠️ 低恐慌+高估值=危险\n\n**二阶思维: 5/10**\n- 空头比例: 0.9%\n- 机构持股: 65.8%\n- 距52周高点: -2.8%\n\n**困境折价: 2/10**\n- P/B: 42.19\n- ROE: 141.5%\n\n**综合评分: 2.5/10**\n钟摆判断：贪婪端 — 谨慎\n",
+        "key_findings": [],
+        "risks": [
+          "情绪钟摆偏向贪婪端，风险未被充分定价",
+          "PE=37.0偏高，二阶思维提示当心过度乐观"
+        ],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "pendulum_position": 0,
+            "risk_pricing": 3,
+            "second_level_thinking": 5,
+            "distressed_discount": 2
+          },
+          "philosophy": [
+            "情绪钟摆",
+            "二阶思维",
+            "风险定价",
+            "困境资产"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "cathie_wood",
+        "agent_name": "Cathie Wood",
+        "signal": "neutral",
+        "confidence": 0.65,
+        "score": 5.0,
+        "reasoning": "## Cathie Wood Analysis for AAPL\n\n**破坏性技术评分: 5/10**\n- 行业: Technology / Consumer Electronics\n- 毛利率: 47.9% \n\n**ARK框架 (5年年化>15%可能性): 5/10**\n- 当前收入增速: 16.6%\n- Wright定律5年目标价估算: $660 (+116%)\n\n**创新扩散曲线: 5/10**\n- 📊 成熟稳定\n\n**市场空间TAM: 5/10**\n- PS: 10.0\n- 市值: 4498.9B\n\n**技术风险: 5/10**\n- 毛利率: 47.9%\n- 负债率: 44.3%\n\n**综合评分: 5.0/10**\n破坏式创新结论：中性，等待S曲线加速\n",
+        "key_findings": [],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "disruption_score": 5,
+            "ark_framework": 5,
+            "innovation_diffusion": 5,
+            "tam_size": 5,
+            "tech_risk": 5
+          },
+          "philosophy": [
+            "破坏式创新",
+            "Wright定律",
+            "S曲线",
+            "5年视野"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 0.7
+      },
+      {
+        "agent_id": "fisher",
+        "agent_name": "Philip Fisher",
+        "signal": "bullish",
+        "confidence": 0.85,
+        "score": 8.6,
+        "reasoning": "## Philip Fisher Analysis for AAPL\n\n**Scuttlebutt信号: 8/10**\n- 毛利率(客户忠诚代理): 47.9% ✓\n- 收入增速稳定性: 16.6%\n\n**管理层质量: 9/10**\n- ROE: 141.5% ✓ 优秀\n- 负债率: 44.3% 偏高\n\n**销售组织力: 8/10**\n- 收入增速: 16.6%\n- 营业利润率: 32.3%\n\n**利润率持续性: 8/10**\n- 毛利率: 47.9% \n- 营业利润率: 32.3%\n\n**成长持续性: 10/10**\n- 盈利增速: 21.8%\n- FCF: 正向 ✓\n\n**综合评分: 8.6/10**\nFisher结论：值得长期持有20年\n",
+        "key_findings": [
+          "ROE=141%，管理层资本配置能力突出(>15%)"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "scuttlebutt": 8,
+            "management_quality": 9,
+            "sales_organization": 8,
+            "margin_sustainability": 8,
+            "growth_durability": 10
+          },
+          "philosophy": [
+            "Scuttlebutt",
+            "管理层质量",
+            "利润率持续性",
+            "长期持有"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "arps",
+        "agent_name": "ARPS Crypto/Gold",
+        "signal": "bullish",
+        "confidence": 0.75,
+        "score": 7.4,
+        "reasoning": "## ARPS Crypto/Gold Analysis for AAPL\n\n**宏观背景(实际利率代理): 5/10**\n- Beta: 1.06 ⚠️ 风险资产属性\n- 波动率(IV代理): 16.5%\n- ⚠️ 避险需求一般\n\n**相对估值(独立性): 5/10**\n- Beta: 1.06 （与权益相关性高）\n\n**动量信号: 10/10**\n- MACD: 金叉 ✓\n- RSI: 70.6\n- 价格 vs SMA20: ✓\n- 价格 vs SMA50: ✓\n\n**流动性风险: 8/10**\n- 市值: 4498.9B ✓ 充足\n- 波动率: 16.5%\n\n**综合评分: 7.4/10**\nARPS结论：适合配置，避险+动量双确认\n",
+        "key_findings": [
+          "技术动量强，MACD金叉+价格在均线上方"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "macro_background": 5,
+            "relative_valuation": 5,
+            "momentum_signal": 10,
+            "liquidity_risk": 8
+          },
+          "philosophy": [
+            "实际利率",
+            "法币贬值",
+            "避险需求",
+            "链上先行指标"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "aschenbrenner",
+        "agent_name": "Leopold Aschenbrenner",
+        "signal": "bullish",
+        "confidence": 0.85,
+        "score": 7.25,
+        "reasoning": "## Leopold Aschenbrenner Analysis for AAPL\n\n**算力基础设施: 8.5/10** (权重25%)\n- 行业: Technology / Consumer Electronics\n- 市值: $4498.9B\n- 负债率: 44.3%\n- ROE: 141.5%\n\n**AI营收研发强度: 5/10** (权重20%)\n- 收入增速: 16.6%\n- 毛利率: 47.9%\n- 运营利润率: 32.3%\n\n**TAM扩张速度: 6.5/10** (权重20%)\n- PE: 37.0 \n- PS: 10.0\n- 收入增速: 16.6%\n\n**垂直整合: 7.5/10** (权重15%)\n- 🔗 全栈控制\n\n**AI强化护城河: 9/10** (权重10%)\n- 毛利率: 47.9%\n- ROE: 141.5%\n- 机构持仓: 65.8%\n\n**管理层AGI视野: 8/10** (权重10%)\n- 内部人持仓: 1.6%\n- 机构持仓: 65.8%\n\n**综合评分: 7.2/10**\n**AGI超级乐观框架结论：🚀 重仓AGI基础设施，这是本世纪的曼哈顿计划**\n",
+        "key_findings": [
+          "🚀 算力基础设施投资力度强，百万卡集群候选者（评分:8.5/10）",
+          "🔗 垂直整合度高，芯片→云→应用全栈控制",
+          "👁️ 管理层高持仓+机构信任，AGI愿景清晰",
+          "🛡️ AI正在强化护城河，竞争优势在扩大"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "compute_infrastructure": 8.5,
+            "ai_exposure": 5,
+            "tam_expansion": 6.5,
+            "vertical_integration": 7.5,
+            "moat_reinforcement": 9,
+            "management_vision": 8
+          },
+          "philosophy": [
+            "AGI超级乐观",
+            "算力指数增长",
+            "超级智能递归",
+            "基础设施重注",
+            "国家安全范式"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "dayu",
+        "agent_name": "大宇 (BTCdayu)",
+        "signal": "neutral",
+        "confidence": 0.8983333333333333,
+        "score": 7.075000000000001,
+        "reasoning": "## 大宇 (BTCdayu) Analysis for AAPL\n\n**动量+情绪: 9.5/10**\n- 涨跌幅: N/A | RSI: 71 | 市值: $4498.9B\n- ✓ 健康动量\n\n**信息优势: 3.0/10**\n- PE: 37.0 | 营收增速: 17%\n- 机构持股: 65.8%\n\n**仓位风险: 7.0/10**\n- 20日波动: 0.2%\n- 最大回撤: N/A\n- 建议高风险仓位: ≤10.0%（大宇10%原则）\n\n**叙事时机: 8.0/10**\n**币圈估值: 7.0/10**\n**稳定币信号: 6.5/10**\n\n**综合评分: 7.1/10**\n**三线程建议:**\n- 🌀 信息轮: 信息不足\n- ⚙️ 决策轮: 看准\n- ❤️ 心态轮: 可重仓\n\n投资哲学：看准+重仓 · 信息优势 · 情绪判断\n",
+        "key_findings": [
+          "动量强劲(RSI=71, 涨跌+0.0%)",
+          "🏆 看准+重仓信号：动量强且风险可控，适合重点参与"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "momentum_sentiment": 9.5,
+            "information_edge": 3.0,
+            "risk_capital": 7.0,
+            "narrative_timing": 8.0,
+            "crypto_valuation": 7.0,
+            "stablecoin_signal": 6.5
+          },
+          "philosophy": [
+            "看准+重仓",
+            "信息优势",
+            "情绪判断",
+            "稳定币研究",
+            "三线程理论"
+          ],
+          "suggested_high_risk_position_pct": 10.0
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 0.7
+      },
+      {
+        "agent_id": "thiel",
+        "agent_name": "Peter Thiel",
+        "signal": "bullish",
+        "confidence": 0.85,
+        "score": 6.800000000000001,
+        "reasoning": "## Peter Thiel Analysis for AAPL\n\n**垄断能力: 9/10** (权重30%)\n- 毛利率: 47.9% \n- 运营利润率: 32.3%\n- ROE: 141.5%\n- 行业: Technology / Consumer Electronics\n\n**逆向时机: 4/10** (权重25%)\n- PE: 37.0 \n- PS: 10.0\n- 机构持仓: 65.8%\n- 内部人持仓: 1.6%\n\n**创始人质量: 6/10** (权重20%)\n- 内部人持仓: 1.6% \n- 毛利率+增长: 47.9% / 16.6%\n- 负债率: 44.3%\n\n**技术护城河: 6.0/10** (权重15%)\n- 收入增速: 16.6%\n- 毛利率: 47.9%\n- FCF: 正向 ✓\n\n**长期押注: 10/10** (权重10%)\n- 收入增速: 16.6%\n- 毛利率: 47.9%\n- 市值: $4498.9B\n\n**综合评分: 6.8/10**\n**Peter Thiel从0到1框架结论：🚀 垄断型企业！从0到1的创新，值得重仓**",
+        "key_findings": [
+          "👑 垄断型企业特征显著，定价权强（评分:9/10）",
+          "📡 长期押注价值高，商业模式可持续（评分:10/10）"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "monopoly_power": 9,
+            "contrarian_timing": 4,
+            "founder_quality": 6,
+            "technology_moat": 6.0,
+            "long_term_bet": 10
+          },
+          "philosophy": [
+            "从0到1垄断",
+            "逆向思维",
+            "技术驱动",
+            "创始人偏好",
+            "长期持有"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "duan_yongping",
+        "agent_name": "段永平 (Duan Yongping)",
+        "signal": "bullish",
+        "confidence": 0.9,
+        "score": 8.35,
+        "reasoning": "## 段永平 (Duan Yongping) 分析 — AAPL\n\n**核心问题：这家公司在做正确的事吗？管理层本分吗？**\n\n**商业模式清晰度: 9.5/10**\n- FCF: 101 ✓ 真实现金流\n- 营业利润率: 32.3%\n\n**护城河质量: 9.5/10**\n- 毛利率: 47.9% ✓\n- ROE: 141.5% ✓\n\n**管理层本分: 7.5/10**\n- 内部人持股: 1.6%\n- 机构持股: 65.8%\n\n**长期持续性: 7.5/10**\n- 营收增速: 16.6%\n- 负债率: 44.3% ✓\n\n**估值合理性: 5.0/10**\n- PE: 37.0\n- FCF收益率: 2.25%\n\n**综合评分: 8.3/10**\n段永平核心判断： ✓ 正确的事，看准可重仓。\n",
+        "key_findings": [
+          "商业模式清晰，FCF=101，可预测盈利",
+          "护城河强：毛利率48%，ROE141%",
+          "管理层本分：内部人持股1.6%"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "business_clarity": 9.5,
+            "moat_quality": 9.5,
+            "management_integrity": 7.5,
+            "long_term_durability": 7.5,
+            "valuation_reasonableness": 5.0
+          },
+          "philosophy": [
+            "本分",
+            "Stop Doing Wrong Things",
+            "极度集中",
+            "能力圈",
+            "长期持有"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "zhang_lei",
+        "agent_name": "张磊 (Zhang Lei)",
+        "signal": "bullish",
+        "confidence": 0.88,
+        "score": 8.65,
+        "reasoning": "## 张磊 (Zhang Lei) 分析 — AAPL\n\n**核心问题：这是10年级别的结构性机会吗？**\n\n**结构性机会: 9.8/10**\n- 营收增速: 16.6% ⚠️\n- 市值规模: $4498.9B\n\n**商业模式质量: 10.0/10**\n- 毛利率: 47.9%\n- 营业利润率: 32.3%\n- FCF: 101 ✓\n\n**管理层卓越度: 8.0/10**\n- 内部人持股: 1.6%\n- ROE: 141.5%\n\n**竞争护城河: 6.5/10**\n\n**估值公平性: 6.5/10**\n- PE: 37.0\n\n**综合评分: 8.7/10**\n高瓴判断：✓ 值得做时间的朋友。\n",
+        "key_findings": [
+          "结构性机会明确：营收增速17%，处于高增长赛道",
+          "商业模式优质：毛利率48%，FCF正向",
+          "管理层卓越：创始人持股1.6%，ROE141%"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "structural_opportunity": 9.75,
+            "business_model_quality": 10.0,
+            "management_excellence": 8.0,
+            "competitive_moat": 6.5,
+            "valuation_fairness": 6.5
+          },
+          "philosophy": [
+            "长期结构性机会",
+            "研究驱动",
+            "创造价值",
+            "做时间的朋友",
+            "赛道优先"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "li_lu",
+        "agent_name": "李录 (Li Lu)",
+        "signal": "bullish",
+        "confidence": 0.8174999999999999,
+        "score": 6.529999999999999,
+        "reasoning": "## 李录 (Li Lu) 分析 — AAPL\n\n**核心问题：安全边际足够吗？护城河真实吗？**\n\n**折价于内在价值: 1.6/10**\n- PE: 37.0 ⚠️ 偏高\n- PB: 42.19 \n- FCF收益率: 2.25%\n\n**竞争地位: 9.5/10**\n- 毛利率: 47.9%\n- ROE: 141.5% ✓\n\n**财务健全: 7.0/10**\n- 负债率: 44.3% ✓\n- 流动比: 1.07\n\n**管理层质量: 8.5/10**\n- 内部人持股: 1.6%\n\n**行业顺风: 10.0/10**\n- 营收增速: 16.6%\n\n**综合评分: 6.5/10**\n李录判断：✓ 安全边际充足，护城河真实，值得持有。\n",
+        "key_findings": [
+          "竞争地位强：毛利率48%，ROE141%",
+          "财务稳健：负债率44%，流动比1.07"
+        ],
+        "risks": [
+          "估值偏高(PE=37)，安全边际不足，与李录偏好相悖"
+        ],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "intrinsic_value_discount": 1.6,
+            "competitive_position": 9.5,
+            "financial_soundness": 7.0,
+            "management_quality": 8.5,
+            "industry_tailwinds": 10
+          },
+          "philosophy": [
+            "安全边际",
+            "能力圈",
+            "深度研究",
+            "护城河",
+            "耐心等待"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "dan_bin",
+        "agent_name": "但斌 (Dan Bin)",
+        "signal": "bullish",
+        "confidence": 0.85,
+        "score": 9.030000000000001,
+        "reasoning": "## 但斌 (Dan Bin) 分析 — AAPL\n\n**核心问题：这是值得享受时代β的伟大公司吗？**\n\n**品牌护城河: 9.6/10**\n- 毛利率: 47.9% ✓ 品牌溢价明显\n- ROE: 141.5% ✓\n\n**定价权: 10.0/10**\n- 营业利润率: 32.3%\n\n**成长特许权: 9.5/10**\n- 营收增速: 16.6%\n- 盈利增速: 21.8%\n- FCF: 101 ✓\n\n**中国结构性主题: 8.0/10**\n- 机构持股: 65.8%\n\n**估值可接受度: 5.5/10**\n- PE: 37.0\n\n**综合评分: 9.0/10**\n但斌判断：✓ 伟大公司，不要和它分开太早。\n",
+        "key_findings": [
+          "品牌护城河强：毛利率48%，ROE141%",
+          "定价权强：高毛利+增速组合，消费者愿意付溢价",
+          "高质量成长：营收增速17%且FCF正向"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "brand_moat": 9.6,
+            "pricing_power": 10.0,
+            "growth_franchise": 9.5,
+            "china_structural_theme": 8.0,
+            "valuation_acceptability": 5.5
+          },
+          "philosophy": [
+            "时代β",
+            "品牌护城河",
+            "消费升级",
+            "长期持有",
+            "不要和伟大的公司分开"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 1.0
+      },
+      {
+        "agent_id": "serenity",
+        "agent_name": "Serenity (@aleabitoreddit)",
+        "signal": "neutral",
+        "confidence": 0.85,
+        "score": 6.0,
+        "reasoning": "## Serenity (@aleabitoreddit) Chokepoint Analysis for AAPL\n\n**卡脖子识别: 5.0/10** (权重30%)\n- 行业: Technology / Consumer Electronics\n- 毛利率: 47.9% \n- 卡脖子判断: 潜在瓶颈，需验证替代方案\n\n**IV Expansion + 动量: 7/10** (权重25%)\n- RSI(14): 70.6 \n- MACD vs Signal: 动量向上\n- 52周高点距离: 97.2%\n\n**AI算力需求/NeoCloud: 7/10** (权重20%)\n- 收入增速: 16.6% \n- 行业: Technology\n- AI受益判断: GPU算力溢出直接受益\n\n**地缘催化剂: 5.0/10** (权重15%)\n- 地缘敏感度: 中\n- CHIPS法案/出口管制受益: 待观察\n\n**风险管理: 6/10** (权重10%)\n- 负债率: 44.3% \n- 回撤承受: 可控\n\n**综合评分: 6.0/10**\n**Chokepoint Verdict: ⏳ Watching - 需验证物理替代方案威胁或等待催化剂窗口**\n",
+        "key_findings": [
+          "📈 IV Expansion机会: 动量向上+催化剂窗口（评分:7/10）",
+          "⚡ AI算力直接受益: NeoCloud级增速验证（评分:7/10）"
+        ],
+        "risks": [],
+        "timestamp": "2026-06-02 11:36",
+        "metadata": {
+          "factors": {
+            "supply_chain_bottleneck": 5.0,
+            "options_iv_momentum": 7,
+            "ai_compute_demand": 7,
+            "geopolitical_catalyst": 5.0,
+            "risk_sizing": 6
+          },
+          "philosophy": [
+            "供应链卡脖子逆向工程(Chokepoint Theory)",
+            "Own Compute - 拥有算力是逃离底层唯一机会",
+            "自下而上(Bottom-Up)而非自上而下(Top-Down)",
+            "IV Expansion期权策略",
+            "华尔街制度性盲区套利",
+            "对抗性AI论证(Red Team)"
+          ]
+        },
+        "risk_adjusted_score": 0,
+        "alpha": 0,
+        "beta": 1.0,
+        "coverage_confidence": 0.7
+      }
+    ],
+    "agent_count": 18
+  }
+}

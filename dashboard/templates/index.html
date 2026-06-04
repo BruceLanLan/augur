@@ -416,46 +416,44 @@
 </div>
 
 <!-- Hero Quick Analysis -->
-<div class="card mb-24 hero-section" style="padding:40px 24px;">
-    <h1 class="hero-title">AUGUR</h1>
-    <p class="hero-subtitle" data-i18n="hero-subtitle">输入股票代码，一键获得18位大师共识</p>
-    <div class="flex items-center justify-center gap-12" style="flex-wrap:wrap;">
-        <input class="hero-input" id="hero-ticker" type="text"
+<section class="hero gilt-edge mb-24">
+    <div class="hero-glow"></div>
+    <img src="/static/images/augur-owl-128.png" class="pixelated hero-owl" width="92" height="92" alt=""/>
+    <div class="hero-eyebrow">▸ AI Investment Oracle</div>
+    <h1 class="hero-title">Summon your council of <span>18 masters</span></h1>
+    <p class="hero-sub" data-i18n="hero-subtitle">输入股票代码，一键获得18位大师共识</p>
+    
+    <div class="hero-input">
+        <input class="field mono" id="hero-ticker" type="text"
                data-i18n="hero-placeholder"
-               placeholder="输入股票代码 (AAPL / NVDA / 0700.HK)"
+               placeholder="Enter ticker — NVDA, AAPL, TSLA…"
                data-i18n-aria="a11y-hero-ticker"
                aria-label="Stock ticker input"
                aria-describedby="hero-ticker-hint"
                oninput="clearTickerInvalid('hero-ticker')"
                onkeydown="if(event.key==='Enter') heroGo()">
-        <button class="btn btn-primary" id="hero-analyze-btn" onclick="heroGo()" style="padding:12px 24px; font-size:0.92rem;">
-            <span data-i18n="btn-analyze">分析</span> &rarr;
+        <button class="pixel-btn dark" id="hero-analyze-btn" onclick="heroGo()">
+            ▶ <span data-i18n="btn-analyze">Consult</span>
         </button>
     </div>
+    
+    <div class="hero-chips" style="margin-top: 14px;">
+        <span style="font:500 0.68rem/1 var(--font-mono);color:var(--fg-3)">Try</span>
+        <span class="chip" onclick="tryExample('NVDA')">NVDA</span>
+        <span class="chip" onclick="tryExample('AAPL')">AAPL</span>
+        <span class="chip" onclick="tryExample('TSLA')">TSLA</span>
+        <span class="chip" onclick="tryExample('MSFT')">MSFT</span>
+        <span class="chip" onclick="tryExample('BTC-USD')">BTC</span>
+        <span class="chip" onclick="tryExample('00700.HK')">00700.HK</span>
+    </div>
+
     <p id="hero-ticker-hint" class="field-hint" style="display:none; margin-top:6px; font-size:0.75rem; color:var(--signal-sell);"></p>
     <div class="shortcut-hint" style="margin-top:8px;" data-i18n="hero-shortcut-hint">按 / 快速聚焦 · Ctrl+Enter 提交</div>
 
-    <!-- One-click example tickers (no financial input required) -->
-    <div style="margin-top:20px;">
-        <div class="text-muted" style="font-size:0.78rem; margin-bottom:10px;" data-i18n="hero-examples-hint">
-            💡 第一次用？点下面任意一个，无需填写财务指标，系统自动获取实时数据：
-        </div>
-        <div class="example-chips">
-            <button class="example-chip" onclick="tryExample('AAPL')">AAPL <span class="chip-tag">苹果</span></button>
-            <button class="example-chip" onclick="tryExample('NVDA')">NVDA <span class="chip-tag">英伟达</span></button>
-            <button class="example-chip" onclick="tryExample('TSLA')">TSLA <span class="chip-tag">特斯拉</span></button>
-            <button class="example-chip" onclick="tryExample('MSFT')">MSFT <span class="chip-tag">微软</span></button>
-            <button class="example-chip" onclick="tryExample('GOOGL')">GOOGL <span class="chip-tag">谷歌</span></button>
-            <button class="example-chip" onclick="tryExample('BTC-USD')">BTC-USD <span class="chip-tag">比特币</span></button>
-            <button class="example-chip" onclick="tryExample('00700.HK')">00700.HK <span class="chip-tag">腾讯</span></button>
-            <button class="example-chip" onclick="tryExample('BABA')">BABA <span class="chip-tag">阿里巴巴</span></button>
-        </div>
-    </div>
-
     <!-- Inline loading skeleton -->
-    <div id="hero-spinner" style="display:none; margin-top:16px;">
+    <div id="hero-spinner" style="display:none; margin-top:16px; position:relative; z-index:2;">
         <p class="loading-pulse text-orange text-mono progress-text" id="hero-progress" data-i18n="hero-progress">正在唤醒 18 位投资大师...</p>
-        <div class="grid-3 mt-16" style="gap:12px; max-width:600px; margin:0 auto;">
+        <div class="grid-3 mt-16" style="gap:12px; max-width:600px;">
             <div class="skeleton skeleton-card"></div>
             <div class="skeleton skeleton-card"></div>
             <div class="skeleton skeleton-card"></div>
@@ -463,7 +461,7 @@
     </div>
 
     <!-- Inline result card -->
-    <div id="hero-result" class="inline-result" style="display:none; max-width:600px; margin:16px auto 0;">
+    <div id="hero-result" class="inline-result" style="display:none; max-width:600px; margin:16px 0 0; position:relative; z-index:2; background:var(--bg-card); border-radius:var(--r-md); padding:16px; border:1px solid var(--border);">
         <div class="flex items-center gap-24" style="flex-wrap:wrap;">
             <div>
                 <div class="data-label" data-i18n="index-label-signal">信号</div>
@@ -479,21 +477,21 @@
             </div>
         </div>
         <div id="hr-reasoning" class="text-muted" style="font-size:0.8rem; margin-top:12px; line-height:1.6;"></div>
-        <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
-            <a id="hr-link" href="/stocks" class="btn btn-sm"><span data-i18n="btn-detail">查看各位大师详情</span> &rarr;</a>
-            <a id="hr-report-link" href="/stocks" class="btn btn-sm btn-report-cta">&#x1F4C4; <span data-i18n="btn-report">生成深度分析报告</span></a>
+        <div style="margin-top:16px; display:flex; gap:8px; flex-wrap:wrap;">
+            <a id="hr-link" href="/stocks" class="btn btn-sm"><span data-i18n="btn-detail">查看详情</span> &rarr;</a>
+            <a id="hr-report-link" href="/stocks" class="btn btn-sm btn-report-cta">&#x1F4C4; <span data-i18n="btn-report">深度报告</span></a>
         </div>
     </div>
 
     <!-- Inline error -->
-    <div id="hero-error" class="error-panel" aria-live="polite" style="display:none; max-width:600px; margin:16px auto 0;">
+    <div id="hero-error" class="error-panel" aria-live="polite" style="display:none; max-width:600px; margin:16px 0 0; position:relative; z-index:2;">
         <div class="error-panel-title" data-i18n="hero-error-title">分析失败</div>
         <div class="error-panel-msg" id="hero-error-msg"></div>
         <div class="error-panel-retry">
-            <button class="btn btn-sm" onclick="heroGo()" data-i18n="btn-retry">重试</button>
+            <button class="pixel-btn dark" onclick="heroGo()" data-i18n="btn-retry">重试</button>
         </div>
     </div>
-</div>
+</section>
 
 <!-- Market Pulse Strip (compact key metrics) -->
 <div class="market-pulse-strip mb-24" id="market-pulse-strip">
@@ -511,21 +509,21 @@
 </div>
 
 <!-- Global Market Overview (Bloomberg-style live board) -->
-<div class="flex items-center justify-between mb-12" style="flex-wrap:wrap; gap:8px;">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-market-overview">全球市场总览</div>
-    <div class="flex items-center gap-12">
-        <span class="market-asof text-muted" id="market-asof" style="font-size:0.7rem;"></span>
-        <button class="btn btn-sm btn-ghost" onclick="loadMarketOverview(true)" id="market-refresh-btn" data-i18n-title="btn-refresh" title="刷新">↻ <span data-i18n="btn-refresh">刷新</span></button>
+<div class="aug-card mb-24">
+    <div class="aug-card-head">
+        <span data-i18n="section-market-overview">Global Market Board</span>
+        <div style="display:flex; gap:12px; align-items:center;">
+            <span class="market-asof text-muted" id="market-asof" style="font-size:0.6rem; font-family:var(--font-mono);"></span>
+            <span style="color:var(--fg-3);font:500 0.6rem/1 var(--font-mono); cursor:pointer;" onclick="loadMarketOverview(true)" id="market-refresh-btn" data-i18n-title="btn-refresh" title="Refresh">refresh 60s</span>
+        </div>
     </div>
-</div>
-<div class="market-board mb-24" id="market-board">
-    <!-- Skeleton placeholders while loading -->
-    <div class="market-tile skeleton-tile"></div>
-    <div class="market-tile skeleton-tile"></div>
-    <div class="market-tile skeleton-tile"></div>
-    <div class="market-tile skeleton-tile"></div>
-    <div class="market-tile skeleton-tile"></div>
-    <div class="market-tile skeleton-tile"></div>
+    <div class="mboard" id="market-board">
+        <!-- Skeleton placeholders while loading -->
+        <div class="market-tile skeleton-tile"></div>
+        <div class="market-tile skeleton-tile"></div>
+        <div class="market-tile skeleton-tile"></div>
+        <div class="market-tile skeleton-tile"></div>
+    </div>
 </div>
 
 <!-- Hot Tickers: 热门标的实时行情 -->
@@ -662,26 +660,35 @@
     </ul>
 </div>
 
-<!-- Featured Personas -->
-<div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-featured-personas">精选投资人</div>
-    <a href="/personas" class="btn btn-sm btn-ghost"><span data-i18n="btn-view-all-personas">查看全部 18 位</span> &rarr;</a>
-</div>
-<div class="grid-4 mb-24">
-    {% for p in featured %}
-    <a class="card featured-card" href="/stocks?persona={{ p.id }}" style="padding:14px; display:block;">
-        <div class="flex items-center gap-8 mb-8">
-            <img src="/docs/images/avatars/{{ p.id }}.svg" alt="{{ p.name }}" class="featured-avatar"
-                 onerror="this.outerHTML='<span style=\'font-size:1.6rem;\'>{{ p.avatar }}</span>'">
-            <div>
-                <div style="font-weight:600; font-size:0.85rem;">{{ p.name }}</div>
-                <div class="text-muted" style="font-size:0.7rem;">{{ p.style }}</div>
-            </div>
+<!-- Recent & Featured Personas (Grid 2-1) -->
+<div class="grid-2-1 mb-24">
+    <!-- Recent Analyses (from cache) -->
+    <div id="recent-section" class="aug-card" style="display:none;">
+        <div class="aug-card-head"><span data-i18n="section-recent">Recent Prophecies</span></div>
+        <ul class="recent" id="recent-list"></ul>
+    </div>
+
+    <!-- Featured Personas -->
+    <div class="aug-card">
+        <div class="aug-card-head">
+            <span data-i18n="section-featured-personas">Featured Masters</span>
+            <a href="/personas" style="font:600 0.62rem/1 var(--font-pixfin);color:var(--amber);cursor:pointer;text-transform:uppercase">View all ▸</a>
         </div>
-        <p class="text-muted" style="font-size:0.75rem; margin:0 0 8px; line-height:1.5;">{{ p.desc }}</p>
-        <span class="badge badge-orange">{{ p.tag }}</span>
-    </a>
-    {% endfor %}
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            {% for p in featured %}
+            {% if loop.index <= 3 %}
+            <div class="m-row" onclick="window.location.href='/stocks?persona={{ p.id }}'">
+                <img src="/docs/images/avatars/{{ p.id }}.png" class="avatar" width="40" height="40" alt="{{ p.name }}" onerror="this.src='/static/images/augur-owl-64.png'">
+                <div style="min-width:0;">
+                    <div style="font:600 0.85rem/1.2 var(--font-sans);color:var(--fg-1);">{{ p.name }}</div>
+                    <div style="font:600 0.58rem/1.3 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;">{{ p.style }}</div>
+                </div>
+                <span style="margin-left:auto;font:700 1rem/1 var(--font-mono);color:var(--amber);">{{ p.tag }}</span>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
 </div>
 
 <!-- Data Source Status (数据源状态) -->
@@ -699,13 +706,6 @@
     </div>
 </div>
 
-<!-- Recent Analyses (from cache) -->
-<div id="recent-section" class="mb-24" style="display:none;">
-    <div class="section-title" data-i18n="section-recent">最近分析</div>
-    <div class="card" style="padding:0; overflow:hidden;">
-        <ul class="recent-list" id="recent-list"></ul>
-    </div>
-</div>
 
 <!-- How it works -->
 <div class="section-title" data-i18n="section-how-it-works">工作原理</div>
@@ -921,21 +921,19 @@ function renderMarketBoard(data) {
     }
     board.innerHTML = '';
     items.forEach(function(it) {
-        var up = (it.change_pct || 0) > 0;
-        var down = (it.change_pct || 0) < 0;
-        var cls = up ? 'is-up' : (down ? 'is-down' : 'is-flat');
-        var arrow = up ? '\u25B2' : (down ? '\u25BC' : '\u2014');
+        var up = (it.change_pct || 0) >= 0;
+        var arrow = up ? '\u25B2' : '\u25BC';
         var pct = ((it.change_pct || 0) * 100).toFixed(2);
         var priceStr = (it.price || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         var tile = document.createElement('div');
-        tile.className = 'market-tile ' + cls;
+        tile.className = 'mtile ' + (up ? 'up' : 'down');
         tile.innerHTML =
-            '<div class="market-tile-head">' +
-                '<span class="market-tile-name">' + escapeHtml(it.name) + '</span>' +
-                '<span class="market-tile-group">' + escapeHtml(it.group || '') + '</span>' +
+            '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
+                '<div class="nm">' + escapeHtml(it.name || '') + '</div>' +
+                '<div style="font:600 0.55rem/1 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;letter-spacing:.5px">' + escapeHtml(it.group || '') + '</div>' +
             '</div>' +
-            '<div class="market-tile-price">' + priceStr + '</div>' +
-            '<div class="market-tile-change">' + arrow + ' ' + (up ? '+' : '') + pct + '%</div>';
+            '<div class="px">' + priceStr + '</div>' +
+            '<div class="ch">' + arrow + ' ' + (up ? '+' : '') + pct + '%</div>';
         board.appendChild(tile);
     });
     if (asof && data.as_of) {
@@ -1293,12 +1291,11 @@ function renderRecentAnalyses() {
         var signalLabel = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
         var badgeClass = signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral';
         var li = document.createElement('li');
-        li.className = 'recent-item';
         li.onclick = function() { window.location.href = '/stocks?ticker=' + item.ticker; };
-        li.innerHTML = '<span class="recent-item-ticker">' + item.ticker + '</span>' +
-            '<span class="signal-badge ' + badgeClass + ' recent-item-signal">' + signalLabel + '</span>' +
-            '<span class="text-mono" style="font-size:0.78rem; color:var(--accent-orange);">' + (item.result.score || 0).toFixed(1) + '/10</span>' +
-            '<span class="recent-item-time">' + relativeTime(item.time) + '</span>';
+        li.innerHTML = '<span class="rt">' + item.ticker + '</span>' +
+            '<span class="signal-badge ' + badgeClass + '" style="font-size:0.62rem;padding:2px 8px">' + signalLabel + '</span>' +
+            '<span style="font:600 0.82rem/1 var(--font-mono);color:var(--fg-2);margin-left:auto">' + (item.result.score || 0).toFixed(1) + '</span>' +
+            '<span style="font:500 0.62rem/1 var(--font-mono);color:var(--fg-3);width:72px;text-align:right">' + relativeTime(item.time) + '</span>';
         list.appendChild(li);
     });
 }

@@ -1,0 +1,27 @@
+watchlist:
+- ticker: AAPL
+  pe: 30
+- ticker: TSLA
+- ticker: ITER4TEST
+  pe: 30.0
+  sector: Healthcare
+- ticker: TEST
+schedule:
+  cron: 0 9 * * 1-5
+  timezone: Asia/Shanghai
+notifications:
+  telegram:
+    enabled: false
+    chat_id: ''
+    token: ''
+  slack:
+    enabled: false
+    channel: ''
+    token: ''
+  wechat:
+    enabled: false
+    webhook_url: ''
+  lark:
+    enabled: false
+    webhook_url: ''
+  alert_threshold: 3

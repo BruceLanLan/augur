@@ -20,123 +20,108 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link href="/static/css/bloomberg.css?v=8.1.0" rel="stylesheet">
     <link href="/static/css/ui-enhance.css?v=8.1.0" rel="stylesheet">
+    <link href="/static/css/colors_and_type.css?v=8.1.0" rel="stylesheet">
+    <link href="/static/css/augur.css?v=8.1.0" rel="stylesheet">
+    <link href="/static/css/layout.css?v=8.1.0" rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="augur">
     <a href="#main-content" class="skip-link" data-i18n="a11y-skip-main">跳到主内容</a>
     <div class="global-progress-bar" id="global-progress-bar" role="progressbar" aria-hidden="true"></div>
-    <div class="app-layout">
+    <div class="app app-layout">
         <!-- Sidebar -->
-        <aside class="sidebar" id="sidebar" aria-label="Main navigation">
-            <div class="sidebar-logo">
-                <img class="logo-icon" src="/static/images/augur-logo-64.png" alt="Augur" width="32" height="32">
-                <span class="logo-text">Augur</span>
+        <aside class="sb sidebar bg-grid" id="sidebar" aria-label="Main navigation">
+            <div class="sb-logo" onclick="window.location.href='/'">
+                <img class="pixelated" src="/static/images/augur-owl-64.png" alt="Augur" width="32" height="32">
+                <span class="sb-word">Augur</span>
             </div>
 
             <button type="button" class="sidebar-collapse-btn" onclick="toggleSidebar()" data-i18n-aria="a11y-collapse-sidebar" aria-label="折叠侧边栏">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
             </button>
 
-            <nav class="sidebar-nav" aria-label="Primary">
+            <nav class="sb-nav" aria-label="Primary">
                 <!-- 分析 Group -->
-                <div class="nav-group">
-                    <div class="nav-group-label" data-i18n="group-analysis">分析</div>
-                    <a class="nav-item" href="/" data-page="home">
-                        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-                        <span data-i18n="nav-dashboard">仪表盘</span>
-                    </a>
-                    <a class="nav-item" href="/stocks" data-page="stocks">
-                        <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
-                        <span data-i18n="nav-stocks">股票分析</span>
-                    </a>
-                    <a class="nav-item" href="/signals" data-page="signals">
-                        <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                        <span data-i18n="nav-signals">信号监控</span>
-                    </a>
-                    <a class="nav-item" href="/scanner" data-page="scanner">
-                        <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="currentColor" stroke-width="1" opacity="0.5"/></svg>
-                        <span data-i18n="nav_scanner">扫描器</span>
-                    </a>
-                    <a class="nav-item" href="/watchlist" data-page="watchlist">
-                        <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                        <span data-i18n="nav-watchlist">自选股</span>
-                    </a>
-                    <a class="nav-item" href="/portfolio" data-page="portfolio">
-                        <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 3v4M8 3v4M2 11h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span data-i18n="nav-portfolio">组合分析</span>
-                    </a>
-                    <a class="nav-item" href="/backtest" data-page="backtest">
-                        <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/><path d="M3 12h1M12 3v1M21 12h1M12 21v1"/></svg>
-                        <span data-i18n="nav-backtest">回测</span>
-                    </a>
-                </div>
-
-                <!-- v8 Group -->
-                <div class="nav-group">
-                    <div class="nav-group-label" data-i18n="group-v8">v8 功能</div>
-                    <a class="nav-item" href="/chat" data-page="chat">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                        <span data-i18n="nav-chat">AI 对话</span>
-                    </a>
-                    <a class="nav-item" href="/optimizer" data-page="optimizer">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span data-i18n="nav-optimizer">组合优化</span>
-                    </a>
-                    <a class="nav-item" href="/compare" data-page="compare">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 3v18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                        <span data-i18n="nav-compare">大师对决</span>
-                    </a>
-                    <a class="nav-item" href="/debate" data-page="debate">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span data-i18n="nav-debate">辩论模式</span>
-                    </a>
-                    <a class="nav-item" href="/history" data-page="history">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span data-i18n="nav-history">历史记录</span>
-                    </a>
-                    <a class="nav-item" href="/performance" data-page="performance">
-                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-                        <span data-i18n="nav-performance">大师排行</span>
-                    </a>
-                </div>
+                <div class="sb-group" data-i18n="group-analysis">Analysis</div>
+                <a class="sb-item nav-item" href="/" data-page="home">
+                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    <span data-i18n="nav-dashboard">Dashboard</span>
+                </a>
+                <a class="sb-item nav-item" href="/stocks" data-page="stocks">
+                    <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
+                    <span data-i18n="nav-stocks">Stock Analysis</span>
+                </a>
+                <a class="sb-item nav-item" href="/signals" data-page="signals">
+                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span data-i18n="nav-signals">Signals</span>
+                    <em class="sb-badge">LIVE</em>
+                </a>
+                <a class="sb-item nav-item" href="/scanner" data-page="scanner">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="currentColor" stroke-width="1" opacity="0.5"/></svg>
+                    <span data-i18n="nav_scanner">Scanner</span>
+                </a>
+                <a class="sb-item nav-item" href="/watchlist" data-page="watchlist">
+                    <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                    <span data-i18n="nav-watchlist">Watchlist</span>
+                </a>
+                <a class="sb-item nav-item" href="/portfolio" data-page="portfolio">
+                    <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 3v4M8 3v4M2 11h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span data-i18n="nav-portfolio">Portfolio</span>
+                </a>
+                <a class="sb-item nav-item" href="/backtest" data-page="backtest">
+                    <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/><path d="M3 12h1M12 3v1M21 12h1M12 21v1"/></svg>
+                    <span data-i18n="nav-backtest">Backtest</span>
+                </a>
 
                 <!-- 投资人 Group -->
-                <div class="nav-group">
-                    <div class="nav-group-label" data-i18n="group-investors">投资人</div>
-                    <a class="nav-item" href="/personas" data-page="personas">
-                        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        <span data-i18n="nav-personas">人格系统</span>
-                    </a>
-                    <a class="nav-item" href="/create-persona" data-page="create-persona">
-                        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                        <span data-i18n="nav-create-persona">创建投资人</span>
-                    </a>
-                </div>
+                <div class="sb-group" data-i18n="group-investors">The Council</div>
+                <a class="sb-item nav-item" href="/personas" data-page="personas">
+                    <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span data-i18n="nav-personas">18 Masters</span>
+                </a>
+
+                <a class="sb-item nav-item" href="/create-persona" data-page="create-persona">
+                    <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span data-i18n="nav-create-persona">Summon New</span>
+                </a>
+
+                <!-- v8 其他功能 -->
+                <div class="sb-group" data-i18n="group-v8">Extra Tools</div>
+                <a class="sb-item nav-item" href="/optimizer" data-page="optimizer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span data-i18n="nav-optimizer">Optimizer</span>
+                </a>
+                <a class="sb-item nav-item" href="/compare" data-page="compare">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 3v18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    <span data-i18n="nav-compare">Compare</span>
+                </a>
+                <a class="sb-item nav-item" href="/debate" data-page="debate">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span data-i18n="nav-debate">Debate</span>
+                </a>
+                <a class="sb-item nav-item" href="/history" data-page="history">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span data-i18n="nav-history">History</span>
+                </a>
+                <a class="sb-item nav-item" href="/performance" data-page="performance">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                    <span data-i18n="nav-performance">Leaderboard</span>
+                </a>
 
                 <!-- 系统 Group -->
-                <div class="nav-group">
-                    <div class="nav-group-label" data-i18n="group-system">系统</div>
-                    <a class="nav-item" href="/settings" data-page="settings">
-                        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-                        <span data-i18n="nav-settings">设置</span>
-                    </a>
-                </div>
+                <div class="sb-group" data-i18n="group-system">System</div>
+                <a class="sb-item nav-item" href="/settings" data-page="settings">
+                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span data-i18n="nav-settings">Settings</span>
+                </a>
             </nav>
 
-            <div class="sidebar-footer">
+            <div class="sb-foot">
                 <button type="button" onclick="toggleLanguage()" class="lang-toggle-btn" data-i18n-aria="a11y-toggle-lang" aria-label="切换语言">
                     <span id="lang-label">EN</span>
                 </button>
-                <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" data-i18n-aria="a11y-toggle-theme" aria-label="切换深色/浅色主题">
-                    <span id="theme-icon">&#x1F319;</span>
-                    <span id="theme-label" data-i18n="theme-dark">深色</span>
-                </button>
-                <div class="status-indicator connected">
-                    <span class="status-dot"></span>
-                    <span class="status-text" data-i18n="status-ready">系统就绪</span>
-                </div>
-                <div class="version-info" data-i18n="powered-by">Powered by Augur</div>
-                <div class="version-info">v7.8.0</div>
+                <div class="sb-status status-indicator connected"><span class="dot live status-dot"></span><span class="status-text" data-i18n="status-ready">Oracle online · yfinance live</span></div>
+                <div class="sb-ver" data-i18n="powered-by">AUGUR v8.1.0</div>
             </div>
         </aside>
 
@@ -149,7 +134,7 @@
         </button>
 
         <!-- Main content -->
-        <main class="app-main" id="main-content" tabindex="-1">
+        <main class="main app-main" id="main-content" tabindex="-1">
             {% block content %}{% endblock %}
         </main>
     </div>

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Augur — AI Investment Oracle</title>
+<link rel="icon" type="image/png" href="../../assets/favicon.png">
+<link rel="stylesheet" href="../../colors_and_type.css">
+<link rel="stylesheet" href="../../augur.css">
+<link rel="stylesheet" href="kit.css">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body class="augur">
+<div id="root"></div>
+
+<script type="text/babel" src="data.jsx"></script>
+<script type="text/babel" src="Sidebar.jsx"></script>
+<script type="text/babel" src="Dashboard.jsx"></script>
+<script type="text/babel" src="StockAnalysis.jsx"></script>
+<script type="text/babel" src="Council.jsx"></script>
+<script type="text/babel">
+function App() {
+  const [page, setPage] = React.useState('home');
+  const [ticker, setTicker] = React.useState('NVDA');
+  const [loading, setLoading] = React.useState(false);
+
+  const go = (p) => { setPage(p); window.scrollTo(0,0); };
+  const analyze = (t) => {
+    setTicker(t); setPage('stocks'); setLoading(true); window.scrollTo(0,0);
+    setTimeout(()=>setLoading(false), 2600);
+  };
+
+  return (
+    <div className="app">
+      <Sidebar page={page} go={go} />
+      <main className="main">
+        {page==='home'    && <Dashboard onAnalyze={analyze} go={go} />}
+        {page==='stocks'  && <StockAnalysis ticker={ticker} loading={loading} />}
+        {page==='council' && <Council />}
+      </main>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+
+<template id="__bundler_thumbnail">
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect width="100" height="100" fill="#0a0a0f"/>
+  <g fill="#ff8c00"><rect x="40" y="34" width="20" height="20"/><rect x="36" y="38" width="4" height="12"/><rect x="60" y="38" width="4" height="12"/></g>
+  <rect x="44" y="40" width="5" height="5" fill="#0a0a0f"/><rect x="51" y="40" width="5" height="5" fill="#0a0a0f"/>
+  <text x="50" y="72" font-family="monospace" font-size="11" fill="#ff8c00" text-anchor="middle" font-weight="700">AUGUR</text>
+</svg>
+</template>
+</body>
+</html>
