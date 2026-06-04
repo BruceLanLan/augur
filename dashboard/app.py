@@ -2717,7 +2717,12 @@ def _get_chat_engine():
 @app.get("/chat", response_class=HTMLResponse)
 async def chat_page(request: Request):
     engine = _get_chat_engine()
-    ctx = {"title": "AI Chat", "agents": engine.get_available_agents()}
+    try:
+        from augur.llm_client import is_llm_available
+        llm_enabled = is_llm_available()
+    except Exception:
+        llm_enabled = False
+    ctx = {"title": "AI Chat", "agents": engine.get_available_agents(), "llm_enabled": llm_enabled}
     ctx.update(_i18n_context(request=request))
     return templates.TemplateResponse(request=request, name="chat.html", context=ctx)
 

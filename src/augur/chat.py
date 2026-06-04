@@ -34,7 +34,7 @@ Usage:
 
 import random
 import time
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 
 
 # Persona response templates: each agent has a distinct speaking style
@@ -206,11 +206,68 @@ class ChatEngine:
     def __init__(self):
         """Initialize the ChatEngine."""
         self._history: List[Dict[str, Any]] = []
+        # Per-agent rolling conversation for multi-turn LLM context:
+        # {agent_id: [{"role": "user"|"assistant", "content": str}, ...]}
+        self._conversations: Dict[str, List[Dict[str, str]]] = {}
 
     def _append_history(self, entry: Dict[str, Any]) -> None:
         self._history.append(entry)
         if len(self._history) > _MAX_HISTORY_ENTRIES:
             self._history = self._history[-_MAX_HISTORY_ENTRIES:]
+
+    def _build_chat_system_prompt(self, agent_id: str) -> Optional[str]:
+        """
+        Build a CHAT-oriented system prompt from the persona's identity and
+        philosophy. We deliberately do NOT reuse agent.get_system_prompt() —
+        that prompt instructs structured "## Signal / ## Score" analysis output,
+        which is wrong for conversational chat. Building from identity+philosophy
+        works uniformly for all 18 personas (not just the ~8 that override it).
+        """
+        try:
+            from augur.registry import get_registry
+            agent = get_registry().get(agent_id)
+            if not agent:
+                return None
+            name = getattr(agent, "name", agent_id)
+            identity = (getattr(agent, "identity", "") or "").strip()
+            philosophy = getattr(agent, "philosophy", []) or []
+            phil_str = "、".join(str(p) for p in philosophy) if philosophy else ""
+
+            parts = [f"你是投资大师「{name}」。"]
+            if identity:
+                parts.append(f"\n你的身份与背景：\n{identity}")
+            if phil_str:
+                parts.append(f"\n你的核心投资哲学：{phil_str}")
+            parts.append(
+                "\n请始终保持这个投资人的视角、语气和分析框架来对话。"
+                "用第一人称回答，像本人一样表达观点。"
+            )
+            return "".join(parts)
+        except Exception:
+            return None
+
+    def _llm_reply(self, agent_id: str, agent_name: str, message: str) -> Optional[str]:
+        """Try to generate a reply via Claude. Returns None to signal fallback."""
+        try:
+            from augur.llm_client import is_llm_available, llm_persona_reply
+            if not is_llm_available():
+                return None
+            system_prompt = self._build_chat_system_prompt(agent_id)
+            if not system_prompt:
+                return None
+            convo = self._conversations.get(agent_id, [])
+            reply = llm_persona_reply(system_prompt, convo, message, agent_name)
+            if reply:
+                # Persist this turn into the per-agent rolling conversation
+                convo = convo + [
+                    {"role": "user", "content": message.strip()},
+                    {"role": "assistant", "content": reply},
+                ]
+                # Keep the last ~12 turns (24 messages) to bound context
+                self._conversations[agent_id] = convo[-24:]
+            return reply
+        except Exception:
+            return None
 
     def get_response(self, message: str, agent_id: str = None) -> Dict[str, Any]:
         """
@@ -240,25 +297,30 @@ class ChatEngine:
             agent_id = random.choice(list(_PERSONA_TEMPLATES.keys()))
             template = _PERSONA_TEMPLATES[agent_id]
 
-        # Detect topic and generate response
         topic = _detect_topic(message)
-        topic_response = template["topics"].get(topic, template["topics"]["general"])
+        agent_name = self._get_agent_name(agent_id)
 
-        # Build the full response
-        greeting = template["greeting"]
-        prefix = template["prefix"]
-
-        response_text = f"{greeting}\n\n{prefix} {topic_response}"
-
-        # Add context-specific flavor based on user message
-        if "$" in message or any(c.isupper() and len(c) >= 2 for c in message.split()):
-            response_text += f"\n\nRegarding your specific question about '{message.strip()[:50]}' - I would recommend doing thorough due diligence on the fundamentals before making any decision."
+        # Try the LLM backend first (real Claude reply in persona voice).
+        # Falls back to templates when no API key / SDK / on error.
+        source = "template"
+        response_text = self._llm_reply(agent_id, agent_name, message)
+        if response_text:
+            source = "llm"
+        else:
+            # Template fallback
+            topic_response = template["topics"].get(topic, template["topics"]["general"])
+            greeting = template["greeting"]
+            prefix = template["prefix"]
+            response_text = f"{greeting}\n\n{prefix} {topic_response}"
+            if "$" in message or any(c.isupper() and len(c) >= 2 for c in message.split()):
+                response_text += f"\n\nRegarding your specific question about '{message.strip()[:50]}' - I would recommend doing thorough due diligence on the fundamentals before making any decision."
 
         result = {
             "agent_id": agent_id,
-            "agent_name": self._get_agent_name(agent_id),
+            "agent_name": agent_name,
             "response": response_text,
             "topic": topic,
+            "source": source,
             "timestamp": time.time(),
         }
 

@@ -4,9 +4,20 @@
 
 {% block content %}
 <div class="page-header">
-    <h1>AI Investment Chat</h1>
+    <h1>AI Investment Chat
+        {% if llm_enabled %}
+        <span class="llm-badge llm-on" title="Claude LLM 已接入，真实推理对话">⚡ LLM</span>
+        {% else %}
+        <span class="llm-badge llm-off" title="未配置 ANTHROPIC_API_KEY，使用模板回复。安装 pip install -e '.[llm]' 并设置 API key 以启用">📋 模板</span>
+        {% endif %}
+    </h1>
     <p class="page-desc">Chat with investment masters - ask questions and get persona-specific insights</p>
 </div>
+<style>
+.llm-badge { font-size: 0.6rem; font-weight: 600; padding: 2px 8px; border-radius: 10px; vertical-align: middle; margin-left: 8px; letter-spacing: 0.5px; }
+.llm-badge.llm-on { background: rgba(0,200,83,0.15); color: var(--signal-buy, #00c853); border: 1px solid rgba(0,200,83,0.3); }
+.llm-badge.llm-off { background: rgba(255,255,255,0.06); color: var(--text-muted, #888); border: 1px solid var(--border-color, #333); }
+</style>
 
 <div style="display: flex; gap: 1rem; height: calc(100vh - 200px); max-height: 700px;" role="main" aria-label="Chat interface">
     <!-- Agent Selector -->
