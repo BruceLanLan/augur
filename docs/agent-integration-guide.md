@@ -1,4 +1,4 @@
-[English](agent-integration-guide-en.md) | 中文
+[🇺🇸 English](en/agent-integration-guide.md) | 🇨🇳 中文
 
 # Augur Agent 整合指南
 

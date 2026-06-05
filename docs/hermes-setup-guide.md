@@ -1,4 +1,4 @@
-[English](hermes-setup-guide-en.md) | 中文
+[🇺🇸 English](en/hermes-setup-guide.md) | 🇨🇳 中文
 
 # Hermes Agent 接入 Augur - 完整指引
 

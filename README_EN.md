@@ -1,4 +1,4 @@
-[中文](README.md) | English
+[🇨🇳 中文](README.md) | 🇺🇸 English
 
 <div align="center">
 
@@ -177,7 +177,7 @@ v8 upgrades Augur from an analysis tool to an **intelligent investment platform*
 
 | Page | URL | What It Does |
 |------|-----|-------------|
-| **AI Chat** | `/chat` | 11 personas with distinct voices — no LLM API required |
+| **AI Chat** | `/chat` | 11 personas with distinct voices — OpenAI-compatible LLM Universal Support (DeepSeek, GPT-4) or fallback to local templates |
 | **Portfolio Optimizer** | `/optimizer` | Markowitz mean-variance optimization, pure Python |
 | **Master Compare** | `/compare` | 2–5 personas independently analyze the same stock |
 | **Debate Mode** | `/debate` | Personas argue in sequence, each rebutting the previous |

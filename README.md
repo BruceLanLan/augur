@@ -1,4 +1,4 @@
-中文 | [English](README_EN.md)
+🇨🇳 中文 | [🇺🇸 English](README_EN.md)
 
 <div align="center">
 
@@ -179,7 +179,7 @@ python3 -m dashboard.app --port 8000
 | | 自选股 | 一键分析，持久化 |
 | | 持仓管理 | 持仓追踪 + 实时盈亏 + 资产配置图 |
 | | 历史回测 | IC 排行榜 + 大师命中率 |
-| **v8 功能** | AI 对话 | 11位大师独特语气对话 |
+| **v8 功能** | AI 对话 | 11位大师独特语气对话，全面支持 OpenAI 兼容接口（可直连 DeepSeek、GPT-4 等） |
 | | 组合优化 | Markowitz 均值方差优化 |
 | | 大师对决 | 2-5位大师同题独立对比 |
 | | 辩论模式 | 多大师顺序辩论 |
