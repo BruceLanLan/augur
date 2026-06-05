@@ -138,3 +138,67 @@ class TestCLI:
         assert isinstance(data, dict)
         # Should contain agent keys
         assert len(data) > 0
+
+    def test_analyze_missing_ticker_argument(self, runner):
+        """Verify analyze without ticker argument fails with proper Click usage error."""
+        result = runner.invoke(main, ["analyze"])
+        assert result.exit_code == 2  # Click usage error
+        assert "Missing argument" in result.output
+        assert "TICKER" in result.output
+
+    def test_consensus_missing_ticker_argument(self, runner):
+        """Verify consensus without ticker argument fails with proper Click usage error."""
+        result = runner.invoke(main, ["consensus"])
+        assert result.exit_code == 2
+        assert "Missing argument" in result.output
+        assert "TICKER" in result.output
+
+    def test_inject_soul_format_flag_accepts_valid_choices(self, runner, tmp_path):
+        """Verify --format flag accepts the three documented choices (hermes, claude, raw)."""
+        for fmt in ["hermes", "claude", "raw"]:
+            result = runner.invoke(main, [
+                "inject-soul",
+                "--profile", f"test-{fmt}",
+                "--persona", "buffett",
+                "--output-dir", str(tmp_path),
+                "--format", fmt,
+            ])
+            assert result.exit_code == 0, f"format={fmt} failed: {result.output}"
+            assert "Soul injected" in result.output
+
+    def test_inject_soul_format_flag_rejects_invalid_choice(self, runner):
+        """Verify --format flag rejects values outside the click.Choice set."""
+        result = runner.invoke(main, [
+            "inject-soul",
+            "--profile", "bad",
+            "--persona", "buffett",
+            "--format", "bogus",
+        ])
+        assert result.exit_code == 2
+        assert "Invalid value" in result.output
+        assert "--format" in result.output
+
+    def test_no_color_disables_emojis(self, runner):
+        """Verify --no-color strips emoji glyphs (not just ANSI) from consensus output."""
+        # Reference: known emoji codepoints used by cli_format
+        emoji_chars = ["\U0001f7e2", "\U0001f7e1", "\U0001f534", "\u26a1", "\U0001f680"]
+        for emoji in emoji_chars:
+            result = runner.invoke(main, ["--no-color", "consensus", "AAPL", "--pe", "25"])
+            assert result.exit_code == 0
+            assert emoji not in result.output, (
+                f"emoji {emoji!r} present in --no-color output"
+            )
+
+    def test_unknown_command_rejected(self, runner):
+        """Verify unknown subcommands are rejected with a Click error."""
+        result = runner.invoke(main, ["definitely-not-a-real-command"])
+        assert result.exit_code == 2
+        assert "No such command" in result.output
+        assert "definitely-not-a-real-command" in result.output
+
+    def test_watchlist_add_invalid_pe_rejected(self, runner):
+        """Verify --pe flag with non-numeric input is rejected by Click's float type."""
+        result = runner.invoke(main, ["watchlist-add", "FAKE", "--pe", "not-a-number"])
+        assert result.exit_code == 2
+        assert "Invalid value" in result.output
+        assert "--pe" in result.output

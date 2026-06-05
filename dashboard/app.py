@@ -1144,6 +1144,12 @@ async def api_put_config(body: ConfigUpdateBody):
 @app.get("/api/config/persona/{agent_id}", summary="获取Agent模型配置")
 async def api_get_persona_config(agent_id: str):
     """获取单个 Agent 的模型配置"""
+    # Validate agent_id format to prevent injection / path traversal issues
+    if not re.match(r'^[a-z0-9_-]{1,50}$', agent_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid agent_id format. Use 1-50 lowercase letters, digits, hyphens, or underscores.",
+        )
     config = get_config()
     per_agent = config.get("per_agent", {})
     default_model = config.get("defaults", {}).get("model", "")
@@ -1652,6 +1658,12 @@ _HAS_AUGUR_DATA = _is_available("augur.data")
 @app.get("/api/fetch/{ticker}", summary="获取实时行情数据")
 async def api_fetch_ticker(ticker: str):
     """Fetch real-time market data for a ticker via yfinance"""
+    # Validate ticker format to prevent injection issues
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.",
+        )
     if not _HAS_AUGUR_DATA:
         feature, install_cmd = get_install_hint("augur.data")
         raise HTTPException(
@@ -1677,8 +1689,20 @@ async def api_fetch_ticker(ticker: str):
 @app.get("/api/search", summary="搜索标的")
 async def api_search_tickers(q: str = ""):
     """Search for tickers by name/symbol"""
+    # Reject empty / excessively long queries up front
     if not q or len(q) < 1:
         return {"results": []}
+    if len(q) > 64:
+        raise HTTPException(
+            status_code=400,
+            detail="Search query too long (max 64 characters).",
+        )
+    # Reject control characters / suspicious bytes
+    if any(ord(c) < 0x20 for c in q):
+        raise HTTPException(
+            status_code=400,
+            detail="Search query contains invalid control characters.",
+        )
 
     if not _HAS_AUGUR_DATA:
         feature, install_cmd = get_install_hint("augur.data")
@@ -2572,6 +2596,12 @@ async def api_list_history(limit: int = 50, page: Optional[int] = None, per_page
 
 @app.get("/api/history/{history_id}")
 async def api_get_history(history_id: str):
+    # Validate history_id format to prevent path traversal / injection
+    if not re.match(r'^[A-Za-z0-9._\-]{1,64}$', history_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid history_id format. Use 1-64 alphanumeric characters, dots, hyphens, or underscores.",
+        )
     from augur.history import get_history
     record = get_history(history_id)
     if not record:
@@ -2581,6 +2611,12 @@ async def api_get_history(history_id: str):
 
 @app.delete("/api/history/{history_id}")
 async def api_delete_history_item(history_id: str):
+    # Validate history_id format to prevent path traversal / injection
+    if not re.match(r'^[A-Za-z0-9._\-]{1,64}$', history_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid history_id format. Use 1-64 alphanumeric characters, dots, hyphens, or underscores.",
+        )
     from augur.history import delete_history
     deleted = delete_history(history_id)
     if not deleted:
@@ -2952,6 +2988,12 @@ async def api_create_rule(body: RuleCreateBody):
 
 @app.delete("/api/rules/{rule_id}")
 async def api_delete_rule(rule_id: str):
+    # Validate rule_id format to prevent path traversal / injection
+    if not re.match(r'^[A-Za-z0-9._\-]{1,64}$', rule_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid rule_id format. Use 1-64 alphanumeric characters, dots, hyphens, or underscores.",
+        )
     engine = _get_rules_engine()
     if not engine.remove_rule(rule_id):
         raise HTTPException(status_code=404, detail=f"Rule '{rule_id}' not found")
