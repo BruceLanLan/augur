@@ -217,3 +217,106 @@ class TestRulesEngine:
         path.write_text("rules:\n  - id: [broken\n    name: oops", encoding="utf-8")
         engine = RulesEngine(rules_path=str(path))
         assert engine.get_rules() == []
+
+    def test_invalid_operator_returns_false(self, tmp_path):
+        """Unknown operator evaluates to False (does not raise)."""
+        engine = self._make_engine(str(tmp_path))
+        cond = {"field": "score", "op": "~~invalid~~", "value": 1}
+        assert engine.evaluate_condition(cond, {"score": 5}) is False
+
+    def test_missing_field_returns_false(self, tmp_path):
+        """Condition referencing absent field evaluates to False."""
+        engine = self._make_engine(str(tmp_path))
+        cond = {"field": "nonexistent", "op": ">", "value": 0}
+        assert engine.evaluate_condition(cond, {"other": 1}) is False
+
+    def test_nested_field_through_non_dict(self, tmp_path):
+        """Dot-notation into a non-dict segment returns None -> False."""
+        engine = self._make_engine(str(tmp_path))
+        cond = {"field": "a.b.c", "op": ">", "value": 0}
+        # 'a' is a string, so further traversal must not crash
+        assert engine.evaluate_condition(cond, {"a": "string"}) is False
+
+    def test_get_rule_by_id(self, tmp_path):
+        """get_rule returns the matching rule or None."""
+        engine = self._make_engine(str(tmp_path))
+        engine.add_rule(Rule(id="find-me", name="Find", conditions=[], actions=[]))
+        engine.add_rule(Rule(id="other", name="Other", conditions=[], actions=[]))
+        found = engine.get_rule("find-me")
+        assert found is not None and found.name == "Find"
+        assert engine.get_rule("does-not-exist") is None
+
+    def test_message_template_substitution_nested(self, tmp_path):
+        """Template variables substitute nested fields via dot notation."""
+        engine = self._make_engine(str(tmp_path))
+        rule = Rule(
+            id="tpl-1",
+            name="Tpl",
+            conditions=[{"field": "consensus.score", "op": ">", "value": 0}],
+            actions=[{"channel": "lark", "message": "{ticker} scored {consensus.score}"}],
+        )
+        engine.add_rule(rule)
+        triggered = engine.evaluate({"ticker": "AAPL", "consensus": {"score": 9.0}})
+        assert len(triggered) == 1
+        msg = triggered[0]["message"]
+        assert "AAPL" in msg and "9.0" in msg
+
+    def test_rule_with_multiple_actions_dispatches_each(self, tmp_path):
+        """A triggered rule with N actions dispatches N notifications."""
+        engine = self._make_engine(str(tmp_path))
+        rule = Rule(
+            id="multi-act",
+            name="Multi",
+            conditions=[{"field": "x", "op": "==", "value": 1}],
+            actions=[
+                {"channel": "telegram", "message": "a"},
+                {"channel": "slack", "message": "b"},
+                {"channel": "lark", "message": "c"},
+            ],
+        )
+        engine.add_rule(rule)
+        triggered = engine.evaluate({"x": 1})
+        assert len(triggered) == 3
+        channels = {t["action"]["channel"] for t in triggered}
+        assert channels == {"telegram", "slack", "lark"}
+        assert len(engine.dispatcher.get_sent()) == 3
+
+    def test_malformed_rule_entries_skipped(self, tmp_path):
+        """Bad individual rule entries are skipped; valid ones still load."""
+        import yaml as _yaml
+        path = tmp_path / "rules.yaml"
+        data = {
+            "rules": [
+                {"id": "good", "name": "Good", "conditions": [], "actions": []},
+                "not-a-dict",
+                {"id": "good2", "name": "Good2", "conditions": [], "actions": []},
+            ]
+        }
+        path.write_text(_yaml.dump(data), encoding="utf-8")
+        engine = RulesEngine(rules_path=str(path))
+        names = [r.name for r in engine.get_rules()]
+        assert "Good" in names and "Good2" in names
+        assert len(engine.get_rules()) == 2
+
+    def test_yaml_errors_handled_cleanly(self, tmp_path):
+        """Both bad YAML and malformed persona-shaped YAML raise no exception;
+        engine starts with an empty rule set in both cases.
+        Regression test for yaml.scanner.ScannerError AttributeError on
+        minimal PyYAML builds: catching yaml.YAMLError (the base class)
+        must suffice.
+        """
+        # Case 1: structurally broken YAML (truncated flow sequence)
+        bad_path = tmp_path / "bad.yaml"
+        bad_path.write_text("rules:\n  - id: [unterminated\n", encoding="utf-8")
+        bad_engine = RulesEngine(rules_path=str(bad_path))
+        assert bad_engine.get_rules() == []
+
+        # Case 2: malformed persona-shaped YAML (looks like a persona config
+        # with an unclosed mapping under a non-'rules' root key)
+        persona_path = tmp_path / "persona.yaml"
+        persona_path.write_text(
+            "persona:\n  name: lynch\n  style: { value: aggressive\n",
+            encoding="utf-8",
+        )
+        persona_engine = RulesEngine(rules_path=str(persona_path))
+        assert persona_engine.get_rules() == []

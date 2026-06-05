@@ -208,8 +208,9 @@ class RulesEngine:
                             continue
             else:
                 self._rules = []
-        except (yaml.YAMLError, yaml.scanner.ScannerError):
+        except yaml.YAMLError:
             # Malformed YAML - start with empty rules
+            # yaml.YAMLError is the base class for all PyYAML parsing/scanner/parser errors.
             self._rules = []
         except (OSError, IOError):
             # File read error

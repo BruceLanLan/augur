@@ -2,6 +2,7 @@
 """Tests for augur.learning - Agent Learning Engine"""
 
 import json
+import logging
 import time
 from unittest.mock import patch
 
@@ -184,3 +185,60 @@ def test_record_outcome_too_stale_skipped(learning_engine):
 
     assert learning_engine.get_accuracy() == {}
     assert learning_engine._predictions[0]["outcome"] is None
+
+
+def test_record_outcome_skipped_predictions_log_debug(learning_engine, caplog):
+    """Predictions dropped by lookback / min_age / max_age filters emit a debug log."""
+    now = 1_700_000_000.0
+    # Too-recent prediction (blocked by min_age_days=30)
+    learning_engine._predictions.append({
+        "ticker": "AAPL",
+        "agent_id": "graham",
+        "signal": "bearish",
+        "score": 3.0,
+        "confidence": 0.7,
+        "timestamp": now - 5 * 86400,
+        "outcome": None,
+    })
+    # Way-too-stale prediction (outside lookback+min_age window of 60d)
+    learning_engine._predictions.append({
+        "ticker": "AAPL",
+        "agent_id": "lynch",
+        "signal": "bullish",
+        "score": 8.0,
+        "confidence": 0.9,
+        "timestamp": now - 90 * 86400,
+        "outcome": None,
+    })
+
+    with caplog.at_level(logging.DEBUG, logger="augur.learning"):
+        with patch("augur.learning.time.time", return_value=now):
+            # min_age_days=30 path: graham (5d) skipped as "not old enough";
+            # lynch (90d) skipped as "too stale" (window is 30+30=60d).
+            learning_engine.record_outcome("AAPL", 0.04, min_age_days=30)
+
+    messages = [r.getMessage() for r in caplog.records
+                if r.name == "augur.learning" and r.levelno == logging.DEBUG]
+    assert any("not old enough" in m and "graham" in m for m in messages), messages
+    assert any("too stale" in m and "lynch" in m for m in messages), messages
+    # None of the skipped predictions should have been resolved.
+    assert all(p["outcome"] is None for p in learning_engine._predictions)
+
+    # Now exercise the default-lookback branch with a separate, stale prediction.
+    caplog.clear()
+    learning_engine._predictions.append({
+        "ticker": "MSFT",
+        "agent_id": "buffett",
+        "signal": "bullish",
+        "score": 7.0,
+        "confidence": 0.8,
+        "timestamp": now - 60 * 86400,
+        "outcome": None,
+    })
+    with caplog.at_level(logging.DEBUG, logger="augur.learning"):
+        with patch("augur.learning.time.time", return_value=now):
+            learning_engine.record_outcome("MSFT", 0.02)
+
+    messages = [r.getMessage() for r in caplog.records
+                if r.name == "augur.learning" and r.levelno == logging.DEBUG]
+    assert any("outside lookback window" in m and "buffett" in m for m in messages), messages

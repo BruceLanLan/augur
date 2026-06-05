@@ -36,9 +36,12 @@ Usage:
 """
 
 import json
+import logging
 import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any
+
+logger = logging.getLogger(__name__)
 
 
 def _get_weights_path() -> Path:
@@ -152,11 +155,26 @@ class LearningEngine:
                 ts = pred["timestamp"]
                 if min_age_cutoff is not None:
                     if ts > min_age_cutoff:
+                        logger.debug(
+                            "skipping prediction for %s from %s: not old enough (age=%.1fd < min_age=%dd)",
+                            ticker, pred["agent_id"],
+                            (now - ts) / 86400.0, min_age_days,
+                        )
                         continue  # prediction not old enough yet
                     max_age_cutoff = now - ((lookback_days + min_age_days) * 86400)
                     if ts < max_age_cutoff:
+                        logger.debug(
+                            "skipping prediction for %s from %s: too stale (age=%.1fd > lookback+min_age=%dd)",
+                            ticker, pred["agent_id"],
+                            (now - ts) / 86400.0, lookback_days + min_age_days,
+                        )
                         continue  # too stale to auto-resolve
                 elif ts < cutoff:
+                    logger.debug(
+                        "skipping prediction for %s from %s: outside lookback window (age=%.1fd > lookback=%dd)",
+                        ticker, pred["agent_id"],
+                        (now - ts) / 86400.0, lookback_days,
+                    )
                     continue  # outside recent lookback window
                 pred["outcome"] = actual_return
                 # Determine if prediction was correct
