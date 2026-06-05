@@ -348,6 +348,13 @@ factors:
 ## ❓ 常见问题
 
 <details>
+<summary>本地安装失败 / 网页打不开</summary>
+
+- **安装时报错：** 如果您已经下载过 `augur` 文件夹，请**不要**再执行 `git clone`（会报错并中断后续命令）。请直接运行：`cd augur && source .venv/bin/activate && python3 -m dashboard.app`
+- **网页打不开：** 执行启动命令后，终端会处于“挂起”状态（这是在持续监听请求，请勿关闭终端或按 Ctrl+C）。如果 `http://localhost:8000` 打不开或被浏览器强制跳转为 https，请尝试访问纯净的 `http://127.0.0.1:8000`。
+</details>
+
+<details>
 <summary>提示 "yfinance not installed"</summary>
 
 ```bash

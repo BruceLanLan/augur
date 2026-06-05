@@ -445,6 +445,13 @@ Full API reference: [docs/api-reference.md](docs/api-reference.md)
 ## ❓ Troubleshooting
 
 <details>
+<summary>Local Installation Fails / Website Won't Open</summary>
+
+- **Install error:** If you already have the `augur` folder downloaded, **do not** run `git clone` again (it will fail and break the rest of the commands). Just run: `cd augur && source .venv/bin/activate && python3 -m dashboard.app`
+- **Website won't open:** After running the start command, your terminal will hang (it's listening for requests, do not close or press Ctrl+C). If `http://localhost:8000` doesn't open or your browser forces https, try navigating to the explicit IP: `http://127.0.0.1:8000`.
+</details>
+
+<details>
 <summary>"yfinance not installed" error</summary>
 
 ```bash
