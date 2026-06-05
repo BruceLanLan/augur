@@ -508,7 +508,10 @@ kbd {
     .app-main,
     .hot-ticker-card,
     .sector-card,
-    .intl-market-card {
+    .intl-market-card,
+    .dot.live,
+    .dialogue .chevron,
+    .owl-spin {
         animation: none !important;
         transition: none !important;
     }

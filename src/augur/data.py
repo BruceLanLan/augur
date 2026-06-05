@@ -177,6 +177,12 @@ def _normalize_ticker(ticker: str) -> str:
         raise ValueError(f"Invalid ticker format (consecutive dots not allowed): {ticker}")
     if not re.match(r'^[A-Z0-9.\-]+$', ticker):
         raise ValueError(f"Invalid ticker format (only alphanumeric, dots, hyphens allowed): {ticker}")
+    # Reject leading/trailing punctuation: ".AAPL", "AAPL.", "-AAPL", "AAPL-"
+    # are syntactically allowed by the regex but never valid ticker symbols.
+    if ticker[0] in '.-' or ticker[-1] in '.-':
+        raise ValueError(
+            f"Invalid ticker format (must not start or end with '.' or '-'): {ticker}"
+        )
     return ticker
 
 
@@ -336,6 +342,19 @@ def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict
             f"{type(tickers).__name__}"
         ))
         logger.warning("batch fetch rejected tickers of type %s", type(tickers).__name__)
+        return {"INVALID": ctx}
+
+    # Validate max_workers: must be a positive int. Reject bool (subclass of int,
+    # but semantically wrong here), floats, zero, and negatives. Cap at a sane
+    # ceiling so a typo like max_workers=1_000_000 can't exhaust file descriptors.
+    if isinstance(max_workers, bool) or not isinstance(max_workers, int) or max_workers < 1 or max_workers > 64:
+        ctx = MarketContext(ticker="INVALID")
+        setattr(ctx, "data_source", "error")
+        setattr(ctx, "data_error", (
+            f"invalid max_workers: expected int in [1, 64], got "
+            f"{max_workers!r} ({type(max_workers).__name__})"
+        ))
+        logger.warning("batch fetch rejected max_workers=%r", max_workers)
         return {"INVALID": ctx}
 
     results: Dict[str, MarketContext] = {}
@@ -606,7 +625,15 @@ def fetch_market_overview(force_refresh: bool = False) -> Dict[str, Any]:
 
 
 def _safe_float(value: Any) -> float:
-    """轻量级安全 float 转换（用于市场总览）。"""
+    """轻量级安全 float 转换（用于市场总览）。
+
+    拒绝 ``bool``（在 Python 中 ``bool`` 是 ``int`` 的子类，``float(True)`` 会
+    悄无声息地得到 ``1.0``，把一个布尔标记变成一个伪造的报价/市值）。其他非数值
+    类型（``None``、list、dict 等）走 ``TypeError`` 路径返回 0.0。``NaN`` / ``±inf``
+    也归一化为 0.0，避免污染下游计算。
+    """
+    if isinstance(value, bool):
+        return 0.0
     try:
         f = float(value)
         if f != f or f in (float("inf"), float("-inf")):

@@ -777,6 +777,12 @@ async def analyze_ticker(
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
 
+    # Cap sector/industry length to prevent abuse (free-form text inputs)
+    if len(sector) > 100:
+        raise HTTPException(status_code=400, detail="Sector too long (max 100 characters).")
+    if len(industry) > 100:
+        raise HTTPException(status_code=400, detail="Industry too long (max 100 characters).")
+
     # Rate limiting: max 30 requests per minute per ticker
     if not _check_rate_limit(ticker):
         raise HTTPException(status_code=429, detail="Rate limit exceeded. Max 30 requests per minute per ticker.")
@@ -971,6 +977,13 @@ async def get_persona_opinion(agent_id: str, ticker: str, question: Optional[str
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
 
+    # Cap question length to prevent abuse (free-form text input)
+    if question is not None and len(question) > 500:
+        raise HTTPException(
+            status_code=400,
+            detail="Question too long (max 500 characters).",
+        )
+
     # Get agent
     agent = get_registry().get(agent_id)
     if not agent:
@@ -1038,6 +1051,12 @@ async def report_ticker(
     # Validate ticker format
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
+
+    # Cap sector/industry length to prevent abuse (free-form text inputs)
+    if len(sector) > 100:
+        raise HTTPException(status_code=400, detail="Sector too long (max 100 characters).")
+    if len(industry) > 100:
+        raise HTTPException(status_code=400, detail="Industry too long (max 100 characters).")
 
     # Rate limiting
     if not _check_rate_limit(ticker):
