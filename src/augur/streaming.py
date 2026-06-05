@@ -81,8 +81,30 @@ class PriceStreamer:
     """
 
     def __init__(self, tickers: List[str] = None, interval: float = 60.0, max_clients: int = 100):
-        self.tickers = tickers or DEFAULT_TICKERS
-        self.interval = interval
+        # Input validation: interval must be a positive number of seconds and
+        # max_clients must be a non-negative integer. Without this, a caller
+        # passing interval=0 would create a tight CPU-bound hot loop, and
+        # max_clients=0 would silently reject every WebSocket connection.
+        if not isinstance(interval, (int, float)) or interval <= 0:
+            raise ValueError(f"interval must be a positive number of seconds, got {interval!r}")
+        if not isinstance(max_clients, int) or max_clients < 0:
+            raise ValueError(f"max_clients must be a non-negative integer, got {max_clients!r}")
+        # Validate and normalise tickers: must be a non-empty list of strings
+        # containing no whitespace and a reasonable length per symbol.
+        if tickers is None:
+            tickers = list(DEFAULT_TICKERS)
+        if not isinstance(tickers, list) or not tickers:
+            raise ValueError("tickers must be a non-empty list of strings")
+        cleaned: List[str] = []
+        for t in tickers:
+            if not isinstance(t, str):
+                raise ValueError(f"ticker entries must be strings, got {type(t).__name__}")
+            sym = t.strip().upper()
+            if not sym or any(ch.isspace() for ch in sym) or len(sym) > 12:
+                raise ValueError(f"invalid ticker symbol: {t!r}")
+            cleaned.append(sym)
+        self.tickers = cleaned
+        self.interval = float(interval)
         self.max_clients = max_clients
         self._clients: Set[WebSocket] = set()
         self._client_lock: Optional[asyncio.Lock] = None

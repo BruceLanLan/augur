@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}{{ status_code }} · {{ heading }} - Augur{% endblock %}
+
+{% block extra_head %}
+<style>
+.error-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(100vh - 240px);
+    padding: 32px 16px;
+}
+.error-card {
+    max-width: 560px;
+    width: 100%;
+    background: var(--bg-secondary, #161821);
+    border: 1px solid var(--border-color, #2a2d35);
+    border-radius: 12px;
+    padding: 40px 32px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+.error-code {
+    font-family: var(--font-pixfin, monospace);
+    font-size: 96px;
+    font-weight: 700;
+    line-height: 1;
+    margin: 0 0 12px 0;
+    background: linear-gradient(135deg, #ff8c00 0%, #ffb347 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--accent-orange, #ff8c00);
+}
+.error-heading {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-primary, #e6e6e6);
+    margin: 0 0 16px 0;
+}
+.error-message {
+    color: var(--text-secondary, #9aa0a6);
+    font-size: 15px;
+    line-height: 1.6;
+    margin: 0 0 8px 0;
+}
+.error-suggestion {
+    color: var(--text-muted, #6b7280);
+    font-size: 13px;
+    line-height: 1.5;
+    margin: 0 0 28px 0;
+    padding: 12px 16px;
+    background: var(--bg-primary, #0e0f12);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-orange, #ff8c00);
+}
+.error-path {
+    font-family: var(--font-mono, monospace);
+    font-size: 12px;
+    color: var(--text-muted, #6b7280);
+    background: var(--bg-primary, #0e0f12);
+    padding: 6px 12px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 24px;
+    word-break: break-all;
+}
+.error-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.error-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: transform 0.1s, background 0.15s;
+}
+.error-btn:active { transform: scale(0.98); }
+.error-btn-primary {
+    background: var(--accent-orange, #ff8c00);
+    color: #0e0f12;
+}
+.error-btn-primary:hover { background: #ffb347; }
+.error-btn-secondary {
+    background: transparent;
+    color: var(--text-primary, #e6e6e6);
+    border-color: var(--border-color, #2a2d35);
+}
+.error-btn-secondary:hover { background: var(--bg-primary, #0e0f12); }
+.error-owl {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 16px;
+    display: block;
+    image-rendering: pixelated;
+    opacity: 0.6;
+}
+@media (max-width: 600px) {
+    .error-code { font-size: 72px; }
+    .error-card { padding: 32px 20px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-card" role="alert" aria-live="polite">
+        <img class="error-owl" src="/static/images/augur-owl-128.png" alt="" width="64" height="64" />
+        <div class="error-code" aria-label="Error {{ status_code }}">{{ status_code }}</div>
+        <h1 class="error-heading">{{ heading }}</h1>
+        <p class="error-message">{{ message }}</p>
+        {% if suggestion %}
+            <p class="error-suggestion">{{ suggestion }}</p>
+        {% endif %}
+        <div class="error-path">{{ path }}</div>
+        <div class="error-actions">
+            <a class="error-btn error-btn-primary" href="/">← Back to Dashboard</a>
+            <button class="error-btn error-btn-secondary" onclick="history.length > 1 ? history.back() : (window.location.href = '/')">
+                Go Back
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

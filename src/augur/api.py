@@ -9,6 +9,7 @@ Provides endpoints:
   GET /health - health check
 """
 
+import os
 import re
 import logging
 from datetime import datetime, timezone
@@ -20,6 +21,9 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
 except ImportError:
     raise ImportError("fastapi is required: pip install fastapi uvicorn")
+
+# Ticker pattern: 1-15 alphanumeric, dot, hyphen, or colon (e.g. BRK.B, 0700.HK, BTC-USD)
+_TICKER_PATTERN = re.compile(r'^[A-Za-z0-9.\-:]{1,15}$')
 
 from augur.registry import AgentRegistry, DecisionCoordinator
 from augur.personas.base import MarketContext
@@ -48,11 +52,24 @@ async def global_exception_handler(request, exc: Exception):
         ),
     )
 
+# CORS: restrict to a configurable allowlist to prevent any-origin access
+# in deployments with auth. Set AUGUR_CORS_ALLOW_ORIGINS to a comma-separated
+# list of allowed origins (e.g. "https://app.example.com,https://admin.example.com").
+# Default is "*" for backwards compatibility with local/dev usage.
+_cors_origins_env = os.environ.get("AUGUR_CORS_ALLOW_ORIGINS", "").strip()
+if _cors_origins_env:
+    _cors_allow_origins = [o.strip() for o in _cors_origins_env.split(",") if o.strip()]
+else:
+    _cors_allow_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=_cors_allow_origins,
+    # Only allow credentials when origins are explicitly restricted (not "*"),
+    # since browsers reject credentialed requests with wildcard origins.
+    allow_credentials=_cors_allow_origins != ["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
 
 _registry: Optional[AgentRegistry] = None
@@ -109,7 +126,7 @@ async def analyze_ticker(
 
     Auto-fetches live data from yfinance when no metrics are provided.
     """
-    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+    if not _TICKER_PATTERN.match(ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
 
     has_metrics = any([price, pe, pb, revenue_growth, gross_margins, market_cap])

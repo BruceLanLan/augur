@@ -234,6 +234,34 @@ def create_server():
             model: The model to use (e.g. claude-sonnet-4-6, deepseek-v4)
         """
         from augur.config import get_config, set_config, save_config
+        from augur.registry import AgentRegistry
+
+        # Validate persona_id: must be a non-empty string of safe identifier chars
+        # (alphanumeric, underscore, hyphen). This prevents the value from being
+        # injected into a dot-notation config key path (set_config splits on "."),
+        # which could overwrite arbitrary nested config keys or produce surprising
+        # nesting when the value contains a ".".
+        if not isinstance(persona_id, str) or not persona_id:
+            return "Error: persona_id must be a non-empty string"
+        if not re.match(r'^[A-Za-z0-9_\-]{1,64}$', persona_id):
+            return ("Error: Invalid persona_id format. "
+                    "Use 1-64 alphanumeric characters, underscores, or hyphens.")
+
+        # Validate the persona actually exists in the registry
+        registry = AgentRegistry()
+        if not registry.get(persona_id):
+            return f"Error: Persona '{persona_id}' not found. Available: {', '.join(a.agent_id for a in registry.get_all())}"
+
+        # Validate model: restrict to a non-empty, length-bounded string of safe
+        # characters to prevent injection of arbitrary content into the YAML
+        # config file.
+        if not isinstance(model, str) or not model:
+            return "Error: model must be a non-empty string"
+        if len(model) > 128:
+            return "Error: model name too long (max 128 characters)"
+        if not re.match(r'^[A-Za-z0-9._\-+:/]{1,128}$', model):
+            return ("Error: Invalid model format. "
+                    "Use alphanumeric characters, dots, hyphens, underscores, colons, or slashes.")
 
         set_config(f"per_agent.{persona_id}", model)
         path = save_config()

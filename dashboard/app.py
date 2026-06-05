@@ -75,11 +75,20 @@ app = FastAPI(
 # Global exception handler: catch unhandled exceptions, return consistent JSON
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
-    """Catch all unhandled exceptions and return consistent JSON error response.
+    """Catch all unhandled exceptions.
 
-    Never leak stack traces to clients. Log the real error for debugging.
+    Browser clients get a friendly HTML 500 page; API/tooling clients get the
+    standard JSON envelope. Never leak stack traces to clients; log the real
+    error for debugging.
     """
     logger.error(f"Unhandled exception on {request.url.path}: {type(exc).__name__}: {exc}")
+
+    if _wants_html(request):
+        return _render_error_page(
+            request, 500, "Internal server error",
+            "Something broke on our end. We've logged the issue.",
+            "Try again in a moment, or head back to the dashboard.",
+        )
 
     return JSONResponse(
         status_code=500,
@@ -107,9 +116,91 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
 
+def _wants_html(request: Request) -> bool:
+    """Return True if the client likely wants an HTML response (browser nav).
+
+    Used by error handlers to choose between a styled HTML error page and a
+    machine-readable JSON error body.
+    """
+    accept = (request.headers.get("accept") or "").lower()
+    if "text/html" in accept or "application/xhtml" in accept:
+        return True
+    # No Accept header usually means a browser typing a URL in the address bar.
+    if not accept:
+        return True
+    return False
+
+
+def _render_error_page(request: Request, status_code: int, heading: str, message: str, suggestion: str = ""):
+    """Render a friendly branded HTML error page for browser navigation.
+
+    Falls back to a minimal inline page if the error template cannot be loaded.
+    """
+    try:
+        return templates.TemplateResponse(
+            request=request,
+            name="error.html",
+            context={
+                "title": f"{status_code} · {heading}",
+                "status_code": status_code,
+                "heading": heading,
+                "message": message,
+                "suggestion": suggestion,
+                "path": request.url.path,
+            },
+            status_code=status_code,
+        )
+    except Exception:
+        # Last-resort fallback so the user always gets HTML on a browser.
+        body = (
+            f"<!doctype html><html lang='en'><head><meta charset='utf-8'>"
+            f"<title>{status_code} · {heading}</title>"
+            f"<style>body{{font-family:system-ui,sans-serif;background:#0e0f12;color:#e6e6e6;"
+            f"display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}}"
+            f".card{{max-width:520px;padding:32px;background:#1a1c22;border:1px solid #2a2d35;"
+            f"border-radius:12px;text-align:center}}h1{{font-size:64px;margin:0;color:#ff8c00}}"
+            f"p{{color:#9aa0a6;line-height:1.5}}</style></head><body><div class='card'>"
+            f"<h1>{status_code}</h1><h2>{heading}</h2><p>{message}</p>"
+            f"{('<p>' + suggestion + '</p>') if suggestion else ''}"
+            f"<p><a href='/' style='color:#ff8c00'>← Back to Dashboard</a></p>"
+            f"</div></body></html>"
+        )
+        return HTMLResponse(content=body, status_code=status_code)
+
+
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
-    """Ensure HTTP exceptions also return consistent JSON."""
+    """Return JSON for API/tooling clients, a styled HTML page for browsers."""
+    if _wants_html(request):
+        if exc.status_code == 404:
+            return _render_error_page(
+                request, 404, "Page not found",
+                f"We couldn't find anything at {request.url.path}.",
+                "Check the URL for typos, or jump back to the dashboard.",
+            )
+        if exc.status_code == 403:
+            return _render_error_page(
+                request, 403, "Access denied",
+                str(exc.detail) if exc.detail else "You don't have permission to view this page.",
+                "Sign in with an authorized account, or contact your admin.",
+            )
+        if exc.status_code == 401:
+            return _render_error_page(
+                request, 401, "Authentication required",
+                "Please sign in to continue.",
+                "Use the Login button in the top-right corner.",
+            )
+        if exc.status_code == 429:
+            return _render_error_page(
+                request, 429, "Too many requests",
+                "You're sending requests too quickly. Please slow down.",
+                "Wait a few seconds and try again.",
+            )
+        return _render_error_page(
+            request, exc.status_code, f"HTTP {exc.status_code}",
+            str(exc.detail) if exc.detail else "Something went wrong.",
+        )
+    # API/tooling clients keep the consistent JSON envelope.
     if exc.status_code == 404:
         return JSONResponse(
             status_code=404,
@@ -119,7 +210,6 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
                 path=request.url.path,
             ),
         )
-    # For other HTTP exceptions (400, 429, etc.), keep consistent JSON
     return JSONResponse(
         status_code=exc.status_code,
         content=api_error_response(
@@ -1294,6 +1384,12 @@ async def api_add_to_watchlist(body: WatchlistAddBody):
 @app.delete("/api/watchlist/{ticker}", summary="删除自选股")
 async def api_remove_from_watchlist(ticker: str):
     """Remove ticker from watchlist"""
+    # Validate ticker format (alphanumerics, dots, hyphens; 1-15 chars)
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.",
+        )
     from augur.cron import remove_from_watchlist
     removed = remove_from_watchlist(ticker.upper())
     if not removed:
@@ -2698,8 +2794,28 @@ async def api_sentiment(ticker: str):
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format")
     from augur.sentiment import SentimentAnalyzer
-    result = SentimentAnalyzer().get_sentiment(ticker)
-    return {"ticker": result.ticker, "overall_score": result.overall_score, "sources": result.sources, "volume": result.volume, "trending": result.trending, "data_source": result.data_source}
+    try:
+        result = SentimentAnalyzer().get_sentiment(ticker)
+    except Exception as e:
+        # Graceful degradation: return neutral sentiment rather than 500
+        logger.warning("sentiment fetch failed for %s: %s", ticker.upper(), e)
+        return {
+            "ticker": ticker.upper(),
+            "overall_score": 0.0,
+            "sources": {"stocktwits_score": 0.0, "reddit_score": 0.0, "x_score": 0.0},
+            "volume": 0,
+            "trending": False,
+            "data_source": "degraded",
+            "error": str(e),
+        }
+    return {
+        "ticker": result.ticker,
+        "overall_score": result.overall_score,
+        "sources": result.sources,
+        "volume": result.volume,
+        "trending": result.trending,
+        "data_source": result.data_source,
+    }
 
 
 # ============ v8: AI Chat ============

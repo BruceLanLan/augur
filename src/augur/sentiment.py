@@ -163,8 +163,20 @@ class SentimentAnalyzer:
         return (time.time() - self._cache_timestamps.get(ticker, 0)) < ttl
 
     def get_sentiment(self, ticker: str) -> SentimentResult:
-        ticker = ticker.upper().strip()
-        if not ticker:
+        # Input validation: only accept string tickers, normalise, and reject
+        # anything containing whitespace, non-printable chars, or excessive
+        # length (which would break the StockTwits URL or pollute the cache).
+        if not isinstance(ticker, str) or not ticker.strip():
+            return SentimentResult(
+                ticker="",
+                overall_score=0.0,
+                sources={"stocktwits_score": 0.0, "reddit_score": 0.0, "x_score": 0.0},
+                volume=0,
+                trending=False,
+                data_source="mock",
+            )
+        ticker = ticker.strip().upper()
+        if any(ch.isspace() for ch in ticker) or len(ticker) > 12 or not ticker.isprintable():
             return SentimentResult(
                 ticker="",
                 overall_score=0.0,
