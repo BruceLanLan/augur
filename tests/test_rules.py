@@ -320,3 +320,98 @@ class TestRulesEngine:
         )
         persona_engine = RulesEngine(rules_path=str(persona_path))
         assert persona_engine.get_rules() == []
+
+
+class TestRuleCRUD:
+    """Additional CRUD/activation/persistence coverage for rules."""
+
+    def test_add_rule_assigns_uuid_when_id_missing(self, tmp_path):
+        """add_rule auto-generates a UUID when Rule.id is empty/falsy."""
+        engine = RulesEngine(rules_path=str(tmp_path / "rules.yaml"))
+        created = engine.add_rule(Rule(id="", name="NoID", conditions=[], actions=[]))
+        assert created.id
+        assert len(created.id) >= 8  # uuid hex
+        # And it should be retrievable
+        assert engine.get_rule(created.id) is not None
+
+    def test_remove_rule_persists_to_disk(self, tmp_path):
+        """After remove_rule, the YAML file no longer contains the rule."""
+        path = tmp_path / "rules.yaml"
+        engine = RulesEngine(rules_path=str(path))
+        engine.add_rule(Rule(id="keep", name="Keep", conditions=[], actions=[]))
+        engine.add_rule(Rule(id="drop", name="Drop", conditions=[], actions=[]))
+        assert engine.remove_rule("drop") is True
+
+        # Reload from disk and confirm only 'keep' remains
+        reloaded = RulesEngine(rules_path=str(path))
+        ids = {r.id for r in reloaded.get_rules()}
+        assert ids == {"keep"}
+
+    def test_get_rules_returns_independent_copy(self, tmp_path):
+        """Mutating the returned list must not affect engine state."""
+        engine = RulesEngine(rules_path=str(tmp_path / "rules.yaml"))
+        engine.add_rule(Rule(id="r1", name="R1", conditions=[], actions=[]))
+        rules = engine.get_rules()
+        rules.clear()
+        # Engine still has the rule
+        assert len(engine.get_rules()) == 1
+        assert engine.get_rule("r1") is not None
+
+    def test_rule_from_dict_defaults(self):
+        """from_dict applies sensible defaults for missing keys."""
+        rule = Rule.from_dict({})
+        assert rule.id  # auto-generated uuid
+        assert rule.name == "Unnamed Rule"
+        assert rule.conditions == []
+        assert rule.actions == []
+        assert rule.enabled is True
+
+    def test_persistence_creates_parent_directories(self, tmp_path):
+        """add_rule must create nested parent dirs on first write."""
+        nested = tmp_path / "deep" / "nested" / "dir" / "rules.yaml"
+        assert not nested.parent.exists()
+        engine = RulesEngine(rules_path=str(nested))
+        engine.add_rule(Rule(id="p1", name="Parent", conditions=[], actions=[]))
+        assert nested.exists()
+        # File content must be valid YAML parseable back to the same rule
+        import yaml as _yaml
+        data = _yaml.safe_load(nested.read_text(encoding="utf-8"))
+        assert isinstance(data, dict) and "rules" in data
+        assert data["rules"][0]["id"] == "p1"
+
+    def test_save_writes_complete_yaml_atomically_readable(self, tmp_path):
+        """A written YAML file must be fully parseable (no truncation)."""
+        path = tmp_path / "rules.yaml"
+        engine = RulesEngine(rules_path=str(path))
+        engine.add_rule(Rule(
+            id="a1",
+            name="Atomic",
+            conditions=[{"field": "score", "op": ">", "value": 5}],
+            actions=[{"channel": "telegram", "message": "go"}],
+        ))
+
+        # Read raw file - must end with content, not be empty
+        raw = path.read_text(encoding="utf-8")
+        assert raw.strip() != ""
+        # Reopen and ensure the rule is exactly as written
+        engine2 = RulesEngine(rules_path=str(path))
+        loaded = engine2.get_rules()
+        assert len(loaded) == 1
+        assert loaded[0].id == "a1"
+        assert loaded[0].name == "Atomic"
+        assert loaded[0].conditions[0]["field"] == "score"
+        assert loaded[0].actions[0]["channel"] == "telegram"
+
+    def test_multiple_rules_preserve_insertion_order_on_reload(self, tmp_path):
+        """CRUD lifecycle: add N rules, remove one, reload - order preserved."""
+        path = tmp_path / "rules.yaml"
+        engine = RulesEngine(rules_path=str(path))
+        engine.add_rule(Rule(id="a", name="Alpha", conditions=[], actions=[]))
+        engine.add_rule(Rule(id="b", name="Beta", conditions=[], actions=[]))
+        engine.add_rule(Rule(id="c", name="Gamma", conditions=[], actions=[]))
+        # Remove middle
+        assert engine.remove_rule("b") is True
+
+        reloaded = RulesEngine(rules_path=str(path))
+        names = [r.name for r in reloaded.get_rules()]
+        assert names == ["Alpha", "Gamma"]

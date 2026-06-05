@@ -213,3 +213,80 @@ class TestStandaloneAPIValidation:
         standalone_client = TestClient(standalone_app)
         resp = standalone_client.get("/api/analyze/ABCDEFGHIJKLMNOP")
         assert resp.status_code == 400
+
+
+class TestScannerAPI:
+    """Integration tests for POST /api/scanner/run (dashboard/app.py)."""
+
+    def test_run_with_preset_tech_giants(self):
+        """POST /api/scanner/run with preset=tech_giants should return 8 results."""
+        resp = client.post(
+            "/api/scanner/run",
+            json={"tickers": [], "preset": "tech_giants"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] == "ok"
+        assert isinstance(data["results"], list)
+        assert len(data["results"]) == 8
+        assert data["count"] == 8
+        first = data["results"][0]
+        assert "ticker" in first
+        assert "consensus_signal" in first
+        assert "consensus_score" in first
+        assert "agents" in first
+        # Each agent entry must have agent_id, signal, score
+        assert len(first["agents"]) > 0
+        agent = first["agents"][0]
+        assert {"agent_id", "signal", "score"} <= set(agent.keys())
+
+    def test_run_with_custom_tickers(self):
+        """POST /api/scanner/run with explicit tickers should normalize and return one entry per ticker."""
+        resp = client.post(
+            "/api/scanner/run",
+            json={"tickers": ["aapl", "msft", "baba"]},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["status"] == "ok"
+        assert len(data["results"]) == 3
+        # Tickers should be normalized to uppercase
+        returned_tickers = {r["ticker"] for r in data["results"]}
+        assert returned_tickers == {"AAPL", "MSFT", "BABA"}
+
+    def test_run_preset_overrides_tickers(self):
+        """When both preset and tickers are provided, preset should take precedence."""
+        resp = client.post(
+            "/api/scanner/run",
+            json={"tickers": ["AAPL"], "preset": "crypto"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        # crypto preset has 4 tickers
+        assert len(data["results"]) == 4
+        returned_tickers = {r["ticker"] for r in data["results"]}
+        assert "BTC-USD" in returned_tickers
+
+    def test_run_no_tickers_returns_400(self):
+        """POST /api/scanner/run with no tickers and no preset should return 400."""
+        resp = client.post("/api/scanner/run", json={"tickers": []})
+        assert resp.status_code == 400
+        assert "No tickers" in resp.json()["detail"]
+
+    def test_run_invalid_ticker_returns_400(self):
+        """POST /api/scanner/run with a malformed ticker should return 400."""
+        resp = client.post(
+            "/api/scanner/run",
+            json={"tickers": ["AAPL;DROP"]},
+        )
+        assert resp.status_code == 400
+        assert "Invalid ticker" in resp.json()["detail"]
+
+    def test_run_too_many_tickers_returns_400(self):
+        """POST /api/scanner/run with >20 tickers should return 400."""
+        resp = client.post(
+            "/api/scanner/run",
+            json={"tickers": [f"T{i:02d}" for i in range(21)]},
+        )
+        assert resp.status_code == 400
+        assert "Maximum 20" in resp.json()["detail"]

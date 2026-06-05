@@ -437,14 +437,14 @@
         </button>
     </div>
     
-    <div class="hero-chips" style="margin-top: 14px;">
+    <div class="hero-chips" style="margin-top: 14px;" role="group" aria-label="Example tickers">
         <span style="font:500 0.68rem/1 var(--font-mono);color:var(--fg-3)">Try</span>
-        <span class="chip" onclick="tryExample('NVDA')">NVDA</span>
-        <span class="chip" onclick="tryExample('AAPL')">AAPL</span>
-        <span class="chip" onclick="tryExample('TSLA')">TSLA</span>
-        <span class="chip" onclick="tryExample('MSFT')">MSFT</span>
-        <span class="chip" onclick="tryExample('BTC-USD')">BTC</span>
-        <span class="chip" onclick="tryExample('00700.HK')">00700.HK</span>
+        <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-nvda" aria-label="Try NVDA example" onclick="tryExample('NVDA')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('NVDA')}">NVDA</span>
+        <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-aapl" aria-label="Try AAPL example" onclick="tryExample('AAPL')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('AAPL')}">AAPL</span>
+        <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-tsla" aria-label="Try TSLA example" onclick="tryExample('TSLA')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('TSLA')}">TSLA</span>
+        <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-msft" aria-label="Try MSFT example" onclick="tryExample('MSFT')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('MSFT')}">MSFT</span>
+        <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-btc" aria-label="Try BTC-USD example" onclick="tryExample('BTC-USD')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('BTC-USD')}">BTC</span>
+        <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-hk" aria-label="Try 00700.HK example" onclick="tryExample('00700.HK')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('00700.HK')}">00700.HK</span>
     </div>
 
     <p id="hero-ticker-hint" class="field-hint" style="display:none; margin-top:6px; font-size:0.75rem; color:var(--signal-sell);"></p>
@@ -494,7 +494,7 @@
 </section>
 
 <!-- Market Pulse Strip (compact key metrics) -->
-<div class="market-pulse-strip mb-24" id="market-pulse-strip">
+<div class="market-pulse-strip mb-24" id="market-pulse-strip" aria-live="polite" aria-busy="true" aria-label="Market pulse loading">
     <div class="pulse-skeleton" style="width:100%; height:32px;"></div>
 </div>
 
@@ -514,10 +514,10 @@
         <span data-i18n="section-market-overview">Global Market Board</span>
         <div style="display:flex; gap:12px; align-items:center;">
             <span class="market-asof text-muted" id="market-asof" style="font-size:0.6rem; font-family:var(--font-mono);"></span>
-            <span style="color:var(--fg-3);font:500 0.6rem/1 var(--font-mono); cursor:pointer;" onclick="loadMarketOverview(true)" id="market-refresh-btn" data-i18n-title="btn-refresh" title="Refresh">refresh 60s</span>
+            <span role="button" tabindex="0" data-i18n-aria="btn-refresh" aria-label="Refresh market board" style="color:var(--fg-3);font:500 0.6rem/1 var(--font-mono); cursor:pointer;" onclick="loadMarketOverview(true)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();loadMarketOverview(true)}" id="market-refresh-btn" data-i18n-title="btn-refresh" title="Refresh">refresh 60s</span>
         </div>
     </div>
-    <div class="mboard" id="market-board">
+    <div class="mboard" id="market-board" aria-live="polite" aria-busy="true" aria-label="Global market board loading">
         <!-- Skeleton placeholders while loading -->
         <div class="market-tile skeleton-tile"></div>
         <div class="market-tile skeleton-tile"></div>
@@ -531,7 +531,7 @@
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-hot-tickers">热门标的实时行情</div>
     <button class="btn btn-sm btn-ghost" onclick="loadHotTickers(true)" id="hot-refresh-btn" data-i18n-title="btn-refresh" title="刷新">↻ <span data-i18n="btn-refresh">刷新</span></button>
 </div>
-<div class="hot-tickers-grid mb-24" id="hot-tickers-grid">
+<div class="hot-tickers-grid mb-24" id="hot-tickers-grid" aria-live="polite" aria-busy="true" aria-label="Hot tickers loading">
     <!-- Skeleton placeholders -->
     <div class="hot-ticker-card skeleton" style="height:90px;"></div>
     <div class="hot-ticker-card skeleton" style="height:90px;"></div>
@@ -545,7 +545,7 @@
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-sector-perf">板块行情</div>
     <button class="btn btn-sm btn-ghost" onclick="loadSectorPerformance(true)" id="sector-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
 </div>
-<div class="sector-grid mb-24" id="sector-grid">
+<div class="sector-grid mb-24" id="sector-grid" aria-live="polite" aria-busy="true" aria-label="Sector performance loading">
     <div class="sector-card skeleton" style="height:80px;"></div>
     <div class="sector-card skeleton" style="height:80px;"></div>
     <div class="sector-card skeleton" style="height:80px;"></div>
@@ -561,7 +561,7 @@
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-intl-markets">国际市场</div>
     <span class="text-muted" style="font-size:0.7rem;" data-i18n="intl-regions">亚太 · 欧洲</span>
 </div>
-<div class="intl-markets-grid mb-24" id="intl-markets-grid">
+<div class="intl-markets-grid mb-24" id="intl-markets-grid" aria-live="polite" aria-busy="true" aria-label="International markets loading">
     <div class="intl-skeleton"></div>
     <div class="intl-skeleton"></div>
     <div class="intl-skeleton"></div>
@@ -574,7 +574,7 @@
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-crypto">Crypto Overview</div>
     <button class="btn btn-sm btn-ghost" onclick="loadCryptoOverview()" id="crypto-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
 </div>
-<div class="hot-tickers-grid mb-24" id="crypto-grid">
+<div class="hot-tickers-grid mb-24" id="crypto-grid" aria-live="polite" aria-busy="true" aria-label="Crypto overview loading">
     <div class="hot-ticker-card skeleton" style="height:90px;"></div>
     <div class="hot-ticker-card skeleton" style="height:90px;"></div>
     <div class="hot-ticker-card skeleton" style="height:90px;"></div>
@@ -641,7 +641,7 @@
     <!-- 宏观经济快照 -->
     <div class="macro-snapshot-section">
         <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;" data-i18n="section-macro">宏观经济快照</div>
-        <div class="macro-snapshot-grid" id="macro-snapshot-grid">
+        <div class="macro-snapshot-grid" id="macro-snapshot-grid" aria-live="polite" aria-busy="true" aria-label="Macro snapshot loading">
             <div class="macro-card skeleton" style="height:80px;"></div>
             <div class="macro-card skeleton" style="height:80px;"></div>
             <div class="macro-card skeleton" style="height:80px;"></div>
@@ -677,7 +677,7 @@
         <div style="display:flex;flex-direction:column;gap:2px;">
             {% for p in featured %}
             {% if loop.index <= 3 %}
-            <div class="m-row" onclick="window.location.href='/stocks?persona={{ p.id }}'">
+            <div class="m-row" role="link" tabindex="0" data-i18n-aria="a11y-featured-persona" aria-label="Analyze with {{ p.name }}" onclick="window.location.href='/stocks?persona={{ p.id }}'" onkeydown="if(event.key==='Enter'){event.preventDefault();window.location.href='/stocks?persona={{ p.id }}'}">
                 <img src="/docs/images/avatars/{{ p.id }}.png" class="avatar" width="40" height="40" alt="{{ p.name }}" onerror="this.src='/static/images/augur-owl-64.png'">
                 <div style="min-width:0;">
                     <div style="font:600 0.85rem/1.2 var(--font-sans);color:var(--fg-1);">{{ p.name }}</div>
@@ -697,7 +697,7 @@
         <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-datasource">数据源状态</div>
         <span class="text-muted" style="font-size:0.7rem;" id="ds-chain-label"></span>
     </div>
-    <div class="datasource-grid" id="datasource-grid">
+    <div class="datasource-grid" id="datasource-grid" aria-live="polite" aria-busy="true" aria-label="Data sources loading">
         <!-- Skeleton placeholders -->
         <div class="datasource-card skeleton" style="height:90px;"></div>
         <div class="datasource-card skeleton" style="height:90px;"></div>
@@ -900,11 +900,13 @@ function loadMarketOverview(forceRefresh) {
                 return;
             }
             renderMarketBoard(data);
+            var mb = document.getElementById('market-board'); if (mb) { mb.setAttribute('aria-busy', 'false'); }
         })
         .catch(function() {
             if (btn) { btn.disabled = false; btn.classList.remove('is-refreshing'); }
             if (board) {
                 board.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F4B9;</div><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><div class="empty-hint">' + _t('msg-yfinance-hint') + '</div><button class="btn btn-sm" onclick="loadMarketOverview(true)" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
+                board.setAttribute('aria-busy', 'false');
             }
         });
 }
@@ -953,6 +955,7 @@ function loadDatasources() {
         .then(function(data) {
             if (!data || !data.catalog) {
                 grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F50C;</div><div class="empty-msg">' + _t('msg-datasource-unavailable') + '</div></div>';
+                grid.setAttribute('aria-busy', 'false');
                 return;
             }
             var catalog = data.catalog;
@@ -982,9 +985,11 @@ function loadDatasources() {
                     '</div>';
                 grid.appendChild(card);
             });
+            grid.setAttribute('aria-busy', 'false');
         })
         .catch(function() {
             grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F50C;</div><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><button class="btn btn-sm" onclick="loadDatasources()" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
+            grid.setAttribute('aria-busy', 'false');
         });
 }
 
@@ -999,10 +1004,12 @@ function loadHotTickers(forceRefresh) {
         .then(function(data) {
             if (btn) btn.disabled = false;
             renderHotTickers(data);
+            if (grid) grid.setAttribute('aria-busy', 'false');
         })
         .catch(function() {
             if (btn) btn.disabled = false;
             if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F525;</div><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><button class="btn btn-sm" onclick="loadHotTickers(true)" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
+            if (grid) grid.setAttribute('aria-busy', 'false');
         });
 }
 
@@ -1082,6 +1089,11 @@ renderMarketBoard = function(data) {
     renderMacroSnapshot(data);
     renderMarketPulse(data);
     renderIntlMarkets(data);
+    // Mark the data-driven panels as no longer busy
+    ['market-pulse-strip', 'intl-markets-grid', 'macro-snapshot-grid'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.setAttribute('aria-busy', 'false');
+    });
 };
 
 function renderFearGreed(data) {
@@ -1311,10 +1323,12 @@ function loadSectorPerformance(forceRefresh) {
         .then(function(data) {
             if (btn) btn.disabled = false;
             renderSectorGrid(data);
+            if (grid) grid.setAttribute('aria-busy', 'false');
         })
         .catch(function() {
             if (btn) btn.disabled = false;
             if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1F3D7;</div><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><button class="btn btn-sm" onclick="loadSectorPerformance(true)" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
+            if (grid) grid.setAttribute('aria-busy', 'false');
         });
 }
 
@@ -1462,10 +1476,12 @@ function loadCryptoOverview() {
         .then(function(data) {
             if (btn) btn.disabled = false;
             renderCryptoGrid(data);
+            if (grid) grid.setAttribute('aria-busy', 'false');
         })
         .catch(function() {
             if (btn) btn.disabled = false;
             if (grid) grid.innerHTML = '<div class="panel-empty-state"><div class="empty-icon">&#x1FA99;</div><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><button class="btn btn-sm" onclick="loadCryptoOverview()" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
+            if (grid) grid.setAttribute('aria-busy', 'false');
         });
 }
 
