@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}404 · Page not found - Augur{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-card" role="alert" aria-live="polite">
+        <img class="error-owl" src="/static/images/augur-owl-128.png" alt="" width="64" height="64" />
+        <div class="error-code" aria-label="Error 404">404</div>
+        <h1 class="error-heading">Page not found</h1>
+        <p class="error-message">We couldn't find anything at <code>{{ path }}</code>.</p>
+        <p class="error-suggestion">Check the URL for typos, or jump back to the dashboard.</p>
+        <div class="error-actions">
+            <a class="error-btn error-btn-primary" href="/">← Back to Dashboard</a>
+            <button class="error-btn error-btn-secondary" onclick="history.length > 1 ? history.back() : (window.location.href = '/')">
+                Go Back
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

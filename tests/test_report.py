@@ -9,7 +9,12 @@ from augur.personas.base import AgentResponse, MarketContext, SignalType
 from augur.report import (
     generate_report,
     _format_signal_chinese,
+    _format_signal_emoji,
     _format_agent_table,
+    _format_position_recommendation,
+    _signal_counts,
+    _valuation_comment,
+    _aggregate_items,
     _format_theme_section,
     _format_disagreement_section,
     _format_bull_bear_debate,
@@ -654,3 +659,110 @@ class TestReportAPIEndpoint:
         assert "report" in data
         assert "深度分析报告" in data["report"]
         assert data["data_source"] == "cached"
+
+
+# =====================================================================
+# Round 3 additions: 8 targeted tests for under-tested report.py paths.
+# Covers: helpers (signal_emoji, valuation_comment, market_cap edge),
+# aggregation (_signal_counts excludes ERROR, _aggregate_items w/ coverage
+# filter), _format_position_recommendation (bearish branch), and the
+# generate_report error path (invalid ticker sanitization).
+# =====================================================================
+
+
+class TestRound3SignalEmoji:
+    """_format_signal_emoji returns the bare emoji per signal (untested helper)."""
+
+    def test_signal_emoji_mapping(self):
+        assert _format_signal_emoji("bullish") == "🟢"
+        assert _format_signal_emoji("neutral") == "🟡"
+        assert _format_signal_emoji("bearish") == "🔴"
+        assert _format_signal_emoji("error") == "⚠️"
+        # Unknown signal -> empty string
+        assert _format_signal_emoji("nonsense") == ""
+
+
+class TestRound3ValuationHelper:
+    """_valuation_comment classifies PE into qualitative bands."""
+
+    def test_pe_bands(self):
+        assert "偏高" in _valuation_comment(45.0)
+        assert "合理偏高" in _valuation_comment(25.0)
+        assert "合理" in _valuation_comment(15.0)
+        assert "偏低" in _valuation_comment(5.0)
+        # Non-positive PE: skip
+        assert _valuation_comment(0) == ""
+
+
+class TestRound3MarketCapEdge:
+    """_format_market_cap handles negative inputs gracefully."""
+
+    def test_negative_market_cap(self):
+        # abs(-2.0)=2.0 >= 1, renders as $-2.00B
+        assert _format_market_cap(-2.0) == "$-2.00B"
+
+
+class TestRound3AggregationHelpers:
+    """Under-tested aggregation: _signal_counts / _aggregate_items with coverage filter."""
+
+    def test_signal_counts_excludes_error_agents(self):
+        results = {
+            "a": _make_agent_response("a", "A", SignalType.BULLISH, 8.0, 0.8),
+            "b": _make_agent_response("b", "B", SignalType.BEARISH, 4.0, 0.7),
+            "c": _make_agent_response("c", "C", SignalType.NEUTRAL, 5.0, 0.6),
+            "d": AgentResponse(agent_id="d", agent_name="D", signal=SignalType.ERROR,
+                                confidence=0, score=0, reasoning="fail"),
+        }
+        bull, neut, bear, total = _signal_counts(results)
+        # ERROR agent is excluded from valid totals
+        assert (bull, neut, bear, total) == (1, 1, 1, 3)
+
+    def test_aggregate_items_skips_low_coverage(self):
+        """Agents with coverage_confidence < 0.5 must NOT contribute to consensus findings."""
+        high = _make_agent_response("a", "A", risks=["监管风险"])
+        low = _make_agent_response("b", "B", risks=["监管风险"])
+        low.coverage_confidence = 0.3  # framework not applicable
+        results = {"a": high, "b": low}
+        aggregated = _aggregate_items(results, "risks")
+        # Only the high-coverage agent should appear
+        assert len(aggregated) == 1
+        assert aggregated[0][1] == ["A"]
+
+
+class TestRound3PositionRecommendation:
+    """_format_position_recommendation bearish branch (only bullish was indirectly tested)."""
+
+    def test_bearish_consensus_branch(self):
+        consensus = AgentResponse(
+            agent_id="consensus", agent_name="Multi-Agent Consensus",
+            signal=SignalType.BEARISH, confidence=0.7, score=3.5, reasoning="Bearish",
+        )
+        section = _format_position_recommendation(consensus)
+        assert "不建仓" in section
+        assert "减仓" in section
+        assert "D级" in section  # 3.5 -> D grade
+        assert "谨慎回避" in section
+
+
+class TestRound3GenerateReportErrorPath:
+    """generate_report error path: invalid ticker characters are sanitized or rejected."""
+
+    def test_fully_invalid_ticker_returns_error_report(self):
+        # Pure punctuation-only ticker -> sanitized to "" -> error report
+        report = generate_report("@#$%", _make_full_context(), _make_full_results(), _make_consensus())
+        assert "分析报告错误" in report
+        assert "无效" in report
+
+    def test_partially_invalid_ticker_sanitized(self):
+        # Has valid alnum chars mixed with garbage -> sanitized to AAPL
+        report = generate_report("AA@PL#", _make_full_context(), _make_full_results(), _make_consensus())
+        # Sanitized to AAPL, so a normal AAPL report should be produced
+        assert "深度分析报告" in report
+        assert "AAPL" in report
+        # The first line is the H1 markdown title "# AAPL 深度分析报告" —
+        # verify no leftover non-alnum garbage leaked into the title
+        title = report.splitlines()[0]
+        assert title.startswith("# ")
+        assert "AAPL" in title
+        assert "@" not in title
+        assert "AA@PL#" not in title

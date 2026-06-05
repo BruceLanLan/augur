@@ -180,3 +180,104 @@ class TestPortfolioOptimizer:
         assert "expected_return" in d
         assert "volatility" in d
         assert "sharpe_ratio" in d
+
+    # ----- Round 4 additions -----
+
+    def test_calculate_returns_basic(self):
+        """calculate_returns converts prices to periodic returns."""
+        opt = PortfolioOptimizer()
+        prices = [
+            [100.0, 110.0, 99.0],     # +0.10, -0.10
+            [50.0, 55.0, 57.75],      # +0.10, +0.05
+        ]
+        rets = opt.calculate_returns(prices)
+        assert len(rets) == 2
+        assert rets[0] == pytest.approx([0.1, -0.1])
+        assert rets[1] == pytest.approx([0.1, 0.05])
+
+    def test_calculate_returns_handles_short_and_zero_prev(self):
+        """calculate_returns skips periods where previous price is 0."""
+        opt = PortfolioOptimizer()
+        prices = [[0.0, 100.0, 110.0], [50.0]]  # second asset too short
+        rets = opt.calculate_returns(prices)
+        # First period skipped (prev=0.0), second kept: (110-100)/100 = 0.1
+        assert rets[0] == pytest.approx([0.1])
+        assert rets[1] == []  # only one price -> empty returns list
+
+    def test_mean_returns_empty_series(self):
+        """mean_returns returns 0.0 for assets with no returns data."""
+        opt = PortfolioOptimizer()
+        means = opt.mean_returns([[], [0.01, 0.02, 0.03]])
+        assert means[0] == 0.0
+        assert means[1] == pytest.approx(0.02)
+
+    def test_portfolio_variance_matches_formula(self):
+        """portfolio_variance equals w^T * Cov * w."""
+        opt = PortfolioOptimizer()
+        cov = [[0.04, 0.01], [0.01, 0.09]]  # diagonal: var
+        weights = [0.5, 0.5]
+        # 0.5*0.5*0.04 + 2*0.5*0.5*0.01 + 0.5*0.5*0.09 = 0.01 + 0.005 + 0.0225 = 0.0375
+        assert opt.portfolio_variance(weights, cov) == pytest.approx(0.0375, abs=1e-10)
+
+    def test_optimize_three_assets_long_only(self):
+        """optimize with 3 assets enforces long-only and sums to ~1.0."""
+        opt = PortfolioOptimizer()
+        # A high-return high-vol, B low-return low-vol, C negative-excess
+        returns_data = {
+            "A": [0.05, 0.07, -0.02, 0.08, 0.04, 0.06, -0.03, 0.09, 0.05, 0.07],
+            "B": [0.01, 0.012, 0.008, 0.015, 0.01, 0.011, 0.009, 0.013, 0.01, 0.012],
+            "C": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],  # zero-var
+        }
+        result = opt.optimize(returns_data, risk_free_rate=0.02)
+        assert all(w >= 0.0 for w in result.weights.values())
+        assert abs(sum(result.weights.values()) - 1.0) < 1e-6
+        assert result.volatility >= 0.0
+        # Sharper should be finite (zero-var regularized)
+        assert math.isfinite(result.sharpe_ratio)
+
+    def test_covariance_matrix_zero_variance_regularized(self):
+        """Zero-variance assets get a tiny epsilon on the diagonal."""
+        opt = PortfolioOptimizer()
+        returns = [
+            [0.01, 0.02, -0.01, 0.03],
+            [0.0, 0.0, 0.0, 0.0],   # perfectly flat
+        ]
+        cov = opt.covariance_matrix(returns)
+        # Second diagonal should be the regularization epsilon
+        assert cov[1][1] == pytest.approx(1e-8)
+        # First diagonal still meaningful
+        assert cov[0][0] > 0.0
+
+    def test_efficient_frontier_one_asset_returns_empty(self):
+        """efficient_frontier returns [] when fewer than 2 assets."""
+        opt = PortfolioOptimizer()
+        assert opt.efficient_frontier({"A": [0.01, 0.02, -0.01]}) == []
+        assert opt.efficient_frontier({}) == []
+
+    def test_efficient_frontier_equal_returns_returns_empty(self):
+        """efficient_frontier returns [] when all assets have identical returns."""
+        opt = PortfolioOptimizer()
+        returns_data = {
+            "A": [0.01, 0.02, 0.03, 0.01, 0.02],
+            "B": [0.01, 0.02, 0.03, 0.01, 0.02],  # same as A
+        }
+        points = opt.efficient_frontier(returns_data, n_points=10)
+        assert points == []
+
+    def test_matrix_inverse_too_large_raises(self):
+        """matrix_inverse raises ValueError for matrices larger than 10x10."""
+        big = [[1.0 if i == j else 0.0 for j in range(11)] for i in range(11)]
+        with pytest.raises(ValueError):
+            matrix_inverse(big)
+
+    def test_optimal_portfolio_to_dict_rounds(self):
+        """OptimalPortfolio.to_dict() rounds float fields to fixed precision."""
+        opt = PortfolioOptimizer()
+        returns_data = {"X": [0.01, 0.02, -0.01, 0.03, 0.005]}
+        result = opt.optimize(returns_data)
+        d = result.to_dict()
+        # All numeric fields should be plain floats
+        for key in ("expected_return", "variance", "volatility", "sharpe_ratio"):
+            assert isinstance(d[key], float)
+        # Variance was unrounded in attribute but rounded in dict
+        assert d["variance"] == round(result.variance, 6)
