@@ -12,40 +12,42 @@
 <div class="card" style="margin-bottom: 1.5rem;">
     <div class="card-body" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
         <div style="flex: 1; min-width: 120px;">
-            <label class="form-label">股票代码</label>
-            <input type="text" id="bt-ticker" class="form-input" value="AAPL" placeholder="AAPL" style="text-transform: uppercase;">
+            <label class="form-label" for="bt-ticker">股票代码</label>
+            <input type="text" id="bt-ticker" class="form-input" value="AAPL" placeholder="AAPL" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="bt-ticker-hint" style="text-transform: uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault();runBacktest();}">
+            <small id="bt-ticker-hint" class="form-hint" style="display:none;color:var(--signal-sell);font-size:0.7rem;margin-top:2px;" role="alert">代码不能为空</small>
         </div>
         <div style="flex: 1; min-width: 140px;">
-            <label class="form-label">初始资金 (USD)</label>
-            <input type="number" id="bt-capital" class="form-input" value="100000" min="1000" step="10000">
+            <label class="form-label" for="bt-capital">初始资金 (USD)</label>
+            <input type="number" id="bt-capital" class="form-input" value="100000" min="1000" step="10000" aria-label="初始资金 (美元)">
         </div>
         <div style="flex: 1; min-width: 140px;">
-            <label class="form-label">仓位策略</label>
-            <select id="bt-strategy" class="form-input">
+            <label class="form-label" for="bt-strategy">仓位策略</label>
+            <select id="bt-strategy" class="form-input" aria-label="仓位策略">
                 <option value="equal_weight">等权分配</option>
                 <option value="kelly">Kelly 公式</option>
                 <option value="fixed_pct">固定比例 (10%)</option>
             </select>
         </div>
         <div style="flex: 1; min-width: 160px;">
-            <label class="form-label">回测天数: <span id="bt-days-val">30</span></label>
-            <div class="flex gap-8" style="flex-wrap:wrap; margin-top:4px;">
-                <button class="btn btn-sm btn-ghost bt-days-btn" data-days="30" onclick="setDays(30)">30d</button>
-                <button class="btn btn-sm btn-ghost bt-days-btn" data-days="60" onclick="setDays(60)">60d</button>
-                <button class="btn btn-sm btn-ghost bt-days-btn" data-days="90" onclick="setDays(90)">90d</button>
-                <button class="btn btn-sm btn-ghost bt-days-btn" data-days="180" onclick="setDays(180)">180d</button>
-                <button class="btn btn-sm btn-ghost bt-days-btn" data-days="365" onclick="setDays(365)">365d</button>
+            <label class="form-label" for="bt-days-val-label">回测天数: <span id="bt-days-val" aria-live="polite">30</span></label>
+            <div class="flex gap-8 bt-days-group" role="group" aria-label="回测天数" id="bt-days-group" style="flex-wrap:wrap; margin-top:4px;">
+                <button type="button" class="btn btn-sm btn-ghost bt-days-btn" data-days="30" aria-pressed="true" onclick="setDays(30)">30d</button>
+                <button type="button" class="btn btn-sm btn-ghost bt-days-btn" data-days="60" aria-pressed="false" onclick="setDays(60)">60d</button>
+                <button type="button" class="btn btn-sm btn-ghost bt-days-btn" data-days="90" aria-pressed="false" onclick="setDays(90)">90d</button>
+                <button type="button" class="btn btn-sm btn-ghost bt-days-btn" data-days="180" aria-pressed="false" onclick="setDays(180)">180d</button>
+                <button type="button" class="btn btn-sm btn-ghost bt-days-btn" data-days="365" aria-pressed="false" onclick="setDays(365)">365d</button>
             </div>
             <input type="hidden" id="bt-days" value="30">
+            <span id="bt-days-val-label" class="visually-hidden" style="position:absolute;left:-9999px;">回测天数</span>
         </div>
         <div>
-            <button class="btn btn-primary" id="bt-run-btn" onclick="runBacktest()">运行回测</button>
+            <button type="button" class="btn btn-primary" id="bt-run-btn" aria-busy="false" onclick="runBacktest()">运行回测</button>
         </div>
     </div>
 </div>
 
 <!-- Loading -->
-<div id="bt-loading" style="display: none; text-align: center; padding: 3rem;" role="status" aria-live="polite" aria-busy="true">
+<div id="bt-loading" style="display: none; text-align: center; padding: 3rem;" role="status" aria-live="polite" aria-busy="false" aria-label="回测加载中">
     <div class="spinner" aria-hidden="true"></div>
     <p style="color: var(--text-secondary); margin-top: 1rem;">正在回测 18 位投资大师...</p>
 </div>
@@ -72,7 +74,7 @@
 </div>
 
 <!-- Key Metrics Cards -->
-<div id="bt-metrics" class="backtest-metrics-grid" style="display: none; margin-bottom: 1.5rem;">
+<div id="bt-metrics" class="backtest-metrics-grid" style="display: none; margin-bottom: 1.5rem;" role="region" aria-live="polite" aria-busy="false" aria-label="回测关键指标">
     <div class="backtest-metric-card">
         <div class="backtest-metric-label">年化收益率</div>
         <div class="backtest-metric-value" id="bt-annualized-return">--</div>
@@ -96,7 +98,7 @@
 </div>
 
 <!-- Result Banner -->
-<div id="bt-banner" class="card" style="display: none; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-green);">
+<div id="bt-banner" class="card" style="display: none; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-green);" role="region" aria-live="polite" aria-busy="false" aria-label="回测结果摘要">
     <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
             <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">共识 IC (20d)</div>
@@ -118,7 +120,7 @@
 </div>
 
 <!-- Leaderboard Table -->
-<div id="bt-leaderboard" class="card" style="display: none;">
+<div id="bt-leaderboard" class="card" style="display: none;" role="region" aria-live="polite" aria-busy="false" aria-label="Agent IC 排行榜">
     <div class="card-header">
         <h3 class="card-title">Agent IC 排行榜</h3>
         <span class="badge" style="font-size: 0.7rem;">按 IC 20d 排序</span>
@@ -151,7 +153,7 @@
 </div>
 
 <!-- Historical Signals Timeline -->
-<div id="bt-timeline" class="card" style="display: none; margin-top: 1.5rem;">
+<div id="bt-timeline" class="card" style="display: none; margin-top: 1.5rem;" role="region" aria-live="polite" aria-busy="false" aria-label="历史信号时间线">
     <div class="card-header">
         <h3 class="card-title">历史信号时间线</h3>
         <span class="badge" style="font-size: 0.7rem;">Historical Signals Timeline</span>
@@ -307,7 +309,9 @@ function setDays(d) {
     document.getElementById('bt-days').value = d;
     document.getElementById('bt-days-val').textContent = d;
     document.querySelectorAll('.bt-days-btn').forEach(function(btn) {
-        btn.classList.toggle('active', parseInt(btn.getAttribute('data-days')) === d);
+        var pressed = parseInt(btn.getAttribute('data-days')) === d;
+        btn.classList.toggle('active', pressed);
+        btn.setAttribute('aria-pressed', pressed ? 'true' : 'false');
     });
 }
 
@@ -317,7 +321,33 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function runBacktest() {
-    var ticker = document.getElementById('bt-ticker').value.trim().toUpperCase() || 'AAPL';
+    var tickerEl = document.getElementById('bt-ticker');
+    var tickerHint = document.getElementById('bt-ticker-hint');
+    var ticker = (tickerEl.value || '').trim().toUpperCase();
+
+    // Client-side validation: ticker must be a non-empty short identifier.
+    if (!ticker) {
+        if (tickerHint) {
+            tickerHint.textContent = '代码不能为空';
+            tickerHint.style.display = 'block';
+        }
+        tickerEl.focus();
+        return;
+    }
+    if (!/^[A-Z0-9.\-]{1,10}$/.test(ticker)) {
+        if (tickerHint) {
+            tickerHint.textContent = '代码格式不合法（仅字母、数字、点、连字符，长度 1-10）';
+            tickerHint.style.display = 'block';
+        }
+        tickerEl.focus();
+        return;
+    }
+    if (tickerHint) {
+        tickerHint.style.display = 'none';
+    }
+    // Normalise the input back to the validated value so the URL is clean.
+    tickerEl.value = ticker;
+
     var days = selectedDays;
     var capital = document.getElementById('bt-capital').value || 100000;
     var strategy = document.getElementById('bt-strategy').value;
@@ -325,6 +355,7 @@ async function runBacktest() {
 
     // Show loading
     btn.disabled = true;
+    btn.setAttribute('aria-busy', 'true');
     btn.textContent = '回测中...';
     var emptyEl = document.getElementById('bt-empty');
     if (emptyEl) emptyEl.style.display = 'none';
@@ -332,7 +363,9 @@ async function runBacktest() {
     if (errEl) errEl.style.display = 'none';
     var leaderboardEmptyEl = document.getElementById('bt-leaderboard-empty');
     if (leaderboardEmptyEl) leaderboardEmptyEl.style.display = 'none';
-    document.getElementById('bt-loading').style.display = 'block';
+    var loadingEl = document.getElementById('bt-loading');
+    loadingEl.style.display = 'block';
+    loadingEl.setAttribute('aria-busy', 'true');
     document.getElementById('bt-banner').style.display = 'none';
     document.getElementById('bt-leaderboard').style.display = 'none';
     document.getElementById('bt-metrics').style.display = 'none';
@@ -354,8 +387,10 @@ async function runBacktest() {
         showBacktestError(msg);
     } finally {
         btn.disabled = false;
+        btn.setAttribute('aria-busy', 'false');
         btn.textContent = '运行回测';
-        document.getElementById('bt-loading').style.display = 'none';
+        loadingEl.style.display = 'none';
+        loadingEl.setAttribute('aria-busy', 'false');
     }
 }
 

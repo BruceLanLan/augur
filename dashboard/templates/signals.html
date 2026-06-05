@@ -365,10 +365,10 @@ function renderWatchlist() {
             '<div style="font-size:2.4rem; margin-bottom:8px;" aria-hidden="true">&#x1F4CB;</div>' +
             '<div style="font-size:1rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">' + escapeHtml(_t('signals-empty-title')) + '</div>' +
             '<div style="font-size:0.82rem; margin-bottom:14px;">' + escapeHtml(_t('signals-empty-desc')) + '</div>' +
-            '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">' +
-            '<button type="button" class="example-chip" onclick="quickAddExample(\'AAPL\')">+ AAPL</button>' +
-            '<button type="button" class="example-chip" onclick="quickAddExample(\'NVDA\')">+ NVDA</button>' +
-            '<button type="button" class="example-chip" onclick="quickAddExample(\'MSFT\')">+ MSFT</button>' +
+            '<div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;" role="group" aria-label="Example tickers">' +
+            '<button type="button" class="example-chip" onclick="quickAddExample(\'AAPL\')" aria-label="' + escapeHtml(_t('signals-add-example-aria') + ' AAPL') + '">+ AAPL</button>' +
+            '<button type="button" class="example-chip" onclick="quickAddExample(\'NVDA\')" aria-label="' + escapeHtml(_t('signals-add-example-aria') + ' NVDA') + '">+ NVDA</button>' +
+            '<button type="button" class="example-chip" onclick="quickAddExample(\'MSFT\')" aria-label="' + escapeHtml(_t('signals-add-example-aria') + ' MSFT') + '">+ MSFT</button>' +
             '</div>' +
             '</td></tr>';
         return;
@@ -402,7 +402,7 @@ function renderWatchlist() {
                 '<span style="color:var(--signal-neutral);">' + result.hold_count + '</span></span>';
         }
 
-        html += '<tr class="signal-row-main" style="border-bottom:1px solid var(--border-color); transition:background 0.2s; cursor:pointer;" onmouseover="this.style.background=\'var(--bg-card-hover)\'" onmouseout="this.style.background=\'transparent\'">' +
+        html += '<tr class="signal-row-main" tabindex="0" role="button" aria-label="' + escapeHtml(_t('signals-row-aria') + ' ' + ticker) + '" style="border-bottom:1px solid var(--border-color); transition:background 0.2s; cursor:pointer;" onmouseover="this.style.background=\'var(--bg-card-hover)\'" onmouseout="this.style.background=\'transparent\'" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">' +
             '<td style="padding:10px 16px; font-family:var(--font-data); font-weight:600; color:var(--accent-orange);">' + escapeHtml(ticker) + '</td>' +
             '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.pe || '--') + '</td>' +
             '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.roe ? (item.roe * 100).toFixed(0) + '%' : '--') + '</td>' +
@@ -446,6 +446,19 @@ function addTicker() {
     if (roe) body.roe = parseFloat(roe) / 100;
     if (gm) body.gross_margins = parseFloat(gm) / 100;
 
+    var btn = document.querySelector('#add-ticker-input + #add-pe-input, button[onclick="addTicker()"]');
+    var addBtn = null;
+    var btns = document.querySelectorAll('button');
+    for (var bi = 0; bi < btns.length; bi++) {
+        if (btns[bi].getAttribute('onclick') === 'addTicker()') { addBtn = btns[bi]; break; }
+    }
+    if (addBtn && addBtn.disabled) return; // prevent double-submit
+    var origLabel = '';
+    if (addBtn) {
+        addBtn.disabled = true;
+        origLabel = addBtn.innerHTML;
+        addBtn.innerHTML = '&#x23F3; <span data-i18n="signals-add-pending">' + escapeHtml(_t('signals-add-pending')) + '</span>';
+    }
     fetch('/api/watchlist/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -453,6 +466,7 @@ function addTicker() {
     })
     .then(function(r) { return r.json(); })
     .then(function(data) {
+        if (addBtn) { addBtn.disabled = false; addBtn.innerHTML = origLabel; }
         if (data.status === 'ok') {
             showToast(ticker + ' ' + _t('signals-added'));
             document.getElementById('add-ticker-input').value = '';
@@ -465,6 +479,7 @@ function addTicker() {
         }
     })
     .catch(function(e) {
+        if (addBtn) { addBtn.disabled = false; addBtn.innerHTML = origLabel; }
         showToast(_t('signals-add-failed') + ': ' + e.message, 'error');
     });
 }
