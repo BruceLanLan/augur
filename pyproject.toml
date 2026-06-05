@@ -56,7 +56,7 @@ mcp = [
     "mcp>=1.0.0;python_version>='3.10'",
 ]
 llm = [
-    "anthropic>=0.40.0",
+    "openai>=1.0.0;python_version>='3.8'",
 ]
 dev = [
     "pytest>=7.0",
@@ -71,7 +71,7 @@ all = [
     "lark-oapi>=1.0.0",
     "apscheduler>=3.10.0",
     "mcp>=1.0.0;python_version>='3.10'",
-    "anthropic>=0.40.0",
+    "openai>=1.0.0;python_version>='3.8'",
 ]
 
 [project.scripts]

@@ -615,7 +615,7 @@ body.sidebar-collapsed .ticker-tape-wrap {
     gap: 6px;
     padding: 0 18px;
     font-size: 0.72rem;
-    font-family: var(--font-data, 'JetBrains Mono', monospace);
+    font-family: var(--font-pixfin, monospace);
     border-right: 1px solid rgba(255,255,255,0.06);
     cursor: default;
 }
@@ -650,7 +650,7 @@ body.sidebar-collapsed .ticker-tape-wrap {
     padding: 0 16px;
     font-size: 0.7rem;
     color: var(--text-muted, #555);
-    font-family: var(--font-data);
+    font-family: var(--font-pixfin);
 }
 
 .ticker-tape-pause {
