@@ -501,11 +501,17 @@ Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUT
 ## 📝 Changelog
 
 <details>
-<summary><strong>v8.1.0 — HD-2D Stunning Design System Integration (current)</strong></summary>
+<summary><strong>v8.1.0 — HD-2D Stunning Design System Integration & UI/UX Polish (current)</strong></summary>
 
-- Fully integrated the "Bloomberg Terminal × JRPG HD-2D" frontend visual architecture.
-- Introduced `ExecCard`, `OracleSays`, and `ScorecardGrid` components.
-- Stripped and optimized core rendering logic to match the new aesthetics.
+- **Frontend Visual Architecture**: Fully integrated the "Bloomberg Terminal × JRPG HD-2D" frontend visual architecture, introducing `ExecCard`, `OracleSays`, and `ScorecardGrid` components.
+- **UI/UX Polish**:
+  - **Layout Spacing Fix**: Resolved the 240px layout gap between the sidebar and main panel, achieving a compact, flex-based responsive structure.
+  - **Contrast Optimization**: Fixed contrast issues on the light parchment background (`.scroll .md-report`, school badges, etc.) by mapping hardcoded colors to adaptive semantic color variables (`var(--signal-buy)`, `var(--signal-sell)`).
+  - **Responsive Grid**: Added responsive breakpoints (768px/480px) for small screens to prevent master avatar badge distortion.
+  - **Chat Readability**: Standardized chat bubble fonts to modern sans-serif fonts to support Chinese and English text beautifully.
+- **i18n Localization**:
+  - Enabled dynamic number abbreviation formatting (e.g. `B`, `M`, `K`) and relative times (e.g. `5m ago`, `2d ago`) in English mode.
+  - Fixed client-side missing translation keys (e.g., initial selection text in the Master Compare page).
 </details>
 
 <details>

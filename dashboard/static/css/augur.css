@@ -269,3 +269,48 @@ body.augur {
 
 /* pixel divider — a row of square "pixels" */
 .pixel-rule { height: 4px; background-image: linear-gradient(90deg, var(--gilt) 0 4px, transparent 4px 8px); background-size: 8px 4px; opacity: 0.5; }
+
+/* ============================================================
+   ORACLE · parchment scroll report content override (contrast fix)
+   Ensures text on light parchment background remains highly readable.
+   ============================================================ */
+.scroll .md-report {
+  color: var(--parchment-ink) !important;
+}
+.scroll .md-report strong {
+  color: #000000 !important;
+}
+.scroll .md-report h1,
+.scroll .md-report h2,
+.scroll .md-report h3,
+.scroll .md-report h4,
+.scroll .md-report h5,
+.scroll .md-report h6 {
+  color: var(--parchment-ink) !important;
+}
+.scroll .md-report .md-h3 {
+  color: #503810 !important;
+}
+.scroll .md-report blockquote {
+  border-left-color: var(--parchment-ink);
+  color: #4a3e30;
+  background: rgba(0, 0, 0, 0.03);
+}
+.scroll .md-report .md-code {
+  background: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #cf6f00 !important;
+}
+.scroll .md-report table,
+.scroll .md-report th,
+.scroll .md-report td {
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: var(--parchment-ink) !important;
+}
+.scroll .md-report th {
+  background: rgba(0, 0, 0, 0.04) !important;
+  color: #000000 !important;
+}
+.scroll .md-report tr:nth-child(even) td {
+  background: rgba(0, 0, 0, 0.02) !important;
+}

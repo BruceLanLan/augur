@@ -45,11 +45,11 @@
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
-.school-badge.value { background: rgba(34,197,94,0.15); color: #22c55e; }
-.school-badge.growth { background: rgba(59,130,246,0.15); color: #3b82f6; }
-.school-badge.macro { background: rgba(168,85,247,0.15); color: #a855f7; }
-.school-badge.quant { background: rgba(236,72,153,0.15); color: #ec4899; }
-.school-badge.china { background: rgba(239,68,68,0.15); color: #ef4444; }
+.school-badge.value { background: rgba(0,200,83,0.12); color: var(--signal-buy); border: 1px solid rgba(0,200,83,0.25); }
+.school-badge.growth { background: rgba(79,195,247,0.12); color: var(--accent-blue, #4fc3f7); border: 1px solid rgba(79,195,247,0.25); }
+.school-badge.macro { background: rgba(168,85,247,0.12); color: #b066ff; border: 1px solid rgba(168,85,247,0.25); }
+.school-badge.quant { background: rgba(236,72,153,0.12); color: #ff66b2; border: 1px solid rgba(236,72,153,0.25); }
+.school-badge.china { background: rgba(255,23,68,0.12); color: var(--signal-sell); border: 1px solid rgba(255,23,68,0.25); }
 .holdings-badge {
     display: inline-block;
     font-size: 0.68rem;
@@ -153,9 +153,9 @@
     font-size: 0.7rem;
     font-weight: 600;
 }
-.compare-table .signal-badge.bullish { background: rgba(34,197,94,0.15); color: #22c55e; }
-.compare-table .signal-badge.bearish { background: rgba(239,68,68,0.15); color: #ef4444; }
-.compare-table .signal-badge.neutral { background: rgba(234,179,8,0.15); color: #eab308; }
+.compare-table .signal-badge.bullish { background: rgba(0,200,83,0.12); color: var(--signal-buy); }
+.compare-table .signal-badge.bearish { background: rgba(255,23,68,0.12); color: var(--signal-sell); }
+.compare-table .signal-badge.neutral { background: rgba(255,214,0,0.12); color: var(--signal-neutral); }
 /* Ask Question Section */
 .ask-section {
     margin-top: 12px;
@@ -217,9 +217,9 @@
     font-weight: 600;
     margin-right: 8px;
 }
-.ask-response .signal-badge.bullish { background: rgba(34,197,94,0.15); color: #22c55e; }
-.ask-response .signal-badge.bearish { background: rgba(239,68,68,0.15); color: #ef4444; }
-.ask-response .signal-badge.neutral { background: rgba(234,179,8,0.15); color: #eab308; }
+.ask-response .signal-badge.bullish { background: rgba(0,200,83,0.12); color: var(--signal-buy); }
+.ask-response .signal-badge.bearish { background: rgba(255,23,68,0.12); color: var(--signal-sell); }
+.ask-response .signal-badge.neutral { background: rgba(255,214,0,0.12); color: var(--signal-neutral); }
 .ask-response .reasoning-text {
     font-size: 0.74rem;
     color: var(--text-secondary);
@@ -310,7 +310,7 @@
     <div class="council-grid" id="persona-grid">
         {% for persona in personas %}
         {% set glyph = '◧' if persona.school == 'value' else ('▲' if persona.school == 'growth' else ('○' if persona.school == 'macro' else ('◇' if persona.school == 'quant' else '⊟'))) %}
-        {% set scolor = '#22c55e' if persona.school == 'value' else ('#3b82f6' if persona.school == 'growth' else ('#a855f7' if persona.school == 'macro' else ('#ec4899' if persona.school == 'quant' else '#ef4444'))) %}
+        {% set scolor = 'var(--signal-buy)' if persona.school == 'value' else ('var(--accent-blue, #4fc3f7)' if persona.school == 'growth' else ('#b066ff' if persona.school == 'macro' else ('#ff66b2' if persona.school == 'quant' else 'var(--signal-sell)'))) %}
         <div class="mcard persona-card" data-school="{{ persona.school }}" data-name="{{ persona.cn_name|lower }}{{ persona.en_name|lower }}{{ persona.id }}" onclick="openMasterDetail('{{ persona.id }}')">
             <div class="medallion">
                 <div class="disc">
@@ -448,7 +448,7 @@ function askPersona(agentId, btn) {
     var question = (questionInput.value || '').trim();
 
     if (!ticker) {
-        tickerInput.style.borderColor = '#ef4444';
+        tickerInput.style.borderColor = 'var(--signal-sell)';
         return;
     }
     tickerInput.style.borderColor = '';
@@ -484,13 +484,13 @@ function askPersona(agentId, btn) {
                 }
                 responseDiv.innerHTML = html;
             } else {
-                responseDiv.innerHTML = '<div style="color:#ef4444; font-size:0.74rem;">Error: ' + (data.detail || 'Unknown error') + '</div>';
+                responseDiv.innerHTML = '<div style="color:var(--signal-sell); font-size:0.74rem;">Error: ' + (data.detail || 'Unknown error') + '</div>';
             }
         })
         .catch(function(err) {
             btn.disabled = false;
             btn.textContent = '提问';
-            responseDiv.innerHTML = '<div style="color:#ef4444; font-size:0.74rem;">Request failed: ' + err.message + '</div>';
+            responseDiv.innerHTML = '<div style="color:var(--signal-sell); font-size:0.74rem;">Request failed: ' + err.message + '</div>';
         });
 }
 
@@ -504,7 +504,7 @@ function runComparison() {
     var tbody = document.getElementById('compare-tbody');
 
     if (!ticker) {
-        document.getElementById('compare-ticker').style.borderColor = '#ef4444';
+        document.getElementById('compare-ticker').style.borderColor = 'var(--signal-sell)';
         return;
     }
     document.getElementById('compare-ticker').style.borderColor = '';
@@ -551,20 +551,20 @@ function runComparison() {
 
                 html += '<tr><td>Agreement</td><td colspan="2" style="text-align:center;">';
                 if (data.agreement) {
-                    html += '<span style="color:#22c55e; font-weight:600;">&#x2705; Consensus (Score diff: ' + data.score_diff + ')</span>';
+                    html += '<span style="color:var(--signal-buy); font-weight:600;">&#x2705; Consensus (Score diff: ' + data.score_diff + ')</span>';
                 } else {
-                    html += '<span style="color:#ef4444; font-weight:600;">&#x274C; Divergent (Score diff: ' + data.score_diff + ')</span>';
+                    html += '<span style="color:var(--signal-sell); font-weight:600;">&#x274C; Divergent (Score diff: ' + data.score_diff + ')</span>';
                 }
                 html += '</td></tr>';
                 tbody.innerHTML = html;
             } else {
-                tbody.innerHTML = '<tr><td colspan="3" style="color:#ef4444; text-align:center;">' + (data.detail || 'Error') + '</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" style="color:var(--signal-sell); text-align:center;">' + (data.detail || 'Error') + '</td></tr>';
             }
         })
         .catch(function(err) {
             btn.disabled = false;
             btn.innerHTML = '&#x1F50D; 对比分析';
-            tbody.innerHTML = '<tr><td colspan="3" style="color:#ef4444; text-align:center;">Request failed: ' + err.message + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" style="color:var(--signal-sell); text-align:center;">Request failed: ' + err.message + '</td></tr>';
         });
 }
 </script>

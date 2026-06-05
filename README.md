@@ -389,11 +389,17 @@ Kelly 只在 BULLISH 且评分 > 5 时给出非零建议。
 ## 📝 版本日志
 
 <details>
-<summary><strong>v8.1.0 — HD-2D 绝美设计系统集成</strong></summary>
+<summary><strong>v8.1.0 — HD-2D 绝美设计系统集成与体验优化</strong></summary>
 
-- 全面集成了 "Bloomberg Terminal × JRPG HD-2D" 前端视觉体系。
-- 引入 `ExecCard`、`OracleSays` 和 `ScorecardGrid` 等组件。
-- 剥离并优化了核心渲染逻辑以匹配全新的美学。
+- **前端视觉体系**：全面集成了 "Bloomberg Terminal × JRPG HD-2D" 前端视觉体系，引入 `ExecCard`、`OracleSays` 和 `ScorecardGrid` 等组件，优化了核心渲染逻辑。
+- **UI/UX 细节打磨**：
+  - **超大间隔修复**：消除了侧边栏与主右侧功能区之间 240px 的布局空白漏洞，实现紧凑高级的 Flex 自适应排布。
+  - **对比度深度优化**：针对亮色模式（羊皮纸背景）下的多处文字（如深度分析 Markdown 报告、学派 Badge 等）进行了对比度修复，全面使用语义化色彩变量（`var(--signal-buy)` / `var(--signal-sell)` 等），确保在深浅色主题下均清晰可读。
+  - **响应式网格断点**：新增了移动端与平板端响应式网格断点，完美适配各种窄屏，杜绝头像徽章和表格指标被挤压变形。
+  - **对话可读性**：AI Chat 对话气泡内的字体优化，避免在中文下回退出现参差不齐的问题。
+- **多语言（i18n）闭环**：
+  - 智能适配英文模式下的金融缩写（如 `B`/`M`/`K`）与相对时间格式（如 `m ago`/`d ago`）。
+  - 修复了大师对比页等界面的多语言漏译交互 bug。
 </details>
 
 <details>

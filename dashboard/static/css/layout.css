@@ -28,7 +28,7 @@
 .sb-ver { font: 700 0.58rem/1 var(--font-pixfin); color: var(--fg-3); margin-top: 8px; letter-spacing: 0.5px; }
 
 /* ---- Main ---- */
-.main { flex: 1; min-width: 0; padding: 0 32px 56px; }
+.main { flex: 1; min-width: 0; padding: 0 32px 56px; margin-left: 0 !important; max-width: 100% !important; }
 
 /* gilt-edged framed hero/panel — the HD-2D relic border */
 .gilt-edge { position: relative; border: 1px solid var(--border-gilt); }
@@ -178,4 +178,19 @@
   .council-grid { grid-template-columns: repeat(3, 1fr); }
   .grid-2-1, .debate { grid-template-columns: 1fr; }
   .exec { flex-direction: column; align-items: stretch; gap: 18px; }
+}
+
+@media (max-width: 768px) {
+  .mboard { grid-template-columns: repeat(2, 1fr); }
+  .sc-grid { grid-template-columns: repeat(4, 1fr); }
+  .council-grid { grid-template-columns: repeat(2, 1fr); }
+  .exec-metrics { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .debate { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 480px) {
+  .mboard { grid-template-columns: 1fr; }
+  .sc-grid { grid-template-columns: repeat(2, 1fr); }
+  .council-grid { grid-template-columns: 1fr; }
+  .exec-metrics { grid-template-columns: 1fr; gap: 10px; }
 }

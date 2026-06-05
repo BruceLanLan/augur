@@ -304,14 +304,22 @@
 
     // === v5.2 Global Utilities ===
 
-    // Format large numbers (e.g. 1500000000 -> "15.0亿", 23400000 -> "2340.0万")
+    // Format large numbers (e.g. 1500000000 -> "15.0B" or "15.0亿", 23400000 -> "23.4M" or "2340.0万")
     function formatNumber(num) {
         if (num === null || num === undefined || isNaN(num)) return '--';
+        var isEN = (window._augurLang === 'en');
         var abs = Math.abs(num);
-        if (abs >= 1e8) return (num / 1e8).toFixed(1) + '亿';
-        if (abs >= 1e4) return (num / 1e4).toFixed(1) + '万';
-        if (abs >= 1e3) return num.toFixed(0);
-        return num.toFixed(2);
+        if (isEN) {
+            if (abs >= 1e9) return (num / 1e9).toFixed(1) + 'B';
+            if (abs >= 1e6) return (num / 1e6).toFixed(1) + 'M';
+            if (abs >= 1e3) return (num / 1e3).toFixed(1) + 'K';
+            return num.toFixed(2);
+        } else {
+            if (abs >= 1e8) return (num / 1e8).toFixed(1) + '亿';
+            if (abs >= 1e4) return (num / 1e4).toFixed(1) + '万';
+            if (abs >= 1e3) return num.toFixed(0);
+            return num.toFixed(2);
+        }
     }
 
     function formatNumberEN(num) {
@@ -323,22 +331,23 @@
         return num.toFixed(2);
     }
 
-    // Relative time (Chinese)
+    // Relative time (Auto-adapt Chinese / English)
     function relativeTime(timestamp) {
         if (!timestamp) return '';
         var now = Date.now();
         var diff = now - (typeof timestamp === 'number' ? timestamp : new Date(timestamp).getTime());
-        if (diff < 0) return '刚刚';
+        var isEN = (window._augurLang === 'en');
+        if (diff < 0) return isEN ? 'just now' : '刚刚';
         var seconds = Math.floor(diff / 1000);
-        if (seconds < 60) return '刚刚';
+        if (seconds < 60) return isEN ? 'just now' : '刚刚';
         var minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return minutes + '分钟前';
+        if (minutes < 60) return minutes + (isEN ? 'm ago' : '分钟前');
         var hours = Math.floor(minutes / 60);
-        if (hours < 24) return hours + '小时前';
+        if (hours < 24) return hours + (isEN ? 'h ago' : '小时前');
         var days = Math.floor(hours / 24);
-        if (days < 30) return days + '天前';
+        if (days < 30) return days + (isEN ? 'd ago' : '天前');
         var months = Math.floor(days / 30);
-        return months + '个月前';
+        return months + (isEN ? 'mo ago' : '个月前');
     }
 
     // Copy to clipboard utility

@@ -224,10 +224,10 @@
     background: var(--bg-tertiary, #1a1a2e);
 }
 .data-table tr.top-agent td {
-    color: var(--accent-green, #66bb6a);
+    color: var(--signal-buy);
 }
 .data-table tr.bottom-agent td {
-    color: var(--accent-red, #ef5350);
+    color: var(--signal-sell);
 }
 .hit-bar-container {
     width: 100%;
@@ -269,16 +269,16 @@
     padding: 0.2rem 0.5rem;
     border-radius: 3px;
 }
-.ic-positive { color: var(--accent-green, #66bb6a); }
-.ic-negative { color: var(--accent-red, #ef5350); }
+.ic-positive { color: var(--signal-buy); }
+.ic-negative { color: var(--signal-sell); }
 .ic-neutral { color: var(--text-secondary); }
 .bt-days-btn.active {
     background: var(--accent-orange) !important;
     color: #000 !important;
     border-color: var(--accent-orange) !important;
 }
-.signal-bullish { color: var(--accent-green, #66bb6a); font-weight: 600; }
-.signal-bearish { color: var(--accent-red, #ef5350); font-weight: 600; }
+.signal-bullish { color: var(--signal-buy); font-weight: 600; }
+.signal-bearish { color: var(--signal-sell); font-weight: 600; }
 .signal-neutral { color: var(--text-secondary); }
 </style>
 
@@ -352,8 +352,8 @@ function renderResults(data) {
     var icEl = document.getElementById('bt-consensus-ic');
     var icNum = (ic != null && !isNaN(ic)) ? Number(ic) : null;
     icEl.textContent = icNum !== null ? icNum.toFixed(4) : 'N/A';
-    icEl.style.color = icNum > 0 ? 'var(--accent-green, #66bb6a)' : icNum < 0 ? 'var(--accent-red, #ef5350)' : 'var(--text-secondary)';
-    banner.style.borderLeftColor = icNum > 0 ? 'var(--accent-green, #66bb6a)' : 'var(--accent-red, #ef5350)';
+    icEl.style.color = icNum > 0 ? 'var(--signal-buy)' : icNum < 0 ? 'var(--signal-sell)' : 'var(--text-secondary)';
+    banner.style.borderLeftColor = icNum > 0 ? 'var(--signal-buy)' : 'var(--signal-sell)';
 
     document.getElementById('bt-result-ticker').textContent = data.ticker;
     document.getElementById('bt-total-records').textContent = data.total_records;
@@ -383,9 +383,9 @@ function renderResults(data) {
         }
 
         var hitPct = (a.hit_rate * 100).toFixed(1);
-        var barColor = a.hit_rate >= 0.6 ? 'var(--accent-green, #66bb6a)' :
-                       a.hit_rate >= 0.4 ? 'var(--accent-yellow, #ffa726)' :
-                       'var(--accent-red, #ef5350)';
+        var barColor = a.hit_rate >= 0.6 ? 'var(--signal-buy)' :
+                       a.hit_rate >= 0.4 ? 'var(--signal-neutral)' :
+                       'var(--signal-sell)';
 
         tr.innerHTML =
             '<td>' + (i + 1) + '</td>' +
@@ -450,19 +450,19 @@ function renderMetrics(data) {
     // Display
     var arEl = document.getElementById('bt-annualized-return');
     arEl.textContent = annualizedReturn != null ? (annualizedReturn * 100).toFixed(1) + '%' : '--';
-    arEl.style.color = annualizedReturn > 0 ? 'var(--accent-green)' : 'var(--accent-red)';
+    arEl.style.color = annualizedReturn > 0 ? 'var(--signal-buy)' : 'var(--signal-sell)';
 
     var mdEl = document.getElementById('bt-max-drawdown');
     mdEl.textContent = maxDrawdown != null ? (maxDrawdown * 100).toFixed(1) + '%' : '--';
-    mdEl.style.color = 'var(--accent-red)';
+    mdEl.style.color = 'var(--signal-sell)';
 
     var srEl = document.getElementById('bt-sharpe-ratio');
     srEl.textContent = sharpeRatio != null ? sharpeRatio.toFixed(2) : '--';
-    srEl.style.color = sharpeRatio > 1 ? 'var(--accent-green)' : sharpeRatio > 0 ? 'var(--accent-yellow, #ffa726)' : 'var(--accent-red)';
+    srEl.style.color = sharpeRatio > 1 ? 'var(--signal-buy)' : sharpeRatio > 0 ? 'var(--signal-neutral)' : 'var(--signal-sell)';
 
     var wrEl = document.getElementById('bt-win-rate');
     wrEl.textContent = winRate != null ? (winRate * 100).toFixed(1) + '%' : '--';
-    wrEl.style.color = winRate > 0.55 ? 'var(--accent-green)' : winRate > 0.45 ? 'var(--accent-yellow, #ffa726)' : 'var(--accent-red)';
+    wrEl.style.color = winRate > 0.55 ? 'var(--signal-buy)' : winRate > 0.45 ? 'var(--signal-neutral)' : 'var(--signal-sell)';
 }
 
 function renderTimeline(data) {

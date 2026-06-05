@@ -10,6 +10,8 @@
     --bg-card: #14141f;
     --bg-card-hover: #1a1a2a;
     --bg-tertiary: #1a1a2e;
+    --bg-secondary: #10101a;
+    --bg-hover: #1a1a2a;
     --accent-orange: #ff8c00;
     --accent-green: #66bb6a;
     --accent-blue: #4fc3f7;
@@ -40,6 +42,8 @@ html.light {
     --bg-card: #ffffff;
     --bg-card-hover: #f0f0f5;
     --bg-tertiary: #e8e8f0;
+    --bg-secondary: #f0f0f5;
+    --bg-hover: #e8e8f0;
     --accent-orange: #e67e00;
     --accent-green: #2e7d32;
     --accent-blue: #1565c0;

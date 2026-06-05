@@ -24,6 +24,8 @@
   --bg-card-hover:  #1a1a2a;   /* card hover                      */
   --bg-tertiary:    #1a1a2e;   /* inset wells, inputs             */
   --bg-elevated:    #1e1e2e;   /* popovers, menus                 */
+  --bg-secondary:   #10101a;   /* secondary panel/card background */
+  --bg-hover:       #1a1a2a;   /* card hover helper               */
 
   /* ---------------------------------------------------------
      2 · AMBER — the terminal accent (Bloomberg signature)
@@ -160,6 +162,8 @@
   --bg-card-hover: #f0ece2;
   --bg-tertiary:   #ece7da;
   --bg-elevated:   #ffffff;
+  --bg-secondary:  #f0ece2;
+  --bg-hover:      #ece7da;
 
   --amber:        #cf6f00;
   --amber-bright: #e67e00;
