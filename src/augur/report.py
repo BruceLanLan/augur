@@ -16,11 +16,23 @@ augur.report - 深度分析报告生成模块
      market_cap/fcf 以十亿美元为单位（自动换算为 $X.XXB / 万亿）。
 """
 
+import math
 import re
 from datetime import datetime
 from typing import Dict, List, Tuple
 
 from augur.personas.base import AgentResponse, MarketContext, SignalType
+
+
+def _is_finite_number(value) -> bool:
+    """Return True only for finite, non-NaN numbers (rejects None, NaN, Inf, strings)."""
+    if value is None:
+        return False
+    if isinstance(value, bool):
+        return False
+    if isinstance(value, (int, float)):
+        return math.isfinite(float(value))
+    return False
 
 
 # ============ Agent主题分组（四大投资流派） ============
@@ -127,6 +139,8 @@ def _clean_reasoning_for_table(reasoning: str, max_len: int = 80) -> str:
     # 去除前导项目符号
     text = re.sub(r'^\s*[-•]\s*', '', text)
     text = text.strip()
+    # 去除 NUL 字节与其他不可打印控制字符，避免破坏 Markdown 表格
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
     if len(text) > max_len:
         text = text[:max_len - 3] + "..."
     # Escape pipe characters to prevent breaking markdown tables
@@ -137,6 +151,8 @@ def _clean_reasoning_for_table(reasoning: str, max_len: int = 80) -> str:
 def _clean_reasoning_inline(reasoning: str, max_len: int = 500) -> str:
     """清理reasoning用于内联段落展示（保留较长内容）。"""
     text = _strip_markdown(reasoning or "").strip()
+    # 去除 NUL 字节与其他不可打印控制字符
+    text = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', text)
     if len(text) > max_len:
         text = text[:max_len - 3] + "..."
     return text
@@ -269,7 +285,7 @@ def _format_executive_summary(
     lines.append(f"| **共识强度** | {strength_desc}（{strength_pct:.0%} 大师持多数派观点） |")
     lines.append(f"| **多空分布** | 🟢看多 {bull} · 🟡中性 {neut} · 🔴看空 {bear}（共 {total} 位有效裁决） |")
     lines.append(f"| **建议仓位** | {position_pct:.1f}%（18位大师加权 · 半Kelly） |")
-    if context.price:
+    if _is_finite_number(context.price):
         lines.append(f"| **当前价格** | ${context.price:.2f} |")
     lines.append(f"| **参与大师** | {len(results)} 位（覆盖价值 / 成长 / 宏观风险 / 技术量化四大流派） |")
     lines.append("")
@@ -669,7 +685,13 @@ def _biggest_contention(bullish, bearish, neutral, score_spread: float) -> str:
 # ============ 报告区段：财务概览 ============
 
 def _format_market_cap(value: float) -> str:
-    """格式化市值/现金流（输入单位：十亿美元）。"""
+    """格式化市值/现金流（输入单位：十亿美元）。
+
+    非有限数（NaN/Inf/None）返回 "$N/A"，避免在报告中出现 "$nanM" 等垃圾字符串。
+    """
+    if not _is_finite_number(value):
+        return "$N/A"
+    value = float(value)
     if abs(value) >= 1000:
         return f"${value / 1000:.2f}万亿"
     if abs(value) >= 1:
@@ -678,7 +700,10 @@ def _format_market_cap(value: float) -> str:
 
 
 def _valuation_comment(pe: float) -> str:
-    """根据PE给出估值定性评估。"""
+    """根据PE给出估值定性评估。非有限数（NaN/Inf/None/<=0）返回空串。"""
+    if not _is_finite_number(pe):
+        return ""
+    pe = float(pe)
     if pe <= 0:
         return ""
     if pe > 40:
@@ -701,59 +726,62 @@ def _format_financial_overview(context: MarketContext) -> str:
     lines.append("")
     lines.append("| 指标 | 数值 |")
     lines.append("|------|------|")
-    if context.price:
+    if _is_finite_number(context.price):
         lines.append(f"| 当前价格 | ${context.price:.2f} |")
-    if context.market_cap:
+    if _is_finite_number(context.market_cap):
         lines.append(f"| 市值 | {_format_market_cap(context.market_cap)} |")
-    if context.pe:
+    if _is_finite_number(context.pe):
         comment = _valuation_comment(context.pe)
         comment_str = f"（{comment}）" if comment else ""
         lines.append(f"| 市盈率 (PE) | {context.pe:.1f}x{comment_str} |")
-    if context.pb:
+    if _is_finite_number(context.pb):
         lines.append(f"| 市净率 (PB) | {context.pb:.2f}x |")
-    if context.ps:
+    if _is_finite_number(context.ps):
         lines.append(f"| 市销率 (PS) | {context.ps:.2f}x |")
     lines.append("")
 
     # —— 盈利能力 ——
-    if any([context.roe, context.roa, context.gross_margins, context.operating_margins]):
+    if any(_is_finite_number(getattr(context, attr)) for attr in
+           ("roe", "roa", "gross_margins", "operating_margins")):
         lines.append("### 盈利能力")
         lines.append("")
         lines.append("| 指标 | 数值 |")
         lines.append("|------|------|")
-        if context.roe:
+        if _is_finite_number(context.roe):
             lines.append(f"| ROE | {context.roe * 100:.1f}% |")
-        if context.roa:
+        if _is_finite_number(context.roa):
             lines.append(f"| ROA | {context.roa * 100:.1f}% |")
-        if context.gross_margins:
+        if _is_finite_number(context.gross_margins):
             lines.append(f"| 毛利率 | {context.gross_margins * 100:.1f}% |")
-        if context.operating_margins:
+        if _is_finite_number(context.operating_margins):
             lines.append(f"| 营业利润率 | {context.operating_margins * 100:.1f}% |")
         lines.append("")
 
     # —— 成长性 ——
-    if any([context.revenue_growth, context.earnings_growth]):
+    if any(_is_finite_number(getattr(context, attr)) for attr in
+           ("revenue_growth", "earnings_growth")):
         lines.append("### 成长性")
         lines.append("")
         lines.append("| 指标 | 数值 |")
         lines.append("|------|------|")
-        if context.revenue_growth:
+        if _is_finite_number(context.revenue_growth):
             lines.append(f"| 营收增长率 | {context.revenue_growth * 100:.1f}% |")
-        if context.earnings_growth:
+        if _is_finite_number(context.earnings_growth):
             lines.append(f"| 盈利增长率 | {context.earnings_growth * 100:.1f}% |")
         lines.append("")
 
     # —— 财务健康 ——
-    if any([context.debt_ratio, context.current_ratio, context.fcf]):
+    if any(_is_finite_number(getattr(context, attr)) for attr in
+           ("debt_ratio", "current_ratio", "fcf")):
         lines.append("### 财务健康")
         lines.append("")
         lines.append("| 指标 | 数值 |")
         lines.append("|------|------|")
-        if context.debt_ratio:
+        if _is_finite_number(context.debt_ratio):
             lines.append(f"| 负债率 | {context.debt_ratio * 100:.1f}% |")
-        if context.current_ratio:
+        if _is_finite_number(context.current_ratio):
             lines.append(f"| 流动比率 | {context.current_ratio:.2f} |")
-        if context.fcf:
+        if _is_finite_number(context.fcf):
             lines.append(f"| 自由现金流 | {_format_market_cap(context.fcf)} |")
         lines.append("")
 

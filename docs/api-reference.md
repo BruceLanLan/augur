@@ -1,6 +1,6 @@
 # Augur API Reference / API 参考文档
 
-> Version: v8.1.0
+> Version: v8.2.0
 
 ## Base URL / 基础地址
 

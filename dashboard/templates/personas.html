@@ -277,7 +277,7 @@
                 ▶ 对比分析
             </button>
         </div>
-        <div class="compare-results" id="compare-results">
+        <div class="compare-results" id="compare-results" role="region" aria-label="大师对比分析结果" aria-live="polite" aria-busy="false">
             <table class="compare-table">
                 <thead>
                     <tr>
@@ -301,8 +301,9 @@
         <button class="filter-tag school-filter-btn" data-school="quant" onclick="filterBySchool('quant', this)">◇ 量化 (Quant)</button>
         <button class="filter-tag school-filter-btn" data-school="china" onclick="filterBySchool('china', this)">⊟ 中国 (China)</button>
         
+        <label for="persona-search" class="sr-only" style="position:absolute;left:-9999px;">搜索大师</label>
         <input id="persona-search" type="text" class="field mono" style="max-width:220px; margin-left:auto; padding:6px 12px; font-size:0.8rem;"
-               placeholder="Search master..."
+               placeholder="Search master..." aria-label="搜索大师"
                oninput="applyFilters()">
     </div>
 
@@ -311,7 +312,7 @@
         {% for persona in personas %}
         {% set glyph = '◧' if persona.school == 'value' else ('▲' if persona.school == 'growth' else ('○' if persona.school == 'macro' else ('◇' if persona.school == 'quant' else '⊟'))) %}
         {% set scolor = 'var(--signal-buy)' if persona.school == 'value' else ('var(--accent-blue, #4fc3f7)' if persona.school == 'growth' else ('#b066ff' if persona.school == 'macro' else ('#ff66b2' if persona.school == 'quant' else 'var(--signal-sell)'))) %}
-        <div class="mcard persona-card" data-school="{{ persona.school }}" data-name="{{ persona.cn_name|lower }}{{ persona.en_name|lower }}{{ persona.id }}" onclick="openMasterDetail('{{ persona.id }}')">
+        <div class="mcard persona-card" role="button" tabindex="0" aria-label="查看 {{ persona.cn_name }} ({{ persona.en_name }}) 详情" data-school="{{ persona.school }}" data-name="{{ persona.cn_name|lower }}{{ persona.en_name|lower }}{{ persona.id }}" onclick="openMasterDetail('{{ persona.id }}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMasterDetail('{{ persona.id }}');}">
             <div class="medallion">
                 <div class="disc">
                     <img src="/docs/images/avatars/{{ persona.id }}.png" alt="{{ persona.cn_name }}" onerror="this.src='/static/images/augur-owl-64.png'">
@@ -361,9 +362,10 @@
 </div>
 
 <!-- Master Detail Overlay Modal -->
-<div class="overlay" id="master-detail-overlay" style="display:none;" onclick="closeMasterDetail()">
+<div class="overlay" id="master-detail-overlay" role="dialog" aria-modal="true" aria-labelledby="md-title" tabindex="-1" style="display:none;" onclick="closeMasterDetail()">
     <div class="detail gilt-edge" onclick="event.stopPropagation()">
-        <button class="detail-x" onclick="closeMasterDetail()">✕</button>
+        <button class="detail-x" aria-label="关闭详情" onclick="closeMasterDetail()">✕</button>
+        <h2 id="md-title" class="sr-only" style="position:absolute;left:-9999px;">大师详情</h2>
         <div class="detail-top" id="md-top"></div>
         <div id="md-content"></div>
     </div>
@@ -389,33 +391,57 @@ var _isComposing = false;
 function openMasterDetail(id) {
     var tpl = document.getElementById('tpl-' + id);
     if(!tpl) return;
-    
+
+    // Remember the element that triggered the modal so we can restore
+    // focus on close (a11y: keyboard users should not lose context).
+    _lastFocusedBeforeModal = document.activeElement;
+
     // The template contains three top-level parts: medallion, info, and content.
     // Let's populate the detail-top and the detail-content.
     var mdTop = document.getElementById('md-top');
     var mdContent = document.getElementById('md-content');
-    
+
     // Copy the DOM from template
     var clone = tpl.content.cloneNode(true);
-    
+
     mdTop.innerHTML = '';
     mdContent.innerHTML = '';
-    
+
     // First two elements go to mdTop (medallion and info)
     mdTop.appendChild(clone.children[0]);
     mdTop.appendChild(clone.children[0]); // since we removed the first, the next is index 0
-    
+
     // The rest goes to mdContent
     while(clone.children.length > 0) {
         mdContent.appendChild(clone.children[0]);
     }
 
-    document.getElementById('master-detail-overlay').style.display = 'flex';
+    var overlay = document.getElementById('master-detail-overlay');
+    overlay.style.display = 'flex';
+    // Move focus into the modal so keyboard users land inside it
+    try { overlay.focus(); } catch (e) { /* noop */ }
 }
 
 function closeMasterDetail() {
-    document.getElementById('master-detail-overlay').style.display = 'none';
+    var overlay = document.getElementById('master-detail-overlay');
+    overlay.style.display = 'none';
+    // Restore focus to the card that opened the modal, if we saved it
+    if (_lastFocusedBeforeModal && typeof _lastFocusedBeforeModal.focus === 'function') {
+        try { _lastFocusedBeforeModal.focus(); } catch (e) { /* noop */ }
+    }
+    _lastFocusedBeforeModal = null;
 }
+
+var _lastFocusedBeforeModal = null;
+var _escHandler = function(e) {
+    if (e.key === 'Escape' || e.keyCode === 27) {
+        var ov = document.getElementById('master-detail-overlay');
+        if (ov && ov.style.display !== 'none') {
+            closeMasterDetail();
+        }
+    }
+};
+document.addEventListener('keydown', _escHandler);
 
 function filterBySchool(school, btn) {
     activeSchool = school;
@@ -456,6 +482,8 @@ function askPersona(agentId, btn) {
     btn.disabled = true;
     btn.textContent = '...';
     responseDiv.className = 'ask-response visible';
+    responseDiv.setAttribute('aria-busy', 'true');
+    responseDiv.setAttribute('aria-live', 'polite');
     responseDiv.innerHTML = '<div style="color:var(--text-muted); font-size:0.74rem;">&#x23F3; 正在分析中...</div>';
 
     var url = '/api/persona/' + agentId + '/opinion?ticker=' + encodeURIComponent(ticker);
@@ -468,6 +496,7 @@ function askPersona(agentId, btn) {
         .then(function(data) {
             btn.disabled = false;
             btn.textContent = '提问';
+            responseDiv.setAttribute('aria-busy', 'false');
             if (data.status === 'ok') {
                 var signalClass = data.signal === 'bullish' ? 'bullish' : (data.signal === 'bearish' ? 'bearish' : 'neutral');
                 var signalText = data.signal === 'bullish' ? 'BULLISH' : (data.signal === 'bearish' ? 'BEARISH' : 'NEUTRAL');
@@ -490,6 +519,7 @@ function askPersona(agentId, btn) {
         .catch(function(err) {
             btn.disabled = false;
             btn.textContent = '提问';
+            responseDiv.setAttribute('aria-busy', 'false');
             responseDiv.innerHTML = '<div style="color:var(--signal-sell); font-size:0.74rem;">Request failed: ' + err.message + '</div>';
         });
 }
@@ -517,6 +547,7 @@ function runComparison() {
     btn.disabled = true;
     btn.innerHTML = '&#x23F3; 分析中...';
     resultsDiv.className = 'compare-results visible';
+    resultsDiv.setAttribute('aria-busy', 'true');
     tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--text-muted); padding:20px;">Loading...</td></tr>';
 
     var url = '/api/persona/compare?persona1=' + encodeURIComponent(persona1) + '&persona2=' + encodeURIComponent(persona2) + '&ticker=' + encodeURIComponent(ticker);
@@ -526,6 +557,7 @@ function runComparison() {
         .then(function(data) {
             btn.disabled = false;
             btn.innerHTML = '&#x1F50D; 对比分析';
+            resultsDiv.setAttribute('aria-busy', 'false');
             if (data.status === 'ok') {
                 var p1 = data.persona1;
                 var p2 = data.persona2;
@@ -564,6 +596,7 @@ function runComparison() {
         .catch(function(err) {
             btn.disabled = false;
             btn.innerHTML = '&#x1F50D; 对比分析';
+            resultsDiv.setAttribute('aria-busy', 'false');
             tbody.innerHTML = '<tr><td colspan="3" style="color:var(--signal-sell); text-align:center;">Request failed: ' + err.message + '</td></tr>';
         });
 }

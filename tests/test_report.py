@@ -24,6 +24,7 @@ from augur.report import (
     _score_to_grade,
     _format_market_cap,
     _clean_reasoning_for_table,
+    _is_finite_number,
     THEME_GROUPS,
     AGENT_PHILOSOPHY,
 )
@@ -766,3 +767,199 @@ class TestRound3GenerateReportErrorPath:
         assert "AAPL" in title
         assert "@" not in title
         assert "AA@PL#" not in title
+
+
+# =====================================================================
+# Round 13 / Agent E: targeted edge-case coverage for report.py
+# Three real bugs found in report.py:
+#   1. _format_market_cap (and financial overview) propagates NaN/Inf
+#      as the literal strings "$nanM", "nan%", "infx" into the report.
+#   2. _clean_reasoning_for_table preserves NUL bytes (and other C0
+#      control chars), which corrupts Markdown table cells and can
+#      break downstream consumers.
+#   3. _valuation_comment crashes or returns garbage on NaN/Inf PE
+#      (e.g. "infx（估值偏高...）" leaks into the report).
+# =====================================================================
+
+
+class TestRound13IsFiniteNumber:
+    """The new _is_finite_number helper gates all NaN/Inf-tolerant code paths."""
+
+    def test_returns_true_for_finite_numbers(self):
+        assert _is_finite_number(0) is True
+        assert _is_finite_number(0.0) is True
+        assert _is_finite_number(-0.0) is True
+        assert _is_finite_number(1.5) is True
+        assert _is_finite_number(-2.7) is True
+        assert _is_finite_number(1e308) is True
+
+    def test_returns_false_for_nan_and_inf(self):
+        import math
+        assert _is_finite_number(math.nan) is False
+        assert _is_finite_number(math.inf) is False
+        assert _is_finite_number(-math.inf) is False
+
+    def test_returns_false_for_none_and_non_numeric(self):
+        assert _is_finite_number(None) is False
+        assert _is_finite_number("1.0") is False
+        assert _is_finite_number([1.0]) is False
+        # bool is a subclass of int — but booleans are not "numbers" for our purposes
+        assert _is_finite_number(True) is False
+        assert _is_finite_number(False) is False
+
+
+class TestRound13MarketCapNaNInf:
+    """_format_market_cap must NOT render NaN/Inf as $nanM / $inf万亿."""
+
+    def test_market_cap_nan_returns_na(self):
+        import math
+        assert _format_market_cap(math.nan) == "$N/A"
+
+    def test_market_cap_inf_returns_na(self):
+        import math
+        assert _format_market_cap(math.inf) == "$N/A"
+        assert _format_market_cap(-math.inf) == "$N/A"
+
+    def test_market_cap_none_returns_na(self):
+        # Calling with None used to raise TypeError. Now it returns the safe string.
+        assert _format_market_cap(None) == "$N/A"
+
+    def test_market_cap_valid_values_unchanged(self):
+        # Regression: finite values must still render as before
+        assert _format_market_cap(2800.0) == "$2.80万亿"
+        assert _format_market_cap(95.0) == "$95.00B"
+        assert _format_market_cap(0.5) == "$500M"
+
+
+class TestRound13FinancialOverviewNaNInf:
+    """NaN/Inf metrics in MarketContext must be silently skipped (not rendered as 'nan%')."""
+
+    def test_nan_market_cap_is_skipped(self):
+        import math
+        ctx = MarketContext(ticker="NAN", market_cap=math.nan)
+        section = _format_financial_overview(ctx)
+        # Was: "| 市值 | $nanM |" — must not appear
+        assert "$nanM" not in section
+        assert "nanM" not in section
+        # The "市值" row should not even be emitted
+        assert "| 市值" not in section
+
+    def test_inf_pe_is_skipped(self):
+        import math
+        ctx = MarketContext(ticker="INF", pe=math.inf)
+        section = _format_financial_overview(ctx)
+        # Was: "| 市盈率 (PE) | infx（估值偏高...） |"
+        assert "infx" not in section
+        assert "inf" not in section.lower()
+        assert "| 市盈率" not in section
+
+    def test_nan_roe_is_skipped(self):
+        import math
+        ctx = MarketContext(ticker="NR", roe=math.nan)
+        section = _format_financial_overview(ctx)
+        # Was: "| ROE | nan% |"
+        assert "nan%" not in section
+        # 盈利能力 table should not be emitted at all when all metrics are NaN
+        assert "| ROE" not in section
+
+    def test_mixed_finite_and_nan_keeps_finite_only(self):
+        """A NaN field must not block its finite siblings in the same section."""
+        import math
+        ctx = MarketContext(
+            ticker="MIX",
+            roe=math.nan,                # skip
+            roa=0.10,                    # keep
+            gross_margins=math.inf,      # skip
+            operating_margins=0.20,      # keep
+        )
+        section = _format_financial_overview(ctx)
+        assert "nan%" not in section
+        assert "inf%" not in section
+        assert "| ROA | 10.0% |" in section
+        assert "| 营业利润率 | 20.0% |" in section
+        # The 盈利能力 header should still be present
+        assert "### 盈利能力" in section
+
+    def test_full_report_no_nan_or_inf_leak(self):
+        """End-to-end: NaN/Inf values in MarketContext must not leak into the full report."""
+        import math
+        ctx = MarketContext(
+            ticker="STRESS",
+            price=math.nan,
+            market_cap=math.inf,
+            pe=-math.inf,
+            pb=math.nan,
+            ps=math.inf,
+            roe=math.nan,
+            roa=math.inf,
+            gross_margins=math.nan,
+            operating_margins=math.inf,
+            revenue_growth=math.nan,
+            earnings_growth=math.inf,
+            debt_ratio=math.nan,
+            current_ratio=math.inf,
+            fcf=math.nan,
+        )
+        report = generate_report("STRESS", ctx, _make_full_results(), _make_consensus())
+        # No literal "nan" / "inf" should appear in the rendered report
+        assert "nan" not in report.lower()
+        assert "inf" not in report.lower()
+        # But the report itself must still be produced with all sections
+        assert "STRESS" in report
+        assert "财务概览" in report
+
+
+class TestRound13ValuationCommentNaN:
+    """_valuation_comment must not crash or misclassify NaN/Inf PE."""
+
+    def test_nan_pe_returns_empty(self):
+        import math
+        assert _valuation_comment(math.nan) == ""
+
+    def test_inf_pe_returns_empty(self):
+        import math
+        # Was: "估值偏高（成长预期已充分定价）" for inf — wrong (inf is not "high")
+        assert _valuation_comment(math.inf) == ""
+        assert _valuation_comment(-math.inf) == ""
+
+    def test_none_pe_returns_empty(self):
+        assert _valuation_comment(None) == ""
+
+
+class TestRound13NullByteInReasoning:
+    """_clean_reasoning_for_table must strip NUL bytes and other C0 control chars."""
+
+    def test_null_byte_stripped_from_reasoning(self):
+        cleaned = _clean_reasoning_for_table("hello\x00world")
+        assert "\x00" not in cleaned
+        assert cleaned == "helloworld"
+
+    def test_null_byte_does_not_leak_into_table(self):
+        results = {
+            "buffett": _make_agent_response(
+                "buffett", "Warren Buffett",
+                reasoning="good\x00bad\x01control",  # NUL + SOH
+            )
+        }
+        table = _format_agent_table(results)
+        # No C0 control characters (other than \t which is whitespace) should appear
+        for ch in table:
+            assert ch not in "\x00\x01\x02\x03\x04\x05\x06\x07\x08"
+        # The visible characters should still be present
+        assert "good" in table
+        assert "bad" in table
+        assert "control" in table
+
+    def test_null_byte_stripped_in_full_report(self):
+        results = {
+            "buffett": _make_agent_response(
+                "buffett", "Warren Buffett",
+                reasoning="内在价值充足\x00\x00\x00护城河强",
+            )
+        }
+        report = generate_report("AAPL", _make_full_context(), results, _make_consensus())
+        # The NUL bytes must not appear in the report
+        assert "\x00" not in report
+        # The visible Chinese text must remain
+        assert "内在价值充足" in report
+        assert "护城河强" in report

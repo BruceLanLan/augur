@@ -200,21 +200,38 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
             request, exc.status_code, f"HTTP {exc.status_code}",
             str(exc.detail) if exc.detail else "Something went wrong.",
         )
-    # API/tooling clients keep the consistent JSON envelope.
-    if exc.status_code == 404:
-        return JSONResponse(
-            status_code=404,
-            content=api_error_response(
-                detail=exc.detail or "Not found",
-                code="NOT_FOUND",
-                path=request.url.path,
-            ),
-        )
+    # API/tooling clients keep the consistent JSON envelope with a
+    # stable, machine-readable code and a human-friendly suggestion.
+    _ERROR_ENVELOPE: Dict[int, Tuple[str, str]] = {
+        400: ("INVALID_REQUEST", "Check the request parameters (ticker format, body shape, required fields) and retry."),
+        401: ("AUTH_REQUIRED", "Provide a valid Bearer token or sign in to continue."),
+        403: ("FORBIDDEN", "You don't have permission for this resource. Ask an admin or enable multi-user mode."),
+        404: ("NOT_FOUND", "The resource doesn't exist. Verify the path or ID and try again."),
+        405: ("METHOD_NOT_ALLOWED", "This endpoint doesn't support the HTTP method you used. Check the docs."),
+        409: ("CONFLICT", "The resource is in a conflicting state. Refresh and retry."),
+        413: ("PAYLOAD_TOO_LARGE", "Request body is too large. Reduce the payload size and retry."),
+        415: ("UNSUPPORTED_MEDIA_TYPE", "Use a supported Content-Type (e.g. application/json)."),
+        422: ("UNPROCESSABLE_ENTITY", "The request was well-formed but contained invalid data. Check field types."),
+        429: ("RATE_LIMITED", "You're sending requests too quickly. Slow down and retry after a moment."),
+        500: ("INTERNAL_ERROR", "Something broke on our end. We've logged the issue — try again shortly."),
+        501: ("NOT_IMPLEMENTED", "This feature isn't available in the current deployment."),
+        502: ("BAD_GATEWAY", "Upstream service returned an invalid response. Try again in a moment."),
+        503: ("SERVICE_UNAVAILABLE", "Service is temporarily unavailable. Retry with backoff."),
+        504: ("GATEWAY_TIMEOUT", "Upstream service timed out. Retry in a moment."),
+    }
+    code, suggestion = _ERROR_ENVELOPE.get(
+        exc.status_code,
+        (f"HTTP_{exc.status_code}", "Check the request and try again."),
+    )
+    detail_text = str(exc.detail) if exc.detail else (
+        "Not found" if exc.status_code == 404 else f"HTTP {exc.status_code}"
+    )
     return JSONResponse(
         status_code=exc.status_code,
         content=api_error_response(
-            detail=str(exc.detail) if exc.detail else f"HTTP {exc.status_code}",
-            code=f"HTTP_{exc.status_code}",
+            detail=detail_text,
+            code=code,
+            suggestion=suggestion,
             path=request.url.path,
         ),
     )
@@ -251,7 +268,12 @@ async def api_token_auth_middleware(request: Request, call_next):
             if not ok:
                 return JSONResponse(
                     status_code=401,
-                    content={"detail": "Authentication required", "code": "AUTH_REQUIRED"},
+                    content=api_error_response(
+                        detail="Authentication required",
+                        code="AUTH_REQUIRED",
+                        suggestion="Provide a valid Bearer token (Authorization: Bearer <token>) and retry.",
+                        path=request.url.path,
+                    ),
                 )
     response = await call_next(request)
     return response
@@ -276,7 +298,12 @@ async def rate_limit_middleware(request: Request, call_next):
             if len(_ip_rate_limits[client_ip]) >= 60:
                 return JSONResponse(
                     status_code=429,
-                    content={"detail": "Rate limit exceeded. Max 60 requests per minute."},
+                    content=api_error_response(
+                        detail="Rate limit exceeded. Max 60 requests per minute.",
+                        code="RATE_LIMITED",
+                        suggestion="Slow down and retry after a few seconds.",
+                        path=request.url.path,
+                    ),
                     headers={"X-RateLimit-Remaining": "0"},
                 )
             _ip_rate_limits[client_ip].append(now)
@@ -708,7 +735,12 @@ async def api_scanner_run(body: ScannerRunBody):
                 "consensus_signal": "error",
                 "consensus_score": 0,
                 "agents": [],
-                "error": str(e),
+                "error": {
+                    "status": "error",
+                    "detail": f"Scanner failed for {ticker.upper()}: {e}",
+                    "code": "SCAN_FAILED",
+                    "suggestion": "Verify the ticker is valid and the data source is reachable, then retry.",
+                },
             })
 
     return {"status": "ok", "results": results, "count": len(results)}
@@ -1381,7 +1413,12 @@ async def api_auth_verify(request: Request):
     if not ok:
         return JSONResponse(
             status_code=401,
-            content={"detail": "Authentication required", "code": "AUTH_REQUIRED"},
+            content=api_error_response(
+                detail="Authentication required",
+                code="AUTH_REQUIRED",
+                suggestion="Provide a valid Bearer token (Authorization: Bearer <token>) and retry.",
+                path=request.url.path,
+            ),
         )
     return {"status": "ok", "authenticated": True, "mode": mode}
 
