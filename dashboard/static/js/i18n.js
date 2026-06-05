@@ -431,7 +431,14 @@ window.I18N = {
         "signals-error-title": "加载自选股失败",
         "signals-error-msg": "网络异常，请稍后重试",
         "signals-error-retry": "重试",
-        "signals-add-pending": "添加中…"
+        "signals-add-pending": "添加中…",
+        // Round 10: signals page example chips + row + form filters (a11y)
+        "signals-add-example-aria": "快速添加",
+        "signals-row-aria": "查看",
+        "signals-filter-type-aria": "按信号类型筛选",
+        "signals-filter-sort-aria": "排序方式",
+        "signals-add-pe-aria": "市盈率 PE",
+        "signals-add-roe-aria": "净资产收益率 ROE"
     },
     en: {
         // Sidebar nav
@@ -861,7 +868,14 @@ window.I18N = {
         "signals-error-title": "Failed to load watchlist",
         "signals-error-msg": "Network error, please retry",
         "signals-error-retry": "Retry",
-        "signals-add-pending": "Adding…"
+        "signals-add-pending": "Adding…",
+        // Round 10: signals page example chips + row + form filters (a11y)
+        "signals-add-example-aria": "Quick add",
+        "signals-row-aria": "View",
+        "signals-filter-type-aria": "Filter by signal type",
+        "signals-filter-sort-aria": "Sort order",
+        "signals-add-pe-aria": "PE ratio",
+        "signals-add-roe-aria": "ROE percent"
     }
 };
 
