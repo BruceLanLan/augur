@@ -157,10 +157,17 @@ def cache_stats() -> Dict[str, Any]:
 def _normalize_ticker(ticker: str) -> str:
     """Normalize and validate a ticker symbol.
 
+    - Accepts str only; non-str inputs (None, int, list, etc.) are rejected
+      with ValueError instead of an uncaught ``AttributeError`` from
+      ``str.strip``.
     - Strips whitespace and uppercases
     - Validates: 1-15 chars, only alphanumeric, dots, hyphens
     - Raises ValueError if invalid
     """
+    if not isinstance(ticker, str):
+        raise ValueError(
+            f"Ticker must be a string, got {type(ticker).__name__}: {ticker!r}"
+        )
     ticker = ticker.strip().upper()
     if not ticker:
         raise ValueError("Ticker cannot be empty")
@@ -286,7 +293,9 @@ def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketCont
         ticker = _normalize_ticker(ticker)
     except ValueError as exc:
         logger.warning("invalid ticker rejected: %s", exc)
-        ctx = MarketContext(ticker=ticker.strip().upper() or "INVALID")
+        # 兜底展示名：非字符串输入直接用 repr 避免再次触发 AttributeError
+        fallback = ticker.strip().upper() if isinstance(ticker, str) else "INVALID"
+        ctx = MarketContext(ticker=fallback)
         setattr(ctx, "data_source", "error")
         setattr(ctx, "data_error", f"invalid ticker: {exc}")
         return ctx
@@ -306,13 +315,28 @@ def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict
     """Fetch multiple tickers in parallel using ThreadPoolExecutor.
 
     Args:
-        tickers: List of stock symbols to fetch.
+        tickers: List of stock symbols to fetch. Non-list inputs (e.g. a bare
+            string or None) are rejected with an empty result and a single
+            ``INVALID`` entry that carries a ``data_error`` describing the
+            misuse, so callers don't crash with ``TypeError`` and don't
+            silently get one context per character of a string.
         max_workers: Maximum number of concurrent threads.
 
     Returns:
         Dict mapping each ticker to its MarketContext (empty context on failure).
     """
     from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    # 校验顶层输入：防止把 str / None 当作可迭代对象（之前会被当作逐字符迭代，悄无声息地污染结果）
+    if not isinstance(tickers, (list, tuple)):
+        ctx = MarketContext(ticker="INVALID")
+        setattr(ctx, "data_source", "error")
+        setattr(ctx, "data_error", (
+            f"invalid tickers argument: expected list, got "
+            f"{type(tickers).__name__}"
+        ))
+        logger.warning("batch fetch rejected tickers of type %s", type(tickers).__name__)
+        return {"INVALID": ctx}
 
     results: Dict[str, MarketContext] = {}
     norm_to_origs: Dict[str, List[str]] = {}
@@ -323,10 +347,13 @@ def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict
                 norm = _normalize_ticker(t)
             except ValueError as exc:
                 logger.warning("batch fetch skipped invalid ticker %s: %s", t, exc)
-                ctx = MarketContext(ticker=t.strip().upper() or "INVALID")
+                # 字符串类型的非法 ticker 沿用旧行为（strip 后大写）以便在结果中可读；
+                # 非字符串元素用 repr 安全地表示为 "INVALID"，避免再次崩溃
+                key = t.strip().upper() if isinstance(t, str) else "INVALID"
+                ctx = MarketContext(ticker=key or "INVALID")
                 setattr(ctx, "data_source", "error")
                 setattr(ctx, "data_error", f"invalid ticker: {exc}")
-                results[t] = ctx
+                results[str(t) if not isinstance(t, str) else t] = ctx
                 continue
             norm_to_origs.setdefault(norm, []).append(t)
             if norm not in future_to_ticker.values():
@@ -713,29 +740,56 @@ def search_ticker(query: str) -> List[Dict[str, Any]]:
     Search for tickers by name/symbol.
 
     Args:
-        query: Search string (ticker symbol or company name).
+        query: Search string (ticker symbol or company name). Must be a
+            non-empty string; non-string / empty / invalid inputs return an
+            empty ``_ResultList`` with a ``data_error`` describing the
+            rejection, matching the rest of the data module's UX.
 
     Returns:
-        List of dicts with keys: symbol, name, exchange, type.
+        List of dicts with keys: symbol, name, exchange, type. Returned as a
+        ``_ResultList`` (``isinstance(result, list) == True``) that carries
+        ``data_error`` / ``data_source`` on failure paths.
     """
-    yf = _get_yfinance()
+    # 与模块其他接口一致：非字符串、空串、非法 ticker 都优雅降级，不再抛出 AttributeError / ImportError。
+    try:
+        normalized = _normalize_ticker(query)
+    except ValueError as exc:
+        logger.warning("search_ticker rejected query %r: %s", query, exc)
+        return _attach_error(
+            _ResultList(), f"invalid query: {exc}", source="error"
+        )
 
+    try:
+        yf = _get_yfinance()
+    except Exception as exc:
+        logger.warning("search_ticker: yfinance unavailable: %s", exc)
+        return _attach_error(
+            _ResultList(), f"yfinance_unavailable: {exc}", source="error"
+        )
+
+    results: _ResultList = _ResultList()
     try:
         # yfinance search is limited; use Ticker info as fallback
         # Try direct ticker lookup first
-        stock = yf.Ticker(query.upper())
+        stock = yf.Ticker(normalized)
         info = stock.info or {}
         if info.get("symbol"):
-            return [{
-                "symbol": info.get("symbol", query.upper()),
+            results.append({
+                "symbol": info.get("symbol", normalized),
                 "name": info.get("longName") or info.get("shortName", ""),
                 "exchange": info.get("exchange", ""),
                 "type": info.get("quoteType", "EQUITY"),
-            }]
-    except Exception:
-        pass
+            })
+    except Exception as exc:
+        # 网络/解析失败不再静默吞掉，附 data_error 让调用方区分“无结果” vs “拉取失败”
+        logger.warning("search_ticker fetch failed for %s: %s", normalized, exc)
+        return _attach_error(
+            results, f"network_error: failed to search {normalized}: {exc}",
+            source="error",
+        )
 
-    return []
+    results.data_source = "yfinance"
+    return results
 
 
 # ============ Internal Helpers ============
