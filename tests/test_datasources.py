@@ -18,8 +18,10 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from augur.datasources import (
+    AlphaVantageProvider,
     DataProvider,
     DataProviderError,
+    FinnhubProvider,
     StooqProvider,
     YFinanceProvider,
     default_providers,
@@ -436,3 +438,128 @@ class TestCacheBehaviour:
 
         assert fetch_spy.call_count == 2
         assert data.cache_info()["size"] >= 1
+
+
+# ============ Provider normalization (Round 9) ============
+# 覆盖: stooq N/D 哨兵、yfinance 股息收益率归一化、finnhub 百分数转小数、
+# alphavantage 限速响应与带 % 字符的 change_pct 解析。
+
+
+class TestStooqNormalization:
+    """Stooq 对无数据字段返回 'N/D'，应安全归零或抛错。"""
+
+    def test_close_ND_raises_even_when_open_valid(self):
+        """open=100 但 close='N/D' 仍应抛错（close 才是有效报价）。"""
+        csv = (
+            "Symbol,Date,Time,Open,High,Low,Close,Volume\n"
+            "BADSYM.US,2024-05-30,22:00:02,100.00,105.00,99.00,N/D,0\n"
+        )
+        provider = StooqProvider()
+        provider._http_get = lambda url: csv
+        with pytest.raises(DataProviderError) as exc:
+            provider.fetch("BADSYM")
+        assert "no quote" in str(exc.value).lower() or "stooq" in str(exc.value).lower()
+
+    def test_zero_close_raises(self):
+        """close=0 是无效报价 -> DataProviderError。"""
+        csv = (
+            "Symbol,Date,Time,Open,High,Low,Close,Volume\n"
+            "Z.US,2024-05-30,22:00:02,100,105,99,0,1000\n"
+        )
+        provider = StooqProvider()
+        provider._http_get = lambda url: csv
+        with pytest.raises(DataProviderError):
+            provider.fetch("Z")
+
+
+class TestYFinanceDividendYieldNormalization:
+    """yfinance dividendYield 格式不稳定：0.35 vs 0.0035 都见过。
+    provider 必须统一为 0-1 小数。"""
+
+    def test_yield_as_percent_divided_by_100(self):
+        """dividendYield=3.5 视为百分数形式 (3.5%) -> 0.035 小数。"""
+        info = {
+            "symbol": "AAPL",
+            "currentPrice": 100,
+            "dividendRate": 0,  # 强制走 dividendYield 分支
+            "dividendYield": 3.5,  # 3.5% 形式
+        }
+        provider = YFinanceProvider(yf_loader=lambda: _make_yf_mock(info))
+        fields = provider.fetch("AAPL")
+        assert abs(fields["dividend_yield"] - 0.035) < 1e-6
+
+    def test_yield_computed_from_rate_when_available(self):
+        """有 dividendRate + price 时，直接用 rate/price 优先于 dividendYield。"""
+        info = {
+            "symbol": "KO",
+            "currentPrice": 50,
+            "dividendRate": 1.0,  # 每股 1 美元
+            "dividendYield": 999,  # 噪声值，应被忽略
+        }
+        provider = YFinanceProvider(yf_loader=lambda: _make_yf_mock(info))
+        fields = provider.fetch("KO")
+        assert abs(fields["dividend_yield"] - 0.02) < 1e-6  # 1/50 = 0.02
+
+    def test_yield_clamped_to_unit_interval(self):
+        """异常大的 dividendYield 应收敛到 [0,1]。"""
+        info = {
+            "symbol": "BAD",
+            "currentPrice": 10,
+            "dividendRate": 0,
+            "dividendYield": 250,  # 250% 不可能，应被收敛
+        }
+        provider = YFinanceProvider(yf_loader=lambda: _make_yf_mock(info))
+        fields = provider.fetch("BAD")
+        assert 0.0 <= fields["dividend_yield"] <= 1.0
+
+
+class TestFinnhubPercentNormalization:
+    """Finnhub 的 roe/roa/margin 指标原为百分数（50=50%），应 /100 转 0-1 小数。"""
+
+    def test_roe_percent_to_decimal(self):
+        quote = {"c": 100, "o": 99, "h": 101, "l": 98, "pc": 99}
+        metric = {"metric": {"roeTTM": 50, "roaTTM": 10, "grossMarginTTM": 40,
+                              "operatingMarginTTM": 25, "netProfitMarginTTM": 15}}
+        profile = {"name": "Foo Inc", "finnhubIndustry": "Tech"}
+        provider = FinnhubProvider(api_key="test")
+        provider._http_get_json = MagicMock(side_effect=[quote, metric, profile])
+        fields = provider.fetch("FOO")
+        assert fields["data_source"] == "finnhub"
+        assert fields["roe"] == 0.5
+        assert fields["roa"] == 0.1
+        assert fields["gross_margins"] == 0.4
+        assert fields["operating_margins"] == 0.25
+        assert fields["profit_margins"] == 0.15
+
+
+class TestAlphaVantageRateLimitAndPercent:
+    """Alpha Vantage 限速返回 Note/Information 字段；change_pct 含 % 字符。"""
+
+    def test_rate_limit_response_raises(self):
+        """GLOBAL_QUOTE 返回 Note 视为限速 -> DataProviderError。"""
+        rate_limited = {"Note": "API rate limit reached. Please retry in 60s."}
+        provider = AlphaVantageProvider(api_key="test")
+        provider._http_get_json = MagicMock(return_value=rate_limited)
+        with pytest.raises(DataProviderError) as exc:
+            provider.fetch("AAPL")
+        assert "rate" in str(exc.value).lower()
+
+    def test_change_percent_with_percent_sign_parsed(self):
+        """'10. change percent' 形如 '1.50%' -> 0.015 小数。"""
+        quote = {
+            "Global Quote": {
+                "01. symbol": "AAPL",
+                "05. price": "100.00",
+                "02. open": "99",
+                "03. high": "101",
+                "04. low": "98",
+                "06. volume": "1000",
+                "10. change percent": "1.50%",
+            }
+        }
+        provider = AlphaVantageProvider(api_key="test")
+        provider._http_get_json = MagicMock(side_effect=[quote, {}])
+        fields = provider.fetch("AAPL")
+        assert fields["data_source"] == "alphavantage"
+        assert fields["price"] == 100.0
+        assert abs(fields["change_pct"] - 0.015) < 1e-6

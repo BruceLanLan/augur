@@ -415,7 +415,23 @@ window.I18N = {
         "signals-remove-failed": "移除失败",
         "signals-analysis-done": "分析完成 - {n} 只股票",
         "signals-save-failed": "保存失败: ",
-        "a11y-hero-ticker": "股票代码输入"
+        "a11y-hero-ticker": "股票代码输入",
+        // Example chip accessibility (index.html)
+        "a11y-chip-nvda": "使用 NVDA 示例",
+        "a11y-chip-aapl": "使用 AAPL 示例",
+        "a11y-chip-tsla": "使用 TSLA 示例",
+        "a11y-chip-msft": "使用 MSFT 示例",
+        "a11y-chip-btc": "使用 BTC-USD 示例",
+        "a11y-chip-hk": "使用 00700.HK 示例",
+        // Featured persona row (index.html)
+        "a11y-featured-persona": "用 {name} 大师分析",
+        // Personas council description
+        "council-desc": "每位大师按独立框架打分，由 18 人委员会加权汇总为一个 Kelly 仓位的共识建议。",
+        // Signals page error panel + pending state
+        "signals-error-title": "加载自选股失败",
+        "signals-error-msg": "网络异常，请稍后重试",
+        "signals-error-retry": "重试",
+        "signals-add-pending": "添加中…"
     },
     en: {
         // Sidebar nav
@@ -829,7 +845,23 @@ window.I18N = {
         "signals-remove-failed": "Remove failed",
         "signals-analysis-done": "Analysis complete - {n} tickers",
         "signals-save-failed": "Save failed: ",
-        "a11y-hero-ticker": "Stock ticker input"
+        "a11y-hero-ticker": "Stock ticker input",
+        // Example chip accessibility (index.html)
+        "a11y-chip-nvda": "Try NVDA example",
+        "a11y-chip-aapl": "Try AAPL example",
+        "a11y-chip-tsla": "Try TSLA example",
+        "a11y-chip-msft": "Try MSFT example",
+        "a11y-chip-btc": "Try BTC-USD example",
+        "a11y-chip-hk": "Try 00700.HK example",
+        // Featured persona row (index.html)
+        "a11y-featured-persona": "Analyze with {name}",
+        // Personas council description
+        "council-desc": "Each master scores independently through their own framework. The council weights every voice into a single Kelly-sized consensus.",
+        // Signals page error panel + pending state
+        "signals-error-title": "Failed to load watchlist",
+        "signals-error-msg": "Network error, please retry",
+        "signals-error-retry": "Retry",
+        "signals-add-pending": "Adding…"
     }
 };
 

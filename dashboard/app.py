@@ -1438,7 +1438,19 @@ class WatchlistAddBody(BaseModel):
 async def api_get_watchlist():
     """Get current watchlist from ~/.augur/watchlist.yaml"""
     from augur.cron import load_watchlist
-    config = load_watchlist()
+    try:
+        config = load_watchlist()
+    except FileNotFoundError:
+        return {"watchlist": [], "schedule": {}}
+    except Exception as e:
+        # Graceful degradation: file may be corrupt or unreadable
+        logger.warning("watchlist load failed: %s", e)
+        return {
+            "watchlist": [],
+            "schedule": {},
+            "error": "watchlist_unavailable",
+            "message": f"自选股文件读取失败: {e}",
+        }
     return {
         "watchlist": config.get("watchlist", []),
         "schedule": config.get("schedule", {}),
@@ -1459,7 +1471,14 @@ async def api_add_to_watchlist(body: WatchlistAddBody):
         val = getattr(body, field, None)
         if val is not None:
             metrics[field] = val
-    config = add_to_watchlist(body.ticker.upper(), metrics if metrics else None)
+    try:
+        config = add_to_watchlist(body.ticker.upper(), metrics if metrics else None)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=f"无写入权限: {e}")
+    except OSError as e:
+        raise HTTPException(status_code=500, detail=f"写入自选股失败: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"添加自选股失败: {e}")
     return {"status": "ok", "ticker": body.ticker.upper(), "watchlist": config.get("watchlist", [])}
 
 
@@ -2662,11 +2681,20 @@ async def api_list_history(limit: int = 50, page: Optional[int] = None, per_page
             raise HTTPException(status_code=400, detail="page and per_page must be >= 1")
         if per_page > 100:
             raise HTTPException(status_code=400, detail="per_page must be <= 100")
-        total = count_history()
-        total_pages = math.ceil(total / per_page) if per_page > 0 else 0
-        records = list_history(page=page, per_page=per_page)
+        try:
+            total = count_history()
+            total_pages = math.ceil(total / per_page) if per_page > 0 else 0
+            records = list_history(page=page, per_page=per_page)
+        except Exception as e:
+            # Graceful degradation: storage may be locked, corrupt, or missing
+            logger.warning("history list (paginated) failed: %s", e)
+            return {"items": [], "total": 0, "page": page, "per_page": per_page, "pages": 0, "error": "history_unavailable", "message": f"历史记录读取失败: {e}"}
         return {"items": records, "total": total, "page": page, "per_page": per_page, "pages": total_pages}
-    records = list_history(limit=limit)
+    try:
+        records = list_history(limit=limit)
+    except Exception as e:
+        logger.warning("history list failed: %s", e)
+        return {"records": [], "count": 0, "error": "history_unavailable", "message": f"历史记录读取失败: {e}"}
     return {"records": records, "count": len(records)}
 
 
@@ -2703,7 +2731,12 @@ async def api_delete_history_item(history_id: str):
 @app.delete("/api/history")
 async def api_clear_history():
     from augur.history import clear_history
-    count = clear_history()
+    try:
+        count = clear_history()
+    except Exception as e:
+        # Graceful degradation: storage failure
+        logger.warning("clear history failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"清除历史记录失败: {e}")
     return {"status": "ok", "deleted": count, "message": f"已清除 {count} 条记录"}
 
 
@@ -2972,11 +3005,24 @@ class ChatBody(BaseModel):
 
 @app.post("/api/chat")
 async def api_chat(body: ChatBody):
+    if not body.message or not body.message.strip():
+        raise HTTPException(status_code=400, detail="消息不能为空")
     if len(body.message) > 2000:
         raise HTTPException(status_code=400, detail="消息过长（最多2000字符）")
     if body.agent_id and not re.match(r'^[a-z_]{1,50}$', body.agent_id):
         raise HTTPException(status_code=400, detail="Invalid agent_id format")
-    return _get_chat_engine().get_response(body.message, body.agent_id)
+    try:
+        return _get_chat_engine().get_response(body.message, body.agent_id)
+    except KeyError as e:
+        # Unknown agent_id surfaced by engine
+        raise HTTPException(status_code=404, detail=f"Agent '{body.agent_id}' not found: {e}")
+    except ValueError as e:
+        # Engine validation rejected the input
+        raise HTTPException(status_code=400, detail=f"Invalid chat request: {e}")
+    except Exception as e:
+        # Engine internal error — degrade gracefully
+        logger.warning("chat engine failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"聊天服务暂时不可用: {e}")
 
 
 # ============ v8: Multi-User Auth (opt-in via AUGUR_MULTI_USER=1) ============
@@ -3166,7 +3212,17 @@ async def api_i18n(lang: str):
     filepath = i18n_dir / f"{lang}.json"
     if not filepath.exists():
         raise HTTPException(status_code=404, detail=f"Language file not found: {lang}")
-    return json.loads(filepath.read_text(encoding="utf-8"))
+    try:
+        data = json.loads(filepath.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        # File exists but content is corrupt — surface as 500 with explanation
+        raise HTTPException(status_code=500, detail=f"翻译文件格式错误: {e}")
+    except UnicodeDecodeError as e:
+        raise HTTPException(status_code=500, detail=f"翻译文件编码错误: {e}")
+    except OSError as e:
+        # Permission / IO error reading the file
+        raise HTTPException(status_code=500, detail=f"翻译文件读取失败: {e}")
+    return data
 
 
 @app.post("/api/lang/{lang}")

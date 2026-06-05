@@ -136,7 +136,13 @@ class AgentRegistry:
         self._register_yaml_personas()
 
     def _register_yaml_personas(self):
-        """Auto-load YAML personas from personas/custom/ next to repo root."""
+        """Auto-load YAML personas from personas/custom/ next to repo root.
+
+        Surface errors via logging so silent persona load failures are visible
+        to operators. Per-file failures are already logged inside
+        ``load_personas_from_dir``; we only log top-level (import / dir discovery)
+        failures here.
+        """
         try:
             from augur.persona_loader import load_personas_from_dir
             # Try multiple locations for custom personas
@@ -146,12 +152,22 @@ class AgentRegistry:
             ]
             for custom_dir in candidates:
                 if custom_dir.exists():
+                    loaded = 0
                     for agent in load_personas_from_dir(custom_dir):
                         if agent.agent_id not in self._agents:  # never overwrite built-in Python personas
                             self._agents[agent.agent_id] = agent
+                            loaded += 1
+                    if loaded:
+                        logger.info(
+                            "Loaded %d YAML persona(s) from %s", loaded, custom_dir
+                        )
                     break
-        except Exception:
-            pass
+        except Exception as exc:  # pragma: no cover - defensive top-level guard
+            logger.error(
+                "Failed to register YAML personas: %s: %s",
+                type(exc).__name__, exc,
+                exc_info=True,
+            )
 
     def register(self, agent: BaseAgent) -> bool:
         """Register an agent"""
