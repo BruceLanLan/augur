@@ -138,6 +138,29 @@ augur sentiment NVDA                # social sentiment analysis
 python3 -m dashboard.app            # → open http://localhost:8000
 ```
 
+### 🔑 AI Chat LLM Configuration
+
+The AI Master Chat module natively supports any standard OpenAI-compatible API, allowing you to easily connect to DeepSeek, GPT-4, or local models (e.g. Ollama).
+
+1. Copy the environment configuration file:
+   ```bash
+   cp .env.example .env
+   ```
+2. Edit the `.env` file to input your API Key and endpoint details:
+   ```ini
+   # Required: Enable the AI chat LLM backend (falls back to local mock replies if unset)
+   OPENAI_API_KEY=your_api_key_here
+
+   # Optional: Custom API base URL (e.g. for DeepSeek, OneAPI, or local Ollama)
+   # DeepSeek: https://api.deepseek.com/v1
+   # Ollama: http://localhost:11434/v1
+   OPENAI_BASE_URL=
+
+   # Optional: Override chat model (default: gpt-4o)
+   # DeepSeek: deepseek-chat
+   AUGUR_CHAT_MODEL=
+   ```
+
 ---
 
 ## ✨ See It In Action

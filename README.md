@@ -132,6 +132,29 @@ augur consensus NVDA        # 加权共识 + Kelly 仓位建议
 python3 -m dashboard.app    # → http://localhost:8000
 ```
 
+### 🔑 智能 AI 对话配置 (配置大模型)
+
+Augur 的 AI 大师对话模块全面支持标准 OpenAI 兼容接口，您可以轻松接入 DeepSeek、GPT-4 或本地大模型（如 Ollama）。
+
+1. 复制环境配置文件：
+   ```bash
+   cp .env.example .env
+   ```
+2. 编辑 `.env` 文件，填入您的 API Key 和配置信息：
+   ```ini
+   # 启用 AI 对话大模型后端（若不设置将使用本地模拟回复）
+   OPENAI_API_KEY=your_api_key_here
+
+   # 可选：自定义 API 接口地址（如 DeepSeek、OneAPI 等）
+   # DeepSeek 填：https://api.deepseek.com/v1
+   # Ollama 填：http://localhost:11434/v1
+   OPENAI_BASE_URL=
+
+   # 可选：自定义模型名称（默认为 gpt-4o）
+   # DeepSeek 填：deepseek-chat
+   AUGUR_CHAT_MODEL=
+   ```
+
 ---
 
 ## ✨ 真实运行效果
