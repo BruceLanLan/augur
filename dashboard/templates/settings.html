@@ -150,10 +150,10 @@
     <div class="settings-grid" id="persona-grid">
         {% for persona in personas %}
         <div class="persona-config-row" data-agent-id="{{ persona.id }}">
-            <img src="/docs/images/avatars/{{ persona.id }}.svg"
+            <img src="/docs/images/avatars/{{ persona.id }}.png"
                  alt="{{ persona.name }}"
                  class="persona-config-avatar"
-                 onerror="this.style.display='none'">
+                 onerror="this.src='/static/images/augur-owl-64.png'">
             <div class="persona-config-info">
                 <div class="persona-config-name">{{ persona.name }}</div>
                 <div class="persona-config-style">{{ persona.style }}</div>
