@@ -82,8 +82,14 @@ Homepage = "https://github.com/BruceLanLan/augur"
 Repository = "https://github.com/BruceLanLan/augur"
 Documentation = "https://github.com/BruceLanLan/augur#readme"
 
-[project.entry-points."mcp"]
+[project.entry-points."mcp.server"]
 augur-agents = "augur.mcp_server:create_server"
+
+[project.entry-points."augur.plugins"]
+# Plugin group; see src/augur/plugins.py (PluginManager.ENTRY_POINT_GROUP).
+# Example external plugin registration:
+#   my_plugin = "my_pkg.module:MyPlugin"
+
 
 [tool.setuptools.packages.find]
 where = ["src"]
