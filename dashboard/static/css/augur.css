@@ -144,25 +144,42 @@ body.augur {
 /* ============================================================
    ORACLE · parchment scroll  (the "prophecy / deep report")
    ============================================================ */
+/* Default: Dark Theme Scroll */
 .scroll {
   position: relative;
   background:
-    repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0 2px, transparent 2px 4px),
-    linear-gradient(180deg, var(--parchment) 0%, var(--parchment-deep) 100%);
-  color: var(--parchment-ink);
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.005) 0 2px, transparent 2px 4px),
+    linear-gradient(180deg, var(--bg-card) 0%, var(--bg-panel) 100%);
+  color: var(--fg-1);
+  border: 1px solid var(--border-gilt);
   border-radius: 4px;
   padding: 22px 26px;
   box-shadow: var(--shadow-pop);
   font: 400 0.86rem/1.7 var(--font-mono);
 }
-/* rolled top & bottom bands of the scroll */
+/* rolled top & bottom bands of the scroll - Dark metallic gold */
 .scroll::before, .scroll::after {
   content: ''; position: absolute; left: -6px; right: -6px; height: 14px;
-  background: linear-gradient(180deg, #b6a079, #8f7c56); border-radius: 7px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  background: linear-gradient(180deg, var(--gilt), #504018); border-radius: 7px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
 }
 .scroll::before { top: -7px; } .scroll::after { bottom: -7px; }
-.scroll h4 { font: 700 0.7rem/1.4 var(--font-pixfin); letter-spacing: 1px; text-transform: uppercase; color: #6b4f1d; margin: 0 0 8px; }
+.scroll h4 { font: 700 0.7rem/1.4 var(--font-pixfin); letter-spacing: 1px; text-transform: uppercase; color: var(--amber); margin: 0 0 8px; }
+
+/* Light Theme Scroll: Classic JRPG parchment */
+html.light .scroll {
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,0.015) 0 2px, transparent 2px 4px),
+    linear-gradient(180deg, var(--parchment) 0%, var(--parchment-deep) 100%);
+  color: var(--parchment-ink);
+  border: none;
+}
+html.light .scroll::before, html.light .scroll::after {
+  background: linear-gradient(180deg, #b6a079, #8f7c56);
+}
+html.light .scroll h4 {
+  color: #6b4f1d;
+}
 
 /* ============================================================
    ORACLE · gilt frame  (HD-2D "portrait / relic" border)
@@ -274,43 +291,43 @@ body.augur {
    ORACLE · parchment scroll report content override (contrast fix)
    Ensures text on light parchment background remains highly readable.
    ============================================================ */
-.scroll .md-report {
+html.light .scroll .md-report {
   color: var(--parchment-ink) !important;
 }
-.scroll .md-report strong {
+html.light .scroll .md-report strong {
   color: #000000 !important;
 }
-.scroll .md-report h1,
-.scroll .md-report h2,
-.scroll .md-report h3,
-.scroll .md-report h4,
-.scroll .md-report h5,
-.scroll .md-report h6 {
+html.light .scroll .md-report h1,
+html.light .scroll .md-report h2,
+html.light .scroll .md-report h3,
+html.light .scroll .md-report h4,
+html.light .scroll .md-report h5,
+html.light .scroll .md-report h6 {
   color: var(--parchment-ink) !important;
 }
-.scroll .md-report .md-h3 {
+html.light .scroll .md-report .md-h3 {
   color: #503810 !important;
 }
-.scroll .md-report blockquote {
+html.light .scroll .md-report blockquote {
   border-left-color: var(--parchment-ink);
   color: #4a3e30;
   background: rgba(0, 0, 0, 0.03);
 }
-.scroll .md-report .md-code {
+html.light .scroll .md-report .md-code {
   background: rgba(0, 0, 0, 0.05) !important;
   border-color: rgba(0, 0, 0, 0.1) !important;
   color: #cf6f00 !important;
 }
-.scroll .md-report table,
-.scroll .md-report th,
-.scroll .md-report td {
+html.light .scroll .md-report table,
+html.light .scroll .md-report th,
+html.light .scroll .md-report td {
   border-color: rgba(0, 0, 0, 0.15) !important;
   color: var(--parchment-ink) !important;
 }
-.scroll .md-report th {
+html.light .scroll .md-report th {
   background: rgba(0, 0, 0, 0.04) !important;
   color: #000000 !important;
 }
-.scroll .md-report tr:nth-child(even) td {
+html.light .scroll .md-report tr:nth-child(even) td {
   background: rgba(0, 0, 0, 0.02) !important;
 }
