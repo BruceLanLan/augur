@@ -173,12 +173,28 @@
                     <th scope="col" style="padding:12px 16px; text-align:center; color:var(--text-secondary); font-weight:500; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px;" data-i18n="signals-col-actions">操作</th>
                 </tr>
             </thead>
-            <tbody id="watchlist-body">
+            <tbody id="watchlist-body"
+                   aria-live="polite"
+                   aria-busy="true"
+                   aria-label="自选股信号列表"
+                   data-state="loading">
                 <tr>
-                    <td colspan="8" style="padding:48px 16px; text-align:center; color:var(--text-muted);" data-i18n="signals-loading">加载中...</td>
+                    <td colspan="8" style="padding:48px 16px; text-align:center; color:var(--text-muted);">
+                        <div class="spinner" aria-hidden="true" style="display:inline-block; vertical-align:middle; margin-right:8px;"></div>
+                        <span data-i18n="signals-loading">加载中...</span>
+                    </td>
                 </tr>
             </tbody>
         </table>
+    </div>
+</div>
+
+<!-- Watchlist error state -->
+<div id="watchlist-error" class="error-panel" style="display:none;" role="alert" aria-live="assertive">
+    <div class="error-panel-title" data-i18n="signals-error-title">加载自选股失败</div>
+    <div class="error-panel-msg" id="watchlist-error-msg" data-i18n="signals-error-msg">网络异常，请稍后重试</div>
+    <div class="error-panel-retry">
+        <button type="button" class="btn btn-sm" onclick="loadWatchlist()" data-i18n="signals-error-retry">重试</button>
     </div>
 </div>
 
@@ -235,14 +251,40 @@ function startAutoRefresh() {
 }
 
 function loadWatchlist() {
+    var tbody = document.getElementById('watchlist-body');
+    var errEl = document.getElementById('watchlist-error');
+    var errMsg = document.getElementById('watchlist-error-msg');
+    if (tbody) tbody.setAttribute('data-state', 'loading');
+    if (errEl) errEl.style.display = 'none';
     fetch('/api/watchlist')
-        .then(function(r) { return r.json(); })
+        .then(function(r) {
+            if (!r.ok) throw new Error('HTTP ' + r.status);
+            return r.json();
+        })
         .then(function(data) {
             watchlistData = data.watchlist || [];
+            if (tbody) {
+                tbody.setAttribute('data-state', 'ready');
+                tbody.setAttribute('aria-busy', 'false');
+            }
+            if (errEl) errEl.style.display = 'none';
             renderWatchlist();
         })
         .catch(function(e) {
             console.error('Failed to load watchlist:', e);
+            if (tbody) {
+                tbody.setAttribute('data-state', 'error');
+                tbody.setAttribute('aria-busy', 'false');
+                tbody.innerHTML = '<tr><td colspan="8" style="padding:32px 16px; text-align:center; color:var(--signal-sell);">' +
+                    '<div style="font-size:0.95rem; font-weight:600;">' + escapeHtml(_t('signals-error-title')) + '</div>' +
+                    '<div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">' + escapeHtml(e.message || '') + '</div>' +
+                    '<button type="button" class="btn btn-sm" style="margin-top:10px;" onclick="loadWatchlist()">' + escapeHtml(_t('signals-error-retry')) + '</button>' +
+                    '</td></tr>';
+            }
+            if (errEl) {
+                errEl.style.display = 'block';
+                if (errMsg && e && e.message) errMsg.textContent = e.message;
+            }
         });
 }
 
@@ -308,6 +350,15 @@ function getFilteredData() {
 function renderWatchlist() {
     var tbody = document.getElementById('watchlist-body');
     var items = getFilteredData();
+
+    // Don't overwrite a visible error state with stale data
+    if (tbody && tbody.getAttribute('data-state') === 'error') {
+        return;
+    }
+    if (tbody) {
+        tbody.setAttribute('data-state', 'ready');
+        tbody.setAttribute('aria-busy', 'false');
+    }
 
     if (watchlistData.length === 0) {
         tbody.innerHTML = '<tr><td colspan="8" style="padding:48px 16px; text-align:center; color:var(--text-muted);">' +

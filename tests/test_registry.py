@@ -3,7 +3,7 @@
 
 import pytest
 from augur.registry import AgentRegistry, DecisionCoordinator
-from augur.personas.base import MarketContext, SignalType
+from augur.personas.base import BaseAgent, MarketContext, SignalType
 
 
 class TestAgentRegistry:
@@ -162,3 +162,103 @@ class TestConfig:
         set_config("per_agent.buffett", "gpt-4o")
         config = get_config()
         assert config["per_agent"]["buffett"] == "gpt-4o"
+
+
+class TestRegistryRegistration:
+    """Tests for persona registration, dedup, and hot-reload semantics."""
+
+    def test_register_returns_true(self):
+        """register() returns True and inserts a new agent."""
+        registry = AgentRegistry()
+        initial = len(registry.get_all())
+        # Use a brand-new ad-hoc agent id
+        class _Stub(BaseAgent):
+            def analyze(self, context):
+                from augur.personas.base import AgentResponse
+                return AgentResponse(
+                    agent_id=self.agent_id, agent_name=self.name,
+                    signal=SignalType.NEUTRAL, confidence=0.5, score=5.0,
+                    reasoning="stub",
+                )
+        stub = _Stub(
+            agent_id="stub_new_1", name="Stub", identity="t", philosophy=[],
+            scoring_weights={}, thresholds={},
+        )
+        assert registry.register(stub) is True
+        assert len(registry.get_all()) == initial + 1
+        assert registry.get("stub_new_1") is stub
+
+    def test_register_overwrites_existing_id(self):
+        """Re-registering same id REPLACES the previous agent (current contract)."""
+        registry = AgentRegistry()
+        original = registry.get("buffett")
+        # Build a different agent that reuses the "buffett" id
+        class _Stub(BaseAgent):
+            def analyze(self, context):
+                from augur.personas.base import AgentResponse
+                return AgentResponse(
+                    agent_id=self.agent_id, agent_name=self.name,
+                    signal=SignalType.NEUTRAL, confidence=0.5, score=5.0,
+                    reasoning="stub-replacement",
+                )
+        replacement = _Stub(
+            agent_id="buffett", name="BuffettStub", identity="t",
+            philosophy=[], scoring_weights={}, thresholds={},
+        )
+        registry.register(replacement)
+        # Replacement should be active; previous Python agent gone
+        assert registry.get("buffett") is replacement
+        assert registry.get("buffett").name == "BuffettStub"
+        assert registry.get("buffett") is not original
+
+    def test_unregister_unknown_id_returns_false(self):
+        """unregister() returns False for unknown ids (no exception)."""
+        registry = AgentRegistry()
+        assert registry.unregister("definitely_not_a_real_agent_xyz") is False
+
+    def test_get_all_returns_independent_list(self):
+        """get_all() should return a fresh list; mutating it must not affect registry."""
+        registry = AgentRegistry()
+        snapshot = registry.get_all()
+        snapshot.clear()
+        # Internal agents should still be present
+        assert len(registry.get_all()) >= 18
+        assert registry.get("buffett") is not None
+
+    def test_list_agents_includes_yaml_custom(self):
+        """If a YAML persona dir exists, the registry may have loaded custom personas."""
+        registry = AgentRegistry()
+        # da-yu.yaml and thiel.yaml ship in personas/custom/
+        # Built-in 'dayu' is already registered; yaml re-load must not duplicate.
+        ids = [a.agent_id for a in registry.get_all()]
+        assert ids.count("dayu") == 1, "Duplicate 'dayu' after YAML load"
+        # thiel.yaml would only land in registry if its agent_id differs from python 'thiel'
+        # Just assert no obvious duplicates exist
+        assert len(ids) == len(set(ids)), f"Duplicate ids in registry: {ids}"
+
+    def test_reload_yaml_does_not_duplicate_builtin(self):
+        """Calling _register_yaml_personas repeatedly must not duplicate or override built-ins."""
+        registry = AgentRegistry()
+        # Capture the original built-in 'dayu' Python agent
+        original_dayu = registry.get("dayu")
+        assert original_dayu is not None
+        original_name = original_dayu.name
+
+        # Hot-reload twice
+        registry._register_yaml_personas()
+        registry._register_yaml_personas()
+
+        # Built-in must be preserved (da-yu.yaml has agent_id=dayu, so it must NOT overwrite)
+        assert registry.get("dayu") is original_dayu
+        assert registry.get("dayu").name == original_name
+        ids = [a.agent_id for a in registry.get_all()]
+        assert ids.count("dayu") == 1
+
+    def test_global_registry_is_singleton(self):
+        """get_registry() returns the same instance on repeated calls (singleton contract)."""
+        import augur.registry as _reg_mod
+        reg1 = _reg_mod.get_registry()
+        reg2 = _reg_mod.get_registry()
+        assert reg1 is reg2
+        # The module-level global must now be set to that same instance
+        assert _reg_mod._global_registry is reg1

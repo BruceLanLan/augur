@@ -32,6 +32,53 @@ from augur.personas.base import MarketContext
 logger = logging.getLogger(__name__)
 
 
+# ============ Error UX helpers ============
+#
+# 数据获取链路中存在多类“静默失败”路径（yfinance 不可用、网络异常、数据源返回空 dict、
+# 未知 ticker 等），原先调用方只能靠 ``data_source=="none"`` 推断，无法区分失败原因。
+# 下面提供一个轻量级 list 子类 ``_ResultList``，允许在 list 上挂载 ``data_error`` 字段，
+# 完全向后兼容（``isinstance(x, list)`` 仍为 True）。
+
+class _ResultList(list):
+    """list 子类，可挂载 ``data_error`` 字段。
+
+    用于 ``fetch_history`` / ``fetch_hot_tickers`` 等返回 list 的接口，
+    在出现数据获取失败时附带用户可读的错误信息。
+    ``data_error`` 默认为 ``None``（成功时）。
+    """
+
+    data_error: Optional[str] = None
+    data_source: Optional[str] = None
+
+
+def _attach_error(result: Any, message: str, source: Optional[str] = None) -> Any:
+    """给返回值（list / dict / MarketContext）附加 ``data_error``，并返回。
+
+    - list: 转 ``_ResultList`` 并挂 ``data_error``（同时支持 ``data_source``）
+    - dict: 写入 ``data_error`` 键
+    - MarketContext: 通过 ``setattr`` 挂动态属性
+    - 其他: 透传，不附加
+    """
+    if isinstance(result, list) and not isinstance(result, _ResultList):
+        result = _ResultList(result)
+    if isinstance(result, _ResultList):
+        result.data_error = message
+        if source is not None:
+            result.data_source = source
+    elif isinstance(result, dict):
+        result.setdefault("data_error", message)
+        if source is not None:
+            result.setdefault("data_source", source)
+    else:
+        try:
+            setattr(result, "data_error", message)
+            if source is not None:
+                setattr(result, "data_source", source)
+        except Exception:  # pragma: no cover - defensive
+            pass
+    return result
+
+
 # ============ Cache ============
 # Simple in-memory cache with TTL and LRU eviction.
 # Max 100 entries; when exceeded, the oldest 20+ entries (by timestamp) are
@@ -171,19 +218,27 @@ def _build_context_from_providers(ticker: str) -> MarketContext:
     - 第一个成功返回非空字典的 provider 胜出。
     - 全部失败时返回仅含 ticker 的空 context，并标记 ``data_source="none"``。
     - 返回的 context 上附带动态属性 ``data_source`` 标记来源（不修改 MarketContext 定义）。
+    - 失败时同时附带 ``data_error`` 字段，给出人类可读的具体原因（区分网络错误、
+      数据源返回空、未知 ticker 等场景），避免调用方只能靠 ``data_source=="none"`` 推断。
     """
     valid_fields = _market_context_field_names()
     upper = ticker.upper()
+
+    errors: List[str] = []
 
     for provider in _get_providers():
         name = getattr(provider, "name", provider.__class__.__name__)
         try:
             raw = provider.fetch(ticker)
         except Exception as exc:
+            msg = f"{name} failed: {exc}"
             logger.warning("data provider '%s' failed for %s: %s", name, ticker, exc)
+            errors.append(msg)
             continue
         if not raw:
+            msg = f"{name} returned empty data"
             logger.warning("data provider '%s' returned empty data for %s", name, ticker)
+            errors.append(msg)
             continue
 
         source = raw.pop("data_source", name)
@@ -193,10 +248,14 @@ def _build_context_from_providers(ticker: str) -> MarketContext:
         setattr(ctx, "data_source", source)
         return ctx
 
-    # 所有数据源均失败：返回空 context，但带来源标记，便于下游识别“无数据”状态
+    # 所有数据源均失败：返回空 context，但带来源标记与具体错误，便于下游识别“无数据”状态
     logger.warning("all data providers failed for %s; returning empty context", ticker)
     ctx = MarketContext(ticker=upper)
     setattr(ctx, "data_source", "none")
+    if errors:
+        setattr(ctx, "data_error", f"all providers failed for {ticker}: " + "; ".join(errors))
+    else:
+        setattr(ctx, "data_error", f"no data available for {ticker}")
     return ctx
 
 
@@ -229,6 +288,7 @@ def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketCont
         logger.warning("invalid ticker rejected: %s", exc)
         ctx = MarketContext(ticker=ticker.strip().upper() or "INVALID")
         setattr(ctx, "data_source", "error")
+        setattr(ctx, "data_error", f"invalid ticker: {exc}")
         return ctx
 
     cache_key = f"ctx:{ticker}"
@@ -265,6 +325,7 @@ def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict
                 logger.warning("batch fetch skipped invalid ticker %s: %s", t, exc)
                 ctx = MarketContext(ticker=t.strip().upper() or "INVALID")
                 setattr(ctx, "data_source", "error")
+                setattr(ctx, "data_error", f"invalid ticker: {exc}")
                 results[t] = ctx
                 continue
             norm_to_origs.setdefault(norm, []).append(t)
@@ -278,6 +339,7 @@ def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict
                 logger.warning("batch fetch failed for %s: %s", norm, e)
                 ctx = MarketContext(ticker=norm)
                 setattr(ctx, "data_source", "error")
+                setattr(ctx, "data_error", f"batch fetch failed: {e}")
             for orig in norm_to_origs.get(norm, []):
                 results[orig] = ctx
     return results
@@ -293,7 +355,10 @@ def fetch_history(ticker: str, period: str = "1y", force_refresh: bool = False) 
         force_refresh: If True, bypass the cache and fetch fresh data
 
     Returns:
-        List of {date, open, high, low, close, volume, change_pct}
+        :class:`_ResultList` of ``{date, open, high, low, close, volume, change_pct}``。
+        失败时返回空 ``_ResultList``，并附带 ``data_error`` 字段描述失败原因
+        （``"invalid_ticker"`` / ``"yfinance_unavailable"`` / ``"network_error: ..."`` /
+        ``"no_data: <ticker> returned empty history"``）。``isinstance(result, list)`` 仍为 True。
     """
     from augur.datasources.base import safe_num
 
@@ -301,26 +366,43 @@ def fetch_history(ticker: str, period: str = "1y", force_refresh: bool = False) 
         ticker = _normalize_ticker(ticker)
     except ValueError as exc:
         logger.warning("invalid ticker rejected for history: %s", exc)
-        return []
+        return _attach_error(
+            _ResultList(), f"invalid ticker: {exc}", source="error"
+        )
 
     cache_key = f"hist:{ticker}:{period}"
     if not force_refresh:
         cached = _cache_get(cache_key)
         if cached is not None:
+            # 缓存值若已是 _ResultList 直接返回；否则透传（保持向后兼容）
+            if isinstance(cached, list) and not isinstance(cached, _ResultList):
+                cached = _ResultList(cached)
             return cached
 
-    yf = _get_yfinance()
+    try:
+        yf = _get_yfinance()
+    except Exception as exc:
+        msg = f"yfinance_unavailable: {exc}"
+        logger.warning("history: yfinance unavailable: %s", exc)
+        return _attach_error(_ResultList(), msg, source="error")
+
     stock = yf.Ticker(ticker)
 
     try:
         hist = stock.history(period=period)
-    except Exception:
-        return []
+    except Exception as exc:
+        msg = f"network_error: failed to fetch history for {ticker}: {exc}"
+        logger.warning("history: network error for %s: %s", ticker, exc)
+        return _attach_error(_ResultList(), msg, source="error")
 
     if hist is None or hist.empty:
-        return []
+        return _attach_error(
+            _ResultList(),
+            f"no_data: {ticker} returned empty history for period={period}",
+            source="yfinance",
+        )
 
-    results = []
+    results: _ResultList = _ResultList()
     prev_close = None
     for date_idx, row in hist.iterrows():
         # safe_num 防止 yfinance 偶发的 NaN 行污染历史序列
@@ -400,10 +482,14 @@ def fetch_market_overview(force_refresh: bool = False) -> Dict[str, Any]:
 
     items: List[Dict[str, Any]] = []
     ok_count = 0
+    yfinance_error: Optional[str] = None
     try:
         yf = _get_yfinance()
-    except Exception:
-        result = {"as_of": _now_iso(), "items": [], "source": "none"}
+    except Exception as exc:
+        yfinance_error = f"yfinance_unavailable: {exc}"
+        logger.warning("market overview: yfinance unavailable: %s", exc)
+        result = {"as_of": _now_iso(), "items": [], "source": "none",
+                  "data_error": yfinance_error}
         _cache_set(cache_key, result)
         return result
 
@@ -473,6 +559,19 @@ def fetch_market_overview(force_refresh: bool = False) -> Dict[str, Any]:
 
     source = "yfinance" if ok_count == len(instruments) else ("partial" if ok_count else "none")
     result = {"as_of": _now_iso(), "items": items, "source": source}
+    if source != "yfinance":
+        # 部分或全部失败时给出可读原因，避免前端无法区分“网络断”与“市场闭市”
+        if ok_count == 0:
+            result["data_error"] = (
+                f"all {len(instruments)} instruments failed; "
+                "market overview is empty"
+            )
+        else:
+            failed = len(instruments) - ok_count
+            result["data_error"] = (
+                f"{failed}/{len(instruments)} instruments failed; "
+                "showing partial data"
+            )
     # 市场总览缓存 60 秒：通过预置时间戳老化实现（_CACHE_TTL=180, 预老化 120s, 有效剩余 60s）
     with _cache_lock:
         _cache[cache_key] = {"value": result, "ts": time.time() - (_CACHE_TTL - 60)}
@@ -526,8 +625,11 @@ def fetch_hot_tickers(force_refresh: bool = False) -> List[Dict[str, Any]]:
 
     try:
         yf = _get_yfinance()
-    except Exception:
-        result: List[Dict[str, Any]] = []
+    except Exception as exc:
+        logger.warning("hot tickers: yfinance unavailable: %s", exc)
+        result: _ResultList = _ResultList()
+        result.data_error = f"yfinance_unavailable: {exc}"
+        result.data_source = "error"
         _cache_set(cache_key, result)
         return result
 
@@ -571,16 +673,20 @@ def fetch_hot_tickers(force_refresh: bool = False) -> List[Dict[str, Any]]:
             "market_cap": round(market_cap, 0),
         }
 
-    items: List[Dict[str, Any]] = []
+    items: _ResultList = _ResultList()
+    failed_symbols: List[str] = []
     with ThreadPoolExecutor(max_workers=5) as executor:
         futures = {executor.submit(_fetch_one_hot, entry): entry for entry in HOT_SYMBOLS}
         for future in futures:
             try:
                 item = future.result(timeout=10)
                 items.append(item)
+                if item["price"] <= 0:
+                    failed_symbols.append(item["symbol"])
             except (FuturesTimeoutError, Exception) as exc:
                 entry = futures[future]
                 logger.debug("hot ticker timeout/error for %s: %s", entry[0], exc)
+                failed_symbols.append(entry[0])
                 items.append({
                     "symbol": entry[0],
                     "name": entry[1],
@@ -588,6 +694,13 @@ def fetch_hot_tickers(force_refresh: bool = False) -> List[Dict[str, Any]]:
                     "change_pct": 0.0,
                     "market_cap": 0.0,
                 })
+
+    if failed_symbols:
+        items.data_error = (
+            f"{len(failed_symbols)}/{len(HOT_SYMBOLS)} tickers failed: "
+            + ", ".join(failed_symbols)
+        )
+    items.data_source = "yfinance"
 
     # 热门标的缓存 90 秒：通过预置时间戳老化实现（_CACHE_TTL=180, 预老化 90s, 有效剩余 90s）
     with _cache_lock:

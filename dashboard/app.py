@@ -443,6 +443,82 @@ def _check_rate_limit(ticker: str) -> bool:
         return True
 
 
+# ============ Token Bucket Rate Limiter ============
+# Per-endpoint token-bucket rate limiting for heavy LLM endpoints.
+# Each bucket has a capacity (burst) and refill rate (tokens/second).
+# This complements the global IP middleware with stricter per-route limits.
+
+class TokenBucket:
+    """Thread-safe token-bucket rate limiter.
+
+    A bucket holds up to ``capacity`` tokens and refills at ``refill_rate`` tokens
+    per second. ``consume()`` returns True and removes one token if a token is
+    available, otherwise returns False without modifying state.
+    """
+
+    __slots__ = ("capacity", "refill_rate", "tokens", "last_refill", "_lock")
+
+    def __init__(self, capacity: int, refill_rate: float):
+        if capacity <= 0:
+            raise ValueError("capacity must be > 0")
+        if refill_rate < 0:
+            raise ValueError("refill_rate must be >= 0")
+        self.capacity = capacity
+        self.refill_rate = refill_rate
+        self.tokens = float(capacity)
+        self.last_refill = _time.time()
+        self._lock = threading.Lock()
+
+    def _refill(self) -> None:
+        now = _time.time()
+        elapsed = now - self.last_refill
+        if elapsed > 0:
+            self.tokens = min(
+                float(self.capacity), self.tokens + elapsed * self.refill_rate
+            )
+            self.last_refill = now
+
+    def consume(self, tokens: float = 1.0) -> bool:
+        """Try to consume ``tokens`` tokens. Returns True if allowed."""
+        with self._lock:
+            self._refill()
+            if self.tokens >= tokens:
+                self.tokens -= tokens
+                return True
+            return False
+
+    def reset(self) -> None:
+        """Reset the bucket to full capacity (used in tests)."""
+        with self._lock:
+            self.tokens = float(self.capacity)
+            self.last_refill = _time.time()
+
+
+# Per-route token-bucket registry. Routes are registered lazily on first use.
+_endpoint_buckets: Dict[str, TokenBucket] = {}
+_endpoint_buckets_lock = threading.Lock()
+
+
+def get_endpoint_bucket(
+    name: str, capacity: int = 5, refill_rate: float = 0.5
+) -> TokenBucket:
+    """Return (creating if needed) the TokenBucket for a named endpoint.
+
+    Defaults: capacity=5 burst tokens, refill=0.5 tok/s (~30/min steady-state).
+    """
+    with _endpoint_buckets_lock:
+        bucket = _endpoint_buckets.get(name)
+        if bucket is None:
+            bucket = TokenBucket(capacity=capacity, refill_rate=refill_rate)
+            _endpoint_buckets[name] = bucket
+        return bucket
+
+
+def consume_endpoint_token(name: str) -> bool:
+    """Convenience wrapper that consumes one token from a named endpoint bucket."""
+    return get_endpoint_bucket(name).consume(1.0)
+
+
 # ============ HTML Routes ============
 
 @app.get("/", response_class=HTMLResponse, summary="首页仪表盘")
@@ -2665,6 +2741,11 @@ async def performance_page(request: Request):
 
 @app.post("/api/compare")
 async def api_compare(body: CompareBody):
+    if not consume_endpoint_token("api_compare"):
+        raise HTTPException(
+            status_code=429,
+            detail="Compare rate limit exceeded. Please wait and retry.",
+        )
     ticker = body.ticker.strip().upper()
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format")
@@ -2694,6 +2775,11 @@ async def api_compare(body: CompareBody):
 
 @app.post("/api/debate")
 async def api_debate(body: DebateBody):
+    if not consume_endpoint_token("api_debate"):
+        raise HTTPException(
+            status_code=429,
+            detail="Debate rate limit exceeded. Please wait and retry.",
+        )
     ticker = body.ticker.strip().upper()
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format")
@@ -3016,6 +3102,11 @@ async def optimizer_page(request: Request):
 
 @app.post("/api/optimize")
 async def api_optimize(body: OptimizeBody):
+    if not consume_endpoint_token("api_optimize"):
+        raise HTTPException(
+            status_code=429,
+            detail="Optimize rate limit exceeded. Please wait and retry.",
+        )
     from augur.optimizer import PortfolioOptimizer
     import random
     if not body.tickers or len(body.tickers) > 10:
