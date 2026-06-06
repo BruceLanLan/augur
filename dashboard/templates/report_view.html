@@ -314,6 +314,41 @@
 .report-verdict-strip .verdict-dot.dot-buy { background: var(--signal-buy); }
 .report-verdict-strip .verdict-dot.dot-sell { background: var(--signal-sell); }
 .report-verdict-strip .verdict-dot.dot-neutral { background: var(--signal-neutral); }
+
+/* Markdown report panels — parchment in light, terminal card in dark */
+.report-section-body .md-report,
+.report-md-panel {
+    padding: 4px 2px;
+}
+html.light .report-section-body.open {
+    background:
+        repeating-linear-gradient(0deg, rgba(0,0,0,0.012) 0 2px, transparent 2px 4px),
+        linear-gradient(180deg, var(--parchment, #fbf7ee) 0%, var(--parchment-deep, #ece2cc) 100%);
+    color: var(--parchment-ink, #2a2118);
+}
+html.light .report-section-block {
+    border-color: #c4bba6;
+}
+html.light .report-section-toggle.open {
+    background: rgba(207, 111, 0, 0.06);
+}
+html.light .score-gauge-track {
+    background: var(--report-chart-track, rgba(0,0,0,0.08));
+}
+html:not(.light) .score-gauge-track {
+    background: var(--report-chart-track, rgba(255,255,255,0.06));
+}
+html.light .report-voting-table th {
+    background: rgba(0, 0, 0, 0.04);
+    color: #4a3e30;
+}
+html.light .report-exec-metrics .metric-item {
+    background: rgba(255, 255, 255, 0.65);
+}
+.report-section-body .md-report .md-p,
+.report-section-body .md-report li {
+    max-width: 72ch;
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -395,7 +430,9 @@
                 <span>Full Report (Rendered Markdown)</span>
             </div>
             <div class="report-section-body" id="rp-full-md-body">
-                <div id="rp-full-md" class="md-report"></div>
+                <div class="report-md-panel">
+                    <div id="rp-full-md" class="md-report"></div>
+                </div>
             </div>
         </div>
     </div>
@@ -405,6 +442,11 @@
 var rpTicker = '{{ ticker }}';
 var rpMarkdown = '';
 var rpAnalysisData = null;
+
+function reportThemeColor(cssVar, fallback) {
+    var val = getComputedStyle(document.documentElement).getPropertyValue(cssVar);
+    return (val && val.trim()) ? val.trim() : fallback;
+}
 
 function createScoreGauge(score, maxScore) {
     maxScore = maxScore || 10;
@@ -416,6 +458,8 @@ function createScoreGauge(score, maxScore) {
     if (score <= 3) color = '#ff5252';
     else if (score <= 6) color = '#ffca28';
     else color = '#00c853';
+    var trackStroke = reportThemeColor('--report-chart-track', 'rgba(255,255,255,0.1)');
+    var subLabelFill = reportThemeColor('--report-text-muted', reportThemeColor('--text-secondary', 'rgba(255,255,255,0.5)'));
     // Arc path
     var startAngle = Math.PI;
     var endAngle = Math.PI + (angle * Math.PI / 180);
@@ -424,18 +468,16 @@ function createScoreGauge(score, maxScore) {
     var x2 = cx + r * Math.cos(endAngle);
     var y2 = cy + r * Math.sin(endAngle);
     var largeArc = angle > 180 ? 1 : 0;
-    var bgX2 = cx + r * Math.cos(2 * Math.PI);
-    var bgY2 = cy + r * Math.sin(2 * Math.PI);
-    var svg = '<svg width="100" height="60" viewBox="0 0 100 60">';
+    var svg = '<svg width="100" height="60" viewBox="0 0 100 60" role="img" aria-label="Score ' + score.toFixed(1) + ' out of ' + maxScore + '">';
     // Background arc (full semicircle)
-    svg += '<path d="M ' + (cx - r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 0 1 ' + (cx + r) + ' ' + cy + '" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8" stroke-linecap="round"/>';
+    svg += '<path d="M ' + (cx - r) + ' ' + cy + ' A ' + r + ' ' + r + ' 0 0 1 ' + (cx + r) + ' ' + cy + '" fill="none" stroke="' + trackStroke + '" stroke-width="8" stroke-linecap="round"/>';
     // Score arc
     if (angle > 0.5) {
         svg += '<path d="M ' + x1.toFixed(2) + ' ' + y1.toFixed(2) + ' A ' + r + ' ' + r + ' 0 ' + largeArc + ' 1 ' + x2.toFixed(2) + ' ' + y2.toFixed(2) + '" fill="none" stroke="' + color + '" stroke-width="8" stroke-linecap="round"/>';
     }
     // Score text
     svg += '<text x="' + cx + '" y="' + (cy - 5) + '" text-anchor="middle" fill="' + color + '" font-size="16" font-weight="700" font-family="var(--font-data)">' + score.toFixed(1) + '</text>';
-    svg += '<text x="' + cx + '" y="' + (cy + 8) + '" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="8">/ ' + maxScore + '</text>';
+    svg += '<text x="' + cx + '" y="' + (cy + 8) + '" text-anchor="middle" fill="' + subLabelFill + '" font-size="8">/ ' + maxScore + '</text>';
     svg += '</svg>';
     return svg;
 }
@@ -494,7 +536,7 @@ function downloadReportHTML() {
     var date = new Date().toISOString().slice(0, 10);
     var filename = rpTicker + '_report_' + date + '.html';
     var htmlDoc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + rpTicker + ' - Augur Analysis Report</title><style>'
-        + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#c9d1d9;padding:40px;max-width:900px;margin:0 auto;line-height:1.8;}'
+        + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#e8e8f0;padding:40px;max-width:900px;margin:0 auto;line-height:1.8;}'
         + 'h1{color:#ff8c00;margin-top:1.5em;font-size:1.8em;border-bottom:2px solid #30363d;padding-bottom:8px;}'
         + 'h2{color:#ff8c00;margin-top:1.5em;font-size:1.3em;border-left:4px solid #ff8c00;padding-left:12px;}'
         + 'h3{color:#ffa726;margin-top:1.2em;font-size:1.1em;}'
@@ -786,7 +828,9 @@ function renderCollapsibleSections() {
         html += '<span>' + escapeHtml(sec.title) + '</span>';
         html += '</div>';
         html += '<div class="report-section-body' + isOpen + '">';
+        html += '<div class="report-md-panel">';
         html += renderReportMarkdown(contentMd);
+        html += '</div>';
         html += '</div></div>';
         container.innerHTML += html;
     });
@@ -797,7 +841,9 @@ function renderScoreChart(agents) {
     if (!agents || !agents.length) return '';
     var barHeight = 24, gap = 4, labelWidth = 110, chartWidth = 300, maxScore = 10;
     var totalHeight = agents.length * (barHeight + gap) + 10;
-    var svg = '<svg width="' + (labelWidth + chartWidth + 40) + '" height="' + totalHeight + '" xmlns="http://www.w3.org/2000/svg" style="display:block; max-width:100%;" viewBox="0 0 ' + (labelWidth + chartWidth + 40) + ' ' + totalHeight + '">';
+    var labelFill = reportThemeColor('--report-chart-label', reportThemeColor('--text-primary', '#e8e8f0'));
+    var trackFill = reportThemeColor('--report-chart-track', 'rgba(255,255,255,0.04)');
+    var svg = '<svg width="' + (labelWidth + chartWidth + 40) + '" height="' + totalHeight + '" xmlns="http://www.w3.org/2000/svg" style="display:block; max-width:100%;" viewBox="0 0 ' + (labelWidth + chartWidth + 40) + ' ' + totalHeight + '" role="img" aria-label="Agent score distribution">';
     agents.forEach(function(agent, idx) {
         var y = idx * (barHeight + gap) + 5;
         var score = Math.min(Math.max(agent.score || 0, 0), maxScore);
@@ -807,9 +853,9 @@ function renderScoreChart(agents) {
         else if (score >= 4) color = '#ffd600';
         else color = '#ff5252';
         // Agent name label
-        svg += '<text x="' + (labelWidth - 4) + '" y="' + (y + barHeight / 2 + 4) + '" text-anchor="end" fill="#c9d1d9" font-size="11" font-family="var(--font-data, monospace)">' + escapeHtml(agent.name || agent.agent_id || '').substring(0, 14) + '</text>';
+        svg += '<text x="' + (labelWidth - 4) + '" y="' + (y + barHeight / 2 + 4) + '" text-anchor="end" fill="' + labelFill + '" font-size="11" font-family="var(--font-data, monospace)">' + escapeHtml(agent.name || agent.agent_id || '').substring(0, 14) + '</text>';
         // Bar background
-        svg += '<rect x="' + labelWidth + '" y="' + y + '" width="' + chartWidth + '" height="' + barHeight + '" rx="3" fill="rgba(255,255,255,0.04)"/>';
+        svg += '<rect x="' + labelWidth + '" y="' + y + '" width="' + chartWidth + '" height="' + barHeight + '" rx="3" fill="' + trackFill + '"/>';
         // Score bar
         if (barW > 0) {
             svg += '<rect x="' + labelWidth + '" y="' + y + '" width="' + barW.toFixed(1) + '" height="' + barHeight + '" rx="3" fill="' + color + '" opacity="0.8"/>';

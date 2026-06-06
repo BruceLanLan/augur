@@ -58,6 +58,20 @@
   --parchment:      #e8dcc0;   /* scroll / report paper           */
   --parchment-deep: #d4c4a0;   /* aged paper edge / shadow band   */
   --parchment-ink:  #2a2118;   /* text written on parchment       */
+
+  /* Report prose — deep analysis markdown readability */
+  --report-surface:     var(--bg-card);
+  --report-text:        var(--fg-1);
+  --report-text-muted:  var(--fg-2);
+  --report-heading:     var(--amber);
+  --report-heading-sub: var(--amber-bright);
+  --report-code-bg:     var(--bg-tertiary);
+  --report-code-fg:     var(--amber);
+  --report-quote-bg:    rgba(255, 140, 0, 0.06);
+  --report-table-head:  var(--bg-tertiary);
+  --report-table-stripe:rgba(255, 255, 255, 0.015);
+  --report-chart-label: var(--fg-2);
+  --report-chart-track: rgba(255, 255, 255, 0.06);
   --oracle-purple:  #3a2c6e;   /* the temple banner, regalia      */
   --oracle-purple-d:#241a46;   /* deep shadow of the banner       */
   --gilt:           #d4af37;   /* scales-of-justice gold, framing */
@@ -74,7 +88,7 @@
 
   --fg-1: #e8e8f0;   /* primary text                              */
   --fg-2: #8888a0;   /* secondary / labels                        */
-  --fg-3: #5a5a70;   /* muted / disabled / hint                   */
+  --fg-3: #8686a0;   /* muted / disabled / hint (≥4.5:1 on card)  */
 
   /* ---------------------------------------------------------
      6 · TYPE FAMILIES
@@ -170,7 +184,7 @@
 
   --signal-buy:     #1b8a4b;
   --signal-sell:    #c62828;
-  --signal-neutral: #b58100;
+  --signal-neutral: #7a5800;
 
   --border:       #ddd6c6;
   --border-hover: #c4bba6;
@@ -182,6 +196,40 @@
   --parchment: #fbf7ee;
   --parchment-deep: #ece2cc;
   --parchment-ink: #2a2118;
+
+  /* Light parchment report — dark ink on warm paper (WCAG AA+) */
+  --report-surface:     var(--parchment);
+  --report-text:        var(--parchment-ink);
+  --report-text-muted:  #4a3e30;
+  --report-heading:     #503810;
+  --report-heading-sub: #6b4f1d;
+  --report-code-bg:     rgba(0, 0, 0, 0.05);
+  --report-code-fg:     #8a4f00;
+  --report-quote-bg:    rgba(0, 0, 0, 0.03);
+  --report-table-head:  rgba(0, 0, 0, 0.04);
+  --report-table-stripe:rgba(0, 0, 0, 0.02);
+  --report-chart-label: #5a5142;
+  --report-chart-track: rgba(0, 0, 0, 0.08);
+
+  /* bloomberg.css legacy aliases — single source of truth */
+  --text-primary:   var(--fg-1);
+  --text-secondary: var(--fg-2);
+  --text-muted:     var(--fg-3);
+  --bg-primary:     var(--bg-void);
+  --bg-sidebar:     var(--bg-panel);
+  --border-color:   var(--border);
+  --accent-orange:  var(--amber);
+}
+
+/* bloomberg.css legacy aliases (override bloomberg :root after load order) */
+:root {
+  --text-primary:   var(--fg-1);
+  --text-secondary: var(--fg-2);
+  --text-muted:     var(--fg-3);
+  --bg-primary:     var(--bg-void);
+  --bg-sidebar:     var(--bg-panel);
+  --border-color:   var(--border);
+  --accent-orange:  var(--amber);
 }
 
 /* ============================================================
