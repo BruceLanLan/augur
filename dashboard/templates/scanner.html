@@ -23,20 +23,22 @@
 </style>
 {% endblock %}
 {% block content %}
-<h1 class="section-title" style="margin-top:0;" data-i18n="scanner_title">市场扫描器</h1>
-<p class="text-muted mb-16" data-i18n="scanner_desc">选择预设列表或输入自定义股票代码，一键让18位大师快速评分</p>
+<div style="margin-bottom:16px;">
+    <h1 style="color:var(--accent-orange); margin:0 0 4px; font-size:1.35rem;" data-i18n="scanner_title">市场扫描器</h1>
+    <p class="text-muted" style="font-size:0.82rem; margin:0;" data-i18n="scanner_desc">选择预设列表或输入自定义股票代码，一键让18位大师快速评分</p>
+</div>
 
 <!-- Preset buttons -->
 <div class="scanner-presets" role="group" aria-label="Scanner presets">
-    <button class="preset-chip" onclick="loadPreset('tech_giants')" data-i18n="scanner_preset_tech">科技巨头</button>
-    <button class="preset-chip" onclick="loadPreset('china_stocks')" data-i18n="scanner_preset_china">中概股</button>
-    <button class="preset-chip" onclick="loadPreset('crypto')" data-i18n="scanner_preset_crypto">加密货币</button>
+    <button type="button" class="preset-chip" onclick="loadPreset('tech_giants', this)" data-i18n="scanner_preset_tech">科技巨头</button>
+    <button type="button" class="preset-chip" onclick="loadPreset('china_stocks', this)" data-i18n="scanner_preset_china">中概股</button>
+    <button type="button" class="preset-chip" onclick="loadPreset('crypto', this)" data-i18n="scanner_preset_crypto">加密货币</button>
 </div>
 
 <!-- Custom input -->
 <div class="card mb-16" style="padding:16px;">
     <label class="data-label" for="scanner-tickers" data-i18n="scanner_custom_label">自定义标的 (逗号分隔)</label>
-    <textarea class="scanner-input" id="scanner-tickers" placeholder="AAPL, NVDA, TSLA, BTC-USD" aria-describedby="scanner-limit-hint"></textarea>
+    <textarea class="scanner-input" id="scanner-tickers" placeholder="AAPL, NVDA, TSLA, BTC-USD" aria-describedby="scanner-limit-hint" oninput="updateScannerCount()"></textarea>
     <div class="flex items-center justify-between mt-12">
         <span id="scanner-limit-hint" class="text-muted" style="font-size:0.72rem;" data-i18n="scanner_limit">最多20个标的</span>
         <button type="button" class="btn btn-primary" onclick="runScanner()" id="scanner-run-btn" data-i18n="scanner_run">开始扫描</button>
@@ -95,21 +97,52 @@ var AGENT_SHORT = {
     duan_yongping:'DYP', zhang_lei:'ZHL', li_lu:'LIL', dan_bin:'DAB'
 };
 
-function loadPreset(name) {
+function countTickers(text) {
+    return text.split(/[,\s\n]+/).filter(function(t) { return t.length > 0; }).length;
+}
+
+function updateScannerCount() {
+    var ta = document.getElementById('scanner-tickers');
+    var hint = document.getElementById('scanner-limit-hint');
+    if (!ta || !hint) return;
+    var n = countTickers((ta.value || '').trim());
+    if (n > 0) {
+        hint.textContent = _t('scanner-count-hint').replace('{n}', n);
+        hint.style.color = n > 20 ? 'var(--signal-sell)' : 'var(--text-muted)';
+    } else {
+        hint.textContent = _t('scanner_limit');
+        hint.style.color = 'var(--text-muted)';
+    }
+}
+
+function loadPreset(name, chipEl) {
     var ta = document.getElementById('scanner-tickers');
     if (ta && PRESETS[name]) {
         ta.value = PRESETS[name].join(', ');
+        updateScannerCount();
     }
     document.querySelectorAll('.preset-chip').forEach(function(el) { el.classList.remove('active'); });
-    if (event && event.target) event.target.classList.add('active');
+    if (chipEl) chipEl.classList.add('active');
 }
 
 function runScanner() {
     var ta = document.getElementById('scanner-tickers');
     var text = (ta ? ta.value : '').trim();
-    if (!text) { showToast(_t('scanner-enter-tickers'), 'warning'); return; }
+    if (!text) {
+        showToast(_t('scanner-enter-tickers'), 'warning');
+        if (ta) { ta.focus(); ta.style.borderColor = 'var(--signal-sell)'; }
+        return;
+    }
     var tickers = text.split(/[,\s\n]+/).filter(function(t) { return t.length > 0; });
-    if (tickers.length > 20) { showToast(_t('scanner-max-warning'), 'warning'); return; }
+    if (tickers.length > 20) {
+        showToast(_t('scanner-max-warning'), 'warning');
+        if (ta) { ta.focus(); ta.style.borderColor = 'var(--signal-sell)'; }
+        return;
+    }
+    if (ta) ta.style.borderColor = '';
+
+    var runBtn = document.getElementById('scanner-run-btn');
+    if (runBtn) runBtn.disabled = true;
 
     document.getElementById('scanner-idle').style.display = 'none';
     document.getElementById('scanner-loading').style.display = 'block';
@@ -130,6 +163,7 @@ function runScanner() {
     .then(function(data) {
         stopProgress('scanner-progress');
         document.getElementById('scanner-loading').style.display = 'none';
+        if (runBtn) runBtn.disabled = false;
         if (data.status === 'ok') {
             renderHeatmap(data.results);
         } else {
@@ -140,6 +174,7 @@ function runScanner() {
     .catch(function(err) {
         stopProgress('scanner-progress');
         document.getElementById('scanner-loading').style.display = 'none';
+        if (runBtn) runBtn.disabled = false;
         document.getElementById('scanner-error').style.display = 'block';
         document.getElementById('scanner-error-msg').textContent = err.message || _t('hero-error-request', 'Request failed');
     });

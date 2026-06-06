@@ -265,8 +265,8 @@
         </div>
         <div class="settings-api-controls">
             <input type="password" id="api-auth-token" class="api-key-input" placeholder="输入 API Token" autocomplete="off">
-            <button class="save-persona-btn" onclick="saveApiToken()" data-i18n="settings-save">保存</button>
             <button class="test-btn" onclick="testApiToken()">测试</button>
+            <button class="save-persona-btn" onclick="saveApiToken()" data-i18n="settings-save">保存</button>
         </div>
         <div class="settings-api-status" id="api-auth-status"></div>
     </div>
@@ -326,11 +326,11 @@
     <!-- Alert Threshold -->
     <div style="padding:12px 0;">
         <label style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px; display:block;">
-            警报阈值 (仅 score &ge; 此值时通知): <span id="threshold-value" style="color:var(--accent-orange); font-weight:600;">3</span>
+            警报阈值 (仅 score &ge; 此值时通知): <span id="settings-cron-threshold-val" style="color:var(--accent-orange); font-weight:600;">3</span>
         </label>
         <input type="range" id="cron-threshold" min="1" max="10" value="3" step="1"
                style="width:100%; accent-color:var(--accent-orange);"
-               oninput="document.getElementById('threshold-value').textContent = this.value;">
+               oninput="document.getElementById('settings-cron-threshold-val').textContent = this.value;">
         <div style="display:flex; justify-content:space-between; font-size:0.65rem; color:var(--text-muted);">
             <span>1 (全部通知)</span>
             <span>10 (仅强信号)</span>
@@ -565,12 +565,6 @@ function saveDatasourceKey(source) {
     var keyId = source === 'finnhub' ? 'finnhub-key' : 'alphavantage-key';
     var key = document.getElementById(keyId).value.trim();
     if (!key) { showToast(_t('settings-toast-enter-api-key'), 'warning'); return; }
-    var configKey = source === 'finnhub' ? 'FINNHUB_API_KEY' : 'ALPHAVANTAGE_API_KEY';
-    fetch('/api/config', {
-        method: 'PUT',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({datasource_keys: {}})
-    });
     // Save via config endpoint
     fetch('/api/config/import', {
         method: 'POST',
@@ -615,10 +609,25 @@ function testDatasource(source) {
 function saveNotification(channel) {
     var payload = {};
     if (channel === 'telegram') {
-        payload.telegram_token = document.getElementById('telegram-token').value.trim();
-        payload.telegram_chat_id = document.getElementById('telegram-chat-id').value.trim();
+        var token = document.getElementById('telegram-token').value.trim();
+        var chatId = document.getElementById('telegram-chat-id').value.trim();
+        if (!token || !chatId) {
+            showToast(_t('settings-toast-enter-telegram'), 'warning');
+            return;
+        }
+        payload.telegram_token = token;
+        payload.telegram_chat_id = chatId;
     } else if (channel === 'slack') {
-        payload.slack_webhook = document.getElementById('slack-webhook').value.trim();
+        var webhook = document.getElementById('slack-webhook').value.trim();
+        if (!webhook) {
+            showToast(_t('settings-toast-enter-slack'), 'warning');
+            return;
+        }
+        if (webhook.indexOf('hooks.slack.com') === -1) {
+            showToast(_t('settings-toast-enter-slack'), 'warning');
+            return;
+        }
+        payload.slack_webhook = webhook;
     }
     fetch('/api/config/import', {
         method: 'POST',
@@ -750,7 +759,7 @@ function loadCronConfig() {
         // Alert threshold
         var threshold = notifications.alert_threshold || 3;
         document.getElementById('cron-threshold').value = threshold;
-        document.getElementById('threshold-value').textContent = threshold;
+        document.getElementById('settings-cron-threshold-val').textContent = threshold;
 
         // Channel toggles
         var tg = notifications.telegram || {};

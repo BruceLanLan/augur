@@ -28,6 +28,7 @@
 .history-table tr.expanded {
     background: var(--bg-card-hover);
 }
+.history-table .col-date { white-space: nowrap; }
 .history-detail {
     display: none;
     padding: 16px;
@@ -49,12 +50,9 @@
     padding: 8px 12px;
     font-size: 0.75rem;
 }
-.empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: var(--text-muted);
+@media (max-width: 768px) {
+    .detail-agents { grid-template-columns: 1fr; }
 }
-.empty-state p { margin-top: 12px; font-size: 0.85rem; }
 </style>
 {% endblock %}
 {% block content %}
@@ -69,12 +67,13 @@
 
 <div class="card">
     <div id="history-content">
-        <div class="empty-state" id="empty-state">
-            <span class="empty-state-icon">&#128340;</span>
+        <div class="empty-state" id="empty-state" style="display:none;">
+            <span class="empty-state-icon" aria-hidden="true">&#128340;</span>
             <div class="empty-state-title" data-i18n="history-empty-title">暂无分析历史</div>
             <p class="empty-state-desc" data-i18n="history-empty-desc">运行首次分析后将自动保存在此</p>
             <div class="empty-state-action">
                 <a href="/stocks" class="btn btn-primary" style="text-decoration:none;" data-i18n="history-start">开始分析</a>
+                <a href="/compare" class="btn btn-sm btn-ghost" style="text-decoration:none;" data-i18n="history-empty-compare">对比分析</a>
             </div>
         </div>
         <!-- Skeleton loading -->
@@ -98,6 +97,7 @@
             </thead>
             <tbody id="history-body"></tbody>
         </table>
+        <p class="table-scroll-hint" data-i18n="table-scroll-hint">左右滑动查看完整表格</p>
         </div>
         <!-- Pagination controls -->
         <div id="pagination-controls" style="display:none; padding:12px 0; border-top:1px solid var(--border-color); margin-top:8px;">
@@ -116,6 +116,7 @@
 var currentPage = 1;
 var totalPages = 1;
 var perPage = 20;
+function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 
 function loadHistory() {
     fetch('/api/history?page=' + currentPage + '&per_page=' + perPage)
@@ -153,7 +154,8 @@ function updatePagination() {
         return;
     }
     controls.style.display = 'block';
-    document.getElementById('page-indicator').textContent = 'Page ' + currentPage + ' / ' + totalPages;
+    document.getElementById('page-indicator').textContent = _t('history-page-indicator', '第 {page} / {total} 页')
+        .replace('{page}', currentPage).replace('{total}', totalPages);
     document.getElementById('prev-page-btn').disabled = (currentPage <= 1);
     document.getElementById('next-page-btn').disabled = (currentPage >= totalPages);
 }
@@ -181,8 +183,14 @@ function renderHistory(records) {
     records.forEach(function(rec) {
         var tr = document.createElement('tr');
         tr.setAttribute('data-id', rec.id);
-        var ts = rec.timestamp ? new Date(rec.timestamp).toLocaleString('zh-CN') : '--';
-        tr.innerHTML = '<td>' + ts + '</td>' +
+        var ts = '--';
+        if (rec.timestamp) {
+            var d = new Date(rec.timestamp);
+            ts = window.innerWidth <= 768
+                ? d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                : d.toLocaleString('zh-CN');
+        }
+        tr.innerHTML = '<td class="col-date">' + ts + '</td>' +
             '<td style="font-weight:600; color:var(--accent-orange);">' + rec.ticker + '</td>' +
             '<td><span class="signal-badge ' + signalBadgeClass(rec.signal) + '" style="font-size:0.7rem;">' + signalLabel(rec.signal) + '</span></td>' +
             '<td>' + (rec.score || 0).toFixed(1) + '/10</td>' +

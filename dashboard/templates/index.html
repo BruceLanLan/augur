@@ -386,11 +386,12 @@
 {% block content %}
 
 <!-- First-run onboarding banner (dismissible, remembered via localStorage) -->
-<div class="onboard-banner" id="onboard-banner" style="display:none;">
+<div class="onboard-banner" id="onboard-banner" style="display:none;" role="region" aria-labelledby="onboard-title">
     <span class="onboard-icon">&#x1F44B;</span>
     <div class="onboard-body">
-        <div class="onboard-title" data-i18n="onboard-title">欢迎使用 Augur — 你的 18 位 AI 投资大师智囊团</div>
+        <div class="onboard-title" id="onboard-title" data-i18n="onboard-title">欢迎使用 Augur — 你的 18 位 AI 投资大师智囊团</div>
         <div class="onboard-desc" data-i18n="onboard-desc">只需输入一个股票代码（如 AAPL），系统会自动获取实时财务数据，让 18 位大师从各自视角独立打分，并形成共识买/卖/持建议。无需手动填写任何财务指标。下方点一下示例即可立即体验 ↓</div>
+        <button class="btn btn-sm onboard-cta" type="button" onclick="tryExample('AAPL')" data-i18n="onboard-try-aapl">立即体验 AAPL</button>
     </div>
     <button class="onboard-close" onclick="dismissOnboard()" data-i18n-title="onboard-close-aria" title="不再显示" data-i18n-aria="onboard-close-aria" aria-label="关闭引导">&times;</button>
 </div>
@@ -416,7 +417,7 @@
 </div>
 
 <!-- Hero Quick Analysis -->
-<section class="hero gilt-edge mb-24">
+<section class="hero hero-section gilt-edge mb-24" id="hero-section">
     <div class="hero-glow"></div>
     <img src="/static/images/augur-owl-128.png" class="pixelated hero-owl" width="92" height="92" alt=""/>
     <div class="hero-eyebrow">▸ AI Investment Oracle</div>
@@ -437,21 +438,22 @@
         </button>
     </div>
     
-    <div class="hero-chips" style="margin-top: 14px;" role="group" aria-label="Example tickers">
+    <p class="hero-examples-hint" style="margin-top:12px; font-size:0.75rem; color:var(--text-muted);" data-i18n="hero-examples-hint">💡 第一次用？点下面任意一个，无需填写财务指标，系统自动获取实时数据：</p>
+    <div class="hero-chips" style="margin-top: 8px;" role="group" data-i18n-aria="a11y-hero-chips-group" aria-label="Example tickers">
         <span style="font:500 0.68rem/1 var(--font-mono);color:var(--fg-3)">Try</span>
         <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-nvda" aria-label="Try NVDA example" onclick="tryExample('NVDA')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('NVDA')}">NVDA</span>
-        <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-aapl" aria-label="Try AAPL example" onclick="tryExample('AAPL')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('AAPL')}">AAPL</span>
+        <span class="chip chip-recommended" role="button" tabindex="0" data-i18n-aria="a11y-chip-aapl" aria-label="Try AAPL example" onclick="tryExample('AAPL')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('AAPL')}">AAPL</span>
         <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-tsla" aria-label="Try TSLA example" onclick="tryExample('TSLA')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('TSLA')}">TSLA</span>
         <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-msft" aria-label="Try MSFT example" onclick="tryExample('MSFT')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('MSFT')}">MSFT</span>
         <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-btc" aria-label="Try BTC-USD example" onclick="tryExample('BTC-USD')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('BTC-USD')}">BTC</span>
         <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-hk" aria-label="Try 00700.HK example" onclick="tryExample('00700.HK')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('00700.HK')}">00700.HK</span>
     </div>
 
-    <p id="hero-ticker-hint" class="field-hint" style="display:none; margin-top:6px; font-size:0.75rem; color:var(--signal-sell);"></p>
+    <p id="hero-ticker-hint" class="field-hint" role="alert" style="display:none; margin-top:6px; font-size:0.75rem; color:var(--signal-sell);"></p>
     <div class="shortcut-hint" style="margin-top:8px;" data-i18n="hero-shortcut-hint">按 / 快速聚焦 · Ctrl+Enter 提交</div>
 
     <!-- Inline loading skeleton -->
-    <div id="hero-spinner" style="display:none; margin-top:16px; position:relative; z-index:2;">
+    <div id="hero-spinner" role="status" aria-live="polite" aria-busy="true" style="display:none; margin-top:16px; position:relative; z-index:2;">
         <p class="loading-pulse text-orange text-mono progress-text" id="hero-progress" data-i18n="hero-progress">正在唤醒 18 位投资大师...</p>
         <div class="grid-3 mt-16" style="gap:12px; max-width:600px;">
             <div class="skeleton skeleton-card"></div>
@@ -461,7 +463,9 @@
     </div>
 
     <!-- Inline result card -->
-    <div id="hero-result" class="inline-result" style="display:none; max-width:600px; margin:16px 0 0; position:relative; z-index:2; background:var(--bg-card); border-radius:var(--r-md); padding:16px; border:1px solid var(--border);">
+    <div id="hero-result" class="inline-result" role="region" aria-live="polite" aria-labelledby="hero-result-heading" style="display:none; max-width:600px; margin:16px 0 0; position:relative; z-index:2; background:var(--bg-card); border-radius:var(--r-md); padding:16px; border:1px solid var(--border);">
+        <div id="hero-result-heading" class="sr-only" data-i18n="hero-result-heading">分析结果</div>
+        <div id="hr-data-warning" class="data-warning-banner" style="display:none; margin-bottom:12px; padding:8px 12px; font-size:0.75rem; background:rgba(255,171,0,0.1); border:1px solid rgba(255,171,0,0.3); border-radius:var(--radius-sm); color:var(--text-secondary);"></div>
         <div class="flex items-center gap-24" style="flex-wrap:wrap;">
             <div>
                 <div class="data-label" data-i18n="index-label-signal">信号</div>
@@ -484,7 +488,7 @@
     </div>
 
     <!-- Inline error -->
-    <div id="hero-error" class="error-panel" aria-live="polite" style="display:none; max-width:600px; margin:16px 0 0; position:relative; z-index:2;">
+    <div id="hero-error" class="error-panel" role="alert" aria-live="assertive" style="display:none; max-width:600px; margin:16px 0 0; position:relative; z-index:2;">
         <div class="error-panel-title" data-i18n="hero-error-title">分析失败</div>
         <div class="error-panel-msg" id="hero-error-msg"></div>
         <div class="error-panel-retry">
@@ -587,7 +591,7 @@
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-commodities-rates">Commodities &amp; Treasury Rates</div>
     <button class="btn btn-sm btn-ghost" onclick="loadCommoditiesAndRates()" id="commod-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
 </div>
-<div class="movers-row mb-24" id="commodities-rates-row">
+<div class="movers-row mb-24" id="commodities-rates-row" aria-live="polite" aria-busy="true" aria-label="Commodities and treasury rates loading">
     <div class="movers-section">
         <div class="movers-title" style="color:var(--accent-orange);" data-i18n="commodities-label">💰 大宗商品</div>
         <div id="commodities-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4B0;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
@@ -602,7 +606,7 @@
 <div class="flex items-center justify-between mb-12">
     <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-top-movers">涨跌幅领先</div>
 </div>
-<div class="movers-row mb-24" id="movers-row">
+<div class="movers-row mb-24" id="movers-row" aria-live="polite" aria-label="Top movers">
     <div class="movers-section">
         <div class="movers-title gainers" data-i18n="movers-gainers">▲ 领涨</div>
         <div id="gainers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C8;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
@@ -656,7 +660,10 @@
 </div>
 <div class="card mb-24" style="padding:0; overflow:hidden;" id="leaderboard-section">
     <ul class="leaderboard-list" id="leaderboard-list">
-        <li class="leaderboard-item" style="justify-content:center;"><span class="text-muted" style="font-size:0.78rem;" data-i18n="leaderboard-empty">尚无分析记录，去分析一只股票吧</span></li>
+        <li class="leaderboard-item" style="justify-content:center; flex-wrap:wrap; gap:8px;">
+            <span class="text-muted" style="font-size:0.78rem;" data-i18n="leaderboard-empty">尚无分析记录，去分析一只股票吧</span>
+            <span class="chip chip-recommended" role="button" tabindex="0" data-i18n-aria="a11y-chip-aapl" aria-label="Try AAPL example" onclick="tryExample('AAPL')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('AAPL')}">AAPL</span>
+        </li>
     </ul>
 </div>
 
@@ -677,7 +684,7 @@
         <div style="display:flex;flex-direction:column;gap:2px;">
             {% for p in featured %}
             {% if loop.index <= 3 %}
-            <div class="m-row" role="link" tabindex="0" data-i18n-aria="a11y-featured-persona" aria-label="Analyze with {{ p.name }}" onclick="window.location.href='/stocks?persona={{ p.id }}'" onkeydown="if(event.key==='Enter'){event.preventDefault();window.location.href='/stocks?persona={{ p.id }}'}">
+            <div class="m-row" role="link" tabindex="0" data-i18n-aria="a11y-featured-persona" data-aria-name="{{ p.name }}" aria-label="Analyze with {{ p.name }}" onclick="window.location.href='/stocks?persona={{ p.id }}'" onkeydown="if(event.key==='Enter'){event.preventDefault();window.location.href='/stocks?persona={{ p.id }}'}">
                 <img src="/docs/images/avatars/{{ p.id }}.png" class="avatar" width="40" height="40" alt="{{ p.name }}" onerror="this.src='/static/images/augur-owl-64.png'">
                 <div style="min-width:0;">
                     <div style="font:600 0.85rem/1.2 var(--font-sans);color:var(--fg-1);">{{ p.name }}</div>
@@ -732,6 +739,23 @@
 <script>
 var _heroGoBusy = false;
 function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
+function _scrollHeroPanel(elId) {
+    var el = document.getElementById(elId);
+    if (el && el.style.display !== 'none') {
+        el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+}
+function _showHeroDataWarning(msg) {
+    var warn = document.getElementById('hr-data-warning');
+    if (!warn) return;
+    if (msg) {
+        warn.textContent = msg;
+        warn.style.display = 'block';
+    } else {
+        warn.textContent = '';
+        warn.style.display = 'none';
+    }
+}
 function heroGo() {
     var ticker = validateTickerInput('hero-ticker', 'hero-ticker-hint');
     if (!ticker) return;
@@ -743,6 +767,7 @@ function heroGo() {
     if (heroBtn) {
         heroBtn.disabled = true;
         heroBtn.classList.add('is-loading');
+        heroBtn.setAttribute('aria-busy', 'true');
         if (heroBtnLabel) heroBtnLabel.textContent = (typeof window.t === 'function' ? window.t('btn-analyzing') : '分析中…');
     }
     function resetHeroBtn() {
@@ -750,15 +775,20 @@ function heroGo() {
         if (heroBtn) {
             heroBtn.disabled = false;
             heroBtn.classList.remove('is-loading');
+            heroBtn.removeAttribute('aria-busy');
             if (heroBtnLabel) heroBtnLabel.textContent = origBtnText || (typeof window.t === 'function' ? window.t('btn-analyze') : '分析');
         }
     }
 
     // Show loading, hide previous results/errors
-    document.getElementById('hero-spinner').style.display = 'block';
+    var spinner = document.getElementById('hero-spinner');
+    spinner.style.display = 'block';
+    spinner.setAttribute('aria-busy', 'true');
     document.getElementById('hero-result').style.display = 'none';
     document.getElementById('hero-error').style.display = 'none';
+    _showHeroDataWarning(null);
     startProgress('hero-progress');
+    _scrollHeroPanel('hero-spinner');
 
     fetchWithTimeout('/api/analyze/' + ticker, {}, 90000)
         .then(function(r) {
@@ -773,7 +803,8 @@ function heroGo() {
         })
         .then(function(data) {
             stopProgress('hero-progress');
-            document.getElementById('hero-spinner').style.display = 'none';
+            spinner.style.display = 'none';
+            spinner.setAttribute('aria-busy', 'false');
             if (!data || !data.consensus) {
                 throw new Error(data && data.detail ? data.detail : '分析返回数据异常，请重试');
             }
@@ -790,7 +821,11 @@ function heroGo() {
             document.getElementById('hr-link').href = '/stocks?ticker=' + ticker;
             document.getElementById('hr-report-link').href = '/stocks?ticker=' + ticker + '&report=1';
 
+            var warnMsg = data.data_error || data.data_note || null;
+            _showHeroDataWarning(warnMsg);
+
             document.getElementById('hero-result').style.display = 'block';
+            _scrollHeroPanel('hero-result');
 
             // Cache the result
             augurCache.add(ticker, {
@@ -799,12 +834,15 @@ function heroGo() {
                 confidence: cons.confidence || 0
             });
             renderRecentAnalyses();
+            renderLeaderboard();
             resetHeroBtn();
         })
         .catch(function(err) {
             stopProgress('hero-progress');
-            document.getElementById('hero-spinner').style.display = 'none';
+            spinner.style.display = 'none';
+            spinner.setAttribute('aria-busy', 'false');
             document.getElementById('hero-error').style.display = 'block';
+            _scrollHeroPanel('hero-error');
             resetHeroBtn();
             var msg = (err && err.name === 'AbortError')
                 ? _t('hero-error-timeout', 'Analysis timed out (90s). Try again or check backend/network.')
@@ -817,11 +855,12 @@ function heroGo() {
 function tryExample(t) {
     // Don't fire if analysis is already in progress
     if (document.getElementById('hero-spinner').style.display !== 'none') return;
+    dismissOnboard();
     var input = document.getElementById('hero-ticker');
-    if (input) input.value = t;
+    if (input) { input.value = t; input.focus(); }
     heroGo();
     // Smooth scroll so the result/spinner is visible
-    var hero = document.querySelector('.hero-section');
+    var hero = document.getElementById('hero-section') || document.querySelector('.hero-section, .hero');
     if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
@@ -943,6 +982,13 @@ function renderMarketBoard(data) {
         var srcLabel = data.source === 'partial' ? _t('msg-partial-data') : '';
         asof.textContent = _t('msg-updated-at') + (isNaN(d.getTime()) ? data.as_of : d.toLocaleTimeString()) + srcLabel;
     }
+    if (data.data_error && board) {
+        var hint = document.createElement('div');
+        hint.className = 'empty-hint';
+        hint.style.cssText = 'grid-column:1/-1; font-size:0.72rem; color:var(--text-muted); margin-top:4px;';
+        hint.textContent = data.data_error;
+        board.appendChild(hint);
+    }
 }
 
 // ====== Data Source Status ======
@@ -1042,6 +1088,13 @@ function renderHotTickers(data) {
         grid.appendChild(card);
         loadSparkline(t.symbol, card);
     });
+    if (data && data.data_error) {
+        var errHint = document.createElement('div');
+        errHint.className = 'empty-hint';
+        errHint.style.cssText = 'grid-column:1/-1; font-size:0.72rem; color:var(--text-muted); margin-top:4px;';
+        errHint.textContent = data.data_error;
+        grid.appendChild(errHint);
+    }
 }
 
 function loadSparkline(symbol, container) {
@@ -1528,9 +1581,11 @@ function loadCommodities() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             renderCommodities(data);
+            _setCommodRatesBusy(false);
         })
         .catch(function() {
-            if (list) list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div></div>';
+            if (list) list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><button class="btn btn-sm" onclick="loadCommodities()" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
+            _setCommodRatesBusy(false);
         });
 }
 
@@ -1565,10 +1620,17 @@ function loadTreasuryRates() {
         .then(function(r) { return r.json(); })
         .then(function(data) {
             renderTreasuryRates(data);
+            _setCommodRatesBusy(false);
         })
         .catch(function() {
-            if (list) list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div></div>';
+            if (list) list.innerHTML = '<div class="panel-empty-state"><div class="empty-msg">' + _t('msg-load-failed-retry') + '</div><button class="btn btn-sm" onclick="loadTreasuryRates()" style="margin-top:8px;">' + _t('btn-retry') + '</button></div>';
+            _setCommodRatesBusy(false);
         });
+}
+
+function _setCommodRatesBusy(busy) {
+    var row = document.getElementById('commodities-rates-row');
+    if (row) row.setAttribute('aria-busy', busy ? 'true' : 'false');
 }
 
 function renderTreasuryRates(data) {

@@ -73,22 +73,33 @@
             </label>
             {% endfor %}
         </div>
-        <div class="text-muted" style="font-size:0.72rem;" id="debate-select-count">已选择: 0 / 4</div>
+        <div class="select-count agent-counter insufficient" id="debate-select-count" data-i18n="debate-initial-select">2-4 位 (已选 0)</div>
     </div>
 </div>
 
 <!-- Spinner -->
-<div id="debate-spinner" style="display:none; text-align:center; padding:40px;">
-    <div class="spinner" style="margin:0 auto;"></div>
-    <p class="loading-pulse text-orange text-mono mt-16" style="font-size:0.88rem;">辩论进行中...</p>
+<div id="debate-spinner" style="display:none; text-align:center; padding:40px;" role="status" aria-live="polite">
+    <div class="spinner" style="margin:0 auto;" aria-hidden="true"></div>
+    <p class="loading-pulse text-orange text-mono mt-16" style="font-size:0.88rem;" data-i18n="debate-loading">辩论进行中...</p>
 </div>
 
 <!-- Error Panel -->
-<div id="debate-error" class="error-panel mb-16" style="display:none;">
-    <div class="error-panel-title"><span class="error-panel-icon">&#x26A0;</span>辩论失败</div>
+<div id="debate-error" class="error-panel mb-16" style="display:none;" role="alert">
+    <div class="error-panel-title"><span class="error-panel-icon" aria-hidden="true">&#x26A0;</span><span data-i18n="debate-error-title">辩论失败</span></div>
     <div class="error-panel-msg" id="debate-error-msg"></div>
     <div class="error-panel-retry">
-        <button class="btn btn-sm" onclick="startDebate()">重试</button>
+        <button type="button" class="btn btn-sm" onclick="startDebate()" data-i18n="debate-retry">重试</button>
+    </div>
+</div>
+
+<!-- Empty State -->
+<div id="debate-empty" class="empty-state card">
+    <span class="empty-state-icon" aria-hidden="true">&#x1F4AC;</span>
+    <div class="empty-state-title" data-i18n="debate-empty-title">选择辩手开始辩论</div>
+    <p class="empty-state-desc" data-i18n="debate-empty-desc">选择 2-4 位投资大师，围绕同一标的进行多轮观点交锋与反驳</p>
+    <div class="empty-state-action">
+        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('debate-ticker').focus()" data-i18n="debate-empty-cta">输入股票代码</button>
+        <a href="/compare" class="btn btn-sm btn-ghost" style="text-decoration:none;" data-i18n="debate-empty-compare">先去对比分析</a>
     </div>
 </div>
 
@@ -98,19 +109,26 @@
 {% endblock %}
 {% block extra_scripts %}
 <script>
+function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
+
 function toggleDebateAgent(label) {
     var cb = label.querySelector('input[type="checkbox"]');
     var allChecked = document.querySelectorAll('#debate-agents input:checked');
     if (!cb.checked && allChecked.length >= 4) {
         cb.checked = false;
-        showToast('最多选择 4 位', 'warning');
+        showToast(_t('debate-max-agents'), 'warning');
         return;
     }
     setTimeout(function() {
         var checked = document.querySelectorAll('#debate-agents input:checked');
         var count = checked.length;
         var countEl = document.getElementById('debate-select-count');
-        countEl.textContent = '2-4 位 (已选 ' + count + ')';
+        countEl.textContent = _t('debate-select-count').replace('{n}', count);
+        if (count >= 2 && count <= 4) {
+            countEl.className = 'select-count agent-counter ready';
+        } else {
+            countEl.className = 'select-count agent-counter insufficient';
+        }
         document.querySelectorAll('.debate-agent-chip').forEach(function(chip) {
             var c = chip.querySelector('input');
             if (c.checked) chip.classList.add('selected');
@@ -139,21 +157,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
 function startDebate() {
     var ticker = document.getElementById('debate-ticker').value.trim().toUpperCase();
-    if (!ticker) { showToast('请输入股票代码', 'warning'); return; }
+    if (!ticker) { showToast(_t('msg-enter-ticker'), 'warning'); return; }
 
     var checked = document.querySelectorAll('#debate-agents input:checked');
     var agentIds = [];
     checked.forEach(function(cb) { agentIds.push(cb.value); });
 
-    if (agentIds.length < 2) { showToast('请至少选择 2 位', 'warning'); return; }
-    if (agentIds.length > 4) { showToast('最多选择 4 位', 'warning'); return; }
+    if (agentIds.length < 2) { showToast(_t('debate-min-agents'), 'warning'); return; }
+    if (agentIds.length > 4) { showToast(_t('debate-max-agents'), 'warning'); return; }
 
     var btn = document.getElementById('debate-btn');
     btn.disabled = true;
-    btn.textContent = '辩论中...';
+    btn.textContent = _t('debate-in-progress');
     document.getElementById('debate-spinner').style.display = 'block';
     document.getElementById('debate-thread').innerHTML = '';
     document.getElementById('debate-error').style.display = 'none';
+    document.getElementById('debate-empty').style.display = 'none';
 
     fetch('/api/debate', {
         method: 'POST',
@@ -163,15 +182,16 @@ function startDebate() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         btn.disabled = false;
-        btn.textContent = '开始辩论';
+        btn.textContent = _t('debate-start');
         document.getElementById('debate-spinner').style.display = 'none';
         renderDebate(data);
     })
     .catch(function(err) {
         btn.disabled = false;
-        btn.textContent = '开始辩论';
+        btn.textContent = _t('debate-start');
         document.getElementById('debate-spinner').style.display = 'none';
         document.getElementById('debate-error').style.display = 'block';
+        document.getElementById('debate-empty').style.display = 'block';
         document.getElementById('debate-error-msg').textContent = err.message || String(err);
     });
 }
@@ -209,7 +229,7 @@ function renderDebate(data) {
         var summaryCard = document.createElement('div');
         summaryCard.className = 'card mt-16';
         summaryCard.style.borderLeft = '3px solid var(--accent-orange)';
-        summaryCard.innerHTML = '<div class="data-label mb-8">辩论总结</div>' +
+        summaryCard.innerHTML = '<div class="data-label mb-8">' + escapeHtml(_t('debate-summary')) + '</div>' +
             '<p class="text-muted" style="font-size:0.82rem; line-height:1.6;">' + data.summary + '</p>';
         thread.appendChild(summaryCard);
     }

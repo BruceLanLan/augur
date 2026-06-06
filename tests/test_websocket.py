@@ -150,3 +150,16 @@ class TestPriceStreamEndpoint:
                     ws.receive_text()
         finally:
             monkeypatch.delenv("AUGUR_API_TOKEN", raising=False)
+
+    def test_ws_prices_accepts_query_token_when_auth_required(self, monkeypatch):
+        """Browser clients pass ?token= when AUGUR_API_TOKEN is configured."""
+        monkeypatch.setenv("AUGUR_API_TOKEN", "secret-test-token-xyz")
+        try:
+            with client.websocket_connect(
+                "/ws/prices?token=secret-test-token-xyz"
+            ) as ws:
+                msg = ws.receive_json()
+                assert msg["type"] == "price_update"
+                assert len(msg["prices"]) > 0
+        finally:
+            monkeypatch.delenv("AUGUR_API_TOKEN", raising=False)

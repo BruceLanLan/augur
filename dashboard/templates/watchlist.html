@@ -98,14 +98,9 @@
 .sparkline-wrapper {
     margin-top: 6px;
 }
-.watchlist-empty {
-    text-align: center;
-    padding: 48px 24px;
-    color: var(--text-muted);
-    font-size: 0.88rem;
-}
-.batch-btn {
-    margin-left: auto;
+@media (max-width: 768px) {
+    .watchlist-header .flex { width: 100%; justify-content: stretch; }
+    .watchlist-header .flex .btn { flex: 1; }
 }
 </style>
 {% endblock %}
@@ -139,17 +134,23 @@
 </div>
 
 <!-- Empty State -->
-<div class="watchlist-empty card" id="watchlist-empty" style="display:none;">
-    <div style="font-size:2rem; margin-bottom:12px;">&#x1F4D1;</div>
-    <div data-i18n="wl-empty-title">暂无自选股</div>
-    <div style="font-size:0.78rem; margin-top:8px; color:var(--text-muted);" data-i18n="wl-empty-desc">添加关注标的，一键批量分析</div>
-    <a href="/stocks" class="btn btn-primary btn-sm" style="margin-top:16px;" data-i18n="wl-empty-cta">去分析股票</a>
+<div class="empty-state card" id="watchlist-empty" style="display:none;">
+    <span class="empty-state-icon" aria-hidden="true">&#x1F4D1;</span>
+    <div class="empty-state-title" data-i18n="wl-empty-title">暂无自选股</div>
+    <p class="empty-state-desc" data-i18n="wl-empty-desc">添加关注标的，一键批量分析</p>
+    <div class="empty-state-action">
+        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('wl-add-input').focus()" data-i18n="wl-empty-add-cta">添加第一只标的</button>
+        <a href="/stocks" class="btn btn-sm btn-ghost" style="text-decoration:none;" data-i18n="wl-empty-cta">去分析股票</a>
+    </div>
 </div>
 
 <!-- Batch Results -->
 <div id="batch-results" style="display:none;" class="card mb-24">
     <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">批量分析结果</div>
-    <div id="batch-results-content"></div>
+    <div class="md-table-wrap">
+        <div id="batch-results-content"></div>
+    </div>
+    <p class="table-scroll-hint" data-i18n="table-scroll-hint">左右滑动查看完整表格</p>
 </div>
 
 {% endblock %}
@@ -263,13 +264,16 @@ function renderWatchlist() {
     var grid = document.getElementById('watchlist-grid');
     var empty = document.getElementById('watchlist-empty');
 
+    var batchBtn = document.getElementById('batch-btn');
     if (!list.length) {
         grid.innerHTML = '';
         empty.style.display = 'block';
+        if (batchBtn) batchBtn.disabled = true;
         return;
     }
 
     empty.style.display = 'none';
+    if (batchBtn) batchBtn.disabled = false;
     grid.innerHTML = '';
 
     list.forEach(function(item) {

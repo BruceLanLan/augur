@@ -130,7 +130,7 @@
 
 <!-- Results -->
 <div id="compare-results-section">
-    <div class="flex items-center justify-between mb-12">
+    <div class="flex items-center justify-between mb-12 compare-results-header">
         <h2 class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0; font-size:1rem;" data-i18n="compare-results">对比结果</h2>
         <div class="flex items-center gap-12">
             <div id="compare-consensus" class="text-muted" style="font-size:0.78rem;"></div>
@@ -145,10 +145,14 @@
 </div>
 
 <!-- Empty State (shown initially) -->
-<div id="compare-empty" class="empty-state">
+<div id="compare-empty" class="empty-state card">
     <span class="empty-state-icon" aria-hidden="true">&#128200;</span>
     <div class="empty-state-title" data-i18n="compare-empty-title">选择大师开始对比</div>
     <p class="empty-state-desc" data-i18n="compare-empty-desc">在上方选择 2-5 位投资大师，对比同一标的的分析差异，查看一致与分歧</p>
+    <div class="empty-state-action">
+        <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('compare-ticker').focus()" data-i18n="compare-empty-cta">输入股票代码</button>
+        <a href="/history" class="btn btn-sm btn-ghost" style="text-decoration:none;" data-i18n="compare-empty-history">查看历史分析</a>
+    </div>
 </div>
 
 {% endblock %}

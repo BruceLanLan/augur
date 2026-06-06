@@ -357,16 +357,16 @@
         navigator.clipboard.writeText(text).then(function() {
             if (btn) {
                 var orig = btn.textContent;
-                btn.textContent = '已复制';
+                btn.textContent = (typeof t === 'function' ? t('btn-copied') : '已复制');
                 btn.classList.add('copy-flash');
                 setTimeout(function() {
                     btn.textContent = orig;
                     btn.classList.remove('copy-flash');
                 }, 1500);
             }
-            showToast('已复制到剪贴板');
+            showToast(typeof t === 'function' ? t('toast-copy-success') : '已复制到剪贴板');
         }).catch(function() {
-            showToast('复制失败', 'error');
+            showToast(typeof t === 'function' ? t('toast-copy-failed') : '复制失败', 'error');
         });
     }
 
@@ -629,12 +629,17 @@
         opts = opts || {};
         var el = document.getElementById(elId);
         if (!el) return;
-        var stages = opts.stages || [
+        var stages = opts.stages || (typeof t === 'function' ? [
+            t('progress-analyze-1'),
+            t('progress-analyze-2'),
+            t('progress-analyze-3'),
+            t('progress-analyze-4')
+        ] : [
             '正在唤醒 18 位投资大师...',
             '大师们正在独立研读财务数据...',
             '正在汇总多空观点、计算共识...',
             '马上就好，正在生成最终结论...'
-        ];
+        ]);
         var prefix = opts.prefix || '';
         var start = Date.now();
         if (augurTimers[elId]) clearInterval(augurTimers[elId]);

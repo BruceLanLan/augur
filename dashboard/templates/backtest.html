@@ -2,10 +2,122 @@
 
 {% block title %}历史回测 - Augur{% endblock %}
 
+{% block extra_head %}
+<style>
+.form-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.3rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.form-input {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-tertiary, #1a1a2e);
+    border: 1px solid var(--border-color, #2a2a3e);
+    border-radius: 4px;
+    color: var(--text-primary, #e0e0e0);
+    font-size: 0.9rem;
+    font-family: 'JetBrains Mono', monospace;
+}
+.form-input:focus {
+    outline: none;
+    border-color: var(--accent-orange, #ff8c00);
+    box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.15);
+}
+.form-hint {
+    display: none;
+    font-size: 0.7rem;
+    margin-top: 2px;
+}
+.data-table {
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+.data-table th {
+    text-align: left;
+    padding: 0.6rem 0.5rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color, #2a2a3e);
+}
+.data-table td {
+    padding: 0.55rem 0.5rem;
+    border-bottom: 1px solid var(--border-color, #1a1a2e);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+}
+.data-table tr:hover {
+    background: var(--bg-tertiary, #1a1a2e);
+}
+.data-table tr.top-agent td {
+    color: var(--signal-buy);
+}
+.data-table tr.bottom-agent td {
+    color: var(--signal-sell);
+}
+.hit-bar-container {
+    width: 100%;
+    height: 18px;
+    background: var(--bg-tertiary, #1a1a2e);
+    border-radius: 3px;
+    overflow: hidden;
+    position: relative;
+}
+.hit-bar {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.6s ease;
+}
+.hit-bar-label {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.65rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-color, #2a2a3e);
+    border-top-color: var(--accent-orange, #ff8c00);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto;
+}
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+.badge {
+    background: var(--bg-tertiary, #1a1a2e);
+    color: var(--text-secondary);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+}
+.ic-positive { color: var(--signal-buy); }
+.ic-negative { color: var(--signal-sell); }
+.ic-neutral { color: var(--text-secondary); }
+.bt-days-btn.active {
+    background: var(--accent-orange) !important;
+    color: #000 !important;
+    border-color: var(--accent-orange) !important;
+}
+.signal-bullish { color: var(--signal-buy); font-weight: 600; }
+.signal-bearish { color: var(--signal-sell); font-weight: 600; }
+.signal-neutral { color: var(--text-secondary); }
+</style>
+{% endblock %}
+
 {% block content %}
 <div style="margin-bottom:1.5rem;">
-    <h2 style="color:var(--accent-orange); margin:0 0 4px;">历史回测</h2>
-    <p style="color:var(--text-secondary); font-size:0.85rem; margin:0;">Agent IC (Information Coefficient) 实盘追踪</p>
+    <h1 style="color:var(--accent-orange); margin:0 0 4px; font-size:1.35rem;">历史回测</h1>
+    <p style="color:var(--text-secondary); font-size:0.82rem; margin:0;">Agent IC (Information Coefficient) 实盘追踪</p>
 </div>
 
 <!-- Controls -->
@@ -18,7 +130,8 @@
         </div>
         <div style="flex: 1; min-width: 140px;">
             <label class="form-label" for="bt-capital">初始资金 (USD)</label>
-            <input type="number" id="bt-capital" class="form-input" value="100000" min="1000" step="10000" aria-label="初始资金 (美元)">
+            <input type="number" id="bt-capital" class="form-input" value="100000" min="1000" step="10000" aria-label="初始资金 (美元)" aria-describedby="bt-capital-hint" oninput="clearCapitalHint()">
+            <small id="bt-capital-hint" class="form-hint" style="color:var(--signal-sell);" role="alert">初始资金不能低于 $1,000</small>
         </div>
         <div style="flex: 1; min-width: 140px;">
             <label class="form-label" for="bt-strategy">仓位策略</label>
@@ -59,7 +172,7 @@
         <div class="empty-state-title">还没有回测结果</div>
         <div class="empty-state-desc">
             回测会用历史价格检验 18 位大师过往信号的有效性（IC 信息系数、命中率）。
-            选择股票与天数后，点击右上方<strong style="color:var(--accent-orange);">「运行回测」</strong>即可查看排行榜。
+            填写上方表单中的股票代码与回测天数，点击<strong style="color:var(--accent-orange);">「运行回测」</strong>即可查看排行榜。
         </div>
     </div>
 </div>
@@ -175,129 +288,6 @@
     </div>
 </div>
 
-<style>
-.form-label {
-    display: block;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    margin-bottom: 0.3rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-.form-input {
-    width: 100%;
-    padding: 0.5rem 0.75rem;
-    background: var(--bg-tertiary, #1a1a2e);
-    border: 1px solid var(--border-color, #2a2a3e);
-    border-radius: 4px;
-    color: var(--text-primary, #e0e0e0);
-    font-size: 0.9rem;
-    font-family: 'JetBrains Mono', monospace;
-}
-.form-input:focus {
-    outline: none;
-    border-color: var(--accent-orange, #ff8c00);
-    box-shadow: 0 0 0 2px rgba(255, 140, 0, 0.15);
-}
-.form-range {
-    width: 100%;
-    height: 4px;
-    appearance: none;
-    -webkit-appearance: none;
-    background: var(--border-color, #2a2a3e);
-    border-radius: 2px;
-    outline: none;
-    margin-top: 0.5rem;
-}
-.form-range::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 16px;
-    height: 16px;
-    border-radius: 50%;
-    background: var(--accent-orange, #ff8c00);
-    cursor: pointer;
-}
-.data-table {
-    border-collapse: collapse;
-    font-size: 0.82rem;
-}
-.data-table th {
-    text-align: left;
-    padding: 0.6rem 0.5rem;
-    font-size: 0.7rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-secondary);
-    border-bottom: 1px solid var(--border-color, #2a2a3e);
-}
-.data-table td {
-    padding: 0.55rem 0.5rem;
-    border-bottom: 1px solid var(--border-color, #1a1a2e);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
-}
-.data-table tr:hover {
-    background: var(--bg-tertiary, #1a1a2e);
-}
-.data-table tr.top-agent td {
-    color: var(--signal-buy);
-}
-.data-table tr.bottom-agent td {
-    color: var(--signal-sell);
-}
-.hit-bar-container {
-    width: 100%;
-    height: 18px;
-    background: var(--bg-tertiary, #1a1a2e);
-    border-radius: 3px;
-    overflow: hidden;
-    position: relative;
-}
-.hit-bar {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.6s ease;
-}
-.hit-bar-label {
-    position: absolute;
-    right: 6px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 0.65rem;
-    color: var(--text-primary);
-    font-weight: 600;
-}
-.spinner {
-    width: 32px;
-    height: 32px;
-    border: 3px solid var(--border-color, #2a2a3e);
-    border-top-color: var(--accent-orange, #ff8c00);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto;
-}
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-.badge {
-    background: var(--bg-tertiary, #1a1a2e);
-    color: var(--text-secondary);
-    padding: 0.2rem 0.5rem;
-    border-radius: 3px;
-}
-.ic-positive { color: var(--signal-buy); }
-.ic-negative { color: var(--signal-sell); }
-.ic-neutral { color: var(--text-secondary); }
-.bt-days-btn.active {
-    background: var(--accent-orange) !important;
-    color: #000 !important;
-    border-color: var(--accent-orange) !important;
-}
-.signal-bullish { color: var(--signal-buy); font-weight: 600; }
-.signal-bearish { color: var(--signal-sell); font-weight: 600; }
-.signal-neutral { color: var(--text-secondary); }
-</style>
-
 {% endblock %}
 
 {% block extra_scripts %}
@@ -319,6 +309,13 @@ function setDays(d) {
 document.addEventListener('DOMContentLoaded', function() {
     setDays(30);
 });
+
+function clearCapitalHint() {
+    var hint = document.getElementById('bt-capital-hint');
+    var input = document.getElementById('bt-capital');
+    if (hint) hint.style.display = 'none';
+    if (input) input.style.borderColor = '';
+}
 
 async function runBacktest() {
     var tickerEl = document.getElementById('bt-ticker');
@@ -349,7 +346,16 @@ async function runBacktest() {
     tickerEl.value = ticker;
 
     var days = selectedDays;
-    var capital = document.getElementById('bt-capital').value || 100000;
+    var capitalEl = document.getElementById('bt-capital');
+    var capitalHint = document.getElementById('bt-capital-hint');
+    var capital = parseFloat(capitalEl.value) || 0;
+    if (capital < 1000) {
+        if (capitalHint) capitalHint.style.display = 'block';
+        if (capitalEl) { capitalEl.style.borderColor = 'var(--signal-sell)'; capitalEl.focus(); }
+        return;
+    }
+    clearCapitalHint();
+
     var strategy = document.getElementById('bt-strategy').value;
     var btn = document.getElementById('bt-run-btn');
 

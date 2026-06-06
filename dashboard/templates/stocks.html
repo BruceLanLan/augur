@@ -48,6 +48,11 @@
     color: var(--text-secondary);
     cursor: pointer;
     user-select: none;
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    font-family: var(--font-ui);
 }
 .adv-toggle:hover { color: var(--accent-orange); }
 .adv-metrics {
@@ -69,37 +74,45 @@
 }
 .copy-btn:hover { background: var(--bg-card-hover); }
 .copy-btn.copied { background: var(--accent-orange); color: #000; }
+@media (max-width: 768px) {
+    .stocks-input-row > div { min-width: 100% !important; max-width: 100% !important; }
+    .an-head { flex-direction: column !important; align-items: flex-start !important; gap: 12px; }
+    .adv-toggle { min-height: 44px; display: inline-flex; align-items: center; padding: 8px 0; }
+}
 </style>
 {% endblock %}
 {% block content %}
 
-<h2 style="color:var(--accent-orange); margin-bottom:4px;">股票分析</h2>
-<p class="text-muted mb-16" style="font-size:0.82rem;">输入标的代码即可获得 18 位投资大师的共识判断 —— <span style="color:var(--text-secondary);">高级财务指标可留空，系统自动获取实时数据</span> <span class="shortcut-hint">按 <kbd>/</kbd> 聚焦 &middot; <kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交</span></p>
+<h2 style="color:var(--accent-orange); margin-bottom:4px;" data-i18n="stocks-title">股票分析</h2>
+<p class="text-muted mb-16" style="font-size:0.82rem;"><span data-i18n="stocks-desc">输入标的代码即可获得 18 位投资大师的共识判断 —— 高级财务指标可留空，系统自动获取实时数据</span> <span class="shortcut-hint" data-i18n="hero-shortcut-hint">按 / 快速聚焦 · Ctrl+Enter 提交</span></p>
 
 <!-- Input Panel -->
 <div class="card mb-24">
-    <div class="flex items-center gap-12 mb-12" style="flex-wrap:wrap;">
+    <div class="flex items-center gap-12 mb-12 stocks-input-row" style="flex-wrap:wrap;">
         <div style="flex:1; min-width:200px; max-width:280px;">
-            <label class="data-label mb-4">股票代码</label>
+            <label class="data-label mb-4" data-i18n="stocks-ticker-label">股票代码</label>
             <input id="inp-ticker" type="text" class="form-input" style="font-family:var(--font-data); font-size:1.2rem; font-weight:700; text-transform:uppercase; padding:12px 16px;"
+                   data-i18n="stocks-ticker-ph"
                    placeholder="AAPL / NVDA / 0700.HK"
+                   data-i18n-aria="a11y-stocks-ticker"
+                   aria-label="股票代码输入"
                    aria-describedby="inp-ticker-hint"
                    oninput="clearTickerInvalid('inp-ticker', 'inp-ticker-hint')"
                    onkeydown="if(event.key==='Enter') runAnalysis()">
             <p id="inp-ticker-hint" class="field-hint" style="display:none; margin-top:4px; font-size:0.72rem; color:var(--signal-sell);"></p>
         </div>
         <div style="min-width:100px;">
-            <label class="data-label mb-4">价格 (USD)</label>
-            <input id="inp-price" type="number" min="0" step="0.01" class="form-input" placeholder="0">
+            <label class="data-label mb-4" data-i18n="stocks-price-label">价格 (USD)</label>
+            <input id="inp-price" type="number" min="0" step="0.01" class="form-input" placeholder="0" aria-label="Price USD">
         </div>
         <div style="min-width:100px;">
-            <label class="data-label mb-4">市值 (亿USD)</label>
-            <input id="inp-mktcap" type="number" min="0" class="form-input" placeholder="0">
+            <label class="data-label mb-4" data-i18n="stocks-mktcap-label">市值 (亿USD)</label>
+            <input id="inp-mktcap" type="number" min="0" class="form-input" placeholder="0" aria-label="Market cap">
         </div>
         <div style="min-width:140px;">
-            <label class="data-label mb-4">板块</label>
-            <select id="inp-sector" class="form-select">
-                <option value="">-- 板块 --</option>
+            <label class="data-label mb-4" data-i18n="stocks-sector-label">板块</label>
+            <select id="inp-sector" class="form-select" aria-label="Sector">
+                <option value="" data-i18n="stocks-sector-placeholder">-- 板块 --</option>
                 <option>Technology</option><option>Consumer Cyclical</option><option>Consumer Defensive</option>
                 <option>Healthcare</option><option>Financials</option><option>Energy</option>
                 <option>Industrials</option><option>Materials</option><option>Real Estate</option>
@@ -107,30 +120,30 @@
             </select>
         </div>
         <div style="min-width:140px;">
-            <label class="data-label mb-4">细分行业</label>
-            <input id="inp-industry" type="text" class="form-input" placeholder="如 Semiconductor" style="font-size:0.82rem;">
+            <label class="data-label mb-4" data-i18n="stocks-industry-label">细分行业</label>
+            <input id="inp-industry" type="text" class="form-input" data-i18n="stocks-industry-ph" placeholder="如 Semiconductor" style="font-size:0.82rem;" aria-label="Industry">
         </div>
         <div style="align-self:flex-end; display:flex; gap:8px;">
-            <button id="analyze-btn" class="btn btn-primary" onclick="runAnalysis()" style="padding:10px 24px; font-size:0.92rem;">分析</button>
+            <button id="analyze-btn" class="btn btn-primary" onclick="runAnalysis()" style="padding:10px 24px; font-size:0.92rem;"><span data-i18n="btn-analyze">分析</span></button>
         </div>
     </div>
 
     <!-- Data source indicator -->
     <div id="data-source-indicator" style="display:none; margin-bottom:8px;">
-        <span style="font-size:0.72rem; padding:2px 8px; border-radius:3px; background:var(--accent-orange); color:#000; font-weight:600;">数据来源: yfinance 实时</span>
+        <span style="font-size:0.72rem; padding:2px 8px; border-radius:3px; background:var(--accent-orange); color:#000; font-weight:600;" data-i18n="stocks-data-source">数据来源: yfinance 实时</span>
     </div>
 
     <!-- Quick tickers -->
-    <div class="mb-12">
-        <span class="text-muted" style="font-size:0.72rem; margin-right:8px;">快速选择:</span>
+    <div class="mb-12" role="group" data-i18n-aria="a11y-hero-chips-group" aria-label="Quick tickers">
+        <span class="text-muted" style="font-size:0.72rem; margin-right:8px;" data-i18n="stocks-quick-label">快速选择:</span>
         {% for t in quick_tickers %}
-        <button class="ticker-btn" onclick="setTickerAndRun('{{ t }}')">{{ t }}</button>
+        <button type="button" class="ticker-btn" onclick="setTickerAndRun('{{ t }}')" data-i18n-aria="stocks-quick-ticker" data-aria-ticker="{{ t }}" aria-label="Analyze {{ t }}">{{ t }}</button>
         {% endfor %}
     </div>
 
     <!-- Advanced metrics toggle -->
     <div>
-        <span class="adv-toggle" onclick="toggleAdvMetrics()">&#9654; 高级财务指标 (可选)</span>
+        <button type="button" class="adv-toggle" id="adv-toggle-btn" onclick="toggleAdvMetrics()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAdvMetrics()}" data-i18n="stocks-adv-toggle" aria-expanded="false" aria-controls="advMetrics">&#9654; 高级财务指标 (可选)</button>
         <div class="adv-metrics" id="advMetrics">
             <div class="metrics-grid mt-8">
                 <div><label>PE 市盈率</label><input id="inp-pe" type="number" min="0" step="0.1" class="form-input" placeholder="0"></div>
@@ -151,9 +164,9 @@
 </div>
 
 <!-- Spinner -->
-<div id="spinner">
+<div id="spinner" role="status" aria-live="polite" aria-busy="false" data-i18n-aria="a11y-stocks-spinner" aria-label="Analysis in progress">
     <div class="spinner" style="margin:0 auto;"></div>
-    <p class="loading-pulse text-orange text-mono mt-16 progress-text" id="analyze-progress" style="font-size:0.88rem; text-align:center;">正在唤醒 18 位投资大师...</p>
+    <p class="loading-pulse text-orange text-mono mt-16 progress-text" id="analyze-progress" data-i18n="hero-progress" style="font-size:0.88rem; text-align:center;">正在唤醒 18 位投资大师...</p>
     <div class="grid-3 mt-16" style="gap:12px;">
         <div class="skeleton skeleton-card"></div>
         <div class="skeleton skeleton-card"></div>
@@ -162,11 +175,11 @@
 </div>
 
 <!-- Error Panel -->
-<div id="error-panel" class="error-panel mb-16" aria-live="polite" style="display:none;">
-    <div class="error-panel-title">分析失败</div>
+<div id="error-panel" class="error-panel mb-16" aria-live="polite" role="alert" style="display:none;">
+    <div class="error-panel-title" data-i18n="hero-error-title">分析失败</div>
     <div class="error-panel-msg" id="error-msg"></div>
     <div class="error-panel-retry">
-        <button class="btn btn-sm" onclick="runAnalysis()">重试</button>
+        <button type="button" class="btn btn-sm" onclick="runAnalysis()" data-i18n="btn-retry">重试</button>
     </div>
 </div>
 
@@ -318,7 +331,8 @@ var AGENT_STYLE_MAP = {
         var hint = document.createElement('div');
         hint.id = 'persona-hint';
         hint.style.cssText = 'font-size:0.78rem; color:var(--accent-orange); margin-bottom:8px; padding:4px 8px; background:rgba(255,140,0,0.08); border-radius:4px; display:inline-block;';
-        hint.textContent = '🎯 使用 ' + persona + ' 框架分析 (来自人格系统)';
+        var hintTpl = (typeof window.t === 'function') ? window.t('stocks-persona-hint') : '🎯 使用 {persona} 框架分析 (来自人格系统)';
+        hint.textContent = hintTpl.replace(/\{persona\}/g, persona);
         var container = document.getElementById('inp-ticker') ? document.getElementById('inp-ticker').closest('.card') : null;
         if (container) container.insertBefore(hint, container.firstChild);
     }
@@ -330,7 +344,10 @@ var AGENT_STYLE_MAP = {
 })();
 
 function toggleAdvMetrics() {
-    document.getElementById('advMetrics').classList.toggle('open');
+    var panel = document.getElementById('advMetrics');
+    var btn = document.getElementById('adv-toggle-btn');
+    panel.classList.toggle('open');
+    if (btn) btn.setAttribute('aria-expanded', panel.classList.contains('open') ? 'true' : 'false');
 }
 
 function setTickerAndRun(t) {
@@ -359,17 +376,22 @@ function runAnalysis() {
     // Disable submit button to prevent double-submit
     var submitBtn = document.getElementById('analyze-btn') || document.querySelector('[onclick="runAnalysis()"]');
     var submitBtnLabel = submitBtn ? submitBtn.querySelector('[data-i18n]') : null;
-    var origBtnText = submitBtn ? submitBtn.textContent : '';
     if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.classList.add('is-loading');
-        submitBtn.textContent = (typeof window.t === 'function' ? window.t('btn-analyzing') : '分析中…');
+        if (submitBtnLabel) {
+            submitBtnLabel.textContent = (typeof window.t === 'function' ? window.t('btn-analyzing') : '分析中…');
+        } else {
+            submitBtn.textContent = (typeof window.t === 'function' ? window.t('btn-analyzing') : '分析中…');
+        }
     }
     function resetSubmitBtn() {
         if (submitBtn) {
             submitBtn.disabled = false;
             submitBtn.classList.remove('is-loading');
-            submitBtn.textContent = origBtnText;
+            if (submitBtnLabel) {
+                submitBtnLabel.textContent = (typeof window.t === 'function' ? window.t('btn-analyze') : '分析');
+            }
         }
     }
 
@@ -402,7 +424,9 @@ function runAnalysis() {
     var resultsEl = document.getElementById('results');
     resultsEl.style.display = 'none';
     resultsEl.classList.remove('show');
-    document.getElementById('spinner').style.display = 'block';
+    var spinnerEl = document.getElementById('spinner');
+    spinnerEl.style.display = 'block';
+    spinnerEl.setAttribute('aria-busy', 'true');
     document.getElementById('error-panel').style.display = 'none';
     startProgress('analyze-progress');
 
@@ -419,7 +443,8 @@ function runAnalysis() {
         })
         .then(function(data) {
             stopProgress('analyze-progress');
-            document.getElementById('spinner').style.display = 'none';
+            spinnerEl.style.display = 'none';
+            spinnerEl.setAttribute('aria-busy', 'false');
             resetSubmitBtn();
             if (!data || !data.consensus) {
                 throw new Error(data && data.detail ? data.detail : '分析返回数据异常，请重试');
@@ -436,12 +461,13 @@ function runAnalysis() {
         })
         .catch(function(err) {
             stopProgress('analyze-progress');
-            document.getElementById('spinner').style.display = 'none';
+            spinnerEl.style.display = 'none';
+            spinnerEl.setAttribute('aria-busy', 'false');
             resetSubmitBtn();
             document.getElementById('error-panel').style.display = 'block';
             var msg = (err && err.name === 'AbortError')
-                ? '分析超时（超过 90 秒）。可能是后端较慢或网络问题，请稍后点击"重试"。'
-                : '请求失败: ' + (err.message || err) + '。请检查网络连接或服务是否运行中。';
+                ? (typeof window.t === 'function' ? window.t('hero-error-timeout') : '分析超时（超过 90 秒）。18 位大师分析较慢时可稍后重试，或检查后端服务与网络连接。')
+                : (typeof window.t === 'function' ? window.t('hero-error-request') : '请求失败: ') + (err.message || err);
             document.getElementById('error-msg').textContent = msg;
         });
 }
@@ -530,8 +556,12 @@ function toggleReasoning(el) {
     if (div) {
         div.classList.toggle('expanded');
         var isExpanded = div.classList.contains('expanded');
-        el.textContent = isExpanded ? '收起' : '展开';
-        el.setAttribute('aria-label', isExpanded ? '收起推理' : '展开推理');
+        var collapseLbl = (typeof window.t === 'function') ? window.t('stocks-collapse') : '收起';
+        var expandLbl = (typeof window.t === 'function') ? window.t('stocks-expand') : '展开';
+        el.textContent = isExpanded ? collapseLbl : expandLbl;
+        el.setAttribute('aria-label', isExpanded
+            ? ((typeof window.t === 'function') ? window.t('stocks-collapse-reasoning') : '收起推理')
+            : ((typeof window.t === 'function') ? window.t('stocks-expand-reasoning') : '展开推理'));
     }
 }
 
@@ -540,8 +570,10 @@ function toggleAllAgents(expand) {
         if (expand) div.classList.add('expanded');
         else div.classList.remove('expanded');
     });
+    var collapseLbl = (typeof window.t === 'function') ? window.t('stocks-collapse') : '收起';
+    var expandLbl = (typeof window.t === 'function') ? window.t('stocks-expand') : '展开';
     document.querySelectorAll('.expand-btn').forEach(function(btn) {
-        btn.textContent = expand ? '收起' : '展开';
+        btn.textContent = expand ? collapseLbl : expandLbl;
     });
 }
 
@@ -654,10 +686,10 @@ function generateReport() {
     if (section) { section.style.display = 'block'; section.scrollIntoView({behavior: 'smooth'}); }
     if (btn) { btn.disabled = true; }
     startProgress('report-progress', { stages: [
-        '正在汇总 18 位大师的分析...',
-        '正在撰写各模块深度解读...',
-        '正在整理估值与风险章节...',
-        '马上完成，正在排版报告...'
+        _t('progress-report-1'),
+        _t('progress-report-2'),
+        _t('progress-report-3'),
+        _t('progress-report-4')
     ]});
     showToast('正在生成深度报告...', 'info');
 

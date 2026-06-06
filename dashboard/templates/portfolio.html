@@ -184,6 +184,7 @@
         </thead>
         <tbody id="holdings-body"></tbody>
     </table>
+    <p class="table-scroll-hint" data-i18n="table-scroll-hint">左右滑动查看完整表格</p>
 </div>
 
 <!-- Empty State -->
@@ -193,6 +194,7 @@
     <p class="empty-state-desc" data-i18n="portfolio-empty-desc">在上方输入股票代码、买入价和数量来添加持仓</p>
     <div class="empty-state-action">
         <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('pf-ticker').focus()" data-i18n="portfolio-empty-cta">添加第一笔持仓</button>
+        <a href="/watchlist" class="btn btn-sm btn-ghost" style="text-decoration:none;" data-i18n="portfolio-empty-watchlist">从自选股导入</a>
     </div>
 </div>
 
@@ -593,7 +595,7 @@ function onAnalysisDone(results) {
     if (!section || !content) return;
 
     section.style.display = 'block';
-    var html = '<table class="md-table" style="width:100%;"><caption class="sr-only">' + escapeHtml(_t('portfolio-analysis-title')) + '</caption><thead><tr>' +
+    var html = '<div class="md-table-wrap"><table class="md-table" style="width:100%;"><caption class="sr-only">' + escapeHtml(_t('portfolio-analysis-title')) + '</caption><thead><tr>' +
         '<th scope="col">' + escapeHtml(_t('portfolio-col-ticker')) + '</th><th scope="col">' + escapeHtml(_t('signals-col-signal')) + '</th><th scope="col">' + escapeHtml(_t('portfolio-col-score')) + '</th><th scope="col">' + escapeHtml(_t('index-label-confidence')) + '</th>' +
         '</tr></thead><tbody>';
 
@@ -610,7 +612,7 @@ function onAnalysisDone(results) {
             '</tr>';
     });
 
-    html += '</tbody></table>';
+    html += '</tbody></table></div><p class="table-scroll-hint">' + escapeHtml(_t('table-scroll-hint')) + '</p>';
     content.innerHTML = html;
     showToast(_t('portfolio-analysis-done'));
 }

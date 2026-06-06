@@ -251,6 +251,7 @@ app.add_middleware(
 # ============ API Token Authentication Middleware ============
 
 _AUTH_EXEMPT_PATHS = {
+    "/api/auth/config",
     "/api/auth/verify",
     "/api/auth/register",
     "/api/auth/login",
@@ -879,7 +880,9 @@ async def analyze_ticker(
         "agent_count": len(agent_responses),
     }
 
-    if data_source == "fallback":
+    if getattr(ctx, "data_error", None):
+        response["data_error"] = ctx.data_error
+    elif data_source == "fallback":
         response["data_note"] = "Auto-fetch failed, using provided parameters"
 
     return response
@@ -1423,6 +1426,13 @@ async def api_update_custom_persona(agent_id: str, body: CustomPersonaBody):
     return {"status": "ok", "agent_id": agent_id, "path": str(filepath), "hot_loaded": True}
 
 
+@app.get("/api/auth/config", summary="获取认证配置")
+async def api_auth_config():
+    """Return whether auth is enabled and which credential types are accepted."""
+    from augur.auth import get_auth_config
+    return {"status": "ok", **get_auth_config()}
+
+
 @app.get("/api/auth/verify", summary="验证API Token")
 async def api_auth_verify(request: Request):
     """验证 API Token 或 JWT 有效性。未启用认证时返回 open 模式。"""
@@ -1908,6 +1918,12 @@ async def api_hot_tickers(request: Request, refresh: bool = False):
         from augur.data import fetch_hot_tickers
         tickers = fetch_hot_tickers(force_refresh=refresh)
         data = {"status": "ok", "tickers": tickers}
+        data_error = getattr(tickers, "data_error", None)
+        if data_error:
+            data["data_error"] = data_error
+        data_source = getattr(tickers, "data_source", None)
+        if data_source:
+            data["data_source"] = data_source
         # ETag support
         data_json = json.dumps(data, sort_keys=True, default=str)
         etag = hashlib.md5(data_json.encode()).hexdigest()
@@ -1940,6 +1956,8 @@ async def api_market_overview(request: Request, refresh: bool = False):
         from augur.data import fetch_market_overview
         overview = fetch_market_overview(force_refresh=refresh)
         data = {"status": "ok", **overview}
+        if overview.get("data_error"):
+            data["status"] = "partial" if overview.get("items") else "degraded"
         # ETag support
         data_json = json.dumps(data, sort_keys=True, default=str)
         etag = hashlib.md5(data_json.encode()).hexdigest()

@@ -588,10 +588,10 @@ function loadReport() {
     document.getElementById('rp-error').style.display = 'none';
     document.getElementById('rp-content').style.display = 'none';
     startProgress('rp-progress', { stages: [
-        'Waking up 18 investment masters...',
-        'Masters are analyzing financial data...',
-        'Aggregating bull/bear opinions...',
-        'Almost done, finalizing report...'
+        _t('progress-report-1'),
+        _t('progress-report-2'),
+        _t('progress-report-3'),
+        _t('progress-report-4')
     ]});
 
     fetchWithTimeout('/api/report/' + rpTicker + '?auto_fetch=true', {}, 120000)

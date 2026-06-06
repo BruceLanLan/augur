@@ -88,37 +88,41 @@
     </div>
 </div>
 
+<!-- Add Ticker Form (before filters — natural read order: add → filter → table) -->
+<div class="card" style="margin-bottom:16px; padding:16px;">
+    <div class="signals-add-row">
+        <label for="add-ticker-input" class="data-label" style="margin:0; white-space:nowrap;" data-i18n="signals-add-label">添加自选股</label>
+        <div style="display:flex; flex-direction:column; gap:2px;">
+            <input type="text" id="add-ticker-input" data-i18n="signals-add-placeholder" placeholder="股票代码 (如 AAPL)"
+                   aria-describedby="add-ticker-hint add-ticker-error"
+                   oninput="clearTickerHint()"
+                   onkeydown="if(event.key==='Enter')addTicker()">
+            <small id="add-ticker-error" role="alert" style="display:none; font-size:0.7rem; color:var(--signal-sell);"></small>
+        </div>
+        <span id="add-ticker-hint" class="sr-only" data-i18n="signals-add-placeholder">股票代码 (如 AAPL)</span>
+        <input type="number" id="add-pe-input" placeholder="PE" step="0.1" data-i18n-aria="signals-add-pe-aria">
+        <input type="number" id="add-roe-input" placeholder="ROE%" step="0.1" min="0" max="200" data-i18n-aria="signals-add-roe-aria">
+        <input type="number" id="add-gm-input" placeholder="毛利率%" step="0.1" min="0" max="100" aria-label="Gross margin percent">
+        <button type="button" class="btn btn-primary" onclick="addTicker()" style="padding:6px 16px;" data-i18n="signals-add-btn">+ 添加</button>
+    </div>
+</div>
+
 <!-- Signal Filter Row -->
 <div class="signal-filter-row">
     <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
         <label for="filter-signal-type" class="text-muted" style="font-size:0.75rem; white-space:nowrap;" data-i18n="signals-filter-type">信号类型:</label>
-        <select id="filter-signal-type" class="signal-filter-select" onchange="applySignalFilters()" aria-label="Signal type filter">
+        <select id="filter-signal-type" class="signal-filter-select" onchange="applySignalFilters()" data-i18n-aria="signals-filter-type-aria">
             <option value="ALL" data-i18n="signals-filter-all">全部</option>
             <option value="BUY">BUY</option>
             <option value="SELL">SELL</option>
             <option value="HOLD">HOLD</option>
         </select>
         <label for="filter-sort" class="text-muted" style="font-size:0.75rem; white-space:nowrap;" data-i18n="signals-filter-sort">排序:</label>
-        <select id="filter-sort" class="signal-filter-select" onchange="applySignalFilters()" aria-label="Sort order">
+        <select id="filter-sort" class="signal-filter-select" onchange="applySignalFilters()" data-i18n-aria="signals-filter-sort-aria">
             <option value="score-desc" data-i18n="signals-sort-score-desc">评分 高→低</option>
             <option value="score-asc" data-i18n="signals-sort-score-asc">评分 低→高</option>
             <option value="ticker-asc" data-i18n="signals-sort-ticker-asc">代码 A→Z</option>
         </select>
-    </div>
-</div>
-
-<!-- Add Ticker Form -->
-<div class="card" style="margin-bottom:16px; padding:16px;">
-    <div class="signals-add-row">
-        <label for="add-ticker-input" class="data-label" style="margin:0; white-space:nowrap;" data-i18n="signals-add-label">添加自选股</label>
-        <input type="text" id="add-ticker-input" data-i18n="signals-add-placeholder" placeholder="股票代码 (如 AAPL)"
-               aria-describedby="add-ticker-hint"
-               onkeydown="if(event.key==='Enter')addTicker()">
-        <span id="add-ticker-hint" class="sr-only">Enter ticker symbol and optional metrics</span>
-        <input type="number" id="add-pe-input" placeholder="PE" step="0.1" aria-label="PE ratio">
-        <input type="number" id="add-roe-input" placeholder="ROE%" step="0.1" min="0" max="200" aria-label="ROE percent">
-        <input type="number" id="add-gm-input" placeholder="毛利率%" step="0.1" min="0" max="100" aria-label="Gross margin percent">
-        <button type="button" class="btn btn-primary" onclick="addTicker()" style="padding:6px 16px;" data-i18n="signals-add-btn">+ 添加</button>
     </div>
 </div>
 
@@ -137,6 +141,7 @@
                 <span class="text-muted" style="font-size:0.72rem;">/10</span>
             </div>
             <div class="text-muted" style="font-size:0.68rem; margin-top:2px;" data-i18n="signals-alert-hint">评分超过此阈值时触发告警通知</div>
+            <div class="text-muted" style="font-size:0.65rem; margin-top:4px;" data-i18n="signals-alert-setup-hint">Telegram/Slack 凭据请在「设置」→「C. 通知渠道」中配置</div>
         </div>
         <div style="min-width:150px;">
             <label for="alert-channel" class="text-muted" style="font-size:0.75rem; display:block; margin-bottom:4px;" data-i18n="alert_channel_label">通知渠道</label>
@@ -375,7 +380,7 @@ function renderWatchlist() {
     }
 
     if (items.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="padding:32px 16px; text-align:center; color:var(--text-muted);">' +
+        tbody.innerHTML = '<tr><td colspan="8" role="status" style="padding:32px 16px; text-align:center; color:var(--text-muted);">' +
             escapeHtml(_t('signals-no-filter-match')) + '</td></tr>';
         return;
     }
@@ -431,12 +436,28 @@ function renderWatchlist() {
     tbody.innerHTML = html;
 }
 
+function clearTickerHint() {
+    var err = document.getElementById('add-ticker-error');
+    var input = document.getElementById('add-ticker-input');
+    if (err) { err.style.display = 'none'; err.textContent = ''; }
+    if (input) input.style.borderColor = '';
+}
+
+function showTickerHint(msg) {
+    var err = document.getElementById('add-ticker-error');
+    var input = document.getElementById('add-ticker-input');
+    if (err) { err.textContent = msg; err.style.display = 'block'; }
+    if (input) { input.style.borderColor = 'var(--signal-sell)'; input.focus(); }
+}
+
 function addTicker() {
     var ticker = document.getElementById('add-ticker-input').value.trim().toUpperCase();
     if (!ticker) {
+        showTickerHint(_t('signals-ticker-hint-empty'));
         showToast(_t('msg-enter-ticker'), 'warning');
         return;
     }
+    clearTickerHint();
 
     var body = { ticker: ticker };
     var pe = document.getElementById('add-pe-input').value;
@@ -469,6 +490,7 @@ function addTicker() {
         if (addBtn) { addBtn.disabled = false; addBtn.innerHTML = origLabel; }
         if (data.status === 'ok') {
             showToast(ticker + ' ' + _t('signals-added'));
+            clearTickerHint();
             document.getElementById('add-ticker-input').value = '';
             document.getElementById('add-pe-input').value = '';
             document.getElementById('add-roe-input').value = '';
