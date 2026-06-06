@@ -1,0 +1,76 @@
+# Loop 200 Review — Agent 1/10 (sidebar ↔ main spacing)
+
+Branch: feature/loop-200-review
+
+## Loop 1
+- **Review:** CDP — sidebar right=240, main left=240, but padding-left=32px → content at 272px. Dead zone feels disconnected.
+- **Fix:** `--main-pad-x: 16px`; `.app-main` padding uses tokens (32→16px).
+
+## Loop 2
+- **Review:** Flex + fixed sidebar (bloomberg) vs sticky `.sb` (layout) — dual layout paradigms.
+- **Fix:** `.app.app-layout` CSS grid `240px 1fr`, gap 0; main `margin-left: 0 !important`.
+
+## Loop 3
+- **Review:** Ticker tape `left: 220px` vs `--sidebar-width: 240px` — 20px misalignment.
+- **Fix:** Ticker default `left: var(--sidebar-width, 240px)`.
+
+## Loop 4
+- **Review:** `.sidebar.collapsed ~ .ticker-tape-wrap` never matches — ticker is sibling of `.app-layout`, not sidebar.
+- **Fix:** `.app-layout:has(.sidebar.collapsed) ~ .ticker-tape-wrap`.
+
+## Loop 5
+- **Review:** `.app-main::before` full-viewport gradient starts at left:0, visually widening gutter.
+- **Fix:** `left: var(--sidebar-width)`; collapsed variant via `:has()`.
+
+## Loop 6
+- **Review:** Hero card padding 38/40/32 adds perceived distance from nav column.
+- **Fix:** Hero padding `32px 24px 28px`.
+
+## Loop 7
+- **Review:** Mobile — tape/background still offset by sidebar width when sidebar is off-canvas.
+- **Fix:** `@media (max-width:768px)` tape + `::before` `left: 0`.
+
+## Loop 8
+- **Review:** Collapsed sidebar ticker used `--sidebar-collapsed: 56px` vs bloomberg 64px.
+- **Fix:** Unified to 64px.
+
+## Loop 9
+- **Review:** Grid collapse had no transition — main jump felt abrupt.
+- **Fix:** `transition: grid-template-columns` on `.app.app-layout`.
+
+## Loop 10
+- **Visual:** Collapsed CDP — grid `64px 1850px`, tape left=64px, main left=64px. OK.
+
+## Loop 11
+- **Review:** `.grid-2-1` gap 20px slightly loose on dashboard two-column blocks.
+- **Fix:** gap 16px.
+
+## Loop 12
+- **Review:** `.sb` hard width 240px fought grid when collapsed.
+- **Fix:** `.sidebar.collapsed.sb { width: 100% }`.
+
+## Loop 13
+- **Review:** base.html shell undocumented for grid column assignment.
+- **Fix:** HTML comments on app-layout / sidebar column.
+
+## Loop 14
+- **Review:** `.main` padding shorthand conflicted with `.app-main` ticker padding.
+- **Fix:** Padding only on `.app-main` via ui-enhance tokens.
+
+## Loop 15
+- **Visual:** gapToContent 32→16px after reload. PASS.
+
+## Loop 16
+- **Review:** 768px breakpoint grid columns not reset — checked layout.css mobile block. OK.
+
+## Loop 17
+- **Review:** Light-mode hero contrast — existing `html.light .hero` rules present. No change.
+
+## Loop 18
+- **Review:** prefers-reduced-motion still lists `.app-main`. Tests pass. No change.
+
+## Loop 19
+- **Tests:** `pytest tests/test_css_responsive_r15.py tests/test_dashboard_static_assets.py -q` → 22 passed.
+
+## Loop 20
+- **Visual sanity:** Grid display=grid, gridCols=240px+fluid, mainPad=48px 16px. Navigation reads connected to dashboard. Commit ready.

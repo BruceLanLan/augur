@@ -5,10 +5,50 @@
 
 .app { display: flex; min-height: 100vh; background: var(--bg-void); }
 
+/* ---- App shell: CSS grid — sidebar flush to main (no gutter) ---- */
+.app.app-layout {
+  display: grid;
+  grid-template-columns: var(--sidebar-width, 240px) minmax(0, 1fr);
+  gap: 0;
+  min-height: 100vh;
+  align-items: start;
+  background: var(--bg-void);
+  transition: grid-template-columns var(--transition-speed, 0.25s) ease;
+}
+
+.app-layout:has(.sidebar.collapsed) {
+  grid-template-columns: var(--sidebar-collapsed, 64px) minmax(0, 1fr);
+  transition: grid-template-columns var(--transition-speed, 0.25s) ease;
+}
+
+.app-layout .sidebar,
+.app-layout .sb {
+  position: sticky;
+  top: 0;
+  grid-column: 1;
+  grid-row: 1 / -1;
+  width: 100%;
+  max-width: 100%;
+  height: 100vh;
+  flex-shrink: 0;
+  margin-left: 0 !important;
+}
+
+.app-layout .main,
+.app-layout .app-main {
+  grid-column: 2;
+  margin-left: 0 !important;
+  max-width: none !important;
+}
+
 /* ---- Sidebar ---- */
-.sb { width: 240px; flex-shrink: 0; position: sticky; top: 0; align-self: flex-start;
+.sb { width: var(--sidebar-width, 240px); flex-shrink: 0; position: sticky; top: 0; align-self: flex-start;
   height: 100vh; background: var(--bg-panel); border-right: 1px solid var(--border);
   display: flex; flex-direction: column; }
+.sidebar.collapsed.sb,
+.app-layout:has(.sidebar.collapsed) .sb {
+  width: 100%;
+}
 .sb-logo { display: flex; align-items: center; gap: 12px; padding: 18px 18px; min-height: 64px;
   border-bottom: 1px solid var(--border); cursor: pointer; }
 .sb-word { font: 700 1.3rem/1 var(--font-mono); color: var(--amber); letter-spacing: -0.5px; }
@@ -28,7 +68,8 @@
 .sb-ver { font: 700 0.58rem/1 var(--font-pixfin); color: var(--fg-3); margin-top: 8px; letter-spacing: 0.5px; }
 
 /* ---- Main ---- */
-.main { flex: 1; min-width: 0; padding: 0 32px 56px; margin-left: 0 !important; max-width: 100% !important; }
+/* Padding lives on .app-main (bloomberg.css) — avoid conflicting shorthand here */
+.main { flex: 1; min-width: 0; margin-left: 0 !important; max-width: 100% !important; }
 
 /* gilt-edged framed hero/panel — the HD-2D relic border */
 .gilt-edge { position: relative; border: 1px solid var(--border-gilt); }
@@ -37,7 +78,7 @@
 .hero { position: relative; overflow: hidden; background:
   radial-gradient(120% 140% at 18% 0%, rgba(212,175,55,0.07), transparent 55%),
   linear-gradient(160deg, #15131f 0%, #0c0c14 70%);
-  border-radius: var(--r-lg); padding: 38px 40px 32px; }
+  border-radius: var(--r-lg); padding: 32px 24px 28px; }
 .hero-glow { position: absolute; inset: 0; background-image:
   linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
   linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px);
@@ -51,8 +92,24 @@
 .hero-input .field { flex: 1; padding: 12px 14px; font-size: 0.95rem; }
 .hero-chips { display: flex; align-items: center; gap: 8px; margin-top: 14px; position: relative; }
 
+html.light .hero {
+  background:
+    radial-gradient(120% 140% at 18% 0%, rgba(212,175,55,0.14), transparent 55%),
+    linear-gradient(160deg, #f8f4eb 0%, #ece7da 70%);
+}
+html.light .hero-glow {
+  background-image:
+    linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px);
+}
+html.light .council-hero {
+  background:
+    radial-gradient(100% 140% at 12% 0%, rgba(212,175,55,0.12), transparent 55%),
+    linear-gradient(160deg, #f8f4eb, #ece7da);
+}
+
 /* ---- Layout grid ---- */
-.grid-2-1 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 20px; }
+.grid-2-1 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 16px; }
 .mboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 
 /* recent list */
@@ -182,6 +239,16 @@
 }
 
 @media (max-width: 768px) {
+  .app.app-layout {
+    display: block;
+  }
+  .app-layout .sidebar,
+  .app-layout .sb,
+  .app-layout .main,
+  .app-layout .app-main {
+    grid-column: auto;
+    grid-row: auto;
+  }
   .mboard { grid-template-columns: repeat(2, 1fr); }
   .sc-grid { grid-template-columns: repeat(4, 1fr); }
   .council-grid { grid-template-columns: repeat(2, 1fr); }

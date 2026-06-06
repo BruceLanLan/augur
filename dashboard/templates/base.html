@@ -28,8 +28,9 @@
 <body class="augur">
     <a href="#main-content" class="skip-link" data-i18n="a11y-skip-main">跳到主内容</a>
     <div class="global-progress-bar" id="global-progress-bar" role="progressbar" aria-hidden="true"></div>
+    <!-- Shell: CSS grid in layout.css — col1 sidebar, col2 main, gap 0 -->
     <div class="app app-layout">
-        <!-- Sidebar -->
+        <!-- Sidebar (grid column 1) -->
         <aside class="sb sidebar bg-grid" id="sidebar" aria-label="Main navigation">
             <div class="sb-logo" onclick="window.location.href='/'">
                 <img class="pixelated" src="/static/images/augur-owl-64.png" alt="Augur" width="32" height="32">
@@ -417,6 +418,42 @@
         }
     });
 
+    // Shared API/JWT token for dashboard fetch + WebSocket (?token=) when auth is enabled.
+    window.augurAuthToken = function() {
+        try {
+            return localStorage.getItem('augur_api_token') || localStorage.getItem('augur-token') || '';
+        } catch(e) {
+            return '';
+        }
+    };
+    function augurAttachAuth(url, options) {
+        options = options || {};
+        var token = window.augurAuthToken();
+        if (!token || typeof url !== 'string' || url.indexOf('/api/') === -1) {
+            return options;
+        }
+        if (!options.headers) options.headers = {};
+        if (options.headers instanceof Headers) {
+            if (!options.headers.has('Authorization')) {
+                options.headers.set('Authorization', 'Bearer ' + token);
+            }
+        } else {
+            if (!options.headers['Authorization']) {
+                options.headers['Authorization'] = 'Bearer ' + token;
+            }
+        }
+        return options;
+    }
+    (function() {
+        var nativeFetch = window.fetch;
+        window.fetch = function(url, options) {
+            if (typeof url === 'string') {
+                options = augurAttachAuth(url, options || {});
+            }
+            return nativeFetch.call(this, url, options);
+        };
+    })();
+
     // Escape HTML entities to prevent XSS
     function escapeHtml(str) {
         if (!str) return '';
@@ -618,22 +655,7 @@
     function fetchWithTimeout(url, options, timeoutMs) {
         options = options || {};
         timeoutMs = timeoutMs || 90000;
-        // Auto-attach API token from localStorage if available
-        try {
-            var token = localStorage.getItem('augur_api_token') || localStorage.getItem('augur-token');
-            if (token && url.indexOf('/api/') !== -1) {
-                if (!options.headers) options.headers = {};
-                if (options.headers instanceof Headers) {
-                    if (!options.headers.has('Authorization')) {
-                        options.headers.set('Authorization', 'Bearer ' + token);
-                    }
-                } else {
-                    if (!options.headers['Authorization']) {
-                        options.headers['Authorization'] = 'Bearer ' + token;
-                    }
-                }
-            }
-        } catch(e) { /* localStorage unavailable */ }
+        options = augurAttachAuth(url, options);
         if (typeof AbortController === 'undefined') return fetch(url, options);
         var controller = new AbortController();
         var timer = setTimeout(function() { controller.abort(); }, timeoutMs);
@@ -657,9 +679,14 @@
             return;
         }
 
-        // Ctrl+Enter -> submit current form
+        // Ctrl+Enter -> submit hero analyze or primary form button
         if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
             e.preventDefault();
+            var heroBtn = document.getElementById('hero-analyze-btn');
+            if (heroBtn && !heroBtn.disabled) {
+                heroBtn.click();
+                return;
+            }
             var primaryBtn = document.querySelector('.btn-primary');
             if (primaryBtn) primaryBtn.click();
             return;
@@ -848,7 +875,12 @@
         function connectWS() {
             try {
                 var proto = location.protocol === 'https:' ? 'wss' : 'ws';
-                var ws = new WebSocket(proto + '://' + location.host + '/ws/prices');
+                var wsUrl = proto + '://' + location.host + '/ws/prices';
+                var token = window.augurAuthToken ? window.augurAuthToken() : '';
+                if (token) {
+                    wsUrl += (wsUrl.indexOf('?') === -1 ? '?' : '&') + 'token=' + encodeURIComponent(token);
+                }
+                var ws = new WebSocket(wsUrl);
                 ws.onmessage = function(e) {
                     try {
                         var d = JSON.parse(e.data);

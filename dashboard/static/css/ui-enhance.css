@@ -6,6 +6,9 @@
 
 /* --- Enhanced CSS Variables --- */
 :root {
+    --main-pad-x: 16px;
+    --main-pad-top: 16px;
+    --main-pad-bottom: 48px;
     --accent-cyan: #00d4aa;
     --accent-purple: #a855f7;
     --accent-gradient: linear-gradient(135deg, #ff8c00 0%, #ffaa33 50%, #00d4aa 100%);
@@ -32,7 +35,7 @@ html.light {
     background: var(--glass-bg);
     backdrop-filter: var(--glass-blur);
     -webkit-backdrop-filter: var(--glass-blur);
-    border-right: 1px solid var(--glass-border);
+    /* border-right owned by bloomberg.css / layout.css — avoid double chrome */
 }
 
 .sidebar-logo {
@@ -79,7 +82,7 @@ html.light {
 .card {
     background: var(--gradient-card);
     backdrop-filter: blur(4px);
-    border: 1px solid var(--glass-border);
+    /* border/padding from bloomberg.css — only add glass wash here */
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -159,7 +162,6 @@ html.light {
 .market-tile {
     background: var(--glass-bg);
     backdrop-filter: blur(4px);
-    border: 1px solid var(--glass-border);
     border-left: 3px solid var(--border-color);
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -262,7 +264,6 @@ html.light {
 
 .featured-card {
     background: var(--gradient-card);
-    border: 1px solid var(--glass-border);
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -328,7 +329,7 @@ html.light {
     content: '';
     position: fixed;
     top: 0;
-    left: 0;
+    left: var(--sidebar-width, 240px);
     right: 0;
     bottom: 0;
     background:
@@ -470,6 +471,12 @@ kbd {
 
 /* Touch-friendly controls on small screens */
 @media (max-width: 768px) {
+    .app-main::before {
+        left: 0;
+    }
+    .ticker-tape-wrap {
+        left: 0;
+    }
     .btn,
     .nav-item,
     .bottom-nav-item,
@@ -493,8 +500,47 @@ kbd {
         grid-template-columns: 1fr;
     }
 
-    .holdings-table {
+    .holdings-table,
+    .history-table {
         min-width: 640px;
+    }
+
+    .table-scroll-hint { display: block; }
+
+    .portfolio-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .watchlist-header,
+    .portfolio-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .watchlist-add-form,
+    .portfolio-add-form {
+        width: 100%;
+    }
+
+    .watchlist-add-form input[type="text"] {
+        flex: 1;
+        width: auto;
+        min-width: 0;
+    }
+
+    .portfolio-add-form input {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .debate-card.rebuttal {
+        margin-left: 0;
+    }
+
+    .compare-results-header {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px;
     }
 }
 
@@ -504,6 +550,55 @@ kbd {
     -webkit-overflow-scrolling: touch;
 }
 
+.empty-state-action {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+}
+
+.table-scroll-hint {
+    display: none;
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 6px 0 2px;
+}
+
+.agent-counter.ready { color: var(--signal-buy); font-weight: 500; }
+.agent-counter.insufficient { color: var(--text-muted); }
+
+.debate-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--accent-orange);
+}
+.debate-card.rebuttal {
+    border-left-color: var(--signal-sell);
+    margin-left: 20px;
+}
+.debate-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+.debate-card-agent {
+    font-weight: 600;
+    font-size: 0.88rem;
+}
+.debate-card-content {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
 @media (prefers-reduced-motion: reduce) {
     .app-main,
     .hot-ticker-card,
@@ -511,7 +606,8 @@ kbd {
     .intl-market-card,
     .dot.live,
     .dialogue .chevron,
-    .owl-spin {
+    .owl-spin,
+    .ticker-tape-track {
         animation: none !important;
         transition: none !important;
     }
@@ -570,11 +666,11 @@ kbd {
 .ticker-tape-wrap {
     position: fixed;
     top: 0;
-    left: var(--sidebar-width, 220px);
+    left: var(--sidebar-width, 240px);
     right: 0;
     height: 32px;
-    background: rgba(10, 10, 20, 0.97);
-    border-bottom: 1px solid rgba(255, 140, 0, 0.25);
+    background: color-mix(in srgb, var(--bg-primary, #0a0a0f) 97%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--accent-orange, #ff8c00) 25%, transparent);
     overflow: hidden;
     display: flex;
     align-items: center;
@@ -583,15 +679,26 @@ kbd {
     -webkit-backdrop-filter: blur(6px);
 }
 
-/* Shrink offset when sidebar collapses */
+/* Shrink offset when sidebar collapses (ticker sits after .app-layout in base.html) */
+.app-layout:has(.sidebar.collapsed) ~ .ticker-tape-wrap,
 .sidebar.collapsed ~ .ticker-tape-wrap,
 body.sidebar-collapsed .ticker-tape-wrap {
-    left: var(--sidebar-collapsed, 56px);
+    left: var(--sidebar-collapsed, 64px);
+}
+
+.app-layout:has(.sidebar.collapsed) .app-main::before {
+    left: var(--sidebar-collapsed, 64px);
 }
 
 /* Push app-main down so content starts below ticker tape */
+:root {
+    --ticker-tape-height: 32px;
+}
 .app-main {
-    padding-top: calc(24px + 32px) !important;
+    padding: calc(var(--main-pad-top, 16px) + var(--ticker-tape-height))
+             var(--main-pad-x, 16px)
+             var(--main-pad-bottom, 48px)
+             var(--main-pad-x, 16px) !important;
 }
 
 .ticker-tape-track {
@@ -619,7 +726,7 @@ body.sidebar-collapsed .ticker-tape-wrap {
     padding: 0 18px;
     font-size: 0.72rem;
     font-family: var(--font-pixfin, monospace);
-    border-right: 1px solid rgba(255,255,255,0.06);
+    border-right: 1px solid var(--border-color, rgba(255,255,255,0.06));
     cursor: default;
 }
 
