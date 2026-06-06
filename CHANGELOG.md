@@ -2,6 +2,24 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [8.2.1] - 2026-06-06
+
+Loop 200 review patch. 200-round multi-agent code review + UX walkthrough on top of v8.2.0.
+
+### Fixed
+- **Layout:** Sidebar and main content aligned via CSS Grid (`240px + 1fr`, gap 0); collapsed sidebar uses unified `--sidebar-width` token.
+- **Report contrast:** Light-mode parchment + pale text unreadable; added `--report-*` semantic tokens and theme-aware SVG via `reportThemeColor()`.
+- **Backend:** Price-series NaN/Inf sanitization, consensus tie → `NEUTRAL`, coverage-confidence normalization, persona YAML bool weights, sample-insufficient report messaging.
+- **Auth:** WebSocket `/ws/prices?token=` validation; Dashboard fetch/WebSocket interceptors aligned with `augur.auth`; `GET /api/auth/config` discovery endpoint.
+
+### Changed
+- **UX / i18n / a11y:** Global `_t()` export, progress/copy i18n keys, empty-state parity across portfolio/compare/history/debate, 44px touch targets, reduced-motion support, stocks page `data-i18n`, mobile table scroll hints.
+- **Pages:** Settings (redundant PUT removed), Scanner (explicit event args), Signals (reordered flow), Backtest (min capital validation), index onboarding/AAPL CTA, partial `data_error` surfacing.
+
+### Notes
+- Tests: **1362 passed** (up from ~1177 in v8.2.0).
+- See `docs/LOOP_200_REPORT.md` for full review notes and backlog.
+
 ## [8.2.0] - 2026-06-06
 
 v8.2.0 release. Version bump from 8.1.0 to 8.2.0.

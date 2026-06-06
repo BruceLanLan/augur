@@ -10,7 +10,7 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v8.2.0](https://img.shields.io/badge/v8.2.0-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![v8.2.1](https://img.shields.io/badge/v8.2.1-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -412,7 +412,18 @@ Kelly 只在 BULLISH 且评分 > 5 时给出非零建议。
 ## 📝 版本日志
 
 <details>
-<summary><strong>v8.2.0 — 大师事实审计 / Makefile / pyproject 打磨 / 分析器与 WebSocket 价格 (current)</strong></summary>
+<summary><strong>v8.2.1 — Loop 200 审查：布局修复 / 报告对比度 / UX 与鉴权整合 (current)</strong></summary>
+
+- **布局修复**：侧栏与主内容区改为 CSS Grid（`240px + 1fr`），消除 240px 视觉断层；折叠侧栏统一 `--sidebar-width` token。
+- **报告对比度**：浅色模式下羊皮纸底 + 浅色正文不可读问题已修复；新增 `--report-*` 语义 token，图表随主题变色。
+- **UX 改进**：全局 `_t()` 导出、progress/copy i18n 键、五页空状态统一、44px 触控目标、移动端表格横向滚动提示、首页 AAPL 引导与 partial 错误透传。
+- **鉴权整合**：Dashboard fetch/WebSocket 自动携带 `AUGUR_API_TOKEN`；`/ws/prices?token=` 服务端校验；`GET /api/auth/config` 配置发现。
+- **后端加固**：价格序列 NaN/Inf 清洗、共识平局 → NEUTRAL、coverage confidence 归一化、persona YAML 权重类型校验。
+- **测试**：**1362** 项全绿（v8.2.0 约 1177）。详见 `docs/LOOP_200_REPORT.md`。
+</details>
+
+<details>
+<summary><strong>v8.2.0 — 大师事实审计 / Makefile / pyproject 打磨 / 分析器与 WebSocket 价格</strong></summary>
 
 - **前端视觉体系**：全面集成了 "Bloomberg Terminal × JRPG HD-2D" 前端视觉体系，引入 `ExecCard`、`OracleSays` 和 `ScorecardGrid` 等组件，优化了核心渲染逻辑。
 - **UI/UX 细节打磨**：
