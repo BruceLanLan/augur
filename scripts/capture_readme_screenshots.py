@@ -66,12 +66,12 @@ async def main() -> None:
         print(f"wrote {dest} ({dest.stat().st_size // 1024} KB)")
         await page.close()
 
+        # README cover art (召唤猫头鹰 HD-2D hero) — hand-maintained; do not auto-capture.
+        # Paths: docs/images/zh/hero-banner.png, docs/images/en/hero-banner.png
         simple_shots = [
             ("screenshots/dashboard-hd2d.png", f"{BASE}/", {"width": 1280, "height": 800}, None),
             ("screenshots/personas-hd2d.png", f"{BASE}/personas", {"width": 1280, "height": 800}, None),
             ("screenshots/history.png", f"{BASE}/history", {"width": 1440, "height": 900}, None),
-            ("zh/hero-banner.png", f"{BASE}/", {"width": 1400, "height": 520}, "zh"),
-            ("en/hero-banner.png", f"{BASE}/", {"width": 1400, "height": 520}, "en"),
         ]
 
         for rel, url, vp, lang in simple_shots:
