@@ -885,6 +885,26 @@ async def analyze_ticker(
     elif data_source == "fallback":
         response["data_note"] = "Auto-fetch failed, using provided parameters"
 
+    # Evaluate rules and dispatch notifications asynchronously (fire-and-forget)
+    try:
+        engine = _get_rules_engine()
+        if engine.get_rules():
+            import asyncio
+            rule_data = {
+                "ticker": ticker.upper(),
+                "signal": consensus_resp.signal,
+                "score": consensus_resp.score,
+                "confidence": consensus_resp.confidence,
+                "kelly_fraction": consensus_resp.kelly_fraction,
+                "price": ctx.price,
+                "sector": ctx.sector,
+            }
+            asyncio.get_event_loop().run_in_executor(
+                None, engine.evaluate, rule_data
+            )
+    except Exception:
+        pass  # Rules errors never block analysis response
+
     return response
 
 
@@ -1610,6 +1630,23 @@ async def api_run_watchlist_analysis():
             "kelly_pct": consensus.metadata.get("position_sizing", {}).get("position_pct"),
         }
         all_results.append(result_item)
+
+        # Evaluate rules for this ticker (fire-and-forget)
+        try:
+            engine = _get_rules_engine()
+            if engine.get_rules():
+                rule_data = {
+                    "ticker": ticker.upper(),
+                    "signal": consensus.signal.value,
+                    "score": result_item["score"],
+                    "confidence": result_item["confidence"],
+                    "kelly_fraction": (result_item.get("kelly_pct") or 0) / 100,
+                    "price": ctx.price,
+                    "sector": ctx.sector if hasattr(ctx, "sector") else "",
+                }
+                engine.evaluate(rule_data)
+        except Exception:
+            pass
 
         # Persist last signal back to watchlist item
         try:
@@ -3267,12 +3304,50 @@ async def api_optimize(body: OptimizeBody):
             rng = random.Random(seed)
             returns_data[ticker.upper()] = [rng.gauss(0.001, 0.02) for _ in range(60)]
 
-    result = PortfolioOptimizer().optimize(returns_data, risk_free_rate=body.risk_free_rate)
+    optimizer = PortfolioOptimizer()
+    result = optimizer.optimize(returns_data, risk_free_rate=body.risk_free_rate)
+
+    # Generate efficient frontier points (annualized for display)
+    _TRADING_DAYS = 252
+    frontier_raw = optimizer.efficient_frontier(
+        returns_data, risk_free_rate=body.risk_free_rate, n_points=40
+    )
+    frontier_points = [
+        {
+            "risk": round(fp.volatility * (_TRADING_DAYS ** 0.5) * 100, 4),
+            "return": round(fp.expected_return * _TRADING_DAYS * 100, 4),
+        }
+        for fp in frontier_raw
+    ]
+
+    # Annualized optimal portfolio stats for display consistency
+    opt_dict = result.to_dict()
+    opt_dict["expected_return_annual"] = round(opt_dict["expected_return"] * _TRADING_DAYS, 6)
+    opt_dict["volatility_annual"] = round(opt_dict["volatility"] * (_TRADING_DAYS ** 0.5), 6)
+
+    # Individual asset points (annualized)
+    tickers_list = list(returns_data.keys())
+    asset_points = []
+    for ticker in tickers_list:
+        rets = returns_data[ticker]
+        if len(rets) < 2:
+            continue
+        mean_r = sum(rets) / len(rets)
+        var_r = sum((r - mean_r) ** 2 for r in rets) / (len(rets) - 1)
+        vol_r = var_r ** 0.5
+        asset_points.append({
+            "ticker": ticker,
+            "risk": round(vol_r * (_TRADING_DAYS ** 0.5) * 100, 4),
+            "return": round(mean_r * _TRADING_DAYS * 100, 4),
+        })
+
     return {
         "status": "ok",
-        "portfolio": result.to_dict(),
+        "portfolio": opt_dict,
         "tickers": [t.upper() for t in body.tickers],
         "data_source": data_source,
+        "frontier_points": frontier_points,
+        "asset_points": asset_points,
     }
 
 

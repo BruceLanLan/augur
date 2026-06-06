@@ -2,6 +2,10 @@
 
 {% block title %}Portfolio Optimizer - Augur{% endblock %}
 
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="page-content content-max" aria-label="Portfolio optimizer">
     <header class="page-header">
@@ -35,20 +39,29 @@
     </div>
 
     <div id="opt-results" style="display: none;" role="region" aria-label="Optimization results" aria-live="polite">
+
+        <!-- Efficient Frontier Chart -->
+        <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Efficient Frontier</h3>
+            <div style="position: relative; height: 340px;">
+                <canvas id="frontier-chart" aria-label="Efficient frontier chart" role="img"></canvas>
+            </div>
+        </div>
+
         <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
             <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Optimal Portfolio</h3>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
                 <div class="stat-box" style="text-align: center; padding: 1rem; background: var(--bg-primary); border-radius: 8px;">
                     <div style="font-size: 0.8rem; color: var(--text-secondary);">Expected Return</div>
-                    <div id="opt-return" style="font-size: 1.4rem; font-weight: 700; color: #34c759;" aria-label="Expected return value">--</div>
+                    <div id="opt-return" style="font-size: 1.4rem; font-weight: 700; color: var(--signal-buy);" aria-label="Expected return value">--</div>
                 </div>
                 <div class="stat-box" style="text-align: center; padding: 1rem; background: var(--bg-primary); border-radius: 8px;">
                     <div style="font-size: 0.8rem; color: var(--text-secondary);">Volatility</div>
-                    <div id="opt-vol" style="font-size: 1.4rem; font-weight: 700; color: #ff9500;" aria-label="Volatility value">--</div>
+                    <div id="opt-vol" style="font-size: 1.4rem; font-weight: 700; color: var(--accent-orange);" aria-label="Volatility value">--</div>
                 </div>
                 <div class="stat-box" style="text-align: center; padding: 1rem; background: var(--bg-primary); border-radius: 8px;">
                     <div style="font-size: 0.8rem; color: var(--text-secondary);">Sharpe Ratio</div>
-                    <div id="opt-sharpe" style="font-size: 1.4rem; font-weight: 700; color: #5ac8fa;" aria-label="Sharpe ratio value">--</div>
+                    <div id="opt-sharpe" style="font-size: 1.4rem; font-weight: 700; color: var(--amber);" aria-label="Sharpe ratio value">--</div>
                 </div>
             </div>
             <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">Allocation Weights</h4>
@@ -56,7 +69,7 @@
         </div>
     </div>
 
-    <div id="opt-error" style="display: none; color: #ff3b30; padding: 1rem; background: rgba(255,59,48,0.1); border-radius: 8px; margin-top: 1rem;" role="alert"></div>
+    <div id="opt-error" style="display: none; color: var(--signal-sell); padding: 1rem; background: rgba(var(--signal-sell-rgb, 255,59,48),0.1); border-radius: 8px; margin-top: 1rem;" role="alert"></div>
 </div>
 
 <style>
@@ -77,6 +90,146 @@
 
 {% block extra_scripts %}
 <script>
+var _frontierChart = null;
+
+function _getCSSVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function renderFrontierChart(frontierPoints, optPoint, assetPoints) {
+    var canvas = document.getElementById('frontier-chart');
+    if (!canvas) return;
+
+    // Destroy previous chart instance if exists
+    if (_frontierChart) {
+        _frontierChart.destroy();
+        _frontierChart = null;
+    }
+
+    var bgCard    = _getCSSVar('--bg-primary') || '#0a0a0f';
+    var borderCol = _getCSSVar('--border-color') || '#1e1e2e';
+    var textSec   = _getCSSVar('--text-secondary') || '#8888a0';
+    var textPrim  = _getCSSVar('--text-primary') || '#e8e8f0';
+    var accentBlue = '#4fc3f7';
+    var accentGold = '#d4a017';
+    var accentGreen = '#66bb6a';
+
+    // Frontier curve dataset
+    var curveData = frontierPoints.map(function(p) {
+        return { x: p.risk, y: p['return'] };
+    });
+
+    // Individual asset dots
+    var assetData = (assetPoints || []).map(function(p) {
+        return { x: p.risk, y: p['return'], label: p.ticker };
+    });
+
+    // Optimal portfolio point
+    var optData = optPoint ? [{ x: optPoint.risk, y: optPoint['return'] }] : [];
+
+    var datasets = [
+        {
+            label: 'Efficient Frontier',
+            data: curveData,
+            type: 'line',
+            borderColor: accentBlue,
+            backgroundColor: 'rgba(79,195,247,0.08)',
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            fill: false,
+            tension: 0.35,
+            order: 3,
+        },
+        {
+            label: 'Assets',
+            data: assetData,
+            type: 'scatter',
+            borderColor: accentGreen,
+            backgroundColor: 'rgba(102,187,106,0.75)',
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointStyle: 'circle',
+            order: 2,
+        },
+        {
+            label: 'Optimal Portfolio',
+            data: optData,
+            type: 'scatter',
+            borderColor: accentGold,
+            backgroundColor: accentGold,
+            pointRadius: 10,
+            pointHoverRadius: 13,
+            pointStyle: 'star',
+            order: 1,
+        },
+    ];
+
+    // Remove assets dataset if empty
+    if (!assetData.length) datasets.splice(1, 1);
+
+    _frontierChart = new Chart(canvas, {
+        type: 'scatter',
+        data: { datasets: datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 500 },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: textSec,
+                        usePointStyle: true,
+                        padding: 16,
+                        font: { size: 12 },
+                    },
+                },
+                tooltip: {
+                    backgroundColor: '#14141f',
+                    borderColor: borderCol,
+                    borderWidth: 1,
+                    titleColor: textPrim,
+                    bodyColor: textSec,
+                    callbacks: {
+                        label: function(ctx) {
+                            var d = ctx.raw;
+                            var base = 'Risk: ' + Number(d.x).toFixed(2) + '%  Return: ' + Number(d.y).toFixed(2) + '%';
+                            if (d.label) base = d.label + '  |  ' + base;
+                            return base;
+                        }
+                    }
+                },
+            },
+            scales: {
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Portfolio Risk — Annualized Std Dev (%)',
+                        color: textSec,
+                        font: { size: 12 },
+                    },
+                    ticks: { color: textSec, font: { size: 11 } },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Expected Return — Annualized (%)',
+                        color: textSec,
+                        font: { size: 12 },
+                    },
+                    ticks: { color: textSec, font: { size: 11 } },
+                    grid: { color: 'rgba(255,255,255,0.04)' },
+                },
+            },
+        },
+    });
+
+    // Set canvas background color
+    canvas.style.background = bgCard;
+    canvas.style.borderRadius = '8px';
+}
+
 async function runOptimize() {
     var tickersInput = document.getElementById('opt-tickers').value.trim();
     if (!tickersInput) { showToast('Please enter at least one ticker', 'error'); return; }
@@ -106,8 +259,17 @@ async function runOptimize() {
         }
 
         var p = data.portfolio;
-        document.getElementById('opt-return').textContent = (p.expected_return * 100).toFixed(2) + '%';
-        document.getElementById('opt-vol').textContent = (p.volatility * 100).toFixed(2) + '%';
+
+        // Use annualized stats if available, else scale raw daily values
+        var retAnn = (p.expected_return_annual !== undefined)
+            ? p.expected_return_annual
+            : p.expected_return * 252;
+        var volAnn = (p.volatility_annual !== undefined)
+            ? p.volatility_annual
+            : p.volatility * Math.sqrt(252);
+
+        document.getElementById('opt-return').textContent = (retAnn * 100).toFixed(2) + '%';
+        document.getElementById('opt-vol').textContent = (volAnn * 100).toFixed(2) + '%';
         document.getElementById('opt-sharpe').textContent = p.sharpe_ratio.toFixed(4);
 
         var weightsDiv = document.getElementById('opt-weights');
@@ -118,9 +280,20 @@ async function runOptimize() {
             weightsDiv.innerHTML += '<div style="display:flex; align-items:center; gap:1rem; padding:0.5rem; background:var(--bg-primary); border-radius:6px;">' +
                 '<span style="font-weight:600; width:60px; color:var(--text-primary);">' + ticker + '</span>' +
                 '<div style="flex:1; height:8px; background:var(--border-color); border-radius:4px; overflow:hidden;">' +
-                '<div style="height:100%; width:' + pct + '%; background: linear-gradient(90deg, #5ac8fa, #34c759); border-radius:4px;"></div></div>' +
+                '<div style="height:100%; width:' + pct + '%; background: linear-gradient(90deg, var(--amber), var(--signal-buy)); border-radius:4px;"></div></div>' +
                 '<span style="width:60px; text-align:right; color:var(--text-secondary);">' + pct + '%</span></div>';
         }
+
+        // Render efficient frontier chart
+        var optChartPoint = {
+            risk: (volAnn * 100),
+            'return': (retAnn * 100),
+        };
+        renderFrontierChart(
+            data.frontier_points || [],
+            optChartPoint,
+            data.asset_points || []
+        );
 
         document.getElementById('opt-results').style.display = 'block';
     } catch(e) {
