@@ -123,7 +123,9 @@ class TestTemplateKeyCoverageRound10:
         pat = re.compile(r'data-i18n(?:-aria|-title)?="([^"]+)"')
         keys = set()
         for p in TPL_DIR.glob("*.html"):
-            keys.update(pat.findall(p.read_text(encoding="utf-8")))
+            for k in pat.findall(p.read_text(encoding="utf-8")):
+                if "{{" not in k:  # skip Jinja template expressions
+                    keys.add(k)
         return keys
 
     def test_every_referenced_key_defined(self, i18n, referenced_keys):

@@ -3,16 +3,18 @@
 {% block title %}AI Chat - Augur{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>AI Investment Chat
+<header class="page-header">
+    <div class="page-header__text">
+    <h1 class="page-title">AI Investment Chat
         {% if llm_enabled %}
         <span class="llm-badge llm-on" title="OpenAI 兼容协议已接入，真实推理对话">⚡ LLM ONLINE</span>
         {% else %}
         <span class="llm-badge llm-off" title="未配置 OPENAI_API_KEY，使用模板回复。">📋 TEMPLATE MODE</span>
         {% endif %}
     </h1>
-    <p class="page-desc" style="font-family: var(--font-pixfin);">Discuss markets with legendary personas. (HD-2D Voice & Logic)</p>
-</div>
+    <p class="page-desc">Discuss markets with legendary personas. (HD-2D Voice & Logic)</p>
+    </div>
+</header>
 <style>
 .llm-badge { font-family: var(--font-pixfin); font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 4px; vertical-align: middle; margin-left: 8px; letter-spacing: 0.5px; }
 .llm-badge.llm-on { background: rgba(255,140,0,0.15); color: var(--accent-orange, #ff8c00); border: 1px solid rgba(255,140,0,0.5); }

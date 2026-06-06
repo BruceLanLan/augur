@@ -383,6 +383,7 @@ a:hover { color: #ffaa33; }
     overflow-x: hidden;
 }
 
+/* Grid shell (layout.css) — sidebar column handles offset, no double gutter */
 .app-layout .app-main {
     margin-left: 0 !important;
     max-width: none !important;
@@ -1775,6 +1776,10 @@ html.light .report-section-body .md-report blockquote {
     color: #4a3e30;
     background: rgba(0, 0, 0, 0.03);
 }
+html.light .report-exec-blurb {
+    color: var(--report-text-muted, #4a3e30) !important;
+    background: rgba(255, 255, 255, 0.55) !important;
+}
 
 /* --- Onboarding banner (first-run guidance) --- */
 .onboard-banner {
@@ -2454,6 +2459,43 @@ html.light .report-section-body .md-report blockquote {
 
     .report-full-text-toggle {
         display: none;
+    }
+
+    .scroll,
+    .report-md-panel,
+    .report-section-body.open {
+        background: #fff !important;
+        color: #222 !important;
+    }
+
+    .scroll .md-report,
+    .report-md-panel .md-report,
+    .report-section-body .md-report,
+    #report-content.md-report {
+        color: #222 !important;
+        background: transparent !important;
+    }
+
+    .md-report th,
+    .md-report td,
+    .md-report strong,
+    .md-report li,
+    .md-report p,
+    .md-report h1,
+    .md-report h2,
+    .md-report h3 {
+        color: #222 !important;
+    }
+
+    .md-report th {
+        background: #f0f0f0 !important;
+    }
+
+    .report-page-container .report-section-block,
+    .report-exec-summary,
+    .score-chart-container {
+        background: #fff !important;
+        border-color: #ccc !important;
     }
 
     .card {

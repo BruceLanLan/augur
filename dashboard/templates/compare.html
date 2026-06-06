@@ -226,7 +226,12 @@ function applyCompareQueryParams() {
         countEl.className = 'select-count agent-counter ' + (count >= 2 && count <= 5 ? 'ready' : 'insufficient');
     }
     validateCompareForm();
-    if (ticker && agents) showToast(_t('compare-url-loaded'));
+    if (ticker && agents) {
+        showToast(_t('compare-url-loaded'));
+        if (params.get('autorun') === '1') {
+            runCompare();
+        }
+    }
 }
 
 // Real-time ticker validation
