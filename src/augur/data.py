@@ -21,6 +21,7 @@ Usage:
 """
 
 import logging
+import math
 import re
 import threading
 import time
@@ -482,7 +483,9 @@ def calculate_technicals(prices: List[Dict]) -> Dict[str, Any]:
     Returns:
         Dict with: rsi, macd, macd_signal, sma20, sma50, atr, volatility_20d, etc.
     """
-    closes = [p["close"] for p in prices if "close" in p]
+    closes = _sanitize_price_series(
+        [p["close"] for p in prices if "close" in p]
+    )
     if not closes:
         return {}
     return _calculate_technicals_from_prices(closes)
@@ -821,10 +824,26 @@ def search_ticker(query: str) -> List[Dict[str, Any]]:
 
 # ============ Internal Helpers ============
 
+def _sanitize_price_series(closes: List[Any]) -> List[float]:
+    """Drop non-finite, bool-coerced, and non-positive closing prices."""
+    clean: List[float] = []
+    for c in closes:
+        if isinstance(c, bool):
+            continue
+        try:
+            v = float(c)
+        except (TypeError, ValueError):
+            continue
+        if math.isfinite(v) and v > 0:
+            clean.append(v)
+    return clean
+
+
 def _calculate_technicals_from_prices(closes: List[float]) -> Dict[str, Any]:
     """Calculate technical indicators from a list of closing prices."""
     result = {}
 
+    closes = _sanitize_price_series(closes)
     n = len(closes)
     if n < 2:
         return result
@@ -875,6 +894,7 @@ def _calculate_technicals_from_prices(closes: List[float]) -> Dict[str, Any]:
 
 def _calculate_rsi(closes: List[float], period: int = 14) -> float:
     """Calculate RSI (Relative Strength Index)."""
+    closes = _sanitize_price_series(closes)
     if len(closes) < period + 1:
         return 50.0
 
@@ -904,6 +924,7 @@ def _calculate_rsi(closes: List[float], period: int = 14) -> float:
 
 def _calculate_macd(closes: List[float]) -> Dict[str, float]:
     """Calculate MACD (12/26/9)."""
+    closes = _sanitize_price_series(closes)
     if len(closes) < 26:
         return {"macd": 0, "signal": 0, "histogram": 0}
 

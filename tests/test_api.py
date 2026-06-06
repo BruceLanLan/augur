@@ -290,3 +290,26 @@ class TestScannerAPI:
         )
         assert resp.status_code == 400
         assert "Maximum 20" in resp.json()["detail"]
+
+
+class TestStandaloneCLIApiAuth:
+    """`augur api` (src/augur/api.py) should honor AUGUR_API_TOKEN like the dashboard."""
+
+    def test_open_without_token(self, monkeypatch):
+        monkeypatch.delenv("AUGUR_API_TOKEN", raising=False)
+        monkeypatch.delenv("AUGUR_MULTI_USER", raising=False)
+        from augur.api import app as cli_app
+        cli_client = TestClient(cli_app)
+        assert cli_client.get("/api/personas").status_code == 200
+
+    def test_requires_bearer_when_token_set(self, monkeypatch):
+        monkeypatch.setenv("AUGUR_API_TOKEN", "cli-api-secret")
+        monkeypatch.delenv("AUGUR_MULTI_USER", raising=False)
+        from augur.api import app as cli_app
+        cli_client = TestClient(cli_app)
+        assert cli_client.get("/api/personas").status_code == 401
+        resp = cli_client.get(
+            "/api/personas",
+            headers={"Authorization": "Bearer cli-api-secret"},
+        )
+        assert resp.status_code == 200

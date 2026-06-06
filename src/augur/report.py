@@ -19,7 +19,7 @@ augur.report - 深度分析报告生成模块
 import math
 import re
 from datetime import datetime
-from typing import Dict, List, Tuple
+from typing import Any, Dict, List, Tuple
 
 from augur.personas.base import AgentResponse, MarketContext, SignalType
 
@@ -196,6 +196,8 @@ def _consensus_strength(results: Dict[str, AgentResponse]) -> Tuple[str, float]:
     bull, neut, bear, total = _signal_counts(results)
     if total == 0:
         return "无有效数据", 0.0
+    if total < 3:
+        return "样本不足", max(bull, neut, bear) / total
     majority = max(bull, neut, bear)
     pct = majority / total
     if pct >= 0.7:
@@ -220,16 +222,24 @@ def _aggregate_items(results: Dict[str, AgentResponse], attr: str) -> List[Tuple
     """聚合所有大师提到的风险/发现，按提及频次降序返回 [(item, [agent_names])]。
     coverage_confidence < 0.5 的 agent 不参与共识 findings 聚合，避免不相关框架污染结论。
     """
-    bag: Dict[str, List[str]] = {}
+    bag: Dict[str, Dict[str, Any]] = {}
     for response in _valid_results(results).values():
         if getattr(response, "coverage_confidence", 1.0) < 0.5:
             continue  # 框架不适用的 agent 不贡献 findings
         for item in getattr(response, attr, []) or []:
-            norm = (item or "").strip()
+            raw = (item or "").strip()
+            norm = raw.lower()
             if not norm:
                 continue
-            bag.setdefault(norm, []).append(response.agent_name)
-    return sorted(bag.items(), key=lambda x: len(x[1]), reverse=True)
+            entry = bag.setdefault(norm, {"text": raw, "agents": []})
+            if not entry["text"]:
+                entry["text"] = raw
+            entry["agents"].append(response.agent_name)
+    return sorted(
+        ((entry["text"], entry["agents"]) for entry in bag.values()),
+        key=lambda x: len(x[1]),
+        reverse=True,
+    )
 
 
 def _agent_theme(agent_id: str) -> str:
@@ -425,10 +435,25 @@ def _format_theme_section(theme_name: str, agent_ids: List[str], results: Dict[s
         return "\n".join(lines)
 
     valid_theme = {k: v for k, v in theme_results.items() if v.signal != SignalType.ERROR}
+    if not valid_theme:
+        if theme_results:
+            lines.append("*该流派大师均分析失败，暂无有效评分*")
+        else:
+            lines.append("*该流派下暂无大师分析结果*")
+        lines.append("")
+        for agent_id, response in theme_results.items():
+            if response.signal == SignalType.ERROR:
+                lines.append(
+                    f"**{response.agent_name}**：⚠️ 分析失败 — "
+                    f"{_clean_reasoning_for_table(response.reasoning, 100)}"
+                )
+                lines.append("")
+        return "\n".join(lines)
+
     bullish_count = sum(1 for r in valid_theme.values() if r.signal == SignalType.BULLISH)
     bearish_count = sum(1 for r in valid_theme.values() if r.signal == SignalType.BEARISH)
     neutral_count = sum(1 for r in valid_theme.values() if r.signal == SignalType.NEUTRAL)
-    avg_score = sum(r.score for r in valid_theme.values()) / len(valid_theme) if valid_theme else 0
+    avg_score = sum(r.score for r in valid_theme.values()) / len(valid_theme)
 
     if lens:
         lines.append(f"**关注焦点**：{lens}")
@@ -815,6 +840,7 @@ def _format_risk_matrix(results: Dict[str, AgentResponse]) -> str:
         lines.append("|----------|----------|--------|")
         for item, agents in findings[:10]:
             item_short = item[:80] + "..." if len(item) > 80 else item
+            item_short = item_short.replace('|', '\\|')
             agents_str = ", ".join(agents[:3])
             if len(agents) > 3:
                 agents_str += f" 等{len(agents)}位"
@@ -834,6 +860,7 @@ def _format_risk_matrix(results: Dict[str, AgentResponse]) -> str:
     lines.append("|----------|----------|--------|")
     for risk, agents in risks[:15]:
         risk_short = risk[:80] + "..." if len(risk) > 80 else risk
+        risk_short = risk_short.replace('|', '\\|')
         agents_str = ", ".join(agents[:3])
         if len(agents) > 3:
             agents_str += f" 等{len(agents)}位"
@@ -913,10 +940,10 @@ def generate_report(
     # --- Ticker validation ---
     # Reject tickers with characters outside [A-Za-z0-9.\-] to avoid crashes
     # from non-ASCII or special character input.
-    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker) or ticker[0] in '.-' or ticker[-1] in '.-':
         # Sanitize by stripping invalid characters
         sanitized = re.sub(r'[^A-Za-z0-9.\-]', '', ticker)[:15]
-        if not sanitized:
+        if not sanitized or sanitized[0] in '.-' or sanitized[-1] in '.-':
             return (
                 "# 分析报告错误\n\n"
                 f"> 输入的股票代码 `{ticker[:30]}` 无效。"

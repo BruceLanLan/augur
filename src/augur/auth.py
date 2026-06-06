@@ -50,6 +50,23 @@ def auth_required() -> bool:
     return get_token() is not None or is_multi_user_mode()
 
 
+def get_auth_config() -> Dict[str, Any]:
+    """Public auth mode summary for clients (no secret values)."""
+    has_token = get_token() is not None
+    multi = is_multi_user_mode()
+    modes: List[str] = []
+    if has_token:
+        modes.append("token")
+    if multi:
+        modes.append("jwt")
+    return {
+        "auth_required": bool(modes),
+        "multi_user": multi,
+        "api_token": has_token,
+        "modes": modes,
+    }
+
+
 def verify_jwt(token: str) -> Optional[Dict[str, Any]]:
     """Verify multi-user JWT and return payload, or None."""
     if not is_multi_user_mode():

@@ -16,11 +16,13 @@ from datetime import datetime, timezone
 from typing import Optional
 
 try:
-    from fastapi import FastAPI, HTTPException
+    from fastapi import FastAPI, HTTPException, Request
     from fastapi.responses import JSONResponse
     from fastapi.middleware.cors import CORSMiddleware
 except ImportError:
     raise ImportError("fastapi is required: pip install fastapi uvicorn")
+
+from augur.auth import auth_required, authenticate_request
 
 # Ticker pattern: 1-15 alphanumeric, dot, hyphen, or colon (e.g. BRK.B, 0700.HK, BTC-USD)
 _TICKER_PATTERN = re.compile(r'^[A-Za-z0-9.\-:]{1,15}$')
@@ -71,6 +73,26 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
+
+_AUTH_EXEMPT_PATHS = {"/health"}
+
+
+@app.middleware("http")
+async def api_auth_middleware(request: Request, call_next):
+    """Enforce Bearer token or JWT on /api/* when AUGUR_API_TOKEN or multi-user is set."""
+    if request.url.path.startswith("/api/") and request.url.path not in _AUTH_EXEMPT_PATHS:
+        if auth_required():
+            ok, _mode = authenticate_request(request)
+            if not ok:
+                return JSONResponse(
+                    status_code=401,
+                    content=api_error_response(
+                        detail="Authentication required",
+                        code="AUTH_REQUIRED",
+                        path=request.url.path,
+                    ),
+                )
+    return await call_next(request)
 
 _registry: Optional[AgentRegistry] = None
 _coordinator: Optional[DecisionCoordinator] = None

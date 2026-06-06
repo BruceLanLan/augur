@@ -3,6 +3,7 @@
 
 import json
 import logging
+import math
 import time
 from unittest.mock import patch
 
@@ -359,3 +360,34 @@ def test_predictions_capped_at_100_on_persist(tmp_path):
     tickers_on_disk = [p["ticker"] for p in data["predictions"]]
     assert "T000" not in tickers_on_disk
     assert tickers_on_disk[-1] == "T_TRIG"
+
+
+def test_learning_engine_accepts_string_weights_path(tmp_path):
+    """weights_path may be passed as str; must not crash on .exists()."""
+    path = str(tmp_path / "weights.json")
+    engine = LearningEngine(weights_path=path)
+    assert engine.weights_path == Path(path)
+
+
+def test_record_prediction_normalizes_signal_case(learning_engine):
+    """Uppercase signal strings are normalized before outcome evaluation."""
+    learning_engine.record_prediction("AAPL", "buffett", "BULLISH", 7.0, 0.8)
+    learning_engine.record_outcome("AAPL", 0.05)
+    acc = learning_engine.get_accuracy()
+    assert acc["buffett"]["correct_predictions"] == 1
+
+
+def test_record_prediction_sanitizes_non_numeric_score(learning_engine):
+    """Non-numeric scores are coerced instead of breaking weight math."""
+    learning_engine.record_prediction("AAPL", "buffett", "bullish", "bad", 0.8)
+    pred = learning_engine._predictions[-1]
+    assert pred["score"] == 5.0
+    assert isinstance(pred["confidence"], float)
+
+
+def test_record_outcome_ignores_nan_return(learning_engine):
+    """NaN actual returns must not corrupt accuracy tracking."""
+    learning_engine.record_prediction("AAPL", "buffett", "bullish", 7.0, 0.8)
+    learning_engine.record_outcome("AAPL", float("nan"))
+    assert learning_engine.get_accuracy() == {}
+    assert learning_engine._predictions[-1]["outcome"] is None

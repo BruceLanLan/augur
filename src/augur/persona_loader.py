@@ -94,10 +94,18 @@ def _eval_rule_condition(condition: str, ctx: MarketContext) -> bool:
 
 
 def _compute_factor(factor_def: Dict, ctx: MarketContext) -> float:
-    score = float(factor_def.get("base", 5))
+    base = factor_def.get("base", 5)
+    if isinstance(base, bool) or not isinstance(base, (int, float)):
+        score = 5.0
+    else:
+        score = float(base)
     for rule in factor_def.get("rules", []):
         condition = rule.get("if", "False")
-        delta = float(rule.get("add", 0))
+        delta_raw = rule.get("add", 0)
+        if isinstance(delta_raw, bool) or not isinstance(delta_raw, (int, float)):
+            delta = 0.0
+        else:
+            delta = float(delta_raw)
         if _eval_rule_condition(condition, ctx):
             score += delta
     return min(max(score, 0.0), 10.0)

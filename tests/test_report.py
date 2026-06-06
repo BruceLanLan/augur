@@ -963,3 +963,74 @@ class TestRound13NullByteInReasoning:
         # The visible Chinese text must remain
         assert "内在价值充足" in report
         assert "护城河强" in report
+
+
+# =====================================================================
+# Loop 6 Agent: report edge cases from analyze/compare flows
+# =====================================================================
+
+
+class TestLoop6ReportEdgeCases:
+    def test_theme_section_all_error_skips_misleading_average(self):
+        from augur.report import _format_theme_section
+        from augur.personas.base import AgentResponse, SignalType
+
+        results = {
+            "buffett": AgentResponse(
+                "buffett", "Buffett", SignalType.ERROR, 0, 0, "timeout"
+            ),
+        }
+        section = _format_theme_section("价值投资", ["buffett"], results)
+        assert "平均评分" not in section
+        assert "分析失败" in section
+
+    def test_aggregate_items_deduplicates_case_variants(self):
+        from augur.report import _aggregate_items
+        from augur.personas.base import AgentResponse, SignalType
+
+        results = {
+            "a": AgentResponse(
+                "a", "A", SignalType.BULLISH, 0.8, 8, "x",
+                key_findings=["Strong moat"],
+            ),
+            "b": AgentResponse(
+                "b", "B", SignalType.BULLISH, 0.8, 8, "x",
+                key_findings=["strong moat"],
+            ),
+        }
+        items = _aggregate_items(results, "key_findings")
+        assert len(items) == 1
+        assert len(items[0][1]) == 2
+
+    def test_consensus_strength_single_agent_is_insufficient_sample(self):
+        from augur.report import _consensus_strength
+        from augur.personas.base import AgentResponse, SignalType
+
+        results = {
+            "a": AgentResponse("a", "A", SignalType.BULLISH, 0.9, 9, "x"),
+        }
+        label, _ = _consensus_strength(results)
+        assert label == "样本不足"
+
+    def test_risk_matrix_escapes_pipe_characters(self):
+        from augur.report import _format_risk_matrix
+        from augur.personas.base import AgentResponse, SignalType
+
+        results = {
+            "a": AgentResponse(
+                "a", "A", SignalType.BEARISH, 0.8, 3, "x",
+                risks=["Margin | compression risk"],
+            ),
+        }
+        section = _format_risk_matrix(results)
+        assert "\\|" in section
+        assert "compression risk" in section
+
+    def test_generate_report_rejects_leading_dot_ticker(self):
+        from augur.report import generate_report
+        from augur.personas.base import AgentResponse, MarketContext, SignalType
+
+        ctx = MarketContext(ticker=".AAPL")
+        cons = AgentResponse("consensus", "C", SignalType.NEUTRAL, 0.5, 5, "x")
+        report = generate_report(".AAPL", ctx, {}, cons)
+        assert "分析报告错误" in report

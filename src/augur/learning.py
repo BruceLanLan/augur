@@ -37,6 +37,7 @@ Usage:
 
 import json
 import logging
+import math
 import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any
@@ -68,7 +69,9 @@ class LearningEngine:
             weights_path: Path to store learned weights.
                          Defaults to ~/.augur/learned_weights.json.
         """
-        self.weights_path = weights_path or _get_weights_path()
+        self.weights_path = (
+            Path(weights_path) if weights_path is not None else _get_weights_path()
+        )
         self._predictions: List[Dict[str, Any]] = []
         self._weights: Dict[str, float] = {}
         self._accuracy: Dict[str, Dict[str, Any]] = {}
@@ -118,6 +121,26 @@ class LearningEngine:
             score: The score (0-10).
             confidence: Confidence level (0-1).
         """
+        signal = (signal or "neutral").strip().lower()
+        if signal not in ("bullish", "bearish", "neutral"):
+            signal = "neutral"
+
+        try:
+            score = float(score)
+        except (TypeError, ValueError):
+            score = 5.0
+        if isinstance(score, bool) or not math.isfinite(score):
+            score = 5.0
+        score = max(0.0, min(10.0, score))
+
+        try:
+            confidence = float(confidence)
+        except (TypeError, ValueError):
+            confidence = 0.5
+        if isinstance(confidence, bool) or not math.isfinite(confidence):
+            confidence = 0.5
+        confidence = max(0.0, min(1.0, confidence))
+
         self._predictions.append({
             "ticker": ticker,
             "agent_id": agent_id,
@@ -146,6 +169,12 @@ class LearningEngine:
                           (used by auto-outcome checks for stale predictions).
         """
         now = time.time()
+        if not isinstance(actual_return, (int, float)) or isinstance(actual_return, bool):
+            logger.debug("record_outcome ignored non-numeric return for %s", ticker)
+            return
+        if not math.isfinite(float(actual_return)):
+            logger.debug("record_outcome ignored non-finite return for %s", ticker)
+            return
         cutoff = now - (lookback_days * 86400)
         min_age_cutoff = now - (min_age_days * 86400) if min_age_days is not None else None
         updated = False
@@ -188,7 +217,7 @@ class LearningEngine:
 
     def _evaluate_prediction(self, prediction: Dict[str, Any], actual_return: float) -> bool:
         """Evaluate if a prediction was correct."""
-        signal = prediction.get("signal", "neutral")
+        signal = str(prediction.get("signal", "neutral")).strip().lower()
         if signal == "bullish" and actual_return > 0.02:
             return True
         elif signal == "bearish" and actual_return < -0.02:

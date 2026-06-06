@@ -2,13 +2,19 @@
 """
 augur.mcp_server - MCP Server for Augur (stdio mode)
 
-Provides 6 tools:
+Provides 7 tools (stdio; no HTTP auth — runs locally beside the analyst):
   - augur_analyze
   - augur_consensus
   - augur_list_personas
   - augur_configure
   - augur_create_persona
   - augur_debate
+  - augur_fetch
+
+MCP tools do not use AUGUR_API_TOKEN (that applies to the Dashboard/REST API only).
+Live market data requires optional deps (`pip install 'augur-agents[data]'`) and,
+for premium sources, env keys such as FINNHUB_API_KEY / ALPHAVANTAGE_API_KEY.
+Without them, augur_fetch / auto-fetch falls back to yfinance or returns a clear error.
 """
 
 import logging
@@ -78,7 +84,14 @@ def create_server():
             "Install it with: pip install 'mcp>=1.0.0' (requires Python 3.10+)"
         )
 
-    mcp = FastMCP("augur", instructions="Multi-agent investment analysis system with 18 investor persona agents")
+    mcp = FastMCP(
+        "augur",
+        instructions=(
+            "Multi-agent investment analysis with 18 investor personas. "
+            "Seven tools: analyze, consensus, list_personas, configure, create_persona, debate, fetch. "
+            "Omit financial metrics to auto-fetch via yfinance; install augur-agents[data] if fetch fails."
+        ),
+    )
 
     @mcp.tool()
     def augur_analyze(ticker: str, persona: Optional[str] = None, pe: float = 0,

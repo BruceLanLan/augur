@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Test AgentRegistry loads all 18+ agents and basic analysis works."""
 
+import math
+
 import pytest
 from augur.registry import AgentRegistry, DecisionCoordinator
 from augur.personas.base import BaseAgent, MarketContext, SignalType
@@ -262,3 +264,40 @@ class TestRegistryRegistration:
         assert reg1 is reg2
         # The module-level global must now be set to that same instance
         assert _reg_mod._global_registry is reg1
+
+
+class TestConsensusEdgeCases:
+    """Loop 6 Agent: consensus tie-break and coverage sanitization."""
+
+    def test_equal_bull_bear_weights_prefers_neutral(self):
+        from augur.personas.base import AgentResponse
+
+        coordinator = DecisionCoordinator(AgentRegistry())
+        results = {
+            "a": AgentResponse(
+                "a", "A", SignalType.BULLISH, 0.8, 5.0, "x", coverage_confidence=1.0
+            ),
+            "b": AgentResponse(
+                "b", "B", SignalType.BEARISH, 0.8, 5.0, "x", coverage_confidence=1.0
+            ),
+        }
+        consensus = coordinator.get_consensus(results, ticker="")
+        assert consensus.signal == SignalType.NEUTRAL
+
+    def test_nan_coverage_confidence_does_not_poison_score(self):
+        from augur.personas.base import AgentResponse
+
+        coordinator = DecisionCoordinator(AgentRegistry())
+        results = {
+            "a": AgentResponse(
+                "a", "A", SignalType.BULLISH, 0.8, 8.0, "x",
+                coverage_confidence=float("nan"),
+            ),
+            "b": AgentResponse(
+                "b", "B", SignalType.BEARISH, 0.8, 2.0, "x", coverage_confidence=1.0
+            ),
+        }
+        consensus = coordinator.get_consensus(results, ticker="")
+        assert math.isfinite(consensus.score)
+        assert math.isfinite(consensus.confidence)
+        assert 0.0 <= consensus.score <= 10.0

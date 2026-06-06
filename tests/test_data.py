@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Tests for augur.data module (offline technical calculations)."""
 
+import pytest
+
 
 class TestDataCalculations:
     def test_calculate_rsi_basic(self):
@@ -95,3 +97,32 @@ class TestDebtRatioConversion:
         else:
             debt_ratio = 0
         assert debt_ratio == 0
+
+
+class TestSanitizePriceSeries:
+    """Loop 6 Agent: non-finite / bool closes must not poison technicals."""
+
+    def test_nan_close_skipped_in_technicals(self):
+        import math
+        from augur.data import calculate_technicals
+
+        result = calculate_technicals(
+            [{"close": float("nan")}, {"close": 100.0}, {"close": 101.0}]
+        )
+        assert all(
+            not (isinstance(v, float) and not math.isfinite(v))
+            for v in result.values()
+        )
+
+    def test_bool_close_skipped(self):
+        from augur.data import calculate_technicals
+
+        result = calculate_technicals([{"close": True}, {"close": 100.0}, {"close": 101.0}])
+        assert result.get("sma20") == pytest.approx(100.5)
+
+    def test_macd_with_inf_returns_zeros(self):
+        from augur.data import _calculate_macd
+
+        prices = [100.0] * 30
+        prices[15] = float("inf")
+        assert _calculate_macd(prices) == {"macd": 0, "signal": 0, "histogram": 0}

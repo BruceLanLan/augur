@@ -132,3 +132,13 @@ def test_load_personas_from_dir_loads_multiple(tmp_path):
     assert {"dir_one", "dir_two"}.issubset(ids)
     # Broken file should be skipped, not raise
     assert all(isinstance(a, YamlAgent) for a in agents)
+
+
+def test_compute_factor_rejects_bool_base(tmp_path):
+    """Boolean YAML base scores must not become 1.0 via float(True)."""
+    from augur.persona_loader import _compute_factor
+    from augur.personas.base import MarketContext
+
+    ctx = MarketContext(ticker="TEST")
+    score = _compute_factor({"base": True, "rules": []}, ctx)
+    assert score == 5.0

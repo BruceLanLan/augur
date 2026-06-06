@@ -10,6 +10,7 @@ Contains:
 """
 
 import logging
+import math
 import time
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -412,7 +413,7 @@ class DecisionCoordinator:
             if learned_weights and agent_id in learned_weights:
                 w = 0.6 * w + 0.4 * learned_weights[agent_id]
 
-            w *= response.coverage_confidence
+            w *= self._normalize_coverage_confidence(response.coverage_confidence)
 
             # Sector-aware weight boosting
             if context and hasattr(context, 'sector') and context.sector:
@@ -459,6 +460,7 @@ class DecisionCoordinator:
         else:
             total_score = 0.0
             total_confidence = 0.0
+            consensus_signal = SignalType.NEUTRAL
 
         # v8: Apply sentiment factor (±0.5 max, clamped to [0,10])
         if ticker:
@@ -468,11 +470,20 @@ class DecisionCoordinator:
             except Exception:
                 pass
 
-        # Weighted majority vote
+        # Weighted majority vote — directional ties resolve to NEUTRAL
         if sum(signal_counts.values()) <= 0:
             consensus_signal = SignalType.NEUTRAL
         else:
-            consensus_signal = max(signal_counts, key=signal_counts.get)
+            max_weight = max(signal_counts.values())
+            tied = [sig for sig, w in signal_counts.items() if w == max_weight]
+            if len(tied) == 1:
+                consensus_signal = tied[0]
+            elif SignalType.NEUTRAL in tied:
+                consensus_signal = SignalType.NEUTRAL
+            elif SignalType.BULLISH in tied and SignalType.BEARISH in tied:
+                consensus_signal = SignalType.NEUTRAL
+            else:
+                consensus_signal = tied[0]
 
         # Regime note
         regime_note = ""
@@ -600,7 +611,14 @@ class DecisionCoordinator:
                 result.risks.append(f"PE={ctx_for_risk.pe:.1f}, valuation elevated - consider stop-loss")
 
         # Clamp final score to valid range [0, 10]
-        result.score = max(0.0, min(10.0, result.score))
+        if not math.isfinite(result.score):
+            result.score = 0.0
+        else:
+            result.score = max(0.0, min(10.0, result.score))
+        if not math.isfinite(result.confidence):
+            result.confidence = 0.2
+        else:
+            result.confidence = max(0.0, min(1.0, result.confidence))
 
         # --- Timing metadata ---
         consensus_ms = (time.perf_counter() - t0_consensus) * 1000
@@ -627,6 +645,14 @@ class DecisionCoordinator:
                 pass
 
         return result
+
+    def _normalize_coverage_confidence(self, coverage: float) -> float:
+        """Clamp model applicability weight to a finite [0, 1] range."""
+        if isinstance(coverage, bool) or not isinstance(coverage, (int, float)):
+            return 1.0
+        if not math.isfinite(coverage):
+            return 1.0
+        return max(0.0, min(1.0, float(coverage)))
 
     def add_debate_message(self, msg: DebateMessage) -> None:
         """Add a debate message to the history."""

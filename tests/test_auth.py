@@ -55,6 +55,25 @@ class TestAuthNoToken:
         assert resp.status_code == 200
 
 
+class TestAuthConfig:
+    """Public auth config endpoint."""
+
+    def test_auth_config_open_mode(self, client_no_token):
+        resp = client_no_token.get("/api/auth/config")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["auth_required"] is False
+        assert data["modes"] == []
+
+    def test_auth_config_token_mode(self, client_with_token):
+        resp = client_with_token.get("/api/auth/config")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["auth_required"] is True
+        assert data["api_token"] is True
+        assert "token" in data["modes"]
+
+
 class TestAuthWithToken:
     """When AUGUR_API_TOKEN is set, API endpoints require Bearer token."""
 
@@ -95,6 +114,46 @@ class TestAuthWithToken:
     def test_health_exempt_from_auth(self, client_with_token):
         resp = client_with_token.get("/health")
         assert resp.status_code == 200
+
+
+class TestAuthDualMode:
+    """When both AUGUR_API_TOKEN and multi-user JWT are enabled."""
+
+    @pytest.fixture
+    def client_dual(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("AUGUR_API_TOKEN", "dual-secret-token")
+        monkeypatch.setenv("AUGUR_MULTI_USER", "1")
+        monkeypatch.setenv("AUGUR_JWT_SECRET", "dual-jwt-secret")
+        monkeypatch.setenv("HOME", str(tmp_path))
+        from augur.users import UserManager
+        UserManager().create_user("dualuser", "password123")
+        from dashboard.app import app
+        return TestClient(app)
+
+    def test_api_accepts_static_token(self, client_dual):
+        resp = client_dual.get(
+            "/api/personas",
+            headers={"Authorization": "Bearer dual-secret-token"},
+        )
+        assert resp.status_code == 200
+
+    def test_api_accepts_jwt(self, client_dual):
+        login = client_dual.post(
+            "/api/auth/login",
+            json={"username": "dualuser", "password": "password123"},
+        )
+        token = login.json()["token"]
+        resp = client_dual.get(
+            "/api/personas",
+            headers={"Authorization": f"Bearer {token}"},
+        )
+        assert resp.status_code == 200
+
+    def test_auth_config_lists_both_modes(self, client_dual):
+        resp = client_dual.get("/api/auth/config")
+        assert resp.status_code == 200
+        modes = set(resp.json()["modes"])
+        assert modes == {"token", "jwt"}
 
 
 class TestAuthMultiUserJWT:
@@ -274,6 +333,15 @@ class TestAuthUnitFunctions:
         # Cleanup so we don't pollute other tests
         with _auth_rate_lock:
             _auth_rate_limits.clear()
+
+    def test_get_auth_config_reports_modes(self, monkeypatch):
+        monkeypatch.setenv("AUGUR_API_TOKEN", "cfg-token")
+        monkeypatch.delenv("AUGUR_MULTI_USER", raising=False)
+        from augur.auth import get_auth_config
+        cfg = get_auth_config()
+        assert cfg["auth_required"] is True
+        assert cfg["api_token"] is True
+        assert cfg["modes"] == ["token"]
 
     def test_verify_jwt_returns_none_in_single_user_mode(self, monkeypatch):
         """verify_jwt must short-circuit (return None) when multi-user is disabled."""

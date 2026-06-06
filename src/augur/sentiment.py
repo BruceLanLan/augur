@@ -217,6 +217,7 @@ class SentimentAnalyzer:
             + live_sources["x_score"] * 0.20,
             4,
         )
+        overall = max(-1.0, min(1.0, overall))
 
         volume = st_volume if st_volume > 0 else (
             int(abs(int(hashlib.sha256(ticker.encode()).hexdigest()[:8], 16) % 40000) + 100)
@@ -239,7 +240,8 @@ class SentimentAnalyzer:
 
     def get_sentiment_factor(self, ticker: str) -> float:
         """Return a score adjustment in [-0.5, +0.5] for use in consensus."""
-        return round(self.get_sentiment(ticker).overall_score * 0.5, 4)
+        factor = self.get_sentiment(ticker).overall_score * 0.5
+        return round(max(-0.5, min(0.5, factor)), 4)
 
     def clear_cache(self) -> None:
         self._cache.clear()

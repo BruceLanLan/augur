@@ -371,3 +371,13 @@ class TestErrorHandling:
             factor = analyzer.get_sentiment_factor("BULL")
         # All sources 1.0 → overall = 1.0 → factor = 0.5
         assert factor == 0.5
+
+    def test_sentiment_factor_clamped_to_half(self):
+        """Extreme source scores must not produce factor outside [-0.5, 0.5]."""
+        with patch("augur.sentiment._fetch_stocktwits", return_value=(2.0, 100)), \
+             patch("augur.sentiment._fetch_reddit", return_value=2.0), \
+             patch("augur.sentiment._mock_score", return_value=2.0):
+            analyzer = SentimentAnalyzer()
+            analyzer.clear_cache()
+            factor = analyzer.get_sentiment_factor("CLAMP")
+        assert factor == 0.5
