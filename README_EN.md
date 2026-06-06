@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/images/en/hero-banner.png" alt="Augur v8.2.1 — CSS Grid sidebar, unified page-title chrome, 18-master consensus dashboard" width="100%"/>
+<img src="docs/images/en/hero-banner.png" alt="Augur v8.2.2 — Optimizer efficient frontier, Rules→Bot alerts, UI contrast fixes" width="100%"/>
 
 # 🦉 Augur
 
@@ -10,8 +10,8 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v8.2.1](https://img.shields.io/badge/v8.2.1-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
-[![1362 Tests](https://img.shields.io/badge/Tests-1362%20passed-success?style=for-the-badge)](docs/LOOP_200_REPORT.md)
+[![v8.2.2](https://img.shields.io/badge/v8.2.2-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![1657 Tests](https://img.shields.io/badge/Tests-1657%20passed-success?style=for-the-badge)](CHANGELOG.md)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -525,7 +525,17 @@ Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUT
 ## 📝 Changelog
 
 <details>
-<summary><strong>v8.2.1 — Loop 200 review: layout fix, report contrast, UX & auth (current)</strong></summary>
+<summary><strong>v8.2.2 — Optimizer frontier chart / Rules→Bot / UI contrast fixes (current)</strong></summary>
+
+- **Optimizer efficient frontier:** New Chart.js scatter+line chart on the optimizer page — shows the Markowitz efficient frontier curve, optimal portfolio (gold star), and individual asset positions.
+- **Rules→Bot integration:** Analysis and watchlist scan results now automatically trigger alert rules and push notifications to Telegram / Slack / WeChat / Lark.
+- **UI contrast fixes:** Replaced hardcoded `#000/#fff` on orange backgrounds with CSS variables (WCAG AA compliant); replaced `rgba` literals with design-system tokens across debate, compare, scanner, settings, optimizer, stocks, and index pages.
+- **Loop 400 code merge:** All Loop 400 stash code (34 files) merged into main; i18n.js +238 new translation keys; compare page now supports `?autorun=1`.
+- **Tests:** **1657** passing (up from 1362 in v8.2.1, +295 new tests).
+</details>
+
+<details>
+<summary><strong>v8.2.1 — Loop 200 review: layout fix, report contrast, UX & auth</strong></summary>
 
 - **Layout fix:** Sidebar and main panel aligned with CSS Grid (`240px + 1fr`); eliminated the 240px visual gap; unified `--sidebar-width` when collapsed.
 - **Report contrast:** Fixed unreadable light-mode parchment + pale text; added `--report-*` semantic tokens and theme-aware chart SVG colors.
@@ -536,10 +546,9 @@ Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUT
 </details>
 
 <details>
-<summary><strong>Loop 400 review (in progress, not merged to main)</strong></summary>
+<summary><strong>Loop 400 review (completed, merged in v8.2.2)</strong></summary>
 
-- Second 200-round pass on Loop 200 backlog; Agents 1/3/5/7/8/9 finished locally, Finalizer did not complete.
-- Pending recovery from `git stash`: unified page-title chrome, full backtest i18n, portfolio↔watchlist flows, API error envelopes.
+- All stash code (34 files) merged into main as part of v8.2.2. Stash fully cleared.
 - Status report: [`docs/LOOP_400_REPORT.md`](docs/LOOP_400_REPORT.md).
 </details>
 

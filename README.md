@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/images/zh/hero-banner.png" alt="Augur v8.2.1 — CSS Grid 侧栏布局、统一页头 chrome、18 位大师共识仪表盘" width="100%"/>
+<img src="docs/images/zh/hero-banner.png" alt="Augur v8.2.2 — Optimizer 有效前沿图、Rules→Bot 通知、UI 对比度修复" width="100%"/>
 
 # 🦉 Augur
 
@@ -10,8 +10,8 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v8.2.1](https://img.shields.io/badge/v8.2.1-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
-[![1362 Tests](https://img.shields.io/badge/Tests-1362%20passed-success?style=for-the-badge)](docs/LOOP_200_REPORT.md)
+[![v8.2.2](https://img.shields.io/badge/v8.2.2-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![1657 Tests](https://img.shields.io/badge/Tests-1657%20passed-success?style=for-the-badge)](CHANGELOG.md)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -413,7 +413,17 @@ Kelly 只在 BULLISH 且评分 > 5 时给出非零建议。
 ## 📝 版本日志
 
 <details>
-<summary><strong>v8.2.1 — Loop 200 审查：布局修复 / 报告对比度 / UX 与鉴权整合 (current)</strong></summary>
+<summary><strong>v8.2.2 — Optimizer 有效前沿图 / Rules→Bot 打通 / UI 对比度修复 (current)</strong></summary>
+
+- **Optimizer 有效前沿图**：组合优化页新增 Chart.js 可视化曲线，展示 Markowitz 有效前沿、最优组合（金色星标）和各资产分布。
+- **Rules→Bot 打通**：分析与 watchlist 扫描结果自动触发告警规则，推送通知到 Telegram / Slack / WeChat / Lark。
+- **UI 对比度修复**：orange 背景上的 `#000/#fff` 全部替换为 CSS 变量，符合 WCAG AA 标准；`rgba` 硬编码色改为设计系统变量。
+- **代码整合**：Loop 400 全部遗留代码合并进 main，i18n 新增 238 行翻译键，compare 页支持 `?autorun=1`。
+- **测试**：**1657** 项全绿（v8.2.1 为 1362，新增 295 项）。
+</details>
+
+<details>
+<summary><strong>v8.2.1 — Loop 200 审查：布局修复 / 报告对比度 / UX 与鉴权整合</strong></summary>
 
 - **布局修复**：侧栏与主内容区改为 CSS Grid（`240px + 1fr`），消除 240px 视觉断层；折叠侧栏统一 `--sidebar-width` token。
 - **报告对比度**：浅色模式下羊皮纸底 + 浅色正文不可读问题已修复；新增 `--report-*` 语义 token，图表随主题变色。
@@ -424,10 +434,9 @@ Kelly 只在 BULLISH 且评分 > 5 时给出非零建议。
 </details>
 
 <details>
-<summary><strong>Loop 400 审查（进行中，未并入 main）</strong></summary>
+<summary><strong>Loop 400 审查（已完成，并入 v8.2.2）</strong></summary>
 
-- 基于 Loop 200 backlog 的第二轮 200 轮审查；Agent 1/3/5/7/8/9 已在本地完成，Finalizer 未收尾。
-- 待恢复：page-title 统一 chrome、backtest 全面 i18n、portfolio↔watchlist 集成、API error envelope 等（见 `git stash`）。
+- 全部遗留代码（34 文件）已于 v8.2.2 合并进 main，stash 清零。
 - 状态报告：[`docs/LOOP_400_REPORT.md`](docs/LOOP_400_REPORT.md)。
 </details>
 
