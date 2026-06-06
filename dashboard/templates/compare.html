@@ -24,7 +24,7 @@
 }
 .agent-checkbox-item.selected {
     border-color: var(--accent-orange);
-    background: rgba(255, 149, 0, 0.1);
+    background: var(--amber-wash, rgba(255,149,0,0.1));
 }
 .agent-checkbox-item input[type="checkbox"] {
     accent-color: var(--accent-orange);
@@ -226,7 +226,12 @@ function applyCompareQueryParams() {
         countEl.className = 'select-count agent-counter ' + (count >= 2 && count <= 5 ? 'ready' : 'insufficient');
     }
     validateCompareForm();
-    if (ticker && agents) showToast(_t('compare-url-loaded'));
+    if (ticker && agents) {
+        showToast(_t('compare-url-loaded'));
+        if (params.get('autorun') === '1') {
+            runCompare();
+        }
+    }
 }
 
 // Real-time ticker validation

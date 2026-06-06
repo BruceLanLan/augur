@@ -182,7 +182,7 @@
     justify-content: center;
     font-size: 0.68rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--bg-void);
 }
 .breadth-bar-decline {
     background: var(--signal-sell);
@@ -193,7 +193,7 @@
     justify-content: center;
     font-size: 0.68rem;
     font-weight: 600;
-    color: #fff;
+    color: var(--bg-void);
 }
 .breadth-stats {
     display: flex;
@@ -694,9 +694,9 @@
                 <img src="/docs/images/avatars/{{ p.id }}.png" class="avatar" width="40" height="40" alt="{{ p.name }}" onerror="this.src='/static/images/augur-owl-64.png'">
                 <div style="min-width:0;">
                     <div style="font:600 0.85rem/1.2 var(--font-sans);color:var(--fg-1);">{{ p.name }}</div>
-                    <div style="font:600 0.58rem/1.3 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;" data-persona-style-id="{{ p.id }}">{{ p.style }}</div>
+                    <div style="font:600 0.58rem/1.3 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;" data-i18n="persona-style-{{ p.id }}">{{ p.style }}</div>
                 </div>
-                <span style="margin-left:auto;font:700 1rem/1 var(--font-mono);color:var(--amber);" data-persona-tag-id="{{ p.id }}">{{ p.tag }}</span>
+                <span style="margin-left:auto;font:700 1rem/1 var(--font-mono);color:var(--amber);" data-i18n="persona-tag-{{ p.id }}">{{ p.tag }}</span>
             </div>
             {% endif %}
             {% endfor %}
@@ -964,9 +964,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show recent analyses from cache
     renderRecentAnalyses();
 
-    // Priority panels first; defer below-fold loads for faster first paint
+    // Priority: market board (feeds macro/fear-greed/pulse) + hot tickers (movers/breadth)
     loadMarketOverview(false);
     loadHotTickers(false);
+
+    // Defer below-fold / secondary panels to keep first paint responsive
     _deferIndexLoad(loadDatasources, 150);
     _deferIndexLoad(function() { loadSectorPerformance(false); }, 350);
     _deferIndexLoad(loadCryptoOverview, 550);

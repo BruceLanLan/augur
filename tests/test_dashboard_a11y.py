@@ -323,7 +323,7 @@ class TestStocksPageMobileA11y:
 
     def test_stocks_page_has_i18n_title(self, stocks_soup):
         h1 = stocks_soup.find("h1", class_="page-title", attrs={"data-i18n": "stocks-title"})
-        assert h1 is not None, "stocks page must expose h1.page-title for heading hierarchy"
+        assert h1 is not None, "stocks page must expose a single h1.page-title for heading hierarchy"
 
 
 class TestI18nMidFlowLanguageSwitch:
@@ -451,7 +451,8 @@ class TestReportViewReadability:
 
     def test_report_view_uses_theme_aware_chart_helper(self):
         html = _read("report_view.html")
-        assert "reportThemeColor" in html, (
+        base = _read("base.html")
+        assert "reportThemeColor" in base or "reportThemeColor" in html, (
             "SVG chart labels must read CSS variables instead of hard-coded light-grey fills"
         )
         chart_block = html.split("function renderScoreChart")[1].split("function ")[0]

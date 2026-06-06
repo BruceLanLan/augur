@@ -288,7 +288,9 @@ html.light .council-hero {
   .hero-title { font-size: 1.35rem; }
 }
 
-/* Page chrome — unified headers, leads, reading rhythm (loop-400) */
+/* ============================================================
+   Page chrome — unified headers, leads, reading rhythm
+   ============================================================ */
 :root {
   --content-max: 1200px;
   --prose-max: 42rem;
@@ -329,6 +331,7 @@ html.light .council-hero {
   flex-shrink: 0;
 }
 
+/* In-card section labels — no redundant divider under card chrome */
 .section-title.compact {
   margin-bottom: 0;
   padding-bottom: 0;
@@ -344,7 +347,14 @@ html.light .council-hero {
   letter-spacing: 0.5px;
 }
 
-.read-prose { max-width: var(--prose-max); }
+.read-prose {
+  max-width: var(--prose-max);
+}
+.read-prose p {
+  line-height: 1.6;
+  margin: 0 0 0.75em;
+}
+
 .content-max {
   max-width: var(--content-max);
   margin-left: auto;
@@ -352,6 +362,7 @@ html.light .council-hero {
   width: 100%;
 }
 
+/* Auth forms — centered narrow panel */
 .auth-panel {
   max-width: 400px;
   margin: 2rem auto;
@@ -368,8 +379,16 @@ html.light .council-hero {
   font-weight: 500;
   color: var(--fg-1);
 }
-.auth-panel .form-input { width: 100%; padding: 0.75rem; font-size: 1rem; }
-.auth-panel .btn-block { width: 100%; padding: 0.75rem; font-size: 1rem; }
+.auth-panel .form-input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+.auth-panel .btn-block {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 1rem;
+}
 .auth-panel-footer {
   margin-top: 1.5rem;
   text-align: center;

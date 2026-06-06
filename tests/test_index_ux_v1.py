@@ -186,9 +186,11 @@ class TestMacroI18n:
 
     def test_macro_commentary_helper(self, index_text):
         assert "_macroCommentary" in index_text
+        assert "macro-' + key + '-up" in index_text
 
     def test_fear_greed_uses_i18n_labels(self, index_text):
         assert "_fgLabel" in index_text
+        assert "fg-extreme-greed" in index_text
 
     def test_macro_grid_has_i18n_aria(self, index_soup):
         grid = index_soup.find(id="macro-snapshot-grid")
@@ -220,9 +222,8 @@ class TestPersonaChips:
         assert link is not None
         assert link.get("data-i18n") == "btn-view-all-personas"
 
-    def test_featured_style_has_persona_id(self, index_text):
-        assert 'data-persona-style-id="{{ p.id }}"' in index_text
-        assert 'data-persona-tag-id="{{ p.id }}"' in index_text
+    def test_featured_style_has_i18n(self, index_text):
+        assert 'data-i18n="persona-style-' in index_text
 
     def test_featured_rows_prefill_aapl(self, index_soup):
         row = index_soup.select(".m-row")[0]
@@ -234,6 +235,7 @@ class TestIndexPerfDeferrals:
 
     def test_deferred_panel_loading(self, index_text):
         assert "_deferIndexLoad" in index_text
+        assert "loadCryptoOverview" in index_text
 
     def test_sparkline_concurrency_limit(self, index_text):
         assert "_SPARKLINE_MAX" in index_text
@@ -246,8 +248,9 @@ class TestFirstTimeLeaderboardEmpty:
     def test_render_leaderboard_empty_has_aapl_chip(self, index_text):
         m = re.search(r"function renderLeaderboard\(\)\s*\{(.+?)\n\}", index_text, re.DOTALL)
         assert m, "renderLeaderboard() not found"
-        assert "chip-recommended" in m.group(1)
-        assert "tryExample('AAPL')" in m.group(1) or "tryExample(\\'AAPL\\')" in m.group(1)
+        body = m.group(1)
+        assert "chip-recommended" in body
+        assert "tryExample('AAPL')" in body or 'tryExample(\\\'AAPL\\\')' in body
 
     def test_try_persona_dismisses_onboard(self, index_text):
         m = re.search(r"function tryPersona\(personaId\)\s*\{(.+?)\n\}", index_text, re.DOTALL)

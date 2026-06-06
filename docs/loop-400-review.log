@@ -1,0 +1,82 @@
+# Loop 400 Review — Agent 1/10 Pass 1 (layout/responsive)
+
+Branch: feature/loop-400-review (from feature/loop-200-review)
+
+## Loop 1
+- **Review:** layout.css sticky sidebar overrides bloomberg `position:fixed` on mobile — off-canvas nav may reserve block flow space.
+- **Fix:** `@media (max-width:768px)` — `.app-layout .sidebar/.sb { position:fixed; z-index:101 }`.
+
+## Loop 2
+- **Review:** bloomberg `.app-main { margin-left:240px }` still active alongside grid shell — risk of double gutter.
+- **Fix:** `.app-layout .app-main { margin-left:0 !important; max-width:none !important }`.
+
+## Loop 3
+- **Review:** Mobile hamburger `top:16px` overlaps 32px ticker tape — menu icon hidden/clashing.
+- **Fix:** ui-enhance 768px — hamburger `top: calc(var(--ticker-tape-height) + 8px)`.
+
+## Loop 4
+- **Review:** Toast `top:16px` (base inline) overlaps ticker on phone.
+- **Fix:** ui-enhance `#toast-container` offset below ticker; max-width avoids hamburger.
+
+## Loop 5
+- **Review:** Hero input flex-row on 375px — analyze button squeezed, sub-44px tap target.
+- **Fix:** layout.css 600px — `.hero-input { flex-direction:column }`, full-width 44px controls.
+
+## Loop 6
+- **Review:** `.hero-chips` no flex-wrap — HK/BTC chips clip off-screen on narrow phones.
+- **Fix:** `flex-wrap: wrap` on `.hero-chips`.
+
+## Loop 7
+- **Review:** bloomberg mobile `padding-top:60px` dead code — ui-enhance ticker padding uses `!important`.
+- **Fix:** Removed redundant mobile padding-top/16px shorthand from bloomberg 768 block.
+
+## Loop 8
+- **Review:** Bottom nav ignores iPhone home-indicator — last tab clipped.
+- **Fix:** `padding-bottom: calc(8px + env(safe-area-inset-bottom))` on bottom-nav + app-main.
+
+## Loop 9
+- **Review:** Portfolio summary 2-col at 480px — cards too narrow to read.
+- **Fix:** ui-enhance 480px — `.portfolio-summary { grid-template-columns:1fr }`.
+
+## Loop 10
+- **Review:** Onboard banner close button ~20px tap target on mobile.
+- **Fix:** bloomberg 480px — close button min 44×44px flex center.
+
+## Loop 11
+- **Review:** Scanner results header `flex justify-between` overflows on 320px.
+- **Fix:** ui-enhance `#scanner-results > .flex` column stack at 768px.
+
+## Loop 12
+- **Review:** Index status-bar 4 items overflow without wrap at 768px (ui-enhance had no rule).
+- **Fix:** ui-enhance 768px `.status-bar { flex-wrap:wrap; gap:12px }`.
+
+## Loop 13
+- **Review:** Ticker pause button 2×6px padding — hard to tap.
+- **Fix:** `min-width/height: 28px` on `.ticker-tape-pause` (fits 32px bar).
+
+## Loop 14
+- **Review:** Hero title 2rem on 320px — wraps awkwardly beside hidden owl.
+- **Fix:** layout.css 480px `.hero-title { font-size:1.35rem }`.
+
+## Loop 15
+- **User POV:** First-time mobile user — open `/`, hamburger visible below ticker, chips wrap, analyze stacks.
+- **Visual:** PASS (code audit).
+
+## Loop 16
+- **User POV:** Portfolio on iPhone — summary cards single column, bottom nav not under home bar.
+- **Visual:** PASS (CSS rules present).
+
+## Loop 17
+- **User POV:** Scanner results on narrow screen — title/summary stack vertically.
+- **Visual:** PASS.
+
+## Loop 18
+- **Review:** Compare/debate/watchlist mobile rules from loop-200 still present — no regression.
+- **Fix:** None.
+
+## Loop 19
+- **Tests:** Added `tests/test_layout_responsive_loop400.py` (11 assertions).
+
+## Loop 20
+- **Tests:** `HOME=.pytest-home pytest tests/test_layout_responsive_loop400.py tests/test_css_responsive_r15.py tests/test_dashboard_static_assets.py -q`
+- **Result:** pending run

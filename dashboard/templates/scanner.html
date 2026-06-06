@@ -17,10 +17,11 @@
 .heatmap-cell.neutral { background: rgba(255,200,0,0.15); color: var(--signal-neutral); }
 .heatmap-cell.bearish { background: rgba(255,60,60,0.2); color: var(--signal-sell); }
 .consensus-badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-weight: 700; font-size: 0.7rem; }
-.consensus-badge.bullish { background: var(--signal-buy); color: #000; }
-.consensus-badge.neutral { background: var(--signal-neutral); color: #000; }
-.consensus-badge.bearish { background: var(--signal-sell); color: #fff; }
-.consensus-badge.error { background: var(--signal-sell); color: #fff; opacity: 0.85; }
+.consensus-badge.bullish { background: var(--signal-buy); color: var(--bg-void); }
+.consensus-badge.neutral { background: var(--signal-neutral); color: var(--bg-void); }
+.consensus-badge.bearish { background: var(--signal-sell); color: var(--fg-1); }
+.consensus-badge.error { background: var(--signal-sell); color: var(--fg-1); opacity: 0.85; }
+.heatmap-cell.error { background: rgba(255,60,60,0.15); color: var(--signal-sell); }
 </style>
 {% endblock %}
 {% block content %}

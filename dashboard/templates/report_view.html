@@ -197,7 +197,7 @@
 .score-gauge-track {
     flex: 1;
     height: 6px;
-    background: rgba(255,255,255,0.06);
+    background: var(--report-chart-track, rgba(255,255,255,0.06));
     border-radius: 3px;
     overflow: hidden;
     position: relative;
@@ -265,7 +265,25 @@
     .report-section-block { border: 1px solid #444; page-break-inside: avoid; }
     body { background: #fff !important; color: #222 !important; }
     .report-page-ticker { color: #222 !important; }
-    .report-exec-summary { border-left-color: #ff8c00; }
+    .report-exec-summary { border-left-color: #ff8c00; background: #fff !important; }
+    .report-verdict-strip { background: #f5f5f5 !important; color: #333 !important; border-color: #ccc !important; }
+    .report-exec-metrics .metric-item { background: #fafafa !important; border-color: #ddd !important; }
+    .report-exec-metrics .metric-label { color: #666 !important; }
+    .report-exec-metrics .metric-value { color: #111 !important; }
+    .report-section-body.open,
+    .report-md-panel,
+    .report-md-panel .md-report,
+    .report-section-body .md-report {
+        background: #fff !important;
+        color: #222 !important;
+    }
+    .md-report th, .md-report td, .md-report strong, .md-report li, .md-report p {
+        color: #222 !important;
+    }
+    .md-report th { background: #f0f0f0 !important; }
+    .report-voting-table th { background: #f0f0f0 !important; color: #333 !important; }
+    .report-voting-table td { color: #222 !important; }
+    .score-chart-container { background: #fff !important; border-color: #ccc !important; }
     * { color-adjust: exact; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 
@@ -345,6 +363,15 @@ html.light .report-voting-table th {
 html.light .report-exec-metrics .metric-item {
     background: rgba(255, 255, 255, 0.65);
 }
+html.light .report-exec-summary [style*="text-secondary"] {
+    color: var(--report-text-muted, #4a3e30) !important;
+}
+html.light .report-verdict-strip {
+    color: var(--report-text-muted, #4a3e30);
+}
+html.light .report-verdict-strip [style*="text-primary"] {
+    color: var(--parchment-ink, #2a2118) !important;
+}
 .report-section-body .md-report .md-p,
 .report-section-body .md-report li {
     max-width: 72ch;
@@ -382,9 +409,10 @@ html.light .report-exec-metrics .metric-item {
         <!-- Download Bar -->
         <div class="report-download-bar" id="rp-download-bar">
             <button type="button" class="btn btn-sm" onclick="downloadReportMD()" data-i18n="download_report" data-i18n-title="download_report">&#x2B07; 下载报告</button>
-            <button type="button" class="btn btn-sm btn-primary" onclick="downloadReportHTML()" data-i18n-title="download_report">&#x1F4C4; HTML</button>
+            <button type="button" class="btn btn-sm btn-primary" onclick="downloadReportHTML()" data-i18n="report-export-html" data-i18n-title="report-export-html">&#x1F4C4; HTML</button>
+            <button type="button" class="btn btn-sm" onclick="downloadReportPDF()" data-i18n="report-print-pdf" data-i18n-title="report-print-pdf">&#x1F5A8; 打印 PDF</button>
             <button type="button" class="btn btn-sm" onclick="copyReportText()" data-i18n="copy_report" data-i18n-title="copy_report">&#x1F4CB; 复制报告</button>
-            <a id="rp-view-stocks-link" href="/stocks?ticker={{ ticker }}&report=1" class="btn btn-sm" style="text-decoration:none;">&#x1F4CA; View in Analysis</a>
+            <a id="rp-view-stocks-link" href="/stocks?ticker={{ ticker }}&report=1" class="btn btn-sm" style="text-decoration:none;" data-i18n="report-view-analysis">&#x1F4CA; 查看分析页</a>
             <div class="report-section-controls">
                 <button type="button" class="btn btn-sm btn-ghost" onclick="expandAllReportSections()" data-i18n="report-expand-all">展开全部</button>
                 <button type="button" class="btn btn-sm btn-ghost" onclick="collapseAllReportSections()" data-i18n="report-collapse-all">收起全部</button>
@@ -401,7 +429,7 @@ html.light .report-exec-metrics .metric-item {
         <div class="report-section-block">
             <div class="report-section-toggle open" onclick="toggleReportSection(this)">
                 <span class="toggle-arrow">&#x25B6;</span>
-                <span>Agent Voting Board</span>
+                <span data-i18n="report-voting-board">大师投票板</span>
             </div>
             <div class="report-section-body open" id="rp-voting-body">
                 <div class="md-table-wrap">
@@ -427,7 +455,7 @@ html.light .report-exec-metrics .metric-item {
         <div class="report-section-block">
             <div class="report-section-toggle" onclick="toggleReportSection(this)">
                 <span class="toggle-arrow">&#x25B6;</span>
-                <span>Full Report (Rendered Markdown)</span>
+                <span data-i18n="report-full-markdown">完整报告（Markdown 渲染）</span>
             </div>
             <div class="report-section-body" id="rp-full-md-body">
                 <div class="report-md-panel">
@@ -442,11 +470,6 @@ html.light .report-exec-metrics .metric-item {
 var rpTicker = '{{ ticker }}';
 var rpMarkdown = '';
 var rpAnalysisData = null;
-
-function reportThemeColor(cssVar, fallback) {
-    var val = getComputedStyle(document.documentElement).getPropertyValue(cssVar);
-    return (val && val.trim()) ? val.trim() : fallback;
-}
 
 function createScoreGauge(score, maxScore) {
     maxScore = maxScore || 10;
@@ -517,7 +540,7 @@ function initReportStickyBar() {
 }
 
 function downloadReportMD() {
-    if (!rpMarkdown) { showToast('No report available', 'warning'); return; }
+    if (!rpMarkdown) { showToast(_t('report-toast-no-report'), 'warning'); return; }
     var date = new Date().toISOString().slice(0, 10);
     var filename = rpTicker + '_report_' + date + '.md';
     var blob = new Blob([rpMarkdown], { type: 'text/markdown;charset=utf-8' });
@@ -527,43 +550,15 @@ function downloadReportMD() {
     document.body.appendChild(a); a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('Markdown report downloaded');
+    showToast(_t('report-toast-md-downloaded'));
 }
 
 function downloadReportHTML() {
-    if (!rpMarkdown) { showToast('No report available', 'warning'); return; }
+    if (!rpMarkdown) { showToast(_t('report-toast-no-report'), 'warning'); return; }
     var renderedBody = renderReportMarkdown(rpMarkdown);
     var date = new Date().toISOString().slice(0, 10);
     var filename = rpTicker + '_report_' + date + '.html';
-    var htmlDoc = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + rpTicker + ' - Augur Analysis Report</title><style>'
-        + 'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0d1117;color:#e8e8f0;padding:40px;max-width:900px;margin:0 auto;line-height:1.8;}'
-        + 'h1{color:#ff8c00;margin-top:1.5em;font-size:1.8em;border-bottom:2px solid #30363d;padding-bottom:8px;}'
-        + 'h2{color:#ff8c00;margin-top:1.5em;font-size:1.3em;border-left:4px solid #ff8c00;padding-left:12px;}'
-        + 'h3{color:#ffa726;margin-top:1.2em;font-size:1.1em;}'
-        + 'h4{color:#ffca28;margin-top:1em;}'
-        + 'table{width:100%;border-collapse:collapse;margin:1em 0;font-size:0.9em;}'
-        + 'th,td{border:1px solid #30363d;padding:10px 14px;text-align:left;}'
-        + 'th{background:#161b22;color:#ff8c00;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;}'
-        + 'tr:nth-child(even){background:#161b22;}'
-        + 'tr:hover{background:rgba(255,140,0,0.05);}'
-        + 'code{background:#161b22;padding:2px 6px;border-radius:3px;font-size:0.85em;font-family:"JetBrains Mono",monospace;}'
-        + 'blockquote{border-left:3px solid #ff8c00;padding-left:14px;color:#8b949e;margin:1em 0;font-style:italic;}'
-        + 'hr{border:none;border-top:1px solid #30363d;margin:2em 0;}'
-        + 'strong{color:#e6edf3;}'
-        + 'ul,ol{padding-left:1.5em;}'
-        + 'li{margin:6px 0;}'
-        + 'p{margin:0.8em 0;}'
-        + '.header{text-align:center;margin-bottom:2em;padding:24px 0;border-bottom:2px solid #30363d;}'
-        + '.header h1{border:none;padding:0;margin:0;}'
-        + '.footer{text-align:center;margin-top:3em;padding-top:1em;border-top:1px solid #30363d;color:#8b949e;font-size:0.8em;}'
-        + '.meta{color:#8b949e;font-size:0.85em;margin-top:8px;}'
-        + '@media print{body{background:#fff;color:#222;padding:20px;}h1,h2,h3{color:#333;}th{background:#f0f0f0;color:#333;}td,th{border-color:#ccc;}}'
-        + '</style></head><body>'
-        + '<div class="header"><h1>' + rpTicker + ' Deep Analysis Report</h1>'
-        + '<p class="meta">Generated by Augur Multi-Agent Investment Analysis Platform | ' + date + '</p></div>'
-        + renderedBody
-        + '<div class="footer">Augur v7.8.2 | 18 AI Investment Masters Consensus Analysis | github.com/augur-agents</div>'
-        + '</body></html>';
+    var htmlDoc = buildReportHTMLExport(rpTicker, renderedBody);
     var blob = new Blob([htmlDoc], { type: 'text/html;charset=utf-8' });
     var url = URL.createObjectURL(blob);
     var a = document.createElement('a');
@@ -571,15 +566,20 @@ function downloadReportHTML() {
     document.body.appendChild(a); a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast('HTML report downloaded');
+    showToast(_t('report-toast-html-downloaded'));
+}
+
+function downloadReportPDF() {
+    if (!rpMarkdown) { showToast(_t('report-toast-no-report'), 'warning'); return; }
+    prepareReportPrint();
 }
 
 function copyReportText() {
-    if (!rpMarkdown) { showToast('No report available', 'warning'); return; }
+    if (!rpMarkdown) { showToast(_t('report-toast-no-report'), 'warning'); return; }
     navigator.clipboard.writeText(rpMarkdown).then(function() {
-        showToast('Report copied to clipboard');
+        showToast(_t('report-toast-copied'));
     }).catch(function() {
-        showToast('Copy failed', 'error');
+        showToast(_t('report-toast-copy-failed'), 'error');
     });
 }
 
@@ -625,7 +625,7 @@ function renderReportPage(data) {
     initReportStickyBar();
 
     // Date
-    document.getElementById('rp-date').textContent = 'Generated: ' + (data.timestamp || new Date().toISOString()).slice(0, 16).replace('T', ' ') + ' UTC';
+    document.getElementById('rp-date').textContent = _t('report-generated') + ': ' + (data.timestamp || new Date().toISOString()).slice(0, 16).replace('T', ' ') + ' UTC';
 
     // Parse signal and score from the markdown report (table format: | **key** | value |)
     var signal = 'neutral', score = 5.0, confidence = 0.5;
@@ -656,11 +656,11 @@ function renderReportPage(data) {
     });
     var verdictStrip = document.getElementById('rp-verdict-strip');
     if (votingAgents.length > 0) {
-        verdictStrip.innerHTML = '<span style="font-weight:600;color:var(--text-primary);">Consensus:</span>'
-            + '<span class="verdict-item"><span class="verdict-dot dot-buy"></span> Bullish: ' + bullCount + '</span>'
-            + '<span class="verdict-item"><span class="verdict-dot dot-neutral"></span> Neutral: ' + neutralCount + '</span>'
-            + '<span class="verdict-item"><span class="verdict-dot dot-sell"></span> Bearish: ' + bearCount + '</span>'
-            + '<span style="margin-left:auto; font-family:var(--font-data); color:var(--text-primary);">' + votingAgents.length + ' agents voted</span>';
+        verdictStrip.innerHTML = '<span style="font-weight:600;color:var(--text-primary);">' + _t('report-consensus') + ':</span>'
+            + '<span class="verdict-item"><span class="verdict-dot dot-buy"></span> ' + _t('report-bullish') + ': ' + bullCount + '</span>'
+            + '<span class="verdict-item"><span class="verdict-dot dot-neutral"></span> ' + _t('report-neutral-label') + ': ' + neutralCount + '</span>'
+            + '<span class="verdict-item"><span class="verdict-dot dot-sell"></span> ' + _t('report-bearish') + ': ' + bearCount + '</span>'
+            + '<span style="margin-left:auto; font-family:var(--font-data); color:var(--text-primary);">' + _t('report-agents-voted').replace('{n}', votingAgents.length) + '</span>';
     } else {
         verdictStrip.style.display = 'none';
     }
@@ -700,7 +700,7 @@ function renderExecSummary(score, signal, confidence) {
     var riskMatch = rpMarkdown.match(/风险等级[^|]*\|\s*(\S+)/i) || rpMarkdown.match(/Risk[：:]\s*(\S+)/i);
     var riskText = riskMatch ? riskMatch[1] : '--';
 
-    var html = '<div class="exec-title">Executive Summary</div>';
+    var html = '<div class="exec-title">' + _t('report-exec-summary') + '</div>';
     html += '<div class="report-exec-metrics">';
     html += '<div class="metric-item"><div class="metric-label">Signal</div><div class="metric-value" style="color:' + signalColor + ';">' + signalText + '</div></div>';
     html += '<div class="metric-item"><div class="metric-label">Score</div><div class="metric-value" style="color:var(--accent-orange);">' + score.toFixed(1) + '/10</div></div>';
@@ -725,7 +725,7 @@ function renderExecSummary(score, signal, confidence) {
         summaryText = lines.slice(0, 3).join(' ').replace(/\*\*/g, '').replace(/[#*_`]/g, '').trim();
     }
     if (summaryText) {
-        html += '<div style="margin-top:14px; font-size:0.82rem; color:var(--text-secondary); line-height:1.7; padding: 12px; background: var(--bg-primary); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-orange);">' + escapeHtml(summaryText.substring(0, 500)) + '</div>';
+        html += '<div class="report-exec-blurb" style="margin-top:14px; font-size:0.82rem; color:var(--report-text-muted, var(--text-secondary)); line-height:1.7; padding: 12px; background: var(--bg-primary); border-radius: var(--radius-sm); border-left: 3px solid var(--accent-orange);">' + escapeHtml(summaryText.substring(0, 500)) + '</div>';
     }
     container.innerHTML = html;
 }
@@ -770,7 +770,7 @@ function renderVotingTable() {
         });
     }
     if (tbody.children.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">Voting data will appear in the full report below</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">' + escapeHtml(_t('report-voting-empty')) + '</td></tr>';
     }
 }
 
@@ -864,7 +864,7 @@ function renderScoreChart(agents) {
         svg += '<text x="' + (labelWidth + barW + 6) + '" y="' + (y + barHeight / 2 + 4) + '" fill="' + color + '" font-size="11" font-weight="600" font-family="var(--font-data, monospace)">' + score.toFixed(1) + '</text>';
     });
     svg += '</svg>';
-    return '<div class="score-chart-container"><div class="score-chart-title">Agent Score Distribution</div>' + svg + '</div>';
+    return '<div class="score-chart-container"><div class="score-chart-title">' + escapeHtml(_t('report-score-distribution')) + '</div>' + svg + '</div>';
 }
 
 // Auto-load on page ready
