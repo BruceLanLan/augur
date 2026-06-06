@@ -477,6 +477,17 @@ kbd {
     .ticker-tape-wrap {
         left: 0;
     }
+    .hamburger-btn {
+        top: calc(var(--ticker-tape-height, 32px) + 8px);
+        left: 12px;
+        z-index: 102;
+    }
+    #toast-container {
+        top: calc(var(--ticker-tape-height, 32px) + 8px) !important;
+        right: 12px;
+        left: auto;
+        max-width: calc(100vw - 64px);
+    }
     .btn,
     .nav-item,
     .bottom-nav-item,
@@ -511,6 +522,17 @@ kbd {
         grid-template-columns: repeat(2, 1fr);
     }
 
+    #scanner-results > .flex {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 8px;
+    }
+
+    .status-bar {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
     .watchlist-header,
     .portfolio-header {
         flex-direction: column;
@@ -541,6 +563,12 @@ kbd {
         flex-direction: column;
         align-items: flex-start !important;
         gap: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .portfolio-summary {
+        grid-template-columns: 1fr;
     }
 }
 
@@ -778,6 +806,8 @@ body.sidebar-collapsed .ticker-tape-wrap {
     z-index: 2;
     transition: color 0.2s, background 0.2s;
     line-height: 1;
+    min-width: 28px;
+    min-height: 28px;
 }
 .ticker-tape-pause:hover {
     color: var(--accent-orange, #ff8c00);

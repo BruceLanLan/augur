@@ -106,6 +106,17 @@ class TestErrorEnvelopeConsistency:
         assert "AAPL" in err["detail"]
         assert "simulated upstream failure" in err["detail"]
 
+    def test_auth_verify_401_envelope(self, monkeypatch):
+        """401 from /api/auth/verify uses AUTH_REQUIRED with a non-empty suggestion."""
+        monkeypatch.setenv("AUGUR_API_TOKEN", "verify-envelope-token")
+        monkeypatch.delenv("AUGUR_MULTI_USER", raising=False)
+        from dashboard.app import app
+        verify_client = TestClient(app)
+        resp = verify_client.get("/api/auth/verify")
+        assert resp.status_code == 401
+        _assert_envelope(resp.json(), expected_status=401, expected_code="AUTH_REQUIRED")
+        assert "Bearer" in resp.json()["suggestion"]
+
     def test_unhandled_404_envelope(self, client):
         """A non-existent API path returns the standard envelope with code NOT_FOUND."""
         resp = client.get("/api/__no_such_route_xyz__")

@@ -111,39 +111,62 @@
 .signal-bullish { color: var(--signal-buy); font-weight: 600; }
 .signal-bearish { color: var(--signal-sell); font-weight: 600; }
 .signal-neutral { color: var(--text-secondary); }
+@media (max-width: 768px) {
+    .bt-form-row {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .bt-form-row > div {
+        min-width: 0 !important;
+        width: 100%;
+    }
+    .bt-days-btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    #bt-run-btn {
+        width: 100%;
+        min-height: 44px;
+    }
+    .backtest-metrics-grid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+}
 </style>
 {% endblock %}
 
 {% block content %}
-<div style="margin-bottom:1.5rem;">
-    <h1 style="color:var(--accent-orange); margin:0 0 4px; font-size:1.35rem;">历史回测</h1>
-    <p style="color:var(--text-secondary); font-size:0.82rem; margin:0;">Agent IC (Information Coefficient) 实盘追踪</p>
-</div>
+<header class="page-header">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="backtest-title">历史回测</h1>
+        <p class="page-lead" data-i18n="backtest-desc">Agent IC (Information Coefficient) 实盘追踪</p>
+    </div>
+</header>
 
 <!-- Controls -->
 <div class="card" style="margin-bottom: 1.5rem;">
-    <div class="card-body" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
+    <div class="card-body bt-form-row" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
         <div style="flex: 1; min-width: 120px;">
-            <label class="form-label" for="bt-ticker">股票代码</label>
+            <label class="form-label" for="bt-ticker" data-i18n="backtest-ticker-label">股票代码</label>
             <input type="text" id="bt-ticker" class="form-input" value="AAPL" placeholder="AAPL" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="bt-ticker-hint" style="text-transform: uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault();runBacktest();}">
-            <small id="bt-ticker-hint" class="form-hint" style="display:none;color:var(--signal-sell);font-size:0.7rem;margin-top:2px;" role="alert">代码不能为空</small>
+            <small id="bt-ticker-hint" class="form-hint" style="display:none;color:var(--signal-sell);font-size:0.7rem;margin-top:2px;" role="alert" data-i18n="backtest-ticker-empty">代码不能为空</small>
         </div>
         <div style="flex: 1; min-width: 140px;">
-            <label class="form-label" for="bt-capital">初始资金 (USD)</label>
-            <input type="number" id="bt-capital" class="form-input" value="100000" min="1000" step="10000" aria-label="初始资金 (美元)" aria-describedby="bt-capital-hint" oninput="clearCapitalHint()">
-            <small id="bt-capital-hint" class="form-hint" style="color:var(--signal-sell);" role="alert">初始资金不能低于 $1,000</small>
+            <label class="form-label" for="bt-capital" data-i18n="backtest-capital-label">初始资金 (USD)</label>
+            <input type="number" id="bt-capital" class="form-input" value="100000" min="1000" step="10000" data-i18n-aria="a11y-backtest-capital" aria-label="初始资金 (美元)" aria-describedby="bt-capital-hint" oninput="clearCapitalHint()">
+            <small id="bt-capital-hint" class="form-hint" style="color:var(--signal-sell);" role="alert" data-i18n="backtest-capital-hint">初始资金不能低于 $1,000</small>
         </div>
         <div style="flex: 1; min-width: 140px;">
-            <label class="form-label" for="bt-strategy">仓位策略</label>
-            <select id="bt-strategy" class="form-input" aria-label="仓位策略">
-                <option value="equal_weight">等权分配</option>
-                <option value="kelly">Kelly 公式</option>
-                <option value="fixed_pct">固定比例 (10%)</option>
+            <label class="form-label" for="bt-strategy" data-i18n="backtest-strategy-label">仓位策略</label>
+            <select id="bt-strategy" class="form-input" data-i18n-aria="a11y-backtest-strategy" aria-label="仓位策略">
+                <option value="equal_weight" data-i18n="backtest-strategy-equal">等权分配</option>
+                <option value="kelly" data-i18n="backtest-strategy-kelly">Kelly 公式</option>
+                <option value="fixed_pct" data-i18n="backtest-strategy-fixed">固定比例 (10%)</option>
             </select>
         </div>
         <div style="flex: 1; min-width: 160px;">
-            <label class="form-label" for="bt-days-val-label">回测天数: <span id="bt-days-val" aria-live="polite">30</span></label>
-            <div class="flex gap-8 bt-days-group" role="group" aria-label="回测天数" id="bt-days-group" style="flex-wrap:wrap; margin-top:4px;">
+            <label class="form-label" for="bt-days-val-label"><span data-i18n="backtest-days-label">回测天数</span>: <span id="bt-days-val" aria-live="polite">30</span></label>
+            <div class="flex gap-8 bt-days-group" role="group" data-i18n-aria="a11y-backtest-days-group" aria-label="回测天数" id="bt-days-group" style="flex-wrap:wrap; margin-top:4px;">
                 <button type="button" class="btn btn-sm btn-ghost bt-days-btn" data-days="30" aria-pressed="true" onclick="setDays(30)">30d</button>
                 <button type="button" class="btn btn-sm btn-ghost bt-days-btn" data-days="60" aria-pressed="false" onclick="setDays(60)">60d</button>
                 <button type="button" class="btn btn-sm btn-ghost bt-days-btn" data-days="90" aria-pressed="false" onclick="setDays(90)">90d</button>
@@ -151,95 +174,97 @@
                 <button type="button" class="btn btn-sm btn-ghost bt-days-btn" data-days="365" aria-pressed="false" onclick="setDays(365)">365d</button>
             </div>
             <input type="hidden" id="bt-days" value="30">
-            <span id="bt-days-val-label" class="visually-hidden" style="position:absolute;left:-9999px;">回测天数</span>
+            <span id="bt-days-val-label" class="visually-hidden" style="position:absolute;left:-9999px;" data-i18n="backtest-days-label">回测天数</span>
         </div>
         <div>
-            <button type="button" class="btn btn-primary" id="bt-run-btn" aria-busy="false" onclick="runBacktest()">运行回测</button>
+            <button type="button" class="btn btn-primary" id="bt-run-btn" aria-busy="false" onclick="runBacktest()"><span data-i18n="backtest-run">运行回测</span></button>
         </div>
     </div>
 </div>
 
 <!-- Loading -->
-<div id="bt-loading" style="display: none; text-align: center; padding: 3rem;" role="status" aria-live="polite" aria-busy="false" aria-label="回测加载中">
+<div id="bt-loading" style="display: none; text-align: center; padding: 3rem;" role="status" aria-live="polite" aria-busy="false" data-i18n-aria="a11y-backtest-loading" aria-label="回测加载中">
     <div class="spinner" aria-hidden="true"></div>
-    <p style="color: var(--text-secondary); margin-top: 1rem;">正在回测 18 位投资大师...</p>
+    <p style="color: var(--text-secondary); margin-top: 1rem;" data-i18n="backtest-loading">正在回测 18 位投资大师...</p>
 </div>
 
 <!-- Initial guidance (hidden after first run) -->
 <div id="bt-empty" class="card" style="margin-bottom:1.5rem;">
     <div class="empty-state" style="padding:36px 24px;">
-        <div class="empty-state-icon">&#x1F4C8;</div>
-        <div class="empty-state-title">还没有回测结果</div>
-        <div class="empty-state-desc">
+        <div class="empty-state-icon" aria-hidden="true">&#x1F4C8;</div>
+        <div class="empty-state-title" data-i18n="backtest-empty-title">还没有回测结果</div>
+        <div class="empty-state-desc" data-i18n="backtest-empty-desc">
             回测会用历史价格检验 18 位大师过往信号的有效性（IC 信息系数、命中率）。
-            填写上方表单中的股票代码与回测天数，点击<strong style="color:var(--accent-orange);">「运行回测」</strong>即可查看排行榜。
+            填写上方表单中的股票代码与回测天数，点击「运行回测」即可查看排行榜。
         </div>
     </div>
 </div>
 
 <!-- Backtest error state -->
 <div id="bt-error" class="error-panel" style="display:none;" role="alert" aria-live="assertive">
-    <div class="error-panel-title">回测失败</div>
-    <div class="error-panel-msg" id="bt-error-msg">请求失败，请稍后重试</div>
+    <div class="error-panel-title" data-i18n="backtest-error-title">回测失败</div>
+    <div class="error-panel-msg" id="bt-error-msg" data-i18n="backtest-error-default">请求失败，请稍后重试</div>
     <div class="error-panel-retry">
-        <button type="button" class="btn btn-sm" onclick="runBacktest()">重试</button>
+        <button type="button" class="btn btn-sm" onclick="runBacktest()" data-i18n="btn-retry">重试</button>
     </div>
 </div>
 
 <!-- Key Metrics Cards -->
-<div id="bt-metrics" class="backtest-metrics-grid" style="display: none; margin-bottom: 1.5rem;" role="region" aria-live="polite" aria-busy="false" aria-label="回测关键指标">
+<div id="bt-metrics" class="backtest-metrics-grid" style="display: none; margin-bottom: 1.5rem;" role="region" aria-live="polite" aria-busy="false" data-i18n-aria="a11y-backtest-metrics" aria-label="回测关键指标">
     <div class="backtest-metric-card">
-        <div class="backtest-metric-label">年化收益率</div>
+        <div class="backtest-metric-label" data-i18n="backtest-metric-annualized">年化收益率</div>
         <div class="backtest-metric-value" id="bt-annualized-return">--</div>
-        <div class="backtest-metric-sub">Annualized Return</div>
+        <div class="backtest-metric-sub" data-i18n="backtest-metric-annualized-sub">年化收益</div>
     </div>
     <div class="backtest-metric-card">
-        <div class="backtest-metric-label">最大回撤</div>
+        <div class="backtest-metric-label" data-i18n="backtest-metric-drawdown">最大回撤</div>
         <div class="backtest-metric-value" id="bt-max-drawdown">--</div>
-        <div class="backtest-metric-sub">Max Drawdown</div>
+        <div class="backtest-metric-sub" data-i18n="backtest-metric-drawdown-sub">最大回撤</div>
     </div>
     <div class="backtest-metric-card">
-        <div class="backtest-metric-label">夏普比率</div>
+        <div class="backtest-metric-label" data-i18n="backtest-metric-sharpe">夏普比率</div>
         <div class="backtest-metric-value" id="bt-sharpe-ratio">--</div>
-        <div class="backtest-metric-sub">Sharpe Ratio</div>
+        <div class="backtest-metric-sub" data-i18n="backtest-metric-sharpe-sub">夏普比率</div>
     </div>
     <div class="backtest-metric-card">
-        <div class="backtest-metric-label">胜率</div>
+        <div class="backtest-metric-label" data-i18n="backtest-metric-winrate">胜率</div>
         <div class="backtest-metric-value" id="bt-win-rate">--</div>
-        <div class="backtest-metric-sub">Win Rate</div>
+        <div class="backtest-metric-sub" data-i18n="backtest-metric-winrate-sub">胜率</div>
     </div>
 </div>
 
 <!-- Result Banner -->
-<div id="bt-banner" class="card" style="display: none; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-green);" role="region" aria-live="polite" aria-busy="false" aria-label="回测结果摘要">
+<div id="bt-banner" class="card" style="display: none; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-green);" role="region" aria-live="polite" aria-busy="false" data-i18n-aria="a11y-backtest-banner" aria-label="回测结果摘要">
     <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;">共识 IC (20d)</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="backtest-banner-consensus">共识 IC (20d)</div>
             <div id="bt-consensus-ic" style="font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">--</div>
         </div>
         <div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);">标的</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);" data-i18n="backtest-banner-ticker">标的</div>
             <div id="bt-result-ticker" style="font-size: 1.2rem; font-weight: 600;">--</div>
         </div>
         <div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);">预测总数</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);" data-i18n="backtest-banner-total">预测总数</div>
             <div id="bt-total-records" style="font-size: 1.2rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">--</div>
         </div>
         <div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);">回测天数</div>
+            <div style="font-size: 0.75rem; color: var(--text-secondary);" data-i18n="backtest-banner-days">回测天数</div>
             <div id="bt-result-days" style="font-size: 1.2rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">--</div>
         </div>
     </div>
 </div>
 
 <!-- Leaderboard Table -->
-<div id="bt-leaderboard" class="card" style="display: none;" role="region" aria-live="polite" aria-busy="false" aria-label="Agent IC 排行榜">
+<div id="bt-leaderboard" class="card" style="display: none;" role="region" aria-live="polite" aria-busy="false" data-i18n-aria="a11y-backtest-leaderboard" aria-label="Agent IC 排行榜">
     <div class="card-header">
-        <h3 class="card-title">Agent IC 排行榜</h3>
-        <span class="badge" style="font-size: 0.7rem;">按 IC 20d 排序</span>
+        <h3 class="card-title" data-i18n="backtest-leaderboard-title">Agent IC 排行榜</h3>
+        <span class="badge" style="font-size: 0.7rem;" data-i18n="backtest-leaderboard-sort">按 IC 20d 排序</span>
     </div>
     <div class="card-body" style="overflow-x: auto;">
+        <p class="table-scroll-hint" data-i18n="table-scroll-hint">左右滑动查看完整表格</p>
         <table class="data-table" style="width: 100%;">
+            <caption class="sr-only" data-i18n="backtest-table-caption">Agent IC 排行榜</caption>
             <thead>
                 <tr>
                     <th style="width: 40px;">#</th>
@@ -247,11 +272,11 @@
                     <th>IC 5d</th>
                     <th>IC 20d</th>
                     <th>IC 60d</th>
-                    <th>命中率</th>
-                    <th style="min-width: 200px;">命中率可视化</th>
-                    <th>正确均分</th>
-                    <th>错误均分</th>
-                    <th>总预测</th>
+                    <th data-i18n="backtest-col-hitrate">命中率</th>
+                    <th style="min-width: 200px;" data-i18n="backtest-col-hitviz">命中率可视化</th>
+                    <th data-i18n="backtest-col-right-avg">正确均分</th>
+                    <th data-i18n="backtest-col-wrong-avg">错误均分</th>
+                    <th data-i18n="backtest-col-total">总预测</th>
                 </tr>
             </thead>
             <tbody id="bt-table-body">
@@ -259,26 +284,28 @@
         </table>
         <div id="bt-leaderboard-empty" class="empty-state" style="display:none; padding:24px 16px;">
             <div class="empty-state-icon" aria-hidden="true">&#x1F4ED;</div>
-            <div class="empty-state-title">暂无 Agent 数据</div>
-            <div class="empty-state-desc">该标的在回测区间内没有 Agent 信号记录，尝试更长的回测天数。</div>
+            <div class="empty-state-title" data-i18n="backtest-lb-empty-title">暂无 Agent 数据</div>
+            <div class="empty-state-desc" data-i18n="backtest-lb-empty-desc">该标的在回测区间内没有 Agent 信号记录，尝试更长的回测天数。</div>
         </div>
     </div>
 </div>
 
 <!-- Historical Signals Timeline -->
-<div id="bt-timeline" class="card" style="display: none; margin-top: 1.5rem;" role="region" aria-live="polite" aria-busy="false" aria-label="历史信号时间线">
+<div id="bt-timeline" class="card" style="display: none; margin-top: 1.5rem;" role="region" aria-live="polite" aria-busy="false" data-i18n-aria="a11y-backtest-timeline" aria-label="历史信号时间线">
     <div class="card-header">
-        <h3 class="card-title">历史信号时间线</h3>
-        <span class="badge" style="font-size: 0.7rem;">Historical Signals Timeline</span>
+        <h3 class="card-title" data-i18n="backtest-timeline-title">历史信号时间线</h3>
+        <span class="badge" style="font-size: 0.7rem;" data-i18n="backtest-timeline-badge">历史信号时间线</span>
     </div>
     <div class="card-body" style="overflow-x: auto;">
+        <p class="table-scroll-hint" data-i18n="table-scroll-hint">左右滑动查看完整表格</p>
         <table class="data-table" style="width: 100%;">
+            <caption class="sr-only" data-i18n="backtest-timeline-caption">历史信号时间线</caption>
             <thead>
                 <tr>
-                    <th>日期</th>
-                    <th>标的</th>
-                    <th>信号</th>
-                    <th>评分</th>
+                    <th data-i18n="backtest-col-date">日期</th>
+                    <th data-i18n="backtest-col-ticker">标的</th>
+                    <th data-i18n="backtest-col-signal">信号</th>
+                    <th data-i18n="backtest-col-score">评分</th>
                     <th>Agent</th>
                 </tr>
             </thead>
@@ -292,6 +319,8 @@
 
 {% block extra_scripts %}
 <script>
+function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
+
 var selectedDays = 30;
 
 function setDays(d) {
@@ -305,7 +334,6 @@ function setDays(d) {
     });
 }
 
-// Initialize first button as active
 document.addEventListener('DOMContentLoaded', function() {
     setDays(30);
 });
@@ -317,15 +345,25 @@ function clearCapitalHint() {
     if (input) input.style.borderColor = '';
 }
 
+function _setRunBtnBusy(busy) {
+    var btn = document.getElementById('bt-run-btn');
+    if (!btn) return;
+    var label = btn.querySelector('[data-i18n]');
+    btn.disabled = busy;
+    btn.setAttribute('aria-busy', busy ? 'true' : 'false');
+    if (label) {
+        label.textContent = _t(busy ? 'backtest-running' : 'backtest-run');
+    }
+}
+
 async function runBacktest() {
     var tickerEl = document.getElementById('bt-ticker');
     var tickerHint = document.getElementById('bt-ticker-hint');
     var ticker = (tickerEl.value || '').trim().toUpperCase();
 
-    // Client-side validation: ticker must be a non-empty short identifier.
     if (!ticker) {
         if (tickerHint) {
-            tickerHint.textContent = '代码不能为空';
+            tickerHint.textContent = _t('backtest-ticker-empty');
             tickerHint.style.display = 'block';
         }
         tickerEl.focus();
@@ -333,7 +371,7 @@ async function runBacktest() {
     }
     if (!/^[A-Z0-9.\-]{1,10}$/.test(ticker)) {
         if (tickerHint) {
-            tickerHint.textContent = '代码格式不合法（仅字母、数字、点、连字符，长度 1-10）';
+            tickerHint.textContent = _t('backtest-ticker-invalid');
             tickerHint.style.display = 'block';
         }
         tickerEl.focus();
@@ -342,7 +380,6 @@ async function runBacktest() {
     if (tickerHint) {
         tickerHint.style.display = 'none';
     }
-    // Normalise the input back to the validated value so the URL is clean.
     tickerEl.value = ticker;
 
     var days = selectedDays;
@@ -357,12 +394,8 @@ async function runBacktest() {
     clearCapitalHint();
 
     var strategy = document.getElementById('bt-strategy').value;
-    var btn = document.getElementById('bt-run-btn');
 
-    // Show loading
-    btn.disabled = true;
-    btn.setAttribute('aria-busy', 'true');
-    btn.textContent = '回测中...';
+    _setRunBtnBusy(true);
     var emptyEl = document.getElementById('bt-empty');
     if (emptyEl) emptyEl.style.display = 'none';
     var errEl = document.getElementById('bt-error');
@@ -386,15 +419,15 @@ async function runBacktest() {
         if (data.status === 'ok') {
             renderResults(data);
         } else {
-            showBacktestError('回测失败: ' + (data.detail || 'unknown error'));
+            showBacktestError(_t('backtest-error-failed').replace('{detail}', data.detail || 'unknown error'));
         }
     } catch (e) {
-        var msg = (e && e.name === 'AbortError') ? '回测超时（超过 120 秒），请稍后重试。' : '请求失败: ' + e.message;
+        var msg = (e && e.name === 'AbortError')
+            ? _t('backtest-error-timeout')
+            : _t('backtest-error-request').replace('{msg}', e.message);
         showBacktestError(msg);
     } finally {
-        btn.disabled = false;
-        btn.setAttribute('aria-busy', 'false');
-        btn.textContent = '运行回测';
+        _setRunBtnBusy(false);
         loadingEl.style.display = 'none';
         loadingEl.setAttribute('aria-busy', 'false');
     }
@@ -403,13 +436,12 @@ async function runBacktest() {
 function showBacktestError(msg) {
     var errEl = document.getElementById('bt-error');
     var errMsg = document.getElementById('bt-error-msg');
-    if (errMsg) errMsg.textContent = msg || '请求失败，请稍后重试';
+    if (errMsg) errMsg.textContent = msg || _t('backtest-error-default');
     if (errEl) errEl.style.display = 'block';
     showToast(msg, 'error');
 }
 
 function renderResults(data) {
-    // Banner
     var banner = document.getElementById('bt-banner');
     banner.style.display = 'block';
 
@@ -424,10 +456,8 @@ function renderResults(data) {
     document.getElementById('bt-total-records').textContent = data.total_records;
     document.getElementById('bt-result-days').textContent = data.days;
 
-    // Render metrics cards
     renderMetrics(data);
 
-    // Leaderboard
     var leaderboard = document.getElementById('bt-leaderboard');
     leaderboard.style.display = 'block';
 
@@ -474,7 +504,6 @@ function renderResults(data) {
         tbody.appendChild(tr);
     }
 
-    // Render signals timeline
     renderTimeline(data);
 }
 
@@ -482,11 +511,9 @@ function renderMetrics(data) {
     var metricsEl = document.getElementById('bt-metrics');
     metricsEl.style.display = 'grid';
 
-    // Compute metrics from agent_ics data
     var agents = data.agent_ics || [];
     var metrics = data.metrics || {};
 
-    // Use server-provided metrics if available, otherwise compute locally
     var winRate = metrics.win_rate;
     var annualizedReturn = metrics.annualized_return;
     var maxDrawdown = metrics.max_drawdown;
@@ -501,25 +528,21 @@ function renderMetrics(data) {
     }
 
     if (annualizedReturn == null && winRate != null) {
-        // Approximate annualized return from win rate and average gains
-        var avgGain = 0.02; // approximate 2% per correct signal
+        var avgGain = 0.02;
         var avgLoss = -0.015;
         var dailyReturn = (winRate * avgGain + (1 - winRate) * avgLoss);
         annualizedReturn = dailyReturn * 252;
     }
 
     if (maxDrawdown == null) {
-        // Approximate max drawdown from consecutive losses
         maxDrawdown = -((1 - (winRate || 0.5)) * 0.15 + 0.05);
     }
 
     if (sharpeRatio == null && annualizedReturn != null) {
-        // Approximate Sharpe from return/vol
         var vol = Math.abs(maxDrawdown || 0.1) * 1.5;
         sharpeRatio = vol > 0 ? (annualizedReturn - 0.04) / vol : 0;
     }
 
-    // Display
     var arEl = document.getElementById('bt-annualized-return');
     arEl.textContent = annualizedReturn != null ? (annualizedReturn * 100).toFixed(1) + '%' : '--';
     arEl.style.color = annualizedReturn > 0 ? 'var(--signal-buy)' : 'var(--signal-sell)';
@@ -543,11 +566,9 @@ function renderTimeline(data) {
     var tbody = document.getElementById('bt-timeline-body');
 
     if (timeline.length === 0) {
-        // Generate from agent_ics data if server didn't provide
         var agents = data.agent_ics || [];
         var days = data.days || 30;
         var ticker = data.ticker || 'AAPL';
-        // Create synthetic timeline from top agents
         for (var i = 0; i < Math.min(agents.length, 5); i++) {
             var a = agents[i];
             for (var d = 0; d < Math.min(days, 10); d++) {
@@ -564,9 +585,7 @@ function renderTimeline(data) {
                 });
             }
         }
-        // Sort by date descending
         timeline.sort(function(a, b) { return b.date.localeCompare(a.date); });
-        // Limit to 50
         timeline = timeline.slice(0, 50);
     }
 

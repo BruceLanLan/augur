@@ -127,6 +127,13 @@ def clear_cache() -> None:
         _cache.clear()
 
 
+def reset_providers_cache() -> None:
+    """Reset the lazy provider chain cache (for tests and hot-reload)."""
+    global _providers_cache
+    with _providers_lock:
+        _providers_cache = None
+
+
 def cache_info() -> Dict[str, Any]:
     """Return cache metadata: current size and TTL setting."""
     with _cache_lock:
@@ -335,6 +342,16 @@ def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict
     from concurrent.futures import ThreadPoolExecutor, as_completed
 
     # 校验顶层输入：防止把 str / None 当作可迭代对象（之前会被当作逐字符迭代，悄无声息地污染结果）
+    if tickers is None:
+        ctx = MarketContext(ticker="INVALID")
+        setattr(ctx, "data_source", "error")
+        setattr(ctx, "data_error", (
+            f"invalid tickers argument: expected list, got "
+            f"{type(tickers).__name__}"
+        ))
+        logger.warning("batch fetch rejected tickers=None")
+        return {"INVALID": ctx}
+
     if not isinstance(tickers, (list, tuple)):
         ctx = MarketContext(ticker="INVALID")
         setattr(ctx, "data_source", "error")
@@ -344,6 +361,9 @@ def fetch_market_context_batch(tickers: List[str], max_workers: int = 5) -> Dict
         ))
         logger.warning("batch fetch rejected tickers of type %s", type(tickers).__name__)
         return {"INVALID": ctx}
+
+    if len(tickers) == 0:
+        return {}
 
     # Validate max_workers: must be a positive int. Reject bool (subclass of int,
     # but semantically wrong here), floats, zero, and negatives. Cap at a sane

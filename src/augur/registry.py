@@ -23,15 +23,17 @@ from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalT
 logger = logging.getLogger(__name__)
 
 # ============ v8: Learning + Sentiment singletons ============
+_singleton_lock = RLock()
 _learning_engine = None
 _sentiment_analyzer = None
 
 def _get_learning_engine():
     global _learning_engine
-    if _learning_engine is None:
-        from augur.learning import LearningEngine
-        _learning_engine = LearningEngine()
-    return _learning_engine
+    with _singleton_lock:
+        if _learning_engine is None:
+            from augur.learning import LearningEngine
+            _learning_engine = LearningEngine()
+        return _learning_engine
 
 
 def _check_and_record_outcomes(le, ticker: str) -> None:
@@ -86,10 +88,11 @@ def _check_and_record_outcomes(le, ticker: str) -> None:
 
 def _get_sentiment_analyzer():
     global _sentiment_analyzer
-    if _sentiment_analyzer is None:
-        from augur.sentiment import SentimentAnalyzer
-        _sentiment_analyzer = SentimentAnalyzer()
-    return _sentiment_analyzer
+    with _singleton_lock:
+        if _sentiment_analyzer is None:
+            from augur.sentiment import SentimentAnalyzer
+            _sentiment_analyzer = SentimentAnalyzer()
+        return _sentiment_analyzer
 
 
 # ============ AgentRegistry ============
@@ -155,9 +158,10 @@ class AgentRegistry:
                 if custom_dir.exists():
                     loaded = 0
                     for agent in load_personas_from_dir(custom_dir):
-                        if agent.agent_id not in self._agents:  # never overwrite built-in Python personas
-                            self._agents[agent.agent_id] = agent
-                            loaded += 1
+                        with self._lock:
+                            if agent.agent_id not in self._agents:  # never overwrite built-in Python personas
+                                self._agents[agent.agent_id] = agent
+                                loaded += 1
                     if loaded:
                         logger.info(
                             "Loaded %d YAML persona(s) from %s", loaded, custom_dir
@@ -186,15 +190,18 @@ class AgentRegistry:
 
     def get(self, agent_id: str) -> Optional[BaseAgent]:
         """Get an agent by ID"""
-        return self._agents.get(agent_id)
+        with self._lock:
+            return self._agents.get(agent_id)
 
     def get_all(self) -> List[BaseAgent]:
         """Get all agents"""
-        return list(self._agents.values())
+        with self._lock:
+            return list(self._agents.values())
 
     def list_agents(self) -> List[Dict]:
         """List all agents info"""
-        return [agent.to_dict() for agent in self._agents.values()]
+        with self._lock:
+            return [agent.to_dict() for agent in self._agents.values()]
 
 
 # ============ DecisionCoordinator ============
@@ -786,17 +793,19 @@ _global_coordinator: Optional[DecisionCoordinator] = None
 def get_registry() -> AgentRegistry:
     """Get global agent registry"""
     global _global_registry
-    if _global_registry is None:
-        _global_registry = AgentRegistry()
-    return _global_registry
+    with _singleton_lock:
+        if _global_registry is None:
+            _global_registry = AgentRegistry()
+        return _global_registry
 
 
 def get_coordinator() -> DecisionCoordinator:
     """Get global coordinator"""
     global _global_coordinator
-    if _global_coordinator is None:
-        _global_coordinator = DecisionCoordinator(get_registry())
-    return _global_coordinator
+    with _singleton_lock:
+        if _global_coordinator is None:
+            _global_coordinator = DecisionCoordinator(get_registry())
+        return _global_coordinator
 
 
 def get_agent(agent_id: str) -> Optional[BaseAgent]:

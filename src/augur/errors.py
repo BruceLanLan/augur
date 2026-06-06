@@ -6,6 +6,26 @@ Provides consistent error formatting for both API and CLI contexts.
 """
 
 from datetime import datetime, timezone
+from typing import Dict, Tuple
+
+# Stable machine-readable codes + actionable suggestions for HTTP status codes.
+HTTP_ERROR_ENVELOPE: Dict[int, Tuple[str, str]] = {
+    400: ("INVALID_REQUEST", "Check the request parameters (ticker format, body shape, required fields) and retry."),
+    401: ("AUTH_REQUIRED", "Provide a valid Bearer token or sign in to continue."),
+    403: ("FORBIDDEN", "You don't have permission for this resource. Ask an admin or enable multi-user mode."),
+    404: ("NOT_FOUND", "The resource doesn't exist. Verify the path or ID and try again."),
+    405: ("METHOD_NOT_ALLOWED", "This endpoint doesn't support the HTTP method you used. Check the docs."),
+    409: ("CONFLICT", "The resource is in a conflicting state. Refresh and retry."),
+    413: ("PAYLOAD_TOO_LARGE", "Request body is too large. Reduce the payload size and retry."),
+    415: ("UNSUPPORTED_MEDIA_TYPE", "Use a supported Content-Type (e.g. application/json)."),
+    422: ("UNPROCESSABLE_ENTITY", "The request was well-formed but contained invalid data. Check field types."),
+    429: ("RATE_LIMITED", "You're sending requests too quickly. Slow down and retry after a moment."),
+    500: ("INTERNAL_ERROR", "Something broke on our end. We've logged the issue — try again shortly."),
+    501: ("NOT_IMPLEMENTED", "This feature isn't available in the current deployment."),
+    502: ("BAD_GATEWAY", "Upstream service returned an invalid response. Try again in a moment."),
+    503: ("SERVICE_UNAVAILABLE", "Service is temporarily unavailable. Retry with backoff."),
+    504: ("GATEWAY_TIMEOUT", "Upstream service timed out. Retry in a moment."),
+}
 
 
 def error_response(

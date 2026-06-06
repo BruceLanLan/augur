@@ -383,6 +383,11 @@ a:hover { color: #ffaa33; }
     overflow-x: hidden;
 }
 
+.app-layout .app-main {
+    margin-left: 0 !important;
+    max-width: none !important;
+}
+
 .sidebar.collapsed ~ .app-main,
 .sidebar.collapsed ~ .mobile-backdrop ~ .app-main {
     margin-left: var(--sidebar-collapsed);
@@ -447,8 +452,6 @@ a:hover { color: #ffaa33; }
     .app-main {
         margin-left: 0 !important;
         max-width: 100% !important;
-        padding: 16px;
-        padding-top: 60px;
     }
 }
 
@@ -1419,7 +1422,7 @@ kbd {
         display: flex;
         justify-content: space-around;
         align-items: center;
-        padding: 8px 0;
+        padding: 8px 0 calc(8px + env(safe-area-inset-bottom, 0px));
         z-index: 100;
     }
 
@@ -1450,7 +1453,7 @@ kbd {
     }
 
     .app-main {
-        padding-bottom: 72px !important;
+        padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
     }
 }
 
@@ -1794,6 +1797,20 @@ html.light .report-section-body .md-report blockquote {
 }
 .onboard-banner .onboard-close:hover { color: var(--accent-orange); }
 .onboard-banner .onboard-cta { margin-top: 10px; }
+
+@media (max-width: 480px) {
+    .onboard-banner {
+        flex-wrap: wrap;
+        padding: 12px 14px;
+    }
+    .onboard-banner .onboard-close {
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
 
 /* --- Example ticker chips (one-click try) --- */
 .chip-recommended {

@@ -19,6 +19,7 @@ Usage:
 from __future__ import annotations
 
 import logging
+import math
 from pathlib import Path
 from typing import Dict, List
 
@@ -93,6 +94,33 @@ def _eval_rule_condition(condition: str, ctx: MarketContext) -> bool:
         return False
 
 
+def _sanitize_threshold(value: object, default: float) -> float:
+    """Reject bool/NaN YAML threshold values that would skew signals."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return default
+    if not math.isfinite(float(value)):
+        return default
+    return float(value)
+
+
+def _normalize_factor_weights(
+    factors: Dict[str, float], scoring_weights: Dict[str, float]
+) -> Dict[str, float]:
+    """Normalize scoring weights to factor keys so totals stay in [0, 10]."""
+    weights = {}
+    for key in factors:
+        raw = scoring_weights.get(key, 0.0)
+        if isinstance(raw, bool) or not isinstance(raw, (int, float)):
+            weights[key] = 0.0
+        else:
+            weights[key] = max(0.0, float(raw))
+    total = sum(weights.values())
+    if total <= 0:
+        share = 1.0 / len(factors)
+        return {key: share for key in factors}
+    return {key: value / total for key, value in weights.items()}
+
+
 def _compute_factor(factor_def: Dict, ctx: MarketContext) -> float:
     base = factor_def.get("base", 5)
     if isinstance(base, bool) or not isinstance(base, (int, float)):
@@ -126,6 +154,15 @@ class YamlAgent(BaseAgent):
         )
         self._factor_defs: Dict[str, Dict] = spec.get("factors", {})
         self._spec = spec
+        raw_thresholds = spec.get("thresholds", {})
+        self.thresholds = {
+            "bullish_threshold": _sanitize_threshold(
+                raw_thresholds.get("bullish_threshold"), 7.0
+            ),
+            "bearish_threshold": _sanitize_threshold(
+                raw_thresholds.get("bearish_threshold"), 4.0
+            ),
+        }
 
     def get_system_prompt(self) -> str:
         return f"""You are a {self.name}-style investor (YAML custom persona).
@@ -153,7 +190,8 @@ Philosophy: {', '.join(self.philosophy)}
                 coverage_confidence=0.3,
             )
 
-        total_score = sum(factors[k] * self.scoring_weights.get(k, 1.0 / len(factors)) for k in factors)
+        norm_weights = _normalize_factor_weights(factors, self.scoring_weights)
+        total_score = sum(factors[k] * norm_weights[k] for k in factors)
         total_score = max(0.0, min(10.0, total_score))
         avg_score = sum(factors.values()) / len(factors)
         signal = self._calculate_signal(total_score)
@@ -231,7 +269,7 @@ def _validate_spec(spec: Dict, path: Path) -> None:
 
     # Validate scoring_weights values are between 0 and 1.0
     for key, val in spec["scoring_weights"].items():
-        if not isinstance(val, (int, float)):
+        if isinstance(val, bool) or not isinstance(val, (int, float)):
             raise ValueError(
                 f"YAML persona {path}: scoring_weights['{key}'] must be numeric, got {type(val).__name__}"
             )

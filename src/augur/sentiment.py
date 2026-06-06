@@ -24,6 +24,7 @@ Environment variables (optional):
 
 import hashlib
 import os
+import threading
 import time
 from dataclasses import dataclass, field
 from typing import Dict, Optional, Tuple
@@ -154,13 +155,15 @@ class SentimentAnalyzer:
         self._cache: Dict[str, SentimentResult] = {}
         self._cache_timestamps: Dict[str, float] = {}
         self._cache_source: Dict[str, str] = {}
+        self._lock = threading.Lock()
 
     def _is_cached(self, ticker: str) -> bool:
-        if ticker not in self._cache:
-            return False
-        src = self._cache_source.get(ticker, "mock")
-        ttl = self.REAL_CACHE_TTL if src == "live" else self.MOCK_CACHE_TTL
-        return (time.time() - self._cache_timestamps.get(ticker, 0)) < ttl
+        with self._lock:
+            if ticker not in self._cache:
+                return False
+            src = self._cache_source.get(ticker, "mock")
+            ttl = self.REAL_CACHE_TTL if src == "live" else self.MOCK_CACHE_TTL
+            return (time.time() - self._cache_timestamps.get(ticker, 0)) < ttl
 
     def get_sentiment(self, ticker: str) -> SentimentResult:
         # Input validation: only accept string tickers, normalise, and reject
@@ -185,8 +188,12 @@ class SentimentAnalyzer:
                 trending=False,
                 data_source="mock",
             )
-        if self._is_cached(ticker):
-            return self._cache[ticker]
+        with self._lock:
+            if ticker in self._cache:
+                src = self._cache_source.get(ticker, "mock")
+                ttl = self.REAL_CACHE_TTL if src == "live" else self.MOCK_CACHE_TTL
+                if (time.time() - self._cache_timestamps.get(ticker, 0)) < ttl:
+                    return self._cache[ticker]
 
         st_score, st_volume = _fetch_stocktwits(ticker)
         reddit_score = _fetch_reddit(ticker)
@@ -233,9 +240,10 @@ class SentimentAnalyzer:
             data_source=data_source,
         )
 
-        self._cache[ticker] = result
-        self._cache_timestamps[ticker] = time.time()
-        self._cache_source[ticker] = data_source
+        with self._lock:
+            self._cache[ticker] = result
+            self._cache_timestamps[ticker] = time.time()
+            self._cache_source[ticker] = data_source
         return result
 
     def get_sentiment_factor(self, ticker: str) -> float:
@@ -244,6 +252,7 @@ class SentimentAnalyzer:
         return round(max(-0.5, min(0.5, factor)), 4)
 
     def clear_cache(self) -> None:
-        self._cache.clear()
-        self._cache_timestamps.clear()
-        self._cache_source.clear()
+        with self._lock:
+            self._cache.clear()
+            self._cache_timestamps.clear()
+            self._cache_source.clear()

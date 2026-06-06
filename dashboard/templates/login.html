@@ -3,32 +3,32 @@
 {% block title %}Login - Augur{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1 data-i18n="login-title">登录</h1>
-    <p class="page-desc" data-i18n="login-desc">登录以访问 Augur 仪表盘</p>
-</div>
+<header class="page-header">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="login-title">登录</h1>
+        <p class="page-desc" data-i18n="login-desc">登录以访问 Augur 仪表盘</p>
+    </div>
+</header>
 
-<div style="max-width: 400px; margin: 2rem auto; padding: 2rem; background: var(--bg-secondary, #1e1e2e); border-radius: 12px; border: 1px solid var(--border-color, #333); width: 90%;">
+<div class="auth-panel">
     <form id="login-form" onsubmit="handleLogin(event)" aria-labelledby="login-title">
-        <div style="margin-bottom: 1.5rem;">
-            <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);" data-i18n="login-username">用户名</label>
-            <input type="text" id="username" name="username" required
-                   style="width: 100%; padding: 0.75rem; background: var(--bg-primary, #121212); border: 1px solid var(--border-color, #444); border-radius: 8px; color: var(--text-primary, #e0e0e0); font-size: 1rem; box-sizing: border-box;"
+        <div class="form-group">
+            <label for="username" data-i18n="login-username">用户名</label>
+            <input type="text" id="username" name="username" class="form-input" required
                    placeholder="Enter your username" autocomplete="username" maxlength="32" aria-required="true">
         </div>
-        <div style="margin-bottom: 1.5rem;">
-            <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);" data-i18n="login-password">密码</label>
-            <input type="password" id="password" name="password" required
-                   style="width: 100%; padding: 0.75rem; background: var(--bg-primary, #121212); border: 1px solid var(--border-color, #444); border-radius: 8px; color: var(--text-primary, #e0e0e0); font-size: 1rem; box-sizing: border-box;"
+        <div class="form-group">
+            <label for="password" data-i18n="login-password">密码</label>
+            <input type="password" id="password" name="password" class="form-input" required
                    placeholder="Enter your password" autocomplete="current-password" maxlength="128" aria-required="true">
         </div>
-        <div id="login-error" style="display: none; margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); border-radius: 8px; color: #ff6b6b; font-size: 0.9rem;" role="alert"></div>
-        <button type="submit" id="login-submit-btn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem;" data-i18n="login-submit">
+        <div id="login-error" class="auth-error" role="alert"></div>
+        <button type="submit" id="login-submit-btn" class="btn btn-primary btn-block" data-i18n="login-submit">
             登录
         </button>
     </form>
-    <p style="margin-top: 1.5rem; text-align: center; color: var(--text-secondary, #999); font-size: 0.9rem;">
-        <span data-i18n="login-register-link">还没有账号？</span> <a href="/register" style="color: var(--accent-orange);">Register</a>
+    <p class="auth-panel-footer">
+        <span data-i18n="login-register-link">还没有账号？</span> <a href="/register">Register</a>
     </p>
 </div>
 {% endblock %}

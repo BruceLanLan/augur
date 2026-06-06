@@ -874,7 +874,7 @@ function saveApiToken() {
     var token = document.getElementById('api-auth-token').value.trim();
     if (!token) {
         localStorage.removeItem('augur_api_token');
-        document.getElementById('api-auth-token').placeholder = 'API Token';
+        document.getElementById('api-auth-token').placeholder = _t('settings-api-token-ph', 'API Token');
         document.getElementById('api-auth-status').innerHTML = '<span style="color:var(--text-muted); font-size:0.75rem;">' + escapeHtml(_t('settings-status-not-configured')) + '</span>';
         showToast(_t('settings-toast-token-cleared'));
         return;

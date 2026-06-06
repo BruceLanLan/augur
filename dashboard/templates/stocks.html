@@ -83,8 +83,12 @@
 {% endblock %}
 {% block content %}
 
-<h2 style="color:var(--accent-orange); margin-bottom:4px;" data-i18n="stocks-title">股票分析</h2>
-<p class="text-muted mb-16" style="font-size:0.82rem;"><span data-i18n="stocks-desc">输入标的代码即可获得 18 位投资大师的共识判断 —— 高级财务指标可留空，系统自动获取实时数据</span> <span class="shortcut-hint" data-i18n="hero-shortcut-hint">按 / 快速聚焦 · Ctrl+Enter 提交</span></p>
+<header class="page-header mb-16">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="stocks-title">股票分析</h1>
+        <p class="page-lead"><span data-i18n="stocks-desc">输入标的代码即可获得 18 位投资大师的共识判断 —— 高级财务指标可留空，系统自动获取实时数据</span> <span class="shortcut-hint" data-i18n="hero-shortcut-hint">按 / 快速聚焦 · Ctrl+Enter 提交</span></p>
+    </div>
+</header>
 
 <!-- Input Panel -->
 <div class="card mb-24">
@@ -292,14 +296,23 @@
 </div>
 
 <!-- Historical Comparison Panel -->
-<div id="history-comparison" class="card mb-24" style="display:none;">
-    <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">历史对比</div>
-    <p class="text-muted" style="font-size:0.78rem; margin-bottom:12px;">展示您对同一标的在不同时间的分析结果，追踪预测变化趋势</p>
+<div id="history-comparison" class="card mb-24" style="display:none;" role="region" aria-live="polite">
+    <div class="section-title spaced" data-i18n="stocks-history-title">历史对比</div>
+    <p class="text-muted" style="font-size:0.78rem; margin-bottom:12px;" data-i18n="stocks-history-desc">展示您对同一标的在不同时间的分析结果，追踪预测变化趋势</p>
+    <p class="table-scroll-hint" data-i18n="table-scroll-hint">左右滑动查看完整表格</p>
+    <div style="overflow-x:auto;">
     <table class="md-table" id="history-table" style="width:100%;">
-        <thead><tr><th>日期</th><th>评分</th><th>信号</th><th>价格</th></tr></thead>
+        <caption class="sr-only" data-i18n="stocks-history-title">历史对比</caption>
+        <thead><tr>
+            <th data-i18n="stocks-history-col-date">日期</th>
+            <th data-i18n="stocks-history-col-score">评分</th>
+            <th data-i18n="stocks-history-col-signal">信号</th>
+            <th data-i18n="stocks-history-col-price">价格</th>
+        </tr></thead>
         <tbody id="history-tbody"></tbody>
     </table>
-    <div id="history-empty" class="text-muted" style="font-size:0.78rem; text-align:center; padding:16px;">暂无历史分析记录</div>
+    </div>
+    <div id="history-empty" class="text-muted" style="font-size:0.78rem; text-align:center; padding:16px;" data-i18n="stocks-history-empty">暂无历史分析记录</div>
 </div>
 
 {% endblock %}
@@ -310,13 +323,13 @@ var lastAnalysisData = null;
 var lastReportMarkdown = '';
 
 var AGENT_STYLE_MAP = {
-    buffett: '价值投资', munger: '价值投资', graham: '深度价值',
-    fisher: '成长投资', cathie_wood: '颠覆创新', soros: '宏观对冲',
-    dalio: '全天候', marks: '逆向投资', lynch: '成长价值',
-    ackman: '激进价值', li_lu: '价值投资', duan_yongping: '本分价值',
-    zhang_lei: '价值成长', dan_bin: '长期价值', dayu: '趋势交易',
-    thiel: '垄断投资', aschenbrenner: 'AI超级周期', arps: '技术分析',
-    serenity: '量化中性'
+    buffett: 'style-value-investing', munger: 'style-value-investing', graham: 'style-deep-value',
+    fisher: 'style-growth', cathie_wood: 'style-disruptive', soros: 'style-macro',
+    dalio: 'style-all-weather', marks: 'style-contrarian', lynch: 'style-growth-value',
+    ackman: 'style-activist', li_lu: 'style-value-investing', duan_yongping: 'style-integrity-value',
+    zhang_lei: 'style-value-growth', dan_bin: 'style-long-term', dayu: 'style-trend',
+    thiel: 'style-monopoly', aschenbrenner: 'style-ai-supercycle', arps: 'style-technical',
+    serenity: 'style-quant-neutral'
 };
 
 // Pre-fill ticker and optional persona from query string
@@ -918,8 +931,9 @@ function buildScoreCards(data) {
 
         html += '<div class="report-scorecard">';
         html += '<div class="sc-name" title="' + escapeHtml(agent.agent_name) + '">' + escapeHtml(agent.agent_name) + '</div>';
-        var styleTag = AGENT_STYLE_MAP[agent.agent_id] || '';
-        if (styleTag) {
+        var styleKey = AGENT_STYLE_MAP[agent.agent_id] || '';
+        if (styleKey) {
+            var styleTag = (typeof window.t === 'function') ? window.t(styleKey) : styleKey;
             html += '<div class="sc-style-tag">' + escapeHtml(styleTag) + '</div>';
         }
         html += '<div class="sc-score ' + scoreClass + '">' + score.toFixed(1) + '</div>';

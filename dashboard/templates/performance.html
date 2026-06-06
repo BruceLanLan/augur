@@ -10,8 +10,12 @@
 {% endblock %}
 {% block content %}
 
-<h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="perf-title">绩效追踪</h1>
-<p class="text-muted mb-16" style="font-size:0.82rem;" data-i18n="perf-desc">Agent IC (Information Coefficient) 排行榜 - 基于回测数据评估各投资人预测能力</p>
+<header class="page-header mb-16">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="perf-title">绩效追踪</h1>
+        <p class="page-lead" data-i18n="perf-desc">Agent IC (Information Coefficient) 排行榜 - 基于回测数据评估各投资人预测能力</p>
+    </div>
+</header>
 
 <!-- Leaderboard -->
 <div class="card mb-24" style="padding:0; overflow:hidden;">

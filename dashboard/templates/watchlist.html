@@ -106,8 +106,12 @@
 {% endblock %}
 {% block content %}
 
-<h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="watchlist-title">自选股</h1>
-<p class="text-muted mb-16" style="font-size:0.82rem;" data-i18n="watchlist-desc">管理您的关注标的，一键批量分析所有自选股</p>
+<header class="page-header mb-16">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="watchlist-title">自选股</h1>
+        <p class="page-lead" data-i18n="watchlist-desc">管理您的关注标的，一键批量分析所有自选股</p>
+    </div>
+</header>
 
 <!-- Add Ticker Form + Batch Analyze -->
 <div class="card mb-24">
@@ -122,6 +126,7 @@
             <button type="submit" class="btn btn-primary" data-i18n="watchlist-add">添加</button>
         </form>
         <div class="flex gap-8">
+            <a href="/portfolio?import=watchlist" class="btn btn-sm btn-ghost" style="text-decoration:none;" data-i18n="watchlist-to-portfolio">导入到持仓</a>
             <button type="button" class="btn btn-sm" onclick="batchAnalyzeAll()" id="batch-btn" data-i18n="watchlist-batch">一键全部分析</button>
             <button type="button" class="btn btn-sm btn-ghost" onclick="clearWatchlist()" data-i18n="watchlist-clear">清空</button>
         </div>
@@ -146,7 +151,7 @@
 
 <!-- Batch Results -->
 <div id="batch-results" style="display:none;" class="card mb-24">
-    <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;">批量分析结果</div>
+    <div class="section-title spaced" data-i18n="watchlist-batch-results">批量分析结果</div>
     <div class="md-table-wrap">
         <div id="batch-results-content"></div>
     </div>

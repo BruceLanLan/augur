@@ -20,13 +20,16 @@
 .consensus-badge.bullish { background: var(--signal-buy); color: #000; }
 .consensus-badge.neutral { background: var(--signal-neutral); color: #000; }
 .consensus-badge.bearish { background: var(--signal-sell); color: #fff; }
+.consensus-badge.error { background: var(--signal-sell); color: #fff; opacity: 0.85; }
 </style>
 {% endblock %}
 {% block content %}
-<div style="margin-bottom:16px;">
-    <h1 style="color:var(--accent-orange); margin:0 0 4px; font-size:1.35rem;" data-i18n="scanner_title">市场扫描器</h1>
-    <p class="text-muted" style="font-size:0.82rem; margin:0;" data-i18n="scanner_desc">选择预设列表或输入自定义股票代码，一键让18位大师快速评分</p>
-</div>
+<header class="page-header mb-16">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="scanner_title">市场扫描器</h1>
+        <p class="page-lead" data-i18n="scanner_desc">选择预设列表或输入自定义股票代码，一键让18位大师快速评分</p>
+    </div>
+</header>
 
 <!-- Preset buttons -->
 <div class="scanner-presets" role="group" aria-label="Scanner presets">
@@ -60,7 +63,7 @@
 <!-- Results -->
 <div id="scanner-results" style="display:none;">
     <div class="flex items-center justify-between mb-12">
-        <div class="section-title" style="margin:0; border:none; padding:0;" data-i18n="scanner_results_title">扫描结果</div>
+        <div class="section-title compact" data-i18n="scanner_results_title">扫描结果</div>
         <span class="text-muted" style="font-size:0.72rem;" id="scanner-summary"></span>
     </div>
     <div class="card" style="padding:0; overflow:hidden;">
@@ -97,13 +100,28 @@ var AGENT_SHORT = {
     duan_yongping:'DYP', zhang_lei:'ZHL', li_lu:'LIL', dan_bin:'DAB'
 };
 
+var TICKER_RE = /^[A-Za-z0-9.\-]{1,15}$/;
+
+function parseTickers(text) {
+    var seen = {};
+    var out = [];
+    text.split(/[,\s\n]+/).forEach(function(raw) {
+        var t = (raw || '').trim().toUpperCase();
+        if (!t || seen[t]) return;
+        seen[t] = true;
+        out.push(t);
+    });
+    return out;
+}
+
 function countTickers(text) {
-    return text.split(/[,\s\n]+/).filter(function(t) { return t.length > 0; }).length;
+    return parseTickers(text).length;
 }
 
 function updateScannerCount() {
     var ta = document.getElementById('scanner-tickers');
     var hint = document.getElementById('scanner-limit-hint');
+    var runBtn = document.getElementById('scanner-run-btn');
     if (!ta || !hint) return;
     var n = countTickers((ta.value || '').trim());
     if (n > 0) {
@@ -113,6 +131,8 @@ function updateScannerCount() {
         hint.textContent = _t('scanner_limit');
         hint.style.color = 'var(--text-muted)';
     }
+    if (runBtn) runBtn.disabled = n === 0 || n > 20;
+    if (ta) ta.style.borderColor = n > 20 ? 'var(--signal-sell)' : '';
 }
 
 function loadPreset(name, chipEl) {
@@ -133,13 +153,28 @@ function runScanner() {
         if (ta) { ta.focus(); ta.style.borderColor = 'var(--signal-sell)'; }
         return;
     }
-    var tickers = text.split(/[,\s\n]+/).filter(function(t) { return t.length > 0; });
+    var tickers = parseTickers(text);
+    if (tickers.length === 0) {
+        showToast(_t('scanner-enter-tickers'), 'warning');
+        if (ta) { ta.focus(); ta.style.borderColor = 'var(--signal-sell)'; }
+        return;
+    }
     if (tickers.length > 20) {
         showToast(_t('scanner-max-warning'), 'warning');
         if (ta) { ta.focus(); ta.style.borderColor = 'var(--signal-sell)'; }
         return;
     }
-    if (ta) ta.style.borderColor = '';
+    for (var i = 0; i < tickers.length; i++) {
+        if (!TICKER_RE.test(tickers[i])) {
+            showToast(_t('scanner-invalid-ticker').replace('{ticker}', tickers[i]), 'warning');
+            if (ta) { ta.focus(); ta.style.borderColor = 'var(--signal-sell)'; }
+            return;
+        }
+    }
+    if (ta) {
+        ta.value = tickers.join(', ');
+        ta.style.borderColor = '';
+    }
 
     var runBtn = document.getElementById('scanner-run-btn');
     if (runBtn) runBtn.disabled = true;
@@ -163,20 +198,38 @@ function runScanner() {
     .then(function(data) {
         stopProgress('scanner-progress');
         document.getElementById('scanner-loading').style.display = 'none';
-        if (runBtn) runBtn.disabled = false;
+        updateScannerCount();
         if (data.status === 'ok') {
-            renderHeatmap(data.results);
+            var results = data.results || [];
+            var okRows = results.filter(function(r) { return r.consensus_signal !== 'error'; });
+            var errRows = results.length - okRows.length;
+            if (okRows.length === 0) {
+                document.getElementById('scanner-error').style.display = 'block';
+                document.getElementById('scanner-error-msg').textContent = _t('scanner-all-failed');
+                showToast(_t('scanner-all-failed'), 'error');
+                return;
+            }
+            renderHeatmap(results);
+            if (errRows > 0) {
+                showToast(_t('scanner-partial-errors').replace('{n}', errRows), 'warning');
+            }
         } else {
             document.getElementById('scanner-error').style.display = 'block';
-            document.getElementById('scanner-error-msg').textContent = data.detail || _t('scanner-error-title');
+            var errMsg = data.detail || _t('scanner-error-title');
+            document.getElementById('scanner-error-msg').textContent = errMsg;
+            showToast(errMsg, 'error');
         }
     })
     .catch(function(err) {
         stopProgress('scanner-progress');
         document.getElementById('scanner-loading').style.display = 'none';
-        if (runBtn) runBtn.disabled = false;
+        updateScannerCount();
+        var msg = (err && err.name === 'AbortError')
+            ? _t('scanner-timeout')
+            : (err.message || _t('hero-error-request', 'Request failed'));
         document.getElementById('scanner-error').style.display = 'block';
-        document.getElementById('scanner-error-msg').textContent = err.message || _t('hero-error-request', 'Request failed');
+        document.getElementById('scanner-error-msg').textContent = msg;
+        showToast(msg, 'error');
     });
 }
 
@@ -189,47 +242,62 @@ function renderHeatmap(results) {
     document.getElementById('scanner-results').style.display = 'block';
 
     var agentIds = [];
-    if (results[0].agents && results[0].agents.length) {
-        agentIds = results[0].agents.map(function(a) { return a.agent_id; });
+    for (var ri = 0; ri < results.length; ri++) {
+        if (results[ri].consensus_signal === 'error') continue;
+        if (results[ri].agents && results[ri].agents.length) {
+            agentIds = results[ri].agents.map(function(a) { return a.agent_id; });
+            break;
+        }
     }
 
     var html = '<thead><tr><th class="ticker-col">Ticker</th><th>Consensus</th>';
     agentIds.forEach(function(id) {
-        html += '<th title="' + id + '">' + (AGENT_SHORT[id] || id.substr(0,3).toUpperCase()) + '</th>';
+        html += '<th title="' + escapeHtml(id) + '">' + (AGENT_SHORT[id] || id.substr(0,3).toUpperCase()) + '</th>';
     });
     html += '</tr></thead><tbody>';
 
     results.forEach(function(row) {
-        var consCls = (row.consensus_signal || 'neutral').toLowerCase();
+        var isError = row.consensus_signal === 'error';
+        var consCls = isError ? 'error' : (row.consensus_signal || 'neutral').toLowerCase();
         html += '<tr>';
         html += '<td class="ticker-col">' + escapeHtml(row.ticker) + '</td>';
-        html += '<td><span class="consensus-badge ' + consCls + '">' + row.consensus_score.toFixed(1) + '</span></td>';
-        var agentMap = {};
-        (row.agents || []).forEach(function(a) { agentMap[a.agent_id] = a; });
-        agentIds.forEach(function(id) {
-            var a = agentMap[id];
-            if (a) {
-                var score = (typeof a.score === 'number') ? a.score : 0;
-                var cls = a.signal === 'bullish' ? 'bullish' : a.signal === 'bearish' ? 'bearish' : 'neutral';
-                html += '<td><span class="heatmap-cell ' + cls + '">' + score.toFixed(1) + '</span></td>';
-            } else {
-                html += '<td>-</td>';
-            }
-        });
+        if (isError) {
+            var errDetail = (row.error && row.error.detail) ? row.error.detail : _t('scanner-error-row');
+            html += '<td colspan="' + (agentIds.length + 1) + '"><span class="consensus-badge error">' + escapeHtml(_t('scanner-error-row')) + '</span> <span class="text-muted" style="font-size:0.7rem;">' + escapeHtml(errDetail) + '</span></td>';
+        } else {
+            html += '<td><span class="consensus-badge ' + consCls + '">' + Number(row.consensus_score).toFixed(1) + '</span></td>';
+            var agentMap = {};
+            (row.agents || []).forEach(function(a) { agentMap[a.agent_id] = a; });
+            agentIds.forEach(function(id) {
+                var a = agentMap[id];
+                if (a) {
+                    var score = (typeof a.score === 'number') ? a.score : 0;
+                    var cls = a.signal === 'bullish' ? 'bullish' : a.signal === 'bearish' ? 'bearish' : 'neutral';
+                    html += '<td><span class="heatmap-cell ' + cls + '">' + score.toFixed(1) + '</span></td>';
+                } else {
+                    html += '<td>-</td>';
+                }
+            });
+        }
         html += '</tr>';
     });
     html += '</tbody>';
     table.innerHTML = html;
 
-    var bullish = results.filter(function(r) { return r.consensus_signal === 'bullish'; }).length;
-    var bearish = results.filter(function(r) { return r.consensus_signal === 'bearish'; }).length;
-    var neutral = results.length - bullish - bearish;
+    var okRows = results.filter(function(r) { return r.consensus_signal !== 'error'; });
+    var bullish = okRows.filter(function(r) { return r.consensus_signal === 'bullish'; }).length;
+    var bearish = okRows.filter(function(r) { return r.consensus_signal === 'bearish'; }).length;
+    var neutral = okRows.length - bullish - bearish;
     var summaryTpl = _t('scanner-summary');
     document.getElementById('scanner-summary').textContent = summaryTpl
-        .replace('{n}', results.length)
+        .replace('{n}', okRows.length)
         .replace('{bull}', bullish)
         .replace('{neutral}', neutral)
         .replace('{bear}', bearish);
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    updateScannerCount();
+});
 </script>
 {% endblock %}

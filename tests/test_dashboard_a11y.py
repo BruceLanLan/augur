@@ -322,8 +322,8 @@ class TestStocksPageMobileA11y:
         assert "stocks-input-row" in text
 
     def test_stocks_page_has_i18n_title(self, stocks_soup):
-        h2 = stocks_soup.find("h2", attrs={"data-i18n": "stocks-title"})
-        assert h2 is not None
+        h1 = stocks_soup.find("h1", class_="page-title", attrs={"data-i18n": "stocks-title"})
+        assert h1 is not None, "stocks page must expose h1.page-title for heading hierarchy"
 
 
 class TestI18nMidFlowLanguageSwitch:

@@ -440,7 +440,7 @@
     
     <p class="hero-examples-hint" style="margin-top:12px; font-size:0.75rem; color:var(--text-muted);" data-i18n="hero-examples-hint">💡 第一次用？点下面任意一个，无需填写财务指标，系统自动获取实时数据：</p>
     <div class="hero-chips" style="margin-top: 8px;" role="group" data-i18n-aria="a11y-hero-chips-group" aria-label="Example tickers">
-        <span style="font:500 0.68rem/1 var(--font-mono);color:var(--fg-3)">Try</span>
+        <span data-i18n="hero-chips-try" style="font:500 0.68rem/1 var(--font-mono);color:var(--fg-3)">试试</span>
         <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-nvda" aria-label="Try NVDA example" onclick="tryExample('NVDA')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('NVDA')}">NVDA</span>
         <span class="chip chip-recommended" role="button" tabindex="0" data-i18n-aria="a11y-chip-aapl" aria-label="Try AAPL example" onclick="tryExample('AAPL')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('AAPL')}">AAPL</span>
         <span class="chip" role="button" tabindex="0" data-i18n-aria="a11y-chip-tsla" aria-label="Try TSLA example" onclick="tryExample('TSLA')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('TSLA')}">TSLA</span>
@@ -532,7 +532,7 @@
 
 <!-- Hot Tickers: 热门标的实时行情 -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-hot-tickers">热门标的实时行情</div>
+    <div class="section-title compact" data-i18n="section-hot-tickers">热门标的实时行情</div>
     <button class="btn btn-sm btn-ghost" onclick="loadHotTickers(true)" id="hot-refresh-btn" data-i18n-title="btn-refresh" title="刷新">↻ <span data-i18n="btn-refresh">刷新</span></button>
 </div>
 <div class="hot-tickers-grid mb-24" id="hot-tickers-grid" aria-live="polite" aria-busy="true" aria-label="Hot tickers loading">
@@ -546,7 +546,7 @@
 
 <!-- Sector Performance Heatmap -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-sector-perf">板块行情</div>
+    <div class="section-title compact" data-i18n="section-sector-perf">板块行情</div>
     <button class="btn btn-sm btn-ghost" onclick="loadSectorPerformance(true)" id="sector-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
 </div>
 <div class="sector-grid mb-24" id="sector-grid" aria-live="polite" aria-busy="true" aria-label="Sector performance loading">
@@ -562,7 +562,7 @@
 
 <!-- International Markets Panel -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-intl-markets">国际市场</div>
+    <div class="section-title compact" data-i18n="section-intl-markets">国际市场</div>
     <span class="text-muted" style="font-size:0.7rem;" data-i18n="intl-regions">亚太 · 欧洲</span>
 </div>
 <div class="intl-markets-grid mb-24" id="intl-markets-grid" aria-live="polite" aria-busy="true" aria-label="International markets loading">
@@ -575,7 +575,7 @@
 
 <!-- Crypto Overview Panel -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-crypto">Crypto Overview</div>
+    <div class="section-title compact" data-i18n="section-crypto">Crypto Overview</div>
     <button class="btn btn-sm btn-ghost" onclick="loadCryptoOverview()" id="crypto-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
 </div>
 <div class="hot-tickers-grid mb-24" id="crypto-grid" aria-live="polite" aria-busy="true" aria-label="Crypto overview loading">
@@ -588,7 +588,7 @@
 
 <!-- Commodities & Treasury Rates Panel -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-commodities-rates">Commodities &amp; Treasury Rates</div>
+    <div class="section-title compact" data-i18n="section-commodities-rates">Commodities &amp; Treasury Rates</div>
     <button class="btn btn-sm btn-ghost" onclick="loadCommoditiesAndRates()" id="commod-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
 </div>
 <div class="movers-row mb-24" id="commodities-rates-row" aria-live="polite" aria-busy="true" aria-label="Commodities and treasury rates loading">
@@ -604,7 +604,7 @@
 
 <!-- Top Movers (Gainers & Losers) -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-top-movers">涨跌幅领先</div>
+    <div class="section-title compact" data-i18n="section-top-movers">涨跌幅领先</div>
 </div>
 <div class="movers-row mb-24" id="movers-row" aria-live="polite" aria-label="Top movers">
     <div class="movers-section">
@@ -619,7 +619,7 @@
 
 <!-- Market Breadth -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-market-breadth">市场宽度</div>
+    <div class="section-title compact" data-i18n="section-market-breadth">市场宽度</div>
 </div>
 <div class="card mb-24" style="padding:16px;" id="market-breadth-card">
     <div class="text-muted" style="font-size:0.78rem;" data-i18n="market-breadth-note">基于热门标的涨跌统计</div>
@@ -637,15 +637,15 @@
 <div class="grid-2 mb-24" id="fear-macro-row">
     <!-- 恐慌与贪婪指标 -->
     <div class="fear-greed-section" id="fear-greed-section">
-        <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;" data-i18n="section-fear-greed">恐慌与贪婪指标</div>
-        <div class="card" style="padding:16px;" id="fear-greed-card">
+        <div class="section-title spaced" data-i18n="section-fear-greed">恐慌与贪婪指标</div>
+        <div class="card" style="padding:16px;" id="fear-greed-card" aria-live="polite" data-i18n-aria="a11y-fear-greed" aria-label="Fear and greed index">
             <div class="panel-empty-state"><div class="empty-icon">&#x1F4CA;</div><div class="empty-msg" data-i18n="msg-fear-greed-loading">恐慌贪婪数据加载中...</div></div>
         </div>
     </div>
     <!-- 宏观经济快照 -->
     <div class="macro-snapshot-section">
-        <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;" data-i18n="section-macro">宏观经济快照</div>
-        <div class="macro-snapshot-grid" id="macro-snapshot-grid" aria-live="polite" aria-busy="true" aria-label="Macro snapshot loading">
+        <div class="section-title spaced" data-i18n="section-macro">宏观经济快照</div>
+        <div class="macro-snapshot-grid" id="macro-snapshot-grid" aria-live="polite" aria-busy="true" data-i18n-aria="a11y-macro-snapshot" aria-label="Macro economic snapshot">
             <div class="macro-card skeleton" style="height:80px;"></div>
             <div class="macro-card skeleton" style="height:80px;"></div>
             <div class="macro-card skeleton" style="height:80px;"></div>
@@ -655,7 +655,7 @@
 
 <!-- Augur Consensus Leaderboard -->
 <div class="flex items-center justify-between mb-12">
-    <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-leaderboard">Augur 共识排行榜</div>
+    <div class="section-title compact" data-i18n="section-leaderboard">Augur 共识排行榜</div>
     <span class="text-muted" style="font-size:0.7rem;" data-i18n="leaderboard-note">基于本地分析历史</span>
 </div>
 <div class="card mb-24" style="padding:0; overflow:hidden;" id="leaderboard-section">
@@ -679,18 +679,24 @@
     <div class="aug-card">
         <div class="aug-card-head">
             <span data-i18n="section-featured-personas">Featured Masters</span>
-            <a href="/personas" style="font:600 0.62rem/1 var(--font-pixfin);color:var(--amber);cursor:pointer;text-transform:uppercase">View all ▸</a>
+            <a href="/personas" data-i18n="btn-view-all-personas" style="font:600 0.62rem/1 var(--font-pixfin);color:var(--amber);cursor:pointer;text-transform:uppercase">查看全部 18 位</a>
+        </div>
+        <div class="persona-chips mb-8" role="group" data-i18n-aria="a11y-persona-chips-group" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 12px 8px;">
+            <span class="text-muted" style="font-size:0.68rem;" data-i18n="featured-personas-hint">想换视角？选一位大师，用 AAPL 快速体验</span>
+            <span class="chip persona-chip" role="button" tabindex="0" data-i18n-aria="a11y-persona-chip-buffett" data-aria-name="Warren Buffett" aria-label="Analyze AAPL with Warren Buffett" onclick="tryPersona('buffett')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryPersona('buffett')}">Buffett</span>
+            <span class="chip persona-chip" role="button" tabindex="0" data-i18n-aria="a11y-persona-chip-graham" data-aria-name="Benjamin Graham" aria-label="Analyze AAPL with Benjamin Graham" onclick="tryPersona('graham')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryPersona('graham')}">Graham</span>
+            <span class="chip persona-chip" role="button" tabindex="0" data-i18n-aria="a11y-persona-chip-cathie_wood" data-aria-name="Cathie Wood" aria-label="Analyze AAPL with Cathie Wood" onclick="tryPersona('cathie_wood')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryPersona('cathie_wood')}">Wood</span>
         </div>
         <div style="display:flex;flex-direction:column;gap:2px;">
             {% for p in featured %}
             {% if loop.index <= 3 %}
-            <div class="m-row" role="link" tabindex="0" data-i18n-aria="a11y-featured-persona" data-aria-name="{{ p.name }}" aria-label="Analyze with {{ p.name }}" onclick="window.location.href='/stocks?persona={{ p.id }}'" onkeydown="if(event.key==='Enter'){event.preventDefault();window.location.href='/stocks?persona={{ p.id }}'}">
+            <div class="m-row" role="link" tabindex="0" data-i18n-aria="a11y-featured-persona" data-aria-name="{{ p.name }}" aria-label="Analyze with {{ p.name }}" onclick="window.location.href='/stocks?persona={{ p.id }}&ticker=AAPL'" onkeydown="if(event.key==='Enter'){event.preventDefault();window.location.href='/stocks?persona={{ p.id }}&ticker=AAPL'}">
                 <img src="/docs/images/avatars/{{ p.id }}.png" class="avatar" width="40" height="40" alt="{{ p.name }}" onerror="this.src='/static/images/augur-owl-64.png'">
                 <div style="min-width:0;">
                     <div style="font:600 0.85rem/1.2 var(--font-sans);color:var(--fg-1);">{{ p.name }}</div>
-                    <div style="font:600 0.58rem/1.3 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;">{{ p.style }}</div>
+                    <div style="font:600 0.58rem/1.3 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;" data-persona-style-id="{{ p.id }}">{{ p.style }}</div>
                 </div>
-                <span style="margin-left:auto;font:700 1rem/1 var(--font-mono);color:var(--amber);">{{ p.tag }}</span>
+                <span style="margin-left:auto;font:700 1rem/1 var(--font-mono);color:var(--amber);" data-persona-tag-id="{{ p.id }}">{{ p.tag }}</span>
             </div>
             {% endif %}
             {% endfor %}
@@ -701,7 +707,7 @@
 <!-- Data Source Status (数据源状态) -->
 <div class="mb-24" id="datasource-section">
     <div class="flex items-center justify-between mb-12">
-        <div class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0;" data-i18n="section-datasource">数据源状态</div>
+        <div class="section-title compact" data-i18n="section-datasource">数据源状态</div>
         <span class="text-muted" style="font-size:0.7rem;" id="ds-chain-label"></span>
     </div>
     <div class="datasource-grid" id="datasource-grid" aria-live="polite" aria-busy="true" aria-label="Data sources loading">
@@ -738,7 +744,51 @@
 {% block extra_scripts %}
 <script>
 var _heroGoBusy = false;
+var _sparklineQueue = [];
+var _sparklineInflight = 0;
+var _SPARKLINE_MAX = 3;
 function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
+function _deferIndexLoad(fn, delay) {
+    var run = function() { fn(); };
+    var ms = delay || 0;
+    if (typeof requestIdleCallback === 'function') {
+        requestIdleCallback(function() { setTimeout(run, ms); }, { timeout: 3000 });
+    } else {
+        setTimeout(run, ms + 50);
+    }
+}
+function _macroCommentary(key, pct, thresholds) {
+    var up = thresholds[0], down = thresholds[1];
+    if (pct > up) return _t('macro-' + key + '-up');
+    if (pct < down) return _t('macro-' + key + '-down');
+    return _t('macro-' + key + '-flat');
+}
+function _fgLabel(index) {
+    if (index >= 75) return _t('fg-extreme-greed');
+    if (index >= 55) return _t('fg-greed');
+    if (index >= 45) return _t('fg-neutral');
+    if (index >= 25) return _t('fg-fear');
+    return _t('fg-extreme-fear');
+}
+function _syncPersonaLabels() {
+    document.querySelectorAll('[data-persona-style-id]').forEach(function(el) {
+        var val = _t('persona-style-' + el.getAttribute('data-persona-style-id'));
+        if (val) el.textContent = val;
+    });
+    document.querySelectorAll('[data-persona-tag-id]').forEach(function(el) {
+        var val = _t('persona-tag-' + el.getAttribute('data-persona-tag-id'));
+        if (val) el.textContent = val;
+    });
+}
+window._refreshIndexDynamicI18n = function() {
+    _syncPersonaLabels();
+    if (_marketOverviewData) {
+        renderFearGreed(_marketOverviewData);
+        renderMacroSnapshot(_marketOverviewData);
+        renderIntlMarkets(_marketOverviewData);
+    }
+    if (_hotTickersDataForMovers) renderMarketBreadth(_hotTickersDataForMovers);
+};
 function _scrollHeroPanel(elId) {
     var el = document.getElementById(elId);
     if (el && el.style.display !== 'none') {
@@ -864,6 +914,12 @@ function tryExample(t) {
     if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
+// First-time persona demo: open stocks page with persona + AAPL pre-filled
+function tryPersona(personaId) {
+    dismissOnboard();
+    window.location.href = '/stocks?persona=' + encodeURIComponent(personaId) + '&ticker=AAPL';
+}
+
 // Onboarding banner show/dismiss (remembered in localStorage)
 function dismissOnboard() {
     var b = document.getElementById('onboard-banner');
@@ -877,12 +933,22 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
         if (localStorage.getItem('augur-onboard-dismissed') !== '1') {
             var b = document.getElementById('onboard-banner');
-            if (b) b.style.display = 'flex';
+            if (b) {
+                b.style.display = 'flex';
+                setTimeout(function() {
+                    var hero = document.getElementById('hero-section');
+                    var input = document.getElementById('hero-ticker');
+                    if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (input) input.focus({ preventScroll: true });
+                }, 400);
+            }
         }
     } catch (e) {
         var b2 = document.getElementById('onboard-banner');
         if (b2) b2.style.display = 'flex';
     }
+
+    _syncPersonaLabels();
 
     fetch('/api/models')
         .then(function(r) { return r.json(); })
@@ -898,23 +964,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show recent analyses from cache
     renderRecentAnalyses();
 
-    // Load global market overview board
+    // Priority panels first; defer below-fold loads for faster first paint
     loadMarketOverview(false);
-
-    // Load datasource status
-    loadDatasources();
-
-    // Load hot tickers
     loadHotTickers(false);
-
-    // Load sector performance
-    loadSectorPerformance(false);
-
-    // Load crypto overview
-    loadCryptoOverview();
-
-    // Load commodities and treasury rates
-    loadCommoditiesAndRates();
+    _deferIndexLoad(loadDatasources, 150);
+    _deferIndexLoad(function() { loadSectorPerformance(false); }, 350);
+    _deferIndexLoad(loadCryptoOverview, 550);
+    _deferIndexLoad(loadCommoditiesAndRates, 750);
 
     // Render leaderboard from cache
     renderLeaderboard();
@@ -1020,7 +1076,7 @@ function loadDatasources() {
                     '<div class="ds-card-head">' +
                         '<span class="ds-card-name">' + escapeHtml(src.label) + '</span>' +
                         '<span class="' + (isActive ? 'ds-badge-active' : 'ds-badge-inactive') + '">' +
-                            (isActive ? 'ACTIVE' : 'INACTIVE') +
+                            (isActive ? _t('ds-badge-active') : _t('ds-badge-inactive')) +
                         '</span>' +
                     '</div>' +
                     '<div class="ds-card-coverage">' + escapeHtml(src.coverage || '') + '</div>' +
@@ -1068,7 +1124,7 @@ function renderHotTickers(data) {
         return;
     }
     grid.innerHTML = '';
-    tickers.forEach(function(t) {
+    tickers.forEach(function(t, idx) {
         var up = (t.change_pct || 0) > 0;
         var down = (t.change_pct || 0) < 0;
         var cls = up ? 'is-up' : (down ? 'is-down' : 'is-flat');
@@ -1086,7 +1142,7 @@ function renderHotTickers(data) {
             '<div class="hot-ticker-price">' + priceStr + '</div>' +
             '<div class="hot-ticker-change">' + arrow + ' ' + (up ? '+' : '') + pct + '%</div>';
         grid.appendChild(card);
-        loadSparkline(t.symbol, card);
+        _deferIndexLoad(function() { loadSparkline(t.symbol, card); }, 80 * idx);
     });
     if (data && data.data_error) {
         var errHint = document.createElement('div');
@@ -1098,20 +1154,33 @@ function renderHotTickers(data) {
 }
 
 function loadSparkline(symbol, container) {
-    fetch('/api/sparkline/' + symbol)
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.prices && data.prices.length >= 1) {
-                var prices = data.prices;
-                if (prices.length === 1) prices = [prices[0], prices[0]];
-                var svg = createSparklineSVG(prices, data.trend);
-                var wrapper = document.createElement('div');
-                wrapper.className = 'sparkline-wrapper';
-                wrapper.innerHTML = svg;
-                container.appendChild(wrapper);
-            }
-        })
-        .catch(function() {});
+    _sparklineQueue.push({ symbol: symbol, container: container });
+    _drainSparklineQueue();
+}
+
+function _drainSparklineQueue() {
+    while (_sparklineInflight < _SPARKLINE_MAX && _sparklineQueue.length) {
+        var job = _sparklineQueue.shift();
+        _sparklineInflight++;
+        fetch('/api/sparkline/' + job.symbol)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.prices && data.prices.length >= 1) {
+                    var prices = data.prices;
+                    if (prices.length === 1) prices = [prices[0], prices[0]];
+                    var svg = createSparklineSVG(prices, data.trend);
+                    var wrapper = document.createElement('div');
+                    wrapper.className = 'sparkline-wrapper';
+                    wrapper.innerHTML = svg;
+                    job.container.appendChild(wrapper);
+                }
+            })
+            .catch(function() {})
+            .then(function() {
+                _sparklineInflight--;
+                _drainSparklineQueue();
+            });
+    }
 }
 
 function createSparklineSVG(prices, trend) {
@@ -1163,12 +1232,13 @@ function renderFearGreed(data) {
     }
     var vixVal = vix.price || 0;
     var index = Math.max(0, Math.min(100, Math.round(100 - ((vixVal - 12) / 38) * 100)));
-    var label = '', color = '';
-    if (index >= 75) { label = 'Extreme Greed'; color = '#00c853'; }
-    else if (index >= 55) { label = 'Greed'; color = '#76ff03'; }
-    else if (index >= 45) { label = 'Neutral'; color = '#ffd600'; }
-    else if (index >= 25) { label = 'Fear'; color = '#ff9100'; }
-    else { label = 'Extreme Fear'; color = '#ff1744'; }
+    var label = _fgLabel(index);
+    var color = '';
+    if (index >= 75) { color = '#00c853'; }
+    else if (index >= 55) { color = '#76ff03'; }
+    else if (index >= 45) { color = '#ffd600'; }
+    else if (index >= 25) { color = '#ff9100'; }
+    else { color = '#ff1744'; }
 
     // SVG semi-circle gauge
     var cx = 100, cy = 90, r = 70;
@@ -1209,7 +1279,7 @@ function renderFearGreed(data) {
             svg +
             '<div class="fg-gauge-value" style="color:' + color + ';">' + index + '</div>' +
             '<div class="fg-gauge-label" style="color:' + color + ';">' + label + '</div>' +
-            '<div class="fg-gauge-sublabel">VIX: ' + vixVal.toFixed(2) + '</div>' +
+            '<div class="fg-gauge-sublabel">' + _t('fg-vix-label') + vixVal.toFixed(2) + '</div>' +
         '</div>';
 }
 
@@ -1230,15 +1300,11 @@ function renderMacroSnapshot(data) {
         return;
     }
     macros.forEach(function(m) {
-        var commentary = '';
         var pct = m.change_pct || 0;
-        if (m.key === 'gold') {
-            commentary = pct > 0.01 ? '避险需求上升' : (pct < -0.01 ? '风险偏好回暖' : '黄金持稳');
-        } else if (m.key === 'oil') {
-            commentary = pct > 0.01 ? '能源压力上升' : (pct < -0.01 ? '能源压力下降' : '油价持稳');
-        } else if (m.key === 'btc') {
-            commentary = pct > 0.02 ? '加密情绪高涨' : (pct < -0.02 ? '加密回调' : '比特币横盘');
-        }
+        var commentary = '';
+        if (m.key === 'gold') commentary = _macroCommentary('gold', pct, [0.01, -0.01]);
+        else if (m.key === 'oil') commentary = _macroCommentary('oil', pct, [0.01, -0.01]);
+        else if (m.key === 'btc') commentary = _macroCommentary('btc', pct, [0.02, -0.02]);
         var up = pct > 0;
         var down = pct < 0;
         var cls = up ? 'is-up' : (down ? 'is-down' : 'is-flat');
@@ -1304,17 +1370,17 @@ function renderIntlMarkets(data) {
     var items = (data && data.items) || [];
     // International indices keys and their region
     var intlKeys = [
-        { key: 'hsi', region: 'Asia' },
-        { key: 'nikkei', region: 'Asia' },
-        { key: 'csi300', region: 'Asia' },
-        { key: 'ftse', region: 'Europe' },
-        { key: 'dax', region: 'Europe' }
+        { key: 'hsi', regionKey: 'intl-region-asia' },
+        { key: 'nikkei', regionKey: 'intl-region-asia' },
+        { key: 'csi300', regionKey: 'intl-region-asia' },
+        { key: 'ftse', regionKey: 'intl-region-europe' },
+        { key: 'dax', regionKey: 'intl-region-europe' }
     ];
     var intlItems = [];
     intlKeys.forEach(function(ik) {
         items.forEach(function(it) {
             if (it.key === ik.key) {
-                intlItems.push({ data: it, region: ik.region });
+                intlItems.push({ data: it, region: _t(ik.regionKey) });
             }
         });
     });
@@ -1498,7 +1564,10 @@ function renderLeaderboard() {
     scored.sort(function(a, b) { return (b.result.score || 0) - (a.result.score || 0); });
     var top = scored.slice(0, 5);
     if (!top.length) {
-        list.innerHTML = '<li class="leaderboard-item" style="justify-content:center;"><span class="text-muted" style="font-size:0.78rem;">' + _t('leaderboard-empty') + '</span></li>';
+        list.innerHTML = '<li class="leaderboard-item" style="justify-content:center; flex-wrap:wrap; gap:8px;">' +
+            '<span class="text-muted" style="font-size:0.78rem;">' + _t('leaderboard-empty') + '</span>' +
+            '<span class="chip chip-recommended" role="button" tabindex="0" data-i18n-aria="a11y-chip-aapl" aria-label="Try AAPL example" onclick="tryExample(\'AAPL\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();tryExample(\'AAPL\')}">AAPL</span>' +
+            '</li>';
         return;
     }
     list.innerHTML = '';

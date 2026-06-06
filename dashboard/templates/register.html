@@ -3,41 +3,40 @@
 {% block title %}Register - Augur{% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1 data-i18n="register-title">注册</h1>
-    <p class="page-desc" data-i18n="register-desc">创建新的 Augur 账号</p>
-</div>
+<header class="page-header">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="register-title">注册</h1>
+        <p class="page-desc" data-i18n="register-desc">创建新的 Augur 账号</p>
+    </div>
+</header>
 
-<div style="max-width: 400px; margin: 2rem auto; padding: 2rem; background: var(--bg-secondary, #1e1e2e); border-radius: 12px; border: 1px solid var(--border-color, #333); width: 90%;">
+<div class="auth-panel">
     <form id="register-form" onsubmit="handleRegister(event)" aria-labelledby="register-title">
-        <div style="margin-bottom: 1.5rem;">
-            <label for="username" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);" data-i18n="register-username">用户名</label>
-            <input type="text" id="username" name="username" required minlength="3" maxlength="32"
-                   style="width: 100%; padding: 0.75rem; background: var(--bg-primary, #121212); border: 1px solid var(--border-color, #444); border-radius: 8px; color: var(--text-primary, #e0e0e0); font-size: 1rem; box-sizing: border-box;"
+        <div class="form-group">
+            <label for="username" data-i18n="register-username">用户名</label>
+            <input type="text" id="username" name="username" class="form-input" required minlength="3" maxlength="32"
                    placeholder="Choose a username (3-32 chars)" autocomplete="username" aria-required="true"
                    aria-describedby="username-help" pattern="[a-zA-Z0-9_]+">
-            <span id="username-help" style="font-size: 0.75rem; color: var(--text-secondary, #999);">Letters, numbers, and underscores only</span>
+            <span id="username-help" class="text-muted" style="font-size:0.75rem;">Letters, numbers, and underscores only</span>
         </div>
-        <div style="margin-bottom: 1.5rem;">
-            <label for="password" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);" data-i18n="register-password">密码</label>
-            <input type="password" id="password" name="password" required minlength="6" maxlength="128"
-                   style="width: 100%; padding: 0.75rem; background: var(--bg-primary, #121212); border: 1px solid var(--border-color, #444); border-radius: 8px; color: var(--text-primary, #e0e0e0); font-size: 1rem; box-sizing: border-box;"
+        <div class="form-group">
+            <label for="password" data-i18n="register-password">密码</label>
+            <input type="password" id="password" name="password" class="form-input" required minlength="6" maxlength="128"
                    placeholder="Choose a password (min 6 chars)" autocomplete="new-password" aria-required="true">
         </div>
-        <div style="margin-bottom: 1.5rem;">
-            <label for="password2" style="display: block; margin-bottom: 0.5rem; font-weight: 500; color: var(--text-primary, #e0e0e0);" data-i18n="register-password2">确认密码</label>
-            <input type="password" id="password2" name="password2" required minlength="6" maxlength="128"
-                   style="width: 100%; padding: 0.75rem; background: var(--bg-primary, #121212); border: 1px solid var(--border-color, #444); border-radius: 8px; color: var(--text-primary, #e0e0e0); font-size: 1rem; box-sizing: border-box;"
+        <div class="form-group">
+            <label for="password2" data-i18n="register-password2">确认密码</label>
+            <input type="password" id="password2" name="password2" class="form-input" required minlength="6" maxlength="128"
                    placeholder="Confirm your password" autocomplete="new-password" aria-required="true">
         </div>
-        <div id="register-error" style="display: none; margin-bottom: 1rem; padding: 0.75rem; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); border-radius: 8px; color: #ff6b6b; font-size: 0.9rem;" role="alert"></div>
-        <div id="register-success" style="display: none; margin-bottom: 1rem; padding: 0.75rem; background: rgba(52,199,89,0.1); border: 1px solid rgba(52,199,89,0.3); border-radius: 8px; color: #34c759; font-size: 0.9rem;" role="status"></div>
-        <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; font-size: 1rem;" data-i18n="register-submit">
+        <div id="register-error" class="auth-error" role="alert"></div>
+        <div id="register-success" style="display:none; margin-bottom:1rem; padding:0.75rem; background:rgba(0,200,83,0.1); border:1px solid rgba(0,200,83,0.3); border-radius:var(--r-md); color:var(--signal-buy); font-size:0.9rem;" role="status"></div>
+        <button type="submit" class="btn btn-primary btn-block" data-i18n="register-submit">
             创建账号
         </button>
     </form>
-    <p style="margin-top: 1.5rem; text-align: center; color: var(--text-secondary, #999); font-size: 0.9rem;">
-        <span data-i18n="register-login-link">已有账号？</span> <a href="/login" style="color: var(--accent-orange);">Sign In</a>
+    <p class="auth-panel-footer">
+        <span data-i18n="register-login-link">已有账号？</span> <a href="/login">Sign In</a>
     </p>
 </div>
 {% endblock %}

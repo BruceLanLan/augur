@@ -158,14 +158,11 @@ class TestBacktestPanelLiveRegions:
     def test_run_btn_toggles_aria_busy(self, backtest_text):
         """The run button itself must toggle aria-busy so screen readers
         announce the long-running operation."""
+        assert "_setRunBtnBusy" in backtest_text, "run button busy state via _setRunBtnBusy"
         assert re.search(
-            r"btn\.setAttribute\(\s*['\"]aria-busy['\"]\s*,\s*['\"]true['\"]\s*\)",
+            r"btn\.setAttribute\(\s*['\"]aria-busy['\"]\s*,\s*busy\s*\?\s*['\"]true['\"]\s*:\s*['\"]false['\"]\s*\)",
             backtest_text,
-        ), "run button must set aria-busy='true' while loading"
-        assert re.search(
-            r"btn\.setAttribute\(\s*['\"]aria-busy['\"]\s*,\s*['\"]false['\"]\s*\)",
-            backtest_text,
-        ), "run button must reset aria-busy='false' when done"
+        ), "_setRunBtnBusy must toggle aria-busy on the run button"
 
 
 # ============================================================

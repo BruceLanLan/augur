@@ -38,6 +38,7 @@ Usage:
 import json
 import logging
 import math
+import threading
 import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any
@@ -75,6 +76,7 @@ class LearningEngine:
         self._predictions: List[Dict[str, Any]] = []
         self._weights: Dict[str, float] = {}
         self._accuracy: Dict[str, Dict[str, Any]] = {}
+        self._lock = threading.RLock()
         self._load_weights()
 
     def _load_weights(self):
@@ -141,15 +143,16 @@ class LearningEngine:
             confidence = 0.5
         confidence = max(0.0, min(1.0, confidence))
 
-        self._predictions.append({
-            "ticker": ticker,
-            "agent_id": agent_id,
-            "signal": signal,
-            "score": score,
-            "confidence": confidence,
-            "timestamp": time.time(),
-            "outcome": None,  # To be filled in later
-        })
+        with self._lock:
+            self._predictions.append({
+                "ticker": ticker,
+                "agent_id": agent_id,
+                "signal": signal,
+                "score": score,
+                "confidence": confidence,
+                "timestamp": time.time(),
+                "outcome": None,  # To be filled in later
+            })
 
     def record_outcome(
         self,
@@ -179,41 +182,41 @@ class LearningEngine:
         min_age_cutoff = now - (min_age_days * 86400) if min_age_days is not None else None
         updated = False
 
-        for pred in self._predictions:
-            if pred["ticker"] == ticker and pred["outcome"] is None:
-                ts = pred["timestamp"]
-                if min_age_cutoff is not None:
-                    if ts > min_age_cutoff:
+        with self._lock:
+            for pred in self._predictions:
+                if pred["ticker"] == ticker and pred["outcome"] is None:
+                    ts = pred["timestamp"]
+                    if min_age_cutoff is not None:
+                        if ts > min_age_cutoff:
+                            logger.debug(
+                                "skipping prediction for %s from %s: not old enough (age=%.1fd < min_age=%dd)",
+                                ticker, pred["agent_id"],
+                                (now - ts) / 86400.0, min_age_days,
+                            )
+                            continue  # prediction not old enough yet
+                        max_age_cutoff = now - ((lookback_days + min_age_days) * 86400)
+                        if ts < max_age_cutoff:
+                            logger.debug(
+                                "skipping prediction for %s from %s: too stale (age=%.1fd > lookback+min_age=%dd)",
+                                ticker, pred["agent_id"],
+                                (now - ts) / 86400.0, lookback_days + min_age_days,
+                            )
+                            continue  # too stale to auto-resolve
+                    elif ts < cutoff:
                         logger.debug(
-                            "skipping prediction for %s from %s: not old enough (age=%.1fd < min_age=%dd)",
+                            "skipping prediction for %s from %s: outside lookback window (age=%.1fd > lookback=%dd)",
                             ticker, pred["agent_id"],
-                            (now - ts) / 86400.0, min_age_days,
+                            (now - ts) / 86400.0, lookback_days,
                         )
-                        continue  # prediction not old enough yet
-                    max_age_cutoff = now - ((lookback_days + min_age_days) * 86400)
-                    if ts < max_age_cutoff:
-                        logger.debug(
-                            "skipping prediction for %s from %s: too stale (age=%.1fd > lookback+min_age=%dd)",
-                            ticker, pred["agent_id"],
-                            (now - ts) / 86400.0, lookback_days + min_age_days,
-                        )
-                        continue  # too stale to auto-resolve
-                elif ts < cutoff:
-                    logger.debug(
-                        "skipping prediction for %s from %s: outside lookback window (age=%.1fd > lookback=%dd)",
-                        ticker, pred["agent_id"],
-                        (now - ts) / 86400.0, lookback_days,
-                    )
-                    continue  # outside recent lookback window
-                pred["outcome"] = actual_return
-                # Determine if prediction was correct
-                was_correct = self._evaluate_prediction(pred, actual_return)
-                self._update_accuracy(pred["agent_id"], was_correct, actual_return, pred["score"])
-                updated = True
+                        continue  # outside recent lookback window
+                    pred["outcome"] = actual_return
+                    was_correct = self._evaluate_prediction(pred, actual_return)
+                    self._update_accuracy(pred["agent_id"], was_correct, actual_return, pred["score"])
+                    updated = True
 
-        if updated:
-            self._recalculate_weights()
-            self._save_weights()
+            if updated:
+                self._recalculate_weights()
+                self._save_weights()
 
     def _evaluate_prediction(self, prediction: Dict[str, Any], actual_return: float) -> bool:
         """Evaluate if a prediction was correct."""
@@ -279,12 +282,15 @@ class LearningEngine:
 
     def get_weights(self) -> Dict[str, float]:
         """Get current learned weights."""
-        return self._weights.copy()
+        with self._lock:
+            return self._weights.copy()
 
     def get_accuracy(self) -> Dict[str, Dict[str, Any]]:
         """Get accuracy data for all agents."""
+        with self._lock:
+            accuracy = dict(self._accuracy)
         result = {}
-        for agent_id, acc in self._accuracy.items():
+        for agent_id, acc in accuracy.items():
             result[agent_id] = {
                 "accuracy_rate": acc["correct"] / acc["total"] if acc["total"] > 0 else 0.0,
                 "total_predictions": acc["total"],
@@ -295,24 +301,28 @@ class LearningEngine:
 
     def get_agent_weight(self, agent_id: str) -> Optional[float]:
         """Get the learned weight for a specific agent."""
-        return self._weights.get(agent_id)
+        with self._lock:
+            return self._weights.get(agent_id)
 
     def reset(self):
         """Reset all learned data."""
-        self._predictions = []
-        self._weights = {}
-        self._accuracy = {}
-        if self.weights_path.exists():
-            self.weights_path.unlink()
+        with self._lock:
+            self._predictions = []
+            self._weights = {}
+            self._accuracy = {}
+            if self.weights_path.exists():
+                self.weights_path.unlink()
 
     @property
     def has_learned_weights(self) -> bool:
         """Check if there are meaningful learned weights (>=3 outcomes per agent)."""
-        if not self._weights:
-            return False
-        return any(acc.get("total", 0) >= 3 for acc in self._accuracy.values())
+        with self._lock:
+            if not self._weights:
+                return False
+            return any(acc.get("total", 0) >= 3 for acc in self._accuracy.values())
 
     @property
     def prediction_count(self) -> int:
         """Get total number of recorded predictions."""
-        return len(self._predictions)
+        with self._lock:
+            return len(self._predictions)

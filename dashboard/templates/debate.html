@@ -49,8 +49,12 @@
 {% endblock %}
 {% block content %}
 
-<h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="debate-title">辩论模式</h1>
-<p class="text-muted mb-16" style="font-size:0.82rem;" data-i18n="debate-desc">选择 2-4 位投资大师，围绕同一标的进行多轮辩论，每位大师对前者观点进行反驳</p>
+<header class="page-header mb-16">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="debate-title">辩论模式</h1>
+        <p class="page-lead" data-i18n="debate-desc">选择 2-4 位投资大师，围绕同一标的进行多轮辩论，每位大师对前者观点进行反驳</p>
+    </div>
+</header>
 
 <div class="card mb-24">
     <div class="flex items-center gap-12 mb-16" style="flex-wrap:wrap;">
@@ -78,7 +82,7 @@
 </div>
 
 <!-- Spinner -->
-<div id="debate-spinner" style="display:none; text-align:center; padding:40px;" role="status" aria-live="polite">
+<div id="debate-spinner" style="display:none; text-align:center; padding:40px;" role="status" aria-live="polite" aria-busy="true">
     <div class="spinner" style="margin:0 auto;" aria-hidden="true"></div>
     <p class="loading-pulse text-orange text-mono mt-16" style="font-size:0.88rem;" data-i18n="debate-loading">辩论进行中...</p>
 </div>
@@ -151,9 +155,40 @@ function validateDebateForm() {
 
 // Real-time validation on ticker input
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('debate-ticker').addEventListener('input', validateDebateForm);
+    var tickerInput = document.getElementById('debate-ticker');
+    tickerInput.addEventListener('input', validateDebateForm);
+    tickerInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); startDebate(); }
+    });
+    applyDebateQueryParams();
     validateDebateForm();
 });
+
+function applyDebateQueryParams() {
+    var params = new URLSearchParams(window.location.search);
+    var ticker = params.get('ticker');
+    var agents = params.get('agents');
+    if (ticker) {
+        document.getElementById('debate-ticker').value = ticker.toUpperCase();
+    }
+    if (agents) {
+        var ids = agents.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        document.querySelectorAll('#debate-agents input[type="checkbox"]').forEach(function(cb) {
+            cb.checked = ids.indexOf(cb.value) !== -1;
+            var chip = cb.closest('.debate-agent-chip');
+            if (chip) {
+                if (cb.checked) chip.classList.add('selected');
+                else chip.classList.remove('selected');
+            }
+        });
+        var count = document.querySelectorAll('#debate-agents input:checked').length;
+        var countEl = document.getElementById('debate-select-count');
+        countEl.textContent = _t('debate-select-count').replace('{n}', count);
+        countEl.className = 'select-count agent-counter ' + (count >= 2 && count <= 4 ? 'ready' : 'insufficient');
+    }
+    validateDebateForm();
+    if (ticker) showToast(_t('debate-url-loaded'));
+}
 
 function startDebate() {
     var ticker = document.getElementById('debate-ticker').value.trim().toUpperCase();
@@ -169,6 +204,7 @@ function startDebate() {
     var btn = document.getElementById('debate-btn');
     btn.disabled = true;
     btn.textContent = _t('debate-in-progress');
+    btn.setAttribute('aria-busy', 'true');
     document.getElementById('debate-spinner').style.display = 'block';
     document.getElementById('debate-thread').innerHTML = '';
     document.getElementById('debate-error').style.display = 'none';
@@ -179,16 +215,27 @@ function startDebate() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticker: ticker, agent_ids: agentIds })
     })
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+        if (!r.ok) {
+            return r.json().then(function(err) {
+                throw new Error(err.detail || err.message || _t('debate-api-error'));
+            }).catch(function() {
+                throw new Error(_t('debate-api-error'));
+            });
+        }
+        return r.json();
+    })
     .then(function(data) {
         btn.disabled = false;
         btn.textContent = _t('debate-start');
+        btn.setAttribute('aria-busy', 'false');
         document.getElementById('debate-spinner').style.display = 'none';
         renderDebate(data);
     })
     .catch(function(err) {
         btn.disabled = false;
         btn.textContent = _t('debate-start');
+        btn.setAttribute('aria-busy', 'false');
         document.getElementById('debate-spinner').style.display = 'none';
         document.getElementById('debate-error').style.display = 'block';
         document.getElementById('debate-empty').style.display = 'block';

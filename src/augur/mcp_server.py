@@ -25,12 +25,40 @@ logger = logging.getLogger(__name__)
 
 # Ticker validation pattern: 1-15 alphanumeric chars, dots, or hyphens
 _TICKER_PATTERN = re.compile(r'^[A-Za-z0-9.\-]{1,15}$')
+_PERSONA_ID_PATTERN = re.compile(r'^[A-Za-z0-9_\-]{1,64}$')
+_MODEL_NAME_PATTERN = re.compile(r'^[A-Za-z0-9._\-+:/]{1,128}$')
 
 
 def _validate_ticker(ticker: str) -> Optional[str]:
     """Validate ticker format. Returns error message string if invalid, None if valid."""
     if not ticker or not _TICKER_PATTERN.match(ticker):
         return "Error: Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens."
+    return None
+
+
+def _validate_persona_id(persona_id: str) -> Optional[str]:
+    """Validate persona_id for configure/create tools."""
+    if not isinstance(persona_id, str) or not persona_id:
+        return "Error: persona_id must be a non-empty string"
+    if not _PERSONA_ID_PATTERN.match(persona_id):
+        return (
+            "Error: Invalid persona_id format. "
+            "Use 1-64 alphanumeric characters, underscores, or hyphens."
+        )
+    return None
+
+
+def _validate_model_name(model: str) -> Optional[str]:
+    """Validate model name for configure tool."""
+    if not isinstance(model, str) or not model:
+        return "Error: model must be a non-empty string"
+    if len(model) > 128:
+        return "Error: model name too long (max 128 characters)"
+    if not _MODEL_NAME_PATTERN.match(model):
+        return (
+            "Error: Invalid model format. "
+            "Use alphanumeric characters, dots, hyphens, underscores, colons, or slashes."
+        )
     return None
 
 
@@ -256,25 +284,18 @@ def create_server():
         # nesting when the value contains a ".".
         if not isinstance(persona_id, str) or not persona_id:
             return "Error: persona_id must be a non-empty string"
-        if not re.match(r'^[A-Za-z0-9_\-]{1,64}$', persona_id):
-            return ("Error: Invalid persona_id format. "
-                    "Use 1-64 alphanumeric characters, underscores, or hyphens.")
+        err = _validate_persona_id(persona_id)
+        if err:
+            return err
 
         # Validate the persona actually exists in the registry
         registry = AgentRegistry()
         if not registry.get(persona_id):
             return f"Error: Persona '{persona_id}' not found. Available: {', '.join(a.agent_id for a in registry.get_all())}"
 
-        # Validate model: restrict to a non-empty, length-bounded string of safe
-        # characters to prevent injection of arbitrary content into the YAML
-        # config file.
-        if not isinstance(model, str) or not model:
-            return "Error: model must be a non-empty string"
-        if len(model) > 128:
-            return "Error: model name too long (max 128 characters)"
-        if not re.match(r'^[A-Za-z0-9._\-+:/]{1,128}$', model):
-            return ("Error: Invalid model format. "
-                    "Use alphanumeric characters, dots, hyphens, underscores, colons, or slashes.")
+        err = _validate_model_name(model)
+        if err:
+            return err
 
         set_config(f"per_agent.{persona_id}", model)
         path = save_config()

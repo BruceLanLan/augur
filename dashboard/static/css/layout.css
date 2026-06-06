@@ -90,7 +90,7 @@
 .hero-sub { font: var(--body); color: var(--fg-2); max-width: 520px; margin: 0 0 22px; position: relative; }
 .hero-input { display: flex; gap: 10px; max-width: 520px; position: relative; }
 .hero-input .field { flex: 1; padding: 12px 14px; font-size: 0.95rem; }
-.hero-chips { display: flex; align-items: center; gap: 8px; margin-top: 14px; position: relative; }
+.hero-chips { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 14px; position: relative; }
 
 html.light .hero {
   background:
@@ -249,11 +249,34 @@ html.light .council-hero {
     grid-column: auto;
     grid-row: auto;
   }
+  .app-layout .sidebar,
+  .app-layout .sb {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 101;
+    width: var(--sidebar-width, 240px);
+    height: 100vh;
+  }
   .mboard { grid-template-columns: repeat(2, 1fr); }
   .sc-grid { grid-template-columns: repeat(4, 1fr); }
   .council-grid { grid-template-columns: repeat(2, 1fr); }
   .exec-metrics { grid-template-columns: repeat(2, 1fr); gap: 14px; }
   .debate { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .hero-input {
+    flex-direction: column;
+    align-items: stretch;
+    max-width: 100%;
+  }
+  .hero-input .field,
+  .hero-input .pixel-btn,
+  .hero-input .btn {
+    width: 100%;
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -262,4 +285,104 @@ html.light .council-hero {
   .council-grid { grid-template-columns: 1fr; }
   .exec-metrics { grid-template-columns: 1fr; gap: 10px; }
   .hero-owl { display: none; }
+  .hero-title { font-size: 1.35rem; }
+}
+
+/* Page chrome — unified headers, leads, reading rhythm (loop-400) */
+:root {
+  --content-max: 1200px;
+  --prose-max: 42rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-4, 16px);
+}
+.page-header__text { min-width: 0; flex: 1; }
+
+.page-title,
+.page-header > h1:not(.hero-title):not(.sr-only) {
+  font: var(--h1);
+  color: var(--amber);
+  margin: 0 0 4px;
+  letter-spacing: -0.4px;
+}
+
+.page-lead,
+.page-desc {
+  font: var(--body-sm);
+  color: var(--fg-2);
+  margin: 0;
+  max-width: var(--prose-max);
+  line-height: 1.55;
+}
+
+.page-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.section-title.compact {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.section-title.spaced {
+  margin-bottom: 12px;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.section-title.lg {
+  font-size: 1rem;
+  letter-spacing: 0.5px;
+}
+
+.read-prose { max-width: var(--prose-max); }
+.content-max {
+  max-width: var(--content-max);
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+
+.auth-panel {
+  max-width: 400px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: var(--bg-card);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--border);
+  width: 90%;
+}
+.auth-panel .form-group { margin-bottom: 1.5rem; }
+.auth-panel label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--fg-1);
+}
+.auth-panel .form-input { width: 100%; padding: 0.75rem; font-size: 1rem; }
+.auth-panel .btn-block { width: 100%; padding: 0.75rem; font-size: 1rem; }
+.auth-panel-footer {
+  margin-top: 1.5rem;
+  text-align: center;
+  color: var(--fg-2);
+  font-size: 0.9rem;
+}
+.auth-error {
+  display: none;
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: rgba(255, 23, 68, 0.1);
+  border: 1px solid rgba(255, 23, 68, 0.3);
+  border-radius: var(--r-md);
+  color: var(--signal-sell);
+  font-size: 0.9rem;
 }

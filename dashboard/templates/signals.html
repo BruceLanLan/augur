@@ -43,12 +43,12 @@
 {% endblock %}
 {% block content %}
 
-<div class="signals-header">
-    <div>
-        <h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="signals-title">信号监控</h1>
-        <p class="text-muted" style="font-size:0.82rem; margin:0;" data-i18n="signals-desc">自选股实时信号追踪，多Agent共识预警</p>
+<header class="page-header signals-header">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="signals-title">信号监控</h1>
+        <p class="page-lead" data-i18n="signals-desc">自选股实时信号追踪，多Agent共识预警</p>
     </div>
-    <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <div class="page-actions">
         <span id="refresh-indicator" class="text-muted" style="font-size:0.75rem;" aria-live="polite">
             <span class="status-dot" style="background:var(--signal-buy); display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px;" aria-hidden="true"></span>
             <span data-i18n="signals-refresh-label">列表刷新: 60s</span>
@@ -57,7 +57,7 @@
             &#x25B6; <span data-i18n="signals-run-all">运行全部分析</span>
         </button>
     </div>
-</div>
+</header>
 
 <!-- Signal Statistics Panel -->
 <div class="signal-stats-panel" id="signal-stats" style="display:none;" aria-live="polite">

@@ -39,24 +39,24 @@ def test_changelog_keeps_no_breaking_changes_note():
     assert "No breaking changes" in section
 
 
-def test_readme_badge_is_v8_2_0():
-    """Both READMEs must display v8.2.0 in their Latest badge."""
+def test_readme_badge_is_v8_2_1():
+    """Both READMEs must display v8.2.1 in their Latest badge."""
     for rel in ("README.md", "README_EN.md"):
         text = _read(rel)
-        # Badge URL form: badge/v8.2.0-Latest
-        assert "badge/v8.2.0-Latest" in text, f"{rel} badge is not v8.2.0"
+        # Badge URL form: badge/v8.2.1-Latest
+        assert "badge/v8.2.1-Latest" in text, f"{rel} badge is not v8.2.1"
         assert "badge/v8.1.0-Latest" not in text, f"{rel} still has stale v8.1.0 badge"
 
 
-def test_readme_changelog_marks_v8_2_0_current():
-    """The top changelog entry marked (current) must be v8.2.0, not v8.1.0."""
+def test_readme_changelog_marks_v8_2_1_current():
+    """The top changelog entry marked (current) must be v8.2.1 (docs release), not v8.1.0."""
     for rel in ("README.md", "README_EN.md"):
         text = _read(rel)
         # The (current) marker should sit on a v8.2.0 line, not v8.1.0.
         current_block = re.search(r"<summary><strong>(v8\.\d+\.\d+)[^<]*\(current\)", text)
         assert current_block, f"{rel} has no (current) changelog entry"
-        assert current_block.group(1) == "v8.2.0", (
-            f"{rel} (current) entry is {current_block.group(1)}, expected v8.2.0"
+        assert current_block.group(1) == "v8.2.1", (
+            f"{rel} (current) entry is {current_block.group(1)}, expected v8.2.1"
         )
 
 

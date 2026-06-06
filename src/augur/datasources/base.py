@@ -43,6 +43,8 @@ def safe_num(value: Any, default: float = 0.0) -> float:
     """
     if value is None:
         return default
+    if isinstance(value, bool):
+        return default
     try:
         f = float(value)
     except (TypeError, ValueError):

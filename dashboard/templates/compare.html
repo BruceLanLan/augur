@@ -82,8 +82,12 @@
 {% endblock %}
 {% block content %}
 
-<h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="compare-title">对比分析</h1>
-<p class="text-muted mb-16" style="font-size:0.82rem;" data-i18n="compare-desc">选择 2-5 位投资大师，对比同一标的的分析差异</p>
+<header class="page-header mb-16">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="compare-title">对比分析</h1>
+        <p class="page-lead" data-i18n="compare-desc">选择 2-5 位投资大师，对比同一标的的分析差异</p>
+    </div>
+</header>
 
 <div class="card mb-24">
     <div class="mb-12">
@@ -131,7 +135,7 @@
 <!-- Results -->
 <div id="compare-results-section">
     <div class="flex items-center justify-between mb-12 compare-results-header">
-        <h2 class="section-title" style="margin-bottom:0; border-bottom:none; padding-bottom:0; font-size:1rem;" data-i18n="compare-results">对比结果</h2>
+        <h2 class="section-title compact lg" data-i18n="compare-results">对比结果</h2>
         <div class="flex items-center gap-12">
             <div id="compare-consensus" class="text-muted" style="font-size:0.78rem;"></div>
             <div class="export-btn-group" id="compare-export" style="display:none;">
@@ -190,12 +194,39 @@ function updateSelection(label) {
 function validateCompareForm() {
     var ticker = document.getElementById('compare-ticker').value.trim();
     var checked = document.querySelectorAll('#agent-grid input[type="checkbox"]:checked');
-    var btn = document.querySelector('.btn-primary');
+    var btn = document.getElementById('compare-btn');
+    if (!btn) return;
     if (ticker.length > 0 && checked.length >= 2 && checked.length <= 5) {
         btn.disabled = false;
     } else {
         btn.disabled = true;
     }
+}
+
+function applyCompareQueryParams() {
+    var params = new URLSearchParams(window.location.search);
+    var ticker = params.get('ticker');
+    var agents = params.get('agents');
+    if (ticker) {
+        document.getElementById('compare-ticker').value = ticker.toUpperCase();
+    }
+    if (agents) {
+        var ids = agents.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        document.querySelectorAll('#agent-grid input[type="checkbox"]').forEach(function(cb) {
+            cb.checked = ids.indexOf(cb.value) !== -1;
+            var label = cb.closest('.agent-checkbox-item');
+            if (label) {
+                if (cb.checked) label.classList.add('selected');
+                else label.classList.remove('selected');
+            }
+        });
+        var countEl = document.getElementById('select-count');
+        var count = document.querySelectorAll('#agent-grid input[type="checkbox"]:checked').length;
+        countEl.textContent = _t('compare-select-count').replace('{n}', count);
+        countEl.className = 'select-count agent-counter ' + (count >= 2 && count <= 5 ? 'ready' : 'insufficient');
+    }
+    validateCompareForm();
+    if (ticker && agents) showToast(_t('compare-url-loaded'));
 }
 
 // Real-time ticker validation
@@ -204,6 +235,10 @@ document.addEventListener('DOMContentLoaded', function() {
     tickerInput.addEventListener('input', function() {
         validateCompareForm();
     });
+    tickerInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); runCompare(); }
+    });
+    applyCompareQueryParams();
     validateCompareForm();
 });
 
@@ -239,7 +274,16 @@ function runCompare() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticker: ticker, agent_ids: agentIds })
     })
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+        if (!r.ok) {
+            return r.json().then(function(err) {
+                throw new Error(err.detail || err.message || _t('compare-api-error'));
+            }).catch(function() {
+                throw new Error(_t('compare-api-error'));
+            });
+        }
+        return r.json();
+    })
     .then(function(data) {
         document.getElementById('compare-spinner').style.display = 'none';
         document.getElementById('compare-results-section').style.display = 'block';
@@ -325,12 +369,12 @@ function exportCompareJSON() {
 function exportCompareMD() {
     var data = window._lastCompareData;
     if (!data) return;
-    var md = '# ' + data.ticker + ' - 对比分析\n\n';
+    var md = '# ' + data.ticker + ' - ' + _t('compare-title') + '\n\n';
     (data.agents || []).forEach(function(a) {
         md += '## ' + (a.agent_name || a.agent_id) + '\n';
-        md += '- 信号: ' + signalLabel(a.signal) + '\n';
-        md += '- 评分: ' + (a.score || 0).toFixed(1) + '/10\n';
-        md += '- 分析: ' + (a.reasoning || '').substring(0, 200) + '\n\n';
+        md += '- ' + _t('compare-md-signal') + ': ' + signalLabel(a.signal) + '\n';
+        md += '- ' + _t('compare-md-score') + ': ' + (a.score || 0).toFixed(1) + '/10\n';
+        md += '- ' + _t('compare-md-analysis') + ': ' + (a.reasoning || '').substring(0, 200) + '\n\n';
     });
     var blob = new Blob([md], { type: 'text/markdown' });
     var url = URL.createObjectURL(blob);

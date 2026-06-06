@@ -57,13 +57,15 @@
 {% endblock %}
 {% block content %}
 
-<div class="flex items-center justify-between mb-16" style="flex-wrap:wrap; gap:12px;">
-    <div>
-        <h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="history-title">历史记录</h1>
-        <p class="text-muted" style="font-size:0.82rem;" data-i18n="history-desc">查看所有分析历史</p>
+<header class="page-header mb-16">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="history-title">历史记录</h1>
+        <p class="page-lead" data-i18n="history-desc">查看所有分析历史</p>
     </div>
-    <button type="button" class="btn btn-sm" onclick="clearAllHistory()" id="clear-btn" style="display:none;" data-i18n="history-clear">清除历史</button>
-</div>
+    <div class="page-actions">
+        <button type="button" class="btn btn-sm" onclick="clearAllHistory()" id="clear-btn" style="display:none;" data-i18n="history-clear">清除历史</button>
+    </div>
+</header>
 
 <div class="card">
     <div id="history-content">
@@ -82,6 +84,13 @@
             <div class="skeleton-table-row"><div class="skeleton"></div><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:50px"></div><div class="skeleton" style="width:40px"></div></div>
             <div class="skeleton-table-row"><div class="skeleton"></div><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:50px"></div><div class="skeleton" style="width:40px"></div></div>
             <div class="skeleton-table-row"><div class="skeleton"></div><div class="skeleton" style="width:60%"></div><div class="skeleton" style="width:50px"></div><div class="skeleton" style="width:40px"></div></div>
+        </div>
+        <div id="history-error" class="error-panel" style="display:none;" role="alert">
+            <div class="error-panel-title"><span class="error-panel-icon" aria-hidden="true">&#x26A0;</span><span data-i18n="history-error-title">加载失败</span></div>
+            <div class="error-panel-msg" id="history-error-msg"></div>
+            <div class="error-panel-retry">
+                <button type="button" class="btn btn-sm" onclick="loadHistory()" data-i18n="history-error-retry">重试</button>
+            </div>
         </div>
         <div class="md-table-wrap">
         <table class="history-table" id="history-table" style="display:none;">
@@ -118,7 +127,21 @@ var totalPages = 1;
 var perPage = 20;
 function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 
+function _historyLocale() {
+    return (typeof getCurrentLang === 'function' && getCurrentLang() === 'en') ? 'en-US' : 'zh-CN';
+}
+
+function formatHistoryDate(ts) {
+    if (!ts) return '--';
+    var d = new Date(ts);
+    var loc = _historyLocale();
+    return window.innerWidth <= 768
+        ? d.toLocaleDateString(loc, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : d.toLocaleString(loc);
+}
+
 function loadHistory() {
+    document.getElementById('history-error').style.display = 'none';
     fetch('/api/history?page=' + currentPage + '&per_page=' + perPage)
         .then(function(r) { return r.json(); })
         .then(function(data) {
@@ -143,7 +166,9 @@ function loadHistory() {
         })
         .catch(function(err) {
             document.getElementById('history-skeleton').style.display = 'none';
-            showToast('加载历史记录失败', 'error');
+            document.getElementById('history-error').style.display = 'block';
+            document.getElementById('history-error-msg').textContent = err.message || _t('history-load-failed');
+            showToast(_t('history-load-failed'), 'error');
         });
 }
 
@@ -183,24 +208,18 @@ function renderHistory(records) {
     records.forEach(function(rec) {
         var tr = document.createElement('tr');
         tr.setAttribute('data-id', rec.id);
-        var ts = '--';
-        if (rec.timestamp) {
-            var d = new Date(rec.timestamp);
-            ts = window.innerWidth <= 768
-                ? d.toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
-                : d.toLocaleString('zh-CN');
-        }
+        var ts = formatHistoryDate(rec.timestamp);
         tr.innerHTML = '<td class="col-date">' + ts + '</td>' +
-            '<td style="font-weight:600; color:var(--accent-orange);">' + rec.ticker + '</td>' +
+            '<td style="font-weight:600; color:var(--accent-orange);">' + escapeHtml(rec.ticker) + '</td>' +
             '<td><span class="signal-badge ' + signalBadgeClass(rec.signal) + '" style="font-size:0.7rem;">' + signalLabel(rec.signal) + '</span></td>' +
             '<td>' + (rec.score || 0).toFixed(1) + '/10</td>' +
-            '<td><button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); deleteRecord(\'' + rec.id + '\', this)">删除</button></td>';
-        tr.onclick = function() { toggleDetail(rec.id, tr); };
+            '<td><button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); deleteRecord(\'' + rec.id + '\', this)">' + escapeHtml(_t('history-delete-btn')) + '</button></td>';
+        tr.onclick = function() { toggleDetail(rec.id, tr, rec.ticker); };
         tbody.appendChild(tr);
     });
 }
 
-function toggleDetail(id, rowEl) {
+function toggleDetail(id, rowEl, tickerHint) {
     var existing = document.getElementById('detail-' + id);
     if (existing) {
         existing.remove();
@@ -225,11 +244,21 @@ function toggleDetail(id, rowEl) {
             td.style.background = 'var(--bg-secondary)';
 
             var agents = data.result.agents || [];
-            var html = '<div style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:8px;">共 ' + agents.length + ' 位投资大师分析结果</div>';
+            var ticker = data.ticker || tickerHint || '';
+            var html = '<div style="font-size:0.78rem; color:var(--text-secondary); margin-bottom:8px;">' +
+                escapeHtml(_t('history-detail-agents').replace('{n}', agents.length)) + '</div>';
+            html += '<div class="flex gap-8 mb-12" style="flex-wrap:wrap;">';
+            html += '<a href="/stocks?ticker=' + encodeURIComponent(ticker) + '&report=1" class="btn btn-sm btn-primary" style="text-decoration:none;">' +
+                escapeHtml(_t('history-view-report')) + '</a>';
+            html += '<a href="/compare?ticker=' + encodeURIComponent(ticker) + '" class="btn btn-sm btn-ghost" style="text-decoration:none;">' +
+                escapeHtml(_t('history-empty-compare')) + '</a>';
+            html += '<a href="/debate?ticker=' + encodeURIComponent(ticker) + '" class="btn btn-sm btn-ghost" style="text-decoration:none;">' +
+                escapeHtml(_t('history-debate-link')) + '</a>';
+            html += '</div>';
             html += '<div class="detail-agents">';
             agents.forEach(function(a) {
                 html += '<div class="detail-agent-card">' +
-                    '<div style="font-weight:600;">' + (a.agent_name || a.agent_id) + '</div>' +
+                    '<div style="font-weight:600;">' + escapeHtml(a.agent_name || a.agent_id) + '</div>' +
                     '<div><span class="signal-badge ' + signalBadgeClass(a.signal) + '" style="font-size:0.65rem;">' + signalLabel(a.signal) + '</span> ' + (a.score||0).toFixed(1) + '/10</div>' +
                     '</div>';
             });
@@ -241,24 +270,24 @@ function toggleDetail(id, rowEl) {
 }
 
 function deleteRecord(id, btn) {
-    if (!confirm('确认删除此记录?')) return;
+    if (!confirm(_t('history-delete-confirm'))) return;
     fetch('/api/history/' + id, { method: 'DELETE' })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.status === 'ok') {
-                showToast('已删除');
+                showToast(_t('history-deleted'));
                 loadHistory();
             }
         });
 }
 
 function clearAllHistory() {
-    if (!confirm('确认清除所有历史记录?')) return;
+    if (!confirm(_t('history-clear-confirm'))) return;
     fetch('/api/history', { method: 'DELETE' })
         .then(function(r) { return r.json(); })
         .then(function(data) {
             if (data.status === 'ok') {
-                showToast('历史记录已清除');
+                showToast(_t('history-cleared'));
                 loadHistory();
             }
         });

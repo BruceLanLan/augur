@@ -19,6 +19,7 @@ try:
     from fastapi import FastAPI, HTTPException, Request
     from fastapi.responses import JSONResponse
     from fastapi.middleware.cors import CORSMiddleware
+    from starlette.exceptions import HTTPException as StarletteHTTPException
 except ImportError:
     raise ImportError("fastapi is required: pip install fastapi uvicorn")
 
@@ -29,7 +30,7 @@ _TICKER_PATTERN = re.compile(r'^[A-Za-z0-9.\-:]{1,15}$')
 
 from augur.registry import AgentRegistry, DecisionCoordinator
 from augur.personas.base import MarketContext
-from augur.errors import api_error_response
+from augur.errors import HTTP_ERROR_ENVELOPE, api_error_response
 
 app = FastAPI(
     title="Augur API",
@@ -45,14 +46,38 @@ async def global_exception_handler(request, exc: Exception):
     logger = logging.getLogger("augur.api")
     logger.error(f"Unhandled exception on {request.url.path}: {type(exc).__name__}: {exc}")
 
+    code, suggestion = HTTP_ERROR_ENVELOPE[500]
     return JSONResponse(
         status_code=500,
         content=api_error_response(
             detail="Internal server error",
-            code="INTERNAL_ERROR",
+            code=code,
+            suggestion=suggestion,
             path=request.url.path,
         ),
     )
+
+
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Return the standard JSON error envelope for HTTP errors."""
+    code, suggestion = HTTP_ERROR_ENVELOPE.get(
+        exc.status_code,
+        (f"HTTP_{exc.status_code}", "Check the request and try again."),
+    )
+    detail_text = str(exc.detail) if exc.detail else (
+        "Not found" if exc.status_code == 404 else f"HTTP {exc.status_code}"
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=api_error_response(
+            detail=detail_text,
+            code=code,
+            suggestion=suggestion,
+            path=request.url.path,
+        ),
+    )
+
 
 # CORS: restrict to a configurable allowlist to prevent any-origin access
 # in deployments with auth. Set AUGUR_CORS_ALLOW_ORIGINS to a comma-separated
@@ -84,11 +109,13 @@ async def api_auth_middleware(request: Request, call_next):
         if auth_required():
             ok, _mode = authenticate_request(request)
             if not ok:
+                code, suggestion = HTTP_ERROR_ENVELOPE[401]
                 return JSONResponse(
                     status_code=401,
                     content=api_error_response(
                         detail="Authentication required",
-                        code="AUTH_REQUIRED",
+                        code=code,
+                        suggestion=suggestion,
                         path=request.url.path,
                     ),
                 )

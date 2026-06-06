@@ -122,8 +122,12 @@
 {% endblock %}
 {% block content %}
 
-<h1 style="color:var(--accent-orange); margin-bottom:4px; font-size:1.35rem;" data-i18n="portfolio-title">持仓管理</h1>
-<p class="text-muted mb-16" style="font-size:0.82rem;" data-i18n="portfolio-desc">跟踪您的投资组合，实时盈亏计算与 Augur 大师分析</p>
+<header class="page-header mb-16">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="portfolio-title">持仓管理</h1>
+        <p class="page-lead" data-i18n="portfolio-desc">跟踪您的投资组合，实时盈亏计算与 Augur 大师分析</p>
+    </div>
+</header>
 
 <!-- Add Holding Form -->
 <div class="card mb-24">
@@ -135,12 +139,13 @@
             <input id="pf-price" type="number" class="form-input" data-i18n="portfolio-price-ph" placeholder="买入价" step="0.01" min="0">
             <label for="pf-qty" class="sr-only" data-i18n="portfolio-qty-ph">数量</label>
             <input id="pf-qty" type="number" class="form-input" data-i18n="portfolio-qty-ph" placeholder="数量" step="1" min="1">
-            <label for="pf-date" class="sr-only">Buy date</label>
+            <label for="pf-date" class="sr-only" data-i18n="portfolio-date-label">买入日期</label>
             <input id="pf-date" type="date" class="form-input" style="width:140px;">
             <button type="button" class="btn btn-primary" onclick="addHolding()" data-i18n="portfolio-add">添加</button>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="importFromWatchlist()" id="pf-import-btn" data-i18n="portfolio-import-btn">导入</button>
         </div>
         <div class="flex gap-8">
-            <button type="button" class="btn btn-sm" onclick="runAugurAnalysis()" id="pf-analyze-btn">&#x1F9E0; <span data-i18n="portfolio-analyze">Augur 分析</span></button>
+            <button type="button" class="btn btn-sm" onclick="runAugurAnalysis()" id="pf-analyze-btn" aria-busy="false">&#x1F9E0; <span data-i18n="portfolio-analyze">Augur 分析</span></button>
             <button type="button" class="btn btn-sm btn-ghost" onclick="clearPortfolio()" data-i18n="portfolio-clear">清空</button>
         </div>
     </div>
@@ -194,7 +199,7 @@
     <p class="empty-state-desc" data-i18n="portfolio-empty-desc">在上方输入股票代码、买入价和数量来添加持仓</p>
     <div class="empty-state-action">
         <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('pf-ticker').focus()" data-i18n="portfolio-empty-cta">添加第一笔持仓</button>
-        <a href="/watchlist" class="btn btn-sm btn-ghost" style="text-decoration:none;" data-i18n="portfolio-empty-watchlist">从自选股导入</a>
+        <a href="/watchlist?to=portfolio" class="btn btn-sm btn-ghost" style="text-decoration:none;" data-i18n="portfolio-empty-watchlist">从自选股导入</a>
     </div>
 </div>
 
@@ -212,7 +217,7 @@
 
 <!-- Augur Analysis Results -->
 <div id="pf-analysis-results" style="display:none;" class="card mb-24">
-    <div class="section-title" style="margin-bottom:12px; border-bottom:none; padding-bottom:0;" data-i18n="portfolio-analysis-title">Augur 大师评分</div>
+    <div class="section-title spaced" data-i18n="portfolio-analysis-title">Augur 大师评分</div>
     <div id="pf-analysis-content"></div>
 </div>
 
@@ -220,8 +225,37 @@
 {% block extra_scripts %}
 <script>
 var PF_KEY = 'augur-portfolio';
+var WL_KEY = 'augur-watchlist';
 var sortState = { col: '', asc: true };
 function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
+
+function getWatchlist() {
+    try { return JSON.parse(localStorage.getItem(WL_KEY)) || []; }
+    catch(e) { return []; }
+}
+
+function importFromWatchlist() {
+    var wl = getWatchlist();
+    if (!wl.length) { showToast(_t('portfolio-import-empty'), 'warning'); return; }
+    var list = getPortfolio();
+    var existing = {};
+    list.forEach(function(h) { existing[h.ticker] = true; });
+    var added = 0;
+    var today = new Date().toISOString().slice(0, 10);
+    wl.forEach(function(item) {
+        var ticker = (item.ticker || '').toUpperCase();
+        if (!ticker || existing[ticker]) return;
+        var price = item.price && item.price > 0 ? item.price : 0;
+        list.push({ ticker: ticker, buyPrice: price, qty: 1, buyDate: today, currentPrice: price || 0, score: null, addedAt: Date.now() });
+        existing[ticker] = true;
+        added++;
+        if (!price) fetchCurrentPrice(ticker);
+    });
+    if (!added) { showToast(_t('portfolio-import-empty'), 'warning'); return; }
+    savePortfolio(list);
+    renderPortfolio();
+    showToast(_t('portfolio-import-done').replace('{n}', added));
+}
 
 function getPortfolio() {
     try { return JSON.parse(localStorage.getItem(PF_KEY)) || []; }
@@ -370,7 +404,7 @@ function renderPortfolio() {
                 '<td class="' + pnlClass + '">' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(2) + '%</td>' +
                 '<td>' + days + '</td>' +
                 '<td>' + scoreHtml + '</td>' +
-                '<td><button class="holding-remove" onclick="removeHolding(' + idx + ')" title="删除">&times;</button></td>' +
+                '<td><button class="holding-remove" onclick="removeHolding(' + idx + ')" title="' + escapeHtml(_t('portfolio-remove-holding')) + '" aria-label="' + escapeHtml(_t('portfolio-remove-holding')) + '">&times;</button></td>' +
                 '</tr>'
         };
     });
@@ -549,6 +583,7 @@ function runAugurAnalysis() {
     var btn = document.getElementById('pf-analyze-btn');
     if (btn) {
         btn.disabled = true;
+        btn.setAttribute('aria-busy', 'true');
         var span = btn.querySelector('span');
         if (span) span.textContent = _t('btn-analyzing');
     }
@@ -576,7 +611,11 @@ function runAugurAnalysis() {
 
 function onAnalysisDone(results) {
     var btn = document.getElementById('pf-analyze-btn');
-    if (btn) { btn.disabled = false; btn.innerHTML = '&#x1F9E0; <span data-i18n="portfolio-analyze">' + _t('portfolio-analyze') + '</span>'; }
+    if (btn) {
+        btn.disabled = false;
+        btn.setAttribute('aria-busy', 'false');
+        btn.innerHTML = '&#x1F9E0; <span data-i18n="portfolio-analyze">' + _t('portfolio-analyze') + '</span>';
+    }
     hideProgress();
 
     // Update scores in portfolio
@@ -619,12 +658,25 @@ function onAnalysisDone(results) {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
-    // Set default date to today
     var dateInput = document.getElementById('pf-date');
     if (dateInput) dateInput.value = new Date().toISOString().slice(0, 10);
     renderPortfolio();
-    // Auto-fetch prices on load
     setTimeout(fetchAllPrices, 500);
+
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('import') === 'watchlist') {
+        importFromWatchlist();
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({}, '', window.location.pathname);
+        }
+    }
+
+    ['pf-ticker', 'pf-price', 'pf-qty'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); addHolding(); }
+        });
+    });
 });
 </script>
 {% endblock %}

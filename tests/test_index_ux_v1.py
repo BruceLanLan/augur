@@ -179,3 +179,78 @@ class TestCtrlEnterHeroSubmit:
         text = _read("base.html")
         assert "hero-analyze-btn" in text
         assert "heroBtn.click()" in text
+
+
+class TestMacroI18n:
+    """Macro snapshot and fear/greed panels must use _t() keys, not hardcoded copy."""
+
+    def test_macro_commentary_helper(self, index_text):
+        assert "_macroCommentary" in index_text
+
+    def test_fear_greed_uses_i18n_labels(self, index_text):
+        assert "_fgLabel" in index_text
+
+    def test_macro_grid_has_i18n_aria(self, index_soup):
+        grid = index_soup.find(id="macro-snapshot-grid")
+        assert grid is not None
+        assert grid.get("data-i18n-aria") == "a11y-macro-snapshot"
+
+    def test_fear_greed_has_i18n_aria(self, index_soup):
+        card = index_soup.find(id="fear-greed-card")
+        assert card is not None
+        assert card.get("data-i18n-aria") == "a11y-fear-greed"
+
+    def test_refresh_hook_on_lang_switch(self, index_text):
+        assert "_refreshIndexDynamicI18n" in index_text
+
+
+class TestPersonaChips:
+    """Featured persona quick chips guide first-time users to persona + AAPL demo."""
+
+    def test_persona_chips_present(self, index_soup):
+        chips = index_soup.select(".persona-chips .persona-chip")
+        assert len(chips) >= 3
+
+    def test_persona_chips_call_try_persona(self, index_soup):
+        for chip in index_soup.select(".persona-chips .persona-chip"):
+            assert "tryPersona(" in (chip.get("onclick") or "")
+
+    def test_view_all_personas_i18n(self, index_soup):
+        link = index_soup.find("a", href="/personas")
+        assert link is not None
+        assert link.get("data-i18n") == "btn-view-all-personas"
+
+    def test_featured_style_has_persona_id(self, index_text):
+        assert 'data-persona-style-id="{{ p.id }}"' in index_text
+        assert 'data-persona-tag-id="{{ p.id }}"' in index_text
+
+    def test_featured_rows_prefill_aapl(self, index_soup):
+        row = index_soup.select(".m-row")[0]
+        assert "ticker=AAPL" in (row.get("onclick") or "")
+
+
+class TestIndexPerfDeferrals:
+    """Below-fold panels and sparklines must defer to keep first paint fast."""
+
+    def test_deferred_panel_loading(self, index_text):
+        assert "_deferIndexLoad" in index_text
+
+    def test_sparkline_concurrency_limit(self, index_text):
+        assert "_SPARKLINE_MAX" in index_text
+        assert "_drainSparklineQueue" in index_text
+
+
+class TestFirstTimeLeaderboardEmpty:
+    """Dynamic leaderboard empty state must keep AAPL quick-start chip."""
+
+    def test_render_leaderboard_empty_has_aapl_chip(self, index_text):
+        m = re.search(r"function renderLeaderboard\(\)\s*\{(.+?)\n\}", index_text, re.DOTALL)
+        assert m, "renderLeaderboard() not found"
+        assert "chip-recommended" in m.group(1)
+        assert "tryExample('AAPL')" in m.group(1) or "tryExample(\\'AAPL\\')" in m.group(1)
+
+    def test_try_persona_dismisses_onboard(self, index_text):
+        m = re.search(r"function tryPersona\(personaId\)\s*\{(.+?)\n\}", index_text, re.DOTALL)
+        assert m
+        assert "dismissOnboard()" in m.group(1)
+        assert "ticker=AAPL" in m.group(1)
