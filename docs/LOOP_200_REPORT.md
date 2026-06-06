@@ -19,7 +19,7 @@
 - 全局 i18n 键 parity、fetch/WebSocket 鉴权拦截器、移动端触控与 reduced-motion 支持
 - Agent 10 补齐跨页 progress/copy i18n 与全局 `_t()` 导出
 
-**版本：** 分支基于 v8.2.0（`3719171` 及之前 14 轮 hardening 提交），本轮新增未 push 的 loop-200 补丁提交。
+**版本：** 已并入 `main`（v8.2.1，`42e6c98`）。后续 Loop 400 续作见 [`LOOP_400_REPORT.md`](LOOP_400_REPORT.md)。
 
 ---
 

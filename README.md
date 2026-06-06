@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/images/zh/hero-banner.png" alt="Augur" width="100%"/>
+<img src="docs/images/zh/hero-banner.png" alt="Augur v8.2.1 — CSS Grid 侧栏布局、统一页头 chrome、18 位大师共识仪表盘" width="100%"/>
 
 # 🦉 Augur
 
@@ -11,6 +11,7 @@
 *18位投资大师，同时分析，一次共识*
 
 [![v8.2.1](https://img.shields.io/badge/v8.2.1-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![1362 Tests](https://img.shields.io/badge/Tests-1362%20passed-success?style=for-the-badge)](docs/LOOP_200_REPORT.md)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -32,7 +33,7 @@
 ## 一次分析，18个视角
 
 <p align="center">
-  <img src="docs/images/screenshots/report-hd2d.png" alt="NVDA 深度分析报告 — HD-2D 风格委员会" width="100%"/>
+  <img src="docs/images/screenshots/report-hd2d.png" alt="NVDA 深度分析报告 — v8.2.1 报告对比度修复，浅色羊皮纸可读" width="100%"/>
 </p>
 
 > **全新 HD-2D 视觉系统**：在彭博终端的数据密度中，融合了 JRPG 的「Gilt-Edged」羊皮纸叙事美学。
@@ -188,10 +189,10 @@ python3 -m dashboard.app --port 8000
 ```
 
 <p align="center">
-  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard — Bloomberg Terminal 风格结合 HD-2D 美学" width="100%"/>
+  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard v8.2.1 — Grid 侧栏零间隙、AAPL 引导与全球行情面板" width="100%"/>
 </p>
 
-**17 个页面**，覆盖完整投资分析流程：
+**17 个页面**（仪表盘 / 股票 / 信号 / 扫描 / 自选股 / 持仓 / 回测 / AI 对话 / 优化 / 对决 / 辩论 / 历史 / 排行 / 人格 / 创建 / 设置 / 登录），覆盖完整投资分析流程：
 
 | 分组 | 页面 | 功能亮点 |
 |------|------|---------|
@@ -419,7 +420,15 @@ Kelly 只在 BULLISH 且评分 > 5 时给出非零建议。
 - **UX 改进**：全局 `_t()` 导出、progress/copy i18n 键、五页空状态统一、44px 触控目标、移动端表格横向滚动提示、首页 AAPL 引导与 partial 错误透传。
 - **鉴权整合**：Dashboard fetch/WebSocket 自动携带 `AUGUR_API_TOKEN`；`/ws/prices?token=` 服务端校验；`GET /api/auth/config` 配置发现。
 - **后端加固**：价格序列 NaN/Inf 清洗、共识平局 → NEUTRAL、coverage confidence 归一化、persona YAML 权重类型校验。
-- **测试**：**1362** 项全绿（v8.2.0 约 1177）。详见 `docs/LOOP_200_REPORT.md`。
+- **测试**：**1362** 项全绿（v8.2.0 约 1177）。详见 [`docs/LOOP_200_REPORT.md`](docs/LOOP_200_REPORT.md)。
+</details>
+
+<details>
+<summary><strong>Loop 400 审查（进行中，未并入 main）</strong></summary>
+
+- 基于 Loop 200 backlog 的第二轮 200 轮审查；Agent 1/3/5/7/8/9 已在本地完成，Finalizer 未收尾。
+- 待恢复：page-title 统一 chrome、backtest 全面 i18n、portfolio↔watchlist 集成、API error envelope 等（见 `git stash`）。
+- 状态报告：[`docs/LOOP_400_REPORT.md`](docs/LOOP_400_REPORT.md)。
 </details>
 
 <details>

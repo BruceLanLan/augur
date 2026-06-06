@@ -18,7 +18,8 @@ Loop 200 review patch. 200-round multi-agent code review + UX walkthrough on top
 
 ### Notes
 - Tests: **1362 passed** (up from ~1177 in v8.2.0).
-- See `docs/LOOP_200_REPORT.md` for full review notes and backlog.
+- Review reports: [`docs/LOOP_200_REPORT.md`](docs/LOOP_200_REPORT.md) (complete) · [`docs/LOOP_400_REPORT.md`](docs/LOOP_400_REPORT.md) (partial — stash recovery pending).
+- README screenshots refreshed for v8.2.1 grid layout and report contrast (see `scripts/capture_readme_screenshots.py`).
 
 ## [8.2.0] - 2026-06-06
 

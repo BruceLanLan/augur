@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/images/en/hero-banner.png" alt="Augur" width="100%"/>
+<img src="docs/images/en/hero-banner.png" alt="Augur v8.2.1 — CSS Grid sidebar, unified page-title chrome, 18-master consensus dashboard" width="100%"/>
 
 # 🦉 Augur
 
@@ -11,6 +11,7 @@
 *18 legendary investors. One consensus. Every time.*
 
 [![v8.2.1](https://img.shields.io/badge/v8.2.1-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![1362 Tests](https://img.shields.io/badge/Tests-1362%20passed-success?style=for-the-badge)](docs/LOOP_200_REPORT.md)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -27,7 +28,7 @@
 ## One analysis. 18 perspectives.
 
 <p align="center">
-  <img src="docs/images/screenshots/report-hd2d.png" alt="NVDA deep analysis — HD-2D Style Council" width="100%"/>
+  <img src="docs/images/screenshots/report-hd2d.png" alt="NVDA deep analysis — v8.2.1 report contrast fix, readable light-mode parchment" width="100%"/>
 </p>
 
 > **All-New HD-2D Visual System**: Fusing the data density of a Bloomberg Terminal with the "Gilt-Edged" parchment aesthetic of a classic JRPG.
@@ -270,7 +271,7 @@ v8 upgrades Augur from an analysis tool to an **intelligent investment platform*
 python3 -m dashboard.app --port 8000
 ```
 
-**17 pages** covering the complete investment analysis workflow:
+**17 pages** (Dashboard / Stocks / Signals / Scanner / Watchlist / Portfolio / Backtest / AI Chat / Optimizer / Compare / Debate / History / Leaderboard / Personas / Create / Settings / Login) covering the complete investment analysis workflow:
 
 | Group | Page | Highlights |
 |-------|------|-----------|
@@ -292,7 +293,7 @@ python3 -m dashboard.app --port 8000
 | **System** | Settings | Per-master parameter configuration |
 
 <p align="center">
-  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard — Bloomberg Terminal style meets HD-2D aesthetics" width="100%"/>
+  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard v8.2.1 — zero-gap grid sidebar, AAPL onboarding, global markets panel" width="100%"/>
 </p>
 
 ---
@@ -531,7 +532,15 @@ Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUT
 - **UX improvements:** Global `window._t()` export, progress/copy i18n keys, consistent empty states across five pages, 44px touch targets, mobile table scroll hints, index AAPL onboarding, partial `data_error` surfacing.
 - **Auth integration:** Dashboard fetch/WebSocket auto-attach `AUGUR_API_TOKEN`; `/ws/prices?token=` server validation; `GET /api/auth/config` discovery endpoint.
 - **Backend hardening:** Price-series NaN/Inf sanitization, consensus tie → `NEUTRAL`, coverage-confidence normalization, persona YAML weight type checks.
-- **Tests:** **1362** passing (up from ~1177 in v8.2.0). See `docs/LOOP_200_REPORT.md` for full review notes.
+- **Tests:** **1362** passing (up from ~1177 in v8.2.0). See [`docs/LOOP_200_REPORT.md`](docs/LOOP_200_REPORT.md).
+</details>
+
+<details>
+<summary><strong>Loop 400 review (in progress, not merged to main)</strong></summary>
+
+- Second 200-round pass on Loop 200 backlog; Agents 1/3/5/7/8/9 finished locally, Finalizer did not complete.
+- Pending recovery from `git stash`: unified page-title chrome, full backtest i18n, portfolio↔watchlist flows, API error envelopes.
+- Status report: [`docs/LOOP_400_REPORT.md`](docs/LOOP_400_REPORT.md).
 </details>
 
 <details>
