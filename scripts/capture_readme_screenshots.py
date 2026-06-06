@@ -11,6 +11,21 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "images"
 BASE = "http://127.0.0.1:8000"
 
+# v8.2.0 README owl covers (召唤猫头鹰 pixel art) — hand-maintained; never auto-capture.
+_PROTECTED_HERO_BANNERS = frozenset(
+    {
+        (OUT / "zh" / "hero-banner.png").resolve(),
+        (OUT / "en" / "hero-banner.png").resolve(),
+    }
+)
+
+
+def _reject_protected_png(dest: Path) -> None:
+    if dest.resolve() in _PROTECTED_HERO_BANNERS:
+        raise RuntimeError(
+            f"Refusing to overwrite README hero banner: {dest.relative_to(ROOT)}"
+        )
+
 
 async def switch_lang(page, lang: str) -> None:
     await page.evaluate(
@@ -41,6 +56,7 @@ async def capture_svg_png(browser, svg_rel: str, dest_rel: str, width: int, heig
     page = await browser.new_page(viewport={"width": width, "height": height})
     await page.goto(svg_path.as_uri(), wait_until="load")
     dest = OUT / dest_rel
+    _reject_protected_png(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)
     await page.screenshot(path=str(dest), type="png")
     print(f"wrote {dest} ({dest.stat().st_size // 1024} KB)")
@@ -57,17 +73,17 @@ async def main() -> None:
         await wait_stocks_analysis(page)
 
         dest = OUT / "screenshots/report-hd2d.png"
+        _reject_protected_png(dest)
         dest.parent.mkdir(parents=True, exist_ok=True)
         await page.screenshot(path=str(dest), type="png")
         print(f"wrote {dest} ({dest.stat().st_size // 1024} KB)")
 
         dest = OUT / "screenshots/04-bullish-critical.png"
+        _reject_protected_png(dest)
         await page.locator(".debate").first.screenshot(path=str(dest), type="png")
         print(f"wrote {dest} ({dest.stat().st_size // 1024} KB)")
         await page.close()
 
-        # README cover art (召唤猫头鹰 HD-2D hero) — hand-maintained; do not auto-capture.
-        # Paths: docs/images/zh/hero-banner.png, docs/images/en/hero-banner.png
         simple_shots = [
             ("screenshots/dashboard-hd2d.png", f"{BASE}/", {"width": 1280, "height": 800}, None),
             ("screenshots/personas-hd2d.png", f"{BASE}/personas", {"width": 1280, "height": 800}, None),
@@ -81,6 +97,7 @@ async def main() -> None:
             if lang:
                 await switch_lang(page, lang)
             dest = OUT / rel
+            _reject_protected_png(dest)
             dest.parent.mkdir(parents=True, exist_ok=True)
             await page.screenshot(path=str(dest), type="png")
             print(f"wrote {dest} ({dest.stat().st_size // 1024} KB)")
