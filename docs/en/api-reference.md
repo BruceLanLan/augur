@@ -1152,12 +1152,28 @@ Two optional auth modes can be enabled independently or together:
 | Multi-user JWT | `AUGUR_MULTI_USER=1` | JWT from `POST /api/auth/login` |
 
 When either mode is active, all `/api/*` endpoints require `Authorization: Bearer <token>` except:
+- `GET /api/auth/config`
 - `GET /api/auth/verify`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
 - `GET /health`, `GET /api/health`
 
 Either credential satisfies auth when both modes are enabled.
+
+**Dashboard:** save the token under Settings → API Token (`localStorage.augur_api_token`) or sign in at `/login` (`localStorage.augur-token`). All `fetch('/api/...')` calls and `/ws/prices` auto-attach the credential.
+
+**CLI (`augur api`):** the lightweight REST server in `src/augur/api.py` honors the same env vars; pass `-H "Authorization: Bearer $AUGUR_API_TOKEN"` to `curl`.
+
+**MCP (`augur mcp-server`):** stdio tools run locally and do **not** read `AUGUR_API_TOKEN`. Missing `FINNHUB_API_KEY` / `ALPHAVANTAGE_API_KEY` only affects optional premium data — yfinance remains the default.
+
+### GET /api/auth/config
+
+Public endpoint (no auth). Tells clients whether credentials are required.
+
+**Response / 响应:**
+```json
+{"status": "ok", "auth_required": true, "multi_user": false, "api_token": true, "modes": ["token"]}
+```
 
 ### GET /api/auth/verify
 
