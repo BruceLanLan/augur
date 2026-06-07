@@ -193,7 +193,7 @@ Auto-fetching data for NVDA from yfinance...
 
 ---
 
-## 🆕 What's New in v8.1.0
+## 🆕 v8.2 Highlights
 
 v8 upgrades Augur from an analysis tool to an **intelligent investment platform** with 10 new modules.
 
@@ -244,12 +244,29 @@ v8 upgrades Augur from an analysis tool to an **intelligent investment platform*
 </td>
 <td width="50%">
 
-**v8.1 real data**
+**AI Chat + Live Data Card** — pick a master, just ask
+
+<img src="docs/images/screenshots/chat-data-card.png" alt="AI Chat — live market card (price / change / consensus signal) + persona voice replies" width="100%"/>
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Markowitz Efficient Frontier** — auto-optimize your portfolio
+
+<img src="docs/images/screenshots/optimizer-frontier.png" alt="Portfolio Optimizer — Markowitz efficient frontier chart with gold star optimal portfolio" width="100%"/>
+
+</td>
+<td width="50%">
+
+**Real data throughout**
 
 - 📡 Streaming: yfinance live prices
 - 😊 Sentiment: StockTwits real API
 - 📊 Optimizer: real 3-month returns
 - 🧠 Learning: auto-records predictions + outcomes
+- 🔔 Rules → Telegram / Slack / WeChat / Lark alerts
 
 </td>
 </tr>
@@ -302,11 +319,11 @@ python3 -m dashboard.app --port 8000
 ## 🔌 Deploy Anywhere
 
 <p align="center">
-  <img src="docs/images/en/architecture.png" alt="Augur Architecture" width="100%"/>
+  <img src="docs/images/en/consensus-flow.png" alt="Augur consensus flow — data collection → 18 independent scores → weighted fusion → buy/sell signal" width="100%"/>
 </p>
 
 <p align="center">
-  <img src="docs/images/en/consensus-flow.png" alt="Consensus Decision Flow" width="100%"/>
+  <img src="docs/images/en/architecture.png" alt="Augur system architecture — access layer / data layer / agents / consensus engine / output layer" width="100%"/>
 </p>
 
 ### Claude Desktop / Hermes (MCP)

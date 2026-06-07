@@ -216,7 +216,7 @@ python3 -m dashboard.app --port 8000
 
 ---
 
-## 🆕 v8 新功能
+## 🆕 v8.2 功能亮点
 
 <table>
 <tr>
@@ -245,12 +245,29 @@ python3 -m dashboard.app --port 8000
 </td>
 <td width="50%">
 
-**v8.1 真实数据**
+**AI 对话 + 实时数据卡片** — 选个大师，问就完了
+
+<img src="docs/images/screenshots/chat-data-card.png" alt="AI 对话页 — 实时行情卡片（价格/涨跌/共识信号）+ 大师独特语气回复" width="100%"/>
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+**Markowitz 有效前沿** — 组合自动最优化
+
+<img src="docs/images/screenshots/optimizer-frontier.png" alt="Portfolio Optimizer — Markowitz 有效前沿图，金色星标最优组合" width="100%"/>
+
+</td>
+<td width="50%">
+
+**真实数据底层**
 
 - 📡 Streaming 接 yfinance 实时报价
 - 😊 Sentiment 接 StockTwits 真实 API
 - 📊 Optimizer 用真实 3 月历史收益率
 - 🧠 Learning 自动记录预测 + 补录结果
+- 🔔 Rules 引擎 → Telegram / Slack / 微信 / Lark 推送
 
 </td>
 </tr>
@@ -261,7 +278,11 @@ python3 -m dashboard.app --port 8000
 ## 🔌 多平台部署
 
 <p align="center">
-  <img src="docs/images/zh/architecture.png" alt="Augur 系统架构" width="100%"/>
+  <img src="docs/images/zh/consensus-flow.png" alt="Augur 共识决策流程 — 数据采集 → 18位独立分析 → 加权融合 → 买卖信号" width="100%"/>
+</p>
+
+<p align="center">
+  <img src="docs/images/zh/architecture.png" alt="Augur 系统架构 — 接入层 / 数据层 / 智能体层 / 共识引擎 / 输出层" width="100%"/>
 </p>
 
 ### Claude Desktop / Hermes（MCP）
