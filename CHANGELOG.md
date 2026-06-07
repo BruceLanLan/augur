@@ -2,6 +2,27 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [8.2.3] - 2026-06-07
+
+Chat 数据卡片、UI inline style 清理、Scanner 边界加固、后端线程安全。
+
+### Added
+- **Chat 数据卡片**：对话页顶部嵌入实时行情卡片（价格、涨跌幅、Augur 共识信号+评分），60 秒自动刷新；分析结果 localStorage 缓存 10 分钟；任何 fetch 失败均静默隐藏。
+
+### Fixed
+- **Scanner 边界加固**：大小写不敏感去重（AAPL+aapl→1条）；单个 ticker 失败不影响整批扫描，失败列表记录在 `response.errors[]`。
+- **后端线程安全**：`get_registry()`/`get_coordinator()` 双检锁（double-checked locking）；自定义 persona CRUD 操作包裹 `_singleton_init_lock`；`history.py` 改为 tmp+`os.replace()` 原子写，加 `_write_lock`。
+
+### Changed
+- **UI inline style 清理（MEDIUM 优先级）**：
+  - `backtest.html`：30+ 处 inline style → `.backtest-form-row`/`.form-error-hint`/banner 类。
+  - `create_persona.html`：`.cp-label`/`.required-star` 替代 verbose inline 标签样式。
+  - `chat.html`：`.oracle-section-title`/`.oracle-welcome` 替代 inline h3/p 样式。
+  - `history.html`：`.ticker-cell` 替代 JS 动态注入的 inline style。
+
+### Notes
+- Tests: **1652 passed**（排除网络测试）。
+
 ## [8.2.2] - 2026-06-07
 
 全面整合 Loop 400 遗留代码、Optimizer 可视化、UI/UX 修复、Rules→Bot 打通。

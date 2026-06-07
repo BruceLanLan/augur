@@ -10,8 +10,8 @@
 
 *18 legendary investors. One consensus. Every time.*
 
-[![v8.2.2](https://img.shields.io/badge/v8.2.2-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
-[![1657 Tests](https://img.shields.io/badge/Tests-1657%20passed-success?style=for-the-badge)](CHANGELOG.md)
+[![v8.2.3](https://img.shields.io/badge/v8.2.3-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![1652 Tests](https://img.shields.io/badge/Tests-1652%20passed-success?style=for-the-badge)](CHANGELOG.md)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18-investor-personas)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -525,7 +525,17 @@ Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUT
 ## 📝 Changelog
 
 <details>
-<summary><strong>v8.2.2 — Optimizer frontier chart / Rules→Bot / UI contrast fixes (current)</strong></summary>
+<summary><strong>v8.2.3 — Chat data cards / UI cleanup / Scanner hardening / Thread-safety (current)</strong></summary>
+
+- **Chat data cards**: Real-time stock card embedded in chat (price, change, consensus signal), 60s refresh, 10-min localStorage cache.
+- **UI cleanup**: inline styles in backtest/create_persona/chat/history extracted to CSS classes.
+- **Scanner hardening**: case-insensitive dedup, per-ticker failure isolation, errors[] field.
+- **Thread-safety**: double-checked locking for singletons, atomic history writes (tmp+os.replace).
+- **Tests:** **1652** passing.
+</details>
+
+<details>
+<summary><strong>v8.2.2 — Optimizer frontier chart / Rules→Bot / UI contrast fixes</strong></summary>
 
 - **Optimizer efficient frontier:** New Chart.js scatter+line chart on the optimizer page — shows the Markowitz efficient frontier curve, optimal portfolio (gold star), and individual asset positions.
 - **Rules→Bot integration:** Analysis and watchlist scan results now automatically trigger alert rules and push notifications to Telegram / Slack / WeChat / Lark.

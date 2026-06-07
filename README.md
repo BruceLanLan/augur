@@ -10,8 +10,8 @@
 
 *18位投资大师，同时分析，一次共识*
 
-[![v8.2.2](https://img.shields.io/badge/v8.2.2-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
-[![1657 Tests](https://img.shields.io/badge/Tests-1657%20passed-success?style=for-the-badge)](CHANGELOG.md)
+[![v8.2.3](https://img.shields.io/badge/v8.2.3-Latest-00d4aa?style=for-the-badge)](https://github.com/BruceLanLan/augur)
+[![1652 Tests](https://img.shields.io/badge/Tests-1652%20passed-success?style=for-the-badge)](CHANGELOG.md)
 [![18 Masters](https://img.shields.io/badge/18-Investment%20Masters-brightgreen?style=for-the-badge)](#-18位投资大师)
 [![Python 3.8+](https://img.shields.io/badge/Python-3.8+-3776ab?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude%20%2F%20Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -413,7 +413,17 @@ Kelly 只在 BULLISH 且评分 > 5 时给出非零建议。
 ## 📝 版本日志
 
 <details>
-<summary><strong>v8.2.2 — Optimizer 有效前沿图 / Rules→Bot 打通 / UI 对比度修复 (current)</strong></summary>
+<summary><strong>v8.2.3 — Chat 数据卡片 / UI 清理 / Scanner 加固 / 线程安全 (current)</strong></summary>
+
+- **Chat 数据卡片**：对话页嵌入实时行情卡（价格/涨跌/共识信号），60s 刷新，LocalStorage 缓存 10 分钟。
+- **UI 清理**：backtest/create_persona/chat/history 的 inline style 全部提取为 CSS 类。
+- **Scanner 加固**：大小写去重、单 ticker 失败隔离、errors[] 字段。
+- **线程安全**：单例双检锁、history.py 原子写（tmp+os.replace）。
+- **测试**：**1652** 项通过。
+</details>
+
+<details>
+<summary><strong>v8.2.2 — Optimizer 有效前沿图 / Rules→Bot 打通 / UI 对比度修复</strong></summary>
 
 - **Optimizer 有效前沿图**：组合优化页新增 Chart.js 可视化曲线，展示 Markowitz 有效前沿、最优组合（金色星标）和各资产分布。
 - **Rules→Bot 打通**：分析与 watchlist 扫描结果自动触发告警规则，推送通知到 Telegram / Slack / WeChat / Lark。
