@@ -874,7 +874,7 @@ def serve_cmd(port, host, open_browser):
 
     # Resolve dashboard app path relative to this file
     from pathlib import Path as _Path
-    dashboard_dir = _Path(__file__).resolve().parents[3] / "dashboard"
+    dashboard_dir = _Path(__file__).resolve().parents[2] / "dashboard"
     if str(dashboard_dir) not in sys.path:
         sys.path.insert(0, str(dashboard_dir.parent))
 
@@ -1013,7 +1013,7 @@ def skills_cmd(school, lang):
     import yaml as _yaml
     from pathlib import Path as _Path
 
-    skills_dir = _Path(__file__).resolve().parents[3] / "skills"
+    skills_dir = _Path(__file__).resolve().parents[2] / "skills"
 
     if not skills_dir.exists():
         click.echo(
