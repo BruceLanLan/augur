@@ -1,5 +1,18 @@
 {% extends "base.html" %}
 {% block title %}创建投资人 - Augur{% endblock %}
+{% block extra_head %}
+<style>
+.cp-label {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+.required-star {
+    color: var(--signal-sell);
+}
+</style>
+{% endblock %}
 {% block content %}
 
 <header class="page-header mb-16">
@@ -21,28 +34,28 @@
         <div class="data-label" style="margin-bottom:16px;">基本信息</div>
 
         <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:0.78rem; color:var(--text-secondary); margin-bottom:4px;">Agent ID <span style="color:var(--signal-sell);">*</span></label>
+            <label class="cp-label">Agent ID <span class="required-star">*</span></label>
             <input type="text" id="cp-agent-id" placeholder="my_strategy (小写字母、数字、下划线、连字符)"
                    style="width:100%; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem;"
                    oninput="updatePreview()">
         </div>
 
         <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:0.78rem; color:var(--text-secondary); margin-bottom:4px;">显示名称 <span style="color:var(--signal-sell);">*</span></label>
+            <label class="cp-label">显示名称 <span class="required-star">*</span></label>
             <input type="text" id="cp-name" placeholder="我的量化策略"
                    style="width:100%; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm); font-size:0.85rem;"
                    oninput="updatePreview()">
         </div>
 
         <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:0.78rem; color:var(--text-secondary); margin-bottom:4px;">人格身份描述 <span style="color:var(--signal-sell);">*</span></label>
+            <label class="cp-label">人格身份描述 <span class="required-star">*</span></label>
             <textarea id="cp-identity" rows="3" placeholder="描述这位投资人的身份、背景和核心理念..."
                       style="width:100%; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm); font-size:0.85rem; resize:vertical;"
                       oninput="updatePreview()"></textarea>
         </div>
 
         <div style="margin-bottom:12px;">
-            <label style="display:block; font-size:0.78rem; color:var(--text-secondary); margin-bottom:4px;">投资哲学 (逗号分隔)</label>
+            <label class="cp-label">投资哲学 (逗号分隔)</label>
             <input type="text" id="cp-philosophy" placeholder="价值投资, 长期持有, 安全边际"
                    style="width:100%; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm); font-size:0.85rem;"
                    oninput="updatePreview()">

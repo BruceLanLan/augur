@@ -111,6 +111,55 @@
 .signal-bullish { color: var(--signal-buy); font-weight: 600; }
 .signal-bearish { color: var(--signal-sell); font-weight: 600; }
 .signal-neutral { color: var(--text-secondary); }
+.backtest-form-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+.backtest-form-col {
+    flex: 1;
+    min-width: 120px;
+}
+.backtest-form-col-wide {
+    flex: 1;
+    min-width: 140px;
+}
+.backtest-form-col-days {
+    flex: 1;
+    min-width: 160px;
+}
+.form-error-hint {
+    display: none;
+    color: var(--signal-sell);
+    font-size: 0.7rem;
+    margin-top: 2px;
+}
+.bt-banner-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.bt-banner-label-plain {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+.bt-banner-value-lg {
+    font-size: 2rem;
+    font-weight: 700;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent-green);
+}
+.bt-banner-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+.bt-banner-value-mono {
+    font-size: 1.2rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+}
 @media (max-width: 768px) {
     .bt-form-row {
         flex-direction: column !important;
@@ -145,18 +194,18 @@
 
 <!-- Controls -->
 <div class="card" style="margin-bottom: 1.5rem;">
-    <div class="card-body bt-form-row" style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 120px;">
+    <div class="card-body bt-form-row backtest-form-row">
+        <div class="backtest-form-col">
             <label class="form-label" for="bt-ticker" data-i18n="backtest-ticker-label">股票代码</label>
             <input type="text" id="bt-ticker" class="form-input" value="AAPL" placeholder="AAPL" maxlength="10" autocomplete="off" spellcheck="false" aria-describedby="bt-ticker-hint" style="text-transform: uppercase;" onkeydown="if(event.key==='Enter'){event.preventDefault();runBacktest();}">
-            <small id="bt-ticker-hint" class="form-hint" style="display:none;color:var(--signal-sell);font-size:0.7rem;margin-top:2px;" role="alert" data-i18n="backtest-ticker-empty">代码不能为空</small>
+            <small id="bt-ticker-hint" class="form-hint form-error-hint" role="alert" data-i18n="backtest-ticker-empty">代码不能为空</small>
         </div>
-        <div style="flex: 1; min-width: 140px;">
+        <div class="backtest-form-col-wide">
             <label class="form-label" for="bt-capital" data-i18n="backtest-capital-label">初始资金 (USD)</label>
             <input type="number" id="bt-capital" class="form-input" value="100000" min="1000" step="10000" data-i18n-aria="a11y-backtest-capital" aria-label="初始资金 (美元)" aria-describedby="bt-capital-hint" oninput="clearCapitalHint()">
-            <small id="bt-capital-hint" class="form-hint" style="color:var(--signal-sell);" role="alert" data-i18n="backtest-capital-hint">初始资金不能低于 $1,000</small>
+            <small id="bt-capital-hint" class="form-hint form-error-hint" role="alert" data-i18n="backtest-capital-hint">初始资金不能低于 $1,000</small>
         </div>
-        <div style="flex: 1; min-width: 140px;">
+        <div class="backtest-form-col-wide">
             <label class="form-label" for="bt-strategy" data-i18n="backtest-strategy-label">仓位策略</label>
             <select id="bt-strategy" class="form-input" data-i18n-aria="a11y-backtest-strategy" aria-label="仓位策略">
                 <option value="equal_weight" data-i18n="backtest-strategy-equal">等权分配</option>
@@ -164,7 +213,7 @@
                 <option value="fixed_pct" data-i18n="backtest-strategy-fixed">固定比例 (10%)</option>
             </select>
         </div>
-        <div style="flex: 1; min-width: 160px;">
+        <div class="backtest-form-col-days">
             <label class="form-label" for="bt-days-val-label"><span data-i18n="backtest-days-label">回测天数</span>: <span id="bt-days-val" aria-live="polite">30</span></label>
             <div class="flex gap-8 bt-days-group" role="group" data-i18n-aria="a11y-backtest-days-group" aria-label="回测天数" id="bt-days-group" style="flex-wrap:wrap; margin-top:4px;">
                 <button type="button" class="btn btn-sm btn-ghost bt-days-btn" data-days="30" aria-pressed="true" onclick="setDays(30)">30d</button>
@@ -237,20 +286,20 @@
 <div id="bt-banner" class="card" style="display: none; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-green);" role="region" aria-live="polite" aria-busy="false" data-i18n-aria="a11y-backtest-banner" aria-label="回测结果摘要">
     <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="backtest-banner-consensus">共识 IC (20d)</div>
-            <div id="bt-consensus-ic" style="font-size: 2rem; font-weight: 700; font-family: 'JetBrains Mono', monospace; color: var(--accent-green);">--</div>
+            <div class="bt-banner-label" data-i18n="backtest-banner-consensus">共识 IC (20d)</div>
+            <div id="bt-consensus-ic" class="bt-banner-value-lg">--</div>
         </div>
         <div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);" data-i18n="backtest-banner-ticker">标的</div>
-            <div id="bt-result-ticker" style="font-size: 1.2rem; font-weight: 600;">--</div>
+            <div class="bt-banner-label-plain" data-i18n="backtest-banner-ticker">标的</div>
+            <div id="bt-result-ticker" class="bt-banner-value">--</div>
         </div>
         <div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);" data-i18n="backtest-banner-total">预测总数</div>
-            <div id="bt-total-records" style="font-size: 1.2rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">--</div>
+            <div class="bt-banner-label-plain" data-i18n="backtest-banner-total">预测总数</div>
+            <div id="bt-total-records" class="bt-banner-value-mono">--</div>
         </div>
         <div>
-            <div style="font-size: 0.75rem; color: var(--text-secondary);" data-i18n="backtest-banner-days">回测天数</div>
-            <div id="bt-result-days" style="font-size: 1.2rem; font-weight: 600; font-family: 'JetBrains Mono', monospace;">--</div>
+            <div class="bt-banner-label-plain" data-i18n="backtest-banner-days">回测天数</div>
+            <div id="bt-result-days" class="bt-banner-value-mono">--</div>
         </div>
     </div>
 </div>

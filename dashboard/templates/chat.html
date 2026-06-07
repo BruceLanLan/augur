@@ -20,6 +20,36 @@
 .llm-badge.llm-on { background: rgba(255,140,0,0.15); color: var(--accent-orange, #ff8c00); border: 1px solid rgba(255,140,0,0.5); }
 .llm-badge.llm-off { background: rgba(255,255,255,0.06); color: var(--text-muted, #888); border: 1px solid var(--border-color, #333); }
 
+/* Ticker input row */
+.chat-ticker-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.chat-ticker-label { font: 0.7rem/1 var(--font-pixfin, monospace); color: var(--text-muted, #888); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+#chat-ticker-input {
+    width: 120px; padding: 4px 10px; background: var(--bg-primary, #0e0e14);
+    border: 1px solid var(--border-color, #333); border-radius: 4px;
+    color: var(--text-primary, #eee); font: 700 0.85rem/1 var(--font-mono, monospace);
+    text-transform: uppercase; letter-spacing: 1px;
+}
+#chat-ticker-input:focus { outline: none; border-color: var(--accent-orange, #ff8c00); }
+
+/* Chat Data Card */
+.chat-data-card {
+    display: flex; align-items: center; gap: 16px;
+    padding: 10px 16px; margin-bottom: 12px;
+    background: var(--bg-card, var(--bg-secondary, #12121a));
+    border: 1px solid var(--border-color, #2a2a38);
+    border-radius: var(--r-md, 6px); flex-wrap: wrap;
+}
+.cdc-ticker { font: 700 1rem/1 var(--font-mono, monospace); color: var(--accent-orange, #ff8c00); }
+.cdc-price { font: 600 0.9rem/1 var(--font-data, monospace); color: var(--text-primary, #eee); }
+.cdc-price .price-change { font-size: 0.8rem; margin-left: 4px; }
+.cdc-price .price-change.up { color: var(--signal-buy, #4caf50); }
+.cdc-price .price-change.down { color: var(--signal-sell, #f44336); }
+.cdc-signal { font: 700 0.75rem/1 var(--font-pixfin, monospace); text-transform: uppercase; letter-spacing: 0.5px; padding: 2px 7px; border-radius: 3px; }
+.cdc-signal.bullish { color: var(--signal-buy, #4caf50); border: 1px solid var(--signal-buy, #4caf50); }
+.cdc-signal.bearish { color: var(--signal-sell, #f44336); border: 1px solid var(--signal-sell, #f44336); }
+.cdc-signal.neutral  { color: var(--signal-neutral, #aaa); border: 1px solid var(--signal-neutral, #aaa); }
+.cdc-updated { font: 0.65rem/1 var(--font-sans, sans-serif); color: var(--text-muted, #666); margin-left: auto; }
+
 /* HD-2D Chat Enhancements */
 .chat-container { display: flex; gap: 1.5rem; height: calc(100vh - 200px); max-height: 700px; }
 .agent-selector {
@@ -90,12 +120,25 @@
     transition: border-color 0.2s;
 }
 #chat-input:focus { outline: none; border-color: var(--accent-orange); box-shadow: 0 0 0 2px rgba(255,140,0,0.2); }
+
+.oracle-section-title {
+    margin: 0 0 1rem 0;
+    font-size: 0.8rem;
+    font-family: var(--font-pixfin);
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+.oracle-welcome {
+    font-family: var(--font-pixfin);
+    font-size: 1.1rem;
+    color: var(--accent-orange);
+}
 </style>
 
 <div class="chat-container" role="main" aria-label="Chat interface">
     <!-- Agent Selector -->
     <div class="agent-selector" role="navigation" aria-label="Agent selection panel">
-        <h3 style="margin: 0 0 1rem 0; font-size: 0.8rem; font-family: var(--font-pixfin); color: var(--text-muted); text-transform: uppercase;">Oracle Council</h3>
+        <h3 class="oracle-section-title">Oracle Council</h3>
         <div id="agent-list" role="listbox" aria-label="Available agents">
             <button class="chat-agent-btn active" data-agent="" onclick="selectAgent(this, '')" role="option" aria-selected="true">
                 <img src="/static/images/avatars/buffett.png" class="agent-avatar" alt="Random" style="filter: grayscale(100%);">
@@ -113,9 +156,23 @@
 
     <!-- Chat Area -->
     <div class="chat-area" role="region" aria-label="Chat messages area">
+        <!-- Ticker input + data card -->
+        <div style="padding: 12px 16px 0;">
+            <div class="chat-ticker-row">
+                <span class="chat-ticker-label">Ticker:</span>
+                <input type="text" id="chat-ticker-input" placeholder="e.g. AAPL" maxlength="15" autocomplete="off" aria-label="Stock ticker symbol" oninput="onChatTickerInput(this.value)">
+            </div>
+            <div id="chat-data-card" class="chat-data-card" style="display:none;" aria-live="polite" aria-label="Live stock data card">
+                <div class="cdc-ticker" id="cdc-ticker"></div>
+                <div class="cdc-price" id="cdc-price"></div>
+                <div class="cdc-signal" id="cdc-signal"></div>
+                <div class="cdc-updated" id="cdc-updated"></div>
+            </div>
+        </div>
+
         <div id="chat-messages" class="chat-messages" role="log" aria-live="polite" aria-label="Conversation messages">
             <div class="chat-msg system" role="status">
-                <p style="font-family: var(--font-pixfin); font-size: 1.1rem; color: var(--accent-orange);">Welcome to the HD-2D Oracle Hall.</p>
+                <p class="oracle-welcome">Welcome to the HD-2D Oracle Hall.</p>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">The masters await your inquiry. Select a persona and ask your questions.</p>
             </div>
         </div>
@@ -225,5 +282,138 @@ async function sendMessage(event) {
     messagesEl.scrollTop = messagesEl.scrollHeight;
     input.focus();
 }
+
+// ============ Chat Data Card ============
+var _cdcTicker = '';
+var _cdcPriceTimer = null;
+var _cdcTickerDebounce = null;
+var CDC_CACHE_KEY_PREFIX = 'augur-cdc-';
+var CDC_CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes
+
+function onChatTickerInput(val) {
+    clearTimeout(_cdcTickerDebounce);
+    var t = val.trim().toUpperCase();
+    _cdcTickerDebounce = setTimeout(function() {
+        if (t && /^[A-Z0-9.\-]{1,15}$/.test(t)) {
+            loadChatDataCard(t);
+        } else if (!t) {
+            hideChatDataCard();
+        }
+    }, 400);
+}
+
+function hideChatDataCard() {
+    _cdcTicker = '';
+    var card = document.getElementById('chat-data-card');
+    if (card) card.style.display = 'none';
+    if (_cdcPriceTimer) { clearInterval(_cdcPriceTimer); _cdcPriceTimer = null; }
+}
+
+function loadChatDataCard(ticker) {
+    if (!ticker) { hideChatDataCard(); return; }
+    _cdcTicker = ticker;
+
+    // Start periodic price refresh (clears previous if any)
+    if (_cdcPriceTimer) clearInterval(_cdcPriceTimer);
+    _cdcPriceTimer = setInterval(function() {
+        if (_cdcTicker) _cdcFetchPrice(_cdcTicker);
+    }, 60000);
+
+    // Fetch price immediately
+    _cdcFetchPrice(ticker);
+
+    // Fetch signal (use localStorage cache if fresh enough)
+    _cdcFetchSignal(ticker);
+}
+
+function _cdcFetchPrice(ticker) {
+    fetch('/api/fetch/' + encodeURIComponent(ticker))
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
+            if (!data || data.status !== 'ok' || ticker !== _cdcTicker) return;
+            var d = data.data || {};
+            _cdcRenderPrice(ticker, d);
+            _cdcShowCard();
+        })
+        .catch(function() { /* silent */ });
+}
+
+function _cdcFetchSignal(ticker) {
+    // Check localStorage cache first
+    try {
+        var cached = localStorage.getItem(CDC_CACHE_KEY_PREFIX + ticker);
+        if (cached) {
+            var obj = JSON.parse(cached);
+            if (obj && obj._ts && (Date.now() - obj._ts) < CDC_CACHE_TTL_MS) {
+                _cdcRenderSignal(ticker, obj);
+                return;
+            }
+        }
+    } catch(e) { /* ignore */ }
+
+    // Call analyze API with auto_fetch=true but non-blocking
+    fetch('/api/analyze/' + encodeURIComponent(ticker) + '?auto_fetch=true')
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
+            if (!data || data.status !== 'ok' || ticker !== _cdcTicker) return;
+            var consensus = data.consensus || {};
+            var cacheObj = {
+                _ts: Date.now(),
+                signal: consensus.signal || '',
+                score: consensus.score || 0,
+                confidence: consensus.confidence || 0,
+            };
+            try { localStorage.setItem(CDC_CACHE_KEY_PREFIX + ticker, JSON.stringify(cacheObj)); } catch(e) {}
+            _cdcRenderSignal(ticker, cacheObj);
+        })
+        .catch(function() { /* silent */ });
+}
+
+function _cdcRenderPrice(ticker, d) {
+    var priceEl = document.getElementById('cdc-price');
+    var tickerEl = document.getElementById('cdc-ticker');
+    if (!priceEl || !tickerEl) return;
+
+    var price = d.price || 0;
+    var changePct = d.change_pct || 0;  // fraction, e.g. 0.0234
+    var companyName = d.company_name || '';
+    var currency = d.currency || '';
+
+    tickerEl.textContent = ticker + (companyName ? '  ' + companyName : '');
+
+    var pctDisplay = (changePct * 100).toFixed(2);
+    var sign = changePct >= 0 ? '+' : '';
+    var cls = changePct >= 0 ? 'up' : 'down';
+    var currencySymbol = currency === 'USD' ? '$' : (currency ? currency + ' ' : '');
+    var priceStr = price > 0 ? (currencySymbol + price.toFixed(2)) : '--';
+
+    priceEl.innerHTML = priceStr + '<span class="price-change ' + cls + '">' + sign + pctDisplay + '%</span>';
+}
+
+function _cdcRenderSignal(ticker, obj) {
+    var signalEl = document.getElementById('cdc-signal');
+    if (!signalEl || ticker !== _cdcTicker) return;
+    var signal = (obj.signal || '').toLowerCase();
+    var score = parseFloat(obj.score || 0).toFixed(1);
+    if (!signal || signal === 'error') { signalEl.textContent = ''; signalEl.className = 'cdc-signal'; return; }
+    signalEl.textContent = signal.toUpperCase() + ' ' + score;
+    signalEl.className = 'cdc-signal ' + signal;
+}
+
+function _cdcShowCard() {
+    var card = document.getElementById('chat-data-card');
+    var updEl = document.getElementById('cdc-updated');
+    if (!card) return;
+    card.style.display = 'flex';
+    if (updEl) updEl.textContent = 'Updated ' + new Date().toLocaleTimeString();
+}
+
+// Auto-load if ticker input has a value (page reload with pre-filled input)
+document.addEventListener('DOMContentLoaded', function() {
+    var input = document.getElementById('chat-ticker-input');
+    if (input && input.value.trim()) {
+        loadChatDataCard(input.value.trim().toUpperCase());
+    }
+});
 </script>
 {% endblock %}

@@ -355,19 +355,24 @@ if IMAGES_DIR.exists():
 
 _registry: Optional[AgentRegistry] = None
 _coordinator: Optional[DecisionCoordinator] = None
+_singleton_init_lock = threading.Lock()
 
 
 def get_registry() -> AgentRegistry:
     global _registry
     if _registry is None:
-        _registry = AgentRegistry()
+        with _singleton_init_lock:
+            if _registry is None:
+                _registry = AgentRegistry()
     return _registry
 
 
 def get_coordinator() -> DecisionCoordinator:
     global _coordinator
     if _coordinator is None:
-        _coordinator = DecisionCoordinator(get_registry())
+        with _singleton_init_lock:
+            if _coordinator is None:
+                _coordinator = DecisionCoordinator(get_registry())
     return _coordinator
 
 
@@ -694,8 +699,22 @@ async def api_scanner_run(body: ScannerRunBody):
     tickers = body.tickers
     if body.preset and body.preset in SCANNER_PRESETS:
         tickers = SCANNER_PRESETS[body.preset]
+
+    # Empty ticker list: return 400 with a clear message (preserves existing API contract)
     if not tickers:
         raise HTTPException(status_code=400, detail="No tickers provided")
+
+    # Deduplicate tickers (case-insensitive, order-preserving)
+    seen_upper: set = set()
+    deduped: List[str] = []
+    for t in tickers:
+        upper = t.upper()
+        if upper not in seen_upper:
+            seen_upper.add(upper)
+            deduped.append(t)
+    tickers = deduped
+
+    # Enforce max 20 tickers
     if len(tickers) > 20:
         raise HTTPException(status_code=400, detail="Maximum 20 tickers per scan")
 
@@ -706,10 +725,11 @@ async def api_scanner_run(body: ScannerRunBody):
 
     coord = get_coordinator()
     results = []
+    error_tickers: List[str] = []
     for ticker in tickers:
         try:
             ctx = MarketContext(ticker=ticker.upper())
-            # Try auto-fetch
+            # Try auto-fetch; if it fails, fall back to empty context
             try:
                 from augur.data import fetch_market_context
                 ctx = fetch_market_context(ticker)
@@ -731,6 +751,7 @@ async def api_scanner_run(body: ScannerRunBody):
                 "agents": agents_data,
             })
         except Exception as e:
+            error_tickers.append(ticker.upper())
             results.append({
                 "ticker": ticker.upper(),
                 "consensus_signal": "error",
@@ -744,7 +765,10 @@ async def api_scanner_run(body: ScannerRunBody):
                 },
             })
 
-    return {"status": "ok", "results": results, "count": len(results)}
+    response: Dict[str, Any] = {"status": "ok", "results": results, "count": len(results)}
+    if error_tickers:
+        response["errors"] = error_tickers
+    return response
 
 
 @app.get("/api/analyze/{ticker}", summary="分析指定标的")
@@ -1360,9 +1384,10 @@ async def api_create_custom_persona(body: CustomPersonaBody):
         from augur.persona_loader import load_persona_yaml
         global _registry, _coordinator
         new_agent = load_persona_yaml(str(filepath))
-        if _registry is not None and new_agent.agent_id not in {a.agent_id for a in _registry.get_all()}:
-            _registry.register(new_agent)
-            _coordinator = None  # reset coordinator so it uses updated registry
+        with _singleton_init_lock:
+            if _registry is not None and new_agent.agent_id not in {a.agent_id for a in _registry.get_all()}:
+                _registry.register(new_agent)
+                _coordinator = None  # reset coordinator so it uses updated registry
     except Exception:
         pass  # hot-reload is best-effort; YAML is saved and will load on restart
 
@@ -1404,12 +1429,13 @@ async def api_delete_custom_persona(agent_id: str):
     filepath.unlink()
     # Unregister from live registry
     global _registry, _coordinator
-    if _registry is not None:
-        try:
-            _registry.unregister(agent_id)
-            _coordinator = None
-        except Exception:
-            pass
+    with _singleton_init_lock:
+        if _registry is not None:
+            try:
+                _registry.unregister(agent_id)
+                _coordinator = None
+            except Exception:
+                pass
     return {"status": "ok", "agent_id": agent_id, "message": "已删除"}
 
 
@@ -1433,14 +1459,15 @@ async def api_update_custom_persona(agent_id: str, body: CustomPersonaBody):
     try:
         from augur.persona_loader import load_persona_yaml
         new_agent = load_persona_yaml(str(filepath))
-        if _registry is not None:
-            # Unregister old, register new
-            try:
-                _registry.unregister(agent_id)
-            except Exception:
-                pass
-            _registry.register(new_agent)
-            _coordinator = None
+        with _singleton_init_lock:
+            if _registry is not None:
+                # Unregister old, register new
+                try:
+                    _registry.unregister(agent_id)
+                except Exception:
+                    pass
+                _registry.register(new_agent)
+                _coordinator = None
     except Exception:
         pass
     return {"status": "ok", "agent_id": agent_id, "path": str(filepath), "hot_loaded": True}

@@ -43,20 +43,19 @@ def test_readme_badge_is_v8_2_1():
     """Both READMEs must display v8.2.1 in their Latest badge."""
     for rel in ("README.md", "README_EN.md"):
         text = _read(rel)
-        # Badge URL form: badge/v8.2.1-Latest
-        assert "badge/v8.2.1-Latest" in text, f"{rel} badge is not v8.2.1"
-        assert "badge/v8.1.0-Latest" not in text, f"{rel} still has stale v8.1.0 badge"
+        # Badge URL form: badge/v8.2.2-Latest
+        assert "badge/v8.2.2-Latest" in text, f"{rel} badge is not v8.2.2"
+        assert "badge/v8.2.1-Latest" not in text, f"{rel} still has stale v8.2.1 badge"
 
 
-def test_readme_changelog_marks_v8_2_1_current():
-    """The top changelog entry marked (current) must be v8.2.1 (docs release), not v8.1.0."""
+def test_readme_changelog_marks_v8_2_2_current():
+    """The top changelog entry marked (current) must be v8.2.2."""
     for rel in ("README.md", "README_EN.md"):
         text = _read(rel)
-        # The (current) marker should sit on a v8.2.0 line, not v8.1.0.
         current_block = re.search(r"<summary><strong>(v8\.\d+\.\d+)[^<]*\(current\)", text)
         assert current_block, f"{rel} has no (current) changelog entry"
-        assert current_block.group(1) == "v8.2.1", (
-            f"{rel} (current) entry is {current_block.group(1)}, expected v8.2.1"
+        assert current_block.group(1) == "v8.2.2", (
+            f"{rel} (current) entry is {current_block.group(1)}, expected v8.2.2"
         )
 
 
@@ -90,11 +89,10 @@ def test_readme_lists_18_investors_and_kelly_sizing():
 
 
 def test_pyproject_and_package_versions_agree_with_changelog():
-    """pyproject + __init__.py must both declare 8.2.0, matching the changelog."""
+    """pyproject + __init__.py must both declare 8.2.2, matching the changelog."""
     init_text = (ROOT / "src" / "augur" / "__init__.py").read_text(encoding="utf-8")
-    assert '__version__ = "8.2.0"' in init_text, "src/augur/__init__.py version is not 8.2.0"
+    assert '__version__ = "8.2.2"' in init_text, "src/augur/__init__.py version is not 8.2.2"
 
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    # Match either "version = "8.2.0"" or 'version = "8.2.0"'
-    assert re.search(r'version\s*=\s*"8\.2\.0"', pyproject), \
-        "pyproject.toml version is not 8.2.0"
+    assert re.search(r'version\s*=\s*"8\.2\.2"', pyproject), \
+        "pyproject.toml version is not 8.2.2"

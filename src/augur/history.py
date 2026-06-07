@@ -14,12 +14,17 @@ Functions:
 """
 
 import json
+import os
+import threading
 import time as _time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 HISTORY_DIR = Path.home() / ".augur" / "history"
+
+# Lock protecting file writes so concurrent requests don't corrupt history files
+_write_lock = threading.Lock()
 
 # Simple cache for count_history() to avoid re-globbing on every call
 _count_cache_value: int = 0
@@ -71,8 +76,13 @@ def save_analysis(ticker: str, result_dict: Dict[str, Any]) -> str:
         "result": result_dict,
     }
 
-    with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(record, f, ensure_ascii=False, indent=2)
+    # Atomic write: serialize to a temp file then rename to prevent concurrent
+    # readers from seeing a half-written file.
+    tmp_path = filepath.with_suffix(".json.tmp")
+    with _write_lock:
+        with open(tmp_path, "w", encoding="utf-8") as f:
+            json.dump(record, f, ensure_ascii=False, indent=2)
+        os.replace(tmp_path, filepath)
 
     _invalidate_count_cache()
     return history_id
