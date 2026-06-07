@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
 Generate Hermes-compatible SKILL.md files for all 18 Augur investment personas.
+Also generates OpenClaw/universal manifest.json for each skill directory.
 
 Usage:
     python scripts/generate_skills.py
@@ -8,6 +9,7 @@ Usage:
     python scripts/generate_skills.py --dry-run           # preview, no write
 """
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -39,6 +41,90 @@ SKILL_META = {
     "dan_bin":       {"skill": "augur-dan-bin",       "model": "claude-sonnet-4-6", "lang": "zh", "school": "brand",      "desc": "但斌（东方港湾）AI — 品牌护城河·时代Beta，中国消费龙头"},
     "serenity":      {"skill": "augur-serenity",      "model": "claude-sonnet-4-6", "lang": "en", "school": "ai-supply",  "desc": "Serenity AI — AI/semiconductor supply chain bottlenecks, chokepoint assets"},
 }
+
+# School-based tags for manifest.json
+SCHOOL_TAGS = {
+    "value":      ["investing", "value", "moat", "fundamental"],
+    "deep-value": ["investing", "deep-value", "margin-of-safety", "contrarian"],
+    "garp":       ["investing", "garp", "growth", "peg"],
+    "macro":      ["investing", "macro", "global", "cycles"],
+    "cycle":      ["investing", "cycle", "contrarian", "risk"],
+    "growth":     ["investing", "growth", "innovation", "disruptive"],
+    "monopoly":   ["investing", "monopoly", "zero-to-one", "tech"],
+    "ai-geo":     ["investing", "ai", "geopolitics", "semiconductor"],
+    "ai-supply":  ["investing", "ai", "semiconductor", "supply-chain"],
+    "momentum":   ["investing", "momentum", "sentiment", "crypto"],
+    "benfun":     ["investing", "benfun", "concentration", "consumer-electronics"],
+    "structural": ["investing", "structural", "long-term", "consumer-upgrade"],
+    "brand":      ["investing", "brand", "moat", "china-consumer"],
+}
+
+
+def generate_manifest(persona_id: str, meta: dict) -> dict:
+    """Build a manifest.json dict for a persona skill."""
+    skill_name = meta["skill"]
+    tags = SCHOOL_TAGS.get(meta["school"], ["investing"])
+    # Insert persona-keyed tag (e.g. "warren-buffett") as second element
+    persona_tag = skill_name.replace("augur-", "")
+    if persona_tag not in tags:
+        tags = [tags[0], persona_tag] + tags[1:]
+
+    return {
+        "name": skill_name,
+        "version": "9.0.3",
+        "description": meta["desc"],
+        "author": "BruceBlue (https://x.com/BruceBlue)",
+        "license": "MIT",
+        "type": "mcp-skill",
+        "model": {
+            "default": meta["model"],
+            "alternatives": ["gpt-4o", "deepseek-chat"],
+        },
+        "mcp": {
+            "server": "augur",
+            "command": "augur-mcp",
+            "required_tools": [
+                "mcp_augur_analyze",
+                "mcp_augur_fetch",
+                "mcp_augur_consensus",
+            ],
+        },
+        "compatibility": ["hermes", "openclaw", "claude-desktop", "any-mcp"],
+        "tags": tags,
+        "language": meta["lang"],
+        "persona_id": persona_id,
+    }
+
+
+def generate_committee_manifest() -> dict:
+    """Build a manifest.json dict for the committee coordinator skill."""
+    return {
+        "name": "augur-committee",
+        "version": "9.0.3",
+        "description": "Augur Investment Committee — Convene 2-18 masters for structured multi-agent analysis and verdict",
+        "author": "BruceBlue (https://x.com/BruceBlue)",
+        "license": "MIT",
+        "type": "mcp-skill",
+        "model": {
+            "default": "claude-sonnet-4-6",
+            "alternatives": ["gpt-4o", "deepseek-chat"],
+        },
+        "mcp": {
+            "server": "augur",
+            "command": "augur-mcp",
+            "required_tools": [
+                "mcp_augur_analyze",
+                "mcp_augur_fetch",
+                "mcp_augur_consensus",
+                "mcp_augur_committee",
+            ],
+        },
+        "compatibility": ["hermes", "openclaw", "claude-desktop", "any-mcp"],
+        "tags": ["investing", "committee", "multi-agent", "consensus"],
+        "language": "en",
+        "type": "committee-coordinator",
+    }
+
 
 ZH_TOOL_SECTION = """
 ## 可用工具（Augur MCP）
@@ -240,12 +326,16 @@ def generate_all(only_persona=None, dry_run: bool = False) -> None:
         content = skill_template(persona_id, meta, soul)
         skill_dir = skills_dir / meta["skill"]
 
+        manifest = generate_manifest(persona_id, meta)
+        manifest_json = json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
+
         if dry_run:
-            print(f"  DRY-RUN {meta['skill']}/ — {len(content)} chars")
+            print(f"  DRY-RUN {meta['skill']}/ — {len(content)} chars SKILL.md, {len(manifest_json)} chars manifest.json")
         else:
             skill_dir.mkdir(parents=True, exist_ok=True)
             (skill_dir / "SKILL.md").write_text(content, encoding="utf-8")
-            print(f"  ✓ {meta['skill']}/SKILL.md — {len(content)} chars")
+            (skill_dir / "manifest.json").write_text(manifest_json, encoding="utf-8")
+            print(f"  ✓ {meta['skill']}/SKILL.md + manifest.json — {len(content)} chars")
 
         generated += 1
 
@@ -253,12 +343,15 @@ def generate_all(only_persona=None, dry_run: bool = False) -> None:
     if not only_persona:
         committee_content = committee_skill()
         committee_dir = skills_dir / "augur-committee"
+        committee_manifest = generate_committee_manifest()
+        committee_manifest_json = json.dumps(committee_manifest, indent=2, ensure_ascii=False) + "\n"
         if dry_run:
-            print(f"  DRY-RUN augur-committee/ — {len(committee_content)} chars")
+            print(f"  DRY-RUN augur-committee/ — {len(committee_content)} chars SKILL.md, {len(committee_manifest_json)} chars manifest.json")
         else:
             committee_dir.mkdir(parents=True, exist_ok=True)
             (committee_dir / "SKILL.md").write_text(committee_content, encoding="utf-8")
-            print(f"  ✓ augur-committee/SKILL.md — {len(committee_content)} chars")
+            (committee_dir / "manifest.json").write_text(committee_manifest_json, encoding="utf-8")
+            print(f"  ✓ augur-committee/SKILL.md + manifest.json — {len(committee_content)} chars")
 
     print(f"\nDone: {generated} persona skills + committee skill")
 

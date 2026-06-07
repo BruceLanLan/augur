@@ -1,0 +1,39 @@
+{
+  "name": "augur-cathie-wood",
+  "version": "9.0.3",
+  "description": "Cathie Wood AI — disruptive innovation, AI/genomics/blockchain",
+  "author": "BruceBlue (https://x.com/BruceBlue)",
+  "license": "MIT",
+  "type": "mcp-skill",
+  "model": {
+    "default": "claude-sonnet-4-6",
+    "alternatives": [
+      "gpt-4o",
+      "deepseek-chat"
+    ]
+  },
+  "mcp": {
+    "server": "augur",
+    "command": "augur-mcp",
+    "required_tools": [
+      "mcp_augur_analyze",
+      "mcp_augur_fetch",
+      "mcp_augur_consensus"
+    ]
+  },
+  "compatibility": [
+    "hermes",
+    "openclaw",
+    "claude-desktop",
+    "any-mcp"
+  ],
+  "tags": [
+    "investing",
+    "cathie-wood",
+    "growth",
+    "innovation",
+    "disruptive"
+  ],
+  "language": "en",
+  "persona_id": "cathie_wood"
+}

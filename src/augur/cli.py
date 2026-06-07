@@ -856,5 +856,216 @@ def sentiment_cmd(ticker):
     click.echo("\n[Note: Mock data seeded by ticker hash]")
 
 
+@main.command("serve")
+@click.option("--port", default=8000, show_default=True, help="Dashboard port")
+@click.option("--host", default="0.0.0.0", show_default=True, help="Bind host")
+@click.option("--open", "open_browser", is_flag=True, default=False, help="Open browser on start")
+def serve_cmd(port, host, open_browser):
+    """Start the Augur web dashboard.
+
+    \b
+    Examples:
+      augur serve                       # Start on default port 8000
+      augur serve --port 8080           # Custom port
+      augur serve --open                # Open browser automatically
+    """
+    import sys
+    import os
+
+    # Resolve dashboard app path relative to this file
+    from pathlib import Path as _Path
+    dashboard_dir = _Path(__file__).resolve().parents[3] / "dashboard"
+    if str(dashboard_dir) not in sys.path:
+        sys.path.insert(0, str(dashboard_dir.parent))
+
+    try:
+        import uvicorn
+    except ImportError:
+        click.echo(
+            "Error: uvicorn is not installed.\n"
+            "  Install with: pip install uvicorn\n"
+            "  Or run manually: python3 -m dashboard.app",
+            err=True,
+        )
+        raise SystemExit(1)
+
+    try:
+        from dashboard.app import app as dashboard_app
+    except ImportError as e:
+        click.echo(
+            f"Error: Could not import dashboard app: {e}\n"
+            "  Run manually: python3 -m dashboard.app",
+            err=True,
+        )
+        raise SystemExit(1)
+
+    click.echo(f"\U0001f989 Augur Dashboard starting at http://localhost:{port}")
+
+    if open_browser:
+        import threading
+        import webbrowser
+
+        def _open():
+            webbrowser.open(f"http://localhost:{port}")
+
+        threading.Timer(1.0, _open).start()
+
+    uvicorn.run(dashboard_app, host=host, port=port)
+
+
+@main.command("watch")
+@click.argument("tickers", nargs=-1, required=True)
+@click.option("--interval", default=60, show_default=True, help="Refresh interval in seconds")
+@click.option("--persona", default=None, help="Use specific persona (default: consensus)")
+@click.option("--alert-above", default=None, type=float, help="Alert when score above threshold")
+@click.option("--alert-below", default=None, type=float, help="Alert when score below threshold")
+def watch_cmd(tickers, interval, persona, alert_above, alert_below):
+    """Watch tickers and refresh analysis at a set interval.
+
+    \b
+    Examples:
+      augur watch AAPL NVDA TSLA            # Watch 3 tickers, refresh every 60s
+      augur watch AAPL --interval 30        # Refresh every 30s
+      augur watch NVDA --persona buffett    # Use Buffett persona
+      augur watch AAPL --alert-above 7.5   # Alert when score > 7.5
+    """
+    import time
+
+    from augur.registry import AgentRegistry, DecisionCoordinator
+
+    registry = AgentRegistry()
+
+    if persona:
+        agent = registry.get(persona)
+        if not agent:
+            click.echo(f"Error: Persona '{persona}' not found.", err=True)
+            click.echo(f"  Available: {', '.join(a.agent_id for a in registry.get_all())}", err=True)
+            raise SystemExit(1)
+    else:
+        agent = None
+
+    click.echo(f"Watching {len(tickers)} ticker(s) — refresh every {interval}s. Press Ctrl+C to stop.\n")
+
+    try:
+        while True:
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%H:%M:%S")
+            click.echo(f"[{timestamp}]")
+
+            for ticker in tickers:
+                try:
+                    ctx = _auto_fetch_context(ticker)
+
+                    if agent:
+                        result = agent.analyze(ctx)
+                        score = result.score
+                        signal = result.signal.value.upper()
+                    else:
+                        coordinator = DecisionCoordinator(registry)
+                        results = coordinator.analyze_with_all(ctx)
+                        consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
+                        score = consensus.score
+                        signal = consensus.signal.value.upper()
+
+                    change_pct = ctx.change_pct
+                    if change_pct >= 0:
+                        change_str = f"↑ +{change_pct:.2%}"
+                    else:
+                        change_str = f"↓ {change_pct:.2%}"
+
+                    line = f"  {ticker.upper():<8s} {signal:<10s} {score:.1f}/10  {change_str}"
+
+                    alerts = []
+                    if alert_above is not None and score > alert_above:
+                        alerts.append(f"ALERT: score {score:.1f} > {alert_above}")
+                    if alert_below is not None and score < alert_below:
+                        alerts.append(f"ALERT: score {score:.1f} < {alert_below}")
+
+                    if alerts:
+                        line += "  *** " + " | ".join(alerts) + " ***"
+
+                    click.echo(line)
+
+                except Exception as e:
+                    click.echo(f"  {ticker.upper():<8s} ERROR: {e}")
+
+            click.echo("")
+            time.sleep(interval)
+
+    except KeyboardInterrupt:
+        click.echo("\nStopped.")
+
+
+@main.command("skills")
+@click.option("--school", default=None, help="Filter by school (value/growth/macro/china)")
+@click.option("--lang", default=None, help="Filter by language (en/zh)")
+def skills_cmd(school, lang):
+    """List available Augur skill profiles.
+
+    \b
+    Examples:
+      augur skills                        # Show all skills
+      augur skills --school value         # Value investing skills only
+      augur skills --lang zh              # Chinese-language skills only
+      augur skills --school growth --lang en
+    """
+    import re as _re
+    import yaml as _yaml
+    from pathlib import Path as _Path
+
+    skills_dir = _Path(__file__).resolve().parents[3] / "skills"
+
+    if not skills_dir.exists():
+        click.echo(
+            "Skills directory not found.\n"
+            "  Hint: Run generate_skills.py or check your augur installation.",
+            err=True,
+        )
+        raise SystemExit(1)
+
+    skill_files = sorted(skills_dir.glob("*/SKILL.md"))
+    if not skill_files:
+        click.echo("No SKILL.md files found in skills/.")
+        return
+
+    rows = []
+    for path in skill_files:
+        try:
+            content = path.read_text(encoding="utf-8")
+            # Extract YAML frontmatter between --- delimiters
+            m = _re.match(r"^---\n(.*?)\n---", content, _re.DOTALL)
+            if not m:
+                continue
+            data = _yaml.safe_load(m.group(1)) or {}
+            augur_meta = data.get("metadata", {}).get("augur", {})
+            skill_school = augur_meta.get("school", "")
+            skill_lang = augur_meta.get("language", "")
+            skill_name = data.get("name", path.parent.name)
+            skill_desc = data.get("description", "")
+
+            if school and skill_school.lower() != school.lower():
+                continue
+            if lang and skill_lang.lower() != lang.lower():
+                continue
+
+            rows.append((skill_name, skill_desc, skill_lang, skill_school))
+        except Exception:
+            continue
+
+    if not rows:
+        click.echo("No skills match the given filters.")
+        return
+
+    # Print formatted table
+    click.echo(f"\nAugur Skills ({len(rows)} found)\n")
+    header = f"{'Name':<30s} {'Language':<10s} {'School':<10s} {'Description'}"
+    click.echo(header)
+    click.echo("-" * 90)
+    for name, desc, skill_lang_val, skill_school_val in rows:
+        # Truncate description for table fit
+        short_desc = desc[:45] + "..." if len(desc) > 45 else desc
+        click.echo(f"{name:<30s} {skill_lang_val:<10s} {skill_school_val:<10s} {short_desc}")
+
+
 if __name__ == "__main__":
     main()

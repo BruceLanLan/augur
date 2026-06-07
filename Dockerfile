@@ -1,16 +1,23 @@
-# Augur - Multi-agent Investment Analysis System
-# Docker image for running dashboard, API, bots, and MCP server
+# Augur Next — Professional Bloomberg AI Agent System
+# Supports: Dashboard · REST API · MCP Server · Telegram · Slack · WeChat · Lark
 
 # --- Build stage ---
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 COPY requirements.txt pyproject.toml ./
 COPY src/ ./src/
-RUN pip install --no-cache-dir --prefix=/install .
+# Install all extras for full functionality
+RUN pip install --no-cache-dir --prefix=/install ".[data,mcp,telegram,slack]" 2>/dev/null \
+    || pip install --no-cache-dir --prefix=/install ".[data]"
 
 # --- Runtime stage ---
 FROM python:3.11-slim
+
+LABEL org.opencontainers.image.title="Augur Next"
+LABEL org.opencontainers.image.description="Professional Bloomberg AI Agent — 18 investment masters, committee mode, MCP"
+LABEL org.opencontainers.image.source="https://github.com/BruceLanLan/augur-next"
+LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
@@ -23,28 +30,28 @@ COPY config/ ./config/
 COPY skills/ ./skills/
 COPY personas/ ./personas/
 COPY dashboard/ ./dashboard/
-COPY scanner/ ./scanner/
+COPY scripts/ ./scripts/
 COPY docs/ ./docs/
 
-# Create augur config directory
-RUN mkdir -p /app/.augur
+# Create augur data + config directories
+RUN mkdir -p /app/.augur /app/.augur/history /app/.augur/personas
 
-# Create non-root user for security
-RUN groupadd -r augur && useradd -r -g augur -d /app -s /sbin/nologin augur
-RUN chown -R augur:augur /app
+# Create non-root user
+RUN groupadd -r augur && useradd -r -g augur -d /app -s /sbin/nologin augur \
+    && chown -R augur:augur /app
 
 USER augur
 
-# Environment variables
+# Environment
 ENV PYTHONPATH=/app/src
 ENV AUGUR_CONFIG=/app/config/agents.yaml
+ENV AUGUR_DATA_DIR=/app/.augur
 
-# Expose ports
+# Ports: 8000=Dashboard, 8900=REST API
 EXPOSE 8000 8900
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
-# Default: start API server
-CMD ["augur", "api", "--port", "8000", "--host", "0.0.0.0"]
+# Default: Dashboard
+CMD ["python", "-m", "dashboard.app", "--port", "8000", "--host", "0.0.0.0"]
