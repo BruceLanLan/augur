@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/images/en/hero-banner.png" alt="Augur v8.2.2 — Optimizer efficient frontier, Rules→Bot alerts, UI contrast fixes" width="100%"/>
+<img src="docs/images/en/hero-banner.png" alt="Augur v8.2.3 — Chat data cards, Optimizer efficient frontier, Rules→Bot alerts, 18-master consensus dashboard" width="100%"/>
 
 # 🦉 Augur
 
@@ -28,7 +28,7 @@
 ## One analysis. 18 perspectives.
 
 <p align="center">
-  <img src="docs/images/screenshots/report-hd2d.png" alt="NVDA deep analysis — v8.2.1 report contrast fix, readable light-mode parchment" width="100%"/>
+  <img src="docs/images/screenshots/report-hd2d.png" alt="NVDA deep analysis — 18-master consensus scores + deep Markdown report" width="100%"/>
 </p>
 
 > **All-New HD-2D Visual System**: Fusing the data density of a Bloomberg Terminal with the "Gilt-Edged" parchment aesthetic of a classic JRPG.
@@ -282,18 +282,19 @@ python3 -m dashboard.app --port 8000
 | | Watchlist | One-click analysis, localStorage persistence |
 | | Portfolio | Position tracking, real-time P&L, asset allocation chart |
 | | Backtest | IC leaderboard + agent accuracy history |
-| **v8 Features** | AI Chat | 11 personas, each with unique voice and perspective |
-| | Portfolio Optimizer | Markowitz efficient frontier optimization |
+| **v8 Features** | AI Chat | 11 personas with unique voices + **real-time data card** (price, signal) |
+| | Portfolio Optimizer | Markowitz mean-variance + **efficient frontier chart** |
 | | Master Compare | Side-by-side analysis from 2–5 chosen personas |
 | | Debate Mode | Sequential debate with per-persona rebuttals |
 | | History | Full analysis history with search and filtering |
 | | Leaderboard | IC-weighted accuracy tracking per agent |
+| | **Alert Push** | Rules engine → auto-push to Telegram / Slack / WeChat / Lark |
 | **Investors** | Personas | 18-master cards, search and school filter |
 | | Create Persona | No-code YAML custom agent builder |
 | **System** | Settings | Per-master parameter configuration |
 
 <p align="center">
-  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard v8.2.1 — zero-gap grid sidebar, AAPL onboarding, global markets panel" width="100%"/>
+  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard v8.2.3 — Bloomberg Terminal × JRPG, global markets panel + 18-master consensus" width="100%"/>
 </p>
 
 ---

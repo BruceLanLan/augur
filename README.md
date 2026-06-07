@@ -2,7 +2,7 @@
 
 <div align="center">
 
-<img src="docs/images/zh/hero-banner.png" alt="Augur v8.2.2 — Optimizer 有效前沿图、Rules→Bot 通知、UI 对比度修复" width="100%"/>
+<img src="docs/images/zh/hero-banner.png" alt="Augur v8.2.3 — Chat 数据卡片、Optimizer 有效前沿图、Rules→Bot 通知、18位大师共识仪表盘" width="100%"/>
 
 # 🦉 Augur
 
@@ -33,7 +33,7 @@
 ## 一次分析，18个视角
 
 <p align="center">
-  <img src="docs/images/screenshots/report-hd2d.png" alt="NVDA 深度分析报告 — v8.2.1 报告对比度修复，浅色羊皮纸可读" width="100%"/>
+  <img src="docs/images/screenshots/report-hd2d.png" alt="NVDA 深度分析报告 — 18位大师共识评分 + 深度 Markdown 报告" width="100%"/>
 </p>
 
 > **全新 HD-2D 视觉系统**：在彭博终端的数据密度中，融合了 JRPG 的「Gilt-Edged」羊皮纸叙事美学。
@@ -189,7 +189,7 @@ python3 -m dashboard.app --port 8000
 ```
 
 <p align="center">
-  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard v8.2.1 — Grid 侧栏零间隙、AAPL 引导与全球行情面板" width="100%"/>
+  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard v8.2.3 — Bloomberg Terminal × JRPG 风格，全球行情面板 + 18位大师共识" width="100%"/>
 </p>
 
 **17 个页面**（仪表盘 / 股票 / 信号 / 扫描 / 自选股 / 持仓 / 回测 / AI 对话 / 优化 / 对决 / 辩论 / 历史 / 排行 / 人格 / 创建 / 设置 / 登录），覆盖完整投资分析流程：
@@ -203,12 +203,13 @@ python3 -m dashboard.app --port 8000
 | | 自选股 | 一键分析，持久化 |
 | | 持仓管理 | 持仓追踪 + 实时盈亏 + 资产配置图 |
 | | 历史回测 | IC 排行榜 + 大师命中率 |
-| **v8 功能** | AI 对话 | 11位大师独特语气对话，全面支持 OpenAI 兼容接口（可直连 DeepSeek、GPT-4 等） |
-| | 组合优化 | Markowitz 均值方差优化 |
+| **v8 功能** | AI 对话 | 11位大师独特语气对话 + 实时行情数据卡片，支持 OpenAI 兼容接口 |
+| | 组合优化 | Markowitz 均值方差优化 + **有效前沿可视化曲线** |
 | | 大师对决 | 2-5位大师同题独立对比 |
 | | 辩论模式 | 多大师顺序辩论 |
 | | 历史记录 | 全部分析历史，可检索 |
 | | 大师排行 | IC 加权的大师准确率追踪 |
+| | **告警推送** | Rules 规则引擎 → 分析结果自动推送 Telegram / Slack / WeChat / Lark |
 | **投资人** | 人格系统 | 18位大师卡片 + 搜索/流派筛选 |
 | | 创建大师 | 无代码 YAML 自定义 |
 | **系统** | 设置 | 每位大师独立配置参数 |
@@ -429,7 +430,7 @@ Kelly 只在 BULLISH 且评分 > 5 时给出非零建议。
 - **Rules→Bot 打通**：分析与 watchlist 扫描结果自动触发告警规则，推送通知到 Telegram / Slack / WeChat / Lark。
 - **UI 对比度修复**：orange 背景上的 `#000/#fff` 全部替换为 CSS 变量，符合 WCAG AA 标准；`rgba` 硬编码色改为设计系统变量。
 - **代码整合**：Loop 400 全部遗留代码合并进 main，i18n 新增 238 行翻译键，compare 页支持 `?autorun=1`。
-- **测试**：**1657** 项全绿（v8.2.1 为 1362，新增 295 项）。
+- **测试**：**1657** 项全绿（v8.2.1 为 1362，+295 项）。
 </details>
 
 <details>
