@@ -195,8 +195,11 @@
         </div>
         <button onclick="addFactorRow()" style="background:var(--bg-primary); border:1px dashed var(--border-color); color:var(--text-secondary); padding:6px 12px; border-radius:var(--radius-sm); cursor:pointer; font-size:0.78rem; width:100%;">+ 添加因子</button>
 
-        <div style="margin-top:24px;">
-            <button class="btn btn-primary" onclick="submitPersona()" id="submit-btn" style="width:100%; padding:10px;">
+        <div style="margin-top:24px; display:flex; gap:8px;">
+            <button class="btn btn-ghost" onclick="openYamlModal()" style="flex:1; padding:10px;">
+                &#x1F441; 预览 YAML
+            </button>
+            <button class="btn btn-primary" onclick="submitPersona()" id="submit-btn" style="flex:2; padding:10px;">
                 &#x2714; 注册投资人
             </button>
         </div>
@@ -416,11 +419,15 @@ document.addEventListener('DOMContentLoaded', function() {
     loadCustomPersonas();
 });
 
-// Load existing custom personas
+// Load existing custom personas (also refreshes the agent-id uniqueness cache)
 function loadCustomPersonas() {
     fetch('/api/custom-personas')
     .then(function(r) { return r.json(); })
     .then(function(data) {
+        // Refresh cache for real-time ID check
+        if (data.status === 'ok' && data.personas) {
+            _cachedPersonaIds = data.personas.map(function(p) { return p.agent_id; });
+        }
         if (data.status === 'ok' && data.personas && data.personas.length > 0) {
             var section = document.getElementById('custom-personas-section');
             var list = document.getElementById('custom-personas-list');
@@ -485,6 +492,200 @@ function deletePersona(agentId, name) {
         }
     })
     .catch(function(err) { showToast('删除失败: ' + err.message, 'error'); });
+}
+
+// ─── YAML Preview Modal ───────────────────────────────────────────────────────
+function openYamlModal() {
+    updatePreview();
+    document.getElementById('yaml-modal-content').textContent =
+        document.getElementById('yaml-preview').textContent;
+    document.getElementById('yaml-modal-overlay').classList.add('open');
+}
+
+function closeYamlModal(evt) {
+    // close when clicking the overlay backdrop, or when called directly
+    if (evt && evt.target !== document.getElementById('yaml-modal-overlay')) return;
+    document.getElementById('yaml-modal-overlay').classList.remove('open');
+}
+
+// ─── Real-time Agent ID uniqueness check ─────────────────────────────────────
+var _cachedPersonaIds = null;   // populated from loadCustomPersonas, updated after submit
+
+function _ensurePersonaCache() {
+    if (_cachedPersonaIds !== null) return Promise.resolve(_cachedPersonaIds);
+    return fetch('/api/custom-personas')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            _cachedPersonaIds = (data.status === 'ok' && data.personas)
+                ? data.personas.map(function(p) { return p.agent_id; })
+                : [];
+            return _cachedPersonaIds;
+        })
+        .catch(function() { _cachedPersonaIds = []; return _cachedPersonaIds; });
+}
+
+function checkAgentId(val) {
+    var el = document.getElementById('id-status');
+    val = val.trim();
+    if (!val) { el.textContent = ''; el.className = 'warn'; return; }
+    if (!/^[a-z0-9_-]+$/.test(val)) {
+        el.textContent = '✗ 只能包含小写字母、数字、下划线和连字符';
+        el.className = 'err';
+        return;
+    }
+    _ensurePersonaCache().then(function(ids) {
+        // In edit mode (btn says "更新"), existing ID is expected — show neutral
+        var isEdit = document.getElementById('submit-btn').getAttribute('data-edit-mode') === 'true';
+        if (ids.indexOf(val) !== -1) {
+            if (isEdit) {
+                el.textContent = '✓ 当前编辑中';
+                el.className = 'ok';
+            } else {
+                el.textContent = '✗ ID 已存在，请换一个';
+                el.className = 'err';
+            }
+        } else {
+            el.textContent = '✓ ID 可用';
+            el.className = 'ok';
+        }
+    });
+}
+
+// ─── Preset Templates ─────────────────────────────────────────────────────────
+var PRESETS = {
+    minimalist_value: {
+        agent_id:   'minimalist_value',
+        name:       'Minimalist Value',
+        identity:   '一位严格遵循格雷厄姆-巴菲特原则的价值投资者。只购买有安全边际的低估值公司，永不追高，永不猜测市场时机。持仓集中、换手率极低。',
+        philosophy: '安全边际, 低估值, 集中持仓, 长期持有, 不预测市场',
+        weights: [
+            { key: 'value',   val: '0.7' },
+            { key: 'quality', val: '0.2' },
+            { key: 'growth',  val: '0.1' }
+        ],
+        factors: [
+            { name: 'value', base: '6', rules: [
+                { if: 'pe < 12', add: '3' },
+                { if: 'pb < 1.2', add: '2' },
+                { if: 'pe > 25', add: '-3' }
+            ]},
+            { name: 'quality', base: '5', rules: [
+                { if: 'roe > 15', add: '2' },
+                { if: 'debt_ratio < 0.3', add: '1' }
+            ]}
+        ]
+    },
+    momentum_trader: {
+        agent_id:   'momentum_trader',
+        name:       'Momentum Trader',
+        identity:   '专注趋势跟踪的量化交易者。相信价格包含所有信息，顺势而为，快进快出。用动量指标和相对强度筛选强势股，严格止损。',
+        philosophy: '趋势为王, 动量优先, 严格止损, 快进快出, 技术分析',
+        weights: [
+            { key: 'momentum', val: '0.6' },
+            { key: 'volume',   val: '0.25' },
+            { key: 'value',    val: '0.15' }
+        ],
+        factors: [
+            { name: 'momentum', base: '5', rules: [
+                { if: 'price_change_52w > 0.3', add: '3' },
+                { if: 'rsi > 60', add: '2' },
+                { if: 'price_change_52w < -0.1', add: '-3' }
+            ]},
+            { name: 'volume', base: '5', rules: [
+                { if: 'volume_ratio > 1.5', add: '2' },
+                { if: 'volume_ratio < 0.5', add: '-2' }
+            ]}
+        ]
+    },
+    contrarian_macro: {
+        agent_id:   'contrarian_macro',
+        name:       'Contrarian Macro',
+        identity:   '逆向思考的宏观投资者。在市场恐慌时贪婪，在市场贪婪时恐惧。结合宏观经济周期分析与情绪指标，寻找被市场过度悲观定价的资产。',
+        philosophy: '逆向投资, 宏观周期, 情绪利用, 价格发现, 耐心等待极端估值',
+        weights: [
+            { key: 'sentiment',  val: '0.4' },
+            { key: 'value',      val: '0.35' },
+            { key: 'macro',      val: '0.25' }
+        ],
+        factors: [
+            { name: 'sentiment', base: '5', rules: [
+                { if: 'fear_greed < 20', add: '4' },
+                { if: 'fear_greed > 80', add: '-3' },
+                { if: 'short_interest > 0.2', add: '2' }
+            ]},
+            { name: 'value', base: '5', rules: [
+                { if: 'pe < 10', add: '3' },
+                { if: 'pb < 0.8', add: '2' },
+                { if: 'pe > 30', add: '-2' }
+            ]}
+        ]
+    }
+};
+
+function loadPreset(key) {
+    if (!key) return;
+    var p = PRESETS[key];
+    if (!p) return;
+
+    // Fill basic fields
+    document.getElementById('cp-agent-id').value  = p.agent_id;
+    document.getElementById('cp-name').value       = p.name;
+    document.getElementById('cp-identity').value   = p.identity;
+    document.getElementById('cp-philosophy').value = p.philosophy;
+
+    // Rebuild weights
+    var wc = document.getElementById('weights-container');
+    wc.innerHTML = '';
+    p.weights.forEach(function(w) {
+        var div = document.createElement('div');
+        div.className = 'weight-row';
+        div.style.cssText = 'display:flex; gap:8px; margin-bottom:8px; align-items:center;';
+        div.innerHTML =
+            '<input type="text" class="weight-key" value="' + w.key + '" style="flex:1; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;" oninput="updatePreview()">' +
+            '<input type="number" class="weight-val" value="' + w.val + '" step="0.05" min="0" max="1" style="width:80px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;" oninput="updatePreview()">' +
+            '<button onclick="removeWeightRow(this)" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1.1rem; padding:0 4px;">&times;</button>';
+        wc.appendChild(div);
+    });
+
+    // Rebuild factors
+    var fc = document.getElementById('factors-container');
+    fc.innerHTML = '';
+    p.factors.forEach(function(f) {
+        var rulesHtml = '';
+        (f.rules || []).forEach(function(r) {
+            rulesHtml +=
+                '<div style="display:flex; gap:6px; margin-bottom:4px; align-items:center;">' +
+                '<span class="text-muted" style="font-size:0.72rem; width:16px;">if:</span>' +
+                '<input type="text" class="rule-if" value="' + escapeAttr(r.if) + '" style="flex:1; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.78rem;" oninput="updatePreview()">' +
+                '<span class="text-muted" style="font-size:0.72rem; width:28px;">add:</span>' +
+                '<input type="number" class="rule-add" value="' + r.add + '" style="width:50px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:4px 8px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.78rem;" oninput="updatePreview()">' +
+                '<button onclick="this.parentElement.remove(); updatePreview();" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:0.9rem; padding:0 2px;">&times;</button>' +
+                '</div>';
+        });
+        var div = document.createElement('div');
+        div.className = 'factor-row';
+        div.style.cssText = 'margin-bottom:8px;';
+        div.innerHTML =
+            '<div style="display:flex; gap:8px; align-items:center;">' +
+            '<input type="text" class="factor-name" value="' + escapeAttr(f.name) + '" style="width:100px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;" oninput="updatePreview()">' +
+            '<span class="text-muted" style="font-size:0.75rem;">base:</span>' +
+            '<input type="number" class="factor-base" value="' + (f.base || 5) + '" style="width:50px; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:6px 10px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.82rem;" oninput="updatePreview()">' +
+            '<button onclick="addRuleToFactor(this)" style="background:none; border:1px solid var(--border-color); color:var(--text-secondary); cursor:pointer; font-size:0.72rem; padding:4px 8px; border-radius:var(--radius-sm);">+规则</button>' +
+            '<button onclick="removeFactorRow(this)" style="background:none; border:none; color:var(--signal-sell); cursor:pointer; font-size:1.1rem; padding:0 4px;">&times;</button>' +
+            '</div>' +
+            '<div class="factor-rules" style="margin-left:20px; margin-top:4px;">' + rulesHtml + '</div>';
+        fc.appendChild(div);
+    });
+
+    // Reset preset selector & refresh
+    document.getElementById('preset-select').value = '';
+    checkAgentId(p.agent_id);
+    updatePreview();
+    showToast('已加载预设：' + p.name);
+}
+
+function escapeAttr(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 </script>
 {% endblock %}

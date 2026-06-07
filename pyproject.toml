@@ -33,45 +33,42 @@ dependencies = [
 
 [project.optional-dependencies]
 data = [
-    "yfinance>=0.2.0",
-    "pandas>=1.5.0",
+    "yfinance>=0.2",
+    "pandas>=1.3",
+    "requests>=2.28",
+]
+mcp = [
+    "mcp>=1.0.0; python_version>='3.10'",
+    "fastmcp>=0.1; python_version>='3.10'",
+]
+llm = [
+    "anthropic>=0.20",
+    "openai>=1.0",
 ]
 telegram = [
     "python-telegram-bot>=20.0",
 ]
 slack = [
-    "slack-bolt>=1.18.0",
+    "slack-bolt>=1.18",
+    "slack-sdk>=3.19",
 ]
 wechat = [
     "gewechat-client>=0.1.0",
     "requests>=2.28.0",
 ]
 lark = [
-    "lark-oapi>=1.0.0",
+    "lark-oapi>=1.0",
 ]
 cron = [
     "apscheduler>=3.10.0",
 ]
-mcp = [
-    "mcp>=1.0.0;python_version>='3.10'",
-]
-llm = [
-    "openai>=1.0.0;python_version>='3.8'",
-]
 dev = [
     "pytest>=7.0",
+    "pytest-asyncio>=0.21",
+    "httpx>=0.24",
 ]
 all = [
-    "yfinance>=0.2.0",
-    "pandas>=1.5.0",
-    "python-telegram-bot>=20.0",
-    "slack-bolt>=1.18.0",
-    "gewechat-client>=0.1.0",
-    "requests>=2.28.0",
-    "lark-oapi>=1.0.0",
-    "apscheduler>=3.10.0",
-    "mcp>=1.0.0;python_version>='3.10'",
-    "openai>=1.0.0;python_version>='3.8'",
+    "augur-agents[data,mcp,llm,telegram,slack,lark,wechat,cron]",
 ]
 
 [project.scripts]
