@@ -24,6 +24,12 @@
     <link href="/static/css/augur.css?v=8.1.0" rel="stylesheet">
     <link href="/static/css/layout.css?v=8.1.0" rel="stylesheet">
     {% block extra_head %}{% endblock %}
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#d4a017">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Augur">
+    <link rel="apple-touch-icon" href="/static/images/augur-owl-128.png">
 </head>
 <body class="augur">
     <a href="#main-content" class="skip-link" data-i18n="a11y-skip-main">跳到主内容</a>
@@ -891,6 +897,14 @@
     </script>
     <script src="/static/js/i18n.js?v=8.1.0"></script>
     {% block extra_scripts %}{% endblock %}
+
+    <script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/static/sw.js').catch(function() {});
+  });
+}
+</script>
 
     <!-- Phase B: Ticker Tape -->
     <script>

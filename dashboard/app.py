@@ -1804,6 +1804,14 @@ async def robots_txt():
     return "User-agent: *\nAllow: /\nSitemap: https://augur.example.com/sitemap.xml\n"
 
 
+@app.get("/manifest.json", include_in_schema=False)
+async def pwa_manifest():
+    manifest_path = STATIC_DIR / "manifest.json"
+    if manifest_path.exists():
+        return FileResponse(manifest_path, media_type="application/manifest+json")
+    raise HTTPException(status_code=404)
+
+
 @app.get("/sitemap.xml", summary="Sitemap XML", include_in_schema=False)
 async def sitemap_xml():
     base = "https://augur.example.com"

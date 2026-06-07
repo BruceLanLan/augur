@@ -1,0 +1,32 @@
+{
+  "name": "Augur — Investment Committee",
+  "short_name": "Augur",
+  "description": "18 legendary investor agents. One verdict.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#d4a017",
+  "orientation": "any",
+  "icons": [
+    { "src": "/static/images/augur-owl-64.png", "sizes": "64x64", "type": "image/png" },
+    { "src": "/static/images/augur-owl-128.png", "sizes": "128x128", "type": "image/png" },
+    { "src": "/static/images/augur-owl-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Analyze Stock",
+      "short_name": "Analyze",
+      "description": "Quick stock analysis",
+      "url": "/stocks",
+      "icons": [{ "src": "/static/images/augur-owl-64.png", "sizes": "64x64" }]
+    },
+    {
+      "name": "Committee",
+      "short_name": "Committee",
+      "description": "Investment committee",
+      "url": "/committee",
+      "icons": [{ "src": "/static/images/augur-owl-64.png", "sizes": "64x64" }]
+    }
+  ]
+}
