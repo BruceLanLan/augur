@@ -471,6 +471,45 @@ def create_server():
         return "\n".join(lines)
 
     @mcp.tool()
+    def augur_sentiment(ticker: str) -> str:
+        """Fetch social sentiment analysis for a ticker (StockTwits + news signals).
+
+        Args:
+            ticker: Stock ticker symbol (e.g. AAPL, NVDA, BTC-USD)
+
+        Returns:
+            Sentiment score (-1.0 very bearish to +1.0 very bullish), volume, trending status.
+        """
+        err = _validate_ticker(ticker)
+        if err:
+            return err
+        try:
+            from augur.sentiment import SentimentAnalyzer
+            analyzer = SentimentAnalyzer()
+            result = analyzer.get_sentiment(ticker.upper())
+            score_label = (
+                "Very Bullish" if result.overall_score > 0.5 else
+                "Bullish" if result.overall_score > 0.1 else
+                "Neutral" if result.overall_score > -0.1 else
+                "Bearish" if result.overall_score > -0.5 else
+                "Very Bearish"
+            )
+            lines = [
+                f"Social Sentiment for {result.ticker}:",
+                f"  Score:    {result.overall_score:+.2f}  ({score_label})",
+                f"  Volume:   {result.volume} messages",
+                f"  Trending: {'Yes' if result.trending else 'No'}",
+                f"  Source:   {result.data_source}",
+            ]
+            if result.sources:
+                lines.append("  By source:")
+                for src, score in result.sources.items():
+                    lines.append(f"    {src}: {score:+.2f}")
+            return "\n".join(lines)
+        except Exception as e:
+            return f"Sentiment unavailable for {ticker}: {e}"
+
+    @mcp.tool()
     def augur_fetch(ticker: str) -> str:
         """Fetch real-time market data for a ticker without running analysis.
 

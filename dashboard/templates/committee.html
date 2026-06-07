@@ -101,6 +101,18 @@
     </div>
 </header>
 
+<!-- Preset Committees -->
+<div class="mb-16">
+    <div style="font:600 0.72rem/1 var(--font-pixfin); color:var(--text-muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;" data-i18n="committee-presets">预设委员会</div>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="btn btn-sm btn-ghost" onclick="loadPreset('value')" style="font-size:0.75rem;">🏛️ <span data-i18n="preset-value">经典价值</span></button>
+        <button class="btn btn-sm btn-ghost" onclick="loadPreset('china')" style="font-size:0.75rem;">🇨🇳 <span data-i18n="preset-china">中国价值</span></button>
+        <button class="btn btn-sm btn-ghost" onclick="loadPreset('macro')" style="font-size:0.75rem;">🌐 <span data-i18n="preset-macro">宏观全天候</span></button>
+        <button class="btn btn-sm btn-ghost" onclick="loadPreset('growth')" style="font-size:0.75rem;">🚀 <span data-i18n="preset-growth">创新成长</span></button>
+        <button class="btn btn-sm btn-ghost" onclick="loadPreset('all')" style="font-size:0.75rem;">📊 <span data-i18n="preset-all">全体委员会</span></button>
+    </div>
+</div>
+
 <!-- Input Form -->
 <div class="card mb-20" style="padding:20px;">
     <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
@@ -198,6 +210,38 @@ function clearAll() {
     });
     _selectedAgents.clear();
     document.getElementById('selected-count').textContent = '0 ' + _t('committee-agents-unit', '位');
+}
+
+var _PRESETS = {
+    value:  ['buffett', 'graham', 'munger', 'fisher'],
+    china:  ['duan_yongping', 'zhang_lei', 'li_lu', 'dan_bin'],
+    macro:  ['dalio', 'soros', 'marks', 'arps'],
+    growth: ['cathie_wood', 'thiel', 'aschenbrenner', 'serenity'],
+    all:    []  // empty = all agents
+};
+var _PRESET_LABELS = {
+    value:  '价值委员会：巴菲特 · 格雷厄姆 · 芒格 · 费雪',
+    china:  '中国价值委员会：段永平 · 张磊 · 李录 · 但斌',
+    macro:  '宏观全天候委员会：达利欧 · 索罗斯 · 霍华德马克斯 · ARPS',
+    growth: '创新成长委员会：凯西伍德 · 蒂尔 · Aschenbrenner · Serenity',
+    all:    '全体委员会：18位大师'
+};
+
+function loadPreset(name) {
+    clearAll();
+    var ids = _PRESETS[name] || [];
+    if (ids.length === 0) {
+        selectAll();
+    } else {
+        ids.forEach(function(id) {
+            var chip = document.querySelector('.committee-agent-chip[data-id="' + id + '"]');
+            if (chip) { _selectedAgents.add(id); chip.classList.add('selected'); }
+        });
+        document.getElementById('selected-count').textContent = _selectedAgents.size + ' ' + _t('committee-agents-unit', '位');
+    }
+    if (!document.getElementById('committee-question').value) {
+        document.getElementById('committee-question').placeholder = _PRESET_LABELS[name] || '';
+    }
 }
 
 function runCommittee() {
