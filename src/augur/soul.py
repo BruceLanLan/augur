@@ -37,13 +37,16 @@ _PERSONA_MD_MAP = {
 
 
 def _find_personas_dir() -> Optional[Path]:
-    """Locate the personas/ directory."""
+    """Locate the personas knowledge directory (docs/knowledge/personas/ preferred)."""
+    root = Path(__file__).parent.parent.parent
     candidates = [
-        Path(__file__).parent.parent.parent / "personas",
+        root / "docs" / "knowledge" / "personas",
+        Path.cwd() / "docs" / "knowledge" / "personas",
+        root / "personas",
         Path.cwd() / "personas",
     ]
     for d in candidates:
-        if d.exists():
+        if d.exists() and any(d.glob("*.md")):
             return d
     return None
 
