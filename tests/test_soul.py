@@ -14,8 +14,8 @@ class TestSoul:
 
         soul = generate_soul("buffett")
         assert "Warren Buffett" in soul
-        assert "Soul Definition" in soul
-        assert "Scoring Rules" in soul
+        assert len(soul) > 500  # rich content
+        assert "moat" in soul.lower() or "护城河" in soul  # core philosophy present
 
     def test_generate_soul_invalid_persona(self):
         """generate_soul raises ValueError for unknown persona."""

@@ -374,6 +374,103 @@ def create_server():
         return "\n".join(lines)
 
     @mcp.tool()
+    def augur_committee(
+        ticker: str,
+        question: str,
+        agents: str = "",
+        pe: float = 0,
+        pb: float = 0,
+        roe: float = 0,
+        gross_margins: float = 0,
+        revenue_growth: float = 0,
+        debt_ratio: float = 0,
+        fcf: float = 0,
+        market_cap: float = 0,
+        price: float = 0,
+        sector: str = "",
+    ) -> str:
+        """Convene an investment committee: multiple masters analyze independently then yield a verdict.
+
+        More structured than debate — each master speaks first without seeing others' opinions,
+        then dissents are recorded, and a weighted verdict is produced.
+
+        Args:
+            ticker: Stock ticker symbol (e.g. AAPL, NVDA, 0700.HK)
+            question: The specific question for the committee (e.g. "Is the moat real at this valuation?")
+            agents: Comma-separated agent IDs to include (empty = all 18, e.g. "buffett,munger,dalio")
+            pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector:
+                Optional financial metrics (auto-fetched via yfinance if omitted)
+
+        Returns:
+            Structured committee report: independent opinions, dissents, and weighted verdict
+        """
+        ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
+                             fcf, market_cap, price, sector=sector)
+
+        registry = AgentRegistry()
+        coordinator = DecisionCoordinator(registry)
+
+        # Resolve agent list
+        selected_agents = None
+        if agents.strip():
+            selected_ids = [a.strip() for a in agents.split(",") if a.strip()]
+            all_agents = {a.agent_id: a for a in registry.get_all()}
+            selected_agents = {aid: all_agents[aid] for aid in selected_ids if aid in all_agents}
+            if not selected_agents:
+                return f"No valid agents found in: {agents}. Use augur_list_personas to see available IDs."
+
+        # Run independent analysis (no cross-contamination)
+        if selected_agents:
+            responses = {aid: agent.analyze(ctx) for aid, agent in selected_agents.items()}
+        else:
+            responses = coordinator.analyze_with_all(ctx)
+
+        consensus = coordinator.get_consensus(responses, ticker=ticker.upper(), context=ctx)
+
+        # Build committee report
+        bullish = [(aid, r) for aid, r in responses.items() if r.signal.value == "bullish"]
+        bearish = [(aid, r) for aid, r in responses.items() if r.signal.value == "bearish"]
+        neutral = [(aid, r) for aid, r in responses.items() if r.signal.value == "neutral"]
+
+        lines = [
+            f"═══ Investment Committee: {ticker.upper()} ═══",
+            f"Question: {question}",
+            f"Attendees: {len(responses)} masters",
+            "",
+            "─── Independent Opinions ───",
+        ]
+        for aid, r in sorted(responses.items(), key=lambda x: -x[1].score):
+            stance = r.signal.value.upper()
+            lines.append(f"  {r.agent_name:22s} │ {stance:8s} │ {r.score:.1f}/10")
+            if r.key_findings:
+                lines.append(f"    → {r.key_findings[0]}")
+
+        lines += [
+            "",
+            "─── Dissents & Concerns ───",
+        ]
+        if bearish:
+            lines.append(f"  BEARISH ({len(bearish)}): " + ", ".join(r.agent_name for _, r in bearish))
+        if len(bullish) > 0 and len(bearish) > 0:
+            for aid, r in bearish:
+                if r.risks:
+                    lines.append(f"    ⚠ {r.agent_name}: {r.risks[0]}")
+        if not bearish:
+            lines.append("  No bearish dissents.")
+
+        kelly = consensus.metadata.get("position_sizing", {}).get("position_pct", 0)
+        lines += [
+            "",
+            "─── Committee Verdict ───",
+            f"  Signal:     {consensus.signal.value.upper()}",
+            f"  Score:      {consensus.score:.1f}/10",
+            f"  Confidence: {consensus.confidence:.0%}",
+            f"  Kelly Size: {kelly:.0%}" if kelly else "  Kelly Size: N/A (signal not bullish)",
+            f"  Vote:       Bullish {len(bullish)} / Neutral {len(neutral)} / Bearish {len(bearish)}",
+        ]
+        return "\n".join(lines)
+
+    @mcp.tool()
     def augur_fetch(ticker: str) -> str:
         """Fetch real-time market data for a ticker without running analysis.
 

@@ -2903,6 +2903,82 @@ async def debate_page(request: Request):
     return templates.TemplateResponse(request=request, name="debate.html", context=ctx)
 
 
+@app.get("/committee", response_class=HTMLResponse)
+async def committee_page(request: Request):
+    ctx = {"title": "投资委员会", "personas": _persona_meta()}
+    ctx.update(_i18n_context(request=request))
+    return templates.TemplateResponse(request=request, name="committee.html", context=ctx)
+
+
+@app.post("/api/committee")
+async def api_committee(body: dict):
+    """Run an investment committee session with selected masters."""
+    from augur.personas.base import MarketContext
+    ticker = body.get("ticker", "").upper()
+    question = body.get("question", "")
+    agent_ids = body.get("agents", [])  # list of agent IDs, empty = all
+
+    if not ticker or not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker")
+    if not question:
+        raise HTTPException(status_code=400, detail="Question is required")
+
+    try:
+        from augur.data import fetch_market_context
+        ctx = fetch_market_context(ticker)
+    except Exception:
+        ctx = MarketContext(ticker=ticker)
+
+    coord = get_coordinator()
+    registry = coord._registry if hasattr(coord, "_registry") else get_registry()
+
+    if agent_ids:
+        all_agents = {a.agent_id: a for a in registry.get_all()}
+        selected = {aid: all_agents[aid] for aid in agent_ids if aid in all_agents}
+    else:
+        selected = {a.agent_id: a for a in registry.get_all()}
+
+    responses = {aid: agent.analyze(ctx) for aid, agent in selected.items()}
+    consensus = coord.get_consensus(responses, ticker=ticker, context=ctx)
+
+    opinions = [
+        {
+            "agent_id": aid,
+            "agent_name": r.agent_name,
+            "signal": r.signal.value,
+            "score": round(r.score, 1),
+            "confidence": round(r.confidence, 2),
+            "key_findings": r.key_findings[:2],
+            "risks": r.risks[:1],
+        }
+        for aid, r in sorted(responses.items(), key=lambda x: -x[1].score)
+    ]
+
+    bullish = sum(1 for r in responses.values() if r.signal.value == "bullish")
+    bearish = sum(1 for r in responses.values() if r.signal.value == "bearish")
+    neutral = sum(1 for r in responses.values() if r.signal.value == "neutral")
+    kelly = consensus.metadata.get("position_sizing", {}).get("position_pct", 0)
+
+    return {
+        "status": "ok",
+        "ticker": ticker,
+        "question": question,
+        "opinions": opinions,
+        "verdict": {
+            "signal": consensus.signal.value,
+            "score": round(consensus.score, 1),
+            "confidence": round(consensus.confidence, 2),
+            "kelly_pct": round(kelly * 100, 1) if kelly else 0,
+            "vote": {"bullish": bullish, "neutral": neutral, "bearish": bearish},
+        },
+        "market_data": {
+            "price": ctx.price,
+            "pe": ctx.pe,
+            "sector": ctx.sector,
+        },
+    }
+
+
 @app.get("/performance", response_class=HTMLResponse)
 async def performance_page(request: Request):
     ctx = {"title": "大师排行榜"}

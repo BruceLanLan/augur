@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+{% block title %}投资委员会 - Augur{% endblock %}
+{% block extra_head %}
+<style>
+/* Committee page styles */
+.committee-agent-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+}
+.committee-agent-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.18s;
+    background: var(--bg-card);
+    user-select: none;
+}
+.committee-agent-chip:hover { border-color: var(--accent-orange); background: var(--bg-card-hover); }
+.committee-agent-chip.selected {
+    border-color: var(--accent-orange);
+    background: var(--amber-wash, rgba(255,140,0,0.12));
+    color: var(--accent-orange);
+}
+.committee-agent-chip input[type="checkbox"] { display: none; }
+.committee-agent-chip .chip-name { font-weight: 600; }
+.chip-count {
+    font: 0.68rem/1 var(--font-data);
+    color: var(--text-muted);
+    margin-left: auto;
+}
+.selected .chip-count { color: var(--accent-orange); }
+
+/* Opinion cards */
+.opinion-list { display: flex; flex-direction: column; gap: 10px; }
+.opinion-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    padding: 12px 16px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--r-md, 8px);
+    border-left: 3px solid var(--border-color);
+}
+.opinion-card.bullish { border-left-color: var(--signal-buy); }
+.opinion-card.bearish { border-left-color: var(--signal-sell); }
+.opinion-card.neutral  { border-left-color: var(--signal-neutral); }
+.opinion-name { font: 700 0.85rem/1.2 var(--font-sans); color: var(--fg-1); }
+.opinion-finding { font-size: 0.78rem; color: var(--fg-2); margin-top: 3px; }
+.opinion-risk { font-size: 0.72rem; color: var(--signal-sell); margin-top: 2px; }
+.opinion-badge {
+    display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+    font: 700 0.7rem/1 var(--font-pixfin);
+    text-transform: uppercase; letter-spacing: 0.5px;
+}
+.opinion-badge .signal { padding: 2px 7px; border-radius: 3px; }
+.opinion-badge .signal.bullish { color: var(--signal-buy); border: 1px solid var(--signal-buy); }
+.opinion-badge .signal.bearish { color: var(--signal-sell); border: 1px solid var(--signal-sell); }
+.opinion-badge .signal.neutral  { color: var(--signal-neutral); border: 1px solid var(--signal-neutral); }
+.opinion-badge .score { color: var(--text-muted); font-size: 0.65rem; }
+
+/* Verdict panel */
+.verdict-panel {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    padding: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--r-lg, 12px);
+    margin-bottom: 20px;
+}
+.verdict-stat { text-align: center; }
+.verdict-stat .label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.verdict-stat .value { font: 700 1.4rem/1 var(--font-data); }
+.verdict-stat .value.bullish { color: var(--signal-buy); }
+.verdict-stat .value.bearish { color: var(--signal-sell); }
+.verdict-stat .value.neutral  { color: var(--signal-neutral); }
+
+/* Vote bar */
+.vote-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; gap: 1px; }
+.vote-bar .bull { background: var(--signal-buy); }
+.vote-bar .neut { background: var(--signal-neutral); }
+.vote-bar .bear { background: var(--signal-sell); }
+.vote-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-muted); margin-top: 4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="page-header mb-16">
+    <div class="page-header__text">
+        <h1 class="page-title" data-i18n="committee-title">投资委员会</h1>
+        <p class="page-lead" data-i18n="committee-desc">召集多位投资大师，独立分析，汇聚裁决——委员会机制比单打独斗更可靠</p>
+    </div>
+</header>
+
+<!-- Input Form -->
+<div class="card mb-20" style="padding:20px;">
+    <div style="display:flex; gap:12px; flex-wrap:wrap; margin-bottom:16px;">
+        <div style="flex:0 0 140px;">
+            <label class="form-label" data-i18n="committee-ticker-label">股票代码</label>
+            <input id="committee-ticker" type="text" class="form-input" placeholder="AAPL" maxlength="15"
+                   style="text-transform:uppercase; font-family:var(--font-data); font-weight:700; letter-spacing:1px;"
+                   oninput="this.value=this.value.toUpperCase()">
+        </div>
+        <div style="flex:1; min-width:240px;">
+            <label class="form-label" data-i18n="committee-question-label">提问（可选）</label>
+            <input id="committee-question" type="text" class="form-input"
+                   placeholder="护城河是否真实？当前估值合理吗？" maxlength="200">
+        </div>
+        <div style="display:flex; align-items:flex-end;">
+            <button class="btn btn-primary" onclick="runCommittee()" id="committee-btn">
+                &#x1F3DB; <span data-i18n="committee-run">召开委员会</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Agent selector -->
+    <div style="margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+        <span style="font:600 0.75rem/1 var(--font-pixfin); color:var(--text-muted); text-transform:uppercase;" data-i18n="committee-select-masters">选择参会大师</span>
+        <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm btn-ghost" onclick="selectAll()" data-i18n="committee-select-all">全选</button>
+            <button class="btn btn-sm btn-ghost" onclick="clearAll()" data-i18n="committee-clear-all">清空</button>
+            <span id="selected-count" style="font-size:0.75rem; color:var(--text-muted); line-height:28px;">0 位</span>
+        </div>
+    </div>
+    <div class="committee-agent-grid" id="agent-grid">
+        {% for p in personas %}
+        <label class="committee-agent-chip" data-id="{{ p.id }}" onclick="toggleAgent('{{ p.id }}', this)">
+            <input type="checkbox" value="{{ p.id }}">
+            <span class="chip-name">{{ p.name.split()[-1] }}</span>
+        </label>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Loading state -->
+<div id="committee-loading" style="display:none; text-align:center; padding:40px;">
+    <div class="spinner" aria-hidden="true"></div>
+    <p style="margin-top:12px; color:var(--text-muted); font-size:0.82rem;" data-i18n="committee-loading">委员会正在独立审议...</p>
+</div>
+
+<!-- Error state -->
+<div id="committee-error" class="error-panel" style="display:none;" role="alert">
+    <div class="error-panel-title">&#x26A0; <span data-i18n="committee-error-title">分析失败</span></div>
+    <div class="error-panel-msg" id="committee-error-msg"></div>
+    <button class="btn btn-sm" onclick="runCommittee()" style="margin-top:8px;" data-i18n="btn-retry">重试</button>
+</div>
+
+<!-- Results -->
+<div id="committee-results" style="display:none;">
+
+    <!-- Verdict -->
+    <div class="section-title compact mb-12" data-i18n="committee-verdict">委员会裁决</div>
+    <div class="verdict-panel mb-20" id="verdict-panel"></div>
+
+    <!-- Opinions -->
+    <div class="section-title compact mb-12" data-i18n="committee-opinions">各位大师独立意见</div>
+    <div class="opinion-list" id="opinion-list"></div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+var _selectedAgents = new Set();
+
+function toggleAgent(id, el) {
+    if (_selectedAgents.has(id)) {
+        _selectedAgents.delete(id);
+        el.classList.remove('selected');
+    } else {
+        _selectedAgents.add(id);
+        el.classList.add('selected');
+    }
+    document.getElementById('selected-count').textContent = _selectedAgents.size + ' ' + _t('committee-agents-unit', '位');
+}
+
+function selectAll() {
+    document.querySelectorAll('.committee-agent-chip').forEach(function(el) {
+        var id = el.getAttribute('data-id');
+        _selectedAgents.add(id);
+        el.classList.add('selected');
+    });
+    document.getElementById('selected-count').textContent = _selectedAgents.size + ' ' + _t('committee-agents-unit', '位');
+}
+
+function clearAll() {
+    document.querySelectorAll('.committee-agent-chip').forEach(function(el) {
+        el.classList.remove('selected');
+    });
+    _selectedAgents.clear();
+    document.getElementById('selected-count').textContent = '0 ' + _t('committee-agents-unit', '位');
+}
+
+function runCommittee() {
+    var ticker = document.getElementById('committee-ticker').value.trim().toUpperCase();
+    var question = document.getElementById('committee-question').value.trim();
+    if (!ticker) { showToast(_t('committee-need-ticker', '请输入股票代码'), 'warning'); return; }
+
+    var agents = Array.from(_selectedAgents);
+    document.getElementById('committee-loading').style.display = 'block';
+    document.getElementById('committee-error').style.display = 'none';
+    document.getElementById('committee-results').style.display = 'none';
+    document.getElementById('committee-btn').disabled = true;
+
+    fetch('/api/committee', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ticker: ticker, question: question || ('分析 ' + ticker), agents: agents})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        document.getElementById('committee-loading').style.display = 'none';
+        document.getElementById('committee-btn').disabled = false;
+        if (data.error || data.detail) {
+            showError(data.error || data.detail);
+            return;
+        }
+        renderResults(data);
+    })
+    .catch(function(e) {
+        document.getElementById('committee-loading').style.display = 'none';
+        document.getElementById('committee-btn').disabled = false;
+        showError(e.message);
+    });
+}
+
+function showError(msg) {
+    document.getElementById('committee-error').style.display = 'block';
+    document.getElementById('committee-error-msg').textContent = msg;
+}
+
+function renderResults(data) {
+    var v = data.verdict;
+    var vote = v.vote;
+    var total = vote.bullish + vote.neutral + vote.bearish || 1;
+
+    // Verdict panel
+    var bullPct = (vote.bullish / total * 100).toFixed(0);
+    var neutPct = (vote.neutral / total * 100).toFixed(0);
+    var bearPct = (vote.bearish / total * 100).toFixed(0);
+
+    document.getElementById('verdict-panel').innerHTML =
+        '<div class="verdict-stat">' +
+            '<div class="label">' + escapeHtml(_t('committee-signal', '信号')) + '</div>' +
+            '<div class="value ' + v.signal + '">' + v.signal.toUpperCase() + '</div>' +
+        '</div>' +
+        '<div class="verdict-stat">' +
+            '<div class="label">' + escapeHtml(_t('committee-score', '评分')) + '</div>' +
+            '<div class="value">' + v.score + '<span style="font-size:0.8rem;color:var(--text-muted)">/10</span></div>' +
+        '</div>' +
+        '<div class="verdict-stat">' +
+            '<div class="label">' + escapeHtml(_t('committee-confidence', '置信度')) + '</div>' +
+            '<div class="value">' + Math.round(v.confidence * 100) + '%</div>' +
+        '</div>' +
+        '<div class="verdict-stat">' +
+            '<div class="label">Kelly</div>' +
+            '<div class="value ' + (v.kelly_pct > 0 ? 'bullish' : '') + '">' + (v.kelly_pct > 0 ? v.kelly_pct + '%' : '—') + '</div>' +
+        '</div>' +
+        '<div class="verdict-stat" style="grid-column:1/-1;">' +
+            '<div class="label" style="margin-bottom:6px;">' + escapeHtml(_t('committee-vote', '票数')) + '  Bullish ' + vote.bullish + ' / Neutral ' + vote.neutral + ' / Bearish ' + vote.bearish + '</div>' +
+            '<div class="vote-bar">' +
+                '<div class="bull" style="flex:' + vote.bullish + '"></div>' +
+                '<div class="neut" style="flex:' + vote.neutral + '"></div>' +
+                '<div class="bear" style="flex:' + vote.bearish + '"></div>' +
+            '</div>' +
+        '</div>';
+
+    // Opinions
+    var opinionsHtml = '';
+    (data.opinions || []).forEach(function(op) {
+        var finding = op.key_findings && op.key_findings[0] ? escapeHtml(op.key_findings[0]) : '';
+        var risk = op.risks && op.risks[0] ? escapeHtml(op.risks[0]) : '';
+        opinionsHtml +=
+            '<div class="opinion-card ' + op.signal + '">' +
+                '<div>' +
+                    '<div class="opinion-name">' + escapeHtml(op.agent_name) + '</div>' +
+                    (finding ? '<div class="opinion-finding">→ ' + finding + '</div>' : '') +
+                    (risk ? '<div class="opinion-risk">⚠ ' + risk + '</div>' : '') +
+                '</div>' +
+                '<div class="opinion-badge">' +
+                    '<span class="signal ' + op.signal + '">' + op.signal.toUpperCase() + '</span>' +
+                    '<span class="score">' + op.score + '/10</span>' +
+                '</div>' +
+            '</div>';
+    });
+    document.getElementById('opinion-list').innerHTML = opinionsHtml;
+    document.getElementById('committee-results').style.display = 'block';
+}
+</script>
+{% endblock %}
