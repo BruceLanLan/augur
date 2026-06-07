@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "augur": {
+      "command": "augur-mcp",
+      "description": "Augur Investment Analysis — 18 masters, committee mode, real-time data",
+      "tools": [
+        "augur_analyze",
+        "augur_consensus",
+        "augur_committee",
+        "augur_debate",
+        "augur_fetch",
+        "augur_sentiment",
+        "augur_list_personas",
+        "augur_configure",
+        "augur_create_persona"
+      ]
+    }
+  }
+}

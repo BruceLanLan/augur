@@ -172,27 +172,69 @@ mcp_augur_committee(
 
 ---
 
-## 📊 Dashboard (optional)
-
-The dashboard serves as a lightweight entry point with full analysis UI:
+## 💻 CLI Commands
 
 ```bash
-python3 -m dashboard.app --port 8000
-# http://localhost:8000
-```
+# Analysis
+augur analyze AAPL                     # 18-master consensus
+augur analyze AAPL --persona buffett   # single master
+augur consensus NVDA                   # weighted consensus + Kelly
 
-18 pages covering the full investment workflow, including the new **Investment Committee** page (`/committee`) and **Hermes Setup Guide** (`/hermes-setup`).
+# Live monitoring
+augur serve --port 8000 --open         # launch Dashboard, open browser
+augur watch AAPL NVDA TSLA             # live monitoring (60s refresh)
+augur watch NVDA --alert-above 7.5     # alert when score crosses threshold
+
+# Portfolio
+augur portfolio AAPL NVDA TSLA         # Kelly-weighted allocation suggestion
+
+# Agent system
+augur-mcp                              # start MCP server (for Hermes/Claude/OpenClaw)
+augur skills                           # list all agent skills
+augur skills --school value            # filter by school
+augur inject-soul --persona buffett    # export agent soul to file
+
+# Bots
+augur telegram                         # start Telegram bot
+augur slack                            # start Slack bot
+```
 
 ---
 
-## 🔧 Regenerate Agent Skills
+## 📊 Dashboard
 
 ```bash
-# Regenerate all SKILL.md files (after modifying soul.py)
+augur serve                    # simplest launch
+augur serve --port 8080        # custom port
+docker compose up              # Docker one-command
+```
+
+18 pages: Dashboard / Stocks / Signals / Scanner / Watchlist / Portfolio / Backtest / AI Chat / Optimizer / **Committee** / Compare / Debate / History / Leaderboard / Personas / **Hermes Setup** / Create Persona / Settings
+
+---
+
+## 🎨 Highly DIY — Custom Agents
+
+```bash
+# Option 1: Dashboard no-code builder (recommended)
+augur serve → visit /create-persona
+
+# Option 2: YAML file
+cat > personas/custom/my_quant.yaml << EOF
+agent_id: my_quant
+name: "My Quant Strategy"
+philosophy: ["momentum", "value", "low_vol"]
+scoring_weights:
+  momentum: 0.40
+  value: 0.35
+  safety: 0.25
+EOF
+
+# Option 3: Modify soul.py, regenerate all skills
 python3 scripts/generate_skills.py
 
-# Preview a single agent
-python3 scripts/generate_skills.py --persona buffett --dry-run
+# Option 4: Via MCP
+mcp_augur_create_persona(yaml_content="agent_id: ...")
 ```
 
 ---
@@ -201,11 +243,14 @@ python3 scripts/generate_skills.py --persona buffett --dry-run
 
 | Feature | augur (stable v8.2.x) | augur-next (dev v9.0.x) |
 |---------|----------------------|-------------------------|
-| Dashboard | ✅ Complete | ✅ + Committee + Setup pages |
-| MCP Server | 7 tools | **9 tools** (+committee +sentiment) |
-| Hermes Skills | ❌ | **19 SKILL.md files** |
+| Dashboard | ✅ 18 pages | ✅ + Committee + Hermes Setup |
+| MCP Server | 7 tools | **9 tools** (+committee +sentiment +create) |
+| Hermes / OpenClaw Skills | ❌ | **19 SKILL.md + manifest.json** |
 | Agent System Prompt | Generic template | **Handcrafted persona prompts** |
 | `augur-mcp` command | ❌ | ✅ |
+| `.mcp.json` auto-discovery | ❌ | ✅ |
+| `augur serve/watch/skills/portfolio` | ❌ | ✅ |
+| One-line installer | ❌ | ✅ `install.sh` |
 | Committee history | ❌ | ✅ Auto-saved |
 
 ---

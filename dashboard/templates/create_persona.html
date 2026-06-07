@@ -11,6 +11,50 @@
 .required-star {
     color: var(--signal-sell);
 }
+#id-status {
+    font-size: 0.78rem;
+    margin-top: 4px;
+    min-height: 1.1em;
+}
+#id-status.ok   { color: var(--signal-buy); }
+#id-status.err  { color: var(--signal-sell); }
+#id-status.warn { color: var(--text-secondary); }
+/* Modal */
+#yaml-modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+#yaml-modal-overlay.open { display: flex; }
+#yaml-modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    max-width: 640px;
+    width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+#yaml-modal pre {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-family: var(--font-data);
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    overflow: auto;
+    flex: 1;
+    white-space: pre-wrap;
+    word-break: break-all;
+    margin: 0;
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -21,6 +65,34 @@
         <p class="page-lead" data-i18n="create-persona-desc">无需编写 YAML，通过表单创建属于你的投资策略 Agent</p>
     </div>
 </header>
+
+<!-- YAML Preview Modal -->
+<div id="yaml-modal-overlay" onclick="closeYamlModal(event)">
+    <div id="yaml-modal">
+        <div style="display:flex; align-items:center; justify-content:space-between;">
+            <div class="data-label" style="margin:0;">YAML 预览（将被保存）</div>
+            <button onclick="closeYamlModal()" style="background:none; border:none; color:var(--text-secondary); cursor:pointer; font-size:1.3rem; padding:0 4px; line-height:1;">&times;</button>
+        </div>
+        <pre id="yaml-modal-content"></pre>
+        <div style="display:flex; gap:8px; justify-content:flex-end;">
+            <button class="btn btn-ghost" onclick="closeYamlModal()">关闭</button>
+            <button class="btn btn-primary" onclick="closeYamlModal(); submitPersona();">确认并保存</button>
+        </div>
+    </div>
+</div>
+
+<!-- Preset Loader -->
+<div class="card" style="padding:14px 20px; margin-bottom:16px; display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <span style="font-size:0.82rem; color:var(--text-secondary); white-space:nowrap;">快速预设：</span>
+    <select id="preset-select" onchange="loadPreset(this.value)"
+            style="background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:7px 12px; border-radius:var(--radius-sm); font-size:0.82rem; cursor:pointer; min-width:200px;">
+        <option value="">— 选择预设模板 —</option>
+        <option value="minimalist_value">Minimalist Value（简约价值派）</option>
+        <option value="momentum_trader">Momentum Trader（趋势追踪）</option>
+        <option value="contrarian_macro">Contrarian Macro（逆向宏观）</option>
+    </select>
+    <span style="font-size:0.75rem; color:var(--text-muted);">选择后自动填入表单，可继续修改</span>
+</div>
 
 <!-- Existing Custom Personas List -->
 <div class="card" id="custom-personas-section" style="padding:16px; margin-bottom:20px; display:none;">
@@ -37,7 +109,8 @@
             <label class="cp-label">Agent ID <span class="required-star">*</span></label>
             <input type="text" id="cp-agent-id" placeholder="my_strategy (小写字母、数字、下划线、连字符)"
                    style="width:100%; background:var(--bg-primary); border:1px solid var(--border-color); color:var(--text-primary); padding:8px 12px; border-radius:var(--radius-sm); font-family:var(--font-data); font-size:0.85rem;"
-                   oninput="updatePreview()">
+                   oninput="updatePreview(); checkAgentId(this.value);">
+            <div id="id-status" class="warn"></div>
         </div>
 
         <div style="margin-bottom:12px;">

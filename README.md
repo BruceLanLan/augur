@@ -161,42 +161,89 @@ mcp_augur_committee(
 
 ---
 
-## 🔌 MCP 工具列表（8个）
+## 🔌 MCP 工具（9个）
 
 | 工具 | 用途 |
 |------|------|
 | `mcp_augur_analyze` | 单个或全部大师分析 |
 | `mcp_augur_consensus` | 加权共识 + Kelly 仓位 |
-| `mcp_augur_committee` | 投资委员会（独立意见+裁决） |
+| `mcp_augur_committee` | 投资委员会（独立意见+裁决，自动存历史） |
 | `mcp_augur_debate` | 多轮辩论 |
 | `mcp_augur_fetch` | 实时行情数据 |
-| `mcp_augur_sentiment` | 社交情绪分析 |
+| `mcp_augur_sentiment` | 社交情绪分析（StockTwits+新闻） |
 | `mcp_augur_list_personas` | 列出所有18位大师 |
 | `mcp_augur_configure` | 配置大师模型参数 |
+| `mcp_augur_create_persona` | 无代码创建自定义大师 |
+
+**自动发现**：项目根目录的 `.mcp.json` 让 Claude Code / 任意 MCP 客户端自动发现所有工具。
 
 ---
 
-## 📊 Dashboard（可选）
-
-Dashboard 作为轻量入口，继续提供完整的分析界面：
+## 💻 CLI 命令
 
 ```bash
-python3 -m dashboard.app --port 8000
-# http://localhost:8000
+# 分析
+augur analyze AAPL                     # 18位大师共识
+augur analyze AAPL --persona buffett   # 单个大师
+augur consensus NVDA                   # 加权共识 + Kelly 仓位
+
+# 实时监控
+augur serve --port 8000 --open         # 启动 Dashboard，自动打开浏览器
+augur watch AAPL NVDA TSLA             # 实时监控（60s 刷新）
+augur watch NVDA --alert-above 7.5     # 评分超阈值时提醒
+
+# 组合管理
+augur portfolio AAPL NVDA TSLA         # 组合 Kelly 配置建议
+augur watchlist-add AAPL               # 添加到自选股
+augur backtest AAPL --days 30          # 历史回测
+
+# Agent 系统
+augur-mcp                              # 启动 MCP server（Hermes/Claude接入）
+augur skills                           # 列出所有 Agent Skill
+augur skills --school value            # 按流派筛选
+augur inject-soul --persona buffett    # 导出 Agent Soul 到文件
+
+# 消息推送
+augur telegram                         # 启动 Telegram Bot
+augur slack                            # 启动 Slack Bot
 ```
 
-18个页面覆盖全流程，新增 **投资委员会页面**（`/committee`）。
+---
+
+## 📊 Dashboard（Web 界面）
+
+```bash
+augur serve                    # 最简启动
+augur serve --port 8080        # 自定义端口
+docker compose up              # Docker 一键启动
+```
+
+18个页面：仪表盘 / 股票 / 信号 / 扫描 / 自选股 / 持仓 / 回测 / AI 对话 / 组合优化 / **委员会** / 对决 / 辩论 / 历史 / 排行 / 人格 / **Hermes 接入指南** / 创建大师 / 设置
 
 ---
 
-## 🔧 自定义大师
+## 🎨 高度 DIY — 自定义大师
 
 ```bash
-# 重新生成所有 Skill 文件（修改 soul.py 后运行）
+# 方式一：Dashboard 无代码创建（推荐）
+augur serve → 访问 /create-persona
+
+# 方式二：YAML 文件
+cat > personas/custom/my_quant.yaml << EOF
+agent_id: my_quant
+name: "我的量化策略"
+philosophy: ["动量", "价值", "低波动"]
+scoring_weights:
+  momentum: 0.40
+  value: 0.35
+  safety: 0.25
+EOF
+
+# 方式三：修改 soul.py 后重新生成所有 Skill
 python3 scripts/generate_skills.py
 
-# 生成单个大师
-python3 scripts/generate_skills.py --persona buffett --dry-run
+# 方式四：直接通过 MCP 创建
+mcp_augur_create_persona(yaml_content="agent_id: ...")
 ```
 
 ---
@@ -205,11 +252,14 @@ python3 scripts/generate_skills.py --persona buffett --dry-run
 
 | 功能 | augur (稳定 v8.2.x) | augur-next (开发 v9.0.x) |
 |------|---------------------|--------------------------|
-| Dashboard | ✅ 完整 | ✅ + Committee页面 |
-| MCP Server | 7个工具 | **8个工具**（+committee +sentiment） |
-| Hermes Skill | ❌ | **18+1个 SKILL.md** |
-| Agent System Prompt | 通用模板 | **专属人格化 prompt** |
+| Dashboard | ✅ 完整 18页 | ✅ + Committee + Hermes Setup |
+| MCP Server | 7个工具 | **9个工具**（+committee +sentiment +create） |
+| Hermes / OpenClaw Skill | ❌ | **19个 SKILL.md + manifest.json** |
+| Agent System Prompt | 通用模板 | **专属人格化 prompt，中国4位全中文** |
 | `augur-mcp` 命令 | ❌ | ✅ |
+| `.mcp.json` 自动发现 | ❌ | ✅ |
+| `augur serve/watch/skills/portfolio` | ❌ | ✅ |
+| 一键安装脚本 | ❌ | ✅ `install.sh` |
 
 ---
 
