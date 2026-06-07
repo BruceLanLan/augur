@@ -1051,6 +1051,68 @@ ws.onmessage = (e) => {
 
 ---
 
+## v9 Features / v9 新功能端点
+
+### POST /api/committee
+
+召开投资委员会：多位大师独立分析，返回意见列表 + 加权裁决。会话自动保存到历史记录。
+
+**Request body / 请求体:**
+
+```json
+{
+  "ticker": "AAPL",
+  "question": "护城河是否正在变窄？",
+  "agents": ["buffett", "munger", "duan_yongping"]
+}
+```
+
+| 字段 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| `ticker` | string | ✅ | 股票代码（1-15位） |
+| `question` | string | ✅ | 委员会讨论的核心问题 |
+| `agents` | string[] | ❌ | 参会大师 ID 列表；空 = 全部18位 |
+
+**Response / 响应:**
+
+```json
+{
+  "status": "ok",
+  "ticker": "AAPL",
+  "question": "护城河是否正在变窄？",
+  "history_id": "20260607_143022_000000_AAPL",
+  "opinions": [
+    {
+      "agent_id": "buffett",
+      "agent_name": "Warren Buffett",
+      "signal": "bullish",
+      "score": 8.2,
+      "confidence": 0.85,
+      "key_findings": ["Strong brand moat", "Services revenue growing"],
+      "risks": ["Hardware cycle risk"]
+    }
+  ],
+  "verdict": {
+    "signal": "bullish",
+    "score": 7.6,
+    "confidence": 0.78,
+    "kelly_pct": 12.0,
+    "vote": {"bullish": 2, "neutral": 1, "bearish": 0}
+  },
+  "market_data": {
+    "price": 213.5,
+    "pe": 32.0,
+    "sector": "Technology"
+  },
+  "agents_used": ["buffett", "munger", "duan_yongping"],
+  "session_type": "committee"
+}
+```
+
+**Error codes / 错误码:** `400` invalid ticker | `400` question required | `429` rate limit
+
+---
+
 ## System / 系统
 
 ### GET /health

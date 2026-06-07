@@ -2903,6 +2903,13 @@ async def debate_page(request: Request):
     return templates.TemplateResponse(request=request, name="debate.html", context=ctx)
 
 
+@app.get("/hermes-setup", response_class=HTMLResponse)
+async def hermes_setup_page(request: Request):
+    ctx = {"title": "Hermes Agent 接入指南"}
+    ctx.update(_i18n_context(request=request))
+    return templates.TemplateResponse(request=request, name="hermes_setup.html", context=ctx)
+
+
 @app.get("/committee", response_class=HTMLResponse)
 async def committee_page(request: Request):
     ctx = {"title": "投资委员会", "personas": _persona_meta()}
@@ -2959,7 +2966,7 @@ async def api_committee(body: dict):
     neutral = sum(1 for r in responses.values() if r.signal.value == "neutral")
     kelly = consensus.metadata.get("position_sizing", {}).get("position_pct", 0)
 
-    return {
+    result = {
         "status": "ok",
         "ticker": ticker,
         "question": question,
@@ -2976,7 +2983,32 @@ async def api_committee(body: dict):
             "pe": ctx.pe,
             "sector": ctx.sector,
         },
+        "session_type": "committee",
+        "agents_used": agent_ids or [a.agent_id for a in registry.get_all()],
     }
+
+    # Persist committee session to history
+    try:
+        from augur.history import save_analysis
+        history_payload = {
+            "ticker": ticker,
+            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "session_type": "committee",
+            "question": question,
+            "consensus": {
+                "signal": consensus.signal.value,
+                "score": round(consensus.score, 1),
+                "confidence": round(consensus.confidence, 2),
+            },
+            "agents": [op["agent_name"] for op in opinions],
+            "opinions": opinions,
+        }
+        history_id = save_analysis(ticker, history_payload)
+        result["history_id"] = history_id
+    except Exception:
+        pass  # history errors never block the response
+
+    return result
 
 
 @app.get("/performance", response_class=HTMLResponse)

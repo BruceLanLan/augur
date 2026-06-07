@@ -1051,6 +1051,51 @@ ws.onmessage = (e) => {
 
 ---
 
+## v9 Features
+
+### POST /api/committee
+
+Convene an investment committee: selected masters analyze independently, returning individual opinions + weighted verdict. Session is automatically saved to history.
+
+**Request body:**
+
+```json
+{
+  "ticker": "AAPL",
+  "question": "Is the moat narrowing?",
+  "agents": ["buffett", "munger", "duan_yongping"]
+}
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `ticker` | string | ✅ | Stock ticker (1-15 chars) |
+| `question` | string | ✅ | The core question for the committee |
+| `agents` | string[] | ❌ | List of agent IDs; empty = all 18 |
+
+**Response:**
+
+```json
+{
+  "status": "ok",
+  "ticker": "AAPL",
+  "history_id": "20260607_143022_000000_AAPL",
+  "opinions": [...],
+  "verdict": {
+    "signal": "bullish",
+    "score": 7.6,
+    "confidence": 0.78,
+    "kelly_pct": 12.0,
+    "vote": {"bullish": 2, "neutral": 1, "bearish": 0}
+  },
+  "session_type": "committee"
+}
+```
+
+**Error codes:** `400` invalid ticker | `400` question required | `429` rate limit
+
+---
+
 ## System / 系统
 
 ### GET /health
