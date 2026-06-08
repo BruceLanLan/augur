@@ -2,6 +2,23 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.1.0] - 2026-06-09
+
+功能扩展：因子细分、历史搜索、设置外观、持仓/自选导出。
+
+### Added
+- **Compare 因子细分表**：雷达图下方展示每个维度的实际因子得分（0-10，颜色编码），按 valuation/growth/quality/momentum/safety 分组，仅当存在真实 metadata.factors 时显示。
+- **History 搜索/筛选**：ticker 搜索框（防抖 300ms）+ bullish/neutral/bearish 信号筛选片；后端 `/api/history` 新增 `ticker` 和 `signal` 查询参数，`history.py` 的 `list_history`/`count_history` 支持 ticker_filter + signal_filter。
+- **Settings 外观设置区块**：设置页顶部新增语言选择器（4 语言按钮组）和主题选择器（深色/浅色），active 状态橙色边框高亮。
+- **Portfolio CSV 导出**：持仓页"导出 CSV"按钮，包含 Ticker/Shares/Avg Cost/Current Price/Market Value/P&L/Buy Date，UTF-8 BOM 兼容 Excel。
+- **Watchlist CSV 导出 + 导入**：自选股页导出（ticker 列表 CSV）+ 文件选择导入（支持逗号/换行/分号分隔，自动去重，验证 ticker 格式）。
+
+### Changed
+- **Compare `_FACTOR_MAP` 完整覆盖**：新增所有 18 个 persona 的 factor key 映射（duan_yongping/fisher/li_lu/lynch/marks/munger/soros/thiel/zhang_lei/dayu/serenity），`_INVERT` 增加 `supply_chain_bottleneck`。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.0.0] - 2026-06-09
 
 v10 首发：日语/韩语国际化支持，四语言循环切换（中/英/日/韩），降级链机制。
