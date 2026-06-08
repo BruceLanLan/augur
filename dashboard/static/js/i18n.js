@@ -888,7 +888,17 @@ window.I18N = {
         "stocks-collapse": "收起",
         "a11y-stocks-ticker": "股票代码输入",
         "a11y-hero-chips-group": "示例股票代码",
-        "a11y-stocks-spinner": "分析进行中"
+        "a11y-stocks-spinner": "分析进行中",
+        // Keyboard shortcuts modal
+        "kbd-modal-title": "键盘快捷键",
+        "kbd-focus-ticker": "聚焦 Ticker 输入框",
+        "kbd-submit-analysis": "提交分析",
+        "kbd-close-panels": "关闭面板 / 侧边栏",
+        "kbd-quick-nav": "快速导航",
+        "kbd-nav-pages": "Dashboard · Stocks · Signals · Personas · Backtest · Settings",
+        "kbd-show-help": "显示快捷键帮助",
+        "kbd-modal-close": "关闭",
+        "kbd-or": "或"
     },
     en: {
         // Sidebar nav
@@ -1774,7 +1784,17 @@ window.I18N = {
         "stocks-collapse": "Collapse",
         "a11y-stocks-ticker": "Stock ticker input",
         "a11y-hero-chips-group": "Example tickers",
-        "a11y-stocks-spinner": "Analysis in progress"
+        "a11y-stocks-spinner": "Analysis in progress",
+        // Keyboard shortcuts modal
+        "kbd-modal-title": "Keyboard Shortcuts",
+        "kbd-focus-ticker": "Focus ticker input",
+        "kbd-submit-analysis": "Submit analysis",
+        "kbd-close-panels": "Close panels / sidebar",
+        "kbd-quick-nav": "Quick navigation",
+        "kbd-nav-pages": "Dashboard · Stocks · Signals · Personas · Backtest · Settings",
+        "kbd-show-help": "Show keyboard shortcuts",
+        "kbd-modal-close": "Close",
+        "kbd-or": "or"
     },
     ja: {
         // Sidebar nav

@@ -2,6 +2,17 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.8.0] - 2026-06-09
+
+键盘快捷键帮助 Modal。
+
+### Added
+- **键盘快捷键 Modal**：按 `?` 键（或侧边栏底部 `?` 按钮）弹出快捷键参考卡，列出所有可用快捷键（`/` / `Ctrl+K` 聚焦、`Ctrl+Enter` 提交、`Esc` 关闭、`1–6` 快速导航、`?` 显示帮助）。点击背景或按 Esc 关闭，四语言 i18n 支持。
+- i18n: kbd-modal-title / kbd-focus-ticker / kbd-submit-analysis / kbd-close-panels / kbd-quick-nav / kbd-nav-pages / kbd-show-help / kbd-modal-close / kbd-or (zh+en)。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.7.0] - 2026-06-09
 
 Stocks 页体验增强：最近分析 chips + URL 状态同步。

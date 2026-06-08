@@ -135,6 +135,9 @@
                 <button type="button" onclick="toggleLanguage()" class="lang-toggle-btn" data-i18n-aria="a11y-toggle-lang" aria-label="切换语言">
                     <span id="lang-label">EN</span>
                 </button>
+                <button type="button" onclick="openKbdModal()" class="lang-toggle-btn" data-i18n-aria="kbd-show-help" aria-label="显示快捷键帮助" title="Keyboard shortcuts (?)">
+                    ?
+                </button>
                 <div class="sb-status status-indicator connected"><span class="dot live status-dot"></span><span class="status-text" data-i18n="status-ready">Oracle online · yfinance live</span></div>
                 <div class="sb-ver" data-i18n="powered-by">AUGUR v8.1.0</div>
             </div>
@@ -189,6 +192,56 @@
 
     <!-- Toast container -->
     <div class="toast-container" id="toast-container" role="status" aria-live="polite" aria-atomic="true" style="position:fixed;z-index:9999;top:16px;right:16px;"></div>
+
+    <!-- Keyboard shortcuts modal -->
+    <div id="kbd-modal" role="dialog" aria-modal="true" aria-labelledby="kbd-modal-heading" onclick="if(event.target===this)closeKbdModal()" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;">
+        <div style="background:var(--bg-card,#1a1a2e);border:1px solid var(--border,#333);border-radius:12px;padding:28px 32px;min-width:340px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative;">
+            <h2 id="kbd-modal-heading" data-i18n="kbd-modal-title" style="margin:0 0 20px;font-size:1.1rem;font-weight:600;color:var(--text-primary,#fff);letter-spacing:.02em;">键盘快捷键</h2>
+            <table style="width:100%;border-collapse:collapse;">
+                <tbody>
+                    <tr style="border-bottom:1px solid var(--border,#333);">
+                        <td style="padding:10px 0;color:var(--text-secondary,#aaa);font-size:.875rem;" data-i18n="kbd-focus-ticker">聚焦 Ticker 输入框</td>
+                        <td style="padding:10px 0;text-align:right;">
+                            <kbd style="background:var(--bg-elevated,#2a2a3e);border:1px solid var(--border,#444);border-radius:5px;padding:3px 8px;font-size:.8rem;font-family:monospace;color:var(--text-primary,#fff);">/</kbd>
+                            <span style="color:var(--text-muted,#666);font-size:.8rem;margin:0 4px;" data-i18n="kbd-or">或</span>
+                            <kbd style="background:var(--bg-elevated,#2a2a3e);border:1px solid var(--border,#444);border-radius:5px;padding:3px 8px;font-size:.8rem;font-family:monospace;color:var(--text-primary,#fff);">Ctrl+K</kbd>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border,#333);">
+                        <td style="padding:10px 0;color:var(--text-secondary,#aaa);font-size:.875rem;" data-i18n="kbd-submit-analysis">提交分析</td>
+                        <td style="padding:10px 0;text-align:right;">
+                            <kbd style="background:var(--bg-elevated,#2a2a3e);border:1px solid var(--border,#444);border-radius:5px;padding:3px 8px;font-size:.8rem;font-family:monospace;color:var(--text-primary,#fff);">Ctrl+Enter</kbd>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border,#333);">
+                        <td style="padding:10px 0;color:var(--text-secondary,#aaa);font-size:.875rem;" data-i18n="kbd-close-panels">关闭面板 / 侧边栏</td>
+                        <td style="padding:10px 0;text-align:right;">
+                            <kbd style="background:var(--bg-elevated,#2a2a3e);border:1px solid var(--border,#444);border-radius:5px;padding:3px 8px;font-size:.8rem;font-family:monospace;color:var(--text-primary,#fff);">Esc</kbd>
+                        </td>
+                    </tr>
+                    <tr style="border-bottom:1px solid var(--border,#333);">
+                        <td style="padding:10px 0;color:var(--text-secondary,#aaa);font-size:.875rem;" data-i18n="kbd-quick-nav">快速导航</td>
+                        <td style="padding:10px 0;text-align:right;">
+                            <kbd style="background:var(--bg-elevated,#2a2a3e);border:1px solid var(--border,#444);border-radius:5px;padding:3px 8px;font-size:.8rem;font-family:monospace;color:var(--text-primary,#fff);">1</kbd>
+                            –
+                            <kbd style="background:var(--bg-elevated,#2a2a3e);border:1px solid var(--border,#444);border-radius:5px;padding:3px 8px;font-size:.8rem;font-family:monospace;color:var(--text-primary,#fff);">6</kbd>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding:10px 0;color:var(--text-secondary,#aaa);font-size:.875rem;" data-i18n="kbd-show-help">显示快捷键帮助</td>
+                        <td style="padding:10px 0;text-align:right;">
+                            <kbd style="background:var(--bg-elevated,#2a2a3e);border:1px solid var(--border,#444);border-radius:5px;padding:3px 8px;font-size:.8rem;font-family:monospace;color:var(--text-primary,#fff);">?</kbd>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="margin-top:8px;padding-top:12px;border-top:1px solid var(--border,#333);">
+                <p style="margin:0;font-size:.75rem;color:var(--text-muted,#666);" data-i18n="kbd-nav-pages">Dashboard · Stocks · Signals · Personas · Backtest · Settings</p>
+            </div>
+            <button type="button" onclick="closeKbdModal()" data-i18n="kbd-modal-close" style="margin-top:20px;width:100%;padding:9px;background:var(--accent,#d4a017);color:#000;border:none;border-radius:6px;font-size:.875rem;font-weight:600;cursor:pointer;">关闭</button>
+            <button type="button" onclick="closeKbdModal()" aria-label="Close" style="position:absolute;top:14px;right:14px;background:none;border:none;color:var(--text-muted,#666);font-size:1.2rem;cursor:pointer;line-height:1;padding:4px;">×</button>
+        </div>
+    </div>
 
     <script>
     // Sidebar toggle
@@ -759,6 +812,19 @@
             .catch(function(err) { clearTimeout(timer); hideProgress(); throw err; });
     }
 
+    // Keyboard shortcuts modal
+    function openKbdModal() {
+        var m = document.getElementById('kbd-modal');
+        if (!m) return;
+        m.style.display = 'flex';
+        m.focus();
+        if (typeof initI18n === 'function') initI18n();
+    }
+    function closeKbdModal() {
+        var m = document.getElementById('kbd-modal');
+        if (m) m.style.display = 'none';
+    }
+
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {
         var tag = (e.target.tagName || '').toLowerCase();
@@ -785,8 +851,19 @@
             return;
         }
 
+        // ? -> keyboard shortcuts modal (not in input)
+        if (e.key === '?' && !inInput) {
+            e.preventDefault();
+            var m = document.getElementById('kbd-modal');
+            if (m && m.style.display === 'flex') { closeKbdModal(); } else { openKbdModal(); }
+            return;
+        }
+
         // Escape -> close expanded cards or modals
         if (e.key === 'Escape') {
+            // Close keyboard shortcuts modal
+            var kbdM = document.getElementById('kbd-modal');
+            if (kbdM && kbdM.style.display === 'flex') { closeKbdModal(); return; }
             // Close expanded persona rows
             document.querySelectorAll('.persona-row.expanded').forEach(function(row) {
                 row.classList.remove('expanded');
