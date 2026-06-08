@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-08，当前版本 **v9.0.8**（所有 P1/P2/P3 项完成）
+> 最后更新：2026-06-09，当前版本 **v9.1.0**（UI P0-P4 全完成，1656 tests passing）
 
 ---
 
@@ -35,6 +35,7 @@
 | 9.0.6 | PWA 支持（可安装为独立 App） |
 | 9.0.7 | stocks 历史共识走势折线图（Chart.js）+ README 准确性修复 |
 | 9.0.8 | `augur committee` CLI 命令 + `augur update` 自更新 + compare 雷达图 + committee WebSocket 流式 + OpenClaw 文档 + PyPI CI |
+| 9.1.0 | UI P0-P4 全完成：CSS token 统一 + 亮色模式修复 + 图表主题联动 + Tape 暂停 UX + 历史图点击 + Toast 升级 + Empty State SVG |
 
 **当前能力盘点：**
 - MCP 工具 9 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona

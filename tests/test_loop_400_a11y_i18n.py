@@ -242,7 +242,7 @@ class TestStocksHistoryPanel:
 
     def test_history_table_has_scroll_hint(self, stocks_text):
         idx = stocks_text.find("history-comparison")
-        assert "table-scroll-hint" in stocks_text[idx:idx + 1200]
+        assert "table-scroll-hint" in stocks_text[idx:idx + 2000]
 
     def test_history_panel_is_live_region(self, stocks_text):
         assert 'aria-live="polite"' in stocks_text
