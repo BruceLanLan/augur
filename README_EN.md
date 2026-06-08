@@ -2,161 +2,192 @@
 
 <div align="center">
 
-# 🦉 Augur Next
+<img src="docs/images/en/hero-banner.png" alt="Augur — Your AI Investment Committee" width="100%">
+
+# 🦉 Augur
 
 **Your AI Investment Committee**
 
-*18 legendary investors. Independent minds. One verdict.*
+*18 legendary investors. Simultaneous analysis. One verdict.*
 
-[![v9.0.2](https://img.shields.io/badge/v9.0.2-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur-next)
-[![18 Agents](https://img.shields.io/badge/18-Independent_Agents-brightgreen?style=for-the-badge)](#-18-independent-agents)
-[![MCP Ready](https://img.shields.io/badge/MCP-Hermes_%2F_Claude-orange?style=for-the-badge)](https://modelcontextprotocol.io)
+[![v9.0.6](https://img.shields.io/badge/v9.0.6-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![1652 Tests](https://img.shields.io/badge/1652_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
+[![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
+[![PWA](https://img.shields.io/badge/PWA-Installable_App-blue?style=for-the-badge)](#-dashboard)
 [![MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
-
-> **Stable version → [augur](https://github.com/BruceLanLan/augur)**
-> This repo is the next-generation feature preview.
 
 </div>
 
 ---
 
-## What is Augur Next?
+## Why Augur?
 
-Augur Next upgrades 18 legendary investors from a "scoring engine" into **true independent AI Agents** — each with their own personality, speaking style, decision framework, and tool access. Talk to them directly through Hermes Studio or Claude Desktop.
+| | Single Strategy / ChatGPT | **Augur** |
+|---|---|---|
+| Analytical perspectives | 1 | **18** (Value / Growth / Macro / China) |
+| Quantitative scoring | ❌ | ✅ 0–10 score + Kelly position sizing |
+| Bull/Bear debate | ❌ | ✅ Built-in structured debate |
+| Investment committee | ❌ | ✅ Configurable preset committees |
+| Real-time market data | ❌ | ✅ yfinance auto-fetch |
+| AI conversation | Generic answers | ✅ Persona chat + live data cards |
+| Portfolio optimization | ❌ | ✅ Markowitz efficient frontier |
+| Multi-platform access | ❌ | ✅ Dashboard / MCP / CLI / Bot |
+| DIY customization | ❌ | ✅ YAML no-code persona builder |
+| Standalone install | ❌ | ✅ PWA — desktop / mobile app |
 
-```
-Stable (augur)               Dev (augur-next)
-──────────────               ─────────────────
-Dashboard scorecard  →       18 independent agent conversations
-Batch consensus      →       Investment committee debates
-Template chat        →       Real LLM persona conversations
+---
+
+## 🎭 18 Investment Masters
+
+### Classic Value School
+
+| Master | Framework | Signature Question |
+|--------|-----------|-------------------|
+| Warren Buffett | Moat · Long-term hold · ROE | Will this company still have a competitive advantage in five years? |
+| Benjamin Graham | Margin of safety · Deep value · P/B | How much cheaper is this than intrinsic value? |
+| Charlie Munger | Lattice thinking · Inversion · Antifragility | Where are we most likely to be wrong? |
+| Philip Fisher | Scuttlebutt · Growth quality · Management | Is this company investing aggressively in R&D? |
+
+### Growth & Innovation
+
+| Master | Framework | Signature Question |
+|--------|-----------|-------------------|
+| Peter Lynch | GARP · PEG · Everyday edge | Is PEG below 1? |
+| Cathie Wood | Disruptive innovation · Wright's Law · AI | How big will this market be in five years? |
+| Peter Thiel | 0→1 monopoly · Secrets · Contrarian | What does this company know that others don't? |
+| Leopold Aschenbrenner | AGI infrastructure · Geopolitics · Compute | Where is the AI compute bottleneck? |
+
+### Macro & Cycles
+
+| Master | Framework | Signature Question |
+|--------|-----------|-------------------|
+| Ray Dalio | All-weather · Debt cycles · Correlation | How does this asset perform in stagflation? |
+| George Soros | Reflexivity · Macro trading · FX | What is the self-reinforcing mechanism here? |
+| Howard Marks | Pendulum · Second-level thinking | What does consensus think — and are they right? |
+| ARPS | Real rates · Gold · Crypto | What is the inflation-adjusted yield? |
+
+### 🇨🇳 Chinese Value School (full Chinese dialogue)
+
+| Master | Framework | Signature Question |
+|--------|-----------|-------------------|
+| Duan Yongping 段永平 | Integrity (本分) · Extreme concentration | What is the true business nature of this company? |
+| Zhang Lei 张磊 (Hillhouse) | Structural long-term value · Enablement | Can this company operate for 100 years? |
+| Li Lu 李录 (Himalaya) | Deep value · Margin of safety | Is intrinsic value being severely underpriced? |
+| Dan Bin 但斌 | Brand moat · Era beta | Is this one of the era's greatest companies? |
+| BTCdayu 大宇 | Information edge · Sentiment momentum | What phase is market sentiment at? |
+
+### Special Strategies
+
+| Master | Framework |
+|--------|-----------|
+| Serenity | AI supply chain bottlenecks · Compute dependency analysis |
+
+---
+
+## 🚀 30-Second Quickstart
+
+```bash
+git clone https://github.com/BruceLanLan/augur.git && cd augur
+pip install -e ".[data]"
+
+# 18-master consensus on AAPL
+augur analyze AAPL
+
+# Weighted consensus + Kelly position
+augur consensus NVDA
+
+# Launch Web dashboard
+augur serve --open
 ```
 
 ---
 
-## 🚀 5-Minute Quickstart
+## 📊 Dashboard
 
-### Step 1: Install
+<img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard — Summon 18 masters" width="100%">
+
+Bloomberg Terminal × JRPG HD-2D aesthetic. Enter a ticker and 18 masters analyze simultaneously.
 
 ```bash
-git clone https://github.com/BruceLanLan/augur-next.git && cd augur-next
-pip install -e ".[data,mcp]"    # Python 3.10+ required for MCP
-augur-mcp --help                # verify the command works
+augur serve              # default http://localhost:8000
+augur serve --port 8080  # custom port
+docker compose up        # Docker one-command launch
 ```
 
-### Step 2: Configure your AI client
+Install as a standalone app (PWA): visit the dashboard in your browser and click "Install" in the address bar — works on desktop and mobile.
 
-**Hermes Studio** (`~/.hermes/config.yaml`):
-```yaml
-mcp_servers:
-  augur:
-    command: augur-mcp
-```
+### Stock Analysis
+
+<img src="docs/images/screenshots/report-hd2d.png" alt="Stock Analysis — NVDA BUY 7.6" width="100%">
+
+Auto-fetches market cap, PE, ROE, FCF and more. 18 masters score independently, then merge into consensus:
+- **Augur Score** (0–10) + **BUY / NEUTRAL / SELL**
+- **Confidence** + **Kelly position sizing**
+- **The Oracle of Augur**: one-line consensus verdict
+- **13 Bullish / 5 Neutral / 0 Bearish**: sentiment distribution
+
+### Bull / Bear Debate
+
+<img src="docs/images/screenshots/04-bullish-critical.png" alt="Bull/Bear deep analysis" width="100%">
+
+Automatically generates a full bull and bear case to surface blind spots.
+
+### Investment Committee
+
+Select any combination of masters, convene a committee session — each master speaks independently and a verdict is auto-generated, then saved to history.
+
+Preset committees: **Classic Value** · **China Value** · **Macro All-Weather** · **Disruptive Growth** · **Full Council**
+
+### Personas
+
+<img src="docs/images/screenshots/personas-hd2d.png" alt="18 Investment Masters" width="100%">
+
+### History
+
+<img src="docs/images/screenshots/history.png" alt="Analysis history" width="100%">
+
+Every analysis is auto-archived. Filter by date, score, or signal for retrospective review.
+
+### All Pages
+
+Dashboard / Stocks / Signals / Scanner / Watchlist / Portfolio / Backtest / AI Chat / Optimizer / **Committee** / Compare / Debate / History / Leaderboard / Personas / Create Persona / Hermes Setup / Settings
+
+---
+
+## 🔌 Deploy Anywhere
+
+<img src="docs/images/screenshots/05-available-everywhere.png" alt="One-click deploy to any platform" width="100%">
+
+| Platform | How to connect |
+|----------|---------------|
+| **Web Dashboard** | `augur serve` — built-in FastAPI, zero config |
+| **Claude Desktop** | MCP config → `augur mcp-server` |
+| **Hermes Agent** | `/skill augur-buffett` — direct persona chat |
+| **OpenClaw** | YAML manifest auto-registration |
+| **Telegram / Slack** | `augur telegram` / `augur slack` |
+| **Claude Code / Codex** | `.mcp.json` auto-discovery |
+
+### MCP Quick Setup
 
 **Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "augur": { "command": "augur-mcp" }
+    "augur": { "command": "augur", "args": ["mcp-server"] }
   }
 }
 ```
 
-### Step 3: Start talking
-
-```
-/skill augur-buffett
-"Is AAPL worth buying at PE=32, ROE=55%, Technology sector?"
-
-/skill augur-committee
-"China Value Committee: Duan Yongping, Zhang Lei, Li Lu, Dan Bin — assess Tencent 00700.HK"
+**Hermes Studio** (`~/.hermes/config.yaml`):
+```yaml
+mcp_servers:
+  augur:
+    command: augur
+    args: [mcp-server]
 ```
 
----
-
-## 🎭 18 Independent Agents
-
-Each agent has a complete personality definition, decision framework, and tool permissions.
-
-### Classic Value
-
-| Skill | Investor | Framework | Language |
-|-------|----------|-----------|----------|
-| `augur-buffett` | Warren Buffett | Moat · Long-term hold | English |
-| `augur-graham` | Benjamin Graham | Margin of safety · Deep value | English |
-| `augur-munger` | Charlie Munger | Lattice thinking · Inversion | English |
-| `augur-fisher` | Philip Fisher | Scuttlebutt · Growth quality | English |
-
-### Growth & Innovation
-
-| Skill | Investor | Framework | Language |
-|-------|----------|-----------|----------|
-| `augur-lynch` | Peter Lynch | GARP · PEG · Everyday edge | English |
-| `augur-cathie-wood` | Cathie Wood | Disruptive innovation · Wright's Law | English |
-| `augur-thiel` | Peter Thiel | 0→1 monopoly · Secrets | English |
-| `augur-aschenbrenner` | Leopold Aschenbrenner | AGI infrastructure · Geopolitics | English |
-
-### Macro & Cycle
-
-| Skill | Investor | Framework | Language |
-|-------|----------|-----------|----------|
-| `augur-dalio` | Ray Dalio | All-weather · Debt cycles | English |
-| `augur-soros` | George Soros | Reflexivity · Macro trading | English |
-| `augur-marks` | Howard Marks | Pendulum · Second-level thinking | English |
-| `augur-arps` | ARPS | Real rates · Gold/Crypto | English |
-
-### 🇨🇳 Chinese Investors (full Chinese dialogue)
-
-| Skill | Investor | Framework |
-|-------|----------|-----------|
-| `augur-duan-yongping` | 段永平 (Duan Yongping) | Integrity (本分) · Extreme concentration |
-| `augur-zhang-lei` | 张磊 Zhang Lei (Hillhouse) | Structural long-term value |
-| `augur-li-lu` | 李录 Li Lu (Himalaya) | Deep value · Margin of safety |
-| `augur-dan-bin` | 但斌 Dan Bin | Brand moat · Era beta |
-
-### Special Strategies
-
-| Skill | Investor | Framework | Language |
-|-------|----------|-----------|----------|
-| `augur-dayu` | 大宇 BTCdayu | Information edge · Sentiment momentum | English |
-| `augur-serenity` | Serenity | AI supply chain bottlenecks | English |
-
----
-
-## 🏛️ Investment Committee Mode
-
-### Via Hermes Agent (recommended)
-
-```
-/skill augur-committee
-"Value Committee on NVDA — Buffett, Munger, Graham, Fisher, PE=35, AI chip leader"
-
-"China Value Committee on Kweichow Moutai — Duan Yongping, Zhang Lei, Li Lu, Dan Bin"
-```
-
-### Via Dashboard
-
-```bash
-python3 -m dashboard.app
-# Open http://localhost:8000/committee
-# Select masters → enter ticker + question → view independent opinions + verdict
-```
-
-Committee sessions are automatically saved to history and can be reviewed at `/history`.
-
-### Via MCP Tool
-
-```
-mcp_augur_committee(
-    ticker="AAPL",
-    question="Is the moat narrowing at this valuation?",
-    agents="buffett,munger,duan_yongping,li_lu"
-)
-```
-
----
-
-## 🔌 MCP Tools (9 total)
+### MCP Tools (9 total)
 
 | Tool | Purpose |
 |------|---------|
@@ -166,9 +197,9 @@ mcp_augur_committee(
 | `mcp_augur_debate` | Multi-round structured debate |
 | `mcp_augur_fetch` | Real-time market data (yfinance) |
 | `mcp_augur_sentiment` | Social sentiment (StockTwits + news) |
-| `mcp_augur_list_personas` | List all 18 agents |
-| `mcp_augur_configure` | Set per-agent model parameters |
-| `mcp_augur_create_persona` | Create custom YAML agent |
+| `mcp_augur_list_personas` | List all 18 masters |
+| `mcp_augur_configure` | Set per-master model parameters |
+| `mcp_augur_create_persona` | Create a custom YAML persona |
 
 ---
 
@@ -176,23 +207,25 @@ mcp_augur_committee(
 
 ```bash
 # Analysis
-augur analyze AAPL                     # 18-master consensus
-augur analyze AAPL --persona buffett   # single master
-augur consensus NVDA                   # weighted consensus + Kelly
+augur analyze AAPL                      # 18-master consensus
+augur analyze AAPL --persona buffett    # single master
+augur consensus NVDA                    # weighted consensus + Kelly
+augur report TSLA                       # deep Markdown analysis report
 
 # Live monitoring
-augur serve --port 8000 --open         # launch Dashboard, open browser
-augur watch AAPL NVDA TSLA             # live monitoring (60s refresh)
+augur serve --port 8000 --open          # launch Dashboard, auto-open browser
+augur watch AAPL NVDA TSLA             # live monitor (60s refresh)
 augur watch NVDA --alert-above 7.5     # alert when score crosses threshold
 
 # Portfolio
 augur portfolio AAPL NVDA TSLA         # Kelly-weighted allocation suggestion
+augur watchlist-add AAPL               # add to watchlist
+augur backtest AAPL --days 30          # historical backtest
 
-# Agent system
-augur-mcp                              # start MCP server (for Hermes/Claude/OpenClaw)
-augur skills                           # list all agent skills
+# Agent / MCP
+augur mcp-server                       # start MCP server (stdio, for Claude/Hermes)
+augur skills                           # list all Agent skills
 augur skills --school value            # filter by school
-augur inject-soul --persona buffett    # export agent soul to file
 
 # Bots
 augur telegram                         # start Telegram bot
@@ -201,23 +234,12 @@ augur slack                            # start Slack bot
 
 ---
 
-## 📊 Dashboard
-
-```bash
-augur serve                    # simplest launch
-augur serve --port 8080        # custom port
-docker compose up              # Docker one-command
-```
-
-18 pages: Dashboard / Stocks / Signals / Scanner / Watchlist / Portfolio / Backtest / AI Chat / Optimizer / **Committee** / Compare / Debate / History / Leaderboard / Personas / **Hermes Setup** / Create Persona / Settings
-
----
-
-## 🎨 Highly DIY — Custom Agents
+## 🎨 Highly DIY — Custom Personas
 
 ```bash
 # Option 1: Dashboard no-code builder (recommended)
-augur serve → visit /create-persona
+augur serve
+# visit http://localhost:8000/create-persona
 
 # Option 2: YAML file
 cat > personas/custom/my_quant.yaml << EOF
@@ -229,59 +251,62 @@ scoring_weights:
   value: 0.35
   safety: 0.25
 EOF
+augur analyze AAPL --persona my_quant
 
-# Option 3: Modify soul.py, regenerate all skills
-python3 scripts/generate_skills.py
-
-# Option 4: Via MCP
+# Option 3: Via MCP tool
 mcp_augur_create_persona(yaml_content="agent_id: ...")
 ```
-
----
-
-## Comparison with Stable Version
-
-| Feature | augur (stable v8.2.x) | augur-next (dev v9.0.x) |
-|---------|----------------------|-------------------------|
-| Dashboard | ✅ 18 pages | ✅ + Committee + Hermes Setup |
-| MCP Server | 7 tools | **9 tools** (+committee +sentiment +create) |
-| Hermes / OpenClaw Skills | ❌ | **19 SKILL.md + manifest.json** |
-| Agent System Prompt | Generic template | **Handcrafted persona prompts** |
-| `augur-mcp` command | ❌ | ✅ |
-| `.mcp.json` auto-discovery | ❌ | ✅ |
-| `augur serve/watch/skills/portfolio` | ❌ | ✅ |
-| One-line installer | ❌ | ✅ `install.sh` |
-| Committee history | ❌ | ✅ Auto-saved |
 
 ---
 
 ## 📝 Changelog
 
 <details>
-<summary><strong>v9.0.2 — Committee presets / sentiment MCP / augur-next README (current)</strong></summary>
+<summary><strong>v9.0.6 — PWA installable standalone app (current)</strong></summary>
 
-- **Committee presets**: Classic Value / China Value / Macro All-Weather / Disruptive Growth / Full Council one-click load.
-- **augur_sentiment MCP tool** (9th tool): StockTwits + news sentiment, score -1.0 to +1.0.
-- **augur-next README**: Full rewrite telling the "18 independent agents" story.
-- **Committee history**: Sessions auto-saved to history, retrievable via `/api/history`.
-- **Hermes setup page** (`/hermes-setup`): Step-by-step integration guide with code copy buttons.
-- **API reference**: `/api/committee` documented in both zh and en.
+- **PWA support**: Dashboard can be installed as a standalone app on desktop or mobile, with offline caching for the core UI.
+- **Ticker Tape**: Real-time price scrollbar at the top of the home page (WebSocket-driven, supports pause / auto-reconnect).
+- **Chat data cards**: Live market data card embedded at the top of the AI chat page — Augur consensus signal refreshes every 60 seconds.
 </details>
 
 <details>
-<summary><strong>v9.0.1 — 18 handcrafted Hermes Agent skills</strong></summary>
+<summary><strong>v9.0.x — Hermes Agent + Committee system</strong></summary>
 
-- 19 `skills/augur-*/SKILL.md` files with full persona-specific system prompts.
-- Chinese investors (段永平/张磊/李录/但斌) get full Chinese system prompts.
-- `augur_committee` MCP tool (structured committee flow).
-- Dashboard `/committee` page.
-- `augur-mcp` console script registered.
+- **19 handcrafted Hermes Skills**: Each master has a full persona-specific system prompt; Chinese masters respond in full Chinese.
+- **9 MCP tools**: Added committee / sentiment / create_persona / debate.
+- **Committee presets**: One-click load of Classic Value / China Value / Macro All-Weather / Disruptive Growth / Full Council.
+- **Hermes Setup page** (`/hermes-setup`): Step-by-step integration guide with one-click code copy.
+- **.mcp.json auto-discovery**: Claude Code and any MCP client auto-discover all tools.
+- **`augur serve / watch / skills / portfolio` CLI**: Full command-line toolset.
+- **install.sh one-liner**, Docker v9, Makefile v2.
+</details>
+
+<details>
+<summary><strong>v8.2.x — Optimizer + Rules→Bot + AI Chat</strong></summary>
+
+- **Optimizer efficient frontier**: Markowitz scatter + line chart, gold star for optimal portfolio, green dots per asset.
+- **Rules→Bot**: Alert rules automatically push to Telegram / Slack / WeChat / Lark when triggered (fire-and-forget).
+- **AI Chat upgrade**: Real LLM support (claude-opus-4-8), multi-turn history, ⚡LLM / 📋 template badges.
+- **Scanner hardening**: Case-insensitive dedup, single-ticker failure doesn't abort batch.
+- **Backend thread safety**: Double-checked locking, atomic history writes, `_write_lock`.
+- **WCAG AA contrast compliance**, CSS variable full coverage.
+</details>
+
+<details>
+<summary><strong>v8.2.0 — HD-2D design system launch</strong></summary>
+
+- AI Chat (11 masters), Portfolio Optimizer, Committee, Debate, History, Leaderboard — all shipped.
+- LearningEngine (IC-based auto weight tuning), SentimentAnalyzer (social sentiment fusion).
+- WebSocket real-time price stream `/ws/prices`, RulesEngine DSL multi-channel alerts.
+- HD-2D design system: ExecCard / OracleSays / ScorecardGrid components, responsive breakpoints, bilingual number formatting.
 </details>
 
 ---
 
 <div align="center">
-MIT License · Built by <a href="https://github.com/BruceLanLan">BruceLanLan</a> · Development preview — API may change
 
-*For educational purposes only, not investment advice*
+MIT License · Built with ❤️ by <a href="https://github.com/BruceLanLan">BruceLanLan</a>
+
+*For educational purposes only — not investment advice*
+
 </div>

@@ -393,6 +393,7 @@ window.I18N = {
         "stocks-history-col-signal": "信号",
         "stocks-history-col-price": "价格",
         "stocks-history-empty": "暂无历史分析记录",
+        "stocks-history-chart-title": "共识评分走势",
         // Auth
         "login-title": "登录",
         "login-desc": "登录以访问 Augur 仪表盘",
@@ -663,6 +664,7 @@ window.I18N = {
         "stocks-history-col-signal": "信号",
         "stocks-history-col-price": "价格",
         "stocks-history-empty": "暂无历史分析记录",
+        "stocks-history-chart-title": "共识评分走势",
         // Scanner
         "scanner-empty-title": "选择预设或输入代码开始扫描",
         "scanner-empty-desc": "18 位大师将对每个标的独立评分，生成共识热力图",
@@ -1205,6 +1207,7 @@ window.I18N = {
         "stocks-history-col-signal": "Signal",
         "stocks-history-col-price": "Price",
         "stocks-history-empty": "No historical analyses yet",
+        "stocks-history-chart-title": "Consensus Score Trend",
         // Auth
         "login-title": "Login",
         "login-desc": "Sign in to access your Augur dashboard",
@@ -1475,6 +1478,7 @@ window.I18N = {
         "stocks-history-col-signal": "Signal",
         "stocks-history-col-price": "Price",
         "stocks-history-empty": "No historical analyses yet",
+        "stocks-history-chart-title": "Consensus Score Trend",
         // Scanner
         "scanner-empty-title": "Pick a preset or enter tickers to scan",
         "scanner-empty-desc": "18 masters score each ticker independently — results appear as a consensus heatmap",

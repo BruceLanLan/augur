@@ -1,9 +1,12 @@
 {% extends "base.html" %}
 {% block title %}股票分析 - Augur{% endblock %}
 {% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <style>
 #results { display:none; }
 #results.show { display:block; animation: fadeInUp 0.5s ease forwards; }
+#history-chart-container { margin-bottom: 16px; }
+#history-chart-canvas { max-height: 200px; }
 #spinner { display:none; text-align:center; padding:40px; }
 .agent-reasoning {
     max-height: 50px;
@@ -299,6 +302,11 @@
 <div id="history-comparison" class="card mb-24" style="display:none;" role="region" aria-live="polite">
     <div class="section-title spaced" data-i18n="stocks-history-title">历史对比</div>
     <p class="text-muted" style="font-size:0.78rem; margin-bottom:12px;" data-i18n="stocks-history-desc">展示您对同一标的在不同时间的分析结果，追踪预测变化趋势</p>
+    <!-- Consensus trend chart -->
+    <div id="history-chart-container" style="display:none;">
+        <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.04em;" data-i18n="stocks-history-chart-title">共识评分走势</div>
+        <canvas id="history-chart-canvas"></canvas>
+    </div>
     <p class="table-scroll-hint" data-i18n="table-scroll-hint">左右滑动查看完整表格</p>
     <div style="overflow-x:auto;">
     <table class="md-table" id="history-table" style="width:100%;">
@@ -676,6 +684,7 @@ function renderResults(data) {
 
     // Render historical comparison (hidden div but kept functional)
     renderHistoryComparison(ticker);
+    loadHistoryChart(ticker);
 
     // Auto-generate report if requested via URL param
     if (window._autoReport) {
@@ -1203,6 +1212,70 @@ function copyReportLink() {
     }).catch(function() {
         showToast('复制失败', 'error');
     });
+}
+
+var _historyChart = null;
+
+function loadHistoryChart(ticker) {
+    fetch('/api/history?ticker=' + encodeURIComponent(ticker) + '&limit=20')
+        .then(function(r) { return r.ok ? r.json() : null; })
+        .then(function(data) {
+            var container = document.getElementById('history-chart-container');
+            if (!container) return;
+            var records = (data && data.records) ? data.records.slice().reverse() : [];
+            if (records.length < 2) { container.style.display = 'none'; return; }
+            container.style.display = 'block';
+            // Ensure the parent panel is visible (renderHistoryComparison may have hidden it)
+            var panel = document.getElementById('history-comparison');
+            if (panel) panel.style.display = 'block';
+
+            var labels = records.map(function(r) {
+                return new Date(r.timestamp).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+            });
+            var scores = records.map(function(r) { return +r.score.toFixed(2); });
+            var ptColors = records.map(function(r) {
+                return r.signal === 'bullish' ? '#00d4aa' : r.signal === 'bearish' ? '#ff4d4f' : '#ff9500';
+            });
+
+            var canvas = document.getElementById('history-chart-canvas');
+            if (_historyChart) { _historyChart.destroy(); _historyChart = null; }
+            _historyChart = new Chart(canvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: scores,
+                        borderColor: 'rgba(255,149,0,0.6)',
+                        backgroundColor: 'rgba(255,149,0,0.06)',
+                        pointBackgroundColor: ptColors,
+                        pointBorderColor: ptColors,
+                        pointRadius: 5,
+                        pointHoverRadius: 7,
+                        tension: 0.35,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false }, tooltip: {
+                        callbacks: { label: function(ctx) { return 'Score: ' + ctx.parsed.y.toFixed(1); } }
+                    }},
+                    scales: {
+                        y: {
+                            min: 0, max: 10,
+                            ticks: { color: 'rgba(180,180,180,0.7)', stepSize: 2, font: { size: 10 } },
+                            grid: { color: 'rgba(255,255,255,0.05)' }
+                        },
+                        x: {
+                            ticks: { color: 'rgba(180,180,180,0.7)', maxRotation: 0, font: { size: 10 } },
+                            grid: { display: false }
+                        }
+                    }
+                }
+            });
+        })
+        .catch(function() { /* silently fail */ });
 }
 
 function renderHistoryComparison(ticker) {
