@@ -122,6 +122,34 @@
 
 <h1 class="sr-only" data-i18n="settings-title">系统设置</h1>
 
+<!-- Section 0: Appearance -->
+<div class="settings-section" id="section-appearance">
+    <div class="settings-section-title">
+        <span data-i18n="settings-section-appearance-title">外观设置</span>
+        <span class="settings-section-desc" data-i18n="settings-section-appearance-desc">语言与主题偏好</span>
+    </div>
+    <div style="display:flex; gap:32px; flex-wrap:wrap; align-items:flex-start; padding:4px 0 8px;">
+        <!-- Language -->
+        <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-family:var(--font-mono);" data-i18n="settings-lang-select-label">界面语言</div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;" role="group" aria-label="语言选择">
+                <button type="button" class="btn btn-sm settings-lang-btn" data-lang="zh" onclick="setAppLang('zh')" data-i18n="settings-lang-zh">中文</button>
+                <button type="button" class="btn btn-sm settings-lang-btn" data-lang="en" onclick="setAppLang('en')" data-i18n="settings-lang-en">English</button>
+                <button type="button" class="btn btn-sm settings-lang-btn" data-lang="ja" onclick="setAppLang('ja')">日本語</button>
+                <button type="button" class="btn btn-sm settings-lang-btn" data-lang="ko" onclick="setAppLang('ko')">한국어</button>
+            </div>
+        </div>
+        <!-- Theme -->
+        <div>
+            <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-family:var(--font-mono);" data-i18n="settings-theme-select-label">显示主题</div>
+            <div style="display:flex; gap:8px;" role="group" aria-label="主题选择">
+                <button type="button" class="btn btn-sm settings-theme-btn" data-theme="dark" onclick="setAppTheme('dark')" data-i18n="theme-dark">深色</button>
+                <button type="button" class="btn btn-sm settings-theme-btn" data-theme="light" onclick="setAppTheme('light')" data-i18n="theme-light">浅色</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Section A: LLM Model Config -->
 <div class="settings-section" id="section-llm">
     <div class="settings-section-title">
@@ -379,6 +407,44 @@
 var originalValues = {};
 function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 
+function _highlightAppearanceBtns() {
+    var lang = typeof getCurrentLang === 'function' ? getCurrentLang() : (localStorage.getItem('augur-lang') || 'zh');
+    var theme = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+    document.querySelectorAll('.settings-lang-btn').forEach(function(b) {
+        var active = b.getAttribute('data-lang') === lang;
+        b.style.borderColor = active ? 'var(--accent-orange)' : '';
+        b.style.opacity = active ? '1' : '0.5';
+    });
+    document.querySelectorAll('.settings-theme-btn').forEach(function(b) {
+        var active = b.getAttribute('data-theme') === theme;
+        b.style.borderColor = active ? 'var(--accent-orange)' : '';
+        b.style.opacity = active ? '1' : '0.5';
+    });
+}
+
+function setAppLang(lang) {
+    if (typeof applyLanguage === 'function') {
+        localStorage.setItem('augur-lang', lang);
+        applyLanguage(lang);
+    }
+    _highlightAppearanceBtns();
+    showToast(_t('settings-saved', '已保存'), 'success');
+}
+
+function setAppTheme(theme) {
+    if (theme === 'light') {
+        document.documentElement.classList.add('light');
+        localStorage.setItem('augur-theme', 'light');
+    } else {
+        document.documentElement.classList.remove('light');
+        localStorage.setItem('augur-theme', 'dark');
+    }
+    if (typeof updateThemeUI === 'function') updateThemeUI();
+    document.dispatchEvent(new CustomEvent('augur:theme-change', { detail: { theme: theme } }));
+    _highlightAppearanceBtns();
+    showToast(_t('settings-saved', '已保存'), 'success');
+}
+
 // Track original values on load for unsaved detection
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.persona-config-row select').forEach(function(sel) {
@@ -386,6 +452,9 @@ document.addEventListener('DOMContentLoaded', function() {
         originalValues[id] = sel.value;
         sel.addEventListener('change', function() { checkUnsaved(); });
     });
+
+    // Highlight current lang/theme buttons
+    _highlightAppearanceBtns();
 
     // Load saved API keys from config (masked)
     loadSavedKeys();
