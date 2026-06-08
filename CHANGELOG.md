@@ -2,6 +2,18 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.3.0] - 2026-06-09
+
+导出功能扩展：信号监控 CSV + 辩论记录复制/下载。
+
+### Added
+- **Signals 信号监控 CSV 导出**：页面顶部"导出 CSV"按钮，包含 Ticker/PE/ROE/毛利率及分析信号/评分/投票数，UTF-8 BOM 兼容 Excel。
+- **Debate 辩论记录导出**：辩论完成后显示"复制记录"和"下载 MD"两个按钮；Markdown 格式含各轮 Agent 评分与推理，支持 clipboard API 及 fallback。
+- `_debateData` 全局变量存储最近辩论结果，`_buildDebateMarkdown()` 统一构建 MD 内容。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.2.0] - 2026-06-09
 
 数据可视化与导出增强：IC 柱状图、回测/扫描器 CSV 导出。

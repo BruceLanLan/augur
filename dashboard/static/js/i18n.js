@@ -246,6 +246,10 @@ window.I18N = {
         "debate-summary": "辩论总结",
         "debate-api-error": "辩论请求失败",
         "debate-url-loaded": "已从分享链接加载",
+        "debate-copy-transcript": "复制记录",
+        "debate-download-md": "下载 MD",
+        "debate-copied": "辩论记录已复制到剪贴板",
+        "debate-downloaded": "辩论记录已下载",
         // History page
         "history-title": "历史记录",
         "history-desc": "查看所有分析历史",
@@ -844,6 +848,9 @@ window.I18N = {
         "signals-error-title": "加载自选股失败",
         "signals-error-msg": "网络异常，请稍后重试",
         "signals-error-retry": "重试",
+        "signals-export-csv": "导出 CSV",
+        "signals-exported": "信号数据已下载",
+        "signals-export-empty": "暂无分析数据可导出",
         "signals-add-pending": "添加中…",
         // Round 10: signals page example chips + row + form filters (a11y)
         "signals-add-example-aria": "快速添加",
@@ -1118,6 +1125,10 @@ window.I18N = {
         "debate-summary": "Debate Summary",
         "debate-api-error": "Debate request failed",
         "debate-url-loaded": "Loaded from share link",
+        "debate-copy-transcript": "Copy Transcript",
+        "debate-download-md": "Download MD",
+        "debate-copied": "Debate transcript copied to clipboard",
+        "debate-downloaded": "Debate transcript downloaded",
         // History page
         "history-title": "History",
         "history-desc": "View all past analyses",
@@ -1716,6 +1727,9 @@ window.I18N = {
         "signals-error-title": "Failed to load watchlist",
         "signals-error-msg": "Network error, please retry",
         "signals-error-retry": "Retry",
+        "signals-export-csv": "Export CSV",
+        "signals-exported": "Signal data downloaded",
+        "signals-export-empty": "No analysis data to export",
         "signals-add-pending": "Adding…",
         // Round 10: signals page example chips + row + form filters (a11y)
         "signals-add-example-aria": "Quick add",

@@ -46,6 +46,7 @@
             <span class="status-dot" style="background:var(--signal-buy); display:inline-block; width:6px; height:6px; border-radius:50%; margin-right:4px;" aria-hidden="true"></span>
             <span data-i18n="signals-refresh-label">列表刷新: 60s</span>
         </span>
+        <button type="button" class="btn btn-sm" onclick="exportSignalsCSV()" data-i18n="signals-export-csv">导出 CSV</button>
         <button type="button" class="btn btn-primary" onclick="runAllAnalysis()" id="run-all-btn">
             &#x25B6; <span data-i18n="signals-run-all">运行全部分析</span>
         </button>
@@ -643,5 +644,46 @@ function showSavedAlertInfo(threshold, channel) {
 }
 
 loadAlertSettings();
+
+function exportSignalsCSV() {
+    var items = watchlistData.slice();
+    var withResults = items.filter(function(item) { return analysisResults[item.ticker]; });
+    if (withResults.length === 0) {
+        // export watchlist without analysis if at least one ticker exists
+        if (items.length === 0) { showToast(_t('signals-export-empty'), 'warning'); return; }
+    }
+    var hasResults = withResults.length > 0;
+    var header = '﻿' + ['Ticker', 'PE', 'ROE_%', 'Gross_Margin_%',
+        hasResults ? 'Signal' : '',
+        hasResults ? 'Score' : '',
+        hasResults ? 'Buy_Votes' : '',
+        hasResults ? 'Sell_Votes' : '',
+        hasResults ? 'Hold_Votes' : ''
+    ].filter(Boolean).join(',');
+    var rows = [header];
+    items.forEach(function(item) {
+        var r = analysisResults[item.ticker];
+        var cols = [
+            item.ticker,
+            item.pe != null ? item.pe : '',
+            item.roe != null ? item.roe : '',
+            item.gross_margin != null ? item.gross_margin : ''
+        ];
+        if (hasResults) {
+            cols.push(r ? (r.signal || '') : '');
+            cols.push(r ? (r.score != null ? Number(r.score).toFixed(1) : '') : '');
+            cols.push(r ? (r.buy_votes != null ? r.buy_votes : '') : '');
+            cols.push(r ? (r.sell_votes != null ? r.sell_votes : '') : '');
+            cols.push(r ? (r.hold_votes != null ? r.hold_votes : '') : '');
+        }
+        rows.push(cols.join(','));
+    });
+    var blob = new Blob([rows.join('\n')], {type: 'text/csv'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'augur-signals-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    showToast(_t('signals-exported'), 'success');
+}
 </script>
 {% endblock %}

@@ -107,6 +107,12 @@
     </div>
 </div>
 
+<!-- Debate Actions (shown after debate loads) -->
+<div id="debate-actions" style="display:none; margin-bottom:12px; display:flex; gap:8px; justify-content:flex-end;">
+    <button type="button" class="btn btn-sm btn-ghost" onclick="copyDebateTranscript()" data-i18n="debate-copy-transcript">复制记录</button>
+    <button type="button" class="btn btn-sm btn-ghost" onclick="downloadDebateMD()" data-i18n="debate-download-md">下载 MD</button>
+</div>
+
 <!-- Debate Thread -->
 <div id="debate-thread"></div>
 
@@ -114,6 +120,8 @@
 {% block extra_scripts %}
 <script>
 function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
+
+var _debateData = null;
 
 function toggleDebateAgent(label) {
     var cb = label.querySelector('input[type="checkbox"]');
@@ -253,6 +261,9 @@ function signalLabel(s) {
 }
 
 function renderDebate(data) {
+    _debateData = data;
+    var actionsEl = document.getElementById('debate-actions');
+    if (actionsEl) actionsEl.style.display = 'flex';
     var thread = document.getElementById('debate-thread');
     thread.innerHTML = '';
     var rounds = data.rounds || [];
@@ -280,6 +291,61 @@ function renderDebate(data) {
             '<p class="text-muted" style="font-size:0.82rem; line-height:1.6;">' + data.summary + '</p>';
         thread.appendChild(summaryCard);
     }
+}
+
+function _buildDebateMarkdown() {
+    if (!_debateData) return '';
+    var ticker = document.getElementById('debate-ticker').value.trim().toUpperCase() || 'Unknown';
+    var date = new Date().toISOString().slice(0, 10);
+    var lines = ['# Augur Debate — ' + ticker + ' (' + date + ')', ''];
+    (_debateData.rounds || []).forEach(function(round, idx) {
+        var agent = round.agent_name || round.agent_id;
+        var signal = (round.signal || 'neutral').toUpperCase();
+        var score = Number(round.score || 0).toFixed(1);
+        var reasoning = (round.reasoning || '').replace(/\*\*/g, '**').trim();
+        lines.push('## ' + (idx + 1) + '. ' + agent + ' — ' + signal + ' ' + score + '/10');
+        lines.push('');
+        lines.push(reasoning);
+        lines.push('');
+    });
+    if (_debateData.summary) {
+        lines.push('## Summary', '', _debateData.summary, '');
+    }
+    return lines.join('\n');
+}
+
+function copyDebateTranscript() {
+    var md = _buildDebateMarkdown();
+    if (!md) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(md).then(function() {
+            showToast(_t('debate-copied'), 'success');
+        }).catch(function() { _fallbackCopy(md); });
+    } else { _fallbackCopy(md); }
+}
+
+function _fallbackCopy(text) {
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showToast(_t('debate-copied'), 'success'); } catch(e) {}
+    document.body.removeChild(ta);
+}
+
+function downloadDebateMD() {
+    var md = _buildDebateMarkdown();
+    if (!md) return;
+    var ticker = document.getElementById('debate-ticker').value.trim().toUpperCase() || 'debate';
+    var fname = 'augur-debate-' + ticker + '-' + new Date().toISOString().slice(0,10) + '.md';
+    var blob = new Blob([md], {type: 'text/markdown'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fname;
+    a.click();
+    showToast(_t('debate-downloaded'), 'success');
 }
 </script>
 {% endblock %}
