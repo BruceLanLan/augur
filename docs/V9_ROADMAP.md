@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-09，当前版本 **v10.4.0**（Committee 报告导出 + Optimizer CSV，1656 tests passing）
+> 最后更新：2026-06-09，当前版本 **v10.5.0**（Chat MD 导出 + Clear，1656 tests passing）
 
 ---
 
@@ -41,6 +41,7 @@
 | 10.2.0 | Performance IC 柱状图 + CSV 导出（Performance/Backtest/Scanner 三处） |
 | 10.3.0 | Signals CSV 导出 + Debate 辩论记录复制/下载 MD |
 | 10.4.0 | Committee 报告复制/下载 + Optimizer 权重 CSV 导出 |
+| 10.5.0 | Chat 对话导出 MD + Clear 清除功能 |
 
 **当前能力盘点（v10.0.0）：**
 - MCP 工具 9 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona

@@ -170,8 +170,14 @@
             </div>
         </div>
 
+        <!-- Chat actions bar -->
+        <div style="display:flex; justify-content:flex-end; gap:6px; padding:0 16px 6px;">
+            <button type="button" class="btn btn-sm btn-ghost" onclick="exportChatMD()" id="chat-export-btn" style="display:none; font-size:0.72rem;">⤓ Export MD</button>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="clearChat()" id="chat-clear-btn" style="display:none; font-size:0.72rem;">✕ Clear</button>
+        </div>
+
         <div id="chat-messages" class="chat-messages" role="log" aria-live="polite" aria-label="Conversation messages">
-            <div class="chat-msg system" role="status">
+            <div class="chat-msg system" role="status" id="chat-welcome-msg">
                 <p class="oracle-welcome">Welcome to the HD-2D Oracle Hall.</p>
                 <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">The masters await your inquiry. Select a persona and ask your questions.</p>
             </div>
@@ -195,6 +201,7 @@
 <script>
 var selectedAgent = '';
 var selectedAgentImage = '/static/images/avatars/buffett.png';
+var _chatHistory = [];  // {role: 'user'|'assistant', agent: str, text: str}
 
 function selectAgent(btn, agentId) {
     document.querySelectorAll('.chat-agent-btn').forEach(function(b) {
@@ -232,6 +239,8 @@ async function sendMessage(event) {
     var userMsg = document.createElement('div');
     userMsg.className = 'chat-msg user';
     userMsg.innerHTML = '<div class="chat-bubble">' + message + '</div>';
+    _chatHistory.push({role: 'user', agent: 'You', text: message});
+    _showChatActionBtns();
     messagesEl.appendChild(userMsg);
 
     input.value = '';
@@ -269,6 +278,7 @@ async function sendMessage(event) {
         assistantMsg.innerHTML = '<div class="chat-avatar-wrapper"><img src="' + finalAvatar + '" onerror="this.src=\'/static/images/avatars/buffett.png\'"></div>' +
             '<div class="chat-bubble typewriter"><strong>' + (data.agent_name || 'Oracle') + '</strong><br><br>' + formattedHtml + '</div>';
         
+        _chatHistory.push({role: 'assistant', agent: data.agent_name || 'Oracle', text: data.response || ''});
         messagesEl.appendChild(assistantMsg);
         document.getElementById('chat-sr-announce').textContent = 'New response from ' + (data.agent_name || 'Oracle');
     } catch(e) {
@@ -415,5 +425,44 @@ document.addEventListener('DOMContentLoaded', function() {
         loadChatDataCard(input.value.trim().toUpperCase());
     }
 });
+
+function _showChatActionBtns() {
+    var exp = document.getElementById('chat-export-btn');
+    var clr = document.getElementById('chat-clear-btn');
+    if (exp) exp.style.display = '';
+    if (clr) clr.style.display = '';
+}
+
+function clearChat() {
+    var messagesEl = document.getElementById('chat-messages');
+    messagesEl.innerHTML = '<div class="chat-msg system" role="status" id="chat-welcome-msg">' +
+        '<p class="oracle-welcome">Welcome to the HD-2D Oracle Hall.</p>' +
+        '<p style="font-size:0.85rem;color:var(--text-secondary);margin-top:0.5rem;">The masters await your inquiry. Select a persona and ask your questions.</p>' +
+        '</div>';
+    _chatHistory = [];
+    var exp = document.getElementById('chat-export-btn');
+    var clr = document.getElementById('chat-clear-btn');
+    if (exp) exp.style.display = 'none';
+    if (clr) clr.style.display = 'none';
+}
+
+function exportChatMD() {
+    if (!_chatHistory.length) return;
+    var ticker = (document.getElementById('chat-ticker-input') || {}).value || '';
+    var date = new Date().toISOString().slice(0, 10);
+    var lines = ['# Augur Chat' + (ticker ? ' — ' + ticker.toUpperCase() : '') + ' (' + date + ')', ''];
+    _chatHistory.forEach(function(m) {
+        if (m.role === 'user') {
+            lines.push('**You:** ' + m.text, '');
+        } else {
+            lines.push('**' + m.agent + ':** ' + m.text, '');
+        }
+    });
+    var blob = new Blob([lines.join('\n')], {type: 'text/markdown'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'augur-chat-' + (ticker ? ticker.toUpperCase() + '-' : '') + date + '.md';
+    a.click();
+}
 </script>
 {% endblock %}

@@ -2,6 +2,18 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.5.0] - 2026-06-09
+
+Chat 对话导出与清除。
+
+### Added
+- **Chat 页 Export MD 按钮**：首条消息发送后显示"⤓ Export MD"按钮，将对话记录（含 Agent 名称/用户问题/Agent 回复）下载为 Markdown 文件，文件名含 Ticker 和日期。
+- **Chat 页 Clear 按钮**：清空 DOM 消息和 `_chatHistory` 数组，恢复欢迎语，隐藏 Export/Clear 按钮。
+- `_chatHistory` 数组在 `sendMessage()` 中维护；`_showChatActionBtns()` 首消息后显示按钮。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.4.0] - 2026-06-09
 
 委员会报告导出 + 优化器权重 CSV 导出。
