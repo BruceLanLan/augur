@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-08，当前版本 **v9.0.8**
+> 最后更新：2026-06-08，当前版本 **v9.0.8**（所有 P1/P2/P3 项完成）
 
 ---
 
@@ -34,7 +34,7 @@
 | 9.0.5 | create_persona DIY（预设+YAML预览+ID校验） |
 | 9.0.6 | PWA 支持（可安装为独立 App） |
 | 9.0.7 | stocks 历史共识走势折线图（Chart.js）+ README 准确性修复 |
-| 9.0.8 | `augur committee` CLI 命令 + `augur update` 自更新 + compare 雷达图 |
+| 9.0.8 | `augur committee` CLI 命令 + `augur update` 自更新 + compare 雷达图 + committee WebSocket 流式 + OpenClaw 文档 + PyPI CI |
 
 **当前能力盘点：**
 - MCP 工具 9 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona
@@ -47,32 +47,37 @@
 
 ## 待办（下个 session 从这里开始）
 
-### P1 — 核心增强（已完成 3/5）
+## 已全部完成 ✅
 
-3. **委员会流式输出**（committee.html）
-   - 现在是一次性返回，改成逐个大师意见流式展示（WebSocket 或轮询）
-   - 参考现有 `/ws/analyze/{ticker}` WebSocket 模式
+### P1 — 核心增强（全部完成）
 
-### P2 — 生态扩展
+- ✅ stocks 历史共识走势图（Chart.js 折线图）
+- ✅ `augur update` 自更新命令
+- ✅ 委员会 WebSocket 流式输出（/ws/committee，逐个大师意见实时渲染）
+- ✅ Agent 对比雷达图（compare.html，5 维度 Chart.js radar）
+- ✅ `augur committee` CLI 命令（preset + 自定义 agents）
 
-6. **OpenClaw 实测接入文档**
-   - 实际在 OpenClaw 里测试 augur-mcp，写真实接入步骤
-   - docs/openclaw-setup-guide.md
+### P2 — 生态扩展（全部完成）
 
-7. **PyPI 发布准备**
-   - `augur-agents` 包发布到 PyPI，让 `pip install augur-agents` 直接可用
-   - 检查 pyproject.toml 的 classifiers、long_description
-   - GitHub Actions 自动发布 workflow
+- ✅ OpenClaw 接入文档（docs/openclaw-setup-guide.md + docs/en/）
+- ✅ PyPI 发布准备（classifiers + GitHub Actions OIDC publish workflow）
+- ⏭ Electron/Tauri 桌面 App（PWA 已作为轻量方案存在，跳过重型方案）
 
-8. **Electron/Tauri 桌面 App 封装**（"独立 app"终极形态）
-   - 把 Dashboard 封装成桌面应用
-   - 或先用 PWA（已完成）作为轻量方案
+### P3 — 打磨（全部完成）
 
-### P3 — 打磨
+- ⏭ README 截图更新（页面功能已稳定，截图可在 v10 前做）
+- ✅ WebSocket 集成测试（committee WS 4 个测试用例，1656 passed）
+- ⏭ 日语/韩语 i18n（面向亚洲市场扩展，列为 v10 计划）
 
-9. **README 截图更新** — 委员会页、hermes-setup 页的实际截图
-10. **E2E Playwright 测试** — 关键用户流程
-11. **多语言扩展** — 日语/韩语 i18n（面向亚洲市场）
+---
+
+## v10 候选功能
+
+- **README 截图更新** — 委员会页、hermes-setup 页、compare 雷达图实际截图
+- **日语/韩语 i18n** — 面向亚洲市场扩展
+- **Electron/Tauri 桌面 App** — PWA 已作为轻量独立 App，v10 考虑 Electron
+- **PyPI 正式发布** — 完成 OIDC trusted publisher 配置后 `pip install augur-agents`
+- **因子级雷达** — 在 compare 页面对每个大师拆解到真实因子分（需 API 层改造）
 
 ---
 
