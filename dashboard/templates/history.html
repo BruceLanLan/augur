@@ -2,6 +2,32 @@
 {% block title %}历史记录 - Augur{% endblock %}
 {% block extra_head %}
 <style>
+/* Calendar heatmap */
+.hist-cal-wrap { overflow-x: auto; padding: 8px 0 4px; }
+.hist-cal-grid {
+    display: inline-grid;
+    grid-template-rows: repeat(7, 10px);
+    grid-auto-flow: column;
+    gap: 2px;
+    min-width: max-content;
+}
+.hist-cal-cell {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    background: var(--bg-secondary);
+    cursor: default;
+    transition: opacity 0.1s;
+}
+.hist-cal-cell:hover { opacity: 0.75; }
+.hist-cal-cell.bull  { background: var(--signal-buy); }
+.hist-cal-cell.bear  { background: var(--signal-sell); }
+.hist-cal-cell.neut  { background: var(--signal-neutral); }
+.hist-cal-cell.active-date { outline: 2px solid var(--accent-orange); }
+.hist-cal-month-labels { display:flex; gap:0; min-width:max-content; margin-bottom:2px; }
+.hist-cal-month-label { font-size:0.6rem; color:var(--text-muted); width:auto; }
+.hist-cal-legend { display:flex; align-items:center; gap:6px; font-size:0.68rem; color:var(--text-muted); margin-top:6px; }
+.hist-cal-legend .dot { width:9px; height:9px; border-radius:2px; display:inline-block; }
+
 .history-table {
     width: 100%;
     border-collapse: collapse;
@@ -70,6 +96,22 @@
         <button type="button" class="btn btn-sm" onclick="clearAllHistory()" id="clear-btn" style="display:none;" data-i18n="history-clear">清除历史</button>
     </div>
 </header>
+
+<!-- Calendar heatmap -->
+<div class="card mb-12" id="hist-cal-card" style="padding:12px 16px; margin-bottom:0.75rem; display:none;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+        <span class="data-label" style="font-size:0.72rem;" data-i18n="history-cal-title">分析日历</span>
+        <button type="button" class="btn btn-sm btn-ghost" onclick="clearCalFilter()" id="cal-clear-filter" style="display:none; font-size:0.68rem;" data-i18n="history-cal-clear">清除日期筛选</button>
+    </div>
+    <div class="hist-cal-month-labels" id="hist-cal-months"></div>
+    <div class="hist-cal-wrap"><div class="hist-cal-grid" id="hist-cal-grid"></div></div>
+    <div class="hist-cal-legend">
+        <span class="dot" style="background:var(--signal-buy);"></span>看多
+        <span class="dot" style="background:var(--signal-sell);"></span>看空
+        <span class="dot" style="background:var(--signal-neutral);"></span>中性
+        <span class="dot" style="background:var(--bg-secondary); border:1px solid var(--border-color);"></span>无记录
+    </div>
+</div>
 
 <div class="card" style="margin-bottom:0.75rem; padding:10px 16px;">
     <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
@@ -360,6 +402,158 @@ function clearAllHistory() {
         });
 }
 
-document.addEventListener('DOMContentLoaded', loadHistory);
+document.addEventListener('DOMContentLoaded', function() {
+    loadHistory();
+    loadCalendarData();
+});
+
+// ===================== Calendar Heatmap =====================
+var _calDateFilter = '';
+
+function loadCalendarData() {
+    // Fetch up to 365 recent history entries to build calendar
+    fetch('/api/history?page=1&per_page=365')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var items = data.items || [];
+            if (items.length === 0) return;
+            buildCalendar(items);
+            document.getElementById('hist-cal-card').style.display = '';
+        })
+        .catch(function() {});
+}
+
+function buildCalendar(items) {
+    // Group by date
+    var byDate = {};
+    items.forEach(function(item) {
+        var ts = item.timestamp || 0;
+        if (!ts) return;
+        var d = new Date(typeof ts === 'number' ? ts * 1000 : ts);
+        var key = d.getFullYear() + '-' + _pad(d.getMonth()+1) + '-' + _pad(d.getDate());
+        if (!byDate[key]) byDate[key] = {bull:0, bear:0, neut:0};
+        var sig = (item.signal || '').toLowerCase();
+        if (sig === 'bullish') byDate[key].bull++;
+        else if (sig === 'bearish') byDate[key].bear++;
+        else byDate[key].neut++;
+    });
+
+    // Build 52-week grid (364 days ending today)
+    var today = new Date();
+    today.setHours(0,0,0,0);
+    var startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - 363);
+    // Align to Sunday
+    startDate.setDate(startDate.getDate() - startDate.getDay());
+
+    var grid = document.getElementById('hist-cal-grid');
+    grid.innerHTML = '';
+    var monthLabels = document.getElementById('hist-cal-months');
+    monthLabels.innerHTML = '';
+
+    var lastMonth = -1;
+    var colCount = 0;
+    var cur = new Date(startDate);
+
+    while (cur <= today) {
+        var key = cur.getFullYear() + '-' + _pad(cur.getMonth()+1) + '-' + _pad(cur.getDate());
+        var d = byDate[key];
+        var cls = 'hist-cal-cell';
+        if (d) {
+            if (d.bull >= d.bear && d.bull >= d.neut) cls += ' bull';
+            else if (d.bear >= d.bull && d.bear >= d.neut) cls += ' bear';
+            else cls += ' neut';
+        }
+        var cell = document.createElement('div');
+        cell.className = cls;
+        cell.setAttribute('data-date', key);
+        var total = d ? (d.bull + d.bear + d.neut) : 0;
+        cell.title = key + (total ? (' — ' + total + ' 条') : '');
+        if (total > 0) {
+            cell.style.cursor = 'pointer';
+            (function(dk) {
+                cell.addEventListener('click', function() { setCalDateFilter(dk); });
+            })(key);
+        }
+        grid.appendChild(cell);
+
+        // Month label at start of each month
+        if (cur.getDate() === 1 || cur.getMonth() !== lastMonth) {
+            if (cur.getDay() === 0 && cur.getDate() <= 7) {
+                var lbl = document.createElement('span');
+                lbl.className = 'hist-cal-month-label';
+                var colWidth = 12 * (colCount) + 'px';
+                lbl.style.paddingLeft = colWidth;
+                lbl.textContent = cur.toLocaleDateString('zh-CN', {month:'short'});
+                lastMonth = cur.getMonth();
+                colCount = 0;
+            }
+        }
+        if (cur.getDay() === 6) colCount++;
+        cur.setDate(cur.getDate() + 1);
+    }
+}
+
+function _pad(n) { return n < 10 ? '0' + n : '' + n; }
+
+function setCalDateFilter(dateStr) {
+    _calDateFilter = dateStr;
+    // Highlight selected cell
+    document.querySelectorAll('.hist-cal-cell').forEach(function(c) {
+        c.classList.toggle('active-date', c.getAttribute('data-date') === dateStr);
+    });
+    document.getElementById('cal-clear-filter').style.display = '';
+    // Filter search to show that date — set ticker filter to empty and reload
+    // We'll add date as a search hint; actually we filter by re-querying with date info
+    // Since backend doesn't support date filter, we fetch all and filter client-side
+    _searchTicker = '';
+    document.getElementById('history-search').value = '';
+    currentPage = 1;
+    _sigFilter = '';
+    document.querySelectorAll('.history-sig-btn').forEach(function(b) {
+        b.style.opacity = (b.getAttribute('data-sig') === '') ? '1' : '0.45';
+        b.style.borderColor = (b.getAttribute('data-sig') === '') ? 'var(--accent-orange)' : '';
+    });
+    loadHistoryForDate(dateStr);
+}
+
+function clearCalFilter() {
+    _calDateFilter = '';
+    document.querySelectorAll('.hist-cal-cell').forEach(function(c) { c.classList.remove('active-date'); });
+    document.getElementById('cal-clear-filter').style.display = 'none';
+    currentPage = 1;
+    loadHistory();
+}
+
+function loadHistoryForDate(dateStr) {
+    // Fetch a large page and filter client-side by date
+    document.getElementById('history-error').style.display = 'none';
+    document.getElementById('history-skeleton').style.display = 'block';
+    document.getElementById('history-table').style.display = 'none';
+    document.getElementById('pagination-controls').style.display = 'none';
+
+    fetch('/api/history?page=1&per_page=365')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            var allRecs = data.items || [];
+            var items = allRecs.filter(function(item) {
+                var ts = item.timestamp || 0;
+                if (!ts) return false;
+                var d = new Date(typeof ts === 'number' ? ts * 1000 : ts);
+                var key = d.getFullYear() + '-' + _pad(d.getMonth()+1) + '-' + _pad(d.getDate());
+                return key === dateStr;
+            });
+            document.getElementById('history-skeleton').style.display = 'none';
+            document.getElementById('empty-state').style.display = 'none';
+            document.getElementById('history-table').style.display = 'table';
+            var hint = document.getElementById('history-filter-hint');
+            renderHistory(items);
+            if (hint) {
+                hint.textContent = dateStr + ' — ' + items.length + ' 条';
+                hint.style.display = 'inline';
+            }
+        })
+        .catch(function() { document.getElementById('history-skeleton').style.display = 'none'; });
+}
 </script>
 {% endblock %}

@@ -2,6 +2,18 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.6.0] - 2026-06-09
+
+History 分析日历热力图。
+
+### Added
+- **History 日历热力图**：页面顶部新增 GitHub 贡献图风格的 52×7 日历格，按日期展示分析活动；绿色=看多、红色=看空、橙色=中性、灰色=无记录；点击有数据的日格过滤当日记录，"清除日期筛选"按钮恢复全览。
+- 日历数据通过独立请求 `/api/history?per_page=365` 拉取最近 365 条，客户端按日期聚合，不影响分页主流程。
+- i18n: history-cal-title / history-cal-clear (zh+en)。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.5.0] - 2026-06-09
 
 Chat 对话导出与清除。
