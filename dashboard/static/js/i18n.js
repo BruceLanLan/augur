@@ -322,6 +322,9 @@ window.I18N = {
         "perf-result-days": "天数",
         "perf-result-ic": "共识 IC",
         "perf-result-records": "记录数",
+        "perf-chart-title": "IC 得分可视化",
+        "perf-export-csv": "导出 CSV",
+        "perf-exported": "排行数据已下载",
         // Backtest page
         "backtest-title": "历史回测",
         "backtest-desc": "Agent IC (Information Coefficient) 实盘追踪",
@@ -382,6 +385,8 @@ window.I18N = {
         "backtest-col-signal": "信号",
         "backtest-col-score": "评分",
         "backtest-table-caption": "Agent IC 排行榜",
+        "backtest-export-csv": "导出 CSV",
+        "backtest-exported": "回测数据已下载",
         "backtest-timeline-caption": "历史信号时间线",
         // Meta / OG (base.html)
         "meta-og-title": "Augur - 18位投资大师AI共识分析系统",
@@ -730,6 +735,8 @@ window.I18N = {
         "scanner-partial-errors": "{n} 个标的扫描失败",
         "scanner-error-row": "失败",
         "scanner-all-failed": "所有标的扫描失败，请检查代码或数据源",
+        "scanner-export-csv": "导出 CSV",
+        "scanner-exported": "扫描结果已下载",
         // Portfolio
         "portfolio-title": "持仓管理",
         "portfolio-desc": "跟踪您的投资组合，实时盈亏计算与 Augur 大师分析",
@@ -1187,6 +1194,9 @@ window.I18N = {
         "perf-result-days": "Days",
         "perf-result-ic": "Consensus IC",
         "perf-result-records": "Records",
+        "perf-chart-title": "IC Score Chart",
+        "perf-export-csv": "Export CSV",
+        "perf-exported": "Leaderboard data downloaded",
         // Backtest page
         "backtest-title": "Historical Backtest",
         "backtest-desc": "Agent IC (Information Coefficient) live tracking",
@@ -1247,6 +1257,8 @@ window.I18N = {
         "backtest-col-signal": "Signal",
         "backtest-col-score": "Score",
         "backtest-table-caption": "Agent IC leaderboard",
+        "backtest-export-csv": "Export CSV",
+        "backtest-exported": "Backtest data downloaded",
         "backtest-timeline-caption": "Historical signals timeline",
         // Meta / OG (base.html)
         "meta-og-title": "Augur - 18-Master AI Consensus Analysis",
@@ -1595,6 +1607,8 @@ window.I18N = {
         "scanner-partial-errors": "{n} ticker(s) failed to scan",
         "scanner-error-row": "Failed",
         "scanner-all-failed": "All tickers failed — check symbols or data source",
+        "scanner-export-csv": "Export CSV",
+        "scanner-exported": "Scanner results downloaded",
         // Portfolio
         "portfolio-title": "Portfolio",
         "portfolio-desc": "Track holdings with live P&L and Augur master analysis",

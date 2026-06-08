@@ -308,7 +308,10 @@
 <div id="bt-leaderboard" class="card" style="display: none;" role="region" aria-live="polite" aria-busy="false" data-i18n-aria="a11y-backtest-leaderboard" aria-label="Agent IC 排行榜">
     <div class="card-header">
         <h3 class="card-title" data-i18n="backtest-leaderboard-title">Agent IC 排行榜</h3>
-        <span class="badge" style="font-size: 0.7rem;" data-i18n="backtest-leaderboard-sort">按 IC 20d 排序</span>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <span class="badge" style="font-size: 0.7rem;" data-i18n="backtest-leaderboard-sort">按 IC 20d 排序</span>
+            <button type="button" class="btn btn-sm" onclick="exportBacktestCSV()" data-i18n="backtest-export-csv">导出 CSV</button>
+        </div>
     </div>
     <div class="card-body" style="overflow-x: auto;">
         <p class="table-scroll-hint" data-i18n="table-scroll-hint">左右滑动查看完整表格</p>
@@ -371,6 +374,9 @@
 function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 
 var selectedDays = 30;
+var _btAgentData = [];
+var _btTicker = '';
+var _btDays = 30;
 
 function setDays(d) {
     selectedDays = d;
@@ -515,6 +521,9 @@ function renderResults(data) {
     tbody.innerHTML = '';
 
     var agents = data.agent_ics || [];
+    _btAgentData = agents;
+    _btTicker = data.ticker || '';
+    _btDays = data.days || selectedDays;
     var totalAgents = agents.length;
 
     if (totalAgents === 0) {
@@ -664,6 +673,32 @@ function icClass(val) {
     if (val > 0.02) return 'ic-positive';
     if (val < -0.02) return 'ic-negative';
     return 'ic-neutral';
+}
+
+function exportBacktestCSV() {
+    if (!_btAgentData.length) { showToast(_t('backtest-lb-empty-title'), 'warning'); return; }
+    var header = '﻿' + ['Rank', 'Agent', 'IC_5d', 'IC_20d', 'IC_60d', 'Hit_Rate_%', 'Avg_Right', 'Avg_Wrong', 'Total'].join(',');
+    var rows = [header];
+    _btAgentData.forEach(function(a, idx) {
+        rows.push([
+            idx + 1,
+            a.agent_id,
+            a.ic_5d.toFixed(4),
+            a.ic_20d.toFixed(4),
+            a.ic_60d.toFixed(4),
+            (a.hit_rate * 100).toFixed(1),
+            a.avg_score_when_right.toFixed(1),
+            a.avg_score_when_wrong.toFixed(1),
+            a.total_predictions
+        ].join(','));
+    });
+    var fname = 'augur-backtest-' + (_btTicker || 'data') + '-' + _btDays + 'd-' + new Date().toISOString().slice(0,10) + '.csv';
+    var blob = new Blob([rows.join('\n')], {type: 'text/csv'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fname;
+    a.click();
+    showToast(_t('backtest-exported'), 'success');
 }
 </script>
 {% endblock %}

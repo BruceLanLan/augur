@@ -65,7 +65,10 @@
 <div id="scanner-results" style="display:none;">
     <div class="flex items-center justify-between mb-12">
         <div class="section-title compact" data-i18n="scanner_results_title">扫描结果</div>
-        <span class="text-muted" style="font-size:0.72rem;" id="scanner-summary"></span>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <span class="text-muted" style="font-size:0.72rem;" id="scanner-summary"></span>
+            <button type="button" class="btn btn-sm" onclick="exportScannerCSV()" data-i18n="scanner-export-csv">导出 CSV</button>
+        </div>
     </div>
     <div class="card" style="padding:0; overflow:hidden;">
         <div style="overflow-x:auto;">
@@ -102,6 +105,7 @@ var AGENT_SHORT = {
 };
 
 var TICKER_RE = /^[A-Za-z0-9.\-]{1,15}$/;
+var _scanResults = [];
 
 function parseTickers(text) {
     var seen = {};
@@ -234,12 +238,47 @@ function runScanner() {
     });
 }
 
+function exportScannerCSV() {
+    if (!_scanResults.length) { showToast(_t('scanner-enter-tickers'), 'warning'); return; }
+    var agentIds = [];
+    for (var ri = 0; ri < _scanResults.length; ri++) {
+        if (_scanResults[ri].consensus_signal !== 'error' && _scanResults[ri].agents && _scanResults[ri].agents.length) {
+            agentIds = _scanResults[ri].agents.map(function(a) { return a.agent_id; });
+            break;
+        }
+    }
+    var header = '﻿' + ['Ticker', 'Consensus', 'Score'].concat(agentIds).join(',');
+    var rows = [header];
+    _scanResults.forEach(function(row) {
+        if (row.consensus_signal === 'error') {
+            rows.push([row.ticker, 'error', ''].join(','));
+            return;
+        }
+        var agentMap = {};
+        (row.agents || []).forEach(function(a) { agentMap[a.agent_id] = a; });
+        var cols = [row.ticker, row.consensus_signal || 'neutral', Number(row.consensus_score || 0).toFixed(1)];
+        agentIds.forEach(function(id) {
+            var a = agentMap[id];
+            cols.push(a ? Number(a.score || 0).toFixed(1) : '');
+        });
+        rows.push(cols.join(','));
+    });
+    var fname = 'augur-scanner-' + new Date().toISOString().slice(0,10) + '.csv';
+    var blob = new Blob([rows.join('\n')], {type: 'text/csv'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fname;
+    a.click();
+    showToast(_t('scanner-exported'), 'success');
+}
+
 function renderHeatmap(results) {
     var table = document.getElementById('heatmap-table');
     if (!table || !results || !results.length) {
         document.getElementById('scanner-idle').style.display = 'block';
         return;
     }
+    _scanResults = results;
     document.getElementById('scanner-results').style.display = 'block';
 
     var agentIds = [];

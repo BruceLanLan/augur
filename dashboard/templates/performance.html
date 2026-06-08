@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %}绩效追踪 - Augur{% endblock %}
 {% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 @media (max-width: 768px) {
     .perf-table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -22,7 +23,10 @@
     <div style="padding:16px 16px 8px; border-bottom:1px solid var(--border-color);">
         <div class="flex items-center justify-between" style="flex-wrap:wrap; gap:8px;">
             <h2 id="perf-leaderboard-heading" class="data-label" style="margin:0; font-size:inherit;" data-i18n="perf-leaderboard">IC 排行榜</h2>
-            <button type="button" class="btn btn-sm" onclick="refreshLeaderboard()" data-i18n="perf-refresh">刷新</button>
+            <div style="display:flex; gap:8px;">
+                <button type="button" class="btn btn-sm" onclick="exportPerfCSV()" id="perf-export-btn" style="display:none;" data-i18n="perf-export-csv">导出 CSV</button>
+                <button type="button" class="btn btn-sm" onclick="refreshLeaderboard()" data-i18n="perf-refresh">刷新</button>
+            </div>
         </div>
     </div>
     <div id="leaderboard-content" class="perf-table-wrap" role="region" aria-live="polite" aria-labelledby="perf-leaderboard-heading">
@@ -30,6 +34,16 @@
             <div class="spinner" style="margin:0 auto;" aria-hidden="true"></div>
             <p class="text-muted mt-16" style="font-size:0.82rem;" data-i18n="perf-loading">加载中...</p>
         </div>
+    </div>
+</div>
+
+<!-- IC Bar Chart -->
+<div class="card mb-24" id="perf-chart-card" style="display:none;">
+    <div style="padding:12px 16px 0; border-bottom:1px solid var(--border-color); margin-bottom:12px;">
+        <span class="data-label" data-i18n="perf-chart-title">IC 得分可视化</span>
+    </div>
+    <div style="padding:12px 16px 16px; max-height:340px;">
+        <canvas id="perf-ic-chart" aria-label="IC Score Bar Chart" role="img"></canvas>
     </div>
 </div>
 
@@ -55,8 +69,14 @@
 <script>
 function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 
+var _perfData = [];
+var _perfChart = null;
+
 document.addEventListener('DOMContentLoaded', function() {
     refreshLeaderboard();
+    document.addEventListener('augur:theme-change', function() {
+        if (_perfData.length > 0) renderICChart(_perfData);
+    });
 });
 
 function refreshLeaderboard() {
@@ -75,19 +95,26 @@ function refreshLeaderboard() {
 
 function renderLeaderboard(items) {
     var content = document.getElementById('leaderboard-content');
+    var exportBtn = document.getElementById('perf-export-btn');
+    var chartCard = document.getElementById('perf-chart-card');
+
     if (!items || items.length === 0) {
         content.innerHTML = '<div style="padding:48px; text-align:center; color:var(--text-muted);">' +
             '<div style="font-size:2rem; margin-bottom:8px;" aria-hidden="true">&#x1F3C6;</div>' +
             '<div>' + escapeHtml(_t('perf-empty-title')) + '</div>' +
             '<div style="font-size:0.78rem; margin-top:4px;">' + escapeHtml(_t('perf-empty-desc')) + '</div></div>';
+        if (exportBtn) exportBtn.style.display = 'none';
+        if (chartCard) chartCard.style.display = 'none';
         return;
     }
 
-    var sorted = items.slice().sort(function(a, b) { return (b.ic || 0) - (a.ic || 0); });
+    var sorted = items.slice().sort(function(a, b) { return (b.ic_60d || b.ic || 0) - (a.ic_60d || a.ic || 0); });
+    _perfData = sorted;
+
     var html = '<table class="data-table"><caption class="sr-only">' + escapeHtml(_t('perf-leaderboard')) + '</caption><thead><tr>' +
         '<th style="width:50px;">' + escapeHtml(_t('perf-col-rank')) + '</th>' +
         '<th>' + escapeHtml(_t('perf-col-agent')) + '</th>' +
-        '<th class="text-right">' + escapeHtml(_t('perf-col-ic')) + '</th>' +
+        '<th class="text-right">IC 60d</th>' +
         '<th class="text-right">' + escapeHtml(_t('perf-col-accuracy')) + '</th>' +
         '<th class="text-right">' + escapeHtml(_t('perf-col-signals')) + '</th>' +
         '</tr></thead><tbody>';
@@ -95,7 +122,6 @@ function renderLeaderboard(items) {
     sorted.forEach(function(item, idx) {
         var rank = idx + 1;
         var rankClass = rank <= 3 ? ' top-3' : '';
-        // API fields: ic_60d, hit_rate, total_predictions
         var ic = item.ic_60d || item.ic || 0;
         var accuracy = item.hit_rate || item.accuracy || 0;
         var signals = item.total_predictions || item.signal_count || 0;
@@ -111,6 +137,86 @@ function renderLeaderboard(items) {
 
     html += '</tbody></table>';
     content.innerHTML = html;
+
+    if (exportBtn) exportBtn.style.display = '';
+    renderICChart(sorted);
+}
+
+function renderICChart(sorted) {
+    var chartCard = document.getElementById('perf-chart-card');
+    var canvas = document.getElementById('perf-ic-chart');
+    if (!chartCard || !canvas || !sorted.length) return;
+
+    chartCard.style.display = '';
+
+    var labels = sorted.map(function(item) { return item.agent_name || item.agent_id || '--'; });
+    var values = sorted.map(function(item) { return +(item.ic_60d || item.ic || 0).toFixed(4); });
+    var bgColors = values.map(function(v) { return v >= 0 ? 'rgba(0,200,100,0.75)' : 'rgba(255,60,60,0.75)'; });
+    var borderColors = values.map(function(v) { return v >= 0 ? 'rgba(0,200,100,1)' : 'rgba(255,60,60,1)'; });
+
+    var isDark = !document.documentElement.classList.contains('light');
+    var textColor = isDark ? '#b0b0c0' : '#444';
+    var gridColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)';
+
+    if (_perfChart) { _perfChart.destroy(); _perfChart = null; }
+
+    _perfChart = new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'IC 60d',
+                data: values,
+                backgroundColor: bgColors,
+                borderColor: borderColors,
+                borderWidth: 1,
+                borderRadius: 3
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) { return ' IC: ' + ctx.raw.toFixed(4); }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { color: gridColor },
+                    ticks: { color: textColor, font: { family: 'JetBrains Mono, monospace', size: 11 } },
+                    border: { color: gridColor }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: textColor, font: { size: 11 } }
+                }
+            }
+        }
+    });
+
+    canvas.style.height = Math.max(200, sorted.length * 22) + 'px';
+}
+
+function exportPerfCSV() {
+    if (!_perfData.length) { showToast(_t('perf-no-data'), 'warning'); return; }
+    var rows = ['﻿' + ['Rank', 'Agent', 'IC_60d', 'Accuracy_%', 'Signals'].join(',')];
+    _perfData.forEach(function(item, idx) {
+        var ic = (item.ic_60d || item.ic || 0).toFixed(4);
+        var acc = ((item.hit_rate || item.accuracy || 0) * 100).toFixed(1);
+        var sig = item.total_predictions || item.signal_count || 0;
+        rows.push([idx + 1, item.agent_name || item.agent_id || '--', ic, acc, sig].join(','));
+    });
+    var blob = new Blob([rows.join('\n')], {type: 'text/csv'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'augur-leaderboard-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
+    showToast(_t('perf-exported'), 'success');
 }
 
 function runBacktest() {

@@ -2,6 +2,19 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.2.0] - 2026-06-09
+
+数据可视化与导出增强：IC 柱状图、回测/扫描器 CSV 导出。
+
+### Added
+- **Performance 页 IC 柱状图**：排行榜下方新增 Chart.js 水平柱状图，按 IC 60d 排序展示各 Agent 得分，绿色正 IC / 红色负 IC，主题切换自动重绘。
+- **Performance 页 CSV 导出**：排行榜"导出 CSV"按钮，下载包含 Rank/Agent/IC_60d/Accuracy/Signals 的 UTF-8 BOM CSV。
+- **Backtest 排行榜 CSV 导出**：IC 排行榜卡片头部"导出 CSV"按钮，文件名含标的+天数+日期，包含全部 IC 字段。
+- **Scanner 扫描结果 CSV 导出**：扫描结果区"导出 CSV"按钮，输出 Ticker/Consensus/Score + 各 Agent 得分列。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.1.0] - 2026-06-09
 
 功能扩展：因子细分、历史搜索、设置外观、持仓/自选导出。
