@@ -1233,8 +1233,15 @@ function loadHistoryChart(ticker) {
                 return new Date(r.timestamp).toLocaleDateString(undefined, {month:'short', day:'numeric'});
             });
             var scores = records.map(function(r) { return +r.score.toFixed(2); });
+            function _cv(n, fb) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || fb; }
+            var buyColor  = _cv('--signal-buy',  '#00c853');
+            var sellColor = _cv('--signal-sell', '#ff1744');
+            var holdColor = _cv('--accent-orange','#ff9500');
+            var tickColor = _cv('--text-muted',  'rgba(180,180,180,0.7)');
+            var gridColor = _cv('--border-color','rgba(255,255,255,0.05)');
+
             var ptColors = records.map(function(r) {
-                return r.signal === 'bullish' ? '#00d4aa' : r.signal === 'bearish' ? '#ff4d4f' : '#ff9500';
+                return r.signal === 'bullish' ? buyColor : r.signal === 'bearish' ? sellColor : holdColor;
             });
 
             var canvas = document.getElementById('history-chart-canvas');
@@ -1245,8 +1252,8 @@ function loadHistoryChart(ticker) {
                     labels: labels,
                     datasets: [{
                         data: scores,
-                        borderColor: 'rgba(255,149,0,0.6)',
-                        backgroundColor: 'rgba(255,149,0,0.06)',
+                        borderColor: holdColor + '99',
+                        backgroundColor: holdColor + '0f',
                         pointBackgroundColor: ptColors,
                         pointBorderColor: ptColors,
                         pointRadius: 5,
@@ -1258,21 +1265,52 @@ function loadHistoryChart(ticker) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    plugins: { legend: { display: false }, tooltip: {
-                        callbacks: { label: function(ctx) { return 'Score: ' + ctx.parsed.y.toFixed(1); } }
-                    }},
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function(ctx) { return 'Score: ' + ctx.parsed.y.toFixed(1); } } },
+                        annotation: undefined
+                    },
                     scales: {
                         y: {
                             min: 0, max: 10,
-                            ticks: { color: 'rgba(180,180,180,0.7)', stepSize: 2, font: { size: 10 } },
-                            grid: { color: 'rgba(255,255,255,0.05)' }
+                            ticks: { color: tickColor, stepSize: 2, font: { size: 10 } },
+                            grid: { color: gridColor },
+                            afterDataLimits: function(scale) {
+                                // reference lines drawn via dataset overlay below
+                            }
                         },
                         x: {
-                            ticks: { color: 'rgba(180,180,180,0.7)', maxRotation: 0, font: { size: 10 } },
+                            ticks: { color: tickColor, maxRotation: 0, font: { size: 10 } },
                             grid: { display: false }
                         }
                     }
-                }
+                },
+                plugins: [{
+                    // Draw BUY / SELL threshold reference lines
+                    id: 'thresholdLines',
+                    afterDraw: function(chart) {
+                        var ctx2 = chart.ctx;
+                        var yAxis = chart.scales.y;
+                        var xLeft = chart.chartArea.left;
+                        var xRight = chart.chartArea.right;
+                        [[7.5, buyColor, 'BUY'], [2.5, sellColor, 'SELL']].forEach(function(cfg) {
+                            var y = yAxis.getPixelForValue(cfg[0]);
+                            ctx2.save();
+                            ctx2.setLineDash([4, 4]);
+                            ctx2.strokeStyle = cfg[1] + '66';
+                            ctx2.lineWidth = 1;
+                            ctx2.beginPath();
+                            ctx2.moveTo(xLeft, y);
+                            ctx2.lineTo(xRight, y);
+                            ctx2.stroke();
+                            ctx2.setLineDash([]);
+                            ctx2.fillStyle = cfg[1] + 'aa';
+                            ctx2.font = '9px monospace';
+                            ctx2.fillText(cfg[2], xRight - 28, y - 2);
+                            ctx2.restore();
+                        });
+                    }
+                }]
             });
         })
         .catch(function() { /* silently fail */ });

@@ -124,7 +124,12 @@
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
 }
-.opinion-card { animation: opinion-in 0.22s ease; }
+.opinion-card { animation: opinion-in 0.22s ease both; }
+@keyframes verdict-reveal {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+#committee-results { animation: verdict-reveal 0.35s ease both; }
 </style>
 {% endblock %}
 
@@ -296,6 +301,7 @@ function runCommittee() {
 
     var agents = Array.from(_selectedAgents);
 
+    _streamCardIdx = 0;
     document.getElementById('committee-loading').style.display = 'block';
     document.getElementById('committee-error').style.display = 'none';
     document.getElementById('committee-results').style.display = 'none';
@@ -380,11 +386,15 @@ function _opinionCardHtml(op) {
     '</div>';
 }
 
+var _streamCardIdx = 0;
 function renderStreamingOpinion(op) {
     var list = document.getElementById('opinion-list');
     var div = document.createElement('div');
     div.innerHTML = _opinionCardHtml(op);
-    list.appendChild(div.firstChild);
+    var card = div.firstChild;
+    card.style.animationDelay = (_streamCardIdx * 0.04) + 's';
+    _streamCardIdx++;
+    list.appendChild(card);
 }
 
 function renderFinalOpinions(opinions) {
@@ -393,33 +403,55 @@ function renderFinalOpinions(opinions) {
     document.getElementById('opinion-list-final').innerHTML = html;
 }
 
+function _countUp(el, target, decimals, suffix, duration) {
+    var start = performance.now();
+    duration = duration || 650;
+    function tick(now) {
+        var t = Math.min((now - start) / duration, 1);
+        var ease = 1 - Math.pow(1 - t, 3);  // ease-out cubic
+        el.textContent = (target * ease).toFixed(decimals) + suffix;
+        if (t < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+}
+
 function renderVerdict(v) {
     var vote = v.vote || {bullish:0, neutral:0, bearish:0};
     document.getElementById('verdict-panel').innerHTML =
         '<div class="verdict-stat">' +
             '<div class="label">' + escapeHtml(_t('committee-signal', '信号')) + '</div>' +
-            '<div class="value ' + escapeHtml(v.signal) + '">' + escapeHtml(v.signal.toUpperCase()) + '</div>' +
+            '<div class="value ' + escapeHtml(v.signal) + '" id="vd-signal">' + escapeHtml(v.signal.toUpperCase()) + '</div>' +
         '</div>' +
         '<div class="verdict-stat">' +
             '<div class="label">' + escapeHtml(_t('committee-score', '评分')) + '</div>' +
-            '<div class="value">' + v.score + '<span style="font-size:0.8rem;color:var(--text-muted)">/10</span></div>' +
+            '<div class="value"><span id="vd-score">0.0</span><span style="font-size:0.8rem;color:var(--text-muted)">/10</span></div>' +
         '</div>' +
         '<div class="verdict-stat">' +
             '<div class="label">' + escapeHtml(_t('committee-confidence', '置信度')) + '</div>' +
-            '<div class="value">' + Math.round(v.confidence * 100) + '%</div>' +
+            '<div class="value"><span id="vd-conf">0</span>%</div>' +
         '</div>' +
         '<div class="verdict-stat">' +
             '<div class="label">Kelly</div>' +
-            '<div class="value ' + (v.kelly_pct > 0 ? 'bullish' : '') + '">' + (v.kelly_pct > 0 ? v.kelly_pct + '%' : '—') + '</div>' +
+            '<div class="value ' + (v.kelly_pct > 0 ? 'bullish' : '') + '" id="vd-kelly">' + (v.kelly_pct > 0 ? '0%' : '—') + '</div>' +
         '</div>' +
         '<div class="verdict-stat" style="grid-column:1/-1;">' +
-            '<div class="label" style="margin-bottom:6px;">' + escapeHtml(_t('committee-vote', '票数')) + ' &nbsp;Bullish ' + vote.bullish + ' / Neutral ' + vote.neutral + ' / Bearish ' + vote.bearish + '</div>' +
+            '<div class="label" style="margin-bottom:6px;" id="vd-vote-label">' + escapeHtml(_t('committee-vote', '票数')) + ' &nbsp;Bullish ' + vote.bullish + ' / Neutral ' + vote.neutral + ' / Bearish ' + vote.bearish + '</div>' +
             '<div class="vote-bar">' +
                 '<div class="bull" style="flex:' + vote.bullish + '"></div>' +
                 '<div class="neut" style="flex:' + vote.neutral + '"></div>' +
                 '<div class="bear" style="flex:' + vote.bearish + '"></div>' +
             '</div>' +
         '</div>';
+
+    // Animate numbers after DOM is ready
+    requestAnimationFrame(function() {
+        var scoreEl = document.getElementById('vd-score');
+        var confEl  = document.getElementById('vd-conf');
+        var kellyEl = document.getElementById('vd-kelly');
+        if (scoreEl) _countUp(scoreEl, v.score, 1, '', 700);
+        if (confEl)  _countUp(confEl, Math.round(v.confidence * 100), 0, '', 700);
+        if (kellyEl && v.kelly_pct > 0) _countUp(kellyEl, v.kelly_pct, 1, '%', 700);
+    });
 }
 </script>
 {% endblock %}

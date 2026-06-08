@@ -383,6 +383,11 @@ function renderCompareResults(data) {
     }
 }
 
+function _cssVar(name, fallback) {
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+}
+
 var _radarChart = null;
 function renderRadarChart(agents) {
     var container = document.getElementById('compare-radar-container');
@@ -390,7 +395,18 @@ function renderRadarChart(agents) {
     if (!container || !canvas) return;
     container.style.display = 'block';
 
-    var PALETTE = ['#ff9500', '#30d158', '#64d2ff', '#bf5af2', '#ff453a'];
+    var PALETTE = [
+        _cssVar('--accent-orange', '#ff9500'),
+        _cssVar('--signal-buy',    '#30d158'),
+        _cssVar('--accent-blue',   '#64d2ff'),
+        _cssVar('--oracle-purple', '#bf5af2'),
+        _cssVar('--signal-sell',   '#ff453a'),
+    ];
+    var gridColor  = _cssVar('--border-color', 'rgba(255,255,255,0.08)');
+    var tickColor  = _cssVar('--text-muted',   '#636366');
+    var labelColor = _cssVar('--text-secondary','#aeaeb2');
+    var legendColor= _cssVar('--text-secondary','#8e8e93');
+
     var labels = [
         _t('compare-radar-score', '总评分'),
         _t('compare-radar-confidence', '置信度'),
@@ -412,22 +428,18 @@ function renderRadarChart(agents) {
 
     var datasets = agents.map(function(a, i) {
         var color = PALETTE[i % PALETTE.length];
-        var rgba = color + '33';
         return {
             label: a.agent_name || a.agent_id,
             data: toRadarData(a),
             borderColor: color,
-            backgroundColor: rgba,
+            backgroundColor: color + '26',
             pointBackgroundColor: color,
             pointRadius: 4,
             borderWidth: 2
         };
     });
 
-    if (_radarChart) {
-        _radarChart.destroy();
-        _radarChart = null;
-    }
+    if (_radarChart) { _radarChart.destroy(); _radarChart = null; }
 
     _radarChart = new Chart(canvas, {
         type: 'radar',
@@ -437,23 +449,17 @@ function renderRadarChart(agents) {
             plugins: {
                 legend: {
                     position: 'bottom',
-                    labels: { color: '#8e8e93', font: { size: 11 }, padding: 12 }
+                    labels: { color: legendColor, font: { size: 11 }, padding: 12 }
                 },
                 tooltip: { enabled: true }
             },
             scales: {
                 r: {
-                    min: 0,
-                    max: 10,
-                    ticks: {
-                        stepSize: 2,
-                        color: '#636366',
-                        font: { size: 10 },
-                        backdropColor: 'transparent'
-                    },
-                    pointLabels: { color: '#aeaeb2', font: { size: 11 } },
-                    grid: { color: 'rgba(255,255,255,0.08)' },
-                    angleLines: { color: 'rgba(255,255,255,0.08)' }
+                    min: 0, max: 10,
+                    ticks: { stepSize: 2, color: tickColor, font: { size: 10 }, backdropColor: 'transparent' },
+                    pointLabels: { color: labelColor, font: { size: 11 } },
+                    grid: { color: gridColor },
+                    angleLines: { color: gridColor }
                 }
             }
         }
