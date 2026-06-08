@@ -1,6 +1,7 @@
 /**
  * Augur i18n - 国际化支持
- * 支持中文(zh)和英文(en)切换，持久化到 localStorage
+ * 支持中文(zh)、英文(en)、日本語(ja)、한국어(ko) 四语言循环切换，持久化到 localStorage
+ * 降级链：当前语言 → en → zh
  */
 window.I18N = {
     zh: {
@@ -1686,43 +1687,465 @@ window.I18N = {
         "a11y-stocks-ticker": "Stock ticker input",
         "a11y-hero-chips-group": "Example tickers",
         "a11y-stocks-spinner": "Analysis in progress"
+    },
+    ja: {
+        // Sidebar nav
+        "nav-dashboard": "ダッシュボード",
+        "nav-stocks": "株式分析",
+        "nav-signals": "シグナル",
+        "nav-backtest": "バックテスト",
+        "nav-personas": "ペルソナ",
+        "nav-create-persona": "投資家を作成",
+        "create-persona-title": "カスタム投資家を作成",
+        "create-persona-desc": "YAMLなしでフォームから投資戦略Agentを作成",
+        "optimizer-title": "ポートフォリオ最適化",
+        "optimizer-desc": "マルコビッツ平均分散最適化 — 最適なポートフォリオ比率を算出",
+        "nav-settings": "設定",
+        "nav-watchlist": "ウォッチリスト",
+        "nav-portfolio": "ポートフォリオ",
+        "nav-chat": "AI チャット",
+        "nav-optimizer": "最適化",
+        "nav-compare": "マスター対決",
+        "nav-debate": "討論モード",
+        "nav-committee": "投資委員会",
+        "nav-hermes-setup": "Hermes 接続",
+        "nav-history": "分析履歴",
+        "nav-performance": "ランキング",
+        // Committee
+        "committee-title": "投資委員会",
+        "committee-desc": "マスターを独立に召集し、総合的な判断を下す",
+        "committee-ticker-label": "ティッカー",
+        "committee-question-label": "質問（任意）",
+        "committee-run": "委員会を開催",
+        "committee-select-masters": "マスターを選択",
+        "committee-select-all": "全選択",
+        "committee-clear-all": "クリア",
+        "committee-agents-unit": "人",
+        "committee-loading": "委員会が独立審議中...",
+        "committee-error-title": "分析失敗",
+        "committee-need-ticker": "ティッカーを入力してください",
+        "committee-verdict": "委員会裁定",
+        "committee-opinions": "各マスターの独立意見",
+        "committee-signal": "シグナル",
+        "committee-score": "スコア",
+        "committee-confidence": "信頼度",
+        "committee-vote": "投票",
+        "committee-presets": "プリセット委員会",
+        "preset-value": "クラシックバリュー",
+        "preset-china": "中国バリュー",
+        "preset-macro": "マクロ全天候",
+        "preset-growth": "イノベーション成長",
+        "preset-all": "全員委員会",
+        // Nav group labels
+        "group-analysis": "分析",
+        "group-v8": "v8 機能",
+        "group-investors": "投資家",
+        "group-system": "システム",
+        // Sidebar footer
+        "status-ready": "システム準備完了",
+        "theme-dark": "ダーク",
+        "theme-light": "ライト",
+        "powered-by": "Powered by Augur",
+        // Bottom nav
+        "bottom-home": "ホーム",
+        "bottom-analysis": "分析",
+        "bottom-committee": "委員会",
+        "bottom-history": "履歴",
+        "bottom-portfolio": "保有",
+        "bottom-masters": "マスター",
+        "bottom-backtest": "バックテスト",
+        "bottom-settings": "設定",
+        "status-connected": "システム準備完了",
+        "status-error": "接続エラー",
+        "status-disconnected": "切断",
+        "table-scroll-hint": "横にスワイプして全テーブルを表示",
+        "msg-enter-ticker": "ティッカーを入力してください",
+        "msg-invalid-ticker": "無効なティッカー形式",
+        "btn-analyzing": "分析中…",
+        "btn-retry": "再試行",
+        // Watchlist
+        "wl-empty-title": "ウォッチリストが空です",
+        "wl-empty-desc": "銘柄を追加して一括分析しましょう",
+        "wl-empty-cta": "株式を分析",
+        "wl-empty-add-cta": "最初の銘柄を追加",
+        // Report
+        "report-back": "株式分析に戻る",
+        "report-expand-all": "全展開",
+        "report-collapse-all": "全折りたたみ",
+        "report-export-html": "HTML",
+        "report-print-pdf": "PDF印刷",
+        "report-view-analysis": "分析ページで見る",
+        "report-voting-board": "エージェント投票板",
+        "report-full-markdown": "完全レポート（Markdownレンダリング）",
+        "report-exec-summary": "エグゼクティブサマリー",
+        "report-consensus": "コンセンサス",
+        "report-bullish": "強気",
+        "report-bearish": "弱気",
+        // Stocks page
+        "stocks-title": "株式分析",
+        "stocks-history-title": "履歴コンセンサス推移",
+        "stocks-data-source": "データソース: yfinance ライブ",
+        "stocks-expand-reasoning": "推論を展開",
+        "stocks-collapse-reasoning": "推論を折りたたむ",
+        "stocks-expand": "展開",
+        "stocks-collapse": "折りたたむ",
+        // Backtest
+        "backtest-title": "バックテスト",
+        "backtest-desc": "マスターの過去シグナルを時系列で検証",
+        "backtest-ticker-label": "ティッカー",
+        "backtest-ticker-empty": "ティッカーを入力してください",
+        "backtest-ticker-invalid": "無効なティッカー",
+        "backtest-days-label": "期間（日数）",
+        "backtest-capital-label": "初期資本",
+        "backtest-capital-hint": "バックテスト用の想定初期資本",
+        "backtest-strategy-label": "リバランス戦略",
+        "backtest-strategy-equal": "均等配分",
+        "backtest-strategy-kelly": "ケリー基準",
+        "backtest-strategy-fixed": "固定配分",
+        "backtest-run": "バックテスト実行",
+        "backtest-running": "バックテスト実行中...",
+        "backtest-loading": "マスターシグナルを分析中...",
+        "backtest-leaderboard-title": "マスターリーダーボード",
+        "backtest-leaderboard-sort": "ソート",
+        "backtest-col-ticker": "銘柄",
+        "backtest-col-date": "日付",
+        "backtest-col-signal": "シグナル",
+        "backtest-col-score": "スコア",
+        "backtest-col-hitrate": "的中率",
+        "backtest-col-hitviz": "精度",
+        "backtest-col-total": "合計",
+        "backtest-col-right-avg": "平均正解",
+        "backtest-col-wrong-avg": "平均不正解",
+        "backtest-metric-winrate": "勝率",
+        "backtest-metric-winrate-sub": "正確なシグナルの割合",
+        "backtest-metric-sharpe": "シャープレシオ",
+        "backtest-metric-sharpe-sub": "リスク調整リターン",
+        "backtest-metric-drawdown": "最大ドローダウン",
+        "backtest-metric-drawdown-sub": "ピークからの最大下落幅",
+        "backtest-metric-annualized": "年率リターン",
+        "backtest-metric-annualized-sub": "バックテスト期間の年換算",
+        "backtest-empty-title": "データなし",
+        "backtest-empty-desc": "銘柄を入力してバックテストを実行してください",
+        "backtest-empty-cta": "まず株式を分析する",
+        "backtest-lb-empty-title": "リーダーボード未生成",
+        "backtest-lb-empty-desc": "バックテスト後にランキングが表示されます",
+        "backtest-error-title": "バックテストエラー",
+        "backtest-error-failed": "バックテスト失敗",
+        "backtest-error-timeout": "タイムアウト",
+        "backtest-error-request": "リクエストエラー",
+        "backtest-error-default": "不明なエラー",
+        "backtest-table-caption": "バックテスト結果テーブル",
+        "backtest-banner-ticker": "銘柄",
+        "backtest-banner-days": "期間",
+        "backtest-banner-consensus": "コンセンサス",
+        "backtest-banner-total": "合計シグナル",
+        // Compare page
+        "compare-title": "マスター対決",
+        "compare-desc": "異なる投資スタイルのマスターを並べて比較",
+        "compare-radar-title": "ファクターレーダー",
+        "compare-radar-subtitle": "各マスターの実際のファクタースコアを5次元で可視化",
+        "compare-radar-valuation": "バリュエーション",
+        "compare-radar-growth": "成長性",
+        "compare-radar-quality": "クオリティ",
+        "compare-radar-momentum": "モメンタム",
+        "compare-radar-safety": "安全性",
+        // History
+        "history-title": "分析履歴",
+        "history-empty-title": "履歴なし",
+        "history-empty-desc": "株式を分析すると、ここに履歴が保存されます",
+        // Signals
+        "signals-title": "シグナルモニタリング",
+        "signals-desc": "Ticker Tape 経由のリアルタイム市場シグナル",
+        // Settings
+        "settings-title": "設定",
+        "settings-save": "保存",
+        // Ticker tape
+        "ticker-paused-badge": "⏸ 一時停止中 — クリックして再開",
+        "ticker-hover-hint": "ホバーで一時停止 • クリックでロック",
+        // Chart range
+        "chart-range-30": "30日",
+        "chart-range-all": "全期間",
+        "chart-point-date": "日付",
+        "chart-point-score": "スコア",
+        "chart-point-signal": "シグナル",
+        // Portfolio
+        "portfolio-title": "ポートフォリオ分析",
+        "portfolio-desc": "保有銘柄の総合分析",
+        // Debate
+        "debate-title": "討論モード",
+        "debate-desc": "2人のマスターが同一銘柄について討論する",
+        // Scanner
+        "scanner-empty-title": "スキャン結果なし",
+        "scanner-empty-desc": "条件を設定してスキャンを実行してください",
+        // Accessibility
+        "a11y-skip-main": "メインコンテンツへスキップ",
+        "a11y-collapse-sidebar": "サイドバーを折りたたむ",
+        "a11y-open-menu": "ナビゲーションメニューを開く",
+        "a11y-toggle-lang": "言語を切り替える",
+        "a11y-toggle-theme": "ダーク/ライトテーマを切り替える",
+        "a11y-ticker-tape": "ティッカーテープ",
+        "a11y-ticker-pause": "ティッカーテープを一時停止",
+        "a11y-ticker-resume": "ティッカーテープを再開",
+        "a11y-stocks-ticker": "株式ティッカー入力",
+        "a11y-hero-chips-group": "ティッカー例",
+        "a11y-stocks-spinner": "分析中"
+    },
+    ko: {
+        // Sidebar nav
+        "nav-dashboard": "대시보드",
+        "nav-stocks": "주식 분석",
+        "nav-signals": "시그널",
+        "nav-backtest": "백테스트",
+        "nav-personas": "페르소나",
+        "nav-create-persona": "투자자 만들기",
+        "create-persona-title": "커스텀 투자자 만들기",
+        "create-persona-desc": "YAML 없이 폼으로 투자 전략 에이전트 생성",
+        "optimizer-title": "포트폴리오 최적화",
+        "optimizer-desc": "마코위츠 평균-분산 최적화 — 최적 포트폴리오 비율 산출",
+        "nav-settings": "설정",
+        "nav-watchlist": "관심종목",
+        "nav-portfolio": "포트폴리오",
+        "nav-chat": "AI 채팅",
+        "nav-optimizer": "최적화",
+        "nav-compare": "마스터 대결",
+        "nav-debate": "토론 모드",
+        "nav-committee": "투자 위원회",
+        "nav-hermes-setup": "Hermes 연결",
+        "nav-history": "분석 기록",
+        "nav-performance": "리더보드",
+        // Committee
+        "committee-title": "투자 위원회",
+        "committee-desc": "마스터들을 독립적으로 소집하여 종합 판단",
+        "committee-ticker-label": "티커",
+        "committee-question-label": "질문 (선택사항)",
+        "committee-run": "위원회 소집",
+        "committee-select-masters": "마스터 선택",
+        "committee-select-all": "전체 선택",
+        "committee-clear-all": "초기화",
+        "committee-agents-unit": "명",
+        "committee-loading": "위원회가 독립 심의 중...",
+        "committee-error-title": "분석 실패",
+        "committee-need-ticker": "티커를 입력하세요",
+        "committee-verdict": "위원회 결정",
+        "committee-opinions": "마스터별 독립 의견",
+        "committee-signal": "시그널",
+        "committee-score": "점수",
+        "committee-confidence": "신뢰도",
+        "committee-vote": "투표",
+        "committee-presets": "프리셋 위원회",
+        "preset-value": "클래식 가치",
+        "preset-china": "중국 가치",
+        "preset-macro": "매크로 올웨더",
+        "preset-growth": "혁신 성장",
+        "preset-all": "전체 위원회",
+        // Nav group labels
+        "group-analysis": "분석",
+        "group-v8": "v8 기능",
+        "group-investors": "투자자",
+        "group-system": "시스템",
+        // Sidebar footer
+        "status-ready": "시스템 준비 완료",
+        "theme-dark": "다크",
+        "theme-light": "라이트",
+        "powered-by": "Powered by Augur",
+        // Bottom nav
+        "bottom-home": "홈",
+        "bottom-analysis": "분석",
+        "bottom-committee": "위원회",
+        "bottom-history": "기록",
+        "bottom-portfolio": "보유",
+        "bottom-masters": "마스터",
+        "bottom-backtest": "백테스트",
+        "bottom-settings": "설정",
+        "status-connected": "시스템 준비 완료",
+        "status-error": "연결 오류",
+        "status-disconnected": "연결 끊김",
+        "table-scroll-hint": "좌우로 스와이프하여 전체 표 보기",
+        "msg-enter-ticker": "티커를 입력하세요",
+        "msg-invalid-ticker": "유효하지 않은 티커 형식",
+        "btn-analyzing": "분석 중…",
+        "btn-retry": "다시 시도",
+        // Watchlist
+        "wl-empty-title": "관심종목이 없습니다",
+        "wl-empty-desc": "종목을 추가하여 일괄 분석하세요",
+        "wl-empty-cta": "주식 분석하기",
+        "wl-empty-add-cta": "첫 종목 추가",
+        // Report
+        "report-back": "주식 분석으로 돌아가기",
+        "report-expand-all": "모두 펼치기",
+        "report-collapse-all": "모두 접기",
+        "report-export-html": "HTML",
+        "report-print-pdf": "PDF 인쇄",
+        "report-view-analysis": "분석 페이지에서 보기",
+        "report-voting-board": "에이전트 투표판",
+        "report-full-markdown": "전체 보고서 (마크다운 렌더링)",
+        "report-exec-summary": "요약",
+        "report-consensus": "컨센서스",
+        "report-bullish": "강세",
+        "report-bearish": "약세",
+        // Stocks page
+        "stocks-title": "주식 분석",
+        "stocks-history-title": "과거 컨센서스 추이",
+        "stocks-data-source": "데이터 소스: yfinance 실시간",
+        "stocks-expand-reasoning": "추론 펼치기",
+        "stocks-collapse-reasoning": "추론 접기",
+        "stocks-expand": "펼치기",
+        "stocks-collapse": "접기",
+        // Backtest
+        "backtest-title": "백테스트",
+        "backtest-desc": "마스터의 과거 시그널을 시계열로 검증",
+        "backtest-ticker-label": "티커",
+        "backtest-ticker-empty": "티커를 입력하세요",
+        "backtest-ticker-invalid": "유효하지 않은 티커",
+        "backtest-days-label": "기간 (일수)",
+        "backtest-capital-label": "초기 자본",
+        "backtest-capital-hint": "백테스트용 가상 초기 자본",
+        "backtest-strategy-label": "리밸런싱 전략",
+        "backtest-strategy-equal": "균등 배분",
+        "backtest-strategy-kelly": "켈리 기준",
+        "backtest-strategy-fixed": "고정 배분",
+        "backtest-run": "백테스트 실행",
+        "backtest-running": "백테스트 실행 중...",
+        "backtest-loading": "마스터 시그널 분석 중...",
+        "backtest-leaderboard-title": "마스터 리더보드",
+        "backtest-leaderboard-sort": "정렬",
+        "backtest-col-ticker": "종목",
+        "backtest-col-date": "날짜",
+        "backtest-col-signal": "시그널",
+        "backtest-col-score": "점수",
+        "backtest-col-hitrate": "적중률",
+        "backtest-col-hitviz": "정확도",
+        "backtest-col-total": "합계",
+        "backtest-col-right-avg": "평균 정답",
+        "backtest-col-wrong-avg": "평균 오답",
+        "backtest-metric-winrate": "승률",
+        "backtest-metric-winrate-sub": "정확한 시그널 비율",
+        "backtest-metric-sharpe": "샤프 비율",
+        "backtest-metric-sharpe-sub": "위험 조정 수익률",
+        "backtest-metric-drawdown": "최대 낙폭",
+        "backtest-metric-drawdown-sub": "고점 대비 최대 하락폭",
+        "backtest-metric-annualized": "연환산 수익률",
+        "backtest-metric-annualized-sub": "백테스트 기간의 연환산",
+        "backtest-empty-title": "데이터 없음",
+        "backtest-empty-desc": "티커를 입력하고 백테스트를 실행하세요",
+        "backtest-empty-cta": "먼저 주식 분석하기",
+        "backtest-lb-empty-title": "리더보드 미생성",
+        "backtest-lb-empty-desc": "백테스트 후 순위가 표시됩니다",
+        "backtest-error-title": "백테스트 오류",
+        "backtest-error-failed": "백테스트 실패",
+        "backtest-error-timeout": "시간 초과",
+        "backtest-error-request": "요청 오류",
+        "backtest-error-default": "알 수 없는 오류",
+        "backtest-table-caption": "백테스트 결과 표",
+        "backtest-banner-ticker": "종목",
+        "backtest-banner-days": "기간",
+        "backtest-banner-consensus": "컨센서스",
+        "backtest-banner-total": "총 시그널",
+        // Compare page
+        "compare-title": "마스터 대결",
+        "compare-desc": "다른 투자 스타일의 마스터를 나란히 비교",
+        "compare-radar-title": "팩터 레이더",
+        "compare-radar-subtitle": "각 마스터의 실제 팩터 스코어를 5차원으로 시각화",
+        "compare-radar-valuation": "밸류에이션",
+        "compare-radar-growth": "성장성",
+        "compare-radar-quality": "퀄리티",
+        "compare-radar-momentum": "모멘텀",
+        "compare-radar-safety": "안전성",
+        // History
+        "history-title": "분석 기록",
+        "history-empty-title": "기록 없음",
+        "history-empty-desc": "주식을 분석하면 여기에 기록이 저장됩니다",
+        // Signals
+        "signals-title": "시그널 모니터링",
+        "signals-desc": "Ticker Tape를 통한 실시간 시장 시그널",
+        // Settings
+        "settings-title": "설정",
+        "settings-save": "저장",
+        // Ticker tape
+        "ticker-paused-badge": "⏸ 일시정지 — 클릭하여 재개",
+        "ticker-hover-hint": "호버로 일시정지 • 클릭으로 고정",
+        // Chart range
+        "chart-range-30": "30일",
+        "chart-range-all": "전체",
+        "chart-point-date": "날짜",
+        "chart-point-score": "점수",
+        "chart-point-signal": "시그널",
+        // Portfolio
+        "portfolio-title": "포트폴리오 분석",
+        "portfolio-desc": "보유 종목 종합 분석",
+        // Debate
+        "debate-title": "토론 모드",
+        "debate-desc": "두 마스터가 같은 종목에 대해 토론",
+        // Scanner
+        "scanner-empty-title": "스캔 결과 없음",
+        "scanner-empty-desc": "조건을 설정하고 스캔을 실행하세요",
+        // Accessibility
+        "a11y-skip-main": "메인 콘텐츠로 이동",
+        "a11y-collapse-sidebar": "사이드바 접기",
+        "a11y-open-menu": "내비게이션 메뉴 열기",
+        "a11y-toggle-lang": "언어 전환",
+        "a11y-toggle-theme": "다크/라이트 테마 전환",
+        "a11y-ticker-tape": "티커 테이프",
+        "a11y-ticker-pause": "티커 테이프 일시정지",
+        "a11y-ticker-resume": "티커 테이프 재개",
+        "a11y-stocks-ticker": "주식 티커 입력",
+        "a11y-hero-chips-group": "예시 티커",
+        "a11y-stocks-spinner": "분석 중"
     }
 };
 
 (function() {
     var _currentLang = 'zh';
+    // Language cycle order and label for the toggle button (shows *next* lang)
+    var _LANG_CYCLE = ['zh', 'en', 'ja', 'ko'];
+    var _LANG_NEXT_LABEL = { zh: 'EN', en: '\u65E5', ja: '\uD55C', ko: '\u4E2D' };
+    var _LANG_HTML_ATTR = { zh: 'zh-CN', en: 'en', ja: 'ja', ko: 'ko' };
+    // Banner: en uses EN banner, others use zh banner
+    var _LANG_BANNER = { en: '/docs/images/hero-banner-en.svg' };
 
     function initI18n() {
         var saved = localStorage.getItem('augur-lang');
-        if (saved && (saved === 'zh' || saved === 'en')) {
+        if (saved && _LANG_CYCLE.indexOf(saved) !== -1) {
             _currentLang = saved;
         } else {
             var navLang = (navigator.language || navigator.userLanguage || 'zh').toLowerCase();
-            _currentLang = navLang.startsWith('zh') ? 'zh' : 'en';
+            if (navLang.startsWith('zh')) _currentLang = 'zh';
+            else if (navLang.startsWith('ja')) _currentLang = 'ja';
+            else if (navLang.startsWith('ko')) _currentLang = 'ko';
+            else _currentLang = 'en';
         }
         applyLanguage(_currentLang);
+    }
+
+    // Fallback chain: current lang \u2192 en \u2192 zh
+    function _getVal(key, dict) {
+        if (dict[key] !== undefined) return dict[key];
+        var en = window.I18N['en'] || {};
+        if (en[key] !== undefined) return en[key];
+        var zh = window.I18N['zh'] || {};
+        return zh[key];
     }
 
     function applyLanguage(lang) {
         _currentLang = lang;
         window._augurLang = lang;
-        var dict = window.I18N[lang];
-        if (!dict) return;
+        var dict = window.I18N[lang] || {};
         var els = document.querySelectorAll('[data-i18n]');
         for (var i = 0; i < els.length; i++) {
             var key = els[i].getAttribute('data-i18n');
-            if (dict[key] !== undefined) {
+            var val = _getVal(key, dict);
+            if (val !== undefined) {
                 if (els[i].tagName === 'INPUT' && els[i].hasAttribute('placeholder')) {
-                    els[i].placeholder = dict[key];
+                    els[i].placeholder = val;
                 } else {
-                    els[i].textContent = dict[key];
+                    els[i].textContent = val;
                 }
             }
         }
         document.querySelectorAll('[data-i18n-aria]').forEach(function(el) {
             var akey = el.getAttribute('data-i18n-aria');
-            if (dict[akey] !== undefined) {
-                var label = dict[akey];
+            var label = _getVal(akey, dict);
+            if (label !== undefined) {
                 var name = el.getAttribute('data-aria-name');
                 if (name) label = label.replace(/\{name\}/g, name);
                 var ticker = el.getAttribute('data-aria-ticker');
@@ -1732,47 +2155,42 @@ window.I18N = {
         });
         document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
             var tkey = el.getAttribute('data-i18n-title');
-            if (dict[tkey] !== undefined) {
-                el.setAttribute('title', dict[tkey]);
-            }
+            var val = _getVal(tkey, dict);
+            if (val !== undefined) el.setAttribute('title', val);
         });
         document.querySelectorAll('[data-i18n-meta]').forEach(function(el) {
             var mkey = el.getAttribute('data-i18n-meta');
-            if (dict[mkey] !== undefined) {
-                el.setAttribute('content', dict[mkey]);
-            }
+            var val = _getVal(mkey, dict);
+            if (val !== undefined) el.setAttribute('content', val);
         });
         var ogImg = document.querySelector('meta[property="og:image"][data-i18n-lang-img]');
         var twImg = document.querySelector('meta[name="twitter:image"][data-i18n-lang-img]');
-        var bannerImg = lang === 'en' ? '/docs/images/hero-banner-en.svg' : '/docs/images/hero-banner-baoyu.svg';
+        var bannerImg = _LANG_BANNER[lang] || '/docs/images/hero-banner-baoyu.svg';
         if (ogImg) ogImg.setAttribute('content', bannerImg);
         if (twImg) twImg.setAttribute('content', bannerImg);
-        // Update lang label
+        // Update lang toggle button label (shows next language in cycle)
         var langLabel = document.getElementById('lang-label');
-        if (langLabel) {
-            langLabel.textContent = lang === 'zh' ? 'EN' : '\u4E2D';
-        }
+        if (langLabel) langLabel.textContent = _LANG_NEXT_LABEL[lang] || 'EN';
         // Sync theme toggle label with current language
         if (typeof updateThemeUI === 'function') updateThemeUI();
         // Sync connection status text if health check ran
         var statusText = document.querySelector('.status-text');
         var indicator = document.querySelector('.status-indicator');
         if (statusText && indicator) {
-            if (indicator.classList.contains('disconnected')) {
-                statusText.textContent = dict['status-disconnected'];
-            } else {
-                statusText.textContent = dict['status-connected'];
-            }
+            var statusKey = indicator.classList.contains('disconnected') ? 'status-disconnected' : 'status-connected';
+            var statusVal = _getVal(statusKey, dict);
+            if (statusVal) statusText.textContent = statusVal;
         }
-        document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+        document.documentElement.lang = _LANG_HTML_ATTR[lang] || 'en';
         if (typeof window._refreshIndexDynamicI18n === 'function') {
             window._refreshIndexDynamicI18n();
         }
     }
 
     function t(key, fallback) {
-        var dict = window.I18N[_currentLang] || window.I18N.zh || {};
-        return dict[key] !== undefined ? dict[key] : (fallback || key);
+        var dict = window.I18N[_currentLang] || {};
+        var val = _getVal(key, dict);
+        return val !== undefined ? val : (fallback || key);
     }
 
     function getCurrentLang() {
@@ -1780,7 +2198,8 @@ window.I18N = {
     }
 
     function toggleLanguage() {
-        var newLang = _currentLang === 'zh' ? 'en' : 'zh';
+        var idx = _LANG_CYCLE.indexOf(_currentLang);
+        var newLang = _LANG_CYCLE[(idx + 1) % _LANG_CYCLE.length];
         localStorage.setItem('augur-lang', newLang);
         applyLanguage(newLang);
     }

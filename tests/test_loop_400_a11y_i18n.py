@@ -25,12 +25,14 @@ def i18n_dicts():
     inner = m.group(1)
     en_marker = inner.find("\n    en:")
     assert en_marker != -1
+    ja_marker = inner.find("\n    ja:")
+    en_end = ja_marker if ja_marker != -1 else len(inner)
     entry_pat = re.compile(r'^\s*"([^"]+)":\s*"((?:[^"\\]|\\.)*)"', re.M)
 
     def _parse(block):
         return {em.group(1): em.group(2) for em in entry_pat.finditer(block)}
 
-    return _parse(inner[:en_marker]), _parse(inner[en_marker:])
+    return _parse(inner[:en_marker]), _parse(inner[en_marker:en_end])
 
 
 @pytest.fixture(scope="module")

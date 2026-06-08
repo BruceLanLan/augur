@@ -2,6 +2,25 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.0.0] - 2026-06-09
+
+v10 首发：日语/韩语国际化支持，四语言循环切换（中/英/日/韩），降级链机制。
+
+### Added
+- **日语 (ja) i18n**：181 个 key 的完整日语翻译，覆盖导航、委员会、股票分析、回测、对比、历史等全页面。
+- **韩语 (ko) i18n**：181 个 key 的完整韩语翻译，与日语覆盖范围一致。
+- **四语言循环切换**：语言 toggle 按钮由 zh↔en 双向切换升级为 zh→en→ja→ko→zh 循环；`localStorage` 持久化四种语言选择。
+- **浏览器语言自动检测**：`navigator.language` 自动识别 zh/ja/ko/en，首次访问按浏览器偏好设语言。
+- **降级链机制**：`t()` 和 `applyLanguage()` 支持 ja/ko → en → zh 三级降级，缺失 key 优雅回落到英文。
+- **Agent detail modal（stocks 页）**：点击任意 agent scorecard 弹出详情 modal，展示 key_findings / risks / reasoning；ESC 或点击遮罩关闭。
+
+### Changed
+- **i18n.js 架构**：`toggleLanguage()` 改为基于 `_LANG_CYCLE` 数组的循环逻辑；`applyLanguage()` 重构为通过内部 `_getVal()` 函数支持降级；`html[lang]` 属性正确映射到 `zh-CN` / `en` / `ja` / `ko`。
+- **测试 fixture 适配**：6 个测试文件的 `i18n_dicts` fixture 更新为仅解析 zh 和 en 块（边界到 `\n    ja:`），避免 ja/ko 覆盖 en 解析结果。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [9.1.0] - 2026-06-09
 
 UI 全面升级：CSS token 统一、亮色模式修复、图表交互增强、Toast 升级、空状态统一。

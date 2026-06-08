@@ -41,7 +41,9 @@ def _parse_i18n():
     inner = m.group(1)
     en_marker = inner.find("\n    en:")
     assert en_marker != -1, "i18n.js must have an 'en' block"
-    zh_block, en_block = inner[:en_marker], inner[en_marker:]
+    ja_marker = inner.find("\n    ja:")
+    en_end = ja_marker if ja_marker != -1 else len(inner)
+    zh_block, en_block = inner[:en_marker], inner[en_marker:en_end]
 
     entry_pat = re.compile(r'^\s*"([^"]+)":\s*"((?:[^"\\]|\\.)*)"', re.M)
 

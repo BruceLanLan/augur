@@ -126,8 +126,10 @@ class TestReportI18nKeys:
         assert m
         inner = m.group(1)
         en_marker = inner.find("\n    en:")
+        ja_marker = inner.find("\n    ja:")
+        en_end = ja_marker if ja_marker != -1 else len(inner)
         zh_block = inner[:en_marker]
-        en_block = inner[en_marker:]
+        en_block = inner[en_marker:en_end]
         def keys(block):
             return set(re.findall(r'"([a-z0-9_-]+)"\s*:', block))
         return keys(zh_block), keys(en_block)

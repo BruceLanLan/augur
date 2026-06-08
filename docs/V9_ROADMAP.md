@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-09，当前版本 **v9.1.0**（UI P0-P4 全完成，1656 tests passing）
+> 最后更新：2026-06-09，当前版本 **v10.0.0**（v10 首发：日/韩 i18n + Agent Detail Modal，1656 tests passing）
 
 ---
 
@@ -36,13 +36,15 @@
 | 9.0.7 | stocks 历史共识走势折线图（Chart.js）+ README 准确性修复 |
 | 9.0.8 | `augur committee` CLI 命令 + `augur update` 自更新 + compare 雷达图 + committee WebSocket 流式 + OpenClaw 文档 + PyPI CI |
 | 9.1.0 | UI P0-P4 全完成：CSS token 统一 + 亮色模式修复 + 图表主题联动 + Tape 暂停 UX + 历史图点击 + Toast 升级 + Empty State SVG |
+| 10.0.0 | v10 首发：日语/韩语 i18n（181 key × 2）+ 四语言循环切换 + 降级链 + Agent Detail Modal |
 
-**当前能力盘点：**
+**当前能力盘点（v10.0.0）：**
 - MCP 工具 9 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona
 - CLI 命令：analyze, consensus, report, serve, watch, skills, portfolio, backtest, chat, sentiment, inject-soul, telegram, slack, wechat, lark, cron-* 等
 - Dashboard 19 页（含 committee, hermes-setup）
 - 19 个 skill 目录（SKILL.md + manifest.json）
-- 测试基线：**1652 passed**（排除网络测试 test_analyze_api_v12.py）
+- i18n：中/英/日/韩四语言，降级链
+- 测试基线：**1656 passed**（排除网络测试 test_analyze_api_v12.py）
 
 ---
 
@@ -72,10 +74,11 @@
 
 ---
 
-## v10 候选功能
+## v10 进展
 
+- ✅ **日语/韩语 i18n**（v10.0.0）— 四语言循环切换，181 key × ja/ko，降级链
+- ✅ **Agent Detail Modal**（v9.1.0 后提交）— stocks 页 scorecard 点击展示详细推理
 - **README 截图更新** — 委员会页、hermes-setup 页、compare 雷达图实际截图
-- **日语/韩语 i18n** — 面向亚洲市场扩展
 - **Electron/Tauri 桌面 App** — PWA 已作为轻量独立 App，v10 考虑 Electron
 - **PyPI 正式发布** — 完成 OIDC trusted publisher 配置后 `pip install augur-agents`
 - **因子级雷达** — 在 compare 页面对每个大师拆解到真实因子分（需 API 层改造）
