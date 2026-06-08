@@ -23,10 +23,7 @@
 
 > **巴菲特会买这只股吗？达利欧怎么看宏观风险？段永平觉得管理层够不够「本分」？**
 >
-> 真正重要的不是单一视角的分析，而是多维度的共识。Augur 让 **18位** 顶级投资人同时为你分析，每人给出独立评分，最终汇成一个带 Kelly 仓位建议的加权共识信号。
-
-> **🦉 为什么是白色像素猫头鹰？**
-> 在日本文化中，白色猫头鹰（フクロウ）是招财和智慧的象征——「不苦労」（没有辛苦）或「福来郎」（福气到来）。
+> 真正重要的不是单一视角的分析，而是多维度的共识。Augur 让 **18位** 顶级投资人同时为你分析，每人给出独立评分，最终汇成一个带 Kelly 仓位建议的加权共识信号——**30秒，一行命令。**
 
 ---
 
@@ -185,14 +182,16 @@ Auto-fetching data for NVDA from yfinance...
 ## 📊 Bloomberg Terminal × JRPG Dashboard
 
 ```bash
-python3 -m dashboard.app --port 8000
+python3 -m dashboard.app          # http://localhost:8000
+python3 -m dashboard.app --port 8080 --host 0.0.0.0   # 自定义端口/局域网
+docker compose up -d dashboard    # Docker 一键部署
 ```
 
 <p align="center">
-  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard v8.2.3 — Bloomberg Terminal × JRPG 风格，全球行情面板 + 18位大师共识" width="100%"/>
+  <img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard — Bloomberg Terminal × JRPG HD-2D，召唤18位大师" width="100%"/>
 </p>
 
-**17 个页面**（仪表盘 / 股票 / 信号 / 扫描 / 自选股 / 持仓 / 回测 / AI 对话 / 优化 / 对决 / 辩论 / 历史 / 排行 / 人格 / 创建 / 设置 / 登录），覆盖完整投资分析流程：
+**17 个页面**，覆盖完整投资分析流程：
 
 | 分组 | 页面 | 功能亮点 |
 |------|------|---------|
@@ -203,7 +202,7 @@ python3 -m dashboard.app --port 8000
 | | 自选股 | 一键分析，持久化 |
 | | 持仓管理 | 持仓追踪 + 实时盈亏 + 资产配置图 |
 | | 历史回测 | IC 排行榜 + 大师命中率 |
-| **v8 功能** | AI 对话 | 11位大师独特语气对话 + 实时行情数据卡片，支持 OpenAI 兼容接口 |
+| **v8 功能** | AI 对话 | 11位大师人格化对话 + 实时行情数据卡片（60s 刷新），支持 OpenAI 兼容接口 |
 | | 组合优化 | Markowitz 均值方差优化 + **有效前沿可视化曲线** |
 | | 大师对决 | 2-5位大师同题独立对比 |
 | | 辩论模式 | 多大师顺序辩论 |
@@ -288,29 +287,23 @@ python3 -m dashboard.app --port 8000
 ### Claude Desktop / Hermes（MCP）
 
 ```bash
-uv venv --python 3.11 .venv && uv pip install -e ".[mcp]"
-.venv/bin/augur mcp-server
+pip install -e ".[mcp]"   # Python 3.10+ required
+augur mcp-server           # stdio server, ready for Claude / Hermes
 ```
 
 **Hermes** (`~/.hermes/config.yaml`):
 ```yaml
 mcp_servers:
   augur:
-    command: /path/to/augur/.venv/bin/augur
+    command: augur
     args: [mcp-server]
-skills:
-  external_dirs:
-    - /path/to/augur/skills
 ```
 
 **Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "augur": {
-      "command": "/path/to/augur/.venv/bin/augur",
-      "args": ["mcp-server"]
-    }
+    "augur": { "command": "augur", "args": ["mcp-server"] }
   }
 }
 ```
@@ -345,9 +338,10 @@ augur consensus AAPL                      # 加权共识 + Kelly 仓位
 augur report TSLA                         # 生成深度 Markdown 报告
 augur list-personas                       # 列出全部 18 位投资人
 
-# v8 新增
-augur chat AAPL --persona buffett         # 向巴菲特提问
-augur sentiment TSLA                      # 社交情绪分析
+# AI 功能
+augur chat AAPL --persona buffett         # 向巴菲特提问（人格化对话）
+augur sentiment TSLA                      # 社交情绪分析（StockTwits + 新闻）
+augur report AAPL                         # 生成深度 Markdown 报告（含多空论点）
 
 # 数据与监控
 augur fetch AAPL                          # 仅获取数据
@@ -428,6 +422,12 @@ uv venv --python 3.11 .venv && uv pip install -e ".[mcp]"
 <summary>Kelly 仓位显示 0%</summary>
 
 Kelly 只在 BULLISH 且评分 > 5 时给出非零建议。
+</details>
+
+<details>
+<summary>🦉 为什么是白色像素猫头鹰？</summary>
+
+在日本文化中，白色猫头鹰（フクロウ）是招财与智慧的象征——「不苦労」（没有辛苦）或「福来郎」（福气到来）。我们用它象征 Augur 的使命：**用 AI 的智慧，让投资决策不再痛苦。**
 </details>
 
 ---

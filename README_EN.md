@@ -23,7 +23,7 @@
 
 > **Would Buffett buy this stock?** What does Dalio think about macro risk? Is management "benfun" (principled) by Duan Yongping's standard?
 >
-> Stop guessing from one angle. Augur lets **18 legendary investors** independently analyze any stock, each producing a structured score, then aggregates them into a weighted consensus with Kelly position sizing.
+> Stop guessing from one angle. Augur lets **18 legendary investors** independently analyze any stock, each producing a structured score, then aggregates them into a weighted consensus with Kelly position sizing — **30 seconds, one command.**
 
 ## One analysis. 18 perspectives.
 
@@ -33,9 +33,6 @@
 
 > **All-New HD-2D Visual System**: Fusing the data density of a Bloomberg Terminal with the "Gilt-Edged" parchment aesthetic of a classic JRPG.
 > NVDA live analysis: BUY · Score 7.6/10 · Confidence 81% · Kelly position 20% · All 18 masters voted
-
-> **🦉 Why a White Pixel Owl?**
-> In Japanese culture, the white owl (*フクロウ, fukurou*) symbolizes luck, wealth, and wisdom. Its name can be written as "不苦労" (no hardship) or "福来郎" (luck arrives). We chose it as Augur's logo to represent our mission: **using AI wisdom to make investment decisions less painful and more rewarding.**
 
 ---
 
@@ -131,12 +128,14 @@ augur analyze AAPL                  # 18-master consensus, live data auto-fetch
 augur consensus NVDA                # weighted consensus + Kelly position sizing
 augur report TSLA                   # generate deep analysis report
 
-# v8 features
-augur chat AAPL --persona buffett   # ask Buffett about a stock
-augur sentiment NVDA                # social sentiment analysis
+# AI features
+augur chat AAPL --persona buffett   # ask Buffett about a stock (persona voice)
+augur sentiment NVDA                # social sentiment analysis (StockTwits + news)
+augur report TSLA                   # generate deep Markdown report (bull/bear cases)
 
 # Launch Dashboard
 python3 -m dashboard.app            # → open http://localhost:8000
+docker compose up -d dashboard      # Docker one-command deploy
 ```
 
 ### 🔑 AI Chat LLM Configuration
@@ -329,31 +328,23 @@ python3 -m dashboard.app --port 8000
 ### Claude Desktop / Hermes (MCP)
 
 ```bash
-# Requires Python 3.10+
-uv venv --python 3.11 .venv
-uv pip install -e ".[mcp]"
-.venv/bin/augur mcp-server   # verify it starts
+pip install -e ".[mcp]"    # Python 3.10+ required
+augur mcp-server            # stdio server, ready for Claude / Hermes
 ```
 
 **Hermes** (`~/.hermes/config.yaml`):
 ```yaml
 mcp_servers:
   augur:
-    command: /path/to/augur/.venv/bin/augur
+    command: augur
     args: [mcp-server]
-skills:
-  external_dirs:
-    - /path/to/augur/skills
 ```
 
 **Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
-    "augur": {
-      "command": "/path/to/augur/.venv/bin/augur",
-      "args": ["mcp-server"]
-    }
+    "augur": { "command": "augur", "args": ["mcp-server"] }
   }
 }
 ```
@@ -389,10 +380,10 @@ augur consensus AAPL                          # weighted consensus + Kelly sizin
 augur report TSLA                             # generate deep Markdown report
 augur list-personas                           # list all 18 investors
 
-# ── v8 New Commands ───────────────────────────────────────────────────────────
+# ── AI Features ───────────────────────────────────────────────────────────────
 augur chat AAPL --persona buffett             # ask Buffett about a stock
 augur chat NVDA                               # random persona response
-augur sentiment TSLA                          # social sentiment (X/Reddit/StockTwits)
+augur sentiment TSLA                          # social sentiment (StockTwits + news)
 
 # ── Data ──────────────────────────────────────────────────────────────────────
 augur fetch AAPL                              # fetch live data, no analysis
@@ -536,6 +527,12 @@ pip install -e ".[data]"
 <summary>Kelly position shows 0%</summary>
 
 Kelly only returns a non-zero suggestion for BULLISH signal with score > 5. NEUTRAL/BEARISH conservatively return 0.
+</details>
+
+<details>
+<summary>🦉 Why a White Pixel Owl?</summary>
+
+In Japanese culture, the white owl (*フクロウ, fukurou*) symbolizes luck, wealth, and wisdom — its name can be written as "不苦労" (no hardship) or "福来郎" (luck arrives). We chose it to represent Augur's mission: **using AI wisdom to make investment decisions less painful and more rewarding.**
 </details>
 
 ---
