@@ -1,7 +1,24 @@
 {% extends "base.html" %}
 {% block title %}对比分析 - Augur{% endblock %}
 {% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
+#compare-radar-container {
+    max-width: 480px;
+    margin: 0 auto 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 16px;
+}
+#compare-radar-title {
+    text-align: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
 .agent-checkbox-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
@@ -144,6 +161,10 @@
                 <button type="button" class="btn btn-sm" onclick="shareCompareLink()" data-i18n="compare-export-share">分享</button>
             </div>
         </div>
+    </div>
+    <div id="compare-radar-container" style="display:none;">
+        <div id="compare-radar-title" data-i18n="compare-radar-title">评分雷达图</div>
+        <canvas id="compare-radar-canvas" height="320"></canvas>
     </div>
     <div class="compare-results" id="compare-results"></div>
 </div>
@@ -356,6 +377,87 @@ function renderCompareResults(data) {
     } else {
         consensusEl.textContent = _t('compare-consensus-none');
     }
+
+    if (agents.length >= 2) {
+        renderRadarChart(agents);
+    }
+}
+
+var _radarChart = null;
+function renderRadarChart(agents) {
+    var container = document.getElementById('compare-radar-container');
+    var canvas = document.getElementById('compare-radar-canvas');
+    if (!container || !canvas) return;
+    container.style.display = 'block';
+
+    var PALETTE = ['#ff9500', '#30d158', '#64d2ff', '#bf5af2', '#ff453a'];
+    var labels = [
+        _t('compare-radar-score', '总评分'),
+        _t('compare-radar-confidence', '置信度'),
+        _t('compare-radar-bullish', '看多度'),
+        _t('compare-radar-evidence', '论据量'),
+        _t('compare-radar-risk', '风险意识')
+    ];
+
+    function toRadarData(a) {
+        var score = Math.min(Math.max(a.score || 0, 0), 10);
+        var conf = Math.min(Math.max((a.confidence || 0) * 10, 0), 10);
+        var sigMap = { bullish: 10, neutral: 5, bearish: 0 };
+        var bull = sigMap[(a.signal || '').toLowerCase()];
+        if (bull === undefined) bull = 5;
+        var evidence = Math.min((a.key_findings || []).length * 2, 10);
+        var riskAware = Math.min((a.risks || []).length * 2, 10);
+        return [score, conf, bull, evidence, riskAware];
+    }
+
+    var datasets = agents.map(function(a, i) {
+        var color = PALETTE[i % PALETTE.length];
+        var rgba = color + '33';
+        return {
+            label: a.agent_name || a.agent_id,
+            data: toRadarData(a),
+            borderColor: color,
+            backgroundColor: rgba,
+            pointBackgroundColor: color,
+            pointRadius: 4,
+            borderWidth: 2
+        };
+    });
+
+    if (_radarChart) {
+        _radarChart.destroy();
+        _radarChart = null;
+    }
+
+    _radarChart = new Chart(canvas, {
+        type: 'radar',
+        data: { labels: labels, datasets: datasets },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#8e8e93', font: { size: 11 }, padding: 12 }
+                },
+                tooltip: { enabled: true }
+            },
+            scales: {
+                r: {
+                    min: 0,
+                    max: 10,
+                    ticks: {
+                        stepSize: 2,
+                        color: '#636366',
+                        font: { size: 10 },
+                        backdropColor: 'transparent'
+                    },
+                    pointLabels: { color: '#aeaeb2', font: { size: 11 } },
+                    grid: { color: 'rgba(255,255,255,0.08)' },
+                    angleLines: { color: 'rgba(255,255,255,0.08)' }
+                }
+            }
+        }
+    });
 }
 
 function exportCompareJSON() {
