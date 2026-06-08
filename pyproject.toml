@@ -12,15 +12,23 @@ requires-python = ">=3.8"
 keywords = ["investment", "multi-agent", "stock-analysis", "ai", "personas", "consensus"]
 classifiers = [
     "Development Status :: 4 - Beta",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
+    "Natural Language :: English",
+    "Natural Language :: Chinese (Simplified)",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Topic :: Office/Business :: Financial :: Investment",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Environment :: Console",
+    "Environment :: Web Environment",
+    "Framework :: FastAPI",
 ]
 dependencies = [
     "click>=8.0",
@@ -78,6 +86,8 @@ augur = "augur.cli:main"
 Homepage = "https://github.com/BruceLanLan/augur"
 Repository = "https://github.com/BruceLanLan/augur"
 Documentation = "https://github.com/BruceLanLan/augur#readme"
+Issues = "https://github.com/BruceLanLan/augur/issues"
+Changelog = "https://github.com/BruceLanLan/augur/blob/main/README.md#-changelog"
 
 [project.entry-points."mcp.server"]
 augur-agents = "augur.mcp_server:create_server"
