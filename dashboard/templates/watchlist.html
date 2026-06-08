@@ -125,9 +125,14 @@
             <p id="wl-add-hint" class="field-hint" role="alert" style="display:none; font-size:0.72rem; color:var(--signal-sell);"></p>
             <button type="submit" class="btn btn-primary" data-i18n="watchlist-add">添加</button>
         </form>
-        <div class="flex gap-8">
+        <div class="flex gap-8" style="flex-wrap:wrap;">
             <a href="/portfolio?import=watchlist" class="btn btn-sm btn-ghost" style="text-decoration:none;" data-i18n="watchlist-to-portfolio">导入到持仓</a>
             <button type="button" class="btn btn-sm" onclick="batchAnalyzeAll()" id="batch-btn" data-i18n="watchlist-batch">一键全部分析</button>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="exportWatchlistCSV()" data-i18n="watchlist-export-csv">导出</button>
+            <label class="btn btn-sm btn-ghost" style="cursor:pointer;" title="从 CSV 导入标的">
+                <span data-i18n="watchlist-import-csv">CSV 导入</span>
+                <input type="file" accept=".csv,.txt" style="display:none;" onchange="importWatchlistCSV(event)">
+            </label>
             <button type="button" class="btn btn-sm btn-ghost" onclick="clearWatchlist()" data-i18n="watchlist-clear">清空</button>
         </div>
     </div>
@@ -207,6 +212,56 @@ function clearWatchlist() {
     saveWatchlist([]);
     renderWatchlist();
     showToast('自选股已清空');
+}
+
+function exportWatchlistCSV() {
+    var list = getWatchlist();
+    if (!list.length) { showToast(_t('wl-empty-title', '列表为空'), 'warning'); return; }
+    var rows = list.map(function(item) { return item.ticker; });
+    var csv = 'Ticker\n' + rows.join('\n');
+    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'augur-watchlist-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(_t('watchlist-export-done', '已导出 ' + rows.length + ' 只标的'), 'success');
+}
+
+function importWatchlistCSV(evt) {
+    var file = evt.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        var text = e.target.result || '';
+        var tickers = [];
+        text.split(/[\r\n,;]+/).forEach(function(raw) {
+            var t = raw.trim().toUpperCase().replace(/[^A-Z0-9.\-]/g, '');
+            if (t && t.length >= 1 && t.length <= 15 && t !== 'TICKER') {
+                tickers.push(t);
+            }
+        });
+        var list = getWatchlist();
+        var existing = list.map(function(x) { return x.ticker; });
+        var added = 0;
+        tickers.forEach(function(t) {
+            if (!existing.includes(t)) {
+                list.push({ ticker: t, addedAt: new Date().toISOString() });
+                existing.push(t);
+                added++;
+            }
+        });
+        if (added > 0) {
+            saveWatchlist(list);
+            renderWatchlist();
+            showToast(_t('watchlist-import-done', '已导入 ' + added + ' 只标的').replace('{n}', added), 'success');
+        } else {
+            showToast(_t('watchlist-import-dup', '无新增标的（均已存在）'), 'warning');
+        }
+        evt.target.value = '';
+    };
+    reader.readAsText(file, 'utf-8');
 }
 
 function fetchTickerInfo(ticker) {
