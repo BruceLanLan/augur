@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-07，当前版本 **v9.0.6**
+> 最后更新：2026-06-08，当前版本 **v9.0.8**
 
 ---
 
@@ -16,7 +16,7 @@
 
 **仓库分工：**
 - `augur`（github.com/BruceLanLan/augur）= 稳定版，当前 **v8.2.3**
-- `augur-next`（github.com/BruceLanLan/augur-next）= 开发版，当前 **v9.0.6**
+- `augur-next`（github.com/BruceLanLan/augur-next）= 开发版，当前 **v9.0.8**
 - 本地：`feature/v9-dev` 分支跟踪 augur-next/main
 - 推送命令：`git push augur-next feature/v9-dev:main`
 
@@ -33,6 +33,8 @@
 | 9.0.4 | OpenClaw manifest.json(19) + install.sh + Makefile v2 + Docker v9 + `.mcp.json` + CLI `serve/watch/skills/portfolio` |
 | 9.0.5 | create_persona DIY（预设+YAML预览+ID校验） |
 | 9.0.6 | PWA 支持（可安装为独立 App） |
+| 9.0.7 | stocks 历史共识走势折线图（Chart.js）+ README 准确性修复 |
+| 9.0.8 | `augur committee` CLI 命令 + `augur update` 自更新 + compare 雷达图 |
 
 **当前能力盘点：**
 - MCP 工具 9 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona
@@ -45,36 +47,11 @@
 
 ## 待办（下个 session 从这里开始）
 
-### P0 — 立即做（上个 session 中断的）
-
-1. **历史共识走势图**（stocks.html）
-   - agent 因 session limit 中断，**未落地**，需重新做
-   - 目标：股票分析页下方加 Chart.js 折线图，X=历史分析日期，Y=共识评分(0-10)，点按信号染色（绿/黄/红）
-   - 数据源：`GET /api/history?limit=20`，过滤当前 ticker，≥2条才显示
-   - 需在 stocks.html 的 `{% block extra_head %}` 加 Chart.js CDN（确认 optimizer.html 的写法）
-   - 加 i18n key `stocks-history-chart-title`（zh+en）
-   - 在分析完成回调里调用 `loadHistoryChart(ticker)`
-
-2. **`augur update` 自更新命令**（对应"及时更新"目标）
-   - 在 src/augur/cli.py 末尾加 `@main.command("update")`
-   - 逻辑：`git -C <repo_root> pull --ff-only`，然后 `pip install -e .`
-   - 找到 repo root：`Path(__file__).resolve().parents[2]`
-   - 显示当前版本 → 更新后版本
-   - 失败优雅提示（非 git 仓库、有本地改动等）
-
-### P1 — 核心增强
+### P1 — 核心增强（已完成 3/5）
 
 3. **委员会流式输出**（committee.html）
    - 现在是一次性返回，改成逐个大师意见流式展示（WebSocket 或轮询）
    - 参考现有 `/ws/analyze/{ticker}` WebSocket 模式
-
-4. **Agent 对比雷达图**（compare.html）
-   - 多位大师评分用雷达图可视化（各因子维度）
-   - Chart.js radar 类型
-
-5. **`augur committee` CLI 命令**
-   - 对应 MCP 的 augur_committee，命令行也能召开委员会
-   - `augur committee AAPL --agents buffett,munger --question "..."`
 
 ### P2 — 生态扩展
 
@@ -116,7 +93,7 @@
 ```bash
 cd ~/augur
 git checkout feature/v9-dev
-git log --oneline -5              # 确认在 v9.0.6
+git log --oneline -5              # 确认在 v9.0.8
 git status                        # 确认工作树干净
 python3 -m pytest tests/ -q --tb=no --ignore=tests/test_analyze_api_v12.py 2>&1 | tail -3
 ```
