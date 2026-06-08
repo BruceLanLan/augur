@@ -146,6 +146,7 @@
         </div>
         <div class="flex gap-8">
             <button type="button" class="btn btn-sm" onclick="runAugurAnalysis()" id="pf-analyze-btn" aria-busy="false">&#x1F9E0; <span data-i18n="portfolio-analyze">Augur 分析</span></button>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="exportPortfolioCSV()" data-i18n="portfolio-export-csv">导出 CSV</button>
             <button type="button" class="btn btn-sm btn-ghost" onclick="clearPortfolio()" data-i18n="portfolio-clear">清空</button>
         </div>
     </div>
@@ -304,6 +305,37 @@ function clearPortfolio() {
     savePortfolio([]);
     renderPortfolio();
     showToast(_t('portfolio-cleared'));
+}
+
+function exportPortfolioCSV() {
+    var list = getPortfolio();
+    if (!list.length) { showToast(_t('portfolio-export-empty', '持仓列表为空'), 'warning'); return; }
+    var headers = ['Ticker', 'Shares', 'Avg Cost', 'Current Price', 'Market Value', 'P&L', 'P&L %', 'Buy Date'];
+    var rows = list.map(function(h) {
+        var mv = (h.currentPrice || 0) * (h.shares || 0);
+        var cost = (h.avgCost || 0) * (h.shares || 0);
+        var pnl = mv - cost;
+        var pnlPct = cost > 0 ? ((pnl / cost) * 100).toFixed(2) : '0.00';
+        return [
+            h.ticker,
+            h.shares || 0,
+            (h.avgCost || 0).toFixed(2),
+            (h.currentPrice || 0).toFixed(2),
+            mv.toFixed(2),
+            pnl.toFixed(2),
+            pnlPct,
+            h.buyDate || ''
+        ].join(',');
+    });
+    var csv = [headers.join(',')].concat(rows).join('\n');
+    var blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'augur-portfolio-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(_t('portfolio-export-done', 'CSV 已下载'), 'success');
 }
 
 function fetchCurrentPrice(ticker) {
