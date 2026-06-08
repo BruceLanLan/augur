@@ -163,3 +163,72 @@ class TestPriceStreamEndpoint:
                 assert len(msg["prices"]) > 0
         finally:
             monkeypatch.delenv("AUGUR_API_TOKEN", raising=False)
+
+
+class TestCommitteeWebSocket:
+    """Tests for /ws/committee streaming endpoint (v9.0.8)."""
+
+    def test_committee_ws_streams_agents_then_verdict(self):
+        """Full committee run: should stream agent messages then a verdict."""
+        with client.websocket_connect("/ws/committee") as ws:
+            ws.send_json({
+                "ticker": "AAPL",
+                "agents": ["buffett", "graham"],
+                "question": "Is AAPL undervalued?",
+            })
+            agent_count = 0
+            verdict_received = False
+            for _ in range(20):
+                msg = ws.receive_json()
+                if msg["type"] == "agent":
+                    agent_count += 1
+                    assert "agent_name" in msg
+                    assert "signal" in msg
+                    assert "score" in msg
+                    assert "progress" in msg
+                elif msg["type"] == "verdict":
+                    verdict_received = True
+                    v = msg["verdict"]
+                    assert "signal" in v
+                    assert "score" in v
+                    assert "confidence" in v
+                    assert "vote" in v
+                    assert isinstance(msg.get("opinions"), list)
+                    break
+
+            assert agent_count == 2
+            assert verdict_received
+
+    def test_committee_ws_invalid_ticker_returns_error(self):
+        """Invalid ticker format should return error message."""
+        with client.websocket_connect("/ws/committee") as ws:
+            ws.send_json({"ticker": "AAPL;DROP", "agents": ["buffett"], "question": "?"})
+            msg = ws.receive_json()
+            assert msg["type"] == "error"
+
+    def test_committee_ws_all_agents_when_empty_list(self):
+        """Empty agents list should run all registered agents."""
+        with client.websocket_connect("/ws/committee") as ws:
+            ws.send_json({"ticker": "NVDA", "agents": [], "question": "Analyze NVDA"})
+            msg = ws.receive_json()
+            assert msg["type"] == "agent"
+            ws.close()
+
+    def test_committee_ws_verdict_opinions_sorted_by_score(self):
+        """Opinions in verdict message should be sorted descending by score."""
+        with client.websocket_connect("/ws/committee") as ws:
+            ws.send_json({
+                "ticker": "TSLA",
+                "agents": ["buffett", "graham", "lynch"],
+                "question": "Is TSLA a good investment?",
+            })
+            verdict_msg = None
+            for _ in range(20):
+                msg = ws.receive_json()
+                if msg["type"] == "verdict":
+                    verdict_msg = msg
+                    break
+            assert verdict_msg is not None
+            opinions = verdict_msg.get("opinions", [])
+            scores = [op["score"] for op in opinions]
+            assert scores == sorted(scores, reverse=True)
