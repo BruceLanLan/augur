@@ -88,13 +88,38 @@ def save_analysis(ticker: str, result_dict: Dict[str, Any]) -> str:
     return history_id
 
 
-def list_history(limit: int = 50, page: Optional[int] = None, per_page: int = 20) -> List[Dict[str, Any]]:
-    """List recent analysis history records.
+def _load_summary(f: Path) -> Optional[Dict[str, Any]]:
+    """Load a single history file and return its summary dict, or None on error."""
+    try:
+        with open(f, "r", encoding="utf-8") as fp:
+            data = json.load(fp)
+        consensus = data.get("result", {}).get("consensus", {})
+        return {
+            "id": data.get("id", f.stem),
+            "ticker": data.get("ticker", ""),
+            "signal": consensus.get("signal", "unknown"),
+            "score": consensus.get("score", 0),
+            "timestamp": data.get("timestamp", ""),
+        }
+    except (json.JSONDecodeError, OSError):
+        return None
+
+
+def list_history(
+    limit: int = 50,
+    page: Optional[int] = None,
+    per_page: int = 20,
+    ticker_filter: Optional[str] = None,
+    signal_filter: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """List recent analysis history records with optional filtering.
 
     Args:
-        limit: Maximum number of records to return (used when page is None).
-        page: Page number (1-indexed). If provided, pagination is used.
-        per_page: Number of records per page (default 20).
+        limit: Maximum records (when page is None).
+        page: 1-indexed page number for pagination.
+        per_page: Records per page.
+        ticker_filter: Case-insensitive substring match on ticker symbol.
+        signal_filter: Exact match on signal value (bullish/neutral/bearish).
 
     Returns:
         List of summary dicts with id, ticker, signal, score, timestamp.
@@ -102,43 +127,68 @@ def list_history(limit: int = 50, page: Optional[int] = None, per_page: int = 20
     _ensure_dir()
     files = sorted(HISTORY_DIR.glob("*.json"), reverse=True)
 
+    if ticker_filter or signal_filter:
+        # Filtering: must scan all files first, then paginate
+        tf = ticker_filter.upper() if ticker_filter else None
+        sf = signal_filter.lower() if signal_filter else None
+        all_records = []
+        for f in files:
+            rec = _load_summary(f)
+            if rec is None:
+                continue
+            if tf and tf not in rec["ticker"].upper():
+                continue
+            if sf and rec["signal"].lower() != sf:
+                continue
+            all_records.append(rec)
+        if page is not None:
+            start = (page - 1) * per_page
+            return all_records[start:start + per_page]
+        return all_records[:limit]
+
     if page is not None:
-        # Pagination mode: slice based on page and per_page
         start = (page - 1) * per_page
-        end = start + per_page
-        target_files = files[start:end]
+        target_files = files[start:start + per_page]
     else:
         target_files = files[:limit]
 
     records = []
     for f in target_files:
-        try:
-            with open(f, "r", encoding="utf-8") as fp:
-                data = json.load(fp)
-            consensus = data.get("result", {}).get("consensus", {})
-            records.append({
-                "id": data.get("id", f.stem),
-                "ticker": data.get("ticker", ""),
-                "signal": consensus.get("signal", "unknown"),
-                "score": consensus.get("score", 0),
-                "timestamp": data.get("timestamp", ""),
-            })
-        except (json.JSONDecodeError, OSError):
-            continue
-
+        rec = _load_summary(f)
+        if rec is not None:
+            records.append(rec)
     return records
 
 
-def count_history() -> int:
-    """Count total number of history records.
+def count_history(
+    ticker_filter: Optional[str] = None,
+    signal_filter: Optional[str] = None,
+) -> int:
+    """Count history records, optionally filtered.
 
-    Uses a module-level cache with a 5-second TTL to avoid
-    re-globbing the directory on every paginated request.
+    When no filters are provided, uses a 5-second TTL cache.
+    Filtered counts always scan all files (no cache).
 
     Returns:
-        Total number of history JSON files.
+        Total number of matching history records.
     """
     global _count_cache_value, _count_cache_time
+    if ticker_filter or signal_filter:
+        _ensure_dir()
+        tf = ticker_filter.upper() if ticker_filter else None
+        sf = signal_filter.lower() if signal_filter else None
+        count = 0
+        for f in HISTORY_DIR.glob("*.json"):
+            rec = _load_summary(f)
+            if rec is None:
+                continue
+            if tf and tf not in rec["ticker"].upper():
+                continue
+            if sf and rec["signal"].lower() != sf:
+                continue
+            count += 1
+        return count
+
     now = _time.time()
     if (now - _count_cache_time) < _COUNT_CACHE_TTL:
         return _count_cache_value

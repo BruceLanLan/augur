@@ -71,6 +71,20 @@
     </div>
 </header>
 
+<div class="card" style="margin-bottom:0.75rem; padding:10px 16px;">
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <input type="text" id="history-search" placeholder="搜索股票代码…" data-i18n="history-search-ph"
+               style="flex:1; min-width:120px; max-width:220px; padding:5px 10px; border-radius:var(--r-sm); border:1px solid var(--border-color); background:var(--bg-input); color:var(--text-primary); font-family:var(--font-mono); font-size:0.85rem;"
+               aria-label="搜索历史记录" oninput="debounceSearch()">
+        <div style="display:flex; gap:6px;" role="group" aria-label="信号筛选">
+            <button type="button" class="btn btn-sm history-sig-btn" data-sig="" onclick="setSigFilter(this)" style="opacity:1;" data-i18n="history-filter-all">全部</button>
+            <button type="button" class="btn btn-sm history-sig-btn" data-sig="bullish" onclick="setSigFilter(this)" data-i18n="history-filter-bullish">看多</button>
+            <button type="button" class="btn btn-sm history-sig-btn" data-sig="neutral" onclick="setSigFilter(this)" data-i18n="history-filter-neutral">中性</button>
+            <button type="button" class="btn btn-sm history-sig-btn" data-sig="bearish" onclick="setSigFilter(this)" data-i18n="history-filter-bearish">看空</button>
+        </div>
+        <span id="history-filter-hint" style="font-size:0.75rem; color:var(--text-muted); display:none;"></span>
+    </div>
+</div>
 <div class="card">
     <div id="history-content">
         <div class="empty-state" id="empty-state" style="display:none;">
@@ -130,10 +144,17 @@
 var currentPage = 1;
 var totalPages = 1;
 var perPage = 20;
+var _searchTicker = '';
+var _sigFilter = '';
+var _searchTimer = null;
 function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 
 function _historyLocale() {
-    return (typeof getCurrentLang === 'function' && getCurrentLang() === 'en') ? 'en-US' : 'zh-CN';
+    var lang = typeof getCurrentLang === 'function' ? getCurrentLang() : 'zh';
+    if (lang === 'en') return 'en-US';
+    if (lang === 'ja') return 'ja-JP';
+    if (lang === 'ko') return 'ko-KR';
+    return 'zh-CN';
 }
 
 function formatHistoryDate(ts) {
@@ -145,9 +166,35 @@ function formatHistoryDate(ts) {
         : d.toLocaleString(loc);
 }
 
+function debounceSearch() {
+    clearTimeout(_searchTimer);
+    _searchTimer = setTimeout(function() {
+        _searchTicker = (document.getElementById('history-search').value || '').trim();
+        currentPage = 1;
+        loadHistory();
+    }, 300);
+}
+
+function setSigFilter(btn) {
+    _sigFilter = btn.getAttribute('data-sig') || '';
+    document.querySelectorAll('.history-sig-btn').forEach(function(b) {
+        b.style.opacity = (b === btn) ? '1' : '0.45';
+        b.style.borderColor = (b === btn) ? 'var(--accent-orange)' : '';
+    });
+    currentPage = 1;
+    loadHistory();
+}
+
+function _buildHistoryUrl() {
+    var url = '/api/history?page=' + currentPage + '&per_page=' + perPage;
+    if (_searchTicker) url += '&ticker=' + encodeURIComponent(_searchTicker);
+    if (_sigFilter) url += '&signal=' + encodeURIComponent(_sigFilter);
+    return url;
+}
+
 function loadHistory() {
     document.getElementById('history-error').style.display = 'none';
-    fetch('/api/history?page=' + currentPage + '&per_page=' + perPage)
+    fetch(_buildHistoryUrl())
         .then(function(r) { return r.json(); })
         .then(function(data) {
             document.getElementById('history-skeleton').style.display = 'none';
@@ -156,16 +203,31 @@ function loadHistory() {
             var total = data.total || 0;
 
             if (total === 0) {
-                document.getElementById('empty-state').style.display = 'block';
+                var es = document.getElementById('empty-state');
+                es.style.display = 'block';
+                // If filter active, update empty state message inline
+                if (_searchTicker || _sigFilter) {
+                    var desc = es.querySelector('.empty-state-desc');
+                    if (desc) desc.textContent = _t('history-no-results', '没有符合条件的记录');
+                }
                 document.getElementById('history-table').style.display = 'none';
                 document.getElementById('clear-btn').style.display = 'none';
                 document.getElementById('pagination-controls').style.display = 'none';
+                document.getElementById('history-filter-hint').style.display = 'none';
                 return;
             }
             document.getElementById('empty-state').style.display = 'none';
             document.getElementById('history-table').style.display = 'table';
             document.getElementById('history-table').classList.add('fade-in');
             document.getElementById('clear-btn').style.display = 'inline-block';
+            // Show filter hint when active
+            var hint = document.getElementById('history-filter-hint');
+            if (_searchTicker || _sigFilter) {
+                hint.textContent = total + ' ' + _t('history-filter-results', '条结果');
+                hint.style.display = 'inline';
+            } else {
+                hint.style.display = 'none';
+            }
             renderHistory(records);
             updatePagination();
         })

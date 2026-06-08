@@ -2818,26 +2818,34 @@ async def history_page(request: Request):
 
 
 @app.get("/api/history")
-async def api_list_history(limit: int = 50, page: Optional[int] = None, per_page: int = 20):
+async def api_list_history(
+    limit: int = 50,
+    page: Optional[int] = None,
+    per_page: int = 20,
+    ticker: Optional[str] = None,
+    signal: Optional[str] = None,
+):
     from augur.history import list_history, count_history
     if limit < 1 or limit > 500:
         raise HTTPException(status_code=400, detail="limit must be between 1 and 500")
+    # Validate optional filter params
+    ticker_filter = ticker.strip().upper() if ticker and ticker.strip() else None
+    signal_filter = signal.strip().lower() if signal and signal.strip() in ("bullish", "neutral", "bearish") else None
     if page is not None:
         if page < 1 or per_page < 1:
             raise HTTPException(status_code=400, detail="page and per_page must be >= 1")
         if per_page > 100:
             raise HTTPException(status_code=400, detail="per_page must be <= 100")
         try:
-            total = count_history()
+            total = count_history(ticker_filter=ticker_filter, signal_filter=signal_filter)
             total_pages = math.ceil(total / per_page) if per_page > 0 else 0
-            records = list_history(page=page, per_page=per_page)
+            records = list_history(page=page, per_page=per_page, ticker_filter=ticker_filter, signal_filter=signal_filter)
         except Exception as e:
-            # Graceful degradation: storage may be locked, corrupt, or missing
             logger.warning("history list (paginated) failed: %s", e)
             return {"items": [], "total": 0, "page": page, "per_page": per_page, "pages": 0, "error": "history_unavailable", "message": f"历史记录读取失败: {e}"}
         return {"items": records, "total": total, "page": page, "per_page": per_page, "pages": total_pages}
     try:
-        records = list_history(limit=limit)
+        records = list_history(limit=limit, ticker_filter=ticker_filter, signal_filter=signal_filter)
     except Exception as e:
         logger.warning("history list failed: %s", e)
         return {"records": [], "count": 0, "error": "history_unavailable", "message": f"历史记录读取失败: {e}"}
