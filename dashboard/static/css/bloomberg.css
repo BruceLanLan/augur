@@ -3,88 +3,14 @@
    Dark professional trading terminal aesthetic
    ============================================ */
 
-/* --- CSS Variables --- */
-:root {
-    --bg-primary: #0a0a0f;
-    --bg-sidebar: #10101a;
-    --bg-card: #14141f;
-    --bg-card-hover: #1a1a2a;
-    --bg-tertiary: #1a1a2e;
-    --bg-secondary: #10101a;
-    --bg-hover: #1a1a2a;
-    --accent-orange: #ff8c00;
-    --accent-green: #66bb6a;
-    --accent-blue: #4fc3f7;
-    --accent-red: #ef5350;
-    --accent-yellow: #ffa726;
-    --signal-buy: #00c853;
-    --signal-sell: #ff1744;
-    --signal-neutral: #ffd600;
-    --border-color: #1e1e2e;
-    --border-subtle: #181824;
-    --border-hover: #2e2e3e;
-    --bg-surface: #161b22;
-    --text-primary: #e8e8f0;
-    --text-secondary: #8888a0;
-    --text-muted: #8686a0;
-    --report-text: var(--text-primary);
-    --report-text-muted: var(--text-secondary);
-    --report-heading: var(--accent-orange);
-    --report-heading-sub: #ffaa33;
-    --report-code-bg: var(--bg-primary);
-    --report-code-fg: var(--accent-orange);
-    --report-quote-bg: rgba(255, 140, 0, 0.06);
-    --report-table-head: var(--bg-surface);
-    --report-table-stripe: rgba(255, 255, 255, 0.015);
-    --report-chart-label: var(--text-secondary);
-    --report-chart-track: rgba(255, 255, 255, 0.06);
-    --font-data: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
-    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --sidebar-width: 240px;
-    --sidebar-collapsed: 64px;
-    --transition-speed: 0.25s;
-    --radius-sm: 4px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
-}
+/* --- CSS Variables ---
+   All design tokens are defined in colors_and_type.css (loaded after this file).
+   bloomberg.css only adds component-level styles below.
+   ---- */
 
-/* --- Light Theme Override --- */
-html.light {
-    /* Aligned with colors_and_type.css :root.light (parchment daylight terminal) */
-    --bg-primary: #f4f1ea;
-    --bg-sidebar: #ffffff;
-    --bg-card: #ffffff;
-    --bg-card-hover: #f0ece2;
-    --bg-tertiary: #ece7da;
-    --bg-secondary: #f0ece2;
-    --bg-hover: #ece7da;
-    --accent-orange: #cf6f00;
-    --accent-green: #1b8a4b;
-    --accent-blue: #1565c0;
-    --accent-red: #c62828;
-    --accent-yellow: #7a5800;
-    --signal-buy: #1b8a4b;
-    --signal-sell: #c62828;
-    --signal-neutral: #7a5800;
-    --border-color: #ddd6c6;
-    --border-subtle: #ece7da;
-    --border-hover: #c4bba6;
-    --bg-surface: #ece7da;
-    --text-primary: #20180e;
-    --text-secondary: #5a5142;
-    --text-muted: #6b6356;
-    --report-text: #2a2118;
-    --report-text-muted: #4a3e30;
-    --report-heading: #503810;
-    --report-heading-sub: #6b4f1d;
-    --report-code-bg: rgba(0, 0, 0, 0.05);
-    --report-code-fg: #8a4f00;
-    --report-quote-bg: rgba(0, 0, 0, 0.03);
-    --report-table-head: rgba(0, 0, 0, 0.04);
-    --report-table-stripe: rgba(0, 0, 0, 0.02);
-    --report-chart-label: #5a5142;
-    --report-chart-track: rgba(0, 0, 0, 0.08);
-}
+/* --- Light Theme Override ---
+   Light mode tokens are defined in colors_and_type.css html.light (loaded after).
+   ---- */
 
 /* --- Theme Toggle Button --- */
 .theme-toggle-btn {
@@ -752,16 +678,33 @@ input, select, textarea {
     border: 1px solid var(--border-color);
     border-left: 3px solid var(--signal-buy);
     border-radius: var(--radius-sm);
-    padding: 10px 16px;
+    padding: 10px 14px;
     color: var(--text-primary);
     font-size: 0.82rem;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     animation: toastSlideIn 0.3s ease forwards;
     max-width: 340px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    transition: transform 0.2s ease;
 }
 
+.toast-icon {
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    line-height: 1.4;
+    opacity: 0.9;
+}
+
+.toast-msg.toast-success { border-left-color: var(--signal-buy); }
+.toast-msg.toast-success .toast-icon { color: var(--signal-buy); }
 .toast-msg.toast-error { border-left-color: var(--signal-sell); }
+.toast-msg.toast-error .toast-icon { color: var(--signal-sell); }
 .toast-msg.toast-warning { border-left-color: var(--signal-neutral); }
+.toast-msg.toast-warning .toast-icon { color: var(--signal-neutral); }
+.toast-msg.toast-info { border-left-color: var(--accent-blue); }
+.toast-msg.toast-info .toast-icon { color: var(--accent-blue); }
 
 @keyframes toastSlideIn {
     from { opacity: 0; transform: translateX(60px); }
@@ -1068,6 +1011,19 @@ input, select, textarea {
     font-size: 2.4rem;
     margin-bottom: 12px;
     opacity: 0.6;
+    display: block;
+}
+
+.empty-state-icon svg {
+    width: 52px;
+    height: 52px;
+    stroke: var(--text-muted);
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    margin: 0 auto;
+    display: block;
 }
 
 .empty-state-title {
@@ -1473,6 +1429,22 @@ kbd {
     .bottom-nav-item.active,
     .bottom-nav-item:hover {
         color: var(--accent-orange);
+    }
+
+    .bottom-nav-item {
+        position: relative;
+    }
+
+    .bottom-nav-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--accent-orange);
     }
 
     .app-main {

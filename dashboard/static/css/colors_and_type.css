@@ -163,6 +163,14 @@
   /* Master name / oracle dialogue — Silkscreen pixel */
   --name:   700 0.95rem/1.3 var(--font-pixfin);
   --dialog: 400 0.95rem/1.7 var(--font-mono);
+
+  /* ---------------------------------------------------------
+     10 · LAYOUT & COMPONENT CONSTANTS
+     --------------------------------------------------------- */
+  --sidebar-width:     240px;
+  --sidebar-collapsed: 64px;
+  --border-subtle:     #181824;   /* near-black divider / inset shadow */
+  --bg-surface:        #161b22;   /* GitHub-dark-style raised surface  */
 }
 
 /* ============================================================
@@ -219,17 +227,35 @@
   --bg-sidebar:     var(--bg-panel);
   --border-color:   var(--border);
   --accent-orange:  var(--amber);
+  --bg-surface:    #ece7da;
+  --border-subtle: #ece7da;
+  --accent-green:  #1b8a4b;
+  --accent-blue:   #1565c0;
+  --accent-red:    #c62828;
+  --accent-yellow: #7a5800;
+  --oracle-purple: #6d5acd;
+  --crystal:       #1a7db8;
 }
 
 /* bloomberg.css legacy aliases (override bloomberg :root after load order) */
 :root {
-  --text-primary:   var(--fg-1);
-  --text-secondary: var(--fg-2);
-  --text-muted:     var(--fg-3);
-  --bg-primary:     var(--bg-void);
-  --bg-sidebar:     var(--bg-panel);
-  --border-color:   var(--border);
-  --accent-orange:  var(--amber);
+  --text-primary:     var(--fg-1);
+  --text-secondary:   var(--fg-2);
+  --text-muted:       var(--fg-3);
+  --bg-primary:       var(--bg-void);
+  --bg-sidebar:       var(--bg-panel);
+  --border-color:     var(--border);
+  --accent-orange:    var(--amber);
+  --accent-green:     var(--data-green);
+  --accent-blue:      var(--data-blue);
+  --accent-red:       var(--data-red);
+  --accent-yellow:    var(--data-yellow);
+  --font-data:        var(--font-mono);
+  --font-ui:          var(--font-sans);
+  --transition-speed: var(--dur);
+  --radius-sm:        var(--r-sm);
+  --radius-md:        var(--r-md);
+  --radius-lg:        var(--r-lg);
 }
 
 /* ============================================================

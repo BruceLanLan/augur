@@ -553,5 +553,12 @@ function shareCompareLink() {
         showToast(_t('compare-toast-share'));
     }).catch(function() { showToast(_t('compare-toast-copy-failed'), 'error'); });
 }
+
+// Re-render radar chart when theme changes so colors stay in sync
+document.addEventListener('augur:theme-change', function() {
+    if (_radarChart && window._lastCompareData && window._lastCompareData.agents) {
+        renderRadarChart(window._lastCompareData.agents);
+    }
+});
 </script>
 {% endblock %}

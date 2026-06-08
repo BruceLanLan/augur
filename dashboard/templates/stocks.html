@@ -304,8 +304,15 @@
     <p class="text-muted" style="font-size:0.78rem; margin-bottom:12px;" data-i18n="stocks-history-desc">展示您对同一标的在不同时间的分析结果，追踪预测变化趋势</p>
     <!-- Consensus trend chart -->
     <div id="history-chart-container" style="display:none;">
-        <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:8px; letter-spacing:0.04em;" data-i18n="stocks-history-chart-title">共识评分走势</div>
-        <canvas id="history-chart-canvas"></canvas>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <div style="font-size:0.72rem; color:var(--text-muted); letter-spacing:0.04em;" data-i18n="stocks-history-chart-title">共识评分走势</div>
+            <div style="display:flex; gap:4px;">
+                <button class="btn btn-sm btn-ghost" id="chart-range-30" onclick="setHistoryRange(30)" style="font-size:0.65rem; padding:2px 8px;" data-i18n="chart-range-30">30天</button>
+                <button class="btn btn-sm btn-ghost" id="chart-range-all" onclick="setHistoryRange(0)" style="font-size:0.65rem; padding:2px 8px;" data-i18n="chart-range-all">全部</button>
+            </div>
+        </div>
+        <canvas id="history-chart-canvas" style="cursor:pointer;"></canvas>
+        <div id="history-point-popup" style="display:none; margin-top:8px; padding:10px 14px; background:var(--bg-card-hover); border:1px solid var(--border-color); border-radius:var(--radius-md,8px); font-size:0.78rem;"></div>
     </div>
     <p class="table-scroll-hint" data-i18n="table-scroll-hint">左右滑动查看完整表格</p>
     <div style="overflow-x:auto;">
@@ -1217,103 +1224,143 @@ function copyReportLink() {
 }
 
 var _historyChart = null;
+var _historyChartTicker = null;
+var _historyRecords = [];
+var _historyRange = 0; // 0 = all, N = last N days
+
+// Re-render history chart when theme changes
+document.addEventListener('augur:theme-change', function() {
+    if (_historyChartTicker && _historyRecords.length) renderHistoryChart(_historyRecords);
+});
+
+function setHistoryRange(days) {
+    _historyRange = days;
+    var btn30 = document.getElementById('chart-range-30');
+    var btnAll = document.getElementById('chart-range-all');
+    if (btn30) btn30.style.opacity = days === 30 ? '1' : '0.5';
+    if (btnAll) btnAll.style.opacity = days === 0 ? '1' : '0.5';
+    if (_historyRecords.length) renderHistoryChart(_historyRecords);
+}
+
+function renderHistoryChart(records) {
+    var container = document.getElementById('history-chart-container');
+    if (!container) return;
+    var filtered = records;
+    if (_historyRange > 0) {
+        var cutoff = Date.now() - _historyRange * 24 * 60 * 60 * 1000;
+        filtered = records.filter(function(r) { return new Date(r.timestamp).getTime() >= cutoff; });
+    }
+    if (filtered.length < 2) { container.style.display = 'none'; return; }
+    container.style.display = 'block';
+    var panel = document.getElementById('history-comparison');
+    if (panel) panel.style.display = 'block';
+
+    var labels = filtered.map(function(r) {
+        return new Date(r.timestamp).toLocaleDateString(undefined, {month:'short', day:'numeric'});
+    });
+    var scores = filtered.map(function(r) { return +r.score.toFixed(2); });
+    function _cv(n, fb) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || fb; }
+    var buyColor  = _cv('--signal-buy',  '#00c853');
+    var sellColor = _cv('--signal-sell', '#ff1744');
+    var holdColor = _cv('--accent-orange','#ff9500');
+    var tickColor = _cv('--text-muted',  'rgba(180,180,180,0.7)');
+    var gridColor = _cv('--border-color','rgba(255,255,255,0.05)');
+
+    var ptColors = filtered.map(function(r) {
+        return r.signal === 'bullish' ? buyColor : r.signal === 'bearish' ? sellColor : holdColor;
+    });
+
+    var canvas = document.getElementById('history-chart-canvas');
+    var popup = document.getElementById('history-point-popup');
+    if (_historyChart) { _historyChart.destroy(); _historyChart = null; }
+    _historyChart = new Chart(canvas, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: scores,
+                borderColor: holdColor + '99',
+                backgroundColor: holdColor + '0f',
+                pointBackgroundColor: ptColors,
+                pointBorderColor: ptColors,
+                pointRadius: 5,
+                pointHoverRadius: 7,
+                tension: 0.35,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            onClick: function(evt, elements) {
+                if (!elements || !elements.length || !popup) return;
+                var idx = elements[0].index;
+                var rec = filtered[idx];
+                if (!rec) return;
+                var date = new Date(rec.timestamp).toLocaleString();
+                var signal = rec.signal === 'bullish' ? 'BUY' : rec.signal === 'bearish' ? 'SELL' : 'HOLD';
+                var sigColor = rec.signal === 'bullish' ? buyColor : rec.signal === 'bearish' ? sellColor : holdColor;
+                popup.style.display = 'block';
+                popup.innerHTML =
+                    '<span style="color:var(--text-muted);font-size:0.68rem;">' + escapeHtml(date) + '</span>' +
+                    ' &nbsp;|&nbsp; ' +
+                    '<span style="font:700 0.85rem var(--font-data);color:' + sigColor + ';">' + rec.score.toFixed(1) + '</span>' +
+                    '<span style="color:var(--text-muted);font-size:0.72rem;">/10</span>' +
+                    ' &nbsp;<span style="color:' + sigColor + ';font-size:0.72rem;font-weight:600;">' + signal + '</span>';
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: function(ctx) { return 'Score: ' + ctx.parsed.y.toFixed(1); } } },
+                annotation: undefined
+            },
+            scales: {
+                y: {
+                    min: 0, max: 10,
+                    ticks: { color: tickColor, stepSize: 2, font: { size: 10 } },
+                    grid: { color: gridColor }
+                },
+                x: {
+                    ticks: { color: tickColor, maxRotation: 0, font: { size: 10 } },
+                    grid: { display: false }
+                }
+            }
+        },
+        plugins: [{
+            id: 'thresholdLines',
+            afterDraw: function(chart) {
+                var ctx2 = chart.ctx;
+                var yAxis = chart.scales.y;
+                var xLeft = chart.chartArea.left;
+                var xRight = chart.chartArea.right;
+                [[7.5, buyColor, 'BUY'], [2.5, sellColor, 'SELL']].forEach(function(cfg) {
+                    var y = yAxis.getPixelForValue(cfg[0]);
+                    ctx2.save();
+                    ctx2.setLineDash([4, 4]);
+                    ctx2.strokeStyle = cfg[1] + '66';
+                    ctx2.lineWidth = 1;
+                    ctx2.beginPath();
+                    ctx2.moveTo(xLeft, y);
+                    ctx2.lineTo(xRight, y);
+                    ctx2.stroke();
+                    ctx2.setLineDash([]);
+                    ctx2.fillStyle = cfg[1] + 'aa';
+                    ctx2.font = '9px monospace';
+                    ctx2.fillText(cfg[2], xRight - 28, y - 2);
+                    ctx2.restore();
+                });
+            }
+        }]
+    });
+    setHistoryRange(_historyRange);
+}
 
 function loadHistoryChart(ticker) {
-    fetch('/api/history?ticker=' + encodeURIComponent(ticker) + '&limit=20')
+    _historyChartTicker = ticker;
+    fetch('/api/history?ticker=' + encodeURIComponent(ticker) + '&limit=60')
         .then(function(r) { return r.ok ? r.json() : null; })
         .then(function(data) {
-            var container = document.getElementById('history-chart-container');
-            if (!container) return;
-            var records = (data && data.records) ? data.records.slice().reverse() : [];
-            if (records.length < 2) { container.style.display = 'none'; return; }
-            container.style.display = 'block';
-            // Ensure the parent panel is visible (renderHistoryComparison may have hidden it)
-            var panel = document.getElementById('history-comparison');
-            if (panel) panel.style.display = 'block';
-
-            var labels = records.map(function(r) {
-                return new Date(r.timestamp).toLocaleDateString(undefined, {month:'short', day:'numeric'});
-            });
-            var scores = records.map(function(r) { return +r.score.toFixed(2); });
-            function _cv(n, fb) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim() || fb; }
-            var buyColor  = _cv('--signal-buy',  '#00c853');
-            var sellColor = _cv('--signal-sell', '#ff1744');
-            var holdColor = _cv('--accent-orange','#ff9500');
-            var tickColor = _cv('--text-muted',  'rgba(180,180,180,0.7)');
-            var gridColor = _cv('--border-color','rgba(255,255,255,0.05)');
-
-            var ptColors = records.map(function(r) {
-                return r.signal === 'bullish' ? buyColor : r.signal === 'bearish' ? sellColor : holdColor;
-            });
-
-            var canvas = document.getElementById('history-chart-canvas');
-            if (_historyChart) { _historyChart.destroy(); _historyChart = null; }
-            _historyChart = new Chart(canvas, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        data: scores,
-                        borderColor: holdColor + '99',
-                        backgroundColor: holdColor + '0f',
-                        pointBackgroundColor: ptColors,
-                        pointBorderColor: ptColors,
-                        pointRadius: 5,
-                        pointHoverRadius: 7,
-                        tension: 0.35,
-                        fill: true
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: { callbacks: { label: function(ctx) { return 'Score: ' + ctx.parsed.y.toFixed(1); } } },
-                        annotation: undefined
-                    },
-                    scales: {
-                        y: {
-                            min: 0, max: 10,
-                            ticks: { color: tickColor, stepSize: 2, font: { size: 10 } },
-                            grid: { color: gridColor },
-                            afterDataLimits: function(scale) {
-                                // reference lines drawn via dataset overlay below
-                            }
-                        },
-                        x: {
-                            ticks: { color: tickColor, maxRotation: 0, font: { size: 10 } },
-                            grid: { display: false }
-                        }
-                    }
-                },
-                plugins: [{
-                    // Draw BUY / SELL threshold reference lines
-                    id: 'thresholdLines',
-                    afterDraw: function(chart) {
-                        var ctx2 = chart.ctx;
-                        var yAxis = chart.scales.y;
-                        var xLeft = chart.chartArea.left;
-                        var xRight = chart.chartArea.right;
-                        [[7.5, buyColor, 'BUY'], [2.5, sellColor, 'SELL']].forEach(function(cfg) {
-                            var y = yAxis.getPixelForValue(cfg[0]);
-                            ctx2.save();
-                            ctx2.setLineDash([4, 4]);
-                            ctx2.strokeStyle = cfg[1] + '66';
-                            ctx2.lineWidth = 1;
-                            ctx2.beginPath();
-                            ctx2.moveTo(xLeft, y);
-                            ctx2.lineTo(xRight, y);
-                            ctx2.stroke();
-                            ctx2.setLineDash([]);
-                            ctx2.fillStyle = cfg[1] + 'aa';
-                            ctx2.font = '9px monospace';
-                            ctx2.fillText(cfg[2], xRight - 28, y - 2);
-                            ctx2.restore();
-                        });
-                    }
-                }]
-            });
+            _historyRecords = (data && data.records) ? data.records.slice().reverse() : [];
+            renderHistoryChart(_historyRecords);
         })
         .catch(function() { /* silently fail */ });
 }

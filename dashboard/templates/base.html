@@ -159,10 +159,11 @@
         <div class="ticker-tape-track" id="ticker-tape-track">
             <span class="ticker-tape-loading" data-i18n="ticker-loading">行情加载中…</span>
         </div>
+        <span class="tape-paused-badge" id="tape-paused-badge" data-i18n="ticker-paused-badge" hidden>⏸ 已暂停 — 点击继续</span>
         <button type="button" class="ticker-tape-pause" id="ticker-tape-pause" data-i18n-aria="a11y-ticker-pause" data-i18n-title="ticker-pause-title" aria-label="暂停滚动" title="暂停/继续">⏸</button>
     </div>
 
-    <!-- Bottom nav for mobile -->
+    <!-- Bottom nav for mobile — max 5 tabs, others accessible via sidebar -->
     <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile navigation">
         <a class="bottom-nav-item" href="/" data-page="home">
             <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
@@ -172,17 +173,13 @@
             <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
             <span data-i18n="bottom-analysis">分析</span>
         </a>
-        <a class="bottom-nav-item" href="/portfolio" data-page="portfolio">
-            <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 3v4M8 3v4M2 11h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <span data-i18n="bottom-portfolio">持仓</span>
+        <a class="bottom-nav-item" href="/committee" data-page="committee">
+            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span data-i18n="bottom-committee">委员会</span>
         </a>
-        <a class="bottom-nav-item" href="/personas" data-page="personas">
-            <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            <span data-i18n="bottom-masters">大师</span>
-        </a>
-        <a class="bottom-nav-item" href="/backtest" data-page="backtest">
+        <a class="bottom-nav-item" href="/history" data-page="history">
             <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
-            <span data-i18n="bottom-backtest">回测</span>
+            <span data-i18n="bottom-history">历史</span>
         </a>
         <a class="bottom-nav-item" href="/settings" data-page="settings">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15"/></svg>
@@ -226,6 +223,7 @@
             try { localStorage.setItem('augur-theme', 'dark'); } catch(e) {}
         }
         updateThemeUI();
+        document.dispatchEvent(new CustomEvent('augur:theme-change', { detail: { theme: html.classList.contains('light') ? 'light' : 'dark' } }));
     }
 
     function updateThemeUI() {
@@ -303,18 +301,30 @@
     });
 
     // Toast utility
+    var _TOAST_ICONS = { success: '✓', warning: '⚠', error: '✗', info: 'ℹ' };
     function showToast(message, type) {
         type = type || 'success';
         var container = document.getElementById('toast-container');
         if (!container) return;
         var toast = document.createElement('div');
-        toast.className = 'toast-msg' + (type === 'error' ? ' toast-error' : type === 'warning' ? ' toast-warning' : '');
-        toast.textContent = message;
+        toast.className = 'toast-msg toast-' + type;
+        var icon = document.createElement('span');
+        icon.className = 'toast-icon';
+        icon.textContent = _TOAST_ICONS[type] || '✓';
+        var text = document.createElement('span');
+        text.textContent = message;
+        toast.appendChild(icon);
+        toast.appendChild(text);
         container.appendChild(toast);
+        // Nudge existing toasts up for stacking effect
+        var toasts = container.querySelectorAll('.toast-msg:not(.removing)');
+        toasts.forEach(function(t, i) {
+            t.style.transform = 'translateY(-' + (i * 4) + 'px) scale(' + (1 - i * 0.02) + ')';
+        });
         setTimeout(function() {
             toast.classList.add('removing');
             setTimeout(function() { toast.remove(); }, 300);
-        }, 3000);
+        }, 3200);
     }
 
     // === v5.2 Global Utilities ===
@@ -915,10 +925,12 @@ if ('serviceWorker' in navigator) {
         if (!wrap || !track) return;
 
         var paused = false;
-        pauseBtn && pauseBtn.addEventListener('click', function() {
-            paused = !paused;
+        var pausedBadge = document.getElementById('tape-paused-badge');
+        function updatePauseState(isPaused) {
+            paused = isPaused;
             wrap.classList.toggle('paused', paused);
             pauseBtn.textContent = paused ? '▶' : '⏸';
+            if (pausedBadge) pausedBadge.hidden = !paused;
             var resumeKey = 'ticker-resume-title';
             var pauseKey = 'ticker-pause-title';
             var resumeAria = 'a11y-ticker-resume';
@@ -928,9 +940,25 @@ if ('serviceWorker' in navigator) {
                 pauseBtn.setAttribute('aria-label', paused ? window.t(resumeAria) : window.t(pauseAria));
                 pauseBtn.setAttribute('data-i18n-aria', paused ? resumeAria : pauseAria);
                 pauseBtn.setAttribute('data-i18n-title', paused ? resumeKey : pauseKey);
+                if (pausedBadge && typeof window.t === 'function') {
+                    pausedBadge.textContent = window.t('ticker-paused-badge') || '⏸ 已暂停 — 点击继续';
+                }
             } else {
                 pauseBtn.title = paused ? '继续滚动' : '暂停/继续';
                 pauseBtn.setAttribute('aria-label', paused ? '继续滚动' : '暂停滚动');
+            }
+        }
+        pauseBtn && pauseBtn.addEventListener('click', function() { updatePauseState(!paused); });
+
+        // Hover-to-pause: pause tape on mouseenter, resume on mouseleave (unless explicitly paused)
+        var hoverPaused = false;
+        wrap.addEventListener('mouseenter', function() {
+            if (!paused) { hoverPaused = true; wrap.classList.add('paused'); }
+        });
+        wrap.addEventListener('mouseleave', function() {
+            if (hoverPaused) {
+                hoverPaused = false;
+                if (!paused) wrap.classList.remove('paused');
             }
         });
 

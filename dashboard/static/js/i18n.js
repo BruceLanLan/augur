@@ -69,6 +69,8 @@ window.I18N = {
         // Bottom nav
         "bottom-home": "首页",
         "bottom-analysis": "分析",
+        "bottom-committee": "委员会",
+        "bottom-history": "历史",
         "bottom-portfolio": "持仓",
         "bottom-masters": "大师",
         "bottom-backtest": "回测",
@@ -374,6 +376,8 @@ window.I18N = {
         "a11y-ticker-resume": "继续滚动",
         "ticker-pause-title": "暂停/继续",
         "ticker-resume-title": "继续滚动",
+        "ticker-paused-badge": "⏸ 已暂停 — 点击继续",
+        "ticker-hover-hint": "悬停已暂停",
         // Persona investment styles (stocks.html)
         "style-value-investing": "价值投资",
         "style-deep-value": "深度价值",
@@ -401,6 +405,11 @@ window.I18N = {
         "stocks-history-col-price": "价格",
         "stocks-history-empty": "暂无历史分析记录",
         "stocks-history-chart-title": "共识评分走势",
+        "chart-range-30": "30天",
+        "chart-range-all": "全部",
+        "chart-point-date": "日期",
+        "chart-point-score": "评分",
+        "chart-point-signal": "信号",
         // Auth
         "login-title": "登录",
         "login-desc": "登录以访问 Augur 仪表盘",
@@ -645,6 +654,8 @@ window.I18N = {
         "a11y-ticker-resume": "继续滚动",
         "ticker-pause-title": "暂停/继续",
         "ticker-resume-title": "继续滚动",
+        "ticker-paused-badge": "⏸ 已暂停 — 点击继续",
+        "ticker-hover-hint": "悬停已暂停",
         // Persona investment styles (stocks.html score cards)
         "style-value-investing": "价值投资",
         "style-deep-value": "深度价值",
@@ -672,6 +683,11 @@ window.I18N = {
         "stocks-history-col-price": "价格",
         "stocks-history-empty": "暂无历史分析记录",
         "stocks-history-chart-title": "共识评分走势",
+        "chart-range-30": "30天",
+        "chart-range-all": "全部",
+        "chart-point-date": "日期",
+        "chart-point-score": "评分",
+        "chart-point-signal": "信号",
         // Scanner
         "scanner-empty-title": "选择预设或输入代码开始扫描",
         "scanner-empty-desc": "18 位大师将对每个标的独立评分，生成共识热力图",
@@ -890,6 +906,8 @@ window.I18N = {
         // Bottom nav
         "bottom-home": "Home",
         "bottom-analysis": "Analyze",
+        "bottom-committee": "Committee",
+        "bottom-history": "History",
         "bottom-portfolio": "Portfolio",
         "bottom-masters": "Masters",
         "bottom-backtest": "Backtest",
@@ -1195,6 +1213,8 @@ window.I18N = {
         "a11y-ticker-resume": "Resume scrolling",
         "ticker-pause-title": "Pause / resume",
         "ticker-resume-title": "Resume scrolling",
+        "ticker-paused-badge": "⏸ Paused — click to resume",
+        "ticker-hover-hint": "Hover paused",
         // Persona investment styles (stocks.html)
         "style-value-investing": "Value Investing",
         "style-deep-value": "Deep Value",
@@ -1222,6 +1242,11 @@ window.I18N = {
         "stocks-history-col-price": "Price",
         "stocks-history-empty": "No historical analyses yet",
         "stocks-history-chart-title": "Consensus Score Trend",
+        "chart-range-30": "30d",
+        "chart-range-all": "All",
+        "chart-point-date": "Date",
+        "chart-point-score": "Score",
+        "chart-point-signal": "Signal",
         // Auth
         "login-title": "Login",
         "login-desc": "Sign in to access your Augur dashboard",
@@ -1466,6 +1491,8 @@ window.I18N = {
         "a11y-ticker-resume": "Resume scrolling",
         "ticker-pause-title": "Pause / resume",
         "ticker-resume-title": "Resume scrolling",
+        "ticker-paused-badge": "⏸ Paused — click to resume",
+        "ticker-hover-hint": "Hover paused",
         // Persona investment styles (stocks.html score cards)
         "style-value-investing": "Value Investing",
         "style-deep-value": "Deep Value",
@@ -1493,6 +1520,11 @@ window.I18N = {
         "stocks-history-col-price": "Price",
         "stocks-history-empty": "No historical analyses yet",
         "stocks-history-chart-title": "Consensus Score Trend",
+        "chart-range-30": "30d",
+        "chart-range-all": "All",
+        "chart-point-date": "Date",
+        "chart-point-score": "Score",
+        "chart-point-signal": "Signal",
         // Scanner
         "scanner-empty-title": "Pick a preset or enter tickers to scan",
         "scanner-empty-desc": "18 masters score each ticker independently — results appear as a consensus heatmap",

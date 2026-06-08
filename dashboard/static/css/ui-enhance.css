@@ -796,7 +796,7 @@ body.sidebar-collapsed .ticker-tape-wrap {
     right: 8px;
     top: 50%;
     transform: translateY(-50%);
-    background: rgba(255,255,255,0.06);
+    background: var(--bg-card-hover);
     border: none;
     color: var(--text-muted, #555);
     font-size: 0.65rem;
@@ -812,6 +812,43 @@ body.sidebar-collapsed .ticker-tape-wrap {
 .ticker-tape-pause:hover {
     color: var(--accent-orange, #ff8c00);
     background: rgba(255,140,0,0.1);
+}
+
+/* Paused state: amber border tint */
+.ticker-tape-wrap.paused {
+    border-bottom-color: color-mix(in srgb, var(--accent-orange, #ff8c00) 55%, transparent);
+}
+
+/* Paused badge — shows when tape is explicitly paused */
+.tape-paused-badge {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font: 600 0.62rem/1 var(--font-pixfin, monospace);
+    color: var(--accent-orange, #ff8c00);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.ticker-tape-wrap.paused .tape-paused-badge {
+    opacity: 1;
+}
+.tape-paused-badge[hidden] { display: none; }
+
+/* Hover overlay to signal tape is paused on hover */
+.ticker-tape-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--amber-wash, rgba(255,140,0,0.04));
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+}
+.ticker-tape-wrap:hover::after {
+    opacity: 1;
 }
 
 /* Ensure app-main sits below ticker tape */
