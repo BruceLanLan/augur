@@ -2,6 +2,19 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.4.0] - 2026-06-09
+
+委员会报告导出 + 优化器权重 CSV 导出。
+
+### Added
+- **Committee 报告导出**：委员会裁决出来后显示"复制报告"和"导出报告"两个按钮；Markdown 格式含裁决摘要（信号/评分/置信度/Kelly/投票）及各大师意见（关键发现/风险/推理）；支持 clipboard API + 降级。
+- **Optimizer 权重 CSV 导出**：最优组合计算后显示"Export CSV"按钮，输出 Ticker/Weight_% / 年化收益率/波动率/Sharpe 等字段。
+- `_committeeVerdict`、`_committeeOpinions`、`_committeeTicker` 全局变量存储委员会会话状态；`_buildCommitteeMarkdown()` 统一构建报告内容。
+- `_optWeights`、`_optMeta` 全局变量存储优化器计算结果。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.3.0] - 2026-06-09
 
 导出功能扩展：信号监控 CSV + 辩论记录复制/下载。

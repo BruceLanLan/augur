@@ -217,7 +217,13 @@
 
 <!-- Results (verdict + re-sorted opinions after done) -->
 <div id="committee-results" style="display:none;">
-    <div class="section-title compact mb-12" data-i18n="committee-verdict">委员会裁决</div>
+    <div class="flex items-center justify-between mb-12" style="flex-wrap:wrap; gap:8px;">
+        <div class="section-title compact" data-i18n="committee-verdict">委员会裁决</div>
+        <div style="display:flex; gap:8px;">
+            <button type="button" class="btn btn-sm btn-ghost" onclick="copyCommitteeReport()" data-i18n="committee-copy-report">复制报告</button>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="exportCommitteeReport()" data-i18n="committee-export-report">导出报告</button>
+        </div>
+    </div>
     <div class="verdict-panel mb-20" id="verdict-panel"></div>
     <div class="section-title compact mb-12" data-i18n="committee-opinions">各位大师独立意见</div>
     <div class="opinion-list" id="opinion-list-final"></div>
@@ -228,6 +234,9 @@
 {% block extra_scripts %}
 <script>
 var _selectedAgents = new Set();
+var _committeeVerdict = null;
+var _committeeOpinions = [];
+var _committeeTicker = '';
 
 function toggleAgent(id, el) {
     if (_selectedAgents.has(id)) {
@@ -293,6 +302,7 @@ var _committeeWs = null;
 
 function runCommittee() {
     var ticker = document.getElementById('committee-ticker').value.trim().toUpperCase();
+    _committeeTicker = ticker;
     var question = document.getElementById('committee-question').value.trim();
     if (!ticker) { showToast(_t('committee-need-ticker', '请输入股票代码'), 'warning'); return; }
 
@@ -334,11 +344,13 @@ function runCommittee() {
             document.getElementById('committee-progress-counter').textContent = msg.progress || '';
         } else if (msg.type === 'verdict') {
             _committeeWs = null;
+            _committeeVerdict = msg.verdict;
+            _committeeOpinions = msg.opinions || [];
             document.getElementById('committee-loading').style.display = 'none';
             document.getElementById('committee-stream-opinions').style.display = 'none';
             document.getElementById('committee-btn').disabled = false;
             renderVerdict(msg.verdict);
-            renderFinalOpinions(msg.opinions || []);
+            renderFinalOpinions(_committeeOpinions);
             document.getElementById('committee-results').style.display = 'block';
         } else if (msg.type === 'error') {
             document.getElementById('committee-loading').style.display = 'none';
@@ -401,6 +413,75 @@ function renderFinalOpinions(opinions) {
     var html = '';
     opinions.forEach(function(op) { html += _opinionCardHtml(op); });
     document.getElementById('opinion-list-final').innerHTML = html;
+}
+
+function _buildCommitteeMarkdown() {
+    if (!_committeeVerdict) return '';
+    var v = _committeeVerdict;
+    var ticker = _committeeTicker || 'Unknown';
+    var date = new Date().toISOString().slice(0, 10);
+    var vote = v.vote || {bullish:0, neutral:0, bearish:0};
+    var lines = [
+        '# Augur Committee Report — ' + ticker + ' (' + date + ')',
+        '',
+        '## Verdict',
+        '- **Signal**: ' + (v.signal || 'neutral').toUpperCase(),
+        '- **Score**: ' + Number(v.score || 0).toFixed(1) + '/10',
+        '- **Confidence**: ' + Math.round((v.confidence || 0) * 100) + '%',
+        '- **Kelly Position**: ' + (v.kelly_pct > 0 ? v.kelly_pct.toFixed(1) + '%' : '—'),
+        '- **Vote**: Bullish ' + vote.bullish + ' / Neutral ' + vote.neutral + ' / Bearish ' + vote.bearish,
+        ''
+    ];
+    if (_committeeOpinions.length > 0) {
+        lines.push('## Individual Opinions', '');
+        _committeeOpinions.forEach(function(op) {
+            var agent = op.agent_name || op.agent_id;
+            lines.push('### ' + agent + ' — ' + (op.signal || 'neutral').toUpperCase() + ' ' + (op.score || 0) + '/10');
+            if (op.key_findings && op.key_findings.length) {
+                lines.push('**Key Findings:**');
+                op.key_findings.forEach(function(f) { lines.push('- ' + f); });
+            }
+            if (op.risks && op.risks.length) {
+                lines.push('**Risks:**');
+                op.risks.forEach(function(r) { lines.push('- ' + r); });
+            }
+            if (op.reasoning) {
+                lines.push('', op.reasoning.replace(/#+\s*/g, '').replace(/\*\*/g, '**').trim());
+            }
+            lines.push('');
+        });
+    }
+    return lines.join('\n');
+}
+
+function copyCommitteeReport() {
+    var md = _buildCommitteeMarkdown();
+    if (!md) return;
+    var fn = function() {};
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(md).then(function() {
+            showToast(_t('committee-report-copied'), 'success');
+        }).catch(fn);
+    } else {
+        var ta = document.createElement('textarea');
+        ta.value = md;
+        ta.style.position = 'fixed'; ta.style.left = '-9999px';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); showToast(_t('committee-report-copied'), 'success'); } catch(e) {}
+        document.body.removeChild(ta);
+    }
+}
+
+function exportCommitteeReport() {
+    var md = _buildCommitteeMarkdown();
+    if (!md) return;
+    var fname = 'augur-committee-' + (_committeeTicker || 'report') + '-' + new Date().toISOString().slice(0,10) + '.md';
+    var blob = new Blob([md], {type: 'text/markdown'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = fname;
+    a.click();
+    showToast(_t('committee-report-downloaded'), 'success');
 }
 
 function _countUp(el, target, decimals, suffix, duration) {

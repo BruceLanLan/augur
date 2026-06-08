@@ -64,7 +64,10 @@
                     <div id="opt-sharpe" style="font-size: 1.4rem; font-weight: 700; color: var(--amber);" aria-label="Sharpe ratio value">--</div>
                 </div>
             </div>
-            <h4 style="margin-bottom: 0.75rem; color: var(--text-primary);">Allocation Weights</h4>
+            <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:0.75rem;">
+                <h4 style="margin:0; color: var(--text-primary);">Allocation Weights</h4>
+                <button type="button" class="btn btn-sm btn-ghost" onclick="exportOptimizerCSV()" id="opt-export-btn" style="display:none;">Export CSV</button>
+            </div>
             <div id="opt-weights" style="display: grid; gap: 0.5rem;" role="list" aria-label="Portfolio allocation weights"></div>
         </div>
     </div>
@@ -91,6 +94,8 @@
 {% block extra_scripts %}
 <script>
 var _frontierChart = null;
+var _optWeights = null;
+var _optMeta = {};
 
 function _getCSSVar(name) {
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -272,6 +277,14 @@ async function runOptimize() {
         document.getElementById('opt-vol').textContent = (volAnn * 100).toFixed(2) + '%';
         document.getElementById('opt-sharpe').textContent = p.sharpe_ratio.toFixed(4);
 
+        _optWeights = p.weights;
+        _optMeta = {
+            return: (retAnn * 100).toFixed(2),
+            volatility: (volAnn * 100).toFixed(2),
+            sharpe: p.sharpe_ratio.toFixed(4)
+        };
+        var exportBtn = document.getElementById('opt-export-btn');
+        if (exportBtn) exportBtn.style.display = '';
         var weightsDiv = document.getElementById('opt-weights');
         weightsDiv.innerHTML = '';
         for (var ticker in p.weights) {
@@ -303,6 +316,26 @@ async function runOptimize() {
         document.getElementById('opt-btn').disabled = false;
         document.getElementById('opt-btn').textContent = 'Optimize Portfolio';
     }
+}
+
+function exportOptimizerCSV() {
+    if (!_optWeights) return;
+    var rows = ['﻿Ticker,Weight_%,Expected_Return_%,Volatility_%,Sharpe'];
+    var first = true;
+    for (var t in _optWeights) {
+        var pct = (_optWeights[t] * 100).toFixed(2);
+        rows.push([t, pct,
+            first ? _optMeta.return : '',
+            first ? _optMeta.volatility : '',
+            first ? _optMeta.sharpe : ''
+        ].join(','));
+        first = false;
+    }
+    var blob = new Blob([rows.join('\n')], {type: 'text/csv'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'augur-optimizer-' + new Date().toISOString().slice(0,10) + '.csv';
+    a.click();
 }
 </script>
 {% endblock %}
