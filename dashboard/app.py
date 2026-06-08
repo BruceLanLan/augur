@@ -3151,6 +3151,124 @@ async def ws_analyze(websocket: WebSocket, ticker: str):
             pass
 
 
+# ============ v9: Committee Streaming WebSocket ============
+
+@app.websocket("/ws/committee")
+async def ws_committee(websocket: WebSocket):
+    if not _ws_api_token_ok(websocket):
+        await websocket.close(code=1008, reason="Unauthorized")
+        return
+    await websocket.accept()
+    try:
+        msg = await websocket.receive_json()
+        ticker = (msg.get("ticker") or "").upper()
+        question = msg.get("question") or f"分析 {ticker}"
+        agent_ids = msg.get("agents") or []
+
+        if not ticker or not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+            await websocket.send_json({"type": "error", "message": "Invalid ticker"})
+            return
+
+        try:
+            from augur.data import fetch_market_context
+            ctx = fetch_market_context(ticker)
+        except Exception:
+            ctx = MarketContext(ticker=ticker)
+
+        coord = get_coordinator()
+        registry = coord._registry if hasattr(coord, "_registry") else get_registry()
+
+        if agent_ids:
+            all_agents_map = {a.agent_id: a for a in registry.get_all()}
+            agents = [all_agents_map[aid] for aid in agent_ids if aid in all_agents_map]
+        else:
+            agents = registry.get_all()
+
+        total = len(agents)
+        responses = {}
+
+        for i, agent in enumerate(agents, 1):
+            try:
+                result = agent.analyze(ctx)
+                responses[agent.agent_id] = result
+                await websocket.send_json({
+                    "type": "agent",
+                    "agent_id": agent.agent_id,
+                    "agent_name": result.agent_name,
+                    "signal": result.signal.value,
+                    "score": round(result.score, 1),
+                    "confidence": round(result.confidence, 2),
+                    "key_findings": result.key_findings[:2],
+                    "risks": result.risks[:1],
+                    "progress": f"{i}/{total}",
+                })
+            except Exception as e:
+                await websocket.send_json({
+                    "type": "agent",
+                    "agent_id": agent.agent_id,
+                    "agent_name": getattr(agent, "name", agent.agent_id),
+                    "signal": "neutral",
+                    "score": 0,
+                    "confidence": 0,
+                    "key_findings": [],
+                    "risks": [],
+                    "progress": f"{i}/{total}",
+                })
+
+        consensus = coord.get_consensus(responses, ticker=ticker, context=ctx)
+        bullish_cnt = sum(1 for r in responses.values() if r.signal.value == "bullish")
+        bearish_cnt = sum(1 for r in responses.values() if r.signal.value == "bearish")
+        neutral_cnt = sum(1 for r in responses.values() if r.signal.value == "neutral")
+        kelly = consensus.metadata.get("position_sizing", {}).get("position_pct", 0)
+
+        opinions_sorted = sorted(
+            [
+                {
+                    "agent_id": aid,
+                    "agent_name": r.agent_name,
+                    "signal": r.signal.value,
+                    "score": round(r.score, 1),
+                    "confidence": round(r.confidence, 2),
+                    "key_findings": r.key_findings[:2],
+                    "risks": r.risks[:1],
+                }
+                for aid, r in responses.items()
+            ],
+            key=lambda x: -x["score"],
+        )
+
+        verdict = {
+            "signal": consensus.signal.value,
+            "score": round(consensus.score, 1),
+            "confidence": round(consensus.confidence, 2),
+            "kelly_pct": round(kelly * 100, 1) if kelly else 0,
+            "vote": {"bullish": bullish_cnt, "neutral": neutral_cnt, "bearish": bearish_cnt},
+        }
+        await websocket.send_json({"type": "verdict", "verdict": verdict, "opinions": opinions_sorted})
+
+        try:
+            from augur.history import save_analysis
+            save_analysis(ticker, {
+                "ticker": ticker,
+                "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "session_type": "committee",
+                "question": question,
+                "consensus": {"signal": consensus.signal.value, "score": round(consensus.score, 1), "confidence": round(consensus.confidence, 2)},
+                "agents": [op["agent_name"] for op in opinions_sorted],
+                "opinions": opinions_sorted,
+            })
+        except Exception:
+            pass
+
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        try:
+            await websocket.send_json({"type": "error", "message": str(e)})
+        except Exception:
+            pass
+
+
 # ============ v8: Real-time Price WebSocket ============
 
 _price_streamer = None

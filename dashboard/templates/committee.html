@@ -90,6 +90,41 @@
 .vote-bar .neut { background: var(--signal-neutral); }
 .vote-bar .bear { background: var(--signal-sell); }
 .vote-labels { display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-muted); margin-top: 4px; }
+
+/* Streaming progress */
+.streaming-progress-bar {
+    height: 3px;
+    background: var(--border-color);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 12px 0 4px;
+    max-width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.streaming-progress-bar__fill {
+    height: 100%;
+    background: var(--accent-orange);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+.streaming-agent-name {
+    font: 600 0.78rem/1 var(--font-pixfin);
+    color: var(--accent-orange);
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+}
+.streaming-counter {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+@keyframes opinion-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.opinion-card { animation: opinion-in 0.22s ease; }
 </style>
 {% endblock %}
 
@@ -153,10 +188,13 @@
     </div>
 </div>
 
-<!-- Loading state -->
-<div id="committee-loading" style="display:none; text-align:center; padding:40px;">
+<!-- Loading state (streaming) -->
+<div id="committee-loading" style="display:none; text-align:center; padding:32px 40px 16px;">
     <div class="spinner" aria-hidden="true"></div>
     <p style="margin-top:12px; color:var(--text-muted); font-size:0.82rem;" data-i18n="committee-loading">委员会正在独立审议...</p>
+    <div class="streaming-progress-bar"><div class="streaming-progress-bar__fill" id="committee-progress-fill"></div></div>
+    <div class="streaming-agent-name" id="committee-progress-name"></div>
+    <div class="streaming-counter" id="committee-progress-counter"></div>
 </div>
 
 <!-- Error state -->
@@ -166,16 +204,18 @@
     <button class="btn btn-sm" onclick="runCommittee()" style="margin-top:8px;" data-i18n="btn-retry">重试</button>
 </div>
 
-<!-- Results -->
-<div id="committee-results" style="display:none;">
-
-    <!-- Verdict -->
-    <div class="section-title compact mb-12" data-i18n="committee-verdict">委员会裁决</div>
-    <div class="verdict-panel mb-20" id="verdict-panel"></div>
-
-    <!-- Opinions -->
+<!-- Streaming opinions (visible while loading) -->
+<div id="committee-stream-opinions" style="display:none; margin-bottom:16px;">
     <div class="section-title compact mb-12" data-i18n="committee-opinions">各位大师独立意见</div>
     <div class="opinion-list" id="opinion-list"></div>
+</div>
+
+<!-- Results (verdict + re-sorted opinions after done) -->
+<div id="committee-results" style="display:none;">
+    <div class="section-title compact mb-12" data-i18n="committee-verdict">委员会裁决</div>
+    <div class="verdict-panel mb-20" id="verdict-panel"></div>
+    <div class="section-title compact mb-12" data-i18n="committee-opinions">各位大师独立意见</div>
+    <div class="opinion-list" id="opinion-list-final"></div>
 </div>
 
 {% endblock %}
@@ -244,37 +284,79 @@ function loadPreset(name) {
     }
 }
 
+var _committeeWs = null;
+
 function runCommittee() {
     var ticker = document.getElementById('committee-ticker').value.trim().toUpperCase();
     var question = document.getElementById('committee-question').value.trim();
     if (!ticker) { showToast(_t('committee-need-ticker', '请输入股票代码'), 'warning'); return; }
 
+    // Close any existing WebSocket
+    if (_committeeWs) { try { _committeeWs.close(); } catch(e) {} _committeeWs = null; }
+
     var agents = Array.from(_selectedAgents);
+
     document.getElementById('committee-loading').style.display = 'block';
     document.getElementById('committee-error').style.display = 'none';
     document.getElementById('committee-results').style.display = 'none';
+    document.getElementById('committee-stream-opinions').style.display = 'block';
+    document.getElementById('opinion-list').innerHTML = '';
     document.getElementById('committee-btn').disabled = true;
+    document.getElementById('committee-progress-fill').style.width = '0%';
+    document.getElementById('committee-progress-name').textContent = '';
+    document.getElementById('committee-progress-counter').textContent = '';
 
-    fetch('/api/committee', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ticker: ticker, question: question || ('分析 ' + ticker), agents: agents})
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        document.getElementById('committee-loading').style.display = 'none';
-        document.getElementById('committee-btn').disabled = false;
-        if (data.error || data.detail) {
-            showError(data.error || data.detail);
-            return;
+    var proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    var ws = new WebSocket(proto + '//' + location.host + '/ws/committee');
+    _committeeWs = ws;
+
+    ws.onopen = function() {
+        ws.send(JSON.stringify({ticker: ticker, question: question || ('分析 ' + ticker), agents: agents}));
+    };
+
+    ws.onmessage = function(ev) {
+        var msg;
+        try { msg = JSON.parse(ev.data); } catch(e) { return; }
+
+        if (msg.type === 'agent') {
+            renderStreamingOpinion(msg);
+            var parts = (msg.progress || '1/1').split('/');
+            var done = parseInt(parts[0]) || 1;
+            var tot = parseInt(parts[1]) || 1;
+            document.getElementById('committee-progress-fill').style.width = (done / tot * 100) + '%';
+            document.getElementById('committee-progress-name').textContent = escapeHtml(msg.agent_name || '');
+            document.getElementById('committee-progress-counter').textContent = msg.progress || '';
+        } else if (msg.type === 'verdict') {
+            _committeeWs = null;
+            document.getElementById('committee-loading').style.display = 'none';
+            document.getElementById('committee-stream-opinions').style.display = 'none';
+            document.getElementById('committee-btn').disabled = false;
+            renderVerdict(msg.verdict);
+            renderFinalOpinions(msg.opinions || []);
+            document.getElementById('committee-results').style.display = 'block';
+        } else if (msg.type === 'error') {
+            document.getElementById('committee-loading').style.display = 'none';
+            document.getElementById('committee-stream-opinions').style.display = 'none';
+            document.getElementById('committee-btn').disabled = false;
+            showError(msg.message || _t('committee-error-generic', '分析失败'));
         }
-        renderResults(data);
-    })
-    .catch(function(e) {
+    };
+
+    ws.onerror = function() {
         document.getElementById('committee-loading').style.display = 'none';
+        document.getElementById('committee-stream-opinions').style.display = 'none';
         document.getElementById('committee-btn').disabled = false;
-        showError(e.message);
-    });
+        showError(_t('committee-ws-error', 'WebSocket 连接失败，请重试'));
+    };
+
+    ws.onclose = function(ev) {
+        if (ev.code === 1008) {
+            document.getElementById('committee-loading').style.display = 'none';
+            document.getElementById('committee-stream-opinions').style.display = 'none';
+            document.getElementById('committee-btn').disabled = false;
+            showError(_t('committee-ws-auth', '认证失败，请检查 API Token'));
+        }
+    };
 }
 
 function showError(msg) {
@@ -282,20 +364,41 @@ function showError(msg) {
     document.getElementById('committee-error-msg').textContent = msg;
 }
 
-function renderResults(data) {
-    var v = data.verdict;
-    var vote = v.vote;
-    var total = vote.bullish + vote.neutral + vote.bearish || 1;
+function _opinionCardHtml(op) {
+    var finding = op.key_findings && op.key_findings[0] ? escapeHtml(op.key_findings[0]) : '';
+    var risk = op.risks && op.risks[0] ? escapeHtml(op.risks[0]) : '';
+    return '<div class="opinion-card ' + escapeHtml(op.signal || 'neutral') + '">' +
+        '<div>' +
+            '<div class="opinion-name">' + escapeHtml(op.agent_name || op.agent_id) + '</div>' +
+            (finding ? '<div class="opinion-finding">→ ' + finding + '</div>' : '') +
+            (risk ? '<div class="opinion-risk">⚠ ' + risk + '</div>' : '') +
+        '</div>' +
+        '<div class="opinion-badge">' +
+            '<span class="signal ' + escapeHtml(op.signal || 'neutral') + '">' + escapeHtml((op.signal || 'neutral').toUpperCase()) + '</span>' +
+            '<span class="score">' + (op.score || 0) + '/10</span>' +
+        '</div>' +
+    '</div>';
+}
 
-    // Verdict panel
-    var bullPct = (vote.bullish / total * 100).toFixed(0);
-    var neutPct = (vote.neutral / total * 100).toFixed(0);
-    var bearPct = (vote.bearish / total * 100).toFixed(0);
+function renderStreamingOpinion(op) {
+    var list = document.getElementById('opinion-list');
+    var div = document.createElement('div');
+    div.innerHTML = _opinionCardHtml(op);
+    list.appendChild(div.firstChild);
+}
 
+function renderFinalOpinions(opinions) {
+    var html = '';
+    opinions.forEach(function(op) { html += _opinionCardHtml(op); });
+    document.getElementById('opinion-list-final').innerHTML = html;
+}
+
+function renderVerdict(v) {
+    var vote = v.vote || {bullish:0, neutral:0, bearish:0};
     document.getElementById('verdict-panel').innerHTML =
         '<div class="verdict-stat">' +
             '<div class="label">' + escapeHtml(_t('committee-signal', '信号')) + '</div>' +
-            '<div class="value ' + v.signal + '">' + v.signal.toUpperCase() + '</div>' +
+            '<div class="value ' + escapeHtml(v.signal) + '">' + escapeHtml(v.signal.toUpperCase()) + '</div>' +
         '</div>' +
         '<div class="verdict-stat">' +
             '<div class="label">' + escapeHtml(_t('committee-score', '评分')) + '</div>' +
@@ -310,34 +413,13 @@ function renderResults(data) {
             '<div class="value ' + (v.kelly_pct > 0 ? 'bullish' : '') + '">' + (v.kelly_pct > 0 ? v.kelly_pct + '%' : '—') + '</div>' +
         '</div>' +
         '<div class="verdict-stat" style="grid-column:1/-1;">' +
-            '<div class="label" style="margin-bottom:6px;">' + escapeHtml(_t('committee-vote', '票数')) + '  Bullish ' + vote.bullish + ' / Neutral ' + vote.neutral + ' / Bearish ' + vote.bearish + '</div>' +
+            '<div class="label" style="margin-bottom:6px;">' + escapeHtml(_t('committee-vote', '票数')) + ' &nbsp;Bullish ' + vote.bullish + ' / Neutral ' + vote.neutral + ' / Bearish ' + vote.bearish + '</div>' +
             '<div class="vote-bar">' +
                 '<div class="bull" style="flex:' + vote.bullish + '"></div>' +
                 '<div class="neut" style="flex:' + vote.neutral + '"></div>' +
                 '<div class="bear" style="flex:' + vote.bearish + '"></div>' +
             '</div>' +
         '</div>';
-
-    // Opinions
-    var opinionsHtml = '';
-    (data.opinions || []).forEach(function(op) {
-        var finding = op.key_findings && op.key_findings[0] ? escapeHtml(op.key_findings[0]) : '';
-        var risk = op.risks && op.risks[0] ? escapeHtml(op.risks[0]) : '';
-        opinionsHtml +=
-            '<div class="opinion-card ' + op.signal + '">' +
-                '<div>' +
-                    '<div class="opinion-name">' + escapeHtml(op.agent_name) + '</div>' +
-                    (finding ? '<div class="opinion-finding">→ ' + finding + '</div>' : '') +
-                    (risk ? '<div class="opinion-risk">⚠ ' + risk + '</div>' : '') +
-                '</div>' +
-                '<div class="opinion-badge">' +
-                    '<span class="signal ' + op.signal + '">' + op.signal.toUpperCase() + '</span>' +
-                    '<span class="score">' + op.score + '/10</span>' +
-                '</div>' +
-            '</div>';
-    });
-    document.getElementById('opinion-list').innerHTML = opinionsHtml;
-    document.getElementById('committee-results').style.display = 'block';
 }
 </script>
 {% endblock %}
