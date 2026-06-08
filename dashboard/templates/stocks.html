@@ -330,6 +330,26 @@
     <div id="history-empty" class="text-muted" style="font-size:0.78rem; text-align:center; padding:16px;" data-i18n="stocks-history-empty">暂无历史分析记录</div>
 </div>
 
+<!-- Agent detail modal -->
+<div id="agent-detail-overlay" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:1200; backdrop-filter:blur(4px);" onclick="closeAgentDetail(event)">
+    <div id="agent-detail-panel" style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--r-lg,12px); padding:24px; max-width:560px; width:90%; max-height:80vh; overflow-y:auto; box-shadow:var(--shadow-pop);">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px;">
+            <img id="agd-avatar" src="" width="44" height="44" style="border-radius:50%; border:2px solid var(--border-color);" onerror="this.src='/static/images/augur-owl-64.png'" alt="">
+            <div>
+                <div id="agd-name" style="font:700 1rem var(--font-sans); color:var(--fg-1);"></div>
+                <div id="agd-meta" style="font-size:0.72rem; color:var(--text-muted); margin-top:2px;"></div>
+            </div>
+            <button onclick="closeAgentDetail()" style="margin-left:auto; background:none; border:none; color:var(--text-muted); font-size:1.2rem; cursor:pointer; padding:4px 8px; line-height:1;">✕</button>
+        </div>
+        <div id="agd-findings" style="margin-bottom:12px;"></div>
+        <div id="agd-risks" style="margin-bottom:12px;"></div>
+        <details style="margin-top:8px;">
+            <summary style="font-size:0.72rem; color:var(--text-muted); cursor:pointer;" data-i18n="stocks-expand-reasoning">展开推理</summary>
+            <div id="agd-reasoning" style="font-size:0.78rem; color:var(--fg-2); line-height:1.6; margin-top:8px; white-space:pre-wrap; word-break:break-word;"></div>
+        </details>
+    </div>
+</div>
+
 {% endblock %}
 {% block extra_scripts %}
 <script>
@@ -516,6 +536,41 @@ function signalColor(s) {
     return m[(s||'').toLowerCase()] || 'var(--text-muted)';
 }
 
+function showAgentDetail(agent) {
+    var overlay = document.getElementById('agent-detail-overlay');
+    if (!overlay) return;
+    var sigColor = signalColor(agent.signal);
+    var sigLbl = signalLabel(agent.signal);
+    document.getElementById('agd-avatar').src = '/docs/images/avatars/' + agent.agent_id + '.png';
+    document.getElementById('agd-name').textContent = agent.agent_name || agent.agent_id;
+    document.getElementById('agd-meta').innerHTML =
+        '<span style="color:' + sigColor + ';font-weight:700;">' + sigLbl + '</span>' +
+        ' &nbsp;|&nbsp; ' +
+        '<span style="color:var(--fg-1);font-family:var(--font-mono);font-weight:700;">' + (agent.score||0).toFixed(1) + '</span>/10' +
+        ' &nbsp;|&nbsp; ' +
+        'Conf: ' + ((agent.confidence||0)*100).toFixed(0) + '%';
+    var findingsEl = document.getElementById('agd-findings');
+    var riskEl     = document.getElementById('agd-risks');
+    if ((agent.key_findings||[]).length) {
+        findingsEl.innerHTML = '<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--signal-buy);margin-bottom:4px;">Key Findings</div>' +
+            (agent.key_findings||[]).map(function(f) { return '<div style="font-size:0.78rem;color:var(--fg-2);margin-bottom:3px;">• ' + escapeHtml(f) + '</div>'; }).join('');
+    } else { findingsEl.innerHTML = ''; }
+    if ((agent.risks||[]).length) {
+        riskEl.innerHTML = '<div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--signal-sell);margin-bottom:4px;">Risks</div>' +
+            (agent.risks||[]).map(function(r) { return '<div style="font-size:0.78rem;color:var(--fg-2);margin-bottom:3px;">• ' + escapeHtml(r) + '</div>'; }).join('');
+    } else { riskEl.innerHTML = ''; }
+    document.getElementById('agd-reasoning').textContent = agent.reasoning || '';
+    overlay.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAgentDetail(evt) {
+    if (evt && evt.target !== document.getElementById('agent-detail-overlay')) return;
+    var overlay = document.getElementById('agent-detail-overlay');
+    if (overlay) overlay.style.display = 'none';
+    document.body.style.overflow = '';
+}
+
 function copyConsensus(btn) {
     if (lastConsensusText) {
         navigator.clipboard.writeText(lastConsensusText).then(function() {
@@ -667,10 +722,16 @@ function renderResults(data) {
 
         var d = document.createElement('div');
         d.className = 'sc';
+        d.style.cursor = 'pointer';
+        d.setAttribute('title', m.agent_name + ' — 点击查看详情');
+        d.setAttribute('data-agent-id', m.agent_id);
         d.innerHTML = '<img src="/docs/images/avatars/' + m.agent_id + '.png" class="avatar" width="34" height="34" alt="" onerror="this.src=\'/static/images/augur-owl-64.png\'"/>' +
             '<div class="sc-nm">' + escapeHtml(m.agent_name) + '</div>' +
             '<div class="sc-score ' + cls + '" style="font-size:' + scoreSz + '">' + s.toFixed(1) + '</div>' +
             '<span class="signal-badge ' + sigCls + '" style="font-size:0.56rem;padding:1px 7px">' + sigLbl + '</span>';
+        (function(agent) {
+            d.addEventListener('click', function() { showAgentDetail(agent); });
+        })(m);
         scGrid.appendChild(d);
     });
 
@@ -1408,5 +1469,16 @@ function renderHistoryComparison(ticker) {
         tbody.appendChild(tr);
     });
 }
+
+// Close agent detail modal on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        var overlay = document.getElementById('agent-detail-overlay');
+        if (overlay && overlay.style.display !== 'none') {
+            overlay.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+    }
+});
 </script>
 {% endblock %}
