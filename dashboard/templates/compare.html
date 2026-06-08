@@ -11,13 +11,47 @@
     border-radius: var(--radius);
     padding: 16px;
 }
+@media (min-width: 1200px) {
+    #compare-radar-container { max-width: 560px; }
+}
 #compare-radar-title {
     text-align: center;
     font-size: 0.75rem;
     color: var(--text-muted);
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     letter-spacing: 0.06em;
     text-transform: uppercase;
+}
+#compare-radar-subtitle {
+    text-align: center;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    opacity: 0.6;
+    margin-bottom: 8px;
+}
+.compare-card { position: relative; }
+.compare-card .signal-dot {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+.compare-card.agree    .signal-dot { background: var(--signal-buy); }
+.compare-card.disagree .signal-dot { background: var(--signal-sell); }
+.compare-conf-bar {
+    height: 2px;
+    background: var(--border-color);
+    border-radius: 1px;
+    margin-top: 10px;
+    overflow: hidden;
+}
+.compare-conf-bar__fill {
+    height: 100%;
+    background: var(--accent-orange);
+    border-radius: 1px;
+    transition: width 0.4s ease;
 }
 .agent-checkbox-grid {
     display: grid;
@@ -164,6 +198,7 @@
     </div>
     <div id="compare-radar-container" style="display:none;">
         <div id="compare-radar-title" data-i18n="compare-radar-title">评分雷达图</div>
+        <div id="compare-radar-subtitle" data-i18n="compare-radar-subtitle">各维度均换算为 0-10 分</div>
         <canvas id="compare-radar-canvas" height="320"></canvas>
     </div>
     <div class="compare-results" id="compare-results"></div>
@@ -353,20 +388,24 @@ function renderCompareResults(data) {
         if (a.key_findings && a.key_findings.length > 0) {
             findingsHtml = '<ul class="compare-findings">';
             a.key_findings.slice(0, 4).forEach(function(f) {
-                findingsHtml += '<li>' + f + '</li>';
+                findingsHtml += '<li>' + escapeHtml(f) + '</li>';
             });
             findingsHtml += '</ul>';
         }
-        card.innerHTML = '<div class="compare-card-header">' +
-            '<span class="compare-card-name">' + (a.agent_name || a.agent_id) + '</span>' +
+        var dotHtml = (isAgree || isDisagree) ? '<span class="signal-dot" title="' + (isAgree ? 'Agree' : 'Disagree') + '"></span>' : '';
+        var confPct = Math.round((a.confidence || 0) * 100);
+        var confBarHtml = '<div class="compare-conf-bar"><div class="compare-conf-bar__fill" style="width:' + confPct + '%"></div></div>';
+        card.innerHTML = dotHtml + '<div class="compare-card-header">' +
+            '<span class="compare-card-name">' + escapeHtml(a.agent_name || a.agent_id) + '</span>' +
             '<span class="signal-badge ' + signalBadgeClass(a.signal) + '" style="font-size:0.7rem;">' + signalLabel(a.signal) + '</span>' +
             '</div>' +
             '<div class="flex items-center gap-12 mb-8">' +
             '<div><span class="data-label">' + escapeHtml(_t('compare-label-score')) + '</span><div class="data-value" style="font-size:1.1rem;">' + (a.score || 0).toFixed(1) + '/10</div></div>' +
             '<div><span class="data-label">' + escapeHtml(_t('compare-label-confidence')) + '</span><div class="text-mono">' + ((a.confidence || 0) * 100).toFixed(0) + '%</div></div>' +
             '</div>' +
-            '<div class="compare-reasoning">' + (a.reasoning || '').replace(/#+\s*/g, '').replace(/\*\*/g, '') + '</div>' +
-            findingsHtml;
+            '<div class="compare-reasoning">' + escapeHtml((a.reasoning || '').replace(/#+\s*/g, '').replace(/\*\*/g, '').substring(0, 300)) + '</div>' +
+            findingsHtml +
+            confBarHtml;
         container.appendChild(card);
     });
 
@@ -438,6 +477,11 @@ function renderRadarChart(agents) {
             borderWidth: 2
         };
     });
+
+    // Update title with ticker name
+    var titleEl = document.getElementById('compare-radar-title');
+    var ticker = (document.getElementById('compare-ticker') || {}).value || '';
+    if (titleEl && ticker) titleEl.textContent = ticker + ' — ' + _t('compare-radar-title', '评分雷达图');
 
     if (_radarChart) { _radarChart.destroy(); _radarChart = null; }
 
