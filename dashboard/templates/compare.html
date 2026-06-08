@@ -447,22 +447,83 @@ function renderRadarChart(agents) {
     var legendColor= _cssVar('--text-secondary','#8e8e93');
 
     var labels = [
-        _t('compare-radar-score', '总评分'),
-        _t('compare-radar-confidence', '置信度'),
-        _t('compare-radar-bullish', '看多度'),
-        _t('compare-radar-evidence', '论据量'),
-        _t('compare-radar-risk', '风险意识')
+        _t('compare-radar-valuation', '估值'),
+        _t('compare-radar-growth',    '成长'),
+        _t('compare-radar-quality',   '质量'),
+        _t('compare-radar-momentum',  '动量'),
+        _t('compare-radar-safety',    '安全')
     ];
 
+    // Factor → canonical category mapping
+    var _FACTOR_MAP = {
+        valuation: ['valuation','valuation_acceptability','relative_valuation'],
+        growth:    ['disruption_score','ark_framework','innovation_diffusion','tam_size',
+                    'ai_exposure','tam_expansion','growth_franchise','earnings_predictability',
+                    'revenue_growth_score'],
+        quality:   ['moat','financial_strength','management_quality','brand_moat','pricing_power',
+                    'moat_reinforcement','management_vision','compute_infrastructure',
+                    'vertical_integration','fundamental','earnings_quality'],
+        momentum:  ['trend_strength','macro_outlook','momentum','macro_background','momentum_signal',
+                    'momentum_sentiment','china_structural_theme','macro_score'],
+        safety:    ['risk_adjusted','debt_safety','coverage_score']
+    };
+    // These factor names represent "bad risk" (high = risky → invert to safety)
+    var _INVERT = { tech_risk: true, liquidity_risk: true, downside_risk: true };
+
+    function _catAvg(factors, category) {
+        var keys = _FACTOR_MAP[category] || [];
+        var vals = [];
+        keys.forEach(function(k) {
+            if (factors[k] !== undefined) {
+                var v = parseFloat(factors[k]) || 0;
+                vals.push(_INVERT[k] ? 10 - v : v);
+            }
+        });
+        // Also check for inverted risk factors not in explicit list
+        if (category === 'safety') {
+            Object.keys(factors).forEach(function(k) {
+                if (_INVERT[k] && vals.indexOf(parseFloat(factors[k])) === -1) {
+                    vals.push(10 - (parseFloat(factors[k]) || 0));
+                }
+            });
+        }
+        if (!vals.length) return null;
+        return vals.reduce(function(s, v) { return s + v; }, 0) / vals.length;
+    }
+
     function toRadarData(a) {
-        var score = Math.min(Math.max(a.score || 0, 0), 10);
-        var conf = Math.min(Math.max((a.confidence || 0) * 10, 0), 10);
-        var sigMap = { bullish: 10, neutral: 5, bearish: 0 };
-        var bull = sigMap[(a.signal || '').toLowerCase()];
+        var factors = (a.metadata && a.metadata.factors) ? a.metadata.factors : null;
+
+        if (factors && Object.keys(factors).length >= 3) {
+            // Use real factor scores — fill missing categories with score/2+2.5 as neutral
+            var neutral = Math.min(Math.max((a.score || 5), 0), 10);
+            var sigMap  = { bullish: 8, neutral: 5, bearish: 2 };
+            var sigVal  = sigMap[(a.signal || '').toLowerCase()];
+            if (sigVal === undefined) sigVal = 5;
+            var vals = [
+                _catAvg(factors, 'valuation'),
+                _catAvg(factors, 'growth'),
+                _catAvg(factors, 'quality'),
+                _catAvg(factors, 'momentum'),
+                _catAvg(factors, 'safety')
+            ];
+            // Fill nulls: use signal-weighted fallback
+            return vals.map(function(v, i) {
+                if (v !== null) return Math.min(Math.max(v, 0), 10);
+                // fallback: blend overall score with signal
+                return i === 4 ? (10 - (1 - (a.confidence || 0.5)) * 6) : (neutral * 0.6 + sigVal * 0.4);
+            });
+        }
+
+        // Proxy fallback (no metadata.factors)
+        var score = Math.min(Math.max(a.score || 5, 0), 10);
+        var conf  = Math.min(Math.max((a.confidence || 0.5) * 10, 0), 10);
+        var sigMapFb = { bullish: 8, neutral: 5, bearish: 2 };
+        var bull = sigMapFb[(a.signal || '').toLowerCase()];
         if (bull === undefined) bull = 5;
-        var evidence = Math.min((a.key_findings || []).length * 2, 10);
-        var riskAware = Math.min((a.risks || []).length * 2, 10);
-        return [score, conf, bull, evidence, riskAware];
+        var evidence = Math.min((a.key_findings || []).length * 1.5 + 3, 10);
+        var safety   = Math.min(conf * 0.5 + 5 - (a.risks || []).length * 0.5, 10);
+        return [score, evidence, bull, conf, safety];
     }
 
     var datasets = agents.map(function(a, i) {
