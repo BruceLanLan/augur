@@ -148,6 +148,12 @@
         {% endfor %}
     </div>
 
+    <!-- Recently analyzed tickers -->
+    <div id="recent-tickers-row" class="mb-12" style="display:none;" role="group" aria-label="Recent analyses">
+        <span class="text-muted" style="font-size:0.72rem; margin-right:8px;" data-i18n="stocks-recent-label">最近:</span>
+        <span id="recent-ticker-chips"></span>
+    </div>
+
     <!-- Advanced metrics toggle -->
     <div>
         <button type="button" class="adv-toggle" id="adv-toggle-btn" onclick="toggleAdvMetrics()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAdvMetrics()}" data-i18n="stocks-adv-toggle" aria-expanded="false" aria-controls="advMetrics">&#9654; 高级财务指标 (可选)</button>
@@ -357,6 +363,42 @@ var lastConsensusText = '';
 var lastAnalysisData = null;
 var lastReportMarkdown = '';
 
+// ===================== Recent tickers =====================
+var _RECENT_KEY = 'augur-recent-tickers';
+var _RECENT_MAX = 6;
+
+function _saveRecentTicker(ticker) {
+    if (!ticker) return;
+    try {
+        var list = JSON.parse(localStorage.getItem(_RECENT_KEY) || '[]');
+        list = list.filter(function(t) { return t !== ticker; });
+        list.unshift(ticker);
+        if (list.length > _RECENT_MAX) list = list.slice(0, _RECENT_MAX);
+        localStorage.setItem(_RECENT_KEY, JSON.stringify(list));
+        _renderRecentTickers();
+    } catch(e) {}
+}
+
+function _renderRecentTickers() {
+    try {
+        var list = JSON.parse(localStorage.getItem(_RECENT_KEY) || '[]');
+        var row = document.getElementById('recent-tickers-row');
+        var chips = document.getElementById('recent-ticker-chips');
+        if (!list.length || !row || !chips) { if (row) row.style.display = 'none'; return; }
+        chips.innerHTML = '';
+        list.forEach(function(t) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'ticker-btn';
+            btn.textContent = t;
+            btn.setAttribute('aria-label', 'Re-analyze ' + t);
+            btn.addEventListener('click', function() { setTickerAndRun(t); });
+            chips.appendChild(btn);
+        });
+        row.style.display = '';
+    } catch(e) {}
+}
+
 var AGENT_STYLE_MAP = {
     buffett: 'style-value-investing', munger: 'style-value-investing', graham: 'style-deep-value',
     fisher: 'style-growth', cathie_wood: 'style-disruptive', soros: 'style-macro',
@@ -389,6 +431,7 @@ var AGENT_STYLE_MAP = {
         window._autoReport = true;
     }
     if (t) { document.getElementById('inp-ticker').value = t; runAnalysis(); }
+    _renderRecentTickers();
 })();
 
 function toggleAdvMetrics() {
@@ -667,6 +710,14 @@ function renderResults(data) {
 
     lastConsensusText = ticker + ' 共识分析:\n信号: ' + signalLabel(cons.signal) + '\n评分: ' + (cons.score||0).toFixed(1) + '/10\n置信度: ' + ((cons.confidence||0)*100).toFixed(0) + '%\n' + (cons.reasoning || '');
     lastAnalysisData = data;  // save for JSON export
+
+    // Save to recent tickers and update URL
+    _saveRecentTicker(ticker);
+    try {
+        if (window.history && window.history.pushState) {
+            window.history.pushState({ticker: ticker}, '', '/stocks?ticker=' + encodeURIComponent(ticker));
+        }
+    } catch(e) {}
 
     // Header updates
     document.getElementById('an-ticker').textContent = ticker;

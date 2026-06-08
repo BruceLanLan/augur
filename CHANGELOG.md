@@ -2,6 +2,17 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.7.0] - 2026-06-09
+
+Stocks 页体验增强：最近分析 chips + URL 状态同步。
+
+### Added
+- **最近分析 chips**：stocks 页在"快速选择"下方显示"最近:"一行，展示最近 6 条已分析过的股票代码（localStorage 存储），点击可直接重新分析。每次分析成功后自动更新列表（去重 + 保持最新在前）。
+- **URL 状态同步**：分析完成后通过 `history.pushState` 更新浏览器 URL 为 `/stocks?ticker=AAPL`，使当前分析可被浏览器记录/书签/分享；刷新页面会自动重新触发分析。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.6.0] - 2026-06-09
 
 History 分析日历热力图。
