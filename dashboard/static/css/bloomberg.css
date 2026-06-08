@@ -293,10 +293,27 @@ a:hover { color: #ffaa33; }
 }
 
 .nav-item.active {
-    background: rgba(255, 140, 0, 0.1);
+    background: rgba(255, 140, 0, 0.12);
     color: var(--accent-orange);
     border-left: 3px solid var(--accent-orange);
     margin-left: -3px;
+    font-weight: 600;
+}
+
+/* Collapsed sidebar: active dot indicator */
+.sidebar.collapsed .nav-item.active::after {
+    content: '';
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--accent-orange);
+}
+.sidebar.collapsed .nav-item {
+    position: relative;
 }
 
 .nav-item svg {
@@ -381,6 +398,11 @@ a:hover { color: #ffaa33; }
     transition: margin-left var(--transition-speed) ease;
     max-width: calc(100% - var(--sidebar-width));
     overflow-x: hidden;
+    animation: page-fade-in 0.22s ease both;
+}
+@keyframes page-fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 /* Grid shell (layout.css) — sidebar column handles offset, no double gutter */

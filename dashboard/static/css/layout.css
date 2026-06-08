@@ -158,8 +158,15 @@ html.light .council-hero {
 .sc:hover { transform: translateY(-2px); border-color: var(--border-gilt); }
 .sc .avatar { width: 38px; height: 38px; }
 .sc-nm { font: 600 0.66rem/1.2 var(--font-sans); color: var(--fg-1); white-space: nowrap; }
-.sc-score { font: 700 1.1rem/1 var(--font-mono); }
-.sc-score.score-high { color: var(--signal-buy); } .sc-score.score-mid { color: var(--signal-neutral); } .sc-score.score-low { color: var(--signal-sell); }
+.sc-score { font: 700 1.1rem/1 var(--font-mono); transition: color 0.2s; }
+.sc-score.score-5 { color: #00c853; }
+.sc-score.score-4 { color: #69f0ae; }
+.sc-score.score-3 { color: var(--signal-neutral); }
+.sc-score.score-2 { color: #ff6e40; }
+.sc-score.score-1 { color: var(--signal-sell); }
+.sc-score.score-high { color: var(--signal-buy); }
+.sc-score.score-mid  { color: var(--signal-neutral); }
+.sc-score.score-low  { color: var(--signal-sell); }
 
 /* debate */
 .debate { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }

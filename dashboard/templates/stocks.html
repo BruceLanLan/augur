@@ -652,15 +652,17 @@ function renderResults(data) {
     scGrid.innerHTML = '';
     var sortedAgents = agents.slice().sort(function(a,b) { return (b.score||0)-(a.score||0); });
     sortedAgents.forEach(function(m) {
-        var cls = m.score>=6.5?'score-high':m.score>=4.5?'score-mid':'score-low';
+        var s = m.score || 0;
+        var cls = s >= 8 ? 'score-5' : s >= 6.5 ? 'score-4' : s >= 4.5 ? 'score-3' : s >= 2.5 ? 'score-2' : 'score-1';
+        var scoreSz = s >= 8 ? '1.15rem' : s >= 6.5 ? '1.05rem' : '0.95rem';
         var sigCls = m.signal==='bullish'?'buy':m.signal==='bearish'?'sell':'neutral';
         var sigLbl = signalLabel(m.signal);
-        
+
         var d = document.createElement('div');
         d.className = 'sc';
         d.innerHTML = '<img src="/docs/images/avatars/' + m.agent_id + '.png" class="avatar" width="34" height="34" alt="" onerror="this.src=\'/static/images/augur-owl-64.png\'"/>' +
             '<div class="sc-nm">' + escapeHtml(m.agent_name) + '</div>' +
-            '<div class="sc-score ' + cls + '">' + (m.score||0).toFixed(1) + '</div>' +
+            '<div class="sc-score ' + cls + '" style="font-size:' + scoreSz + '">' + s.toFixed(1) + '</div>' +
             '<span class="signal-badge ' + sigCls + '" style="font-size:0.56rem;padding:1px 7px">' + sigLbl + '</span>';
         scGrid.appendChild(d);
     });
