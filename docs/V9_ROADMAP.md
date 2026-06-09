@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-09，当前版本 **v10.10.0**（18 预生成 Hermes agent YAML + manifest 更新，1656 tests passing）
+> 最后更新：2026-06-09，当前版本 **v10.11.0**（Compare 因子级雷达修复 + 展开明细，1656 tests passing）
 
 ---
 
@@ -47,6 +47,7 @@
 | 10.8.0 | 键盘快捷键帮助 Modal（`?` 键触发，四语言 i18n，Esc/背景关闭） |
 | 10.9.0 | `augur-mcp` 独立 stdio 入口 + Hermes Studio / Claude Desktop 接入文档 |
 | 10.10.0 | `hermes-agents/` 18 个预生成 agent YAML + skills manifest 全部更新为 `augur-mcp` |
+| 10.11.0 | Compare 因子级雷达作用域 bug 修复 + 因子明细展开（mini 进度条，分类分组） |
 
 **当前能力盘点（v10.0.0）：**
 - MCP 工具 9 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona

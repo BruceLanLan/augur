@@ -889,6 +889,9 @@ window.I18N = {
         "a11y-stocks-ticker": "股票代码输入",
         "a11y-hero-chips-group": "示例股票代码",
         "a11y-stocks-spinner": "分析进行中",
+        // Compare factor breakdown
+        "compare-factor-toggle": "▶ 展开因子明细",
+        "compare-factor-collapse": "收起因子明细",
         // Keyboard shortcuts modal
         "kbd-modal-title": "键盘快捷键",
         "kbd-focus-ticker": "聚焦 Ticker 输入框",
@@ -1785,6 +1788,9 @@ window.I18N = {
         "a11y-stocks-ticker": "Stock ticker input",
         "a11y-hero-chips-group": "Example tickers",
         "a11y-stocks-spinner": "Analysis in progress",
+        // Compare factor breakdown
+        "compare-factor-toggle": "▶ Expand factor details",
+        "compare-factor-collapse": "Collapse factor details",
         // Keyboard shortcuts modal
         "kbd-modal-title": "Keyboard Shortcuts",
         "kbd-focus-ticker": "Focus ticker input",

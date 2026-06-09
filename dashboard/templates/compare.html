@@ -201,12 +201,14 @@
         <div id="compare-radar-subtitle" data-i18n="compare-radar-subtitle">各维度均换算为 0-10 分</div>
         <canvas id="compare-radar-canvas" height="320"></canvas>
         <!-- Factor breakdown table (shown when real factors exist) -->
-        <div id="compare-factor-breakdown" style="display:none; margin-top:16px; overflow-x:auto;">
-            <div style="font-size:0.72rem; color:var(--text-muted); margin-bottom:6px; font-family:var(--font-mono);" data-i18n="compare-factor-breakdown-hint">点击维度名称展开因子明细</div>
-            <table id="compare-factor-table" style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:var(--font-mono);">
-                <thead id="compare-factor-thead"></thead>
-                <tbody id="compare-factor-tbody"></tbody>
-            </table>
+        <div id="compare-factor-breakdown" style="display:none; margin-top:16px;">
+            <button type="button" id="compare-factor-toggle" onclick="toggleFactorBreakdown()" style="background:none;border:1px solid var(--border-color);border-radius:6px;padding:5px 12px;font-size:0.78rem;color:var(--text-secondary);cursor:pointer;margin-bottom:10px;" data-i18n="compare-factor-toggle">▶ 展开因子明细</button>
+            <div id="compare-factor-inner" style="display:none;overflow-x:auto;">
+                <table id="compare-factor-table" style="width:100%; border-collapse:collapse; font-size:0.78rem; font-family:var(--font-mono);">
+                    <thead id="compare-factor-thead"></thead>
+                    <tbody id="compare-factor-tbody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
     <div class="compare-results" id="compare-results"></div>
@@ -435,35 +437,8 @@ function _cssVar(name, fallback) {
     return v || fallback;
 }
 
-var _radarChart = null;
-function renderRadarChart(agents) {
-    var container = document.getElementById('compare-radar-container');
-    var canvas = document.getElementById('compare-radar-canvas');
-    if (!container || !canvas) return;
-    container.style.display = 'block';
-
-    var PALETTE = [
-        _cssVar('--accent-orange', '#ff9500'),
-        _cssVar('--signal-buy',    '#30d158'),
-        _cssVar('--accent-blue',   '#64d2ff'),
-        _cssVar('--oracle-purple', '#bf5af2'),
-        _cssVar('--signal-sell',   '#ff453a'),
-    ];
-    var gridColor  = _cssVar('--border-color', 'rgba(255,255,255,0.08)');
-    var tickColor  = _cssVar('--text-muted',   '#636366');
-    var labelColor = _cssVar('--text-secondary','#aeaeb2');
-    var legendColor= _cssVar('--text-secondary','#8e8e93');
-
-    var labels = [
-        _t('compare-radar-valuation', '估值'),
-        _t('compare-radar-growth',    '成长'),
-        _t('compare-radar-quality',   '质量'),
-        _t('compare-radar-momentum',  '动量'),
-        _t('compare-radar-safety',    '安全')
-    ];
-
-    // Factor → canonical category mapping (covers all 18 personas)
-    var _FACTOR_MAP = {
+// Factor → canonical category mapping (module scope — shared by radar + breakdown)
+var _FACTOR_MAP = {
         valuation: [
             'valuation','valuation_acceptability','relative_valuation',
             'valuation_reasonableness','valuation_fairness',  // duan_yongping, zhang_lei
@@ -508,33 +483,58 @@ function renderRadarChart(agents) {
             'risk_capital','stablecoin_signal',               // dayu
             'risk_sizing','liquidity'                         // serenity, soros
         ]
-    };
-    // These factor names represent "bad risk" (high = risky → invert to safety score)
-    var _INVERT = {
-        tech_risk: true, liquidity_risk: true, downside_risk: true,
-        supply_chain_bottleneck: true  // serenity: high bottleneck risk = lower safety
-    };
-
-    function _catAvg(factors, category) {
-        var keys = _FACTOR_MAP[category] || [];
-        var vals = [];
-        keys.forEach(function(k) {
-            if (factors[k] !== undefined) {
-                var v = parseFloat(factors[k]) || 0;
-                vals.push(_INVERT[k] ? 10 - v : v);
+};
+// These factor names represent "bad risk" (high = risky → invert to safety score)
+var _INVERT = {
+    tech_risk: true, liquidity_risk: true, downside_risk: true,
+    supply_chain_bottleneck: true  // serenity: high bottleneck risk = lower safety
+};
+function _catAvg(factors, category) {
+    var keys = _FACTOR_MAP[category] || [];
+    var vals = [];
+    keys.forEach(function(k) {
+        if (factors[k] !== undefined) {
+            var v = parseFloat(factors[k]) || 0;
+            vals.push(_INVERT[k] ? 10 - v : v);
+        }
+    });
+    if (category === 'safety') {
+        Object.keys(factors).forEach(function(k) {
+            if (_INVERT[k] && vals.indexOf(parseFloat(factors[k])) === -1) {
+                vals.push(10 - (parseFloat(factors[k]) || 0));
             }
         });
-        // Also check for inverted risk factors not in explicit list
-        if (category === 'safety') {
-            Object.keys(factors).forEach(function(k) {
-                if (_INVERT[k] && vals.indexOf(parseFloat(factors[k])) === -1) {
-                    vals.push(10 - (parseFloat(factors[k]) || 0));
-                }
-            });
-        }
-        if (!vals.length) return null;
-        return vals.reduce(function(s, v) { return s + v; }, 0) / vals.length;
     }
+    if (!vals.length) return null;
+    return vals.reduce(function(s, v) { return s + v; }, 0) / vals.length;
+}
+
+var _radarChart = null;
+function renderRadarChart(agents) {
+    var container = document.getElementById('compare-radar-container');
+    var canvas = document.getElementById('compare-radar-canvas');
+    if (!container || !canvas) return;
+    container.style.display = 'block';
+
+    var PALETTE = [
+        _cssVar('--accent-orange', '#ff9500'),
+        _cssVar('--signal-buy',    '#30d158'),
+        _cssVar('--accent-blue',   '#64d2ff'),
+        _cssVar('--oracle-purple', '#bf5af2'),
+        _cssVar('--signal-sell',   '#ff453a'),
+    ];
+    var gridColor  = _cssVar('--border-color', 'rgba(255,255,255,0.08)');
+    var tickColor  = _cssVar('--text-muted',   '#636366');
+    var labelColor = _cssVar('--text-secondary','#aeaeb2');
+    var legendColor= _cssVar('--text-secondary','#8e8e93');
+
+    var labels = [
+        _t('compare-radar-valuation', '估值'),
+        _t('compare-radar-growth',    '成长'),
+        _t('compare-radar-quality',   '质量'),
+        _t('compare-radar-momentum',  '动量'),
+        _t('compare-radar-safety',    '安全')
+    ];
 
     function toRadarData(a) {
         var factors = (a.metadata && a.metadata.factors) ? a.metadata.factors : null;
@@ -676,18 +676,38 @@ function renderFactorBreakdown(agents) {
         // Individual factor rows
         usedKeys.forEach(function(k) {
             html += '<tr style="border-bottom:1px solid var(--border-subtle, #1a1f2e);">';
-            html += '<td style="padding:3px 6px 3px 14px; color:var(--text-muted);">' + k.replace(/_/g, ' ') + '</td>';
+            html += '<td style="padding:3px 6px 3px 14px; color:var(--text-muted); white-space:nowrap;">' + k.replace(/_/g, ' ') + '</td>';
             agents.forEach(function(a) {
                 var f = (a.metadata && a.metadata.factors) ? a.metadata.factors : {};
                 var val = f[k] !== undefined ? parseFloat(f[k]) : null;
                 var display = val !== null ? val.toFixed(1) : '—';
-                var color = val === null ? 'var(--text-muted)' : (val >= 7 ? 'var(--data-green)' : (val >= 4 ? 'var(--text-primary)' : 'var(--accent-red)'));
-                html += '<td style="text-align:right; padding:3px 6px; color:' + color + ';">' + display + '</td>';
+                var barColor = val === null ? '#333' : (val >= 7 ? 'var(--data-green,#30d158)' : (val >= 4 ? 'var(--accent-orange,#ff9500)' : 'var(--accent-red,#ff453a)'));
+                var barW = val !== null ? Math.round(val * 10) : 0;
+                var textColor = val === null ? 'var(--text-muted)' : (val >= 7 ? 'var(--data-green)' : (val >= 4 ? 'var(--text-primary)' : 'var(--accent-red)'));
+                html += '<td style="text-align:right; padding:3px 6px; color:' + textColor + ';">';
+                if (val !== null) {
+                    html += '<div style="display:inline-flex;align-items:center;gap:4px;">';
+                    html += '<div style="width:40px;height:4px;background:var(--bg-elevated,#2a2a3e);border-radius:2px;overflow:hidden;">';
+                    html += '<div style="width:' + barW + '%;height:100%;background:' + barColor + ';border-radius:2px;"></div></div>';
+                    html += '<span>' + display + '</span></div>';
+                } else {
+                    html += display;
+                }
+                html += '</td>';
             });
             html += '</tr>';
         });
     });
     tbody.innerHTML = html;
+}
+
+function toggleFactorBreakdown() {
+    var inner = document.getElementById('compare-factor-inner');
+    var btn = document.getElementById('compare-factor-toggle');
+    if (!inner) return;
+    var open = inner.style.display !== 'none';
+    inner.style.display = open ? 'none' : 'block';
+    if (btn) btn.textContent = open ? (_t('compare-factor-toggle','▶ 展开因子明细')) : ('▼ ' + _t('compare-factor-collapse','收起因子明细'));
 }
 
 function exportCompareJSON() {

@@ -2,6 +2,21 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.11.0] - 2026-06-09
+
+Compare 页因子级雷达修复 + 因子明细展开。
+
+### Fixed
+- **`_FACTOR_MAP` / `_catAvg` 作用域 bug**：两个变量定义在 `renderRadarChart` 内部，`renderFactorBreakdown` 无法访问（ReferenceError）——导致因子明细表格静默失效。将 `_FACTOR_MAP`、`_INVERT`、`_catAvg` 提升至模块作用域，因子真实分现在正确渲染。
+
+### Added
+- **因子明细展开按钮**：compare 页雷达图下方新增"▶ 展开因子明细"按钮（默认收起），展开后显示按类别（估值/成长/质量/动量/安全）分组的因子分表格，每个值附带彩色 mini 进度条（绿/橙/红）。
+- i18n: compare-factor-toggle / compare-factor-collapse (zh+en)。
+
+### Notes
+- `metadata.factors` 已存在于所有 18 个 agent 的分析结果中，无需 API 改动。
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.10.0] - 2026-06-09
 
 18 预生成 Hermes agent YAML + skill manifest 更新。
