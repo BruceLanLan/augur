@@ -84,7 +84,26 @@ Hermes will automatically invoke the `augur_analyze` or `augur_consensus` tool.
 
 ---
 
-## Method 2: Soul Injection (Profile Personalization)
+## Method 2: Pre-built Agents (Fastest Path)
+
+The repo ships 18 ready-to-use Hermes agent YAML files — no commands to run, just copy and restart.
+
+```bash
+# Copy all 18 masters
+cp hermes-agents/*.yaml ~/.hermes/agents/
+
+# Or pick a few
+cp hermes-agents/buffett.yaml ~/.hermes/agents/
+cp hermes-agents/serenity.yaml ~/.hermes/agents/
+```
+
+Restart Hermes Studio → independent agents appear in the sidebar (Warren Buffett, 段永平, Serenity…), each with full persona system prompt and access to `augur-mcp` tools.
+
+**Available files:** `buffett`, `graham`, `munger`, `lynch`, `dalio`, `soros`, `marks`, `cathie-wood`, `fisher`, `thiel`, `arps`, `aschenbrenner`, `dayu`, `duan-yongping`, `zhang-lei`, `li-lu`, `dan-bin`, `serenity`.
+
+---
+
+## Method 3: Soul Injection (Profile Personalization)
 
 Inject an investor's "soul" into each Hermes Profile, making the Profile itself embody a specific investment master.
 
@@ -115,7 +134,7 @@ augur inject-soul --profile serenity-trader --persona serenity --format hermes -
 
 ---
 
-## Method 3: Group Chat Mode
+## Method 4: Group Chat Mode
 
 Add multiple Augur Agents as participants in Hermes Web UI's Group Chat.
 
@@ -153,7 +172,7 @@ Each Agent responds independently using their own persona and analytical framewo
 
 ---
 
-## Method 4: Telegram Bot + Hermes Gateway
+## Method 5: Telegram Bot + Hermes Gateway
 
 Connect Augur to Telegram through Hermes Platform Channels.
 
@@ -176,7 +195,7 @@ Analyze AAPL
 
 ---
 
-## Method 5: WeChat Integration (GeWeChat + Hermes)
+## Method 6: WeChat Integration (GeWeChat + Hermes)
 
 ### Step 1: Start GeWeChat Docker
 

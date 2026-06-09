@@ -2,6 +2,20 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.10.0] - 2026-06-09
+
+18 预生成 Hermes agent YAML + skill manifest 更新。
+
+### Added
+- **`hermes-agents/` 目录**：18 个预生成 Hermes Studio agent YAML（每位投资人一个文件），`cp hermes-agents/*.yaml ~/.hermes/agents/` 即可，无需跑任何命令。每个 YAML 包含完整 system prompt、MCP 工具依赖（`augur-mcp`）、语言标注（4 位中国投资人为 zh）。
+- **hermes-setup-guide 更新**（中/英）：新增方式二"独立 Agent（预生成 YAML）"，所有方式编号重排（现共 6 种方式）。
+
+### Changed
+- **所有 skills/*/manifest.json**（19 个）：`command` 改为 `augur-mcp`，移除 `args: [mcp-server]`，与 v10.9 console script 对齐。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.9.0] - 2026-06-09
 
 `augur-mcp` 独立 stdio 入口 + Hermes Studio 接入文档。

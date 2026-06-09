@@ -84,7 +84,48 @@ Hermes 会自动调用 `augur_analyze` 或 `augur_consensus` 工具。
 
 ---
 
-## 方式二：Soul 注入（Profile 人格化）
+## 方式二：独立 Agent（预生成 YAML，最快路径）
+
+仓库内置 18 个现成的 Hermes agent YAML，无需运行任何命令，直接复制即用。
+
+```bash
+# 复制全部 18 位大师
+cp hermes-agents/*.yaml ~/.hermes/agents/
+
+# 或只复制几位
+cp hermes-agents/buffett.yaml ~/.hermes/agents/
+cp hermes-agents/duan-yongping.yaml ~/.hermes/agents/
+cp hermes-agents/serenity.yaml ~/.hermes/agents/
+```
+
+重启 Hermes Studio → 侧边栏出现"Warren Buffett"、"段永平"等独立 Agent，直接与他们对话，同时可调用 `augur-mcp` 工具。
+
+**可用文件：**
+
+| 文件 | 投资人 | 风格 |
+|------|--------|------|
+| `buffett.yaml` | Warren Buffett | 护城河价值投资 |
+| `graham.yaml` | Benjamin Graham | 安全边际/净净值 |
+| `munger.yaml` | Charlie Munger | 心智模型多元框架 |
+| `lynch.yaml` | Peter Lynch | PEG/十倍股 |
+| `dalio.yaml` | Ray Dalio | 宏观债务周期 |
+| `soros.yaml` | George Soros | 反身性/宏观交易 |
+| `marks.yaml` | Howard Marks | 市场周期/第二层思维 |
+| `cathie-wood.yaml` | Cathie Wood | 颠覆式创新 |
+| `fisher.yaml` | Philip Fisher | Scuttlebutt/成长股 |
+| `thiel.yaml` | Peter Thiel | 逆向思维/垄断 |
+| `arps.yaml` | ARPS | 黄金/比特币/实物资产 |
+| `aschenbrenner.yaml` | Leopold Aschenbrenner | AGI时线/AI地缘政治 |
+| `dayu.yaml` | 大宇 | 加密叙事/链上数据 |
+| `duan-yongping.yaml` | 段永平 | 本分/长期主义 |
+| `zhang-lei.yaml` | 张磊 | 高瓴/结构性价值 |
+| `li-lu.yaml` | 李录 | 喜马拉雅/中国价值 |
+| `dan-bin.yaml` | 但斌 | 时代β/消费品 |
+| `serenity.yaml` | Serenity | AI半导体供应链 |
+
+---
+
+## 方式三：Soul 注入（Profile 人格化）
 
 给 Hermes 的每个 Profile 注入投资人"灵魂"，让 Profile 本身就是某位投资大师。
 
@@ -115,7 +156,7 @@ augur inject-soul --profile serenity-trader --persona serenity --format hermes -
 
 ---
 
-## 方式三：Group Chat 群聊模式
+## 方式四：Group Chat 群聊模式
 
 在 Hermes Web UI 的 Group Chat 中添加多个 Augur Agent 作为参与者。
 
@@ -153,7 +194,7 @@ hermes skills install https://github.com/BruceLanLan/augur/tree/main/skills/sere
 
 ---
 
-## 方式四：Telegram Bot + Hermes Gateway
+## 方式五：Telegram Bot + Hermes Gateway
 
 通过 Hermes 的 Platform Channels 将 Augur 接入 Telegram。
 
@@ -176,7 +217,7 @@ hermes skills install https://github.com/BruceLanLan/augur/tree/main/skills/sere
 
 ---
 
-## 方式五：微信接入（GeWeChat + Hermes）
+## 方式六：微信接入（GeWeChat + Hermes）
 
 ### Step 1: 启动 GeWeChat Docker
 

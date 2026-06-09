@@ -14,15 +14,12 @@
   },
   "mcp": {
     "server": "augur",
-    "command": "augur",
+    "command": "augur-mcp",
     "required_tools": [
       "mcp_augur_analyze",
       "mcp_augur_fetch",
       "mcp_augur_consensus",
       "mcp_augur_committee"
-    ],
-    "args": [
-      "mcp-server"
     ]
   },
   "compatibility": [
