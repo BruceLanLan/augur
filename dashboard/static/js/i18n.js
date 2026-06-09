@@ -889,6 +889,9 @@ window.I18N = {
         "a11y-stocks-ticker": "股票代码输入",
         "a11y-hero-chips-group": "示例股票代码",
         "a11y-stocks-spinner": "分析进行中",
+        // Cross-page ticker navigation
+        "signals-analyze-link": "前往分析",
+        "history-analyze-link": "前往分析",
         // Watchlist quick-add
         "scanner-add-watchlist": "加入自选股",
         "scanner-added-watchlist": "已加入自选股",
@@ -1796,6 +1799,9 @@ window.I18N = {
         "a11y-stocks-ticker": "Stock ticker input",
         "a11y-hero-chips-group": "Example tickers",
         "a11y-stocks-spinner": "Analysis in progress",
+        // Cross-page ticker navigation
+        "signals-analyze-link": "Analyze",
+        "history-analyze-link": "Analyze",
         // Watchlist quick-add
         "scanner-add-watchlist": "Add to watchlist",
         "scanner-added-watchlist": "added to watchlist",

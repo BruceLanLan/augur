@@ -2,6 +2,17 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.13.0] - 2026-06-09
+
+跨页面 Ticker 导航：Signals / History → Stocks 一键分析。
+
+### Added
+- **Signals 页面 ticker 链接**：自选股信号表中，代码列变为可点击链接（橙色下划线），跳转到 `/stocks?ticker=X`，stocks 页面自动触发分析（已有 URL 参数 auto-run 逻辑）。
+- **History 页面 ticker 链接**：历史记录表中，代码列同样变为链接，`stopPropagation()` 防止触发展开行。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.12.0] - 2026-06-09
 
 Scanner + Stocks 一键加入自选股。

@@ -319,7 +319,7 @@ function renderHistory(records) {
         tr.setAttribute('data-id', rec.id);
         var ts = formatHistoryDate(rec.timestamp);
         tr.innerHTML = '<td class="col-date">' + ts + '</td>' +
-            '<td class="ticker-cell">' + escapeHtml(rec.ticker) + '</td>' +
+            '<td class="ticker-cell"><a href="/stocks?ticker=' + encodeURIComponent(rec.ticker) + '" onclick="event.stopPropagation();" style="color:var(--accent-orange,#d4a017);text-decoration:none;font-weight:600;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">' + escapeHtml(rec.ticker) + '</a></td>' +
             '<td><span class="signal-badge ' + signalBadgeClass(rec.signal) + '" style="font-size:0.7rem;">' + signalLabel(rec.signal) + '</span></td>' +
             '<td>' + (rec.score || 0).toFixed(1) + '/10</td>' +
             '<td><button class="btn btn-sm btn-ghost" onclick="event.stopPropagation(); deleteRecord(\'' + rec.id + '\', this)">' + escapeHtml(_t('history-delete-btn')) + '</button></td>';

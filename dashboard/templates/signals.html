@@ -402,7 +402,7 @@ function renderWatchlist() {
         }
 
         html += '<tr class="signal-row-main" tabindex="0" role="button" aria-label="' + escapeHtml(_t('signals-row-aria') + ' ' + ticker) + '" style="border-bottom:1px solid var(--border-color); transition:background 0.2s; cursor:pointer;" onmouseover="this.style.background=\'var(--bg-card-hover)\'" onmouseout="this.style.background=\'transparent\'" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();this.click();}">' +
-            '<td style="padding:10px 16px; font-family:var(--font-data); font-weight:600; color:var(--accent-orange);">' + escapeHtml(ticker) + '</td>' +
+            '<td style="padding:10px 16px; font-family:var(--font-data); font-weight:600;"><a href="/stocks?ticker=' + encodeURIComponent(ticker) + '" title="' + escapeHtml(_t('signals-analyze-link','分析 ' + ticker)) + '" style="color:var(--accent-orange);text-decoration:none;" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">' + escapeHtml(ticker) + '</a></td>' +
             '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.pe || '--') + '</td>' +
             '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.roe ? (item.roe * 100).toFixed(0) + '%' : '--') + '</td>' +
             '<td style="padding:10px 16px; text-align:center; font-family:var(--font-data);">' + (item.gross_margins ? (item.gross_margins * 100).toFixed(0) + '%' : '--') + '</td>' +
