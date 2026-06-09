@@ -210,9 +210,10 @@
                 <span id="an-price" style="font:var(--data-lg);color:var(--fg-1)"></span>
             </div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="pixel-btn dark" onclick="runAnalysis()">↻ Re-run</button>
             <button class="pixel-btn dark" onclick="exportJSON()">⤓ Export</button>
+            <button class="pixel-btn dark" id="stocks-watchlist-btn" onclick="addCurrentToWatchlist()" data-i18n="stocks-add-watchlist" style="display:none;">+ Watchlist</button>
             <button class="pixel-btn" onclick="generateReport()" id="gen-report-btn">Deep Report</button>
         </div>
     </div>
@@ -627,6 +628,34 @@ function copyConsensus(btn) {
     }
 }
 
+function addCurrentToWatchlist() {
+    var btn = document.getElementById('stocks-watchlist-btn');
+    var ticker = (btn && btn.getAttribute('data-ticker')) || (lastAnalysisData && lastAnalysisData.ticker);
+    if (!ticker) { showToast(_t('stocks-no-ticker', '请先分析一只股票'), 'warning'); return; }
+    var md = lastAnalysisData && lastAnalysisData.market_data ? lastAnalysisData.market_data : {};
+    var body = {ticker: ticker};
+    if (md.pe && md.pe > 0) body.pe = md.pe;
+    if (md.roe && md.roe > 0) body.roe = md.roe;
+    if (md.price && md.price > 0) body.price = md.price;
+    if (md.market_cap && md.market_cap > 0) body.market_cap = md.market_cap;
+    fetch('/api/watchlist/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(body)
+    }).then(function(r) {
+        if (r.ok) {
+            showToast(ticker + ' ' + _t('stocks-added-watchlist', '已加入自选股'), 'success');
+            if (btn) { btn.textContent = '✓ Watchlist'; btn.disabled = true; }
+        } else {
+            r.json().then(function(d) {
+                showToast((d && d.detail) ? d.detail : _t('stocks-watchlist-error', '添加失败'), 'error');
+            });
+        }
+    }).catch(function() {
+        showToast(_t('stocks-watchlist-error', '添加失败'), 'error');
+    });
+}
+
 function exportJSON() {
     if (!lastAnalysisData) { showToast('请先运行分析', 'warning'); return; }
     var blob = new Blob([JSON.stringify(lastAnalysisData, null, 2)], {type: 'application/json'});
@@ -710,6 +739,10 @@ function renderResults(data) {
 
     lastConsensusText = ticker + ' 共识分析:\n信号: ' + signalLabel(cons.signal) + '\n评分: ' + (cons.score||0).toFixed(1) + '/10\n置信度: ' + ((cons.confidence||0)*100).toFixed(0) + '%\n' + (cons.reasoning || '');
     lastAnalysisData = data;  // save for JSON export
+
+    // Show watchlist button
+    var wlBtn = document.getElementById('stocks-watchlist-btn');
+    if (wlBtn) { wlBtn.style.display = ''; wlBtn.setAttribute('data-ticker', ticker); }
 
     // Save to recent tickers and update URL
     _saveRecentTicker(ticker);

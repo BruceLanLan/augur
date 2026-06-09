@@ -272,6 +272,24 @@ function exportScannerCSV() {
     showToast(_t('scanner-exported'), 'success');
 }
 
+function addToWatchlistFromScanner(ticker) {
+    fetch('/api/watchlist/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ticker: ticker})
+    }).then(function(r) {
+        if (r.ok) {
+            showToast(ticker + ' ' + _t('scanner-added-watchlist', '已加入自选股'), 'success');
+        } else {
+            r.json().then(function(d) {
+                showToast((d && d.detail) ? d.detail : _t('scanner-watchlist-error', '添加失败'), 'error');
+            });
+        }
+    }).catch(function() {
+        showToast(_t('scanner-watchlist-error', '添加失败'), 'error');
+    });
+}
+
 function renderHeatmap(results) {
     var table = document.getElementById('heatmap-table');
     if (!table || !results || !results.length) {
@@ -300,7 +318,7 @@ function renderHeatmap(results) {
         var isError = row.consensus_signal === 'error';
         var consCls = isError ? 'error' : (row.consensus_signal || 'neutral').toLowerCase();
         html += '<tr>';
-        html += '<td class="ticker-col">' + escapeHtml(row.ticker) + '</td>';
+        html += '<td class="ticker-col" style="white-space:nowrap;">' + escapeHtml(row.ticker) + ' <button type="button" onclick="addToWatchlistFromScanner(\'' + escapeHtml(row.ticker) + '\')" title="' + _t('scanner-add-watchlist','加入自选股') + '" style="background:none;border:1px solid var(--border-color,#333);border-radius:4px;color:var(--text-muted);font-size:0.75rem;padding:1px 5px;cursor:pointer;vertical-align:middle;line-height:1.2;" onmouseover="this.style.color=\'var(--accent,#d4a017)\';this.style.borderColor=\'var(--accent,#d4a017)\'" onmouseout="this.style.color=\'var(--text-muted)\';this.style.borderColor=\'var(--border-color,#333)\'">+</button></td>';
         if (isError) {
             var errDetail = (row.error && row.error.detail) ? row.error.detail : _t('scanner-error-row');
             html += '<td colspan="' + (agentIds.length + 1) + '"><span class="consensus-badge error">' + escapeHtml(_t('scanner-error-row')) + '</span> <span class="text-muted" style="font-size:0.7rem;">' + escapeHtml(errDetail) + '</span></td>';

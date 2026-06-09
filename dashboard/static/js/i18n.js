@@ -889,6 +889,14 @@ window.I18N = {
         "a11y-stocks-ticker": "股票代码输入",
         "a11y-hero-chips-group": "示例股票代码",
         "a11y-stocks-spinner": "分析进行中",
+        // Watchlist quick-add
+        "scanner-add-watchlist": "加入自选股",
+        "scanner-added-watchlist": "已加入自选股",
+        "scanner-watchlist-error": "添加失败",
+        "stocks-add-watchlist": "+ 自选股",
+        "stocks-added-watchlist": "已加入自选股",
+        "stocks-watchlist-error": "添加失败",
+        "stocks-no-ticker": "请先分析一只股票",
         // Compare factor breakdown
         "compare-factor-toggle": "▶ 展开因子明细",
         "compare-factor-collapse": "收起因子明细",
@@ -1788,6 +1796,14 @@ window.I18N = {
         "a11y-stocks-ticker": "Stock ticker input",
         "a11y-hero-chips-group": "Example tickers",
         "a11y-stocks-spinner": "Analysis in progress",
+        // Watchlist quick-add
+        "scanner-add-watchlist": "Add to watchlist",
+        "scanner-added-watchlist": "added to watchlist",
+        "scanner-watchlist-error": "Failed to add",
+        "stocks-add-watchlist": "+ Watchlist",
+        "stocks-added-watchlist": "added to watchlist",
+        "stocks-watchlist-error": "Failed to add",
+        "stocks-no-ticker": "Run an analysis first",
         // Compare factor breakdown
         "compare-factor-toggle": "▶ Expand factor details",
         "compare-factor-collapse": "Collapse factor details",

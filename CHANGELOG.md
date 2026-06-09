@@ -2,6 +2,18 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.12.0] - 2026-06-09
+
+Scanner + Stocks 一键加入自选股。
+
+### Added
+- **Scanner → Watchlist**：扫描结果每行 Ticker 旁新增 `+` 按钮，点击直接调用 `/api/watchlist/add` 加入自选股，成功显示 toast 提示。
+- **Stocks → Watchlist**：分析完成后 Header 按钮区出现"+ Watchlist"按钮（默认隐藏），点击将当前 ticker（含 PE/ROE/Price/MarketCap）加入自选股，添加成功后按钮变为"✓ Watchlist"并禁用避免重复。
+- i18n: scanner-add-watchlist / scanner-added-watchlist / stocks-add-watchlist / stocks-added-watchlist 等 (zh+en)。
+
+### Notes
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.11.0] - 2026-06-09
 
 Compare 页因子级雷达修复 + 因子明细展开。
