@@ -17,24 +17,38 @@ This is the simplest method. Augur runs as an MCP Server that Hermes automatical
 ### Step 1: Verify Augur MCP Server is Available
 
 ```bash
-# Test on your VPS
-augur mcp-server
-# If no errors appear, it's working (ctrl+c to exit)
+# v10.8+ recommended: use the dedicated augur-mcp entry point (stdio)
+augur-mcp
+# If no errors appear, it's working (Ctrl+C to exit)
 ```
 
 ### Step 2: Configure Hermes MCP
 
-Edit your Hermes configuration file (usually at `~/.hermes/config.yaml` or in the Hermes Web UI settings page):
+**Option A — Hermes Studio / Claude Desktop (recommended)**
+
+Open the client → Settings → MCP Servers → Add:
+
+```yaml
+name: augur
+command: augur-mcp
+timeout: 180
+env:
+  OPENAI_API_KEY: sk-xxxx
+  AUGUR_CONFIG: ~/.augur/config.yaml
+```
+
+**Option B — Hermes Web UI / self-hosted (`config.yaml`)**
 
 ```yaml
 mcp_servers:
   augur-agents:
-    command: augur
-    args: [mcp-server]
+    command: augur-mcp
     description: "18 legendary investor multi-agent consensus analysis system"
     env:
       AUGUR_CONFIG: "~/.augur/config.yaml"
 ```
+
+> The legacy `augur mcp-server` subcommand still works; `augur-mcp` is the v10.8 dedicated stdio entry point (no subcommand required).
 
 ### Step 3: Verify in Hermes Web UI
 
@@ -213,7 +227,7 @@ python3 -m dashboard.app --port 8000 --cors
 # http://VPS-IP:8000/personas  -> See all 18 masters
 
 # 6. Start MCP Server (after Hermes is configured)
-augur mcp-server
+augur-mcp
 
 # 7. Chat in Hermes Web UI
 # "Analyze SIVE using Serenity's framework"
@@ -224,12 +238,11 @@ augur mcp-server
 ## FAQ
 
 **Q: Hermes can't find the tools after MCP configuration?**
-A: Make sure the `augur` command is in your PATH. You can use an absolute path:
+A: Make sure `augur-mcp` is in your PATH (`which augur-mcp`). You can use an absolute path:
 ```yaml
 mcp_servers:
   augur-agents:
-    command: /root/augur/venv/bin/augur
-    args: [mcp-server]
+    command: /root/augur/venv/bin/augur-mcp
 ```
 
 **Q: Dashboard startup error about jinja2/httpx?**
@@ -239,7 +252,7 @@ A: Run `pip install jinja2 httpx`
 A: Use two terminals, or use tmux:
 ```bash
 tmux new -d -s dashboard 'python3 -m dashboard.app --port 8000 --cors'
-tmux new -d -s mcp 'augur mcp-server'
+tmux new -d -s mcp 'augur-mcp'
 ```
 
 **Q: How to make agents in Hermes group chat use different models?**

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "augur-agents"
-version = "10.8.0"
+version = "10.9.0"
 description = "Multi-agent investment analysis system with 18 investor persona agents, consensus mechanism, and multi-platform deployment"
 readme = "README.md"
 license = {text = "MIT"}
@@ -81,6 +81,7 @@ all = [
 
 [project.scripts]
 augur = "augur.cli:main"
+augur-mcp = "augur.mcp_server:run_server"
 
 [project.urls]
 Homepage = "https://github.com/BruceLanLan/augur"

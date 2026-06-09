@@ -2,6 +2,19 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.9.0] - 2026-06-09
+
+`augur-mcp` 独立 stdio 入口 + Hermes Studio 接入文档。
+
+### Added
+- **`augur-mcp` console script**：新增 `augur-mcp` 独立命令，作为 stdio MCP transport 专用入口，供 Hermes Studio / Claude Desktop / mcporter 等桌面 MCP 客户端直接 spawn（无需 `augur mcp-server` 子命令，兼容旧命令）。
+- **`src/augur/mcp_entry.py`**：极简 stdio 启动器，`if __name__ == "__main__"` 直接调 `run_server()`。
+- **Hermes Studio 接入文档**：hermes-setup-guide.md（中/英）补充 Option A（Hermes Studio / Claude Desktop）配置示例，更新全部示例命令为 `augur-mcp`。
+
+### Notes
+- `[project.entry-points."mcp.server"]` PEP 720 discovery 入口保持不变；新加的 `augur-mcp` 是给 stdio spawn 用的第二条路——两条路都通。
+- Tests: **1656 passed**（排除网络测试 test_analyze_api_v12.py）。
+
 ## [10.8.0] - 2026-06-09
 
 键盘快捷键帮助 Modal。

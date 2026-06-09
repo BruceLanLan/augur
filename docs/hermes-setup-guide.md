@@ -17,24 +17,38 @@
 ### Step 1: 确认 Augur MCP Server 可用
 
 ```bash
-# 在 VPS 上测试
-augur mcp-server
-# 如果没有报错就说明正常（ctrl+c 退出）
+# v10.8+ 推荐：直接用 augur-mcp 命令（stdio 专用入口）
+augur-mcp
+# 如果没有报错就说明正常（Ctrl+C 退出）
 ```
 
 ### Step 2: 配置 Hermes 的 MCP
 
-编辑 Hermes 配置文件（通常在 `~/.hermes/config.yaml` 或 Hermes Web UI 的设置页面）：
+**方式 A — Hermes Studio / Claude Desktop（推荐）**
+
+打开客户端 → Settings → MCP Servers → Add：
+
+```yaml
+name: augur
+command: augur-mcp
+timeout: 180
+env:
+  OPENAI_API_KEY: sk-xxxx       # 按实际填写
+  AUGUR_CONFIG: ~/.augur/config.yaml
+```
+
+**方式 B — Hermes Web UI / 自部署（`config.yaml`）**
 
 ```yaml
 mcp_servers:
   augur-agents:
-    command: augur
-    args: [mcp-server]
+    command: augur-mcp
     description: "18位投资大师多Agent共识分析系统"
     env:
       AUGUR_CONFIG: "~/.augur/config.yaml"
 ```
+
+> 旧版命令 `augur mcp-server` 仍兼容；`augur-mcp` 是 v10.8 新增的独立入口（stdio 专用，无需子命令）。
 
 ### Step 3: 在 Hermes Web UI 中验证
 
@@ -213,7 +227,7 @@ python3 -m dashboard.app --port 8000 --cors
 # http://VPS-IP:8000/personas  → 看到 18 位大师
 
 # 6. 启动 MCP Server（Hermes 配置好后）
-augur mcp-server
+augur-mcp
 
 # 7. 在 Hermes Web UI 对话
 # "用 Serenity 的框架分析一下 SIVE"
@@ -224,12 +238,11 @@ augur mcp-server
 ## 常见问题
 
 **Q: MCP 配置后 Hermes 找不到工具？**
-A: 确认 `augur` 命令在 PATH 里。可以用绝对路径：
+A: 确认 `augur-mcp` 在 PATH 里（`which augur-mcp`）。可以用绝对路径：
 ```yaml
 mcp_servers:
   augur-agents:
-    command: /root/augur/venv/bin/augur
-    args: [mcp-server]
+    command: /root/augur/venv/bin/augur-mcp
 ```
 
 **Q: Dashboard 启动报错 jinja2/httpx？**
@@ -239,7 +252,7 @@ A: 运行 `pip install jinja2 httpx`
 A: 用两个终端，或用 tmux：
 ```bash
 tmux new -d -s dashboard 'python3 -m dashboard.app --port 8000 --cors'
-tmux new -d -s mcp 'augur mcp-server'
+tmux new -d -s mcp 'augur-mcp'
 ```
 
 **Q: 如何让 Hermes 群聊里的 Agent 用不同模型？**

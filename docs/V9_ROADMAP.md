@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-09，当前版本 **v10.8.0**（键盘快捷键 Modal，1656 tests passing）
+> 最后更新：2026-06-09，当前版本 **v10.9.0**（`augur-mcp` stdio 入口 + Hermes Studio 文档，1656 tests passing）
 
 ---
 
@@ -45,6 +45,7 @@
 | 10.6.0 | History 分析日历热力图（GitHub 风格，绿/红/橙，点击日期筛选） |
 | 10.7.0 | Stocks 最近分析 chips（localStorage）+ URL 状态同步（pushState） |
 | 10.8.0 | 键盘快捷键帮助 Modal（`?` 键触发，四语言 i18n，Esc/背景关闭） |
+| 10.9.0 | `augur-mcp` 独立 stdio 入口 + Hermes Studio / Claude Desktop 接入文档 |
 
 **当前能力盘点（v10.0.0）：**
 - MCP 工具 9 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona
