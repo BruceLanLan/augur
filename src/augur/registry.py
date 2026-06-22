@@ -312,60 +312,34 @@ class DecisionCoordinator:
             )
 
         # --- Industry-aware weights ---
-        weights = {}
-        regime = None
-        if ticker:
-            try:
-                from augur.consensus.industry_matrix import detect_industry, get_agent_weights
-                industry, _ = detect_industry(ticker)
-                matrix_file = Path(__file__).parent.parent / "feedback" / "industry_matrix.json"
-                trained = {}
-                if matrix_file.exists():
-                    import json as _j
-                    trained = _j.loads(matrix_file.read_text())
-                weights = get_agent_weights(industry, trained)
-            except Exception as e:
-                logger.debug("Module not available: %s", e)
-                pass
+        from augur.consensus import (
+            build_consensus_weights,
+            load_global_consensus_weights,
+            restrict_weights_to_agents,
+        )
+        from augur.consensus.paths import load_feedback_json
+        from augur.consensus.probability_calibrator import calibrate_confidence
+        from augur.consensus.meta_model import MetaModel
+        from augur.consensus.risk_manager import RiskManager
+        from augur.consensus.rolling_ic import load_rolling_ic_weights
 
-        # --- Regime-aware weight adjustment ---
-        regime_features = {}
-        try:
-            from augur.consensus.regime_weights import detect_regime, apply_regime_weights
-            from augur.consensus.macro_features import fetch_macro_features
-
-            regime = detect_regime(date_str)
-            regime_features = fetch_macro_features(date_str)
-            if regime_features.get("regime"):
-                regime = regime_features["regime"]
-            if regime and weights:
-                weights = apply_regime_weights(weights, regime)
-            try:
-                from augur.consensus.regime_router import RegimeRouter
-                router = RegimeRouter()
-                router_weights = router.get_weights(regime=regime, features=regime_features)
-                if router_weights:
-                    for agent_id in weights:
-                        if agent_id in router_weights:
-                            weights[agent_id] = (weights[agent_id] + router_weights[agent_id]) / 2
-                    total_rw = sum(weights.values())
-                    if total_rw > 0:
-                        weights = {k: v / total_rw for k, v in weights.items()}
-            except Exception:
-                pass
-        except Exception as e:
-            logger.debug("Module not available: %s", e)
-            regime = None
+        weight_ctx = build_consensus_weights(ticker, date_str, context)
+        weights = weight_ctx.weights
+        valid_agent_ids = [
+            aid for aid, resp in results.items() if resp.signal != SignalType.ERROR
+        ]
+        if weights and valid_agent_ids:
+            weights = restrict_weights_to_agents(weights, valid_agent_ids)
+        regime = weight_ctx.regime
+        regime_features = weight_ctx.regime_features
 
         # --- Correlation diversity penalty ---
         corr_matrix = {}
         try:
-            corr_file = Path(__file__).parent.parent / "feedback" / "agent_correlation.json"
-            if corr_file.exists():
-                import json as _j
-                corr_matrix = _j.loads(corr_file.read_text()).get("correlation_matrix", {})
-        except Exception:
-            pass
+            corr_data = load_feedback_json("agent_correlation.json")
+            corr_matrix = corr_data.get("correlation_matrix", {})
+        except Exception as exc:
+            logger.warning("Failed to load agent correlation matrix: %s", exc)
 
         # --- Signal counting and scoring ---
         signal_counts = {SignalType.BULLISH: 0.0, SignalType.NEUTRAL: 0.0, SignalType.BEARISH: 0.0}
@@ -377,24 +351,10 @@ class DecisionCoordinator:
         adjusted_weights = {}
 
         # Global optimized weights as default base
-        global_weights = {}
-        try:
-            _gw_file = Path(__file__).parent.parent / "feedback" / "weights.json"
-            if _gw_file.exists():
-                import json as _j
-                global_weights = _j.loads(_gw_file.read_text()).get("consensus_weights", {})
-                if not global_weights:
-                    global_weights = _j.loads(_gw_file.read_text())
-        except Exception:
-            pass
+        global_weights = load_global_consensus_weights()
 
         # Rolling IC dynamic weight override
-        rolling_ic_weights = {}
-        try:
-            from augur.consensus.rolling_ic import load_rolling_ic_weights
-            rolling_ic_weights = load_rolling_ic_weights() or {}
-        except Exception:
-            pass
+        rolling_ic_weights = load_rolling_ic_weights() or {}
 
         # v8: Learned weights from LearningEngine (60% base + 40% learned)
         learned_weights = {}
@@ -512,27 +472,21 @@ class DecisionCoordinator:
                 "SIDEWAYS": "Sideways",
             }
             regime_label = regime_labels.get(regime, regime)
-            regime_note = f" | Regime: {regime_label}"
+            industry_note = ""
+            if weight_ctx.industry != "general":
+                industry_note = f" | Industry: {weight_ctx.industry_label}"
+            regime_note = f" | Regime: {regime_label}{industry_note}"
 
         # --- Probability calibration ---
         calibrated_confidence = min(0.95, total_confidence)
-        try:
-            from augur.consensus.probability_calibrator import calibrate_confidence
-            calibrated_confidence = calibrate_confidence(total_score, calibrated_confidence, "consensus")
-        except Exception:
-            pass
+        calibrated_confidence = calibrate_confidence(total_score, calibrated_confidence, "consensus")
 
         # --- Meta-model blending ---
-        try:
-            from augur.consensus.meta_model import MetaModel
-            mm = MetaModel.load()
-            if mm is not None:
-                agent_scores_dict = {aid: resp.score for aid, resp in results.items()}
-                mm_score = mm.predict(agent_scores_dict)
-                total_score = 0.5 * total_score + 0.5 * mm_score
-        except Exception as e:
-            logger.debug("Module not available: %s", e)
-            pass
+        mm = MetaModel.load()
+        if mm is not None:
+            agent_scores_dict = {aid: resp.score for aid, resp in results.items()}
+            mm_score = mm.predict(agent_scores_dict)
+            total_score = 0.5 * total_score + 0.5 * mm_score
 
         result = AgentResponse(
             agent_id="consensus",
@@ -548,7 +502,6 @@ class DecisionCoordinator:
         # --- Risk Manager veto ---
         ctx_for_risk = context  # initialise outside try so Kelly block can access it
         try:
-            from augur.consensus.risk_manager import RiskManager
             if ctx_for_risk is None:
                 for r in results.values():
                     meta_ctx = r.metadata.get("context")
@@ -566,9 +519,8 @@ class DecisionCoordinator:
             rm = RiskManager()
             verdict = rm.evaluate(ctx_for_risk, result, results, regime=regime, vix=vix)
             result = rm.apply_veto(result, verdict)
-        except Exception as e:
-            logger.debug("Module not available: %s", e)
-            pass
+        except Exception as exc:
+            logger.warning("Risk manager evaluation failed: %s", exc)
 
         # --- Kelly position sizing (simplified half-Kelly) ---
         try:

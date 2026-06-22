@@ -239,7 +239,7 @@ class BaseAgent:
     def _merge_saved_thresholds(self):
         """V5: overlay optimized thresholds from feedback/agent_hyperparams.json."""
         try:
-            from scanner.agent_hyperparams import load_optimized_thresholds
+            from augur.agent_hyperparams import load_optimized_thresholds
             saved = load_optimized_thresholds(self.agent_id)
             if saved:
                 self.thresholds.update(saved)

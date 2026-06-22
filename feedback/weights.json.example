@@ -1,0 +1,25 @@
+{
+  "_comment": "Global consensus agent weights (fallback when no industry matrix match). Copy to feedback/weights.json.",
+  "consensus_weights": {
+    "buffett": 0.09,
+    "graham": 0.07,
+    "lynch": 0.07,
+    "dalio": 0.06,
+    "munger": 0.06,
+    "soros": 0.05,
+    "marks": 0.07,
+    "cathie_wood": 0.06,
+    "fisher": 0.06,
+    "arps": 0.05,
+    "aschenbrenner": 0.05,
+    "dayu": 0.04,
+    "thiel": 0.05,
+    "duan_yongping": 0.04,
+    "zhang_lei": 0.04,
+    "li_lu": 0.04,
+    "dan_bin": 0.04,
+    "serenity": 0.05
+  },
+  "updated_at": "2026-06-22",
+  "source": "committee_feedback_example"
+}

@@ -65,6 +65,29 @@ def _validate_model_name(model: str) -> Optional[str]:
     return None
 
 
+def _run_workflow_tool(
+    ticker: str,
+    steps: str = "fetch,analyze,consensus",
+    agents: str = "",
+    question: str = "",
+) -> str:
+    """Execute augur_workflow MCP tool logic (testable without FastMCP)."""
+    err = _validate_ticker(ticker)
+    if err:
+        return err
+    try:
+        from augur.workflow import run_workflow, VALID_STEPS
+        result = run_workflow(ticker, steps=steps, agents=agents, question=question)
+        summary = result.get("summary", "")
+        ran = ", ".join(result.get("steps", []))
+        header = f"Workflow complete ({ran}) for {ticker.upper()}\n\n"
+        return header + summary if summary else header + str(result)
+    except ValueError as e:
+        return f"Error: {e}\nValid steps: {', '.join(VALID_STEPS)}"
+    except Exception as e:
+        return f"Workflow failed for {ticker}: {e}"
+
+
 def _build_context(ticker: str, pe: float = 0, pb: float = 0, roe: float = 0,
                    gross_margins: float = 0, revenue_growth: float = 0,
                    debt_ratio: float = 0, fcf: float = 0, market_cap: float = 0,
@@ -564,17 +587,7 @@ def create_server():
         Returns:
             Structured workflow report with fetch data, consensus, committee verdict, sentiment
         """
-        err = _validate_ticker(ticker)
-        if err:
-            return err
-        try:
-            from augur.workflow import run_workflow
-            result = run_workflow(ticker, steps=steps, agents=agents, question=question)
-            return result.get("summary", str(result))
-        except ValueError as e:
-            return f"Error: {e}"
-        except Exception as e:
-            return f"Workflow failed for {ticker}: {e}"
+        return _run_workflow_tool(ticker, steps=steps, agents=agents, question=question)
 
     return mcp
 

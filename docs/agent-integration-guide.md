@@ -19,6 +19,7 @@ Augur 的18位投资人Agent可以独立存在，以多种形态嵌入你的工�
 | 💻 **Claude Code / Codex** | IDE 终端 | 开发中的投资分析 |
 | 📱 **Telegram / Slack** | 消息机器人 | 随时随地问询 |
 | 🔧 **API 调用** | REST API | 自动化工作流 |
+| 🔗 **Agentic Workflow** | CLI / MCP / API | 多步 fetch → analyze → consensus → committee |
 
 ---
 
@@ -354,6 +355,66 @@ print(f"共识信号: {data['signal']}")
 print(f"综合评分: {data['score']}")
 for agent_id, result in data['agents'].items():
     print(f"  {result['name']}: {result['signal']} ({result['score']}/10)")
+```
+
+---
+
+### 方式8：Agentic Workflow 多步流水线
+
+运行可配置的多步分析流水线：**fetch → analyze → consensus → committee → debate → sentiment**。
+
+#### CLI
+
+```bash
+# 默认：fetch, analyze, consensus
+augur workflow AAPL
+
+# 完整投委会流水线
+augur workflow AAPL --steps fetch,analyze,consensus,committee
+
+# 指定 Agent + 投委会问题
+augur workflow NVDA --agents buffett,munger,dalio --steps fetch,analyze,committee -q "护城河是在扩大还是缩小？"
+
+# JSON 输出（便于脚本集成）
+augur workflow TSLA --steps fetch,consensus,sentiment --json
+```
+
+有效步骤：`fetch`、`analyze`、`consensus`、`committee`、`debate`、`sentiment`。
+
+#### MCP 工具
+
+使用 `augur mcp-server` 时，调用 `augur_workflow` 工具：
+
+```
+augur_workflow(ticker="AAPL", steps="fetch,analyze,consensus,committee")
+```
+
+可选参数：`agents`（逗号分隔 ID）、`question`（投委会问题）。
+
+#### REST API
+
+```bash
+curl -X POST http://localhost:8900/api/workflow \
+  -H "Content-Type: application/json" \
+  -d '{"ticker":"AAPL","steps":"fetch,analyze,consensus,committee"}'
+```
+
+Python 示例：
+
+```python
+import requests
+
+resp = requests.post(
+    "http://localhost:8900/api/workflow",
+    json={
+        "ticker": "AAPL",
+        "steps": "fetch,analyze,consensus,committee",
+        "question": "当前估值是否值得加仓？",
+    },
+)
+data = resp.json()
+print(data["summary"])
+print(data["results"]["consensus"]["signal"])
 ```
 
 ---

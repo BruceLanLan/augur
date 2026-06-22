@@ -51,7 +51,7 @@
 | 10.12.0 | Scanner + Stocks 一键加入自选股（`/api/watchlist/add`，实时 toast 反馈） |
 | 10.13.0 | Signals/History Ticker 列变导航链接 → `/stocks?ticker=X` 一键重新分析 |
 | 10.14.0 | Terminal Workspace 布局预设 + Settings UI + `/api/workspace`；`augur_workflow` MCP 工具；`augur.consensus.*` 共识增强模块 |
-| 10.15.0 | v10.14 功能正式发布：版本号同步、CHANGELOG/README badge、workspace/workflow/consensus 集成测试 12 cases |
+| 10.15.0 | v10.14 功能正式发布 + **Agent Peer Review** 集成：persona 权重重归一化、服务端 landing 302、workflow 去重/low_participation；`scanner/` legacy；synthesis backlog |
 
 **当前能力盘点（v10.15.0）：**
 - MCP 工具 10 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona, **workflow**
@@ -60,6 +60,26 @@
 - 19 个 skill 目录（SKILL.md + manifest.json）
 - i18n：中/英/日/韩四语言，降级链
 - 测试基线：**1668 passed**（排除网络测试 test_analyze_api_v12.py）
+
+### scanner/ 弃用说明
+
+- `scanner/` 仅为向后兼容 shim，实现已迁移至 `src/augur/`。
+- Dashboard、`augur.registry`、MCP、CLI 应只从 `augur.*` 导入。
+- 详见 [`scanner/README.md`](../scanner/README.md)。
+- 唯一保留的可选 legacy 引用：`scanner.ten_x_screener`（10x 因子 overlay，模块缺失时静默跳过）。
+
+---
+
+## Agent Peer Review（v10.15.0）
+
+6 份 agent peer review（#1 Workspace、#2 Workflow、#3 Consensus、#4 Dashboard、#8 Agent Hosts、#9 Architecture）已汇总至 [`docs/AGENT_PEER_REVIEW_SYNTHESIS.md`](AGENT_PEER_REVIEW_SYNTHESIS.md)。
+
+**本版已落地 P0：**
+- Persona-aware consensus weights（`restrict_weights_to_agents`）
+- 服务端 landing redirect（`GET /` → `resolve_landing_url`）
+- Workflow：`enabled_personas` 桥接、consensus 去重、`low_participation` 警告
+
+**下 session P1 优先：** MCP workspace 工具、manifest 10-tool 同步、profile i18n、committee_preset 接线、dashboard router 拆分。
 
 ---
 

@@ -51,17 +51,27 @@ def run_workflow(
             }
 
     selected_agents = None
+    persona_filter: Optional[List[str]] = None
     if agents.strip():
         selected_ids = [a.strip() for a in agents.split(",") if a.strip()]
         all_agents = {a.agent_id: a for a in registry.get_all()}
         selected_agents = {aid: all_agents[aid] for aid in selected_ids if aid in all_agents}
+        skipped = [aid for aid in selected_ids if aid not in all_agents]
+        if skipped:
+            output["agents_skipped"] = skipped
+    else:
+        from augur.workspace import get_enabled_personas
+
+        persona_filter = get_enabled_personas() or None
+        if persona_filter:
+            output["agents_filter"] = persona_filter
 
     responses = None
     if any(s in step_list for s in ("analyze", "consensus", "committee", "debate")):
         if selected_agents:
             responses = {aid: agent.analyze(ctx) for aid, agent in selected_agents.items()}
         else:
-            responses = coordinator.analyze_with_all(ctx)
+            responses = coordinator.analyze_with_all(ctx, enabled_personas=persona_filter)
         if "analyze" in step_list:
             output["results"]["analyze"] = {
                 aid: {
@@ -73,18 +83,31 @@ def run_workflow(
                 for aid, r in responses.items()
             }
 
-    if "consensus" in step_list and responses:
-        consensus = coordinator.get_consensus(responses, ticker=ticker, context=ctx)
+    consensus_result = None
+    if any(s in step_list for s in ("consensus", "committee")) and responses:
+        consensus_result = coordinator.get_consensus(responses, ticker=ticker, context=ctx)
+        meta = consensus_result.metadata or {}
+        if meta.get("low_participation"):
+            output.setdefault("warnings", []).append(
+                "low_participation: fewer than 3 agents responded; confidence capped"
+            )
+
+    if "consensus" in step_list and consensus_result is not None:
+        meta = consensus_result.metadata or {}
         output["results"]["consensus"] = {
-            "signal": consensus.signal.value,
-            "score": consensus.score,
-            "confidence": consensus.confidence,
-            "reasoning": consensus.reasoning,
-            "kelly_pct": (consensus.metadata or {}).get("position_sizing", {}).get("position_pct"),
+            "signal": consensus_result.signal.value,
+            "score": consensus_result.score,
+            "confidence": consensus_result.confidence,
+            "reasoning": consensus_result.reasoning,
+            "kelly_pct": meta.get("position_sizing", {}).get("position_pct"),
+            "low_participation": bool(meta.get("low_participation")),
+            "regime": meta.get("regime_features", {}).get("regime"),
         }
 
     if "committee" in step_list and responses:
-        consensus = coordinator.get_consensus(responses, ticker=ticker, context=ctx)
+        consensus = consensus_result or coordinator.get_consensus(
+            responses, ticker=ticker, context=ctx
+        )
         bullish = sum(1 for r in responses.values() if r.signal.value == "bullish")
         bearish = sum(1 for r in responses.values() if r.signal.value == "bearish")
         neutral = len(responses) - bullish - bearish

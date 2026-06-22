@@ -3427,3 +3427,194 @@ html.light .report-exec-blurb {
     outline: 2px solid var(--accent-orange);
     outline-offset: 2px;
 }
+
+
+/* ============================================================
+   Home dashboard widgets (v10.15 — Bloomberg terminal layout)
+   ============================================================ */
+
+.home-customize-bar {
+    padding: 8px 12px;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+}
+
+.home-customize-label {
+    font: 600 0.68rem/1 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+}
+
+#home-customize-btn.is-active {
+    color: var(--accent-orange);
+    border-color: var(--accent-orange);
+    background: rgba(255, 140, 0, 0.08);
+}
+
+.home-watchlist-wrap {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.home-watchlist-strip {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+    white-space: nowrap;
+    min-height: 42px;
+}
+
+.home-watchlist-skeleton,
+.home-watchlist-empty {
+    padding: 12px 16px;
+    font: 500 0.72rem/1.2 var(--font-mono);
+    color: var(--text-muted);
+}
+
+.home-watchlist-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-right: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+    position: relative;
+}
+
+.home-watchlist-item:hover {
+    background: var(--bg-card-hover);
+}
+
+.home-watchlist-item.is-up .hw-change { color: var(--signal-buy); }
+.home-watchlist-item.is-down .hw-change { color: var(--signal-sell); }
+.home-watchlist-item.is-flat .hw-change { color: var(--text-muted); }
+
+.hw-symbol {
+    font: 700 0.78rem/1 var(--font-data);
+    color: var(--accent-orange);
+}
+
+.hw-price {
+    font: 600 0.78rem/1 var(--font-data);
+    color: var(--text-primary);
+}
+
+.hw-change {
+    font: 600 0.68rem/1 var(--font-data);
+}
+
+.hw-unpin {
+    margin-left: 4px;
+    width: 18px;
+    height: 18px;
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--bg-primary);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+}
+
+.hw-unpin:hover {
+    color: var(--signal-sell);
+    border-color: var(--signal-sell);
+}
+
+.home-watchlist-wrap.is-customizing {
+    border-color: rgba(255, 140, 0, 0.45);
+    box-shadow: inset 0 0 0 1px rgba(255, 140, 0, 0.12);
+}
+
+.home-panel {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+    overflow: hidden;
+}
+
+.home-panel-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-secondary);
+    border: none;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+}
+
+.home-panel-head:hover {
+    background: var(--bg-card-hover);
+}
+
+.home-panel-head-card {
+    border-bottom: 1px solid var(--border-color);
+}
+
+.home-panel-chevron {
+    font-size: 0.72rem;
+    color: var(--accent-orange);
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+.home-panel.is-collapsed .home-panel-chevron,
+.home-panel-head[aria-expanded="false"] .home-panel-chevron {
+    transform: rotate(-90deg);
+}
+
+.home-panel-title {
+    font: 600 0.72rem/1 var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary);
+    flex: 1;
+    min-width: 0;
+}
+
+.home-panel-meta {
+    font-size: 0.68rem;
+    margin-left: auto;
+}
+
+.home-panel-actions {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.home-panel-body {
+    padding: 12px 14px 14px;
+}
+
+.home-panel-body.is-collapsed {
+    display: none;
+}
+
+.home-panel.is-collapsed .home-panel-head {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .home-panel-actions {
+        gap: 6px;
+    }
+    .home-watchlist-item {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+}

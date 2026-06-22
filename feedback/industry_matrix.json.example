@@ -1,0 +1,54 @@
+{
+  "_comment": "Per-industry agent weight overrides for consensus. Copy to feedback/industry_matrix.json and tune from backtest / committee feedback.",
+  "_format": "Each industry key maps agent_id -> relative weight (normalized at runtime).",
+  "technology": {
+    "cathie_wood": 0.22,
+    "aschenbrenner": 0.18,
+    "thiel": 0.14,
+    "lynch": 0.12,
+    "arps": 0.10,
+    "buffett": 0.08,
+    "graham": 0.06,
+    "marks": 0.10
+  },
+  "financial": {
+    "buffett": 0.24,
+    "graham": 0.22,
+    "marks": 0.18,
+    "munger": 0.14,
+    "lynch": 0.12,
+    "dalio": 0.10
+  },
+  "healthcare": {
+    "fisher": 0.28,
+    "lynch": 0.18,
+    "buffett": 0.14,
+    "munger": 0.12,
+    "marks": 0.14,
+    "graham": 0.14
+  },
+  "consumer": {
+    "buffett": 0.20,
+    "munger": 0.18,
+    "lynch": 0.22,
+    "duan_yongping": 0.16,
+    "fisher": 0.12,
+    "marks": 0.12
+  },
+  "energy": {
+    "dalio": 0.22,
+    "soros": 0.20,
+    "marks": 0.18,
+    "buffett": 0.16,
+    "munger": 0.12,
+    "graham": 0.12
+  },
+  "china": {
+    "duan_yongping": 0.24,
+    "zhang_lei": 0.20,
+    "li_lu": 0.18,
+    "dan_bin": 0.16,
+    "dayu": 0.12,
+    "munger": 0.10
+  }
+}

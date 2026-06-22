@@ -28,7 +28,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 try:
     from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
-    from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, PlainTextResponse, Response
+    from fastapi.responses import (
+        HTMLResponse, JSONResponse, FileResponse, PlainTextResponse, Response, RedirectResponse,
+    )
     from fastapi.templating import Jinja2Templates
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.staticfiles import StaticFiles
@@ -40,17 +42,29 @@ except ImportError:
     print("Missing dependencies. Run: pip install fastapi uvicorn jinja2")
     sys.exit(1)
 
-try:
-    from augur.registry import AgentRegistry, DecisionCoordinator
-    from augur.personas.base import MarketContext
-except ImportError:
-    from scanner.personas.registry import AgentRegistry, DecisionCoordinator
-    from scanner.personas.base import MarketContext
+from augur.registry import AgentRegistry, DecisionCoordinator
+from augur.personas.base import MarketContext
 
 from augur.report import generate_report
 
 from augur.config import get_config, set_config, save_config, reset_config
-from augur.workspace import get_workspace, save_workspace, list_presets, LAYOUT_PRESETS
+from augur.workspace import (
+    get_workspace,
+    get_workspace_state,
+    get_enabled_personas,
+    resolve_landing_url,
+    save_workspace,
+    list_presets,
+    list_profiles,
+    create_profile,
+    delete_profile,
+    get_profile,
+    set_active_profile,
+    export_workspace_bundle,
+    import_workspace_bundle,
+    WORKSPACE_EXPORT_KEY,
+    LAYOUT_PRESETS,
+)
 from augur.errors import api_error_response
 from augur.auth import (
     authenticate_request,
@@ -557,6 +571,9 @@ def consume_endpoint_token(name: str) -> bool:
 
 @app.get("/", response_class=HTMLResponse, summary="首页仪表盘")
 async def index(request: Request):
+    landing = resolve_landing_url(get_workspace(), path="/")
+    if landing:
+        return RedirectResponse(url=landing, status_code=302)
     agent_count = len(get_registry().get_all())
     try:
         from augur.datasources import available_sources
@@ -1346,19 +1363,36 @@ async def api_put_persona_config(agent_id: str, body: PersonaModelBody):
 class WorkspaceBody(BaseModel):
     """Terminal workspace customization."""
     layout_preset: Optional[str] = "analyst"
-    default_page: Optional[str] = "/"
-    default_ticker: Optional[str] = ""
-    sidebar_collapsed: Optional[bool] = False
+    default_page: Optional[str] = None
+    default_ticker: Optional[str] = None
+    sidebar_collapsed: Optional[bool] = None
     hidden_nav: Optional[List[str]] = None
-    show_ticker_tape: Optional[bool] = True
-    committee_preset: Optional[str] = "all"
+    show_ticker_tape: Optional[bool] = None
+    committee_preset: Optional[str] = None
     enabled_personas: Optional[List[str]] = None
+
+
+class WorkspaceProfileBody(BaseModel):
+    """Create a named workspace profile."""
+    name: str
+    copy_from: Optional[str] = None
+
+
+class WorkspaceActiveBody(BaseModel):
+    """Switch active workspace profile."""
+    profile: str
 
 
 @app.get("/api/workspace", summary="获取终端工作区配置")
 async def api_get_workspace():
     """Return Bloomberg-style terminal workspace preferences."""
-    return {"status": "ok", "workspace": get_workspace()}
+    state = get_workspace_state()
+    return {
+        "status": "ok",
+        "workspace": get_workspace(),
+        "active_profile": state["active_profile"],
+        "profiles": list_profiles(),
+    }
 
 
 @app.get("/api/workspace/presets", summary="列出工作区布局预设")
@@ -1367,12 +1401,260 @@ async def api_workspace_presets():
     return {"status": "ok", "presets": list_presets()}
 
 
+@app.get("/api/workspace/profiles", summary="列出命名工作区配置")
+async def api_list_workspace_profiles():
+    """Return all named workspace profiles."""
+    return {"status": "ok", "profiles": list_profiles(), "active_profile": get_workspace_state()["active_profile"]}
+
+
+@app.get("/api/workspace/profiles/{profile_name}", summary="获取命名工作区配置详情")
+async def api_get_workspace_profile(profile_name: str):
+    """Return full workspace settings for a named profile without switching active."""
+    profile = get_profile(profile_name)
+    if profile is None:
+        slug = profile_name.strip().lower()
+        raise HTTPException(status_code=404, detail=f"Profile '{slug}' not found")
+    slug = profile_name.strip().lower()
+    return {
+        "status": "ok",
+        "profile": slug,
+        "active": slug == get_workspace_state()["active_profile"],
+        "workspace": profile,
+    }
+
+
+@app.post("/api/workspace/profiles", summary="创建命名工作区配置")
+async def api_create_workspace_profile(body: WorkspaceProfileBody):
+    """Create a new named profile (e.g. day-trading, research)."""
+    try:
+        profile = create_profile(body.name, copy_from=body.copy_from)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"status": "ok", "profile": body.name.strip().lower(), "workspace": profile}
+
+
+@app.delete("/api/workspace/profiles/{profile_name}", summary="删除命名工作区配置")
+async def api_delete_workspace_profile(profile_name: str):
+    """Delete a named profile."""
+    try:
+        delete_profile(profile_name)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"status": "ok", "deleted": profile_name.strip().lower()}
+
+
+@app.put("/api/workspace/active", summary="切换活动工作区配置")
+async def api_set_active_workspace_profile(body: WorkspaceActiveBody):
+    """Switch the active workspace profile."""
+    try:
+        workspace = set_active_profile(body.profile)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"status": "ok", "active_profile": body.profile.strip().lower(), "workspace": workspace}
+
+
 @app.put("/api/workspace", summary="保存终端工作区配置")
 async def api_put_workspace(body: WorkspaceBody):
     """Save workspace layout preferences to ~/.augur/workspace.yaml."""
     data = body.model_dump(exclude_none=True)
     saved = save_workspace(data)
-    return {"status": "ok", "workspace": saved}
+    return {"status": "ok", "workspace": saved, "active_profile": get_workspace_state()["active_profile"]}
+
+
+# ============ Home dashboard widgets (Bloomberg-style layout) ============
+
+_HOME_WIDGETS_LOCK = threading.RLock()
+_HOME_WIDGETS_CACHE: Optional[Dict[str, Any]] = None
+_DEFAULT_PINNED = ["AAPL", "NVDA", "MSFT", "TSLA", "GOOGL"]
+_VALID_HOME_PANELS = frozenset({
+    "market-pulse", "market-board", "hot-tickers", "sector-perf", "intl-markets",
+    "crypto", "commodities-rates", "top-movers", "market-breadth", "fear-macro",
+    "leaderboard", "recent-personas", "datasources",
+})
+_DEFAULT_HOME_WIDGETS: Dict[str, Any] = {
+    "pinned_tickers": [],
+    "collapsed_panels": [],
+}
+
+
+def _home_widgets_path() -> Path:
+    path = Path.home() / ".augur" / "home_widgets.yaml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
+def _load_home_widgets_yaml() -> Dict[str, Any]:
+    path = _home_widgets_path()
+    if not path.exists():
+        return {}
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        return data if isinstance(data, dict) else {}
+    except Exception as e:
+        logger.warning("Failed to load home widgets from %s: %s", path, e)
+        return {}
+
+
+def _normalize_ticker_list(items: Any, limit: int = 12) -> List[str]:
+    if not isinstance(items, list):
+        return []
+    out: List[str] = []
+    for raw in items:
+        if not isinstance(raw, str):
+            continue
+        sym = raw.strip().upper()
+        if not sym or not re.match(r"^[A-Z0-9._-]{1,20}$", sym):
+            continue
+        if sym not in out:
+            out.append(sym)
+        if len(out) >= limit:
+            break
+    return out
+
+
+def _effective_pinned_tickers(widgets: Dict[str, Any]) -> List[str]:
+    pinned = _normalize_ticker_list(widgets.get("pinned_tickers"))
+    if pinned:
+        return pinned
+    try:
+        from augur.cron import load_watchlist
+        watchlist = load_watchlist().get("watchlist", [])
+        from_watchlist = []
+        for item in watchlist:
+            if not isinstance(item, dict):
+                continue
+            sym = str(item.get("ticker", "")).strip().upper()
+            if sym and sym not in from_watchlist:
+                from_watchlist.append(sym)
+            if len(from_watchlist) >= 8:
+                break
+        if from_watchlist:
+            return from_watchlist
+    except Exception:
+        pass
+    return list(_DEFAULT_PINNED)
+
+
+def _normalize_collapsed_panels(items: Any) -> List[str]:
+    if not isinstance(items, list):
+        return []
+    out: List[str] = []
+    for raw in items:
+        if not isinstance(raw, str):
+            continue
+        panel_id = raw.strip()
+        if panel_id in _VALID_HOME_PANELS and panel_id not in out:
+            out.append(panel_id)
+    return out
+
+
+def get_home_widgets() -> Dict[str, Any]:
+    """Load persisted home dashboard widget preferences."""
+    global _HOME_WIDGETS_CACHE
+    with _HOME_WIDGETS_LOCK:
+        if _HOME_WIDGETS_CACHE is not None:
+            return dict(_HOME_WIDGETS_CACHE)
+        stored = _load_home_widgets_yaml()
+        merged = dict(_DEFAULT_HOME_WIDGETS)
+        merged["pinned_tickers"] = _normalize_ticker_list(stored.get("pinned_tickers"))
+        merged["collapsed_panels"] = _normalize_collapsed_panels(stored.get("collapsed_panels"))
+        _HOME_WIDGETS_CACHE = merged
+        return dict(merged)
+
+
+def save_home_widgets(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Validate and persist home dashboard widget preferences."""
+    global _HOME_WIDGETS_CACHE
+    cleaned = {
+        "pinned_tickers": _normalize_ticker_list(data.get("pinned_tickers")),
+        "collapsed_panels": _normalize_collapsed_panels(data.get("collapsed_panels")),
+    }
+    with _HOME_WIDGETS_LOCK:
+        _HOME_WIDGETS_CACHE = cleaned
+        _home_widgets_path().write_text(
+            yaml.safe_dump(cleaned, allow_unicode=True, default_flow_style=False),
+            encoding="utf-8",
+        )
+    return dict(cleaned)
+
+
+def _fetch_pinned_quotes(symbols: List[str]) -> List[Dict[str, Any]]:
+    """Best-effort quotes for pinned watchlist strip."""
+    if not symbols:
+        return []
+    quote_map: Dict[str, Dict[str, Any]] = {sym: {"symbol": sym} for sym in symbols}
+    if _HAS_AUGUR_DATA:
+        try:
+            from augur.data import fetch_hot_tickers
+            hot = fetch_hot_tickers(force_refresh=False)
+            for row in hot or []:
+                sym = str(row.get("symbol", "")).upper()
+                if sym in quote_map:
+                    quote_map[sym] = {
+                        "symbol": sym,
+                        "name": row.get("name", sym),
+                        "price": row.get("price"),
+                        "change_pct": row.get("change_pct"),
+                    }
+        except Exception as e:
+            logger.debug("pinned quote fetch via hot tickers failed: %s", e)
+    return [quote_map[sym] for sym in symbols]
+
+
+class HomeWidgetsBody(BaseModel):
+    """Home dashboard widget customization."""
+    pinned_tickers: Optional[List[str]] = None
+    collapsed_panels: Optional[List[str]] = None
+
+
+@app.get("/api/home/widgets", summary="获取首页小组件配置")
+async def api_get_home_widgets():
+    """Return Bloomberg-style home dashboard layout (pinned strip + collapsed panels)."""
+    widgets = get_home_widgets()
+    pinned = _effective_pinned_tickers(widgets)
+    return {
+        "status": "ok",
+        "widgets": widgets,
+        "pinned_tickers": pinned,
+        "quotes": _fetch_pinned_quotes(pinned),
+        "valid_panels": sorted(_VALID_HOME_PANELS),
+    }
+
+
+@app.put("/api/home/widgets", summary="保存首页小组件配置")
+async def api_put_home_widgets(body: HomeWidgetsBody):
+    """Persist pinned watchlist strip and collapsible panel state."""
+    payload = body.model_dump(exclude_none=True)
+    saved = save_home_widgets(payload)
+    pinned = _effective_pinned_tickers(saved)
+    return {
+        "status": "ok",
+        "widgets": saved,
+        "pinned_tickers": pinned,
+        "quotes": _fetch_pinned_quotes(pinned),
+    }
+
+
+@app.get("/api/workspace/export", summary="导出工作区配置")
+async def api_workspace_export():
+    """Export all workspace profiles for backup (also embedded in /api/config/export)."""
+    return {"status": "ok", WORKSPACE_EXPORT_KEY: export_workspace_bundle()}
+
+
+@app.post("/api/workspace/import", summary="导入工作区配置")
+async def api_workspace_import(request: Request):
+    """Import workspace profiles from export payload or full config JSON."""
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid JSON")
+    payload = body.get(WORKSPACE_EXPORT_KEY, body)
+    merge = body.get("merge", True)
+    try:
+        imported = import_workspace_bundle(payload, merge=bool(merge))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"status": "ok", WORKSPACE_EXPORT_KEY: imported}
 
 
 @app.get("/api/models", summary="获取可用模型列表")

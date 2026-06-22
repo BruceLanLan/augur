@@ -242,6 +242,23 @@
     "col_actions": "操作",
     "agent_details": "各Agent评分明细"
   },
+  "workspace": {
+    "section_title": "终端工作区",
+    "section_desc": "Bloomberg 风格布局预设与导航定制",
+    "preset_label": "布局预设",
+    "default_page": "默认首页",
+    "default_ticker": "默认 Ticker",
+    "ticker_tape": "显示行情 Ticker Tape",
+    "sidebar_collapsed": "默认折叠侧栏",
+    "hidden_nav": "隐藏导航项",
+    "save": "保存工作区",
+    "saved": "工作区已保存",
+    "preset_applied": "已应用预设",
+    "preset_analyst": "分析师",
+    "preset_trader": "交易员",
+    "preset_committee": "委员会",
+    "preset_minimal": "极简"
+  },
   "settings_ext": {
     "title": "系统设置",
     "unsaved": "有未保存更改",

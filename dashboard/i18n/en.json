@@ -242,6 +242,23 @@
     "col_actions": "Actions",
     "agent_details": "Agent score breakdown"
   },
+  "workspace": {
+    "section_title": "Terminal Workspace",
+    "section_desc": "Bloomberg-style layout presets and nav customization",
+    "preset_label": "Layout Preset",
+    "default_page": "Default Landing Page",
+    "default_ticker": "Default Ticker",
+    "ticker_tape": "Show Ticker Tape",
+    "sidebar_collapsed": "Collapse Sidebar by Default",
+    "hidden_nav": "Hidden Nav Items",
+    "save": "Save Workspace",
+    "saved": "Workspace saved",
+    "preset_applied": "Preset applied",
+    "preset_analyst": "Analyst",
+    "preset_trader": "Trader",
+    "preset_committee": "Committee",
+    "preset_minimal": "Minimal"
+  },
   "settings_ext": {
     "title": "Settings",
     "unsaved": "Unsaved changes",

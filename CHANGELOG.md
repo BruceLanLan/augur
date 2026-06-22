@@ -4,20 +4,28 @@ All notable changes to augur-agents are documented in this file.
 
 ## [10.15.0] - 2026-06-22
 
-Bloomberg 风格终端工作区定制 + Agentic 工作流 MCP + 共识增强模块。
+Bloomberg 风格终端工作区定制 + Agentic 工作流 MCP + 共识增强模块 + **Agent Peer Review** 集成迭代。
 
 ### Added
 - **Terminal Workspace** (`src/augur/workspace.py`)：布局预设（analyst/trader/committee/minimal）、默认首页、隐藏导航、Ticker Tape 开关；持久化到 `~/.augur/workspace.yaml`。
-- **Dashboard API**：`GET/PUT /api/workspace`、`GET /api/workspace/presets`；Settings 页新增「终端工作区」配置区。
+- **Multi-profile workspace**：命名配置 CRUD、`/api/workspace/profiles`、export/import bundle。
+- **Dashboard API**：`GET/PUT /api/workspace`、`GET /api/workspace/presets`；Settings 页「终端工作区」配置区。
 - **Agentic Workflow**：`augur_workflow` MCP 工具 + `src/augur/workflow.py`（fetch → analyze → consensus → committee → debate → sentiment 可组合步骤链）。
-- **Consensus 模块** (`src/augur/consensus/`)：industry_matrix、regime_weights、macro_features、probability_calibrator、meta_model、rolling_ic、regime_router、risk_manager；registry 改用 `augur.consensus.*` 替代缺失的 `scanner.*`。
+- **Consensus 模块** (`src/augur/consensus/`)：industry_matrix、regime_weights、macro_features、probability_calibrator、meta_model、rolling_ic、regime_router、risk_manager。
+- **Agent Peer Review synthesis** (`docs/AGENT_PEER_REVIEW_SYNTHESIS.md`)：6 份 peer review 汇总 + P0/P1/P2 backlog + mutual promotion 计划。
 
 ### Fixed
-- 版本号同步：FastAPI metadata、REST API、README badge → v10.15.0。
-- MCP 文档更新为 10 个工具。
+- **Persona-aware weights**：`restrict_weights_to_agents()` 将行业/机制权重重归一化到实际参与 agent。
+- **Server-side landing**：`GET /` 使用 `resolve_landing_url` 302 跳转，避免 trader 配置下首页 widget 闪烁。
+- **Workflow integration**：空 `--agents` 时读取 workspace `enabled_personas`；consensus+committee 步骤去重；输出 `low_participation` 警告。
+- **Regime double-count**：`build_consensus_weights` 仅通过 65/35 blend 应用一次 regime overlay。
+- **Sidebar precedence**：profile `sidebar_collapsed` 权威覆盖 stale `localStorage`。
+- **MCP manifest**：`.mcp.json` 补齐 `augur_workflow`（10 tools）。
+- Dashboard/registry 主路径移除 `scanner.*` fallback import；`scanner/` 标记 legacy。
 
 ### Notes
-- Tests: **1668 passed**（排除网络测试 test_analyze_api_v12.py；含 test_v10_14_workspace_workflow 12 cases）。
+- Peer reviews: `docs/reviews/peer-review-*.md` (6/9 submitted).
+- Tests: run `tests/test_v10_14*.py tests/test_*v10_15*.py tests/test_workflow_enabled_personas.py`.
 
 ## [10.13.0] - 2026-06-09
 

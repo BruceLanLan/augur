@@ -41,7 +41,7 @@ class LynchAgent(BaseAgent):
         factors = {}
 
         try:
-            from scanner.agent_hyperparams import load_optimized_thresholds
+            from augur.agent_hyperparams import load_optimized_thresholds
             opt = load_optimized_thresholds(self.agent_id)
             if opt:
                 self.thresholds.update(opt)

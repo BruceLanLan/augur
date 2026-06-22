@@ -416,6 +416,22 @@
     </div>
 </div>
 
+<!-- Bloomberg-style home layout controls -->
+<div class="home-customize-bar flex items-center justify-between mb-12" id="home-customize-bar">
+    <span class="home-customize-label" data-i18n="home-terminal-layout">Terminal Layout</span>
+    <button type="button" class="btn btn-sm btn-ghost" id="home-customize-btn"
+            onclick="toggleHomeCustomize()" aria-pressed="false"
+            data-i18n="home-customize-btn">Customize</button>
+</div>
+
+<!-- Pinned watchlist strip (workspace-aware) -->
+<div class="home-watchlist-wrap mb-16" id="home-watchlist-wrap" aria-live="polite"
+     data-i18n-aria="a11y-home-watchlist" aria-label="Pinned watchlist">
+    <div class="home-watchlist-strip" id="home-watchlist-strip">
+        <div class="home-watchlist-skeleton"></div>
+    </div>
+</div>
+
 <!-- Hero Quick Analysis -->
 <section class="hero hero-section gilt-edge mb-24" id="hero-section">
     <div class="hero-glow"></div>
@@ -498,8 +514,18 @@
 </section>
 
 <!-- Market Pulse Strip (compact key metrics) -->
-<div class="market-pulse-strip mb-24" id="market-pulse-strip" aria-live="polite" aria-busy="true" aria-label="Market pulse loading">
-    <div class="pulse-skeleton" style="width:100%; height:32px;"></div>
+<div class="home-panel mb-24" data-panel-id="market-pulse" id="home-panel-market-pulse">
+    <button type="button" class="home-panel-head" id="home-panel-head-market-pulse"
+            aria-expanded="true" aria-controls="home-panel-body-market-pulse"
+            onclick="toggleHomePanel('market-pulse')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="home-panel-market-pulse">Market Pulse</span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-market-pulse">
+        <div class="market-pulse-strip" id="market-pulse-strip" aria-live="polite" aria-busy="true" aria-label="Market pulse loading">
+            <div class="pulse-skeleton" style="width:100%; height:32px;"></div>
+        </div>
+    </div>
 </div>
 
 <!-- Stats Grid -->
@@ -513,209 +539,300 @@
 </div>
 
 <!-- Global Market Overview (Bloomberg-style live board) -->
-<div class="aug-card mb-24">
-    <div class="aug-card-head">
-        <span data-i18n="section-market-overview">Global Market Board</span>
-        <div style="display:flex; gap:12px; align-items:center;">
+<div class="home-panel mb-24" data-panel-id="market-board" id="home-panel-market-board">
+    <button type="button" class="home-panel-head home-panel-head-card" id="home-panel-head-market-board"
+            aria-expanded="true" aria-controls="home-panel-body-market-board"
+            onclick="toggleHomePanel('market-board')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="section-market-overview">Global Market Board</span>
+        <span class="home-panel-actions" onclick="event.stopPropagation()">
             <span class="market-asof text-muted" id="market-asof" style="font-size:0.6rem; font-family:var(--font-mono);"></span>
             <span role="button" tabindex="0" data-i18n-aria="btn-refresh" aria-label="Refresh market board" style="color:var(--fg-3);font:500 0.6rem/1 var(--font-mono); cursor:pointer;" onclick="loadMarketOverview(true)" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();loadMarketOverview(true)}" id="market-refresh-btn" data-i18n-title="btn-refresh" title="Refresh">refresh 60s</span>
+        </span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-market-board">
+        <div class="aug-card" style="margin:0;">
+            <div class="mboard" id="market-board" aria-live="polite" aria-busy="true" aria-label="Global market board loading">
+                <div class="market-tile skeleton-tile"></div>
+                <div class="market-tile skeleton-tile"></div>
+                <div class="market-tile skeleton-tile"></div>
+                <div class="market-tile skeleton-tile"></div>
+            </div>
         </div>
-    </div>
-    <div class="mboard" id="market-board" aria-live="polite" aria-busy="true" aria-label="Global market board loading">
-        <!-- Skeleton placeholders while loading -->
-        <div class="market-tile skeleton-tile"></div>
-        <div class="market-tile skeleton-tile"></div>
-        <div class="market-tile skeleton-tile"></div>
-        <div class="market-tile skeleton-tile"></div>
     </div>
 </div>
 
 <!-- Hot Tickers: 热门标的实时行情 -->
-<div class="flex items-center justify-between mb-12">
-    <div class="section-title compact" data-i18n="section-hot-tickers">热门标的实时行情</div>
-    <button class="btn btn-sm btn-ghost" onclick="loadHotTickers(true)" id="hot-refresh-btn" data-i18n-title="btn-refresh" title="刷新">↻ <span data-i18n="btn-refresh">刷新</span></button>
-</div>
-<div class="hot-tickers-grid mb-24" id="hot-tickers-grid" aria-live="polite" aria-busy="true" aria-label="Hot tickers loading">
-    <!-- Skeleton placeholders -->
-    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
-    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
-    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
-    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
-    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+<div class="home-panel mb-24" data-panel-id="hot-tickers" id="home-panel-hot-tickers">
+    <button type="button" class="home-panel-head" id="home-panel-head-hot-tickers"
+            aria-expanded="true" aria-controls="home-panel-body-hot-tickers"
+            onclick="toggleHomePanel('hot-tickers')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="section-hot-tickers">热门标的实时行情</span>
+        <span class="home-panel-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-sm btn-ghost" onclick="loadHotTickers(true)" id="hot-refresh-btn" data-i18n-title="btn-refresh" title="刷新">↻ <span data-i18n="btn-refresh">刷新</span></button>
+        </span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-hot-tickers">
+        <div class="hot-tickers-grid" id="hot-tickers-grid" aria-live="polite" aria-busy="true" aria-label="Hot tickers loading">
+            <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+            <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+            <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+            <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+            <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+        </div>
+    </div>
 </div>
 
 <!-- Sector Performance Heatmap -->
-<div class="flex items-center justify-between mb-12">
-    <div class="section-title compact" data-i18n="section-sector-perf">板块行情</div>
-    <button class="btn btn-sm btn-ghost" onclick="loadSectorPerformance(true)" id="sector-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
-</div>
-<div class="sector-grid mb-24" id="sector-grid" aria-live="polite" aria-busy="true" aria-label="Sector performance loading">
-    <div class="sector-card skeleton" style="height:80px;"></div>
-    <div class="sector-card skeleton" style="height:80px;"></div>
-    <div class="sector-card skeleton" style="height:80px;"></div>
-    <div class="sector-card skeleton" style="height:80px;"></div>
-    <div class="sector-card skeleton" style="height:80px;"></div>
-    <div class="sector-card skeleton" style="height:80px;"></div>
-    <div class="sector-card skeleton" style="height:80px;"></div>
-    <div class="sector-card skeleton" style="height:80px;"></div>
+<div class="home-panel mb-24" data-panel-id="sector-perf" id="home-panel-sector-perf">
+    <button type="button" class="home-panel-head" id="home-panel-head-sector-perf"
+            aria-expanded="true" aria-controls="home-panel-body-sector-perf"
+            onclick="toggleHomePanel('sector-perf')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="section-sector-perf">板块行情</span>
+        <span class="home-panel-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-sm btn-ghost" onclick="loadSectorPerformance(true)" id="sector-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
+        </span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-sector-perf">
+        <div class="sector-grid" id="sector-grid" aria-live="polite" aria-busy="true" aria-label="Sector performance loading">
+            <div class="sector-card skeleton" style="height:80px;"></div>
+            <div class="sector-card skeleton" style="height:80px;"></div>
+            <div class="sector-card skeleton" style="height:80px;"></div>
+            <div class="sector-card skeleton" style="height:80px;"></div>
+            <div class="sector-card skeleton" style="height:80px;"></div>
+            <div class="sector-card skeleton" style="height:80px;"></div>
+            <div class="sector-card skeleton" style="height:80px;"></div>
+            <div class="sector-card skeleton" style="height:80px;"></div>
+        </div>
+    </div>
 </div>
 
 <!-- International Markets Panel -->
-<div class="flex items-center justify-between mb-12">
-    <div class="section-title compact" data-i18n="section-intl-markets">国际市场</div>
-    <span class="text-muted" style="font-size:0.7rem;" data-i18n="intl-regions">亚太 · 欧洲</span>
-</div>
-<div class="intl-markets-grid mb-24" id="intl-markets-grid" aria-live="polite" aria-busy="true" aria-label="International markets loading">
-    <div class="intl-skeleton"></div>
-    <div class="intl-skeleton"></div>
-    <div class="intl-skeleton"></div>
-    <div class="intl-skeleton"></div>
-    <div class="intl-skeleton"></div>
+<div class="home-panel mb-24" data-panel-id="intl-markets" id="home-panel-intl-markets">
+    <button type="button" class="home-panel-head" id="home-panel-head-intl-markets"
+            aria-expanded="true" aria-controls="home-panel-body-intl-markets"
+            onclick="toggleHomePanel('intl-markets')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="section-intl-markets">国际市场</span>
+        <span class="home-panel-meta text-muted" data-i18n="intl-regions">亚太 · 欧洲</span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-intl-markets">
+        <div class="intl-markets-grid" id="intl-markets-grid" aria-live="polite" aria-busy="true" aria-label="International markets loading">
+            <div class="intl-skeleton"></div>
+            <div class="intl-skeleton"></div>
+            <div class="intl-skeleton"></div>
+            <div class="intl-skeleton"></div>
+            <div class="intl-skeleton"></div>
+        </div>
+    </div>
 </div>
 
 <!-- Crypto Overview Panel -->
-<div class="flex items-center justify-between mb-12">
-    <div class="section-title compact" data-i18n="section-crypto">Crypto Overview</div>
-    <button class="btn btn-sm btn-ghost" onclick="loadCryptoOverview()" id="crypto-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
-</div>
-<div class="hot-tickers-grid mb-24" id="crypto-grid" aria-live="polite" aria-busy="true" aria-label="Crypto overview loading">
-    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
-    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
-    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
-    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
-    <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+<div class="home-panel mb-24" data-panel-id="crypto" id="home-panel-crypto">
+    <button type="button" class="home-panel-head" id="home-panel-head-crypto"
+            aria-expanded="true" aria-controls="home-panel-body-crypto"
+            onclick="toggleHomePanel('crypto')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="section-crypto">Crypto Overview</span>
+        <span class="home-panel-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-sm btn-ghost" onclick="loadCryptoOverview()" id="crypto-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
+        </span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-crypto">
+        <div class="hot-tickers-grid" id="crypto-grid" aria-live="polite" aria-busy="true" aria-label="Crypto overview loading">
+            <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+            <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+            <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+            <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+            <div class="hot-ticker-card skeleton" style="height:90px;"></div>
+        </div>
+    </div>
 </div>
 
 <!-- Commodities & Treasury Rates Panel -->
-<div class="flex items-center justify-between mb-12">
-    <div class="section-title compact" data-i18n="section-commodities-rates">Commodities &amp; Treasury Rates</div>
-    <button class="btn btn-sm btn-ghost" onclick="loadCommoditiesAndRates()" id="commod-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
-</div>
-<div class="movers-row mb-24" id="commodities-rates-row" aria-live="polite" aria-busy="true" aria-label="Commodities and treasury rates loading">
-    <div class="movers-section">
-        <div class="movers-title" style="color:var(--accent-orange);" data-i18n="commodities-label">💰 大宗商品</div>
-        <div id="commodities-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4B0;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
-    </div>
-    <div class="movers-section">
-        <div class="movers-title" style="color:var(--accent-orange);" data-i18n="treasury-label">📈 国债收益率</div>
-        <div id="treasury-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F3E6;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
+<div class="home-panel mb-24" data-panel-id="commodities-rates" id="home-panel-commodities-rates">
+    <button type="button" class="home-panel-head" id="home-panel-head-commodities-rates"
+            aria-expanded="true" aria-controls="home-panel-body-commodities-rates"
+            onclick="toggleHomePanel('commodities-rates')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="section-commodities-rates">Commodities &amp; Treasury Rates</span>
+        <span class="home-panel-actions" onclick="event.stopPropagation()">
+            <button class="btn btn-sm btn-ghost" onclick="loadCommoditiesAndRates()" id="commod-refresh-btn" data-i18n-title="btn-refresh" title="刷新">&#x21BB; <span data-i18n="btn-refresh">刷新</span></button>
+        </span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-commodities-rates">
+        <div class="movers-row" id="commodities-rates-row" aria-live="polite" aria-busy="true" aria-label="Commodities and treasury rates loading">
+            <div class="movers-section">
+                <div class="movers-title" style="color:var(--accent-orange);" data-i18n="commodities-label">💰 大宗商品</div>
+                <div id="commodities-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4B0;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
+            </div>
+            <div class="movers-section">
+                <div class="movers-title" style="color:var(--accent-orange);" data-i18n="treasury-label">📈 国债收益率</div>
+                <div id="treasury-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F3E6;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Top Movers (Gainers & Losers) -->
-<div class="flex items-center justify-between mb-12">
-    <div class="section-title compact" data-i18n="section-top-movers">涨跌幅领先</div>
-</div>
-<div class="movers-row mb-24" id="movers-row" aria-live="polite" aria-label="Top movers">
-    <div class="movers-section">
-        <div class="movers-title gainers" data-i18n="movers-gainers">▲ 领涨</div>
-        <div id="gainers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C8;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
-    </div>
-    <div class="movers-section">
-        <div class="movers-title losers" data-i18n="movers-losers">▼ 领跌</div>
-        <div id="losers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C9;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
+<div class="home-panel mb-24" data-panel-id="top-movers" id="home-panel-top-movers">
+    <button type="button" class="home-panel-head" id="home-panel-head-top-movers"
+            aria-expanded="true" aria-controls="home-panel-body-top-movers"
+            onclick="toggleHomePanel('top-movers')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="section-top-movers">涨跌幅领先</span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-top-movers">
+        <div class="movers-row" id="movers-row" aria-live="polite" aria-label="Top movers">
+            <div class="movers-section">
+                <div class="movers-title gainers" data-i18n="movers-gainers">▲ 领涨</div>
+                <div id="gainers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C8;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
+            </div>
+            <div class="movers-section">
+                <div class="movers-title losers" data-i18n="movers-losers">▼ 领跌</div>
+                <div id="losers-list"><div class="panel-empty-state"><div class="empty-icon">&#x1F4C9;</div><div class="empty-msg" data-i18n="msg-loading">加载中...</div></div></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Market Breadth -->
-<div class="flex items-center justify-between mb-12">
-    <div class="section-title compact" data-i18n="section-market-breadth">市场宽度</div>
-</div>
-<div class="card mb-24" style="padding:16px;" id="market-breadth-card">
-    <div class="text-muted" style="font-size:0.78rem;" data-i18n="market-breadth-note">基于热门标的涨跌统计</div>
-    <div class="breadth-bar-wrap" style="margin-top:8px;">
-        <div class="breadth-bar-advance" id="breadth-advance" style="width:50%;">--</div>
-        <div class="breadth-bar-decline" id="breadth-decline" style="width:50%;">--</div>
-    </div>
-    <div class="breadth-stats">
-        <span id="breadth-adv-label" data-i18n="breadth-advancing">上涨: --</span>
-        <span id="breadth-dec-label" data-i18n="breadth-declining">下跌: --</span>
+<div class="home-panel mb-24" data-panel-id="market-breadth" id="home-panel-market-breadth">
+    <button type="button" class="home-panel-head" id="home-panel-head-market-breadth"
+            aria-expanded="true" aria-controls="home-panel-body-market-breadth"
+            onclick="toggleHomePanel('market-breadth')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="section-market-breadth">市场宽度</span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-market-breadth">
+        <div class="card" style="padding:16px;" id="market-breadth-card">
+            <div class="text-muted" style="font-size:0.78rem;" data-i18n="market-breadth-note">基于热门标的涨跌统计</div>
+            <div class="breadth-bar-wrap" style="margin-top:8px;">
+                <div class="breadth-bar-advance" id="breadth-advance" style="width:50%;">--</div>
+                <div class="breadth-bar-decline" id="breadth-decline" style="width:50%;">--</div>
+            </div>
+            <div class="breadth-stats">
+                <span id="breadth-adv-label" data-i18n="breadth-advancing">上涨: --</span>
+                <span id="breadth-dec-label" data-i18n="breadth-declining">下跌: --</span>
+            </div>
+        </div>
     </div>
 </div>
 
 <!-- Fear & Greed + Macro Snapshot side by side -->
-<div class="grid-2 mb-24" id="fear-macro-row">
-    <!-- 恐慌与贪婪指标 -->
-    <div class="fear-greed-section" id="fear-greed-section">
-        <div class="section-title spaced" data-i18n="section-fear-greed">恐慌与贪婪指标</div>
-        <div class="card" style="padding:16px;" id="fear-greed-card" aria-live="polite" data-i18n-aria="a11y-fear-greed" aria-label="Fear and greed index">
-            <div class="panel-empty-state"><div class="empty-icon">&#x1F4CA;</div><div class="empty-msg" data-i18n="msg-fear-greed-loading">恐慌贪婪数据加载中...</div></div>
-        </div>
-    </div>
-    <!-- 宏观经济快照 -->
-    <div class="macro-snapshot-section">
-        <div class="section-title spaced" data-i18n="section-macro">宏观经济快照</div>
-        <div class="macro-snapshot-grid" id="macro-snapshot-grid" aria-live="polite" aria-busy="true" data-i18n-aria="a11y-macro-snapshot" aria-label="Macro economic snapshot">
-            <div class="macro-card skeleton" style="height:80px;"></div>
-            <div class="macro-card skeleton" style="height:80px;"></div>
-            <div class="macro-card skeleton" style="height:80px;"></div>
+<div class="home-panel mb-24" data-panel-id="fear-macro" id="home-panel-fear-macro">
+    <button type="button" class="home-panel-head" id="home-panel-head-fear-macro"
+            aria-expanded="true" aria-controls="home-panel-body-fear-macro"
+            onclick="toggleHomePanel('fear-macro')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="home-panel-fear-macro">Sentiment &amp; Macro</span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-fear-macro">
+        <div class="grid-2" id="fear-macro-row">
+            <div class="fear-greed-section" id="fear-greed-section">
+                <div class="section-title spaced" data-i18n="section-fear-greed">恐慌与贪婪指标</div>
+                <div class="card" style="padding:16px;" id="fear-greed-card" aria-live="polite" data-i18n-aria="a11y-fear-greed" aria-label="Fear and greed index">
+                    <div class="panel-empty-state"><div class="empty-icon">&#x1F4CA;</div><div class="empty-msg" data-i18n="msg-fear-greed-loading">恐慌贪婪数据加载中...</div></div>
+                </div>
+            </div>
+            <div class="macro-snapshot-section">
+                <div class="section-title spaced" data-i18n="section-macro">宏观经济快照</div>
+                <div class="macro-snapshot-grid" id="macro-snapshot-grid" aria-live="polite" aria-busy="true" data-i18n-aria="a11y-macro-snapshot" aria-label="Macro economic snapshot">
+                    <div class="macro-card skeleton" style="height:80px;"></div>
+                    <div class="macro-card skeleton" style="height:80px;"></div>
+                    <div class="macro-card skeleton" style="height:80px;"></div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Augur Consensus Leaderboard -->
-<div class="flex items-center justify-between mb-12">
-    <div class="section-title compact" data-i18n="section-leaderboard">Augur 共识排行榜</div>
-    <span class="text-muted" style="font-size:0.7rem;" data-i18n="leaderboard-note">基于本地分析历史</span>
-</div>
-<div class="card mb-24" style="padding:0; overflow:hidden;" id="leaderboard-section">
-    <ul class="leaderboard-list" id="leaderboard-list">
-        <li class="leaderboard-item" style="justify-content:center; flex-wrap:wrap; gap:8px;">
-            <span class="text-muted" style="font-size:0.78rem;" data-i18n="leaderboard-empty">尚无分析记录，去分析一只股票吧</span>
-            <span class="chip chip-recommended" role="button" tabindex="0" data-i18n-aria="a11y-chip-aapl" aria-label="Try AAPL example" onclick="tryExample('AAPL')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('AAPL')}">AAPL</span>
-        </li>
-    </ul>
+<div class="home-panel mb-24" data-panel-id="leaderboard" id="home-panel-leaderboard">
+    <button type="button" class="home-panel-head" id="home-panel-head-leaderboard"
+            aria-expanded="true" aria-controls="home-panel-body-leaderboard"
+            onclick="toggleHomePanel('leaderboard')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="section-leaderboard">Augur 共识排行榜</span>
+        <span class="home-panel-meta text-muted" data-i18n="leaderboard-note">基于本地分析历史</span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-leaderboard">
+        <div class="card" style="padding:0; overflow:hidden;" id="leaderboard-section">
+            <ul class="leaderboard-list" id="leaderboard-list">
+                <li class="leaderboard-item" style="justify-content:center; flex-wrap:wrap; gap:8px;">
+                    <span class="text-muted" style="font-size:0.78rem;" data-i18n="leaderboard-empty">尚无分析记录，去分析一只股票吧</span>
+                    <span class="chip chip-recommended" role="button" tabindex="0" data-i18n-aria="a11y-chip-aapl" aria-label="Try AAPL example" onclick="tryExample('AAPL')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryExample('AAPL')}">AAPL</span>
+                </li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <!-- Recent & Featured Personas (Grid 2-1) -->
-<div class="grid-2-1 mb-24">
-    <!-- Recent Analyses (from cache) -->
-    <div id="recent-section" class="aug-card" style="display:none;">
-        <div class="aug-card-head"><span data-i18n="section-recent">Recent Prophecies</span></div>
-        <ul class="recent" id="recent-list"></ul>
-    </div>
-
-    <!-- Featured Personas -->
-    <div class="aug-card">
-        <div class="aug-card-head">
-            <span data-i18n="section-featured-personas">Featured Masters</span>
-            <a href="/personas" data-i18n="btn-view-all-personas" style="font:600 0.62rem/1 var(--font-pixfin);color:var(--amber);cursor:pointer;text-transform:uppercase">查看全部 18 位</a>
-        </div>
-        <div class="persona-chips mb-8" role="group" data-i18n-aria="a11y-persona-chips-group" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 12px 8px;">
-            <span class="text-muted" style="font-size:0.68rem;" data-i18n="featured-personas-hint">想换视角？选一位大师，用 AAPL 快速体验</span>
-            <span class="chip persona-chip" role="button" tabindex="0" data-i18n-aria="a11y-persona-chip-buffett" data-aria-name="Warren Buffett" aria-label="Analyze AAPL with Warren Buffett" onclick="tryPersona('buffett')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryPersona('buffett')}">Buffett</span>
-            <span class="chip persona-chip" role="button" tabindex="0" data-i18n-aria="a11y-persona-chip-graham" data-aria-name="Benjamin Graham" aria-label="Analyze AAPL with Benjamin Graham" onclick="tryPersona('graham')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryPersona('graham')}">Graham</span>
-            <span class="chip persona-chip" role="button" tabindex="0" data-i18n-aria="a11y-persona-chip-cathie_wood" data-aria-name="Cathie Wood" aria-label="Analyze AAPL with Cathie Wood" onclick="tryPersona('cathie_wood')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryPersona('cathie_wood')}">Wood</span>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:2px;">
-            {% for p in featured %}
-            {% if loop.index <= 3 %}
-            <div class="m-row" role="link" tabindex="0" data-i18n-aria="a11y-featured-persona" data-aria-name="{{ p.name }}" aria-label="Analyze with {{ p.name }}" onclick="window.location.href='/stocks?persona={{ p.id }}&ticker=AAPL'" onkeydown="if(event.key==='Enter'){event.preventDefault();window.location.href='/stocks?persona={{ p.id }}&ticker=AAPL'}">
-                <img src="/docs/images/avatars/{{ p.id }}.png" class="avatar" width="40" height="40" alt="{{ p.name }}" onerror="this.src='/static/images/augur-owl-64.png'">
-                <div style="min-width:0;">
-                    <div style="font:600 0.85rem/1.2 var(--font-sans);color:var(--fg-1);">{{ p.name }}</div>
-                    <div style="font:600 0.58rem/1.3 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;" data-i18n="persona-style-{{ p.id }}">{{ p.style }}</div>
-                </div>
-                <span style="margin-left:auto;font:700 1rem/1 var(--font-mono);color:var(--amber);" data-i18n="persona-tag-{{ p.id }}">{{ p.tag }}</span>
+<div class="home-panel mb-24" data-panel-id="recent-personas" id="home-panel-recent-personas">
+    <button type="button" class="home-panel-head" id="home-panel-head-recent-personas"
+            aria-expanded="true" aria-controls="home-panel-body-recent-personas"
+            onclick="toggleHomePanel('recent-personas')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="home-panel-recent-personas">Recent &amp; Masters</span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-recent-personas">
+        <div class="grid-2-1">
+            <div id="recent-section" class="aug-card" style="display:none;">
+                <div class="aug-card-head"><span data-i18n="section-recent">Recent Prophecies</span></div>
+                <ul class="recent" id="recent-list"></ul>
             </div>
-            {% endif %}
-            {% endfor %}
+
+            <div class="aug-card">
+                <div class="aug-card-head">
+                    <span data-i18n="section-featured-personas">Featured Masters</span>
+                    <a href="/personas" data-i18n="btn-view-all-personas" style="font:600 0.62rem/1 var(--font-pixfin);color:var(--amber);cursor:pointer;text-transform:uppercase">查看全部 18 位</a>
+                </div>
+                <div class="persona-chips mb-8" role="group" data-i18n-aria="a11y-persona-chips-group" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:0 12px 8px;">
+                    <span class="text-muted" style="font-size:0.68rem;" data-i18n="featured-personas-hint">想换视角？选一位大师，用 AAPL 快速体验</span>
+                    <span class="chip persona-chip" role="button" tabindex="0" data-i18n-aria="a11y-persona-chip-buffett" data-aria-name="Warren Buffett" aria-label="Analyze AAPL with Warren Buffett" onclick="tryPersona('buffett')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryPersona('buffett')}">Buffett</span>
+                    <span class="chip persona-chip" role="button" tabindex="0" data-i18n-aria="a11y-persona-chip-graham" data-aria-name="Benjamin Graham" aria-label="Analyze AAPL with Benjamin Graham" onclick="tryPersona('graham')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryPersona('graham')}">Graham</span>
+                    <span class="chip persona-chip" role="button" tabindex="0" data-i18n-aria="a11y-persona-chip-cathie_wood" data-aria-name="Cathie Wood" aria-label="Analyze AAPL with Cathie Wood" onclick="tryPersona('cathie_wood')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();tryPersona('cathie_wood')}">Wood</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:2px;">
+                    {% for p in featured %}
+                    {% if loop.index <= 3 %}
+                    <div class="m-row" role="link" tabindex="0" data-i18n-aria="a11y-featured-persona" data-aria-name="{{ p.name }}" aria-label="Analyze with {{ p.name }}" onclick="window.location.href='/stocks?persona={{ p.id }}&ticker=AAPL'" onkeydown="if(event.key==='Enter'){event.preventDefault();window.location.href='/stocks?persona={{ p.id }}&ticker=AAPL'}">
+                        <img src="/docs/images/avatars/{{ p.id }}.png" class="avatar" width="40" height="40" alt="{{ p.name }}" onerror="this.src='/static/images/augur-owl-64.png'">
+                        <div style="min-width:0;">
+                            <div style="font:600 0.85rem/1.2 var(--font-sans);color:var(--fg-1);">{{ p.name }}</div>
+                            <div style="font:600 0.58rem/1.3 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;" data-i18n="persona-style-{{ p.id }}">{{ p.style }}</div>
+                        </div>
+                        <span style="margin-left:auto;font:700 1rem/1 var(--font-mono);color:var(--amber);" data-i18n="persona-tag-{{ p.id }}">{{ p.tag }}</span>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Data Source Status (数据源状态) -->
-<div class="mb-24" id="datasource-section">
-    <div class="flex items-center justify-between mb-12">
-        <div class="section-title compact" data-i18n="section-datasource">数据源状态</div>
-        <span class="text-muted" style="font-size:0.7rem;" id="ds-chain-label"></span>
-    </div>
-    <div class="datasource-grid" id="datasource-grid" aria-live="polite" aria-busy="true" aria-label="Data sources loading">
-        <!-- Skeleton placeholders -->
-        <div class="datasource-card skeleton" style="height:90px;"></div>
-        <div class="datasource-card skeleton" style="height:90px;"></div>
-        <div class="datasource-card skeleton" style="height:90px;"></div>
-        <div class="datasource-card skeleton" style="height:90px;"></div>
+<div class="home-panel mb-24" data-panel-id="datasources" id="home-panel-datasources">
+    <button type="button" class="home-panel-head" id="home-panel-head-datasources"
+            aria-expanded="true" aria-controls="home-panel-body-datasources"
+            onclick="toggleHomePanel('datasources')">
+        <span class="home-panel-chevron" aria-hidden="true">▾</span>
+        <span class="home-panel-title" data-i18n="section-datasource">数据源状态</span>
+        <span class="home-panel-meta text-muted" id="ds-chain-label"></span>
+    </button>
+    <div class="home-panel-body" id="home-panel-body-datasources">
+        <div id="datasource-section">
+            <div class="datasource-grid" id="datasource-grid" aria-live="polite" aria-busy="true" aria-label="Data sources loading">
+                <div class="datasource-card skeleton" style="height:90px;"></div>
+                <div class="datasource-card skeleton" style="height:90px;"></div>
+                <div class="datasource-card skeleton" style="height:90px;"></div>
+                <div class="datasource-card skeleton" style="height:90px;"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -747,6 +864,10 @@ var _heroGoBusy = false;
 var _sparklineQueue = [];
 var _sparklineInflight = 0;
 var _SPARKLINE_MAX = 3;
+var _homeWidgetsState = { pinned_tickers: [], collapsed_panels: [], quotes: [] };
+var _homeCustomizeMode = false;
+var _homeWidgetsSaveTimer = null;
+var _homeDefaultTicker = '';
 function _t(key, fb) { return (typeof window.t === 'function') ? window.t(key, fb) : (fb || key); }
 function _deferIndexLoad(fn, delay) {
     var run = function() { fn(); };
@@ -927,6 +1048,194 @@ function dismissOnboard() {
     try { localStorage.setItem('augur-onboard-dismissed', '1'); } catch (e) {}
 }
 
+// ====== Bloomberg-style home widgets ======
+function loadHomeWorkspace() {
+    return fetch('/api/workspace')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status !== 'ok' || !data.workspace) return;
+            var ticker = (data.workspace.default_ticker || '').trim().toUpperCase();
+            _homeDefaultTicker = ticker;
+            var input = document.getElementById('hero-ticker');
+            if (input && ticker && !input.value.trim()) {
+                input.value = ticker;
+            }
+        })
+        .catch(function() {});
+}
+
+function loadHomeWidgets() {
+    return fetch('/api/home/widgets')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status !== 'ok') return;
+            _homeWidgetsState.pinned_tickers = data.pinned_tickers || [];
+            _homeWidgetsState.collapsed_panels = (data.widgets && data.widgets.collapsed_panels) || [];
+            _homeWidgetsState.quotes = data.quotes || [];
+            applyHomePanelState();
+            renderPinnedWatchlistStrip();
+        })
+        .catch(function() {});
+}
+
+function applyHomePanelState() {
+    var collapsed = _homeWidgetsState.collapsed_panels || [];
+    document.querySelectorAll('.home-panel[data-panel-id]').forEach(function(panel) {
+        var panelId = panel.getAttribute('data-panel-id');
+        var head = document.getElementById('home-panel-head-' + panelId);
+        var body = document.getElementById('home-panel-body-' + panelId);
+        if (!head || !body) return;
+        var isCollapsed = collapsed.indexOf(panelId) !== -1;
+        body.classList.toggle('is-collapsed', isCollapsed);
+        panel.classList.toggle('is-collapsed', isCollapsed);
+        head.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
+    });
+}
+
+function toggleHomePanel(panelId) {
+    var body = document.getElementById('home-panel-body-' + panelId);
+    var head = document.getElementById('home-panel-head-' + panelId);
+    var panel = document.getElementById('home-panel-' + panelId);
+    if (!body || !head) return;
+    var willCollapse = !body.classList.contains('is-collapsed');
+    body.classList.toggle('is-collapsed', willCollapse);
+    if (panel) panel.classList.toggle('is-collapsed', willCollapse);
+    head.setAttribute('aria-expanded', willCollapse ? 'false' : 'true');
+    var collapsed = _homeWidgetsState.collapsed_panels || [];
+    var idx = collapsed.indexOf(panelId);
+    if (willCollapse && idx === -1) collapsed.push(panelId);
+    if (!willCollapse && idx !== -1) collapsed.splice(idx, 1);
+    _homeWidgetsState.collapsed_panels = collapsed;
+    scheduleSaveHomeWidgets();
+}
+
+function homePanelHeadKey(event, panelId) {
+    if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleHomePanel(panelId);
+    }
+}
+
+function scheduleSaveHomeWidgets() {
+    if (_homeWidgetsSaveTimer) clearTimeout(_homeWidgetsSaveTimer);
+    _homeWidgetsSaveTimer = setTimeout(saveHomeWidgets, 350);
+}
+
+function saveHomeWidgets() {
+    return fetch('/api/home/widgets', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            pinned_tickers: _homeWidgetsState.pinned_tickers || [],
+            collapsed_panels: _homeWidgetsState.collapsed_panels || []
+        })
+    })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.status === 'ok') {
+                _homeWidgetsState.pinned_tickers = data.pinned_tickers || _homeWidgetsState.pinned_tickers;
+                _homeWidgetsState.quotes = data.quotes || _homeWidgetsState.quotes;
+                renderPinnedWatchlistStrip();
+            }
+        })
+        .catch(function() {});
+}
+
+function toggleHomeCustomize() {
+    _homeCustomizeMode = !_homeCustomizeMode;
+    var btn = document.getElementById('home-customize-btn');
+    var wrap = document.getElementById('home-watchlist-wrap');
+    if (btn) {
+        btn.setAttribute('aria-pressed', _homeCustomizeMode ? 'true' : 'false');
+        btn.classList.toggle('is-active', _homeCustomizeMode);
+    }
+    if (wrap) wrap.classList.toggle('is-customizing', _homeCustomizeMode);
+    renderPinnedWatchlistStrip();
+}
+
+function renderPinnedWatchlistStrip() {
+    var strip = document.getElementById('home-watchlist-strip');
+    if (!strip) return;
+    var symbols = _homeWidgetsState.pinned_tickers || [];
+    var quotes = _homeWidgetsState.quotes || [];
+    if (!symbols.length) {
+        strip.innerHTML = '<div class="home-watchlist-empty">' + _t('home-watchlist-empty', 'Pin tickers in Customize mode') + '</div>';
+        return;
+    }
+    var quoteMap = {};
+    quotes.forEach(function(q) { if (q && q.symbol) quoteMap[q.symbol.toUpperCase()] = q; });
+    strip.innerHTML = '';
+    symbols.forEach(function(sym) {
+        var q = quoteMap[sym.toUpperCase()] || { symbol: sym };
+        var pct = q.change_pct;
+        var up = typeof pct === 'number' && pct > 0;
+        var down = typeof pct === 'number' && pct < 0;
+        var cls = up ? 'is-up' : (down ? 'is-down' : 'is-flat');
+        var pctStr = (typeof pct === 'number')
+            ? ((up ? '+' : '') + (pct * 100).toFixed(2) + '%')
+            : '--';
+        var priceStr = (typeof q.price === 'number')
+            ? q.price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : '--';
+        var item = document.createElement('div');
+        item.className = 'home-watchlist-item ' + cls;
+        item.setAttribute('role', 'button');
+        item.setAttribute('tabindex', '0');
+        item.setAttribute('aria-label', sym + ' ' + priceStr);
+        item.innerHTML =
+            '<span class="hw-symbol">' + escapeHtml(sym) + '</span>' +
+            '<span class="hw-price">' + priceStr + '</span>' +
+            '<span class="hw-change">' + pctStr + '</span>' +
+            (_homeCustomizeMode
+                ? '<button type="button" class="hw-unpin" aria-label="Unpin ' + escapeHtml(sym) + '" title="Unpin">&times;</button>'
+                : '');
+        item.onclick = function(e) {
+            if (e.target && e.target.classList.contains('hw-unpin')) {
+                e.stopPropagation();
+                unpinHomeTicker(sym);
+                return;
+            }
+            var input = document.getElementById('hero-ticker');
+            if (input) {
+                input.value = sym;
+                input.focus();
+            }
+        };
+        item.onkeydown = function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                item.click();
+            }
+        };
+        var unpinBtn = item.querySelector('.hw-unpin');
+        if (unpinBtn) {
+            unpinBtn.onclick = function(e) {
+                e.stopPropagation();
+                unpinHomeTicker(sym);
+            };
+        }
+        strip.appendChild(item);
+    });
+}
+
+function pinHomeTicker(symbol) {
+    symbol = (symbol || '').trim().toUpperCase();
+    if (!symbol) return;
+    var list = (_homeWidgetsState.pinned_tickers || []).slice();
+    if (list.indexOf(symbol) === -1) list.unshift(symbol);
+    if (list.length > 12) list = list.slice(0, 12);
+    _homeWidgetsState.pinned_tickers = list;
+    saveHomeWidgets();
+}
+
+function unpinHomeTicker(symbol) {
+    symbol = (symbol || '').trim().toUpperCase();
+    _homeWidgetsState.pinned_tickers = (_homeWidgetsState.pinned_tickers || []).filter(function(s) {
+        return s.toUpperCase() !== symbol;
+    });
+    saveHomeWidgets();
+}
+
 // Load model count
 document.addEventListener('DOMContentLoaded', function() {
     // Show onboarding banner only if not previously dismissed
@@ -949,6 +1258,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     _syncPersonaLabels();
+
+    loadHomeWorkspace();
+    loadHomeWidgets();
 
     fetch('/api/models')
         .then(function(r) { return r.json(); })
@@ -1136,6 +1448,12 @@ function renderHotTickers(data) {
         var card = document.createElement('div');
         card.className = 'hot-ticker-card ' + cls;
         card.onclick = function() { window.location.href = '/stocks?ticker=' + t.symbol; };
+        card.oncontextmenu = function(e) {
+            if (_homeCustomizeMode) {
+                e.preventDefault();
+                pinHomeTicker(t.symbol);
+            }
+        };
         card.innerHTML =
             '<div class="hot-ticker-head">' +
                 '<span class="hot-ticker-symbol">' + escapeHtml(t.symbol) + '</span>' +

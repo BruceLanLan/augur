@@ -339,9 +339,19 @@
                         });
                     });
                 }
-                if (ws.sidebar_collapsed) {
-                    var sb = document.getElementById('sidebar');
-                    if (sb) sb.classList.add('collapsed');
+                var sb = document.getElementById('sidebar');
+                if (sb) {
+                    if (ws.sidebar_collapsed) {
+                        sb.classList.add('collapsed');
+                    } else {
+                        sb.classList.remove('collapsed');
+                    }
+                    try {
+                        localStorage.setItem(
+                            'augur-sidebar',
+                            ws.sidebar_collapsed ? 'collapsed' : 'expanded'
+                        );
+                    } catch(e) {}
                 }
                 if (ws.show_ticker_tape === false) {
                     var tape = document.getElementById('ticker-tape-wrap');
@@ -349,10 +359,18 @@
                 }
                 try {
                     var path = window.location.pathname;
-                    if (path === '/' && ws.default_page && ws.default_page !== '/' &&
-                        !sessionStorage.getItem('augur-workspace-routed')) {
-                        sessionStorage.setItem('augur-workspace-routed', '1');
-                        window.location.replace(ws.default_page);
+                    if (path === '/' && !sessionStorage.getItem('augur-workspace-routed')) {
+                        var target = null;
+                        var ticker = (ws.default_ticker || '').trim();
+                        if (ticker) {
+                            target = '/stocks?ticker=' + encodeURIComponent(ticker.toUpperCase());
+                        } else if (ws.default_page && ws.default_page !== '/') {
+                            target = ws.default_page;
+                        }
+                        if (target) {
+                            sessionStorage.setItem('augur-workspace-routed', '1');
+                            window.location.replace(target);
+                        }
                     }
                 } catch(e) {}
             })

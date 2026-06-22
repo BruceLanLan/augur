@@ -19,6 +19,7 @@ Augur's 18 investor Agents can exist independently and be embedded into your wor
 | 💻 **Claude Code / Codex** | IDE terminal | Investment analysis during development |
 | 📱 **Telegram / Slack** | Messaging bot | On-the-go inquiries |
 | 🔧 **API Calls** | REST API | Automated workflows |
+| 🔗 **Agentic Workflow** | CLI / MCP / API | Multi-step fetch → analyze → consensus → committee |
 
 ---
 
@@ -354,6 +355,66 @@ print(f"Consensus Signal: {data['signal']}")
 print(f"Overall Score: {data['score']}")
 for agent_id, result in data['agents'].items():
     print(f"  {result['name']}: {result['signal']} ({result['score']}/10)")
+```
+
+---
+
+### Method 8: Agentic Workflow Pipeline
+
+Run configurable multi-step pipelines: **fetch → analyze → consensus → committee → debate → sentiment**.
+
+#### CLI
+
+```bash
+# Default: fetch, analyze, consensus
+augur workflow AAPL
+
+# Full committee pipeline
+augur workflow AAPL --steps fetch,analyze,consensus,committee
+
+# Subset of agents + committee question
+augur workflow NVDA --agents buffett,munger,dalio --steps fetch,analyze,committee -q "Is the moat widening?"
+
+# JSON for scripting
+augur workflow TSLA --steps fetch,consensus,sentiment --json
+```
+
+Valid steps: `fetch`, `analyze`, `consensus`, `committee`, `debate`, `sentiment`.
+
+#### MCP tool
+
+When using `augur mcp-server`, call the `augur_workflow` tool:
+
+```
+augur_workflow(ticker="AAPL", steps="fetch,analyze,consensus,committee")
+```
+
+Optional parameters: `agents` (comma-separated IDs), `question` (for committee).
+
+#### REST API
+
+```bash
+curl -X POST http://localhost:8900/api/workflow \
+  -H "Content-Type: application/json" \
+  -d '{"ticker":"AAPL","steps":"fetch,analyze,consensus,committee"}'
+```
+
+Python example:
+
+```python
+import requests
+
+resp = requests.post(
+    "http://localhost:8900/api/workflow",
+    json={
+        "ticker": "AAPL",
+        "steps": "fetch,analyze,consensus,committee",
+        "question": "Should we add to the position?",
+    },
+)
+data = resp.json()
+print(data["summary"])
+print(data["results"]["consensus"]["signal"])
 ```
 
 ---

@@ -4,12 +4,14 @@
 from pathlib import Path
 from typing import Dict
 
+from augur.consensus.paths import feedback_path
+
 
 def load_rolling_ic_weights() -> Dict[str, float]:
     """Load rolling IC weights from feedback file if present."""
     try:
         import json
-        ic_file = Path(__file__).parent.parent.parent / "feedback" / "rolling_ic.json"
+        ic_file = feedback_path("rolling_ic.json")
         if not ic_file.exists():
             ic_file = Path.home() / ".augur" / "rolling_ic.json"
         if ic_file.exists():

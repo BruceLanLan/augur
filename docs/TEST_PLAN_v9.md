@@ -321,6 +321,133 @@ print(f'Consensus: OK ({consensus.signal.value} {consensus.score:.1f})')
 
 ---
 
+## 10. v10.15 Agentic Workflow + Workspace 专项测试
+
+> 新增于 v10.15：覆盖 `augur.workflow` 多步链、`/api/workspace` 预设、consensus 增强模块。
+
+### 10.1 自动化测试
+
+```bash
+cd ~/augur
+python3 -m pytest tests/test_v10_14_workspace_workflow.py tests/test_e2e_agentic_v10_15.py -v --tb=short
+```
+
+**期望：** 全部 passed（约 35+ 项），0 failed。
+
+| 文件 | 覆盖内容 |
+|------|---------|
+| `test_v10_14_workspace_workflow.py` | workspace 预设/持久化、consensus 子模块、workflow 单步、Dashboard `/api/workspace` |
+| `test_e2e_agentic_v10_15.py` | 完整 workflow 链（fetch→analyze→consensus→committee→debate→sentiment）、workspace 预设 round-trip、MCP 校验逻辑 |
+
+### 10.2 Workflow API（`run_workflow`）
+
+**用 mock 数据验证多步链：**
+
+```python
+from unittest.mock import patch
+from augur.personas.base import MarketContext, AgentResponse, SignalType
+from augur.registry import DecisionCoordinator
+from augur.workflow import run_workflow
+
+ctx = MarketContext(ticker="NVDA", pe=60, sector="Technology", price=500)
+mock = AgentResponse(
+    agent_id="buffett", agent_name="Buffett",
+    signal=SignalType.BULLISH, confidence=0.8, score=7.5, reasoning="Test",
+)
+consensus = AgentResponse(
+    agent_id="consensus", agent_name="Consensus",
+    signal=SignalType.BULLISH, confidence=0.78, score=7.8, reasoning="OK",
+    metadata={"position_sizing": {"position_pct": 8.5}},
+)
+
+with patch("augur.data.fetch_market_context", return_value=ctx):
+    with patch.object(DecisionCoordinator, "analyze_with_all", return_value={"buffett": mock}):
+        with patch.object(DecisionCoordinator, "get_consensus", return_value=consensus):
+            result = run_workflow("NVDA", steps="fetch,analyze,consensus")
+
+assert result["ticker"] == "NVDA"
+assert result["results"]["consensus"]["kelly_pct"] == 8.5
+assert "Consensus" in result["summary"]
+```
+
+**无效 step 应抛 ValueError：**
+
+```python
+import pytest
+from augur.workflow import run_workflow
+with pytest.raises(ValueError, match="Unknown step"):
+    run_workflow("AAPL", steps="invalid_step")
+```
+
+### 10.3 Workspace 预设 API
+
+```python
+from fastapi.testclient import TestClient
+from dashboard.app import app
+client = TestClient(app)
+
+# 列出预设
+r = client.get("/api/workspace/presets")
+assert r.status_code == 200
+assert "trader" in r.json()["presets"]
+
+# 应用 trader 预设（需显式传 default_page，否则 Pydantic 默认 "/"）
+r = client.put("/api/workspace", json={
+    "layout_preset": "trader",
+    "default_page": "/stocks",
+})
+assert r.json()["workspace"]["default_page"] == "/stocks"
+assert "backtest" in r.json()["workspace"]["hidden_nav"]
+
+# committee 预设
+r = client.put("/api/workspace", json={
+    "layout_preset": "committee",
+    "default_page": "/committee",
+    "show_ticker_tape": False,
+})
+assert r.json()["workspace"]["default_page"] == "/committee"
+assert r.json()["workspace"]["show_ticker_tape"] is False
+```
+
+### 10.4 Consensus 模块（mock 数据）
+
+```python
+from augur.consensus.industry_matrix import get_agent_weights
+from augur.consensus.regime_weights import apply_regime_weights
+from augur.consensus.probability_calibrator import calibrate_confidence
+
+w = get_agent_weights("technology", {})
+assert sum(w.values()) == pytest.approx(1.0, abs=0.01)
+
+adj = apply_regime_weights({"buffett": 0.5, "marks": 0.5}, "BEAR_LOW_VOL")
+assert sum(adj.values()) == pytest.approx(1.0, abs=0.01)
+
+c = calibrate_confidence(8.0, 0.7, "consensus")
+assert 0.05 <= c <= 0.95
+```
+
+### 10.5 MCP `augur_workflow` 校验
+
+无需启动 MCP server，验证 ticker 校验与 workflow 错误路径：
+
+```python
+from augur.mcp_server import _validate_ticker
+assert _validate_ticker("NVDA;DROP") is not None
+assert _validate_ticker("AAPL") is None
+```
+
+### 10.6 验收标准（v10.15）
+
+| 检查项 | 期望 |
+|--------|------|
+| `test_v10_14_workspace_workflow.py` | 全部 passed |
+| `test_e2e_agentic_v10_15.py` | 全部 passed |
+| workflow 多步链 | fetch/analyze/consensus/committee/debate/sentiment 结构正确 |
+| workspace 四预设 | analyst/trader/committee/minimal API round-trip |
+| consensus 模块 | industry_matrix、regime_weights、probability_calibrator 边界正确 |
+
+---
+
 ## 9. 测试报告模板
 
 ```
