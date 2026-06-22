@@ -17,6 +17,7 @@ Commands:
   augur cron-start        - Start scheduler daemon
   augur watchlist-add     - Add ticker to watchlist
   augur watchlist-show    - Show current watchlist
+  augur workflow TICKER     - Multi-step agentic pipeline
 """
 
 import click
@@ -41,6 +42,7 @@ def main(ctx, no_color):
       augur consensus NVDA        # Consensus recommendation
       augur list-personas         # Show all personas
       augur fetch TSLA            # Fetch real-time data
+      augur workflow AAPL --steps fetch,analyze,consensus,committee
     """
     import os
     ctx.ensure_object(dict)
@@ -769,6 +771,51 @@ def fetch_cmd(ticker, as_json):
         click.echo(f"{'SMA20':<18s} {ctx.sma20:.2f}")
         click.echo(f"{'SMA50':<18s} {ctx.sma50:.2f}")
         click.echo(f"\n[数据来源: yfinance 实时]")
+
+
+@main.command("workflow")
+@click.argument("ticker")
+@click.option(
+    "--steps",
+    default="fetch,analyze,consensus",
+    show_default=True,
+    help="Comma-separated steps: fetch, analyze, consensus, committee, debate, sentiment",
+)
+@click.option("--agents", "-a", default="", help="Comma-separated agent IDs (default: all personas)")
+@click.option("--question", "-q", default="", help="Question for the committee step")
+@click.option("--json", "as_json", is_flag=True, default=False, help="Output raw JSON")
+def workflow_cmd(ticker, steps, agents, question, as_json):
+    """Run a multi-step agentic analysis pipeline.
+
+    \b
+    Examples:
+      augur workflow AAPL
+      augur workflow NVDA --steps fetch,analyze,consensus,committee
+      augur workflow TSLA --agents buffett,munger,dalio --steps fetch,analyze,committee
+      augur workflow AAPL --json
+    """
+    from augur.workflow import run_workflow, VALID_STEPS
+
+    if not as_json:
+        click.echo(f"Running workflow for {ticker.upper()} ({steps})...\n")
+
+    try:
+        result = run_workflow(ticker, steps=steps, agents=agents, question=question)
+    except ValueError as e:
+        click.echo(f"Error: {e}", err=True)
+        click.echo(f"  Valid steps: {', '.join(VALID_STEPS)}", err=True)
+        raise SystemExit(1)
+    except Exception as e:
+        click.echo(f"Workflow failed: {e}", err=True)
+        raise SystemExit(1)
+
+    if as_json:
+        import json as _json
+        payload = {k: v for k, v in result.items() if k != "summary"}
+        click.echo(_json.dumps(payload, ensure_ascii=False, indent=2))
+        return
+
+    click.echo(result.get("summary", ""))
 
 
 def _auto_fetch_context(ticker: str):

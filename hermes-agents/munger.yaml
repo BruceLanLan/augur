@@ -5,7 +5,7 @@
 
 name: augur-munger
 display_name: "Charlie Munger"
-description: "Mental models polymath — invert, always invert"
+description: "Mental models polymath — invert, always invert · augur_workflow MCP"
 persona_id: munger
 language: en
 version: "10.10.0"

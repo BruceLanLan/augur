@@ -2,6 +2,23 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.15.0] - 2026-06-22
+
+Bloomberg 风格终端工作区定制 + Agentic 工作流 MCP + 共识增强模块。
+
+### Added
+- **Terminal Workspace** (`src/augur/workspace.py`)：布局预设（analyst/trader/committee/minimal）、默认首页、隐藏导航、Ticker Tape 开关；持久化到 `~/.augur/workspace.yaml`。
+- **Dashboard API**：`GET/PUT /api/workspace`、`GET /api/workspace/presets`；Settings 页新增「终端工作区」配置区。
+- **Agentic Workflow**：`augur_workflow` MCP 工具 + `src/augur/workflow.py`（fetch → analyze → consensus → committee → debate → sentiment 可组合步骤链）。
+- **Consensus 模块** (`src/augur/consensus/`)：industry_matrix、regime_weights、macro_features、probability_calibrator、meta_model、rolling_ic、regime_router、risk_manager；registry 改用 `augur.consensus.*` 替代缺失的 `scanner.*`。
+
+### Fixed
+- 版本号同步：FastAPI metadata、REST API、README badge → v10.15.0。
+- MCP 文档更新为 10 个工具。
+
+### Notes
+- Tests: **1668 passed**（排除网络测试 test_analyze_api_v12.py；含 test_v10_14_workspace_workflow 12 cases）。
+
 ## [10.13.0] - 2026-06-09
 
 跨页面 Ticker 导航：Signals / History → Stocks 一键分析。

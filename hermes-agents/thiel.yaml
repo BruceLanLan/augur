@@ -5,7 +5,7 @@
 
 name: augur-thiel
 display_name: "Peter Thiel"
-description: "Zero to One — contrarian monopoly thinking"
+description: "Zero to One — contrarian monopoly thinking · augur_workflow MCP"
 persona_id: thiel
 language: en
 version: "10.10.0"

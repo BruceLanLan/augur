@@ -55,16 +55,35 @@ mcp_servers:
 1. 打开 Hermes Web UI
 2. 进入 **Settings > MCP Servers**
 3. 应该能看到 `augur-agents` 已注册
-4. **7 个工具**应该可用：
+4. **10 个工具**应该可用：
    - `augur_analyze` - 单投资人或全部 18 位分析（含 key_findings/risks）
    - `augur_consensus` - 18 位加权共识（含 Kelly 仓位建议）
+   - `augur_committee` - 投资委员会结构化辩论与裁决
+   - `augur_debate` - 多 Agent 多轮辩论
    - `augur_fetch` - 仅获取实时数据（不分析）
+   - `augur_sentiment` - 社交/新闻情绪快照
+   - `augur_workflow` - **可组合多步工作流**（fetch → analyze → consensus → committee → debate → sentiment）
    - `augur_list_personas` - 列出全部 18 位投资人
    - `augur_configure` - 配置每位投资人使用的 LLM 模型
    - `augur_create_persona` - 创建自定义 YAML 投资人
-   - `augur_debate` - 多 Agent 多轮辩论
 
 > 所有 analyze/consensus/debate 工具都支持**自动 yfinance 数据获取**：不传指标时自动抓取实时数据。
+
+#### `augur_workflow` 示例
+
+在 Hermes 聊天中可以直接说：
+
+```
+对 NVDA 跑完整工作流：fetch → analyze → consensus → committee
+```
+
+或指定参与大师与步骤：
+
+```
+augur_workflow ticker=NVDA steps=fetch,analyze,consensus,committee agents=buffett,duan_yongping,cathie_wood question="当前估值是否合理？"
+```
+
+有效步骤：`fetch`, `analyze`, `consensus`, `committee`, `debate`, `sentiment`（默认 `fetch,analyze,consensus`）。
 
 ### Step 4: 开始对话
 
@@ -80,7 +99,38 @@ mcp_servers:
 用巴菲特框架分析 NVDA，PE=45，毛利率75%，ROE=85%
 ```
 
-Hermes 会自动调用 `augur_analyze` 或 `augur_consensus` 工具。
+Hermes 会自动调用 `augur_analyze`、`augur_consensus` 或 `augur_workflow` 工具。
+
+---
+
+## 终端工作区定制（Dashboard）
+
+v10.14+ 在 Augur Dashboard 提供 Bloomberg 风格终端布局预设，与 Hermes MCP 集成互补：Hermes 负责 Agent 对话，Dashboard 负责可视化终端。
+
+### 布局预设
+
+| 预设 | 默认首页 | 特点 |
+|------|----------|------|
+| `analyst` | `/` | 全导航 + Ticker Tape，委员会 preset=all |
+| `trader` | `/stocks` | 隐藏 backtest/optimizer/performance/hermes-setup |
+| `committee` | `/committee` | 聚焦委员会，隐藏 scanner/backtest/optimizer |
+| `minimal` | `/stocks` | 极简导航，适合日常盯盘 |
+
+### 配置方式
+
+**Dashboard UI**：Settings → **终端工作区** → 选择预设、默认首页、默认 Ticker、隐藏导航项、Ticker Tape 开关 → 保存。
+
+**REST API**（Dashboard 运行时）：
+
+```bash
+curl http://localhost:8000/api/workspace/presets   # 列出预设
+curl http://localhost:8000/api/workspace           # 读取当前配置
+curl -X PUT http://localhost:8000/api/workspace \
+  -H 'Content-Type: application/json' \
+  -d '{"layout_preset":"committee","default_ticker":"NVDA"}'
+```
+
+配置持久化到 `~/.augur/workspace.yaml`。
 
 ---
 

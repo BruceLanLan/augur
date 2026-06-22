@@ -10,7 +10,7 @@ Each skill directory contains:
 
 ## What Are These Skills?
 
-Each skill is a self-contained agent definition that wires a specific investor persona (Buffett, Graham, Dalio, etc.) to the Augur MCP server. Load a skill to get the full persona system prompt and automatic access to the Augur MCP tools (`mcp_augur_fetch`, `mcp_augur_analyze`, `mcp_augur_consensus`, `mcp_augur_debate`, `mcp_augur_committee`).
+Each skill is a self-contained agent definition that wires a specific investor persona (Buffett, Graham, Dalio, etc.) to the Augur MCP server. Load a skill to get the full persona system prompt and automatic access to the Augur MCP tools (`mcp_augur_fetch`, `mcp_augur_analyze`, `mcp_augur_consensus`, `mcp_augur_debate`, `mcp_augur_committee`, `mcp_augur_sentiment`, `mcp_augur_workflow`, plus persona management tools).
 
 ---
 
@@ -61,6 +61,24 @@ for d in skills/augur-*; do openclaw skill install "$d"; done
 1. Start the Augur MCP server: `augur-mcp`
 2. Use the `SKILL.md` content as the agent system prompt
 3. The MCP tools are auto-discovered from the running server
+
+### `augur_workflow` — Agentic Multi-Step Pipelines
+
+Use `augur_workflow` when you want a single MCP call to run a configurable chain instead of orchestrating each tool manually:
+
+```
+augur_workflow(ticker="AAPL", steps="fetch,analyze,consensus")
+augur_workflow(ticker="NVDA", steps="fetch,analyze,consensus,committee,debate", agents="buffett,duan_yongping,cathie_wood", question="Hold or trim?")
+augur_workflow(ticker="TSLA", steps="fetch,sentiment")
+```
+
+Valid steps: `fetch`, `analyze`, `consensus`, `committee`, `debate`, `sentiment`. Default: `fetch,analyze,consensus`.
+
+The **augur-committee** skill is the best fit for workflows that include the `committee` or `debate` steps.
+
+### Terminal Workspace (Dashboard)
+
+When running the Augur Dashboard alongside Hermes, customize the Bloomberg-style terminal layout under **Settings → Terminal Workspace** (or via `GET/PUT /api/workspace`). Presets: `analyst`, `trader`, `committee`, `minimal`. Preferences persist to `~/.augur/workspace.yaml` (default page, hidden nav, ticker tape, committee preset, enabled personas).
 
 ---
 

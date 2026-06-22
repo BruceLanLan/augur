@@ -5,7 +5,7 @@
 
 name: augur-marks
 display_name: "Howard Marks"
-description: "Oaktree — second-level thinking & market cycles"
+description: "Oaktree — second-level thinking & market cycles · augur_workflow MCP"
 persona_id: marks
 language: en
 version: "10.10.0"

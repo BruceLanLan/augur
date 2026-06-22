@@ -5,7 +5,7 @@
 
 name: augur-lynch
 display_name: "Peter Lynch"
-description: "Fidelity Magellan — PEG ratio & ten-bagger hunter"
+description: "Fidelity Magellan — PEG ratio & ten-bagger hunter · augur_workflow MCP"
 persona_id: lynch
 language: en
 version: "10.10.0"

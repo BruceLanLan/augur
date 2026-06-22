@@ -5,7 +5,7 @@
 
 name: augur-soros
 display_name: "George Soros"
-description: "Quantum Fund — reflexivity & macro dislocations"
+description: "Quantum Fund — reflexivity & macro dislocations · augur_workflow MCP"
 persona_id: soros
 language: en
 version: "10.10.0"

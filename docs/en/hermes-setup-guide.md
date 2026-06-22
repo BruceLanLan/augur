@@ -55,16 +55,35 @@ mcp_servers:
 1. Open Hermes Web UI
 2. Navigate to **Settings > MCP Servers**
 3. You should see `augur-agents` registered
-4. **7 tools** should be available:
+4. **10 tools** should be available:
    - `augur_analyze` - Single or all 18 investor analysis (with key_findings/risks)
    - `augur_consensus` - 18-master weighted consensus (with Kelly position sizing)
+   - `augur_committee` - Structured investment committee debate and verdict
+   - `augur_debate` - Multi-round agent debate
    - `augur_fetch` - Fetch live market data only (no analysis)
+   - `augur_sentiment` - Social/news sentiment snapshot
+   - `augur_workflow` - **Composable multi-step pipeline** (fetch → analyze → consensus → committee → debate → sentiment)
    - `augur_list_personas` - List all 18 investors
    - `augur_configure` - Configure LLM model per investor
    - `augur_create_persona` - Create custom YAML persona
-   - `augur_debate` - Multi-round agent debate
 
 > All analyze/consensus/debate tools support **auto yfinance data fetch**: if no metrics are passed, live data is fetched automatically.
+
+#### `augur_workflow` Examples
+
+In Hermes chat, you can say:
+
+```
+Run the full NVDA workflow: fetch → analyze → consensus → committee
+```
+
+Or specify agents and steps explicitly:
+
+```
+augur_workflow ticker=NVDA steps=fetch,analyze,consensus,committee agents=buffett,duan_yongping,cathie_wood question="Is the current valuation fair?"
+```
+
+Valid steps: `fetch`, `analyze`, `consensus`, `committee`, `debate`, `sentiment` (default: `fetch,analyze,consensus`).
 
 ### Step 4: Start a Conversation
 
@@ -80,7 +99,38 @@ Or be more specific:
 Analyze NVDA using the Buffett framework, PE=45, gross margin 75%, ROE=85%
 ```
 
-Hermes will automatically invoke the `augur_analyze` or `augur_consensus` tool.
+Hermes will automatically invoke the `augur_analyze`, `augur_consensus`, or `augur_workflow` tool.
+
+---
+
+## Terminal Workspace Customization (Dashboard)
+
+v10.14+ adds Bloomberg-style terminal layout presets in the Augur Dashboard — complementary to Hermes MCP integration: Hermes handles agent chat; the Dashboard provides the visual terminal.
+
+### Layout Presets
+
+| Preset | Default Page | Highlights |
+|--------|--------------|------------|
+| `analyst` | `/` | Full nav + ticker tape, committee preset=all |
+| `trader` | `/stocks` | Hides backtest/optimizer/performance/hermes-setup |
+| `committee` | `/committee` | Committee-focused; hides scanner/backtest/optimizer |
+| `minimal` | `/stocks` | Minimal nav for daily monitoring |
+
+### Configuration
+
+**Dashboard UI**: Settings → **Terminal Workspace** → pick preset, default page, default ticker, hidden nav items, ticker tape toggle → Save.
+
+**REST API** (while Dashboard is running):
+
+```bash
+curl http://localhost:8000/api/workspace/presets   # list presets
+curl http://localhost:8000/api/workspace           # read current config
+curl -X PUT http://localhost:8000/api/workspace \
+  -H 'Content-Type: application/json' \
+  -d '{"layout_preset":"committee","default_ticker":"NVDA"}'
+```
+
+Preferences persist to `~/.augur/workspace.yaml`.
 
 ---
 

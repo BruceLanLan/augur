@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-09，当前版本 **v10.13.0**（Signals/History Ticker 导航链接，1656 tests passing）
+> 最后更新：2026-06-22，当前版本 **v10.15.0**（Terminal Workspace + augur_workflow MCP + consensus 模块，1668+ tests passing）
 
 ---
 
@@ -50,14 +50,16 @@
 | 10.11.0 | Compare 因子级雷达作用域 bug 修复 + 因子明细展开（mini 进度条，分类分组） |
 | 10.12.0 | Scanner + Stocks 一键加入自选股（`/api/watchlist/add`，实时 toast 反馈） |
 | 10.13.0 | Signals/History Ticker 列变导航链接 → `/stocks?ticker=X` 一键重新分析 |
+| 10.14.0 | Terminal Workspace 布局预设 + Settings UI + `/api/workspace`；`augur_workflow` MCP 工具；`augur.consensus.*` 共识增强模块 |
+| 10.15.0 | v10.14 功能正式发布：版本号同步、CHANGELOG/README badge、workspace/workflow/consensus 集成测试 12 cases |
 
-**当前能力盘点（v10.0.0）：**
-- MCP 工具 9 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona
+**当前能力盘点（v10.15.0）：**
+- MCP 工具 10 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona, **workflow**
 - CLI 命令：analyze, consensus, report, serve, watch, skills, portfolio, backtest, chat, sentiment, inject-soul, telegram, slack, wechat, lark, cron-* 等
 - Dashboard 19 页（含 committee, hermes-setup）
 - 19 个 skill 目录（SKILL.md + manifest.json）
 - i18n：中/英/日/韩四语言，降级链
-- 测试基线：**1656 passed**（排除网络测试 test_analyze_api_v12.py）
+- 测试基线：**1668 passed**（排除网络测试 test_analyze_api_v12.py）
 
 ---
 

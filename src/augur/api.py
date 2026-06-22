@@ -6,6 +6,7 @@ Provides endpoints:
   GET /api/personas - list all personas
   GET /api/analyze/{ticker} - analyze with all agents
   GET /api/persona/{agent_id} - get single persona info
+  POST /api/workflow - run multi-step agentic pipeline
   GET /health - health check
 """
 
@@ -19,6 +20,7 @@ try:
     from fastapi import FastAPI, HTTPException, Request
     from fastapi.responses import JSONResponse
     from fastapi.middleware.cors import CORSMiddleware
+    from pydantic import BaseModel, Field
     from starlette.exceptions import HTTPException as StarletteHTTPException
 except ImportError:
     raise ImportError("fastapi is required: pip install fastapi uvicorn")
@@ -35,7 +37,7 @@ from augur.errors import HTTP_ERROR_ENVELOPE, api_error_response
 app = FastAPI(
     title="Augur API",
     description="Multi-agent investment analysis API",
-    version="6.1.0",
+    version="10.15.0",
 )
 
 
@@ -235,6 +237,43 @@ async def get_persona(agent_id: str):
     if not agent:
         raise HTTPException(status_code=404, detail=f"Persona '{agent_id}' not found")
     return agent.to_dict()
+
+
+class WorkflowRequest(BaseModel):
+    ticker: str = Field(..., description="Stock ticker symbol (e.g. AAPL, NVDA)")
+    steps: str = Field(
+        default="fetch,analyze,consensus",
+        description="Comma-separated steps: fetch, analyze, consensus, committee, debate, sentiment",
+    )
+    agents: str = Field(default="", description="Optional comma-separated agent IDs")
+    question: str = Field(default="", description="Optional question for committee step")
+
+
+@app.post("/api/workflow")
+async def run_workflow_endpoint(body: WorkflowRequest):
+    """Run a multi-step agentic analysis workflow."""
+    if not _TICKER_PATTERN.match(body.ticker):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.",
+        )
+
+    try:
+        from augur.workflow import run_workflow
+        result = run_workflow(
+            body.ticker,
+            steps=body.steps,
+            agents=body.agents,
+            question=body.question,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return {
+        "status": "ok",
+        "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        **result,
+    }
 
 
 @app.get("/health")

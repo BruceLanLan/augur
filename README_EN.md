@@ -10,7 +10,7 @@
 
 *18 legendary investors. Simultaneous analysis. One verdict.*
 
-[![v9.0.6](https://img.shields.io/badge/v9.0.6-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![v10.15.0](https://img.shields.io/badge/v10.15.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
 [![1652 Tests](https://img.shields.io/badge/1652_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)

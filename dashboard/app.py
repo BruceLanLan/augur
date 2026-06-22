@@ -50,6 +50,7 @@ except ImportError:
 from augur.report import generate_report
 
 from augur.config import get_config, set_config, save_config, reset_config
+from augur.workspace import get_workspace, save_workspace, list_presets, LAYOUT_PRESETS
 from augur.errors import api_error_response
 from augur.auth import (
     authenticate_request,
@@ -68,7 +69,7 @@ _APP_START_TIME = _time.time()
 app = FastAPI(
     title="Augur — 多智能体投资分析",
     description="18位虚拟投资大师，多维度共识分析",
-    version="7.8.3",
+    version="10.15.0",
 )
 
 
@@ -735,7 +736,7 @@ async def api_scanner_run(body: ScannerRunBody):
                 ctx = fetch_market_context(ticker)
             except Exception:
                 pass
-            agent_responses = coord.analyze_with_all(ctx)
+            agent_responses = coord.analyze_with_all(ctx, enabled_personas=get_enabled_personas())
             consensus = coord.get_consensus(agent_responses, ticker=ticker.upper(), context=ctx)
             agents_data = []
             for agent_id, resp in agent_responses.items():
@@ -873,7 +874,7 @@ async def analyze_ticker(
         )
 
     coord = get_coordinator()
-    agent_responses = coord.analyze_with_all(ctx)
+    agent_responses = coord.analyze_with_all(ctx, enabled_personas=get_enabled_personas())
     consensus_resp = coord.get_consensus(
         agent_responses,
         ticker=ticker.upper(),
@@ -1166,7 +1167,7 @@ async def report_ticker(
         )
 
     coord = get_coordinator()
-    agent_responses = coord.analyze_with_all(ctx)
+    agent_responses = coord.analyze_with_all(ctx, enabled_personas=get_enabled_personas())
     consensus_resp = coord.get_consensus(
         agent_responses,
         ticker=ticker.upper(),
@@ -1340,6 +1341,38 @@ async def api_put_persona_config(agent_id: str, body: PersonaModelBody):
     set_config(f"per_agent.{agent_id}", body.model)
     save_config()
     return {"status": "ok", "agent_id": agent_id, "model": body.model}
+
+
+class WorkspaceBody(BaseModel):
+    """Terminal workspace customization."""
+    layout_preset: Optional[str] = "analyst"
+    default_page: Optional[str] = "/"
+    default_ticker: Optional[str] = ""
+    sidebar_collapsed: Optional[bool] = False
+    hidden_nav: Optional[List[str]] = None
+    show_ticker_tape: Optional[bool] = True
+    committee_preset: Optional[str] = "all"
+    enabled_personas: Optional[List[str]] = None
+
+
+@app.get("/api/workspace", summary="获取终端工作区配置")
+async def api_get_workspace():
+    """Return Bloomberg-style terminal workspace preferences."""
+    return {"status": "ok", "workspace": get_workspace()}
+
+
+@app.get("/api/workspace/presets", summary="列出工作区布局预设")
+async def api_workspace_presets():
+    """Return available layout presets (analyst, trader, committee, minimal)."""
+    return {"status": "ok", "presets": list_presets()}
+
+
+@app.put("/api/workspace", summary="保存终端工作区配置")
+async def api_put_workspace(body: WorkspaceBody):
+    """Save workspace layout preferences to ~/.augur/workspace.yaml."""
+    data = body.model_dump(exclude_none=True)
+    saved = save_workspace(data)
+    return {"status": "ok", "workspace": saved}
 
 
 @app.get("/api/models", summary="获取可用模型列表")
@@ -1640,7 +1673,7 @@ async def api_run_watchlist_analysis():
                 ctx_kwargs[key] = item[key]
 
         ctx = MarketContext(**ctx_kwargs)
-        results = coordinator.analyze_with_all(ctx)
+        results = coordinator.analyze_with_all(ctx, enabled_personas=get_enabled_personas())
         consensus = coordinator.get_consensus(results, ticker=ticker, context=ctx)
 
         result_item = {

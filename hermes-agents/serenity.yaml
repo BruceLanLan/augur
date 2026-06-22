@@ -5,7 +5,7 @@
 
 name: augur-serenity
 display_name: "Serenity"
-description: "AI semiconductor supply chains & chokepoint assets"
+description: "AI semiconductor supply chains & chokepoint assets · augur_workflow MCP"
 persona_id: serenity
 language: en
 version: "10.10.0"

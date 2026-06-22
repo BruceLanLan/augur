@@ -1,7 +1,7 @@
 ---
 name: augur-committee
 description: "Augur Investment Committee — Convene 2-18 masters for structured multi-agent analysis and verdict"
-version: 9.0.0
+version: 10.14.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]
@@ -35,10 +35,13 @@ For each session:
 
 ## Available Tools (Augur MCP)
 
+- `mcp_augur_workflow` — Multi-step pipeline: fetch → analyze → consensus → committee → debate → sentiment (composable `steps` and optional `agents`)
 - `mcp_augur_committee` — Run the full committee session (returns structured opinions + verdict)
 - `mcp_augur_analyze` — Individual master scoring
 - `mcp_augur_fetch` — Real-time market data
 - `mcp_augur_consensus` — Weighted consensus calculation
+- `mcp_augur_debate` — Multi-round agent debate
+- `mcp_augur_sentiment` — Social/news sentiment snapshot
 
 ## Example Usage
 
@@ -47,6 +50,9 @@ For each session:
 "NVDA 委员会 — 巴菲特、段永平、Cathie Wood 和 Aschenbrenner，当前 PE=35，AI 芯片供应商"
 
 "Convene full committee on TSLA — all 18 masters, focus on whether the EV moat is real"
+
+# Full pipeline in one MCP call (committee step included)
+augur_workflow(ticker="NVDA", steps="fetch,analyze,consensus,committee", question="Is NVDA fairly valued at current PE?")
 ```
 
 ## MCP Setup

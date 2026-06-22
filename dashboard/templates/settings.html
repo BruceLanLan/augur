@@ -150,6 +150,55 @@
     </div>
 </div>
 
+<!-- Section 0.5: Terminal Workspace -->
+<div class="settings-section" id="section-workspace">
+    <div class="settings-section-title">
+        <span data-i18n="settings-section-workspace-title">终端工作区</span>
+        <span class="settings-section-desc" data-i18n="settings-section-workspace-desc">Bloomberg 风格布局预设与导航定制</span>
+    </div>
+    <div style="margin-bottom:12px;">
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px; font-family:var(--font-mono);" data-i18n="settings-workspace-preset-label">布局预设</div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;" id="workspace-preset-btns">
+            <button type="button" class="btn btn-sm workspace-preset-btn" data-preset="analyst" onclick="applyWorkspacePreset('analyst')">📊 <span data-i18n="workspace-preset-analyst">分析师</span></button>
+            <button type="button" class="btn btn-sm workspace-preset-btn" data-preset="trader" onclick="applyWorkspacePreset('trader')">📈 <span data-i18n="workspace-preset-trader">交易员</span></button>
+            <button type="button" class="btn btn-sm workspace-preset-btn" data-preset="committee" onclick="applyWorkspacePreset('committee')">🏛️ <span data-i18n="workspace-preset-committee">委员会</span></button>
+            <button type="button" class="btn btn-sm workspace-preset-btn" data-preset="minimal" onclick="applyWorkspacePreset('minimal')">⚡ <span data-i18n="workspace-preset-minimal">极简</span></button>
+        </div>
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px;" class="settings-cron-grid">
+        <div>
+            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:6px;" data-i18n="settings-workspace-default-page">默认首页</label>
+            <select id="workspace-default-page" class="form-select" style="width:100%;">
+                <option value="/">Dashboard</option>
+                <option value="/stocks">Stock Analysis</option>
+                <option value="/signals">Signals</option>
+                <option value="/committee">Committee</option>
+                <option value="/watchlist">Watchlist</option>
+            </select>
+        </div>
+        <div>
+            <label style="font-size:0.75rem; color:var(--text-muted); display:block; margin-bottom:6px;" data-i18n="settings-workspace-default-ticker">默认 Ticker</label>
+            <input type="text" id="workspace-default-ticker" class="api-key-input" placeholder="AAPL" maxlength="20" autocomplete="off" style="width:100%;">
+        </div>
+    </div>
+    <div style="margin-bottom:12px;">
+        <label class="toggle-row" style="max-width:320px;">
+            <span class="toggle-label" data-i18n="settings-workspace-ticker-tape">显示行情 Ticker Tape</span>
+            <input type="checkbox" id="workspace-show-tape" class="toggle-switch" checked>
+        </label>
+        <label class="toggle-row" style="max-width:320px; margin-top:8px;">
+            <span class="toggle-label" data-i18n="settings-workspace-sidebar-collapsed">默认折叠侧栏</span>
+            <input type="checkbox" id="workspace-sidebar-collapsed" class="toggle-switch">
+        </label>
+    </div>
+    <div style="margin-bottom:12px;">
+        <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;" data-i18n="settings-workspace-hidden-nav">隐藏导航项</div>
+        <div id="workspace-nav-toggles" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:8px;"></div>
+    </div>
+    <button class="btn btn-primary" onclick="saveWorkspaceConfig()" data-i18n="settings-workspace-save">保存工作区</button>
+    <div id="workspace-status" style="font-size:0.8rem; margin-top:8px;"></div>
+</div>
+
 <!-- Section A: LLM Model Config -->
 <div class="settings-section" id="section-llm">
     <div class="settings-section-title">
@@ -924,7 +973,112 @@ function runCronNow() {
 document.addEventListener('DOMContentLoaded', function() {
     loadCronConfig();
     loadApiAuthStatus();
+    initWorkspaceSettings();
 });
+
+var WORKSPACE_NAV_PAGES = [
+    {id:'scanner',label:'Scanner'},{id:'backtest',label:'Backtest'},{id:'optimizer',label:'Optimizer'},
+    {id:'compare',label:'Compare'},{id:'debate',label:'Debate'},{id:'committee',label:'Committee'},
+    {id:'hermes-setup',label:'Hermes'},{id:'history',label:'History'},{id:'performance',label:'Leaderboard'},
+    {id:'create-persona',label:'Create Persona'},{id:'portfolio',label:'Portfolio'}
+];
+var _workspaceState = { layout_preset: 'analyst', hidden_nav: [] };
+
+function initWorkspaceSettings() {
+    var container = document.getElementById('workspace-nav-toggles');
+    if (!container) return;
+    container.innerHTML = '';
+    WORKSPACE_NAV_PAGES.forEach(function(p) {
+        var lbl = document.createElement('label');
+        lbl.className = 'toggle-row';
+        lbl.style.padding = '6px 10px';
+        lbl.innerHTML = '<span class="toggle-label">' + p.label + '</span>' +
+            '<input type="checkbox" class="toggle-switch workspace-nav-hide" data-page="' + p.id + '">';
+        container.appendChild(lbl);
+    });
+    loadWorkspaceConfig();
+}
+
+function loadWorkspaceConfig() {
+    fetch('/api/workspace')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status !== 'ok' || !data.workspace) return;
+        _workspaceState = data.workspace;
+        var ws = data.workspace;
+        document.getElementById('workspace-default-page').value = ws.default_page || '/';
+        document.getElementById('workspace-default-ticker').value = ws.default_ticker || '';
+        document.getElementById('workspace-show-tape').checked = ws.show_ticker_tape !== false;
+        document.getElementById('workspace-sidebar-collapsed').checked = !!ws.sidebar_collapsed;
+        document.querySelectorAll('.workspace-preset-btn').forEach(function(b) {
+            var active = b.getAttribute('data-preset') === ws.layout_preset;
+            b.style.borderColor = active ? 'var(--accent-orange)' : '';
+            b.style.opacity = active ? '1' : '0.65';
+        });
+        var hidden = ws.hidden_nav || [];
+        document.querySelectorAll('.workspace-nav-hide').forEach(function(cb) {
+            cb.checked = hidden.indexOf(cb.getAttribute('data-page')) !== -1;
+        });
+    })
+    .catch(function() {});
+}
+
+function applyWorkspacePreset(preset) {
+    fetch('/api/workspace/presets')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        var p = (data.presets || {})[preset];
+        if (!p) return;
+        _workspaceState.layout_preset = preset;
+        document.getElementById('workspace-default-page').value = p.default_page || '/';
+        document.getElementById('workspace-show-tape').checked = p.show_ticker_tape !== false;
+        document.querySelectorAll('.workspace-nav-hide').forEach(function(cb) {
+            cb.checked = (p.hidden_nav || []).indexOf(cb.getAttribute('data-page')) !== -1;
+        });
+        document.querySelectorAll('.workspace-preset-btn').forEach(function(b) {
+            var active = b.getAttribute('data-preset') === preset;
+            b.style.borderColor = active ? 'var(--accent-orange)' : '';
+            b.style.opacity = active ? '1' : '0.65';
+        });
+        showToast(_t('settings-workspace-preset-applied', 'Preset applied') + ': ' + preset, 'info');
+    })
+    .catch(function() {});
+}
+
+function saveWorkspaceConfig() {
+    var hidden = [];
+    document.querySelectorAll('.workspace-nav-hide:checked').forEach(function(cb) {
+        hidden.push(cb.getAttribute('data-page'));
+    });
+    var activePreset = 'custom';
+    document.querySelectorAll('.workspace-preset-btn').forEach(function(b) {
+        if (b.style.borderColor) activePreset = b.getAttribute('data-preset') || 'custom';
+    });
+    var payload = {
+        layout_preset: _workspaceState.layout_preset || activePreset,
+        default_page: document.getElementById('workspace-default-page').value,
+        default_ticker: document.getElementById('workspace-default-ticker').value.trim(),
+        show_ticker_tape: document.getElementById('workspace-show-tape').checked,
+        sidebar_collapsed: document.getElementById('workspace-sidebar-collapsed').checked,
+        hidden_nav: hidden
+    };
+    fetch('/api/workspace', {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.status === 'ok') {
+            showToast(_t('settings-workspace-saved', 'Workspace saved'));
+            var el = document.getElementById('workspace-status');
+            if (el) el.innerHTML = '<span style="color:var(--accent-green);">&#x2713; OK</span>';
+        } else {
+            showToast(_t('settings-toast-save-failed'), 'error');
+        }
+    })
+    .catch(function(err) { showToast(_t('settings-toast-save-failed') + err.message, 'error'); });
+}
 
 // ============ API Auth Token Functions ============
 

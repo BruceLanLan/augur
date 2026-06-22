@@ -218,11 +218,22 @@ class DecisionCoordinator:
         self._debate_history: List[DebateMessage] = []
         self._last_analysis_ms: float = 0.0
 
-    def analyze_with_all(self, context: MarketContext) -> Dict[str, AgentResponse]:
-        """Analyze with all agents in parallel using ThreadPoolExecutor."""
+    def analyze_with_all(
+        self,
+        context: MarketContext,
+        enabled_personas: Optional[List[str]] = None,
+    ) -> Dict[str, AgentResponse]:
+        """Analyze with all agents in parallel using ThreadPoolExecutor.
+
+        When ``enabled_personas`` is non-empty, only those agent IDs are run.
+        An empty list or ``None`` runs every registered agent.
+        """
         t0 = time.perf_counter()
         results = {}
         agents = self.registry.get_all()
+        if enabled_personas:
+            allowed = set(enabled_personas)
+            agents = [a for a in agents if a.agent_id in allowed]
 
         if not agents:
             self._last_analysis_ms = 0.0
@@ -305,7 +316,7 @@ class DecisionCoordinator:
         regime = None
         if ticker:
             try:
-                from scanner.industry_matrix import detect_industry, get_agent_weights
+                from augur.consensus.industry_matrix import detect_industry, get_agent_weights
                 industry, _ = detect_industry(ticker)
                 matrix_file = Path(__file__).parent.parent / "feedback" / "industry_matrix.json"
                 trained = {}
@@ -320,8 +331,8 @@ class DecisionCoordinator:
         # --- Regime-aware weight adjustment ---
         regime_features = {}
         try:
-            from scanner.regime_weights import detect_regime, apply_regime_weights
-            from scanner.macro_features import fetch_macro_features
+            from augur.consensus.regime_weights import detect_regime, apply_regime_weights
+            from augur.consensus.macro_features import fetch_macro_features
 
             regime = detect_regime(date_str)
             regime_features = fetch_macro_features(date_str)
@@ -330,7 +341,7 @@ class DecisionCoordinator:
             if regime and weights:
                 weights = apply_regime_weights(weights, regime)
             try:
-                from scanner.regime_router import RegimeRouter
+                from augur.consensus.regime_router import RegimeRouter
                 router = RegimeRouter()
                 router_weights = router.get_weights(regime=regime, features=regime_features)
                 if router_weights:
@@ -380,7 +391,7 @@ class DecisionCoordinator:
         # Rolling IC dynamic weight override
         rolling_ic_weights = {}
         try:
-            from scanner.rolling_ic import load_rolling_ic_weights
+            from augur.consensus.rolling_ic import load_rolling_ic_weights
             rolling_ic_weights = load_rolling_ic_weights() or {}
         except Exception:
             pass
@@ -506,14 +517,14 @@ class DecisionCoordinator:
         # --- Probability calibration ---
         calibrated_confidence = min(0.95, total_confidence)
         try:
-            from scanner.probability_calibrator import calibrate_confidence
+            from augur.consensus.probability_calibrator import calibrate_confidence
             calibrated_confidence = calibrate_confidence(total_score, calibrated_confidence, "consensus")
         except Exception:
             pass
 
         # --- Meta-model blending ---
         try:
-            from scanner.meta_model import MetaModel
+            from augur.consensus.meta_model import MetaModel
             mm = MetaModel.load()
             if mm is not None:
                 agent_scores_dict = {aid: resp.score for aid, resp in results.items()}
@@ -537,7 +548,7 @@ class DecisionCoordinator:
         # --- Risk Manager veto ---
         ctx_for_risk = context  # initialise outside try so Kelly block can access it
         try:
-            from scanner.risk_manager import RiskManager
+            from augur.consensus.risk_manager import RiskManager
             if ctx_for_risk is None:
                 for r in results.values():
                     meta_ctx = r.metadata.get("context")

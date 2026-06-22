@@ -2,14 +2,17 @@
 """
 augur.mcp_server - MCP Server for Augur (stdio mode)
 
-Provides 7 tools (stdio; no HTTP auth — runs locally beside the analyst):
+Provides 10 tools (stdio; no HTTP auth — runs locally beside the analyst):
   - augur_analyze
   - augur_consensus
+  - augur_committee
+  - augur_debate
+  - augur_fetch
+  - augur_sentiment
   - augur_list_personas
   - augur_configure
   - augur_create_persona
-  - augur_debate
-  - augur_fetch
+  - augur_workflow
 
 MCP tools do not use AUGUR_API_TOKEN (that applies to the Dashboard/REST API only).
 Live market data requires optional deps (`pip install 'augur-agents[data]'`) and,
@@ -542,6 +545,36 @@ def create_server():
             return "\n".join(lines)
         except Exception as e:
             return f"Error fetching data for {ticker}: {e}\nMake sure yfinance is installed: pip install 'augur-agents[data]'"
+
+    @mcp.tool()
+    def augur_workflow(
+        ticker: str,
+        steps: str = "fetch,analyze,consensus",
+        agents: str = "",
+        question: str = "",
+    ) -> str:
+        """Run a multi-step agentic analysis workflow.
+
+        Args:
+            ticker: Stock ticker symbol (e.g. AAPL, NVDA)
+            steps: Comma-separated steps: fetch, analyze, consensus, committee, debate, sentiment
+            agents: Optional comma-separated agent IDs (empty = all personas)
+            question: Optional question for committee step
+
+        Returns:
+            Structured workflow report with fetch data, consensus, committee verdict, sentiment
+        """
+        err = _validate_ticker(ticker)
+        if err:
+            return err
+        try:
+            from augur.workflow import run_workflow
+            result = run_workflow(ticker, steps=steps, agents=agents, question=question)
+            return result.get("summary", str(result))
+        except ValueError as e:
+            return f"Error: {e}"
+        except Exception as e:
+            return f"Workflow failed for {ticker}: {e}"
 
     return mcp
 

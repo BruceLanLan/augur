@@ -323,7 +323,41 @@
             }
         } catch(e) {}
         updateThemeUI();
+        applyTerminalWorkspace();
     });
+
+    function applyTerminalWorkspace() {
+        fetch('/api/workspace')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.status !== 'ok' || !data.workspace) return;
+                var ws = data.workspace;
+                if (ws.hidden_nav && ws.hidden_nav.length) {
+                    ws.hidden_nav.forEach(function(page) {
+                        document.querySelectorAll('[data-page="' + page + '"]').forEach(function(el) {
+                            el.style.display = 'none';
+                        });
+                    });
+                }
+                if (ws.sidebar_collapsed) {
+                    var sb = document.getElementById('sidebar');
+                    if (sb) sb.classList.add('collapsed');
+                }
+                if (ws.show_ticker_tape === false) {
+                    var tape = document.getElementById('ticker-tape-wrap');
+                    if (tape) tape.style.display = 'none';
+                }
+                try {
+                    var path = window.location.pathname;
+                    if (path === '/' && ws.default_page && ws.default_page !== '/' &&
+                        !sessionStorage.getItem('augur-workspace-routed')) {
+                        sessionStorage.setItem('augur-workspace-routed', '1');
+                        window.location.replace(ws.default_page);
+                    }
+                } catch(e) {}
+            })
+            .catch(function() {});
+    }
 
     // Active nav highlight
     document.addEventListener('DOMContentLoaded', function() {

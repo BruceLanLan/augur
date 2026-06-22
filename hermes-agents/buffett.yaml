@@ -5,7 +5,7 @@
 
 name: augur-buffett
 display_name: "Warren Buffett"
-description: "Oracle of Omaha — moat-focused value investor"
+description: "Oracle of Omaha — moat-focused value investor · augur_workflow MCP"
 persona_id: buffett
 language: en
 version: "10.10.0"

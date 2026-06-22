@@ -5,7 +5,7 @@
 
 name: augur-dalio
 display_name: "Ray Dalio"
-description: "Bridgewater — macro cycles & all-weather portfolio"
+description: "Bridgewater — macro cycles & all-weather portfolio · augur_workflow MCP"
 persona_id: dalio
 language: en
 version: "10.10.0"

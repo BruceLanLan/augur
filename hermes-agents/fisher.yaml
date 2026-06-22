@@ -5,7 +5,7 @@
 
 name: augur-fisher
 display_name: "Philip Fisher"
-description: "Common Stocks — scuttlebutt & long-term growth"
+description: "Common Stocks — scuttlebutt & long-term growth · augur_workflow MCP"
 persona_id: fisher
 language: en
 version: "10.10.0"
