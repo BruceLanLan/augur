@@ -83,6 +83,11 @@ class TestWorkspaceProfiles:
         state = ws_mod.get_workspace_state()
         assert "default" in state["profiles"]
 
+    def test_save_profile_unknown_raises(self, isolated_workspace):
+        ws_mod = isolated_workspace
+        with pytest.raises(ValueError, match="not found"):
+            ws_mod.save_profile("missing", {"layout_preset": "analyst"})
+
 
 class TestLandingRedirect:
     def test_default_ticker_takes_priority(self, isolated_workspace):
@@ -180,6 +185,20 @@ class TestWorkspaceExportImport:
         assert ws_mod.get_workspace()["default_ticker"] == "QQQ"
 
 
+class TestWorkspaceSettingsHTML:
+    def test_save_clears_landing_route_session_flag(self):
+        settings = Path(__file__).resolve().parents[1] / "dashboard" / "templates" / "settings.html"
+        text = settings.read_text(encoding="utf-8")
+        assert "function saveWorkspaceConfig" in text
+        save_block = text.split("function saveWorkspaceConfig")[1].split("function ")[0]
+        assert "sessionStorage.removeItem('augur-workspace-routed')" in save_block
+
+    def test_base_landing_redirect_encodes_ticker(self):
+        base = Path(__file__).resolve().parents[1] / "dashboard" / "templates" / "base.html"
+        text = base.read_text(encoding="utf-8")
+        assert "encodeURIComponent(ticker.toUpperCase())" in text
+
+
 class TestWorkspaceProfilesAPI:
     def test_profile_endpoints(self, isolated_workspace, tmp_path):
         from fastapi.testclient import TestClient
@@ -208,8 +227,22 @@ class TestWorkspaceProfilesAPI:
             assert r2b.json()["active"] is False
             assert r2b.json()["workspace"]["layout_preset"] == "analyst"
 
+            r2b2 = client.put("/api/workspace/profiles/day-trading", json={
+                "layout_preset": "minimal",
+                "default_page": "/stocks",
+                "default_ticker": "AAPL",
+            })
+            assert r2b2.status_code == 200
+            assert r2b2.json()["profile"] == "day-trading"
+            assert r2b2.json()["workspace"]["layout_preset"] == "minimal"
+            assert r2b2.json()["workspace"]["default_ticker"] == "AAPL"
+            assert client.get("/api/workspace").json()["workspace"]["layout_preset"] == "analyst"
+
             r2c = client.get("/api/workspace/profiles/no-such-profile")
             assert r2c.status_code == 404
+
+            r2d = client.get("/api/workspace/profiles/Bad%20Name!")
+            assert r2d.status_code == 404
 
             r3 = client.put("/api/workspace/active", json={"profile": "day-trading"})
             assert r3.status_code == 200
@@ -247,3 +280,6 @@ class TestWorkspaceProfilesAPI:
             client = TestClient(app)
             r = client.post("/api/workspace/profiles", json={"name": "Bad Name!"})
             assert r.status_code == 400
+
+            r_put = client.put("/api/workspace/profiles/Bad%20Name!", json={"layout_preset": "analyst"})
+            assert r_put.status_code == 400

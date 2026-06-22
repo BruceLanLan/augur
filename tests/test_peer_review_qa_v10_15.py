@@ -218,6 +218,31 @@ class TestWorkspaceProfileAPI:
         assert "research" in names
         assert r.json()["active_profile"] == "research"
 
+    def test_put_non_active_profile_without_switching(self, isolated_workspace):
+        ws_mod, _path = isolated_workspace
+        from dashboard.app import app
+
+        client = TestClient(app)
+        client.post("/api/workspace/profiles", json={"name": "research"})
+        client.put("/api/workspace", json={"layout_preset": "trader", "default_ticker": "SPY"})
+
+        r = client.put("/api/workspace/profiles/research", json={
+            "layout_preset": "minimal",
+            "default_ticker": "QQQ",
+        })
+        assert r.status_code == 200
+        assert r.json()["profile"] == "research"
+        assert r.json()["workspace"]["default_ticker"] == "QQQ"
+        assert r.json()["active"] is False
+
+        active = client.get("/api/workspace").json()["workspace"]
+        assert active["layout_preset"] == "trader"
+        assert active["default_ticker"] == "SPY"
+
+        research = client.get("/api/workspace/profiles/research").json()["workspace"]
+        assert research["layout_preset"] == "minimal"
+        assert research["default_ticker"] == "QQQ"
+
 
 class TestWorkspaceWorkflowIntegration:
     def test_workflow_reads_workspace_enabled_personas(self, isolated_workspace):

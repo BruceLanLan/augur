@@ -54,12 +54,14 @@ from augur.workspace import (
     get_enabled_personas,
     resolve_landing_url,
     save_workspace,
+    save_profile,
     list_presets,
     list_profiles,
     create_profile,
     delete_profile,
     get_profile,
     set_active_profile,
+    normalize_profile_name,
     export_workspace_bundle,
     import_workspace_bundle,
     WORKSPACE_EXPORT_KEY,
@@ -1410,11 +1412,30 @@ async def api_list_workspace_profiles():
 @app.get("/api/workspace/profiles/{profile_name}", summary="获取命名工作区配置详情")
 async def api_get_workspace_profile(profile_name: str):
     """Return full workspace settings for a named profile without switching active."""
-    profile = get_profile(profile_name)
+    slug = normalize_profile_name(profile_name)
+    if not slug:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    profile = get_profile(slug)
     if profile is None:
-        slug = profile_name.strip().lower()
         raise HTTPException(status_code=404, detail=f"Profile '{slug}' not found")
-    slug = profile_name.strip().lower()
+    return {
+        "status": "ok",
+        "profile": slug,
+        "active": slug == get_workspace_state()["active_profile"],
+        "workspace": profile,
+    }
+
+
+@app.put("/api/workspace/profiles/{profile_name}", summary="保存命名工作区配置")
+async def api_save_workspace_profile(profile_name: str, body: WorkspaceBody):
+    """Save settings for a named profile without switching active."""
+    slug = normalize_profile_name(profile_name)
+    if not slug:
+        raise HTTPException(status_code=400, detail="Invalid profile name")
+    try:
+        profile = save_profile(slug, body.model_dump(exclude_none=True))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     return {
         "status": "ok",
         "profile": slug,

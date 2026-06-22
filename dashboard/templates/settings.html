@@ -1150,7 +1150,7 @@ function createWorkspaceProfile() {
 function deleteWorkspaceProfile() {
     var sel = document.getElementById('workspace-profile-select');
     var name = sel && sel.value;
-    if (!name || name === 'default') {
+    if (!name || name === _workspaceActiveProfile) {
         showToast(_t('settings-workspace-profile-cannot-delete', 'Cannot delete this profile'), 'error');
         return;
     }
@@ -1175,6 +1175,7 @@ function applyWorkspacePreset(preset) {
         var p = (data.presets || {})[preset];
         if (!p) return;
         _workspaceState.layout_preset = preset;
+        _workspaceState.committee_preset = p.committee_preset || _workspaceState.committee_preset;
         document.getElementById('workspace-default-page').value = p.default_page || '/';
         document.getElementById('workspace-show-tape').checked = p.show_ticker_tape !== false;
         document.querySelectorAll('.workspace-nav-hide').forEach(function(cb) {
@@ -1200,12 +1201,8 @@ function saveWorkspaceConfig() {
         showToast(_t('settings-workspace-personas-required', 'Select at least one persona'), 'warning');
         return;
     }
-    var activePreset = 'custom';
-    document.querySelectorAll('.workspace-preset-btn').forEach(function(b) {
-        if (b.style.borderColor) activePreset = b.getAttribute('data-preset') || 'custom';
-    });
     var payload = {
-        layout_preset: _workspaceState.layout_preset || activePreset,
+        layout_preset: _workspaceState.layout_preset || 'custom',
         default_page: document.getElementById('workspace-default-page').value,
         default_ticker: document.getElementById('workspace-default-ticker').value.trim(),
         show_ticker_tape: document.getElementById('workspace-show-tape').checked,
@@ -1221,6 +1218,8 @@ function saveWorkspaceConfig() {
     .then(function(r) { return r.json(); })
     .then(function(data) {
         if (data.status === 'ok') {
+            _workspaceState = data.workspace || _workspaceState;
+            try { sessionStorage.removeItem('augur-workspace-routed'); } catch(e) {}
             showToast(_t('settings-workspace-saved', 'Workspace saved'));
             var el = document.getElementById('workspace-status');
             if (el) el.innerHTML = '<span style="color:var(--accent-green);">&#x2713; OK</span>';

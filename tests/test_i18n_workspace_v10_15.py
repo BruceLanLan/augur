@@ -19,9 +19,23 @@ WORKSPACE_KEYS = [
     "settings-workspace-ticker-tape",
     "settings-workspace-sidebar-collapsed",
     "settings-workspace-hidden-nav",
+    "settings-workspace-enabled-personas",
+    "settings-workspace-enabled-personas-hint",
+    "settings-workspace-personas-all",
+    "settings-workspace-personas-clear",
+    "settings-workspace-personas-required",
     "settings-workspace-save",
     "settings-workspace-saved",
     "settings-workspace-preset-applied",
+    "settings-workspace-profile-label",
+    "settings-workspace-profile-delete",
+    "settings-workspace-profile-create",
+    "settings-workspace-profile-switched",
+    "settings-workspace-profile-name-required",
+    "settings-workspace-profile-created",
+    "settings-workspace-profile-cannot-delete",
+    "settings-workspace-profile-delete-confirm",
+    "settings-workspace-profile-deleted",
     "workspace-preset-analyst",
     "workspace-preset-trader",
     "workspace-preset-committee",
@@ -37,6 +51,11 @@ JSON_WORKSPACE_KEYS = [
     "ticker_tape",
     "sidebar_collapsed",
     "hidden_nav",
+    "enabled_personas",
+    "enabled_personas_hint",
+    "personas_all",
+    "personas_clear",
+    "personas_required",
     "save",
     "saved",
     "preset_applied",
@@ -44,6 +63,15 @@ JSON_WORKSPACE_KEYS = [
     "preset_trader",
     "preset_committee",
     "preset_minimal",
+    "profile_label",
+    "profile_delete",
+    "profile_create",
+    "profile_switched",
+    "profile_name_required",
+    "profile_created",
+    "profile_cannot_delete",
+    "profile_delete_confirm",
+    "profile_deleted",
 ]
 
 LANG_MARKERS = ["zh:", "en:", "ja:", "ko:"]
@@ -88,8 +116,19 @@ class TestWorkspaceI18nJs:
 
     def test_settings_html_references_covered(self):
         html = SETTINGS_HTML.read_text(encoding="utf-8")
+        skip_in_html = {
+            "settings-workspace-saved",
+            "settings-workspace-preset-applied",
+            "settings-workspace-profile-switched",
+            "settings-workspace-profile-name-required",
+            "settings-workspace-profile-created",
+            "settings-workspace-profile-cannot-delete",
+            "settings-workspace-profile-delete-confirm",
+            "settings-workspace-profile-deleted",
+            "settings-workspace-personas-required",
+        }
         for key in WORKSPACE_KEYS:
-            if key in ("settings-workspace-saved", "settings-workspace-preset-applied"):
+            if key in skip_in_html:
                 continue
             assert f'data-i18n="{key}"' in html or f"_t('{key}'" in html, (
                 f"{key!r} referenced in settings flow but not found in settings.html"
