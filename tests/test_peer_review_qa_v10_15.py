@@ -55,8 +55,28 @@ class TestFeedbackPaths:
 
         payload = {"consensus_weights": {"buffett": 0.6, "marks": 0.4}}
         (tmp_path / "weights.json").write_text(json.dumps(payload), encoding="utf-8")
-        with patch.object(paths, "FEEDBACK_DIR", tmp_path):
+        with patch.object(paths, "FEEDBACK_DIR", tmp_path), patch.object(
+            paths, "USER_FEEDBACK_DIR", tmp_path / "missing"
+        ):
             assert paths.load_feedback_json("weights.json") == payload
+
+    def test_user_feedback_precedence(self, tmp_path):
+        from augur.consensus import paths
+
+        user_dir = tmp_path / "user"
+        repo_dir = tmp_path / "repo"
+        user_dir.mkdir()
+        repo_dir.mkdir()
+        (user_dir / "weights.json").write_text(
+            json.dumps({"consensus_weights": {"marks": 1.0}}), encoding="utf-8"
+        )
+        (repo_dir / "weights.json").write_text(
+            json.dumps({"consensus_weights": {"buffett": 1.0}}), encoding="utf-8"
+        )
+        with patch.object(paths, "USER_FEEDBACK_DIR", user_dir), patch.object(
+            paths, "FEEDBACK_DIR", repo_dir
+        ):
+            assert paths.feedback_path("weights.json") == user_dir / "weights.json"
 
 
 class TestConsensusWeighting:

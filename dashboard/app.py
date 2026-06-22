@@ -372,7 +372,7 @@ if IMAGES_DIR.exists():
 
 _registry: Optional[AgentRegistry] = None
 _coordinator: Optional[DecisionCoordinator] = None
-_singleton_init_lock = threading.Lock()
+_singleton_init_lock = threading.RLock()
 
 
 def get_registry() -> AgentRegistry:

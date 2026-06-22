@@ -1,0 +1,27 @@
+{
+  "_comment": "Rolling information-coefficient weights per agent. Copy to feedback/rolling_ic.json or ~/.augur/feedback/rolling_ic.json.",
+  "_format": "Higher IC -> higher weight; normalized at runtime when blended 50/50 with base weights.",
+  "updated_at": "2026-06-22",
+  "source": "committee_feedback_example",
+  "window_days": 90,
+  "weights": {
+    "buffett": 0.08,
+    "graham": 0.06,
+    "lynch": 0.09,
+    "marks": 0.10,
+    "cathie_wood": 0.07,
+    "fisher": 0.07,
+    "dalio": 0.08,
+    "munger": 0.07,
+    "soros": 0.06,
+    "arps": 0.06,
+    "aschenbrenner": 0.07,
+    "thiel": 0.06,
+    "duan_yongping": 0.05,
+    "zhang_lei": 0.04,
+    "li_lu": 0.04,
+    "dan_bin": 0.04,
+    "dayu": 0.04,
+    "serenity": 0.06
+  }
+}

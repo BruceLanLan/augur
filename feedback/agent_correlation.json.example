@@ -1,0 +1,29 @@
+{
+  "_comment": "Pairwise agent signal correlation for diversity penalty. Copy to feedback/agent_correlation.json.",
+  "_format": "correlation_matrix[agent_a][agent_b] in [-1, 1]; only pairs with corr > 0.7 reduce weight.",
+  "updated_at": "2026-06-22",
+  "source": "committee_feedback_example",
+  "correlation_matrix": {
+    "buffett": {
+      "graham": 0.82,
+      "munger": 0.78,
+      "marks": 0.55
+    },
+    "graham": {
+      "buffett": 0.82,
+      "munger": 0.71
+    },
+    "cathie_wood": {
+      "aschenbrenner": 0.76,
+      "thiel": 0.68,
+      "arps": 0.61
+    },
+    "aschenbrenner": {
+      "cathie_wood": 0.76,
+      "thiel": 0.72
+    },
+    "lynch": {
+      "fisher": 0.58
+    }
+  }
+}

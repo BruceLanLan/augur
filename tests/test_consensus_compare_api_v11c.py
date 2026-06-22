@@ -19,15 +19,46 @@ This file covers:
      too-few agents -> 400, duplicate agent_ids -> 400, unknown agent -> 404.
 """
 
+import os
+from unittest.mock import patch
+
 import pytest
 from fastapi.testclient import TestClient
 
+from augur.personas.base import MarketContext
 from dashboard.app import app, get_endpoint_bucket
+
+MACRO_STUB = {"vix": 18.0, "trend": "sideways", "regime": "SIDEWAYS"}
+ANALYZE_CTX = MarketContext(
+    ticker="AAPL",
+    price=100.0,
+    pe=25.0,
+    pb=3.0,
+    roe=0.25,
+    gross_margins=0.45,
+    sector="Technology",
+    industry="Consumer Electronics",
+)
+FAST_PERSONAS = ["buffett", "graham", "marks"]
+ANALYZE_QUERY = "pe=25&price=100&roe=0.25&auto_fetch=false"
 
 
 @pytest.fixture(scope="module")
 def client():
     return TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def _stub_consensus_external_io():
+    """Fast, deterministic analyze/consensus path without yfinance or full 18-agent runs."""
+    with patch.dict(os.environ, {"AUGUR_SKIP_MACRO_FETCH": "1"}, clear=False), patch(
+        "dashboard.app.get_enabled_personas",
+        return_value=FAST_PERSONAS,
+    ), patch(
+        "augur.consensus.weighting.fetch_macro_features",
+        return_value=MACRO_STUB,
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -45,7 +76,7 @@ class TestAnalyzeConsensus:
         """The analyze endpoint returns a `consensus` block with the
         required fields (signal, score, confidence, reasoning, key_findings,
         risks, metadata) and the agents[] list matches `agent_count`."""
-        resp = client.get("/api/analyze/AAPL")
+        resp = client.get(f"/api/analyze/AAPL?{ANALYZE_QUERY}")
         assert resp.status_code == 200, resp.text
         data = resp.json()
 
@@ -69,6 +100,8 @@ class TestAnalyzeConsensus:
         assert isinstance(consensus["key_findings"], list)
         assert isinstance(consensus["risks"], list)
         assert isinstance(consensus["metadata"], dict)
+        assert "weighting" in consensus["metadata"]
+        assert consensus["metadata"]["weighting"].get("participating_agents") >= 1
 
         # agents[] length must equal agent_count
         agents = data["agents"]
@@ -79,7 +112,7 @@ class TestAnalyzeConsensus:
         """When at least one agent is bullish/bearish, the consensus signal
         must be one of the values declared by the agent responses (bullish,
         bearish, or neutral) — never a raw error / unknown token."""
-        resp = client.get("/api/analyze/AAPL")
+        resp = client.get(f"/api/analyze/AAPL?{ANALYZE_QUERY}")
         assert resp.status_code == 200, resp.text
         data = resp.json()
 

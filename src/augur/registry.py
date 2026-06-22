@@ -556,6 +556,17 @@ class DecisionCoordinator:
         if regime_features:
             result.metadata["regime_features"] = regime_features
 
+        if adjusted_weights:
+            result.metadata["weighting"] = {
+                "industry": weight_ctx.industry,
+                "industry_label": weight_ctx.industry_label,
+                "regime": regime,
+                "participating_agents": len(adjusted_weights),
+                "agent_weights": {
+                    aid: round(w, 4) for aid, w in sorted(adjusted_weights.items())
+                },
+            }
+
         # 10x multi-factor overlay
         try:
             from scanner.ten_x_screener import attach_ten_x_to_consensus

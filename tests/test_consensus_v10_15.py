@@ -71,12 +71,23 @@ class TestWeightQuality:
 
 class TestFeedbackTemplates:
     def test_example_files_exist_and_parse(self):
-        matrix_example = REPO_ROOT / "feedback" / "industry_matrix.json.example"
-        weights_example = REPO_ROOT / "feedback" / "weights.json.example"
-        assert matrix_example.exists()
-        assert weights_example.exists()
-        matrix = json.loads(matrix_example.read_text(encoding="utf-8"))
-        weights = json.loads(weights_example.read_text(encoding="utf-8"))
+        for name in (
+            "industry_matrix.json.example",
+            "weights.json.example",
+            "agent_correlation.json.example",
+            "rolling_ic.json.example",
+        ):
+            path = REPO_ROOT / "feedback" / name
+            assert path.exists(), f"missing feedback example: {name}"
+            data = json.loads(path.read_text(encoding="utf-8"))
+            assert isinstance(data, dict)
+
+        matrix = json.loads(
+            (REPO_ROOT / "feedback" / "industry_matrix.json.example").read_text(encoding="utf-8")
+        )
+        weights = json.loads(
+            (REPO_ROOT / "feedback" / "weights.json.example").read_text(encoding="utf-8")
+        )
         assert "technology" in matrix
         assert "consensus_weights" in weights
         assert sum(weights["consensus_weights"].values()) == pytest.approx(1.0, abs=0.02)
@@ -88,6 +99,29 @@ class TestFeedbackTemplates:
     def test_load_feedback_json_missing_returns_default(self):
         data = load_feedback_json("nonexistent_file_xyz.json", default={"x": 1})
         assert data == {"x": 1}
+
+    def test_user_feedback_dir_overrides_repo(self, tmp_path):
+        from augur.consensus import paths
+
+        user_dir = tmp_path / "user_feedback"
+        repo_dir = tmp_path / "repo_feedback"
+        user_dir.mkdir()
+        repo_dir.mkdir()
+        (user_dir / "weights.json").write_text(
+            json.dumps({"consensus_weights": {"buffett": 1.0}}),
+            encoding="utf-8",
+        )
+        (repo_dir / "weights.json").write_text(
+            json.dumps({"consensus_weights": {"graham": 1.0}}),
+            encoding="utf-8",
+        )
+
+        with patch.object(paths, "USER_FEEDBACK_DIR", user_dir), patch.object(
+            paths, "FEEDBACK_DIR", repo_dir
+        ):
+            assert paths.feedback_path("weights.json") == user_dir / "weights.json"
+            data = paths.load_feedback_json("weights.json")
+            assert data["consensus_weights"]["buffett"] == 1.0
 
 
 class TestRestrictWeights:
@@ -142,6 +176,11 @@ class TestGetConsensusIntegration:
         assert consensus.agent_id == "consensus"
         assert "Regime:" in consensus.reasoning
         assert consensus.metadata.get("regime_features", {}).get("regime") == "BEAR_HIGH_VOL"
+        weighting = consensus.metadata.get("weighting", {})
+        assert weighting.get("industry") == "financial"
+        assert weighting.get("regime") == "BEAR_HIGH_VOL"
+        assert weighting.get("participating_agents", 0) >= 3
+        assert isinstance(weighting.get("agent_weights"), dict)
 
     @patch("augur.consensus.build_consensus_weights")
     def test_get_consensus_calls_build_consensus_weights(self, mock_build):

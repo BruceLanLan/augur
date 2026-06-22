@@ -1,24 +1,18 @@
 # -*- coding: utf-8 -*-
 """Rolling IC weight loader."""
 
-from pathlib import Path
 from typing import Dict
 
-from augur.consensus.paths import feedback_path
+from augur.consensus.paths import load_feedback_json
 
 
 def load_rolling_ic_weights() -> Dict[str, float]:
     """Load rolling IC weights from feedback file if present."""
     try:
-        import json
-        ic_file = feedback_path("rolling_ic.json")
-        if not ic_file.exists():
-            ic_file = Path.home() / ".augur" / "rolling_ic.json"
-        if ic_file.exists():
-            data = json.loads(ic_file.read_text(encoding="utf-8"))
-            weights = data.get("weights", data)
-            if isinstance(weights, dict):
-                return {k: float(v) for k, v in weights.items()}
+        data = load_feedback_json("rolling_ic.json")
+        weights = data.get("weights", data)
+        if isinstance(weights, dict):
+            return {k: float(v) for k, v in weights.items() if isinstance(v, (int, float))}
     except Exception:
         pass
     return {}
