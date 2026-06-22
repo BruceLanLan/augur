@@ -80,7 +80,7 @@ class TestErrorEnvelopeConsistency:
         with patch.object(app_mod, "get_coordinator") as gc:
             coord = gc.return_value
 
-            def _boom(_ctx):
+            def _boom(_ctx, **kwargs):
                 raise RuntimeError("simulated upstream failure")
 
             coord.analyze_with_all.side_effect = _boom
