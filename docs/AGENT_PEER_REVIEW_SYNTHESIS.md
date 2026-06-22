@@ -1,9 +1,33 @@
-# Agent Peer Review Synthesis — v10.15.0
+# Agent Peer Review Synthesis — v10.15.1
 
 **Integration Lead:** Reviewer #10  
 **Date:** 2026-06-22  
 **Inputs:** 6 peer reviews (#1 Workspace, #2 Workflow, #3 Consensus, #4 Dashboard, #8 Agent Hosts, #9 Architecture) + v10.14/v10.15 diff  
 **Missing reviews:** #5 Testing, #6 Docs, #7 MCP — inferred from code/tests where noted
+
+---
+
+## 50-round QA (5 agents × 10 rounds)
+
+**Gatekeeper program:** Five agents each run 10 full-suite iterations (`pytest tests/ -q --ignore=tests/test_analyze_api_v12.py`). Agent #5 (Testing) completed rounds 1–10 on 2026-06-22.
+
+| Agent | Rounds | Final pass/fail | Status |
+|-------|--------|-----------------|--------|
+| #5 Testing | 10/10 | 2043 / 0 | ✅ Green (rounds 2–10) |
+
+### P0 resolved in QA pass
+
+| ID | Item | Resolution |
+|----|------|------------|
+| P0-QA-1 | E2E dashboard `agent_count` ≥ 18 | Workspace cache reset in `conftest.py` |
+| P0-QA-2 | Scanner error envelope (`enabled_personas` kwarg) | Suite isolation + existing `**kwargs` mock |
+| P0-QA-3 | Sentiment factor consensus delta | MetaModel isolated in integration test |
+
+### P1 deferred (unchanged)
+
+Workspace MCP tools (P1-1), profile i18n (P1-3), step_status envelope (P1-6) remain next-session items — not regressions in full suite.
+
+**Artifact:** `docs/iterations/agent5-fullsuite-SUMMARY.md`
 
 ---
 

@@ -4,6 +4,22 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
+def reset_workspace_state():
+    """Reset workspace in-memory cache before/after each test to prevent cross-test pollution."""
+    try:
+        from augur.workspace import reset_workspace_cache
+        reset_workspace_cache()
+    except Exception:
+        pass
+    yield
+    try:
+        from augur.workspace import reset_workspace_cache
+        reset_workspace_cache()
+    except Exception:
+        pass
+
+
+@pytest.fixture(autouse=True)
 def reset_ip_rate_limits():
     """Clear IP-based rate limit state before each test to prevent cross-test pollution."""
     from dashboard.app import _ip_rate_limits, _ip_rate_lock

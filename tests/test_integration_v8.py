@@ -105,18 +105,21 @@ class TestSentimentIntegration:
 
         mock_sa = MagicMock()
         mock_sa.get_sentiment_factor.return_value = 0.0
-        with patch("augur.registry._get_sentiment_analyzer", return_value=mock_sa):
+        with patch("augur.registry._get_sentiment_analyzer", return_value=mock_sa), \
+             patch("augur.consensus.meta_model.MetaModel.load", return_value=None):
             baseline = coordinator.get_consensus(results, ticker="NVDA", context=ctx)
 
         mock_sa.get_sentiment_factor.return_value = 0.5
-        with patch("augur.registry._get_sentiment_analyzer", return_value=mock_sa):
+        with patch("augur.registry._get_sentiment_analyzer", return_value=mock_sa), \
+             patch("augur.consensus.meta_model.MetaModel.load", return_value=None):
             boosted = coordinator.get_consensus(results, ticker="NVDA", context=ctx)
 
         assert boosted.score == pytest.approx(baseline.score + 0.5, abs=1e-4)
         assert 0.0 <= boosted.score <= 10.0
 
         mock_sa.get_sentiment_factor.return_value = -0.5
-        with patch("augur.registry._get_sentiment_analyzer", return_value=mock_sa):
+        with patch("augur.registry._get_sentiment_analyzer", return_value=mock_sa), \
+             patch("augur.consensus.meta_model.MetaModel.load", return_value=None):
             dampened = coordinator.get_consensus(results, ticker="NVDA", context=ctx)
 
         assert dampened.score == pytest.approx(max(0.0, baseline.score - 0.5), abs=1e-4)

@@ -2,6 +2,17 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.15.1] - 2026-06-22
+
+50-round QA gatekeeper patch (Agent #5, 10 full-suite rounds).
+
+### Fixed
+- **Test isolation**: autouse workspace cache reset in `tests/conftest.py` — fixes e2e dashboard `agent_count` pollution from stale `enabled_personas`.
+- **Sentiment integration test**: patch `MetaModel.load` in `test_integration_v8` so sentiment ±0.5 hook is tested without 50/50 meta-model dilution.
+
+### Notes
+- Full suite: **2043 passed**, 0 failed (rounds 2–10); see `docs/iterations/agent5-fullsuite-SUMMARY.md`.
+
 ## [10.15.0] - 2026-06-22
 
 Bloomberg 风格终端工作区定制 + Agentic 工作流 MCP + 共识增强模块 + **Agent Peer Review** 集成迭代。

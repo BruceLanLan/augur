@@ -85,7 +85,7 @@ _APP_START_TIME = _time.time()
 app = FastAPI(
     title="Augur — 多智能体投资分析",
     description="18位虚拟投资大师，多维度共识分析",
-    version="10.15.0",
+    version="10.15.1",
 )
 
 

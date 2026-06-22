@@ -37,7 +37,7 @@ from augur.errors import HTTP_ERROR_ENVELOPE, api_error_response
 app = FastAPI(
     title="Augur API",
     description="Multi-agent investment analysis API",
-    version="10.15.0",
+    version="10.15.1",
 )
 
 
