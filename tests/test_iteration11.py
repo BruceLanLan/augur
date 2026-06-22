@@ -430,10 +430,14 @@ class TestRateLimiting:
     @pytest.fixture(autouse=True)
     def reset_rate_limits(self):
         """Clear rate limit state before each test."""
-        from dashboard.app import _rate_limits
+        from dashboard.app import _rate_limits, _ip_rate_limits, _ip_rate_lock
         _rate_limits.clear()
+        with _ip_rate_lock:
+            _ip_rate_limits.clear()
         yield
         _rate_limits.clear()
+        with _ip_rate_lock:
+            _ip_rate_limits.clear()
 
     def test_rate_limit_allows_normal_traffic(self):
         """25 requests to same ticker all return 200."""

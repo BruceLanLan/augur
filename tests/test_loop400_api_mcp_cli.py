@@ -22,6 +22,8 @@ from dashboard.app import (
     get_endpoint_bucket,
     _rate_limits,
     _rate_limit_lock,
+    _ip_rate_limits,
+    _ip_rate_lock,
 )
 from augur.cli import main
 from augur.mcp_server import _validate_model_name, _validate_persona_id, _validate_ticker
@@ -148,6 +150,8 @@ class TestDashboardAuthAndRateLimits:
     def test_per_ticker_analyze_429_envelope(self, dashboard_client):
         with _rate_limit_lock:
             _rate_limits.clear()
+        with _ip_rate_lock:
+            _ip_rate_limits.clear()
         for _ in range(31):
             dashboard_client.get("/api/analyze/LOOP?auto_fetch=false")
         resp = dashboard_client.get("/api/analyze/LOOP?auto_fetch=false")
@@ -155,6 +159,8 @@ class TestDashboardAuthAndRateLimits:
         _assert_envelope(resp.json(), expected_code="RATE_LIMITED")
         with _rate_limit_lock:
             _rate_limits.clear()
+        with _ip_rate_lock:
+            _ip_rate_limits.clear()
 
     @pytest.mark.parametrize("endpoint,bucket,body", [
         ("api_compare", "api_compare", {"ticker": "AAPL", "agent_ids": ["buffett", "graham"]}),
