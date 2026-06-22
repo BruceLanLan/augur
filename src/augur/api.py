@@ -268,6 +268,9 @@ async def run_workflow_endpoint(body: WorkflowRequest):
         )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logging.exception("Workflow failed for %s", body.ticker)
+        raise HTTPException(status_code=500, detail=f"Workflow failed: {e}")
 
     return {
         "status": "ok",

@@ -5,6 +5,7 @@ augur.workflow - Agentic multi-step analysis pipeline.
 Runs configurable step chains: fetch → analyze → consensus → committee → debate → sentiment.
 """
 
+import time
 from typing import Any, Dict, List, Optional
 
 
@@ -23,6 +24,22 @@ def parse_steps(steps: str) -> List[str]:
     return step_list
 
 
+def _record_step_status(output: Dict[str, Any], step_list: List[str]) -> None:
+    """Attach per-step status envelope (ok / skipped / error / empty)."""
+    results = output.get("results", {})
+    status: Dict[str, str] = {}
+    for step in VALID_STEPS:
+        if step not in step_list:
+            status[step] = "skipped"
+        elif step not in results:
+            status[step] = "empty"
+        elif isinstance(results[step], dict) and "error" in results[step]:
+            status[step] = "error"
+        else:
+            status[step] = "ok"
+    output["step_status"] = status
+
+
 def run_workflow(
     ticker: str,
     steps: str = "fetch,analyze,consensus",
@@ -37,18 +54,26 @@ def run_workflow(
     registry = AgentRegistry()
     coordinator = DecisionCoordinator(registry)
     output: Dict[str, Any] = {"ticker": ticker, "steps": step_list, "results": {}}
+    step_timings: Dict[str, float] = {}
 
     ctx = None
     if any(s in step_list for s in ("fetch", "analyze", "consensus", "committee", "debate")):
-        from augur.data import fetch_market_context
-        ctx = fetch_market_context(ticker)
-        if "fetch" in step_list:
-            output["results"]["fetch"] = {
-                "price": ctx.price,
-                "pe": ctx.pe,
-                "sector": ctx.sector,
-                "industry": ctx.industry,
-            }
+        t0 = time.perf_counter()
+        try:
+            from augur.data import fetch_market_context
+            ctx = fetch_market_context(ticker)
+            if "fetch" in step_list:
+                output["results"]["fetch"] = {
+                    "price": ctx.price,
+                    "pe": ctx.pe,
+                    "sector": ctx.sector,
+                    "industry": ctx.industry,
+                }
+        except Exception as e:
+            if "fetch" in step_list:
+                output["results"]["fetch"] = {"error": str(e)}
+            output.setdefault("warnings", []).append(f"fetch_failed: {e}")
+        step_timings["fetch"] = round(time.perf_counter() - t0, 3)
 
     selected_agents = None
     persona_filter: Optional[List[str]] = None
@@ -59,6 +84,10 @@ def run_workflow(
         skipped = [aid for aid in selected_ids if aid not in all_agents]
         if skipped:
             output["agents_skipped"] = skipped
+        if not selected_agents:
+            output.setdefault("warnings", []).append(
+                "all_requested_agents_invalid: falling back to workspace/default agent set"
+            )
     else:
         from augur.workspace import get_enabled_personas
 
@@ -66,8 +95,20 @@ def run_workflow(
         if persona_filter:
             output["agents_filter"] = persona_filter
 
+    debate_personas: Optional[List[str]] = None
+    if selected_agents:
+        debate_personas = list(selected_agents.keys())
+    elif persona_filter:
+        debate_personas = persona_filter
+
     responses = None
-    if any(s in step_list for s in ("analyze", "consensus", "committee", "debate")):
+    needs_responses = any(s in step_list for s in ("analyze", "consensus", "committee", "debate"))
+    if needs_responses and ctx is None:
+        output.setdefault("warnings", []).append(
+            "context_unavailable: market data fetch failed; analyze/consensus/committee/debate skipped"
+        )
+    elif needs_responses:
+        t0 = time.perf_counter()
         if selected_agents:
             responses = {aid: agent.analyze(ctx) for aid, agent in selected_agents.items()}
         else:
@@ -82,15 +123,18 @@ def run_workflow(
                 }
                 for aid, r in responses.items()
             }
+        step_timings["analyze"] = round(time.perf_counter() - t0, 3)
 
     consensus_result = None
     if any(s in step_list for s in ("consensus", "committee")) and responses:
+        t0 = time.perf_counter()
         consensus_result = coordinator.get_consensus(responses, ticker=ticker, context=ctx)
         meta = consensus_result.metadata or {}
         if meta.get("low_participation"):
             output.setdefault("warnings", []).append(
                 "low_participation: fewer than 3 agents responded; confidence capped"
             )
+        step_timings["consensus"] = round(time.perf_counter() - t0, 3)
 
     if "consensus" in step_list and consensus_result is not None:
         meta = consensus_result.metadata or {}
@@ -105,6 +149,7 @@ def run_workflow(
         }
 
     if "committee" in step_list and responses:
+        t0 = time.perf_counter()
         consensus = consensus_result or coordinator.get_consensus(
             responses, ticker=ticker, context=ctx
         )
@@ -121,17 +166,33 @@ def run_workflow(
                 for r in sorted(responses.values(), key=lambda x: -x.score)
             ],
         }
+        step_timings["committee"] = round(time.perf_counter() - t0, 3)
 
     if "debate" in step_list:
-        debate_results = coordinator.run_debate(ctx, rounds=2)
-        debate_consensus = coordinator.get_consensus(debate_results, ticker=ticker, context=ctx)
-        output["results"]["debate"] = {
-            "signal": debate_consensus.signal.value,
-            "score": debate_consensus.score,
-            "rounds": 2,
-        }
+        t0 = time.perf_counter()
+        try:
+            if responses:
+                debate_results = coordinator.run_debate(
+                    ctx, rounds=2, initial_results=responses
+                )
+            else:
+                debate_results = coordinator.run_debate(
+                    ctx, rounds=2, enabled_personas=debate_personas
+                )
+            debate_consensus = coordinator.get_consensus(
+                debate_results, ticker=ticker, context=ctx
+            )
+            output["results"]["debate"] = {
+                "signal": debate_consensus.signal.value,
+                "score": debate_consensus.score,
+                "rounds": 2,
+            }
+        except Exception as e:
+            output["results"]["debate"] = {"error": str(e)}
+        step_timings["debate"] = round(time.perf_counter() - t0, 3)
 
     if "sentiment" in step_list:
+        t0 = time.perf_counter()
         try:
             from augur.sentiment import SentimentAnalyzer
             sent = SentimentAnalyzer().get_sentiment(ticker)
@@ -142,7 +203,12 @@ def run_workflow(
             }
         except Exception as e:
             output["results"]["sentiment"] = {"error": str(e)}
+        step_timings["sentiment"] = round(time.perf_counter() - t0, 3)
 
+    if step_timings:
+        output["step_timings_ms"] = {k: round(v * 1000, 1) for k, v in step_timings.items()}
+
+    _record_step_status(output, step_list)
     output["summary"] = format_workflow_summary(output)
     return output
 
@@ -152,7 +218,7 @@ def format_workflow_summary(data: Dict[str, Any]) -> str:
     lines = [f"═══ Augur Workflow: {data['ticker']} ═══", f"Steps: {', '.join(data['steps'])}", ""]
     results = data.get("results", {})
 
-    if "fetch" in results:
+    if "fetch" in results and "error" not in results["fetch"]:
         f = results["fetch"]
         lines += [
             "── Fetch ──",
@@ -192,5 +258,12 @@ def format_workflow_summary(data: Dict[str, Any]) -> str:
     if "sentiment" in results and "error" not in results["sentiment"]:
         s = results["sentiment"]
         lines += [f"── Sentiment ──  Score: {s['score']:+.2f}", ""]
+
+    warnings = data.get("warnings", [])
+    if warnings:
+        lines += ["── Warnings ──"]
+        for w in warnings:
+            lines.append(f"  ! {w}")
+        lines.append("")
 
     return "\n".join(lines)

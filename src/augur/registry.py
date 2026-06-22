@@ -632,18 +632,29 @@ class DecisionCoordinator:
         """Get debate history"""
         return self._debate_history
 
-    def run_debate(self, context: MarketContext, rounds: int = 2) -> Dict[str, AgentResponse]:
+    def run_debate(
+        self,
+        context: MarketContext,
+        rounds: int = 2,
+        initial_results: Optional[Dict[str, AgentResponse]] = None,
+        enabled_personas: Optional[List[str]] = None,
+    ) -> Dict[str, AgentResponse]:
         """
         Run multi-round debate
 
         Args:
             context: Market context
             rounds: Number of debate rounds
+            initial_results: Optional pre-computed agent responses to debate from
+            enabled_personas: When initial_results is None, filter agents for first round
 
         Returns:
             Final agent positions
         """
-        current_results = self.analyze_with_all(context)
+        if initial_results is not None:
+            current_results = initial_results
+        else:
+            current_results = self.analyze_with_all(context, enabled_personas=enabled_personas)
 
         for round_num in range(rounds - 1):
             debate_summary = self._build_debate_summary(current_results)

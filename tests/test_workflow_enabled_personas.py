@@ -100,3 +100,67 @@ class TestWorkflowEnabledPersonas:
 
         assert result["results"]["consensus"]["low_participation"] is True
         assert any("low_participation" in w for w in result.get("warnings", []))
+
+    def test_all_invalid_agents_warning(self, mock_ctx, mock_response):
+        with patch("augur.data.fetch_market_context", return_value=mock_ctx):
+            with patch.object(
+                DecisionCoordinator, "analyze_with_all", return_value={"buffett": mock_response},
+            ):
+                from augur.workflow import run_workflow
+
+                result = run_workflow("TEST", steps="analyze", agents="fake1,fake2")
+
+        assert any("all_requested_agents_invalid" in w for w in result.get("warnings", []))
+
+    def test_step_status_envelope(self, mock_ctx, mock_response):
+        with patch("augur.data.fetch_market_context", return_value=mock_ctx):
+            with patch.object(
+                DecisionCoordinator, "analyze_with_all", return_value={"buffett": mock_response},
+            ):
+                with patch.object(DecisionCoordinator, "get_consensus", return_value=mock_response):
+                    from augur.workflow import run_workflow
+
+                    result = run_workflow("TEST", steps="fetch,analyze,consensus,sentiment")
+
+        status = result["step_status"]
+        assert status["fetch"] == "ok"
+        assert status["analyze"] == "ok"
+        assert status["consensus"] == "ok"
+        assert status["committee"] == "skipped"
+        assert "step_timings_ms" in result
+
+    def test_debate_reuses_prior_responses(self, mock_ctx, mock_response):
+        analyze_calls = {"n": 0}
+
+        def fake_analyze(self, ctx, enabled_personas=None):
+            analyze_calls["n"] += 1
+            return {"buffett": mock_response}
+
+        with patch("augur.data.fetch_market_context", return_value=mock_ctx):
+            with patch.object(DecisionCoordinator, "analyze_with_all", fake_analyze):
+                with patch.object(
+                    DecisionCoordinator, "run_debate", return_value={"buffett": mock_response},
+                ) as mock_debate:
+                    with patch.object(DecisionCoordinator, "get_consensus", return_value=mock_response):
+                        from augur.workflow import run_workflow
+
+                        run_workflow("TEST", steps="analyze,debate")
+
+        assert analyze_calls["n"] == 1
+        mock_debate.assert_called_once()
+        assert mock_debate.call_args.kwargs.get("initial_results") is not None
+
+    def test_warnings_in_summary(self, mock_ctx, mock_response):
+        mock_response.metadata = {"low_participation": True}
+
+        with patch("augur.data.fetch_market_context", return_value=mock_ctx):
+            with patch.object(
+                DecisionCoordinator, "analyze_with_all", return_value={"buffett": mock_response},
+            ):
+                with patch.object(DecisionCoordinator, "get_consensus", return_value=mock_response):
+                    from augur.workflow import run_workflow
+
+                    result = run_workflow("TEST", steps="consensus")
+
+        assert "Warnings" in result["summary"]
+        assert "low_participation" in result["summary"]

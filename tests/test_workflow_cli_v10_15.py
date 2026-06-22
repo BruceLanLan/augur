@@ -163,6 +163,16 @@ class TestWorkflowAPI:
             resp = client.post("/api/workflow", json={"ticker": "AAPL", "steps": "nope"})
         assert resp.status_code == 400
 
+    def test_workflow_runtime_error_returns_500(self, monkeypatch):
+        monkeypatch.delenv("AUGUR_API_TOKEN", raising=False)
+        from augur.api import app
+
+        client = TestClient(app)
+        with patch("augur.workflow.run_workflow", side_effect=RuntimeError("backend down")):
+            resp = client.post("/api/workflow", json={"ticker": "AAPL"})
+        assert resp.status_code == 500
+        assert "backend down" in resp.json()["detail"]
+
 
 class TestWorkflowMCP:
     def test_augur_workflow_tool(self, workflow_result):
