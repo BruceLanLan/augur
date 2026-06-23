@@ -61,17 +61,17 @@ Workspace MCP tools (P1-1), profile i18n (P1-3), step_status envelope (P1-6) rem
 
 ### P1 — Next session high value
 
-| ID | Item | Source |
-|----|------|--------|
-| P1-1 | MCP workspace tools (`augur_workspace_get/set/profiles`) | #8 |
-| P1-2 | Regenerate all persona `manifest.json` + Hermes yaml with 10 tools | #8 |
-| P1-3 | Complete workspace profile i18n keys in `i18n.js` (9 keys × 4 locales) | #4 |
-| P1-4 | Wire `committee_preset` to committee page defaults | #1 |
-| P1-5 | `enabled_personas` multi-select in Settings UI | #1 |
-| P1-6 | Per-step `step_status` envelope + partial failure in workflow | #2 |
-| P1-7 | `GET /api/workspace` ETag / conditional GET | #4 |
-| P1-8 | Feedback path → `~/.augur/feedback/` for PyPI installs | #2, #3 |
-| P1-9 | Extract `dashboard/routes/workspace.py` (R1) | #4, #9 |
+| ID | Item | Source | Status v10.16.0 |
+|----|------|--------|------------------|
+| P1-1 | MCP workspace tools (`augur_workspace_get/set/profiles`) | #8 | ✅ Implemented |
+| P1-2 | Regenerate all persona `manifest.json` + Hermes yaml with 13 tools | #8 | Pending |
+| P1-3 | Complete workspace profile i18n keys in `i18n.js` (9 keys × 4 locales) | #4 | Pending |
+| P1-4 | Wire `committee_preset` to committee page defaults | #1 | Pending |
+| P1-5 | `enabled_personas` multi-select in Settings UI | #1 | Pending |
+| P1-6 | Per-step `step_status` envelope + partial failure in workflow | #2 | Pending |
+| P1-7 | `GET /api/workspace` ETag / conditional GET | #4 | Pending |
+| P1-8 | Feedback path → `~/.augur/feedback/` for PyPI installs | #2, #3 | Pending |
+| P1-9 | Extract `dashboard/routes/workspace.py` (R1) | #4, #9 | Pending |
 
 ### P2 — Maturity / architecture
 

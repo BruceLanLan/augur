@@ -8,6 +8,7 @@ build/
 *.egg
 .pytest_cache/
 .agents/
+.venv/
 
 # Test caches
 .pytest-home/

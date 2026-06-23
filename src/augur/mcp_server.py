@@ -2,7 +2,7 @@
 """
 augur.mcp_server - MCP Server for Augur (stdio mode)
 
-Provides 10 tools (stdio; no HTTP auth — runs locally beside the analyst):
+Provides 13 tools (stdio; no HTTP auth — runs locally beside the analyst):
   - augur_analyze
   - augur_consensus
   - augur_committee
@@ -13,6 +13,9 @@ Provides 10 tools (stdio; no HTTP auth — runs locally beside the analyst):
   - augur_configure
   - augur_create_persona
   - augur_workflow
+  - augur_workspace_get
+  - augur_workspace_set
+  - augur_workspace_profiles
 
 MCP tools do not use AUGUR_API_TOKEN (that applies to the Dashboard/REST API only).
 Live market data requires optional deps (`pip install 'augur-agents[data]'`) and,
@@ -88,6 +91,139 @@ def _run_workflow_tool(
         return f"Workflow failed for {ticker}: {e}"
 
 
+def _format_workspace(name: str, cfg: dict, active_name: str) -> list:
+    lines = [
+        f"Profile: {name}" + (" (active)" if name == active_name else ""),
+        f"  Layout preset:     {cfg.get('layout_preset', 'analyst')}",
+        f"  Default page:      {cfg.get('default_page', '/')}",
+        f"  Default ticker:    {cfg.get('default_ticker') or '(none)'}",
+        f"  Show ticker tape:  {cfg.get('show_ticker_tape', True)}",
+        f"  Committee preset:  {cfg.get('committee_preset', 'all')}",
+        f"  Hidden nav:        {', '.join(cfg.get('hidden_nav', [])) or '(none)'}",
+        f"  Enabled personas:  {', '.join(cfg.get('enabled_personas', [])) or '(all)'}",
+    ]
+    return lines
+
+
+def _run_workspace_get_tool(profile: str = "") -> str:
+    """Execute augur_workspace_get MCP tool logic (testable without FastMCP)."""
+    from augur.workspace import get_workspace_state, list_profiles
+
+    state = get_workspace_state()
+    active = state["active_profile"]
+
+    if profile.strip():
+        slug = profile.strip().lower()
+        cfg = state["profiles"].get(slug)
+        if cfg is None:
+            names = ", ".join(p["name"] for p in list_profiles())
+            return f"Error: profile '{profile}' not found. Available: {names}"
+        lines = _format_workspace(slug, cfg, active)
+    else:
+        lines = _format_workspace(active, state["profiles"][active], active)
+
+    other_names = [n for n in sorted(state["profiles"]) if n != (profile.strip().lower() or active)]
+    if other_names:
+        lines.append(f"\nOther profiles: {', '.join(other_names)}")
+    return "\n".join(lines)
+
+
+def _run_workspace_set_tool(
+    profile: str = "",
+    layout_preset: str = "",
+    default_page: str = "",
+    default_ticker: str = "",
+    show_ticker_tape: Optional[bool] = None,
+    committee_preset: str = "",
+    hidden_nav: str = "",
+    enabled_personas: str = "",
+) -> str:
+    """Execute augur_workspace_set MCP tool logic (testable without FastMCP).
+
+    Only fields explicitly provided are changed; everything else in the target
+    profile is left untouched. Pass the literal value "none" to hidden_nav or
+    enabled_personas to clear that list.
+    """
+    from augur.workspace import get_workspace_state, save_profile, save_workspace, normalize_profile_name
+
+    state = get_workspace_state()
+    active = state["active_profile"]
+    target = normalize_profile_name(profile) if profile.strip() else active
+    if target is None:
+        return f"Error: invalid profile name '{profile}'"
+    if target not in state["profiles"]:
+        return f"Error: profile '{profile}' not found. Use augur_workspace_profiles to list or create profiles."
+
+    merged = dict(state["profiles"][target])
+    if layout_preset.strip():
+        merged["layout_preset"] = layout_preset.strip()
+    if default_page.strip():
+        merged["default_page"] = default_page.strip()
+    if default_ticker.strip():
+        merged["default_ticker"] = default_ticker.strip()
+    if show_ticker_tape is not None:
+        merged["show_ticker_tape"] = show_ticker_tape
+    if committee_preset.strip():
+        merged["committee_preset"] = committee_preset.strip()
+    if hidden_nav.strip():
+        merged["hidden_nav"] = [] if hidden_nav.strip().lower() == "none" else [
+            x.strip() for x in hidden_nav.split(",") if x.strip()
+        ]
+    if enabled_personas.strip():
+        merged["enabled_personas"] = [] if enabled_personas.strip().lower() == "none" else [
+            x.strip() for x in enabled_personas.split(",") if x.strip()
+        ]
+
+    try:
+        if target == active:
+            saved = save_workspace(merged)
+        else:
+            saved = save_profile(target, merged)
+    except ValueError as e:
+        return f"Error: {e}"
+
+    return "Saved.\n" + "\n".join(_format_workspace(target, saved, active))
+
+
+def _run_workspace_profiles_tool(
+    action: str = "list",
+    name: str = "",
+    copy_from: str = "",
+) -> str:
+    """Execute augur_workspace_profiles MCP tool logic (testable without FastMCP)."""
+    from augur.workspace import (
+        get_workspace_state, list_profiles, create_profile, delete_profile, set_active_profile,
+    )
+
+    action = (action or "").strip().lower()
+    if action == "list":
+        state = get_workspace_state()
+        lines = [f"Workspace profiles (active: {state['active_profile']}):"]
+        for p in list_profiles():
+            marker = " *" if p["active"] else ""
+            lines.append(f"  {p['name']}{marker} — preset={p['layout_preset']}, page={p['default_page']}")
+        return "\n".join(lines)
+
+    if not name.strip():
+        return "Error: 'name' is required for action=create/delete/switch"
+
+    try:
+        if action == "create":
+            cfg = create_profile(name, copy_from=copy_from.strip() or None)
+            active = get_workspace_state()["active_profile"]
+            return "Created.\n" + "\n".join(_format_workspace(name.strip().lower(), cfg, active))
+        elif action == "delete":
+            delete_profile(name)
+            return f"Deleted profile '{name.strip().lower()}'."
+        elif action == "switch":
+            cfg = set_active_profile(name)
+            return "Switched.\n" + "\n".join(_format_workspace(name.strip().lower(), cfg, name.strip().lower()))
+        else:
+            return "Error: action must be one of: list, create, delete, switch"
+    except ValueError as e:
+        return f"Error: {e}"
+
+
 def _build_context(ticker: str, pe: float = 0, pb: float = 0, roe: float = 0,
                    gross_margins: float = 0, revenue_growth: float = 0,
                    debt_ratio: float = 0, fcf: float = 0, market_cap: float = 0,
@@ -142,7 +278,10 @@ def create_server():
         "augur",
         instructions=(
             "Multi-agent investment analysis with 18 investor personas. "
-            "Seven tools: analyze, consensus, list_personas, configure, create_persona, debate, fetch. "
+            "Tools: analyze, consensus, committee, debate, fetch, sentiment, list_personas, "
+            "configure, create_persona, workflow, workspace_get, workspace_set, workspace_profiles. "
+            "Use workspace_get/workspace_profiles to read the user's Dashboard layout and enabled "
+            "personas before analyzing, so this agent stays consistent with their terminal setup. "
             "Omit financial metrics to auto-fetch via yfinance; install augur-agents[data] if fetch fails."
         ),
     )
@@ -588,6 +727,65 @@ def create_server():
             Structured workflow report with fetch data, consensus, committee verdict, sentiment
         """
         return _run_workflow_tool(ticker, steps=steps, agents=agents, question=question)
+
+    @mcp.tool()
+    def augur_workspace_get(profile: str = "") -> str:
+        """Read the Terminal Workspace layout/persona configuration set up in the Dashboard.
+
+        Lets an agent host see what the user has customized (layout preset, default
+        page/ticker, enabled personas, committee preset) instead of guessing.
+
+        Args:
+            profile: Optional named profile to read. Empty = the currently active profile.
+        """
+        return _run_workspace_get_tool(profile=profile)
+
+    @mcp.tool()
+    def augur_workspace_set(
+        profile: str = "",
+        layout_preset: str = "",
+        default_page: str = "",
+        default_ticker: str = "",
+        show_ticker_tape: Optional[bool] = None,
+        committee_preset: str = "",
+        hidden_nav: str = "",
+        enabled_personas: str = "",
+    ) -> str:
+        """Update the Terminal Workspace configuration from an agent host.
+
+        Only the fields you pass are changed; everything else in the target profile
+        is left as-is. This is the write side of the customizable-Bloomberg story:
+        an agent can apply layout/persona preferences on the user's behalf instead
+        of only reading them via the Dashboard UI.
+
+        Args:
+            profile: Named profile to update. Empty = the currently active profile.
+            layout_preset: One of analyst, trader, committee, minimal, custom.
+            default_page: Landing page path, e.g. /stocks, /committee.
+            default_ticker: Ticker to land on (combined with default_page).
+            show_ticker_tape: Whether to show the scrolling ticker tape.
+            committee_preset: Default committee preset name, e.g. all, value.
+            hidden_nav: Comma-separated nav items to hide, or "none" to clear.
+            enabled_personas: Comma-separated persona IDs to restrict analysis/consensus
+                to (weights are renormalized), or "none" to clear (use all personas).
+        """
+        return _run_workspace_set_tool(
+            profile=profile, layout_preset=layout_preset, default_page=default_page,
+            default_ticker=default_ticker, show_ticker_tape=show_ticker_tape,
+            committee_preset=committee_preset, hidden_nav=hidden_nav,
+            enabled_personas=enabled_personas,
+        )
+
+    @mcp.tool()
+    def augur_workspace_profiles(action: str = "list", name: str = "", copy_from: str = "") -> str:
+        """List, create, delete, or switch named Terminal Workspace profiles.
+
+        Args:
+            action: One of list, create, delete, switch.
+            name: Profile name (required for create/delete/switch).
+            copy_from: For action=create, an existing profile to copy settings from.
+        """
+        return _run_workspace_profiles_tool(action=action, name=name, copy_from=copy_from)
 
     return mcp
 

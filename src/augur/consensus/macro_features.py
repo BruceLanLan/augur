@@ -2,6 +2,7 @@
 """Macro feature fetcher for regime detection."""
 
 import os
+import threading
 import time
 from typing import Any, Dict, Optional, Tuple
 
@@ -13,6 +14,7 @@ _DEFAULT_MACRO: Dict[str, Any] = {
 
 _CACHE: Optional[Tuple[float, Dict[str, Any]]] = None
 _CACHE_TTL_SEC = 300.0
+_CACHE_LOCK = threading.RLock()
 
 
 def _macro_from_market(date_str: Optional[str] = None) -> Dict[str, Any]:
@@ -61,16 +63,18 @@ def fetch_macro_features(date_str: Optional[str] = None) -> Dict[str, Any]:
         return dict(_DEFAULT_MACRO)
 
     global _CACHE
-    now = time.monotonic()
-    if _CACHE is not None and (now - _CACHE[0]) < _CACHE_TTL_SEC:
-        return dict(_CACHE[1])
+    with _CACHE_LOCK:
+        now = time.monotonic()
+        if _CACHE is not None and (now - _CACHE[0]) < _CACHE_TTL_SEC:
+            return dict(_CACHE[1])
 
-    result = _macro_from_market(date_str)
-    _CACHE = (now, result)
-    return dict(result)
+        result = _macro_from_market(date_str)
+        _CACHE = (now, result)
+        return dict(result)
 
 
 def clear_macro_cache() -> None:
     """Clear in-process macro cache (for tests)."""
     global _CACHE
-    _CACHE = None
+    with _CACHE_LOCK:
+        _CACHE = None

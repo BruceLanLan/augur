@@ -17,6 +17,7 @@ from typing import Dict, List, Optional
 from threading import RLock
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import TimeoutError as FutureTimeoutError
 
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType, DebateMessage
 
@@ -249,7 +250,7 @@ class DecisionCoordinator:
                     agent = future_to_agent[future]
                     try:
                         results[agent.agent_id] = future.result(timeout=30)
-                    except TimeoutError:
+                    except (TimeoutError, FutureTimeoutError):
                         results[agent.agent_id] = AgentResponse(
                             agent_id=agent.agent_id,
                             agent_name=agent.name,
@@ -482,11 +483,22 @@ class DecisionCoordinator:
         calibrated_confidence = calibrate_confidence(total_score, calibrated_confidence, "consensus")
 
         # --- Meta-model blending ---
+        # NOTE: MetaModel.load() always returns an active instance in this stub
+        # implementation (never None outside of tests that explicitly patch it),
+        # so the blend weight below is the *only* way to dial down how much the
+        # cross-agent median washes out the industry/regime-tuned weighted score.
         mm = MetaModel.load()
         if mm is not None:
-            agent_scores_dict = {aid: resp.score for aid, resp in results.items()}
-            mm_score = mm.predict(agent_scores_dict)
-            total_score = 0.5 * total_score + 0.5 * mm_score
+            from augur.config import get_config
+            meta_weight = get_config().get("consensus", {}).get("meta_model_weight", 0.5)
+            try:
+                meta_weight = max(0.0, min(1.0, float(meta_weight)))
+            except (TypeError, ValueError):
+                meta_weight = 0.5
+            if meta_weight > 0:
+                agent_scores_dict = {aid: resp.score for aid, resp in results.items()}
+                mm_score = mm.predict(agent_scores_dict)
+                total_score = (1 - meta_weight) * total_score + meta_weight * mm_score
 
         result = AgentResponse(
             agent_id="consensus",

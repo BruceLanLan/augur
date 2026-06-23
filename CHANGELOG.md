@@ -2,6 +2,26 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.16.0] - 2026-06-24
+
+P1-1（Agent Peer Review backlog）：MCP Workspace 工具，闭合"终端定制 ↔ agentic 接入"的最后一块缺口。
+
+### Added
+- **`augur_workspace_get` / `augur_workspace_set` / `augur_workspace_profiles`** MCP 工具：agent host（OpenClaw/Hermes/任意 MCP 客户端）现在可以读取并代写用户在 Dashboard 设置的终端布局、enabled_personas、committee_preset，不再是"chat-sidecar"——这是项目自身 peer-review 终审结论里点名的唯一缺口。
+- `consensus.meta_model_weight` 配置项（默认 0.5，0 表示完全关闭中位数混合），让 MetaModel 50/50 blend 不再是隐藏的硬编码行为。
+- `tests/test_workspace_mcp_v10_16.py`：17 个新测试，含一个用 AST 静态解析 `.mcp.json` ↔ 源码 `@mcp.tool()` 数量一致性的防漂移测试。
+
+### Fixed
+- **代码审查（针对近期 workspace/workflow/consensus 批次）**：
+  - `registry.py` 超时分支误判：`ThreadPoolExecutor.future.result(timeout=30)` 在 Python 3.9/3.10 抛 `concurrent.futures.TimeoutError`，与内置 `TimeoutError` 不是同一个类，原代码只捕获了内置类，导致"分析超时"提示从未真正触发（仍会被下层 `except Exception` 兜住，不影响功能，只是报错信息不准）。
+  - `consensus/macro_features.py` 模块级缓存读写未加锁，与项目自身"线程安全加固"目标不一致；现用 `RLock` 包裹。
+- **文档/manifest 漂移**（peer-review 已点名的系统性问题）：`docs/openclaw-setup-guide.md`、`docs/en/openclaw-setup-guide.md`、`docs/hermes-setup-guide.md`、`docs/en/hermes-setup-guide.md` 工具数量从过期的 9/10 个修正为 13 个，并补上缺失的 `augur_workflow`/`augur_workspace_*` 条目。
+- **开发依赖缺口**：`pytest`/`pytest-asyncio`/`httpx` 已在 `dev` extra，但 `beautifulsoup4` 缺失导致全新 clone 跑不了 12 个 UX 测试文件；已补全到 `pyproject.toml` 的 `dev` extra。
+
+### Notes
+- Full suite: **2060 passed**, 0 failed (`pytest tests/ -q --ignore=tests/test_analyze_api_v12.py`).
+- P1 backlog 剩余项（manifest regeneration、profile i18n、committee_preset 接线等）见 `docs/AGENT_PEER_REVIEW_SYNTHESIS.md`，下一 session 继续。
+
 ## [10.15.1] - 2026-06-22
 
 50-round QA gatekeeper patch (Agent #5, 10 full-suite rounds).

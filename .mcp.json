@@ -13,7 +13,10 @@
         "augur_list_personas",
         "augur_configure",
         "augur_create_persona",
-        "augur_workflow"
+        "augur_workflow",
+        "augur_workspace_get",
+        "augur_workspace_set",
+        "augur_workspace_profiles"
       ],
       "skills": [
         "augur-buffett",

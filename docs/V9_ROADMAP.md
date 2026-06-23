@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-22，当前版本 **v10.15.0**（Terminal Workspace + augur_workflow MCP + consensus 模块，1668+ tests passing）
+> 最后更新：2026-06-24，当前版本 **v10.16.0**（MCP Workspace 工具 P1-1 落地 + 代码审查 4 项修复，2060 tests passing）
 
 ---
 
@@ -15,10 +15,11 @@
 - 编程成一个独立 App
 
 **仓库分工：**
-- `augur`（github.com/BruceLanLan/augur）= 稳定版，当前 **v8.2.3**
-- `augur-next`（github.com/BruceLanLan/augur-next）= 开发版，当前 **v9.0.8**
+- `augur`（github.com/BruceLanLan/augur）= 稳定版，当前 **v8.2.3**（公开，227★/34 fork，最后一次发布 2026-06-08——已落后 augur-next 两个以上大版本）
+- `augur-next`（github.com/BruceLanLan/augur-next）= 开发版，当前 **v10.16.0**
 - 本地：`feature/v9-dev` 分支跟踪 augur-next/main
 - 推送命令：`git push augur-next feature/v9-dev:main`
+- **下一里程碑：** 把 augur-next 稳定功能挑选打包，正式发布一版到公开 `augur`（见下方"公开发布准备"）
 
 ---
 
@@ -52,14 +53,15 @@
 | 10.13.0 | Signals/History Ticker 列变导航链接 → `/stocks?ticker=X` 一键重新分析 |
 | 10.14.0 | Terminal Workspace 布局预设 + Settings UI + `/api/workspace`；`augur_workflow` MCP 工具；`augur.consensus.*` 共识增强模块 |
 | 10.15.0 | v10.14 功能正式发布 + **Agent Peer Review** 集成：persona 权重重归一化、服务端 landing 302、workflow 去重/low_participation；`scanner/` legacy；synthesis backlog |
+| 10.16.0 | **P1-1 MCP Workspace 工具**：`augur_workspace_get/set/profiles`（agent 可读写用户的 Dashboard 布局/启用人格，闭合 agentic 接入缺口）；代码审查 4 项修复（registry.py `concurrent.futures.TimeoutError` 漏捕获、meta_model 混合权重可配置化 `consensus.meta_model_weight`、macro_features.py 缓存加锁、缺失的 `beautifulsoup4` dev 依赖）；新增 manifest-sync 回归测试（AST 校验 `.mcp.json` 与 `@mcp.tool()` 一致） |
 
-**当前能力盘点（v10.15.0）：**
-- MCP 工具 10 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona, **workflow**
+**当前能力盘点（v10.16.0）：**
+- MCP 工具 13 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona, workflow, **workspace_get, workspace_set, workspace_profiles**
 - CLI 命令：analyze, consensus, report, serve, watch, skills, portfolio, backtest, chat, sentiment, inject-soul, telegram, slack, wechat, lark, cron-* 等
 - Dashboard 19 页（含 committee, hermes-setup）
 - 19 个 skill 目录（SKILL.md + manifest.json）
 - i18n：中/英/日/韩四语言，降级链
-- 测试基线：**1668 passed**（排除网络测试 test_analyze_api_v12.py）
+- 测试基线：**2060 passed, 0 failed**（含 `data` extra 后全绿，无需排除网络测试）
 
 ### scanner/ 弃用说明
 
@@ -70,16 +72,19 @@
 
 ---
 
-## Agent Peer Review（v10.15.0）
+## Agent Peer Review（v10.15.0 起）
 
 6 份 agent peer review（#1 Workspace、#2 Workflow、#3 Consensus、#4 Dashboard、#8 Agent Hosts、#9 Architecture）已汇总至 [`docs/AGENT_PEER_REVIEW_SYNTHESIS.md`](AGENT_PEER_REVIEW_SYNTHESIS.md)。
 
-**本版已落地 P0：**
+**v10.15.0 已落地 P0：**
 - Persona-aware consensus weights（`restrict_weights_to_agents`）
 - 服务端 landing redirect（`GET /` → `resolve_landing_url`）
 - Workflow：`enabled_personas` 桥接、consensus 去重、`low_participation` 警告
 
-**下 session P1 优先：** MCP workspace 工具、manifest 10-tool 同步、profile i18n、committee_preset 接线、dashboard router 拆分。
+**v10.16.0 已落地 P1-1：**
+- MCP workspace 工具（`augur_workspace_get/set/profiles`）+ manifest 13-tool 同步回归测试
+
+**下 session P1 剩余：** profile i18n、committee_preset 接线、dashboard router 拆分（详见 synthesis 文档 P1 表）。
 
 ---
 
@@ -137,7 +142,7 @@
 ```bash
 cd ~/augur
 git checkout feature/v9-dev
-git log --oneline -5              # 确认在 v9.0.8
+git log --oneline -5              # 确认在最新版本（见本文件顶部）
 git status                        # 确认工作树干净
 python3 -m pytest tests/ -q --tb=no --ignore=tests/test_analyze_api_v12.py 2>&1 | tail -3
 ```

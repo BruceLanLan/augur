@@ -2,7 +2,7 @@
 
 # OpenClaw Integration with Augur — Complete Guide
 
-> Augur exposes 9 MCP tools and 19 skills to OpenClaw.
+> Augur exposes 13 MCP tools and 19 skills to OpenClaw.
 > After setup, use `/skill augur-buffett` or just chat naturally.
 
 ---
@@ -26,7 +26,7 @@ augur mcp-server   # No error = OK (Ctrl+C to exit)
 
 ## Option 1: MCP Server (Recommended)
 
-OpenClaw calls `augur mcp-server` via stdio and auto-registers all 9 tools.
+OpenClaw calls `augur mcp-server` via stdio and auto-registers all 13 tools.
 
 ### Step 1 — Edit OpenClaw Config
 
@@ -58,7 +58,7 @@ Restart OpenClaw, then:
 /tools list
 ```
 
-You should see 9 `mcp_augur_*` tools:
+You should see 13 `mcp_augur_*` tools:
 
 ```
 mcp_augur_analyze       — Single or all-master analysis
@@ -70,6 +70,10 @@ mcp_augur_sentiment     — Social sentiment (StockTwits + news)
 mcp_augur_list_personas — List all 18 masters
 mcp_augur_configure     — Configure per-master model params
 mcp_augur_create_persona — Create a custom YAML persona
+mcp_augur_workflow      — Composable multi-step pipeline (fetch→analyze→consensus→committee→debate→sentiment)
+mcp_augur_workspace_get — Read the user's Dashboard layout/enabled personas
+mcp_augur_workspace_set — Write terminal layout/enabled personas on the user's behalf
+mcp_augur_workspace_profiles — List/create/delete/switch named workspace profiles
 ```
 
 ### Step 3 — Start Analyzing
@@ -201,7 +205,7 @@ for t in tools: print(f'  - {t[\"name\"]}')
 
 Expected output:
 ```
-✅ 9 tools registered:
+✅ 13 tools registered:
   - mcp_augur_analyze
   - mcp_augur_consensus
   - mcp_augur_committee

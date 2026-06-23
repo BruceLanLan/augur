@@ -55,7 +55,7 @@ mcp_servers:
 1. 打开 Hermes Web UI
 2. 进入 **Settings > MCP Servers**
 3. 应该能看到 `augur-agents` 已注册
-4. **10 个工具**应该可用：
+4. **13 个工具**应该可用：
    - `augur_analyze` - 单投资人或全部 18 位分析（含 key_findings/risks）
    - `augur_consensus` - 18 位加权共识（含 Kelly 仓位建议）
    - `augur_committee` - 投资委员会结构化辩论与裁决
@@ -66,6 +66,9 @@ mcp_servers:
    - `augur_list_personas` - 列出全部 18 位投资人
    - `augur_configure` - 配置每位投资人使用的 LLM 模型
    - `augur_create_persona` - 创建自定义 YAML 投资人
+   - `augur_workspace_get` - 读取用户在 Dashboard 设置的终端布局/启用大师
+   - `augur_workspace_set` - 代用户写入终端布局/启用大师配置
+   - `augur_workspace_profiles` - 列出/创建/删除/切换命名工作区配置
 
 > 所有 analyze/consensus/debate 工具都支持**自动 yfinance 数据获取**：不传指标时自动抓取实时数据。
 

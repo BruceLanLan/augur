@@ -55,7 +55,7 @@ mcp_servers:
 1. Open Hermes Web UI
 2. Navigate to **Settings > MCP Servers**
 3. You should see `augur-agents` registered
-4. **10 tools** should be available:
+4. **13 tools** should be available:
    - `augur_analyze` - Single or all 18 investor analysis (with key_findings/risks)
    - `augur_consensus` - 18-master weighted consensus (with Kelly position sizing)
    - `augur_committee` - Structured investment committee debate and verdict
@@ -66,6 +66,9 @@ mcp_servers:
    - `augur_list_personas` - List all 18 investors
    - `augur_configure` - Configure LLM model per investor
    - `augur_create_persona` - Create custom YAML persona
+   - `augur_workspace_get` - Read the user's Dashboard layout/enabled personas
+   - `augur_workspace_set` - Write terminal layout/enabled personas on the user's behalf
+   - `augur_workspace_profiles` - List/create/delete/switch named workspace profiles
 
 > All analyze/consensus/debate tools support **auto yfinance data fetch**: if no metrics are passed, live data is fetched automatically.
 

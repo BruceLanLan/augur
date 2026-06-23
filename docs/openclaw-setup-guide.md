@@ -2,7 +2,7 @@
 
 # OpenClaw 接入 Augur — 完整指引
 
-> Augur 通过 MCP（Model Context Protocol）向 OpenClaw 暴露 9 个工具和 19 个技能。
+> Augur 通过 MCP（Model Context Protocol）向 OpenClaw 暴露 13 个工具和 19 个技能。
 > 配置完成后，在 OpenClaw 里直接呼唤"巴菲特"或运行 `/skill augur-buffett` 即可。
 
 ---
@@ -26,7 +26,7 @@ augur mcp-server   # 无报错则正常（Ctrl+C 退出）
 
 ## 方式一：MCP Server 接入（推荐）
 
-OpenClaw 通过 stdio 调用 `augur mcp-server`，自动注册所有 9 个工具。
+OpenClaw 通过 stdio 调用 `augur mcp-server`，自动注册所有 13 个工具。
 
 ### Step 1 — 编辑 OpenClaw 配置
 
@@ -58,7 +58,7 @@ mcp_servers:
 /tools list
 ```
 
-应看到 9 个 `mcp_augur_*` 工具：
+应看到 13 个 `mcp_augur_*` 工具：
 
 ```
 mcp_augur_analyze      — 单个或全部大师分析
@@ -70,6 +70,10 @@ mcp_augur_sentiment    — 社交情绪（StockTwits + 新闻）
 mcp_augur_list_personas — 列出所有大师
 mcp_augur_configure    — 配置大师模型参数
 mcp_augur_create_persona — 创建自定义大师
+mcp_augur_workflow     — 可组合多步工作流（fetch→analyze→consensus→committee→debate→sentiment）
+mcp_augur_workspace_get — 读取用户在 Dashboard 设置的终端布局/启用大师
+mcp_augur_workspace_set — 代用户写入终端布局/启用大师配置
+mcp_augur_workspace_profiles — 列出/创建/删除/切换命名工作区配置
 ```
 
 ### Step 3 — 开始使用
@@ -225,7 +229,7 @@ for t in tools: print(f'  - {t[\"name\"]}')
 
 预期输出：
 ```
-✅ 9 tools registered:
+✅ 13 tools registered:
   - mcp_augur_analyze
   - mcp_augur_consensus
   - mcp_augur_committee

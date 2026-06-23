@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "augur-agents"
-version = "10.15.1"
+version = "10.16.0"
 description = "Multi-agent investment analysis system with 18 investor persona agents, consensus mechanism, and multi-platform deployment"
 readme = "README.md"
 license = {text = "MIT"}
@@ -74,6 +74,7 @@ dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",
     "httpx>=0.24",
+    "beautifulsoup4>=4.11",
 ]
 all = [
     "augur-agents[data,mcp,llm,telegram,slack,lark,wechat,cron]",
