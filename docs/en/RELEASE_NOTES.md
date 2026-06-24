@@ -4,33 +4,21 @@
 
 ## What this update fixes
 
-Live testing surfaced three reports: "the homepage dashboard won't respond to clicks at all," "data isn't showing up in a lot of places," and "the investment committee and deep report have problems too." v10.16.4 fixed a Kelly-position display bug in the committee (numbers like "1990.0%"). v10.16.5 root-caused and fixed 11 homepage endpoints freezing the event loop. This release (v10.16.6) traces the same root cause into the investment committee's and deep report's own code path — **but live testing found this only significantly reduces the freeze, it does not fully eliminate it**. See "Known limitation" below.
-
-Root cause, identical to v10.16.5: `analyze_ticker` (full-persona ticker analysis), `report_ticker` (the Deep Report endpoint), `api_committee`, `api_compare`, `api_debate`, and 3 others — 8 endpoints total — were declared `async def` but had zero `await` anywhere in their bodies. Internally they made blocking, synchronous yfinance network calls and ran all 18 personas' analysis synchronously. The dashboard server runs as a single process with a single event loop, so generating one committee verdict or deep report froze that loop for its entire duration — every other request the server was handling at the same time, including other users' clicks on other pages, froze along with it.
-
-Two streaming endpoints (`/ws/analyze`, `/ws/committee`) have to stay `async def` because the WebSocket protocol requires it, so they couldn't get the same one-line fix — instead, their blocking network calls were offloaded to a thread pool.
+The "data isn't showing up in a lot of places" report from live testing was already partly addressed by v10.16.5/v10.16.6 (homepage + committee/deep-report). This release (v10.16.7) continues the same live-testing sweep across the rest of the dashboard (history, optimizer, portfolio, watchlist, scanner, signals, settings, chat) and found two concrete data-correctness bugs.
 
 ## What's fixed
 
-- The 8 affected endpoints (single-ticker analysis, deep report, committee, compare, debate, persona comparison, single-persona opinion, batch watchlist analysis) are now declared as plain synchronous functions, dispatched by FastAPI to its background thread pool instead of running on the event loop.
-- `/ws/analyze` and `/ws/committee` now run their blocking yfinance calls through `run_in_threadpool` instead of directly on the event loop, while staying `async def` to satisfy the WebSocket protocol.
-- Fixed a related latent bug along the way: `analyze_ticker`'s fire-and-forget notification dispatch relied on `asyncio.get_event_loop()`, which only works reliably from the main thread while a loop is running. Once the handler moved into a worker thread pool, that call would have silently failed (swallowed by a nearby `except Exception`), breaking rule notifications without any visible error. Replaced with a plain background thread — same fire-and-forget behavior, no dependency on an event loop being present.
-- Expanded the regression-guard test from 11 to 19 endpoints, asserting they must stay sync `def` so this class of bug can't silently come back.
-
-## Known limitation (not fully fixed by this release)
-
-After converting the handlers, we didn't stop at "is it structurally `async def` or not" — we re-ran a real concurrency test. While `/api/committee` was running (all 18 personas), a concurrently-issued, normally-instant request still took over 3 seconds to return, sometimes longer than the committee request's own duration. Five concurrent fast requests with no committee running at all stayed under 21ms, confirming the threadpool dispatch itself isn't the bottleneck.
-
-The real cause here is different from v10.16.5's: the 18 personas' `analyze()` calls are CPU-bound, not I/O-bound. Moving CPU-bound work into a worker thread doesn't make it run in true parallel in CPython — only one thread can hold the GIL and execute bytecode at a time, and one thread doing sustained CPU work can severely starve other threads' requests (the well-known GIL "convoy effect"). A full fix would mean either optimizing `analyze()`'s own CPU time, or moving it somewhere that actually parallelizes (a process pool, or multiple server worker processes) — both bigger changes, deferred pending user direction, since the latter requires solving cross-process sharing of in-memory singletons, caches, and rate-limit counters.
-
-Net effect of this release: committee/deep-report generation no longer makes the *entire* dashboard server completely unresponsive for the whole duration (the original bug is gone), but other users/pages will still see multi-second delays during that window.
+- **The History page's (`/history`) 52-week calendar heatmap never rendered**: the page requested `/api/history?page=1&per_page=365`, but the endpoint's paginated mode caps `per_page` at 100 and returns HTTP 400 above that — the frontend's empty `.catch()` swallowed the error silently, so the calendar card simply never appeared, with no visible error. Fixed by switching to the endpoint's unpaginated `limit` mode (`/api/history?limit=365`, capped at 500), which already exists and is exactly what the calendar needs (a flat list of recent records, no pagination metadata).
+- **The portfolio optimizer (`/optimizer`, `/api/optimize`) computed both its displayed Sharpe ratio and its actual optimal weights with mismatched units**: the optimizer works internally with *daily* returns, but received the risk-free rate as an *annual* rate (e.g. 0.02 for 2%) and subtracted it directly from daily returns before dividing by daily volatility. Since a typical daily mean return (~0.1%-0.3%) is tiny next to an annual rate like 2%, this made the "excess return" strongly negative for nearly every asset — skewing not just the displayed Sharpe ratio (observed -1.44 where the correct value is roughly +2.0) but the analytical max-Sharpe weight solution itself, meaning the "optimal" portfolio it recommended wasn't actually optimal. Fixed by converting the risk-free rate to a daily rate (dividing by 252 trading days) before combining it with daily returns/volatility anywhere in the optimizer. A related follow-up was caught right after: the page already displays return/volatility as annualized figures, but was showing the Sharpe ratio on a daily basis next to them — three numbers on inconsistent time bases, which still looks wrong even after the unit fix above. Now the displayed Sharpe ratio is annualized too (×√252), so all three numbers are on the same basis.
 
 ## Test status
 
-Full suite: **2095 tests passing** (excluding 5 tests that require network access; 2100 including them), 0 failures.
+Full suite: **2100 tests passing**, 0 failures.
 
 ## How this was found
 
-After fixing the 11 homepage endpoints in v10.16.5, we did a full sweep for the same pattern: every `async def` handler in `dashboard/app.py` that calls `fetch_market_context` or runs persona analysis directly. That turned up 8 more endpoints and 2 WebSocket handlers with the identical problem — and they happened to be exactly the committee and deep-report code the user had named in their original report.
+Continuing the same live-testing approach as v10.16.5/v10.16.6, but this time not looking for the `async def`/event-loop class of bug — instead, walking every remaining dashboard page not yet covered, mapping each page's `fetch()` calls to its backend endpoint, and exercising each one against the running dev server with real tickers, checking for error responses, mismatched response shapes, or numerically implausible results. Most endpoints checked out fine; these two were genuine defects.
+
+The GIL concurrency limitation documented in v10.16.6 (committee/deep-report slowdowns under load) was left untouched this release, per the user's earlier decision to park it.
 
 See [CHANGELOG.md](../../CHANGELOG.md) for the full technical change log.

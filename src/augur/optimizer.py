@@ -34,6 +34,10 @@ import math
 from dataclasses import dataclass
 from typing import Dict, List
 
+# returns_data is daily returns throughout this module; risk_free_rate
+# arguments are annual, so they must be divided by this before combining.
+_TRADING_DAYS = 252
+
 
 # ============ Matrix Operations (Pure Python) ============
 
@@ -258,6 +262,10 @@ class PortfolioOptimizer:
         tickers = list(returns_data.keys())
         n = len(tickers)
 
+        # returns_data holds daily returns, but risk_free_rate is annual;
+        # convert to a daily rate so it's in the same units before combining.
+        daily_rf = risk_free_rate / _TRADING_DAYS
+
         if n == 0:
             return OptimalPortfolio(
                 weights={}, expected_return=0.0, variance=0.0,
@@ -270,7 +278,7 @@ class PortfolioOptimizer:
             mean_r = sum(rets) / len(rets) if rets else 0.0
             var = sum((r - mean_r) ** 2 for r in rets) / (len(rets) - 1) if len(rets) > 1 else 0.0
             vol = math.sqrt(var)
-            sr = self.sharpe_ratio(mean_r, vol, risk_free_rate)
+            sr = self.sharpe_ratio(mean_r, vol, daily_rf)
             return OptimalPortfolio(
                 weights={ticker: 1.0},
                 expected_return=mean_r,
@@ -293,7 +301,7 @@ class PortfolioOptimizer:
             port_ret = self.portfolio_return(w, mean_rets)
             port_var = self.portfolio_variance(w, cov)
             port_vol = math.sqrt(max(port_var, 0))
-            sr = self.sharpe_ratio(port_ret, port_vol, risk_free_rate)
+            sr = self.sharpe_ratio(port_ret, port_vol, daily_rf)
             return OptimalPortfolio(
                 weights={tickers[i]: w[i] for i in range(n)},
                 expected_return=port_ret,
@@ -303,7 +311,7 @@ class PortfolioOptimizer:
             )
 
         # Excess returns
-        excess = [mean_rets[i] - risk_free_rate for i in range(n)]
+        excess = [mean_rets[i] - daily_rf for i in range(n)]
 
         # Cov^-1 * excess
         z = matrix_vector_multiply(cov_inv, excess)
@@ -330,7 +338,7 @@ class PortfolioOptimizer:
         port_ret = self.portfolio_return(w, mean_rets)
         port_var = self.portfolio_variance(w, cov)
         port_vol = math.sqrt(max(port_var, 0))
-        sr = self.sharpe_ratio(port_ret, port_vol, risk_free_rate)
+        sr = self.sharpe_ratio(port_ret, port_vol, daily_rf)
 
         return OptimalPortfolio(
             weights={tickers[i]: round(w[i], 6) for i in range(n)},
@@ -361,6 +369,9 @@ class PortfolioOptimizer:
         if n < 2:
             return []
 
+        # returns_data holds daily returns; risk_free_rate is annual.
+        daily_rf = risk_free_rate / _TRADING_DAYS
+
         returns_list = [returns_data[t] for t in tickers]
         mean_rets = self.mean_returns(returns_list)
         cov = self.covariance_matrix(returns_list)
@@ -387,7 +398,7 @@ class PortfolioOptimizer:
             port_ret = self.portfolio_return(best_w, mean_rets)
             port_var = self.portfolio_variance(best_w, cov)
             port_vol = math.sqrt(max(port_var, 0))
-            sr = self.sharpe_ratio(port_ret, port_vol, risk_free_rate)
+            sr = self.sharpe_ratio(port_ret, port_vol, daily_rf)
 
             points.append(EfficientFrontierPoint(
                 expected_return=round(port_ret, 6),

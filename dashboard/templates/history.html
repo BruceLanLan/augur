@@ -412,10 +412,11 @@ var _calDateFilter = '';
 
 function loadCalendarData() {
     // Fetch up to 365 recent history entries to build calendar
-    fetch('/api/history?page=1&per_page=365')
+    // Uses the unpaginated `limit` mode (cap 500), not page/per_page (cap 100)
+    fetch('/api/history?limit=365')
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            var items = data.items || [];
+            var items = data.records || [];
             if (items.length === 0) return;
             buildCalendar(items);
             document.getElementById('hist-cal-card').style.display = '';
@@ -532,10 +533,10 @@ function loadHistoryForDate(dateStr) {
     document.getElementById('history-table').style.display = 'none';
     document.getElementById('pagination-controls').style.display = 'none';
 
-    fetch('/api/history?page=1&per_page=365')
+    fetch('/api/history?limit=365')
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            var allRecs = data.items || [];
+            var allRecs = data.records || [];
             var items = allRecs.filter(function(item) {
                 var ts = item.timestamp || 0;
                 if (!ts) return false;

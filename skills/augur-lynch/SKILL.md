@@ -1,7 +1,7 @@
 ---
 name: augur-lynch
 description: "Peter Lynch AI — GARP / PEG, consumer growth, everyday observations"
-version: 10.16.6
+version: 10.16.7
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

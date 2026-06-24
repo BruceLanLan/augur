@@ -8,7 +8,7 @@ display_name: "Leopold Aschenbrenner"
 description: "AGI timelines & AI semiconductor geopolitics · augur_workflow MCP"
 persona_id: aschenbrenner
 language: en
-version: "10.16.6"
+version: "10.16.7"
 
 mcp:
   command: augur-mcp

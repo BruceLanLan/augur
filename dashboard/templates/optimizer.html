@@ -273,15 +273,19 @@ async function runOptimize() {
             ? p.volatility_annual
             : p.volatility * Math.sqrt(252);
 
+        var sharpeAnn = (p.sharpe_ratio_annual !== undefined)
+            ? p.sharpe_ratio_annual
+            : p.sharpe_ratio * Math.sqrt(252);
+
         document.getElementById('opt-return').textContent = (retAnn * 100).toFixed(2) + '%';
         document.getElementById('opt-vol').textContent = (volAnn * 100).toFixed(2) + '%';
-        document.getElementById('opt-sharpe').textContent = p.sharpe_ratio.toFixed(4);
+        document.getElementById('opt-sharpe').textContent = sharpeAnn.toFixed(4);
 
         _optWeights = p.weights;
         _optMeta = {
             return: (retAnn * 100).toFixed(2),
             volatility: (volAnn * 100).toFixed(2),
-            sharpe: p.sharpe_ratio.toFixed(4)
+            sharpe: sharpeAnn.toFixed(4)
         };
         var exportBtn = document.getElementById('opt-export-btn');
         if (exportBtn) exportBtn.style.display = '';

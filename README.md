@@ -10,7 +10,7 @@
 
 *18位传奇投资人，同时分析，一次共识*
 
-[![v10.16.6](https://img.shields.io/badge/v10.16.6-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![v10.16.7](https://img.shields.io/badge/v10.16.7-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
 [![2100 Tests](https://img.shields.io/badge/2100_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -284,7 +284,15 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 想看本次更新更详细的功能说明（非技术向）？见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.16.6 — 大幅缓解（非彻底解决）投委会/深度报告卡顿 (current)</strong></summary>
+<summary><strong>v10.16.7 — 修复历史页日历热力图不显示 + 组合优化器 Sharpe/权重计算错误 (current)</strong></summary>
+
+- **历史记录页 52 周日历热力图一直没显示**：前端请求 `/api/history?page=1&per_page=365`，但接口分页模式限制 `per_page<=100`，超过直接 400，错误被空 `.catch()` 默默吞掉。改为用接口本身支持的非分页 `limit` 模式（`/api/history?limit=365`），日历正常显示。
+- **组合优化器算出来的 Sharpe 比率和最优持仓权重单位不匹配**：优化器内部用的是"每日收益率"，却直接拿"年化无风险利率"去减，导致几乎所有股票的"超额收益"都被算成负数——不仅显示的 Sharpe 比率离谱（实测 -1.44，正确应为 +2 左右），连最优权重的计算公式本身都被污染，给出的持仓建议不可信。修复为先把年化利率换算成每日利率再使用。
+- 测试覆盖：完整测试套件 2100 个全部通过。
+</details>
+
+<details>
+<summary><strong>v10.16.6 — 大幅缓解（非彻底解决）投委会/深度报告卡顿</strong></summary>
 
 - **同一根因延伸到投委会与深度报告**：`analyze_ticker`(`/api/analyze`)、`report_ticker`(`/api/report`，即"深度报告")、`api_committee`(`/api/committee`)、`api_compare`、`api_debate`、`compare_personas`、`get_persona_opinion`、`api_run_watchlist_analysis` 共 8 个接口同样是 `async def` 却内部同步调用 yfinance 和 18 位投资大师分析，函数体里完全没有 `await`。全部改为同步 `def`。
 - **`/ws/analyze`、`/ws/committee` 两个 WebSocket 接口不能改成同步 `def`**（Starlette 要求 WebSocket 路由必须是 `async def`），改为用 `run_in_threadpool` 把里面阻塞的 yfinance 调用丢进线程池，不再占用事件循环。

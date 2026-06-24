@@ -10,7 +10,7 @@
 
 *18 legendary investors. Simultaneous analysis. One verdict.*
 
-[![v10.16.6](https://img.shields.io/badge/v10.16.6-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![v10.16.7](https://img.shields.io/badge/v10.16.7-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
 [![2100 Tests](https://img.shields.io/badge/2100_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -284,7 +284,15 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > For a more detailed, non-technical walkthrough of this release, see [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
 
 <details open>
-<summary><strong>v10.16.6 — Significantly reduced (not fully fixed) committee / deep report freezing (current)</strong></summary>
+<summary><strong>v10.16.7 — Fixed history page calendar heatmap + optimizer Sharpe/weight unit mismatch (current)</strong></summary>
+
+- **History page's 52-week calendar heatmap never rendered**: the page requested `/api/history?page=1&per_page=365`, but the endpoint's paginated mode caps `per_page` at 100 and returns 400 above that — silently swallowed by an empty `.catch()`. Fixed by switching to the endpoint's existing unpaginated `limit` mode (`/api/history?limit=365`).
+- **Portfolio optimizer's Sharpe ratio and optimal weights used mismatched units**: the optimizer works with daily returns internally, but subtracted an annual risk-free rate directly from them — making "excess return" strongly negative for nearly every asset, corrupting both the displayed Sharpe ratio (observed -1.44 where ~+2.0 was correct) and the max-Sharpe weight solution itself. Fixed by converting the risk-free rate to daily before use.
+- Test coverage: full suite, 2100 passing.
+</details>
+
+<details>
+<summary><strong>v10.16.6 — Significantly reduced (not fully fixed) committee / deep report freezing</strong></summary>
 
 - **Same root cause, extended to the committee and deep-report code path**: `analyze_ticker` (`/api/analyze`), `report_ticker` (`/api/report`, the Deep Report endpoint), `api_committee` (`/api/committee`), `api_compare`, `api_debate`, `compare_personas`, `get_persona_opinion`, and `api_run_watchlist_analysis` — 8 endpoints — were also `async def` with zero `await` anywhere in their bodies, while internally calling blocking yfinance fetches and running all 18 personas' analysis synchronously. Converted all 8 to sync `def`.
 - **`/ws/analyze` and `/ws/committee` can't be converted to sync `def`** (Starlette requires WebSocket routes to stay `async def`). Instead wrapped their blocking `fetch_market_context` calls in `run_in_threadpool`, so the network fetch no longer ties up the event loop during a streaming committee/analyze session.

@@ -4004,6 +4004,7 @@ async def api_optimize(body: OptimizeBody):
     opt_dict = result.to_dict()
     opt_dict["expected_return_annual"] = round(opt_dict["expected_return"] * _TRADING_DAYS, 6)
     opt_dict["volatility_annual"] = round(opt_dict["volatility"] * (_TRADING_DAYS ** 0.5), 6)
+    opt_dict["sharpe_ratio_annual"] = round(opt_dict["sharpe_ratio"] * (_TRADING_DAYS ** 0.5), 4)
 
     # Individual asset points (annualized)
     tickers_list = list(returns_data.keys())
