@@ -11,7 +11,7 @@
 *18位传奇投资人，同时分析，一次共识*
 
 [![v10.16.0](https://img.shields.io/badge/v10.16.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![1652 Tests](https://img.shields.io/badge/1652_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![2065 Tests](https://img.shields.io/badge/2065_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-可安装应用-blue?style=for-the-badge)](#-dashboard-web-界面)
@@ -35,6 +35,9 @@
 | 多平台接入 | ❌ | ✅ Dashboard / MCP / CLI / Bot |
 | 高度 DIY | ❌ | ✅ YAML 无代码创建专属大师 |
 | 独立安装 | ❌ | ✅ PWA 可安装为桌面/手机应用 |
+| **终端定制** | ❌ | ✅ Bloomberg 风格布局 Profile，多套保存切换 |
+| **Agent 可读写你的终端** | ❌ | ✅ MCP Agent 可查询/修改你的布局与启用大师，而不只是聊天 |
+| **多步骤自动化分析** | ❌ | ✅ `augur_workflow`：抓数据→分析→共识→委员会→辩论→情绪，一条流水线 |
 
 ---
 
@@ -139,6 +142,17 @@ docker compose up        # Docker 一键启动
 
 预设委员会：**经典价值** · **中国价值** · **宏观全天候** · **创新成长** · **全体委员会**
 
+### 终端工作区（Terminal Workspace）
+
+像 Bloomberg 终端一样，把 Dashboard 布局变成你自己的：
+
+- **布局预设**：analyst（默认）/ trader / committee / minimal，一键切换默认首页、隐藏导航栏、Ticker Tape 开关。
+- **多套 Profile**：保存多个命名配置（如 "白天看盘" / "周末深度研究"），随时切换，互不影响。
+- **启用大师子集**：只保留你信任的几位大师参与共识计算，权重自动重新归一化，不是简单平分。
+- **委员会预设**绑定到 Profile，切换 Profile 时一并切换默认委员会组合。
+- 配置持久化在 `~/.augur/workspace.yaml`，支持导出/导入，换机器也能带走你的终端。
+- **对 Agent 开放**：见下方"接入任意平台"——任何 MCP 客户端都能读取/修改你的工作区配置，不需要你手动点 Dashboard。
+
 ### 人格大师页
 
 <img src="docs/images/screenshots/personas-hd2d.png" alt="18位投资大师" width="100%">
@@ -151,7 +165,7 @@ docker compose up        # Docker 一键启动
 
 ### 全部页面
 
-Dashboard / 股票分析 / 信号 / 扫描 / 自选股 / 持仓 / 回测 / AI对话 / 组合优化 / **投资委员会** / 对决 / 辩论 / 历史 / 排行 / 大师 / 创建大师 / Hermes接入指南 / 设置
+Dashboard / 股票分析 / 信号 / 扫描 / 自选股 / 持仓 / 回测 / AI对话 / 组合优化 / **投资委员会** / 对决 / 辩论 / 历史 / 排行 / 大师 / 创建大师 / Hermes接入指南 / 设置（含**终端工作区**）
 
 ---
 
@@ -187,7 +201,7 @@ mcp_servers:
     args: [mcp-server]
 ```
 
-### MCP 工具（9个）
+### MCP 工具（13个）
 
 | 工具 | 用途 |
 |------|------|
@@ -200,6 +214,10 @@ mcp_servers:
 | `mcp_augur_list_personas` | 列出全部18位大师 |
 | `mcp_augur_configure` | 配置大师模型参数 |
 | `mcp_augur_create_persona` | 无代码创建自定义大师 |
+| `mcp_augur_workflow` | 多步骤流水线：fetch→analyze→consensus→committee→debate→sentiment |
+| `mcp_augur_workspace_get` | 读取你的终端布局 / 启用大师 / 委员会预设 |
+| `mcp_augur_workspace_set` | 代你修改终端布局（如切到 trader 预设、只启用价值派大师） |
+| `mcp_augur_workspace_profiles` | 列出 / 创建 / 删除 / 切换终端 Profile |
 
 ---
 
@@ -224,6 +242,8 @@ augur backtest AAPL --days 30          # 历史回测
 
 # Agent / MCP
 augur mcp-server                       # 启动 MCP server（stdio，供 Claude/Hermes 接入）
+augur workflow AAPL                    # 多步骤流水线：fetch→analyze→consensus→committee→debate→sentiment
+augur workflow NVDA --steps fetch,analyze,consensus,committee --agents buffett,munger,dalio
 augur skills                           # 列出所有 Agent Skill
 augur skills --school value            # 按流派筛选
 
@@ -261,8 +281,37 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 
 ## 📝 版本日志
 
+> 想看本次更新更详细的功能说明（非技术向）？见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+
+<details open>
+<summary><strong>v10.16.0 — MCP 终端工作区工具（Agent 可读写你的定制） (current)</strong></summary>
+
+- **`mcp_augur_workspace_get/set/profiles`**：任意 MCP 客户端（Claude Desktop / Hermes / OpenClaw）现在可以读取并代你修改 Dashboard 终端布局、启用大师子集、委员会预设——agent 不再只是"问答助手"，而是能感知并操作你的工作区。
+- **共识引擎可配置化**：MetaModel 中位数混合权重不再是隐藏的固定 50/50，可通过 `consensus.meta_model_weight` 调节（0 = 完全关闭）。
+- **代码审查批次修复**：超时分支误判、缓存并发加锁、文档/manifest 工具数量同步。
+</details>
+
 <details>
-<summary><strong>v9.0.6 — PWA 可安装独立应用 (current)</strong></summary>
+<summary><strong>v10.14.0–10.15.1 — 终端工作区 + Agentic 工作流 + 共识增强</strong></summary>
+
+- **Terminal Workspace**（`/settings`）：Bloomberg 风格布局预设（analyst/trader/committee/minimal）、多 Profile 保存切换、隐藏导航、Ticker Tape 开关、导出/导入配置。
+- **`augur_workflow`**：一次调用串联 fetch→analyze→consensus→committee→debate→sentiment 多步骤流水线，支持限定 `enabled_personas`。
+- **共识增强模块**（`augur.consensus`）：行业矩阵权重、市场 regime 路由、概率校准、滚动 IC、宏观特征、风险管理。
+- **Agent Peer Review**：项目内部 9 路自检流程，修复 persona 权重重归一化、服务端首页跳转、workflow 去重等问题。
+</details>
+
+<details>
+<summary><strong>v10.0.0–10.13.0 — 国际化 + Dashboard 体验打磨</strong></summary>
+
+- **四语言 i18n**：新增日语/韩语，中/英/日/韩循环切换 + 降级链。
+- **图表与导出**：因子细分表、Performance IC 柱状图、Signals/Backtest/Scanner/Optimizer 全面支持 CSV 导出，Committee/Debate 报告复制与下载。
+- **History 日历热力图**：GitHub 风格贡献图展示分析活跃度，点击日期筛选。
+- **体验细节**：键盘快捷键帮助面板（`?`）、最近分析 chips、URL 状态同步、Scanner/Stocks 一键加自选股、Signals/History 跨页 Ticker 导航。
+- **`augur-mcp` 独立入口**：专供 Hermes Studio / Claude Desktop 等桌面客户端直接 spawn 的 stdio 入口。
+</details>
+
+<details>
+<summary><strong>v9.0.6 — PWA 可安装独立应用</strong></summary>
 
 - **PWA 支持**：Dashboard 可作为独立应用安装到桌面或手机，离线缓存核心界面。
 - **Ticker Tape**：首页顶部实时价格滚动条（WebSocket 驱动，支持暂停/断线重连）。

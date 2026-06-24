@@ -11,7 +11,7 @@
 *18 legendary investors. Simultaneous analysis. One verdict.*
 
 [![v10.16.0](https://img.shields.io/badge/v10.16.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![1652 Tests](https://img.shields.io/badge/1652_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![2065 Tests](https://img.shields.io/badge/2065_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-Installable_App-blue?style=for-the-badge)](#-dashboard)
@@ -35,6 +35,9 @@
 | Multi-platform access | ❌ | ✅ Dashboard / MCP / CLI / Bot |
 | DIY customization | ❌ | ✅ YAML no-code persona builder |
 | Standalone install | ❌ | ✅ PWA — desktop / mobile app |
+| **Terminal customization** | ❌ | ✅ Bloomberg-style layout profiles, save and switch between them |
+| **Agent reads/writes your terminal** | ❌ | ✅ MCP agents can query and change your layout and enabled masters — not just chat |
+| **Multi-step automated analysis** | ❌ | ✅ `augur_workflow`: fetch→analyze→consensus→committee→debate→sentiment in one call |
 
 ---
 
@@ -139,6 +142,17 @@ Select any combination of masters, convene a committee session — each master s
 
 Preset committees: **Classic Value** · **China Value** · **Macro All-Weather** · **Disruptive Growth** · **Full Council**
 
+### Terminal Workspace
+
+Make the Dashboard your own, Bloomberg-terminal style:
+
+- **Layout presets**: analyst (default) / trader / committee / minimal — switch default landing page, hidden nav items, and the Ticker Tape with one click.
+- **Multiple named profiles**: save several named configs (e.g. "day trading" / "weekend deep research") and switch between them without losing the others.
+- **Enabled-master subset**: keep only the masters you trust in the consensus calculation — weights are re-normalized automatically, not just split evenly.
+- **Committee preset bound to profile**: switching profiles also switches your default committee lineup.
+- Persisted to `~/.augur/workspace.yaml`, with export/import — take your terminal setup to a new machine.
+- **Open to agents**: see "Deploy Anywhere" below — any MCP client can read and modify your workspace config without you touching the Dashboard.
+
 ### Personas
 
 <img src="docs/images/screenshots/personas-hd2d.png" alt="18 Investment Masters" width="100%">
@@ -151,7 +165,7 @@ Every analysis is auto-archived. Filter by date, score, or signal for retrospect
 
 ### All Pages
 
-Dashboard / Stocks / Signals / Scanner / Watchlist / Portfolio / Backtest / AI Chat / Optimizer / **Committee** / Compare / Debate / History / Leaderboard / Personas / Create Persona / Hermes Setup / Settings
+Dashboard / Stocks / Signals / Scanner / Watchlist / Portfolio / Backtest / AI Chat / Optimizer / **Committee** / Compare / Debate / History / Leaderboard / Personas / Create Persona / Hermes Setup / Settings (incl. **Terminal Workspace**)
 
 ---
 
@@ -187,7 +201,7 @@ mcp_servers:
     args: [mcp-server]
 ```
 
-### MCP Tools (9 total)
+### MCP Tools (13 total)
 
 | Tool | Purpose |
 |------|---------|
@@ -200,6 +214,10 @@ mcp_servers:
 | `mcp_augur_list_personas` | List all 18 masters |
 | `mcp_augur_configure` | Set per-master model parameters |
 | `mcp_augur_create_persona` | Create a custom YAML persona |
+| `mcp_augur_workflow` | Multi-step pipeline: fetch→analyze→consensus→committee→debate→sentiment |
+| `mcp_augur_workspace_get` | Read your terminal layout / enabled masters / committee preset |
+| `mcp_augur_workspace_set` | Modify your terminal layout on your behalf (e.g. switch to trader preset, restrict to value-school masters) |
+| `mcp_augur_workspace_profiles` | List / create / delete / switch terminal profiles |
 
 ---
 
@@ -224,6 +242,8 @@ augur backtest AAPL --days 30          # historical backtest
 
 # Agent / MCP
 augur mcp-server                       # start MCP server (stdio, for Claude/Hermes)
+augur workflow AAPL                    # multi-step pipeline: fetch→analyze→consensus→committee→debate→sentiment
+augur workflow NVDA --steps fetch,analyze,consensus,committee --agents buffett,munger,dalio
 augur skills                           # list all Agent skills
 augur skills --school value            # filter by school
 
@@ -261,8 +281,37 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 
 ## 📝 Changelog
 
+> For a more detailed, non-technical walkthrough of this release, see [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
+
+<details open>
+<summary><strong>v10.16.0 — MCP terminal workspace tools (agents can read/write your customization) (current)</strong></summary>
+
+- **`mcp_augur_workspace_get/set/profiles`**: Any MCP client (Claude Desktop / Hermes / OpenClaw) can now read and modify your Dashboard terminal layout, enabled-master subset, and committee preset on your behalf — the agent is no longer just a Q&A assistant, it can sense and operate your workspace.
+- **Configurable consensus blending**: The MetaModel median blend is no longer a hidden fixed 50/50 — tune it via `consensus.meta_model_weight` (0 disables it entirely).
+- **Code-review fixes**: timeout-branch mismatch, cache concurrency locking, doc/manifest tool-count drift.
+</details>
+
 <details>
-<summary><strong>v9.0.6 — PWA installable standalone app (current)</strong></summary>
+<summary><strong>v10.14.0–10.15.1 — Terminal Workspace + agentic workflow + consensus engine</strong></summary>
+
+- **Terminal Workspace** (`/settings`): Bloomberg-style layout presets (analyst/trader/committee/minimal), multiple saved profiles, hidden nav, Ticker Tape toggle, config export/import.
+- **`augur_workflow`**: one call chains fetch→analyze→consensus→committee→debate→sentiment, with `enabled_personas` scoping support.
+- **Consensus enhancement modules** (`augur.consensus`): industry-matrix weighting, market-regime routing, probability calibration, rolling IC, macro features, risk management.
+- **Agent Peer Review**: an internal 9-track self-review process that fixed persona weight re-normalization, server-side landing redirect, workflow dedup, and more.
+</details>
+
+<details>
+<summary><strong>v10.0.0–10.13.0 — Internationalization + Dashboard UX polish</strong></summary>
+
+- **Four-language i18n**: added Japanese/Korean, cyclable zh/en/ja/ko switching with fallback chain.
+- **Charts and exports**: factor breakdown table, Performance IC bar chart, CSV export across Signals/Backtest/Scanner/Optimizer, Committee/Debate report copy and download.
+- **History calendar heatmap**: GitHub-style contribution graph showing analysis activity, click a date to filter.
+- **UX details**: keyboard shortcuts help panel (`?`), recent-analysis chips, URL state sync, one-click watchlist add from Scanner/Stocks, cross-page ticker navigation from Signals/History.
+- **`augur-mcp` standalone entry point**: a dedicated stdio entry point for desktop MCP clients like Hermes Studio / Claude Desktop to spawn directly.
+</details>
+
+<details>
+<summary><strong>v9.0.6 — PWA installable standalone app</strong></summary>
 
 - **PWA support**: Dashboard can be installed as a standalone app on desktop or mobile, with offline caching for the core UI.
 - **Ticker Tape**: Real-time price scrollbar at the top of the home page (WebSocket-driven, supports pause / auto-reconnect).
