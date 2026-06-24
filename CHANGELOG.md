@@ -2,6 +2,22 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.16.2] - 2026-06-24
+
+收尾 P1 backlog 剩余的真实缺口（P1-6、P1-7），并纠正一条此前误判为"未完成"的状态（P1-8）。
+
+### Fixed
+- **`augur_workflow` 单步失败会拖垮整条流水线**（P1-6 真实缺口）：`analyze`/`consensus`/`committee` 三个步骤此前没有 try/except 保护——任何一步内部异常（比如某个大师的分析逻辑抛错）会直接让整个 `run_workflow()` 抛出，前面已经成功的 `fetch` 结果也拿不到。现在这三步都和 `fetch`/`debate`/`sentiment` 一样有独立的异常捕获，失败的步骤记录 `{"error": ...}` 并继续往后跑。
+- **`format_workflow_summary()` 在某步骤失败时会再炸一次**：原来的渲染逻辑假设每个 step 的结果一定是正常结构（比如 `results["consensus"]["signal"]`），如果该 step 实际是 `{"error": ...}`，渲染会因为 `KeyError` 整个崩掉——这是上面那条修复出来后才暴露的连带 bug。现在统一加了 `"error" not in results[...]` 守卫，并新增"Step Errors"小节把失败的步骤列出来，方便排查。
+- **`GET /api/workspace` 补上 ETag / 条件请求**（P1-7）：和仪表盘其它几个高频轮询端点（hot-tickers、market-overview、sector-performance）保持一致的模式，配置没变时客户端可以用 `If-None-Match` 换 304，不用每次都拉全量 JSON。
+
+### Corrected (not actually a bug)
+- **P1-8**（"Feedback path → `~/.augur/feedback/`"）核实后发现在更早的 v10.15.0 agent #3 共识引擎迭代里就已经实现（`USER_FEEDBACK_DIR` 覆盖优先级，配套测试 `test_user_feedback_dir_overrides_repo`/`test_user_feedback_precedence`），synthesis 文档的状态表没同步更新。本次只是纠正文档状态。
+
+### Notes
+- 新增 4 个测试：`run_workflow` 单步失败场景 ×2、ETag 条件请求 ×1，外加上一轮遗留的 1 个。
+- P1 backlog 现在只剩 **P1-9**（`dashboard/routes/workspace.py` router 拆分）——这是个纯架构重构、收益主要是代码组织，没有直接的用户可见行为变化，先不动，等你这轮产品体验完、确认没有更紧急的事再排期。
+
 ## [10.16.1] - 2026-06-24
 
 收尾 v10.16.0 文档巡检中发现的剩余 P1 项；同时纠正了两条此前误判为"未完成"的状态。

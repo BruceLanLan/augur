@@ -4,65 +4,31 @@
 
 ## What this update fixes
 
-Until now, Augur worked like a "Q&A" investment tool: open the Dashboard, type a ticker, get a consensus report from 18 investor personas. Useful, but with two real gaps:
+The last update (v10.16.1) let agents read and write your terminal workspace. This one focuses on two lower-level issues that still show up in day-to-day use:
 
-1. **Everyone watches the market differently, but Augur only had one layout.** A day trader wants a different home page than someone doing deep research; some users only trust 4 value-school masters, others want all 18 in the consensus. None of this could be saved or switched before.
-2. **Once you connect an AI agent, the agent only "analyzes" — it doesn't know "you."** You could ask Claude/Hermes to call Augur's analysis tools, but the agent had no idea what you'd configured on your Dashboard — it couldn't read your layout preferences or adjust them for you. The agent and your terminal were two disconnected worlds.
-
-This update addresses both, with the same direction we've been building toward: **turn Augur into a Bloomberg-style terminal that users can deeply customize, and let AI agents actually operate that terminal — not just chat alongside it.**
+1. **A single failed step in `augur_workflow` used to take down the whole pipeline.** Run `fetch → analyze → consensus → committee` and if the consensus step throws (say, due to missing data), the entire pipeline aborted — even the fetch/analyze results computed earlier were thrown away.
+2. **Agents polling your workspace config got a full payload every time, even when nothing changed.** If your agent checks your terminal config periodically, every check was a full JSON round-trip regardless of whether you'd touched anything.
 
 ## What's new
 
-### 1. Terminal Workspace — customize your terminal like Bloomberg
+### 1. `augur_workflow` no longer aborts on a single step's failure
 
-- **Layout presets**: analyst (default) / trader / committee / minimal — switch default landing page, hidden nav items, and the live price ticker tape with one click.
-- **Multiple named profiles**: save several configs (e.g. "day trading" / "weekend deep research") and switch between them without overwriting the others.
-- **See only the masters you trust**: enable a subset of the 18 personas for consensus calculation (e.g. only the 4 value-school masters) — weights are automatically re-normalized rather than split evenly, which matters: "pick 4 masters" and "pick all 18 but only look at 4 opinions" are mathematically different things if you don't renormalize.
-- **Committee preset bound to your profile**: switching profiles switches your default committee lineup too.
-- Saved locally to `~/.augur/workspace.yaml`, with export/import — bring your setup to a new machine.
+If analyze / consensus / committee throws, the error is now captured in that step's own result (as `{"error": "..."}`) and the rest of the pipeline keeps running instead of stopping cold. The final summary report has a new "Step Errors" section, so you can see exactly which step failed and why without digging through logs.
 
-Where to find it: Dashboard → Settings.
+### 2. Workspace reads support conditional requests (ETag), cutting wasted traffic
 
-### 2. AI agents can now read and modify your terminal
+`mcp_augur_workspace_get` now returns an ETag. If your agent passes that ETag back on the next call and the config genuinely hasn't changed, the server just returns "not modified" instead of re-sending the full config. Useful for agents that poll frequently.
 
-This is the most significant piece of this update. If you connect to Augur through Claude Desktop, Hermes Studio, or any MCP-compatible client, the agent can now:
+## Doc correction
 
-- **Read** your current terminal layout, which masters are enabled, and which committee preset you're using;
-- **Modify it on your behalf** — tell the agent "switch me to trader mode and only show value-school opinions" and it can apply that change directly, no need to click through the Dashboard yourself;
-- **List, create, switch, and delete** your saved profiles.
-
-In other words, the agent used to be a chat assistant bolted onto the outside of Augur. Now it can sense and operate your actual working environment — which is the real distinction between "agentic" and plain "chat."
-
-### 3. One command runs the whole analysis pipeline (`augur_workflow`)
-
-Previously, running "fetch live data → full-roster analysis → consensus → committee" meant four separate calls. Now one command or one agent call chains it:
-
-```bash
-augur workflow NVDA --steps fetch,analyze,consensus,committee
-```
-
-It can also be scoped to just the masters you've enabled (automatically linked to your Terminal Workspace's enabled-master setting).
-
-### 4. A stronger consensus engine under the hood
-
-Behind the score, we added a more detailed calculation stack: an industry weighting matrix, market-regime detection and routing, probability calibration, rolling IC (information coefficient) evaluation, macro factors, and risk management. One thing worth calling out specifically:
-
-- There's an internal "median blending" mechanism that pulls the final score partway toward the median of all masters' opinions, to avoid letting one extreme view dominate. The blend ratio used to be hard-coded at 50% and wasn't very transparent. It's now a tunable setting (`consensus.meta_model_weight`) — still 50% by default, but you can set it anywhere from 0 (no blending) to 1 (pure median).
-
-## What this update fixes (bugs)
-
-A code review surfaced a few issues that didn't affect day-to-day use but made results slightly less accurate or robust:
-
-- In some cases, the "analysis timed out" message never actually fired (it was silently caught by an outer error handler instead — functionality was unaffected, only the error message was misleading).
-- A background cache module had a concurrency risk; it's now properly locked.
-- A few setup docs still referenced an old tool count (9 or 10); they're now updated to the current 13, with the missing tools documented.
+The last release notes incorrectly listed the user feedback path (`~/.augur/feedback/`, overridable via `USER_FEEDBACK_DIR`) as "not yet implemented." It actually shipped earlier, in v10.15.0's third consensus-engine round, with test coverage already in place. This update corrects that documentation — no new code changed as a result.
 
 ## Test status
 
-Full suite: **2065 tests passing**, 0 failures.
+Full suite: **2072 tests passing**, 0 failures.
 
 ## What's next
 
-This update wraps up most of the high-priority items from the last code review: the Committee page now reads your workspace config and auto-applies the matching committee preset, and all 18 masters' `manifest.json` / Hermes configs are back in sync with the current version number and the full 13-tool list. What's left is more architectural polish (per-step status reporting, caching headers on the config endpoint) that won't change day-to-day usage.
+The only item left in the P1 backlog is P1-9 (splitting up the dashboard's router file — a purely internal code-organization change with no user-facing effect). It's intentionally on hold until after some real-world use and feedback on the product as it stands today.
 
 See [CHANGELOG.md](../../CHANGELOG.md) for the full technical change log.

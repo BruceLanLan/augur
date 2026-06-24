@@ -1,7 +1,7 @@
 ---
 name: augur-dayu
 description: "大宇 (BTCdayu) AI — information edge / sentiment momentum, Crypto and meme"
-version: 10.16.1
+version: 10.16.2
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

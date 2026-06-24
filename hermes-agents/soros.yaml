@@ -8,7 +8,7 @@ display_name: "George Soros"
 description: "Quantum Fund — reflexivity & macro dislocations · augur_workflow MCP"
 persona_id: soros
 language: en
-version: "10.16.1"
+version: "10.16.2"
 
 mcp:
   command: augur-mcp

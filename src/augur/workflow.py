@@ -109,31 +109,41 @@ def run_workflow(
         )
     elif needs_responses:
         t0 = time.perf_counter()
-        if selected_agents:
-            responses = {aid: agent.analyze(ctx) for aid, agent in selected_agents.items()}
-        else:
-            responses = coordinator.analyze_with_all(ctx, enabled_personas=persona_filter)
-        if "analyze" in step_list:
-            output["results"]["analyze"] = {
-                aid: {
-                    "agent_name": r.agent_name,
-                    "signal": r.signal.value,
-                    "score": r.score,
-                    "confidence": r.confidence,
+        try:
+            if selected_agents:
+                responses = {aid: agent.analyze(ctx) for aid, agent in selected_agents.items()}
+            else:
+                responses = coordinator.analyze_with_all(ctx, enabled_personas=persona_filter)
+            if "analyze" in step_list:
+                output["results"]["analyze"] = {
+                    aid: {
+                        "agent_name": r.agent_name,
+                        "signal": r.signal.value,
+                        "score": r.score,
+                        "confidence": r.confidence,
+                    }
+                    for aid, r in responses.items()
                 }
-                for aid, r in responses.items()
-            }
+        except Exception as e:
+            if "analyze" in step_list:
+                output["results"]["analyze"] = {"error": str(e)}
+            output.setdefault("warnings", []).append(f"analyze_failed: {e}")
         step_timings["analyze"] = round(time.perf_counter() - t0, 3)
 
     consensus_result = None
     if any(s in step_list for s in ("consensus", "committee")) and responses:
         t0 = time.perf_counter()
-        consensus_result = coordinator.get_consensus(responses, ticker=ticker, context=ctx)
-        meta = consensus_result.metadata or {}
-        if meta.get("low_participation"):
-            output.setdefault("warnings", []).append(
-                "low_participation: fewer than 3 agents responded; confidence capped"
-            )
+        try:
+            consensus_result = coordinator.get_consensus(responses, ticker=ticker, context=ctx)
+            meta = consensus_result.metadata or {}
+            if meta.get("low_participation"):
+                output.setdefault("warnings", []).append(
+                    "low_participation: fewer than 3 agents responded; confidence capped"
+                )
+        except Exception as e:
+            if "consensus" in step_list:
+                output["results"]["consensus"] = {"error": str(e)}
+            output.setdefault("warnings", []).append(f"consensus_failed: {e}")
         step_timings["consensus"] = round(time.perf_counter() - t0, 3)
 
     if "consensus" in step_list and consensus_result is not None:
@@ -150,22 +160,26 @@ def run_workflow(
 
     if "committee" in step_list and responses:
         t0 = time.perf_counter()
-        consensus = consensus_result or coordinator.get_consensus(
-            responses, ticker=ticker, context=ctx
-        )
-        bullish = sum(1 for r in responses.values() if r.signal.value == "bullish")
-        bearish = sum(1 for r in responses.values() if r.signal.value == "bearish")
-        neutral = len(responses) - bullish - bearish
-        output["results"]["committee"] = {
-            "question": question or f"Should we invest in {ticker}?",
-            "verdict": consensus.signal.value,
-            "score": consensus.score,
-            "vote": {"bullish": bullish, "neutral": neutral, "bearish": bearish},
-            "opinions": [
-                {"agent": r.agent_name, "signal": r.signal.value, "score": r.score}
-                for r in sorted(responses.values(), key=lambda x: -x.score)
-            ],
-        }
+        try:
+            consensus = consensus_result or coordinator.get_consensus(
+                responses, ticker=ticker, context=ctx
+            )
+            bullish = sum(1 for r in responses.values() if r.signal.value == "bullish")
+            bearish = sum(1 for r in responses.values() if r.signal.value == "bearish")
+            neutral = len(responses) - bullish - bearish
+            output["results"]["committee"] = {
+                "question": question or f"Should we invest in {ticker}?",
+                "verdict": consensus.signal.value,
+                "score": consensus.score,
+                "vote": {"bullish": bullish, "neutral": neutral, "bearish": bearish},
+                "opinions": [
+                    {"agent": r.agent_name, "signal": r.signal.value, "score": r.score}
+                    for r in sorted(responses.values(), key=lambda x: -x.score)
+                ],
+            }
+        except Exception as e:
+            output["results"]["committee"] = {"error": str(e)}
+            output.setdefault("warnings", []).append(f"committee_failed: {e}")
         step_timings["committee"] = round(time.perf_counter() - t0, 3)
 
     if "debate" in step_list:
@@ -227,7 +241,7 @@ def format_workflow_summary(data: Dict[str, Any]) -> str:
             "",
         ]
 
-    if "analyze" in results:
+    if "analyze" in results and "error" not in results["analyze"]:
         agents = results["analyze"]
         lines += [f"── Analyze ({len(agents)} agents) ──", ""]
         for aid, a in sorted(agents.items(), key=lambda x: -x[1]["score"])[:5]:
@@ -238,7 +252,7 @@ def format_workflow_summary(data: Dict[str, Any]) -> str:
             lines.append(f"  … and {len(agents) - 5} more")
         lines.append("")
 
-    if "consensus" in results:
+    if "consensus" in results and "error" not in results["consensus"]:
         c = results["consensus"]
         lines += [
             "── Consensus ──",
@@ -246,7 +260,7 @@ def format_workflow_summary(data: Dict[str, Any]) -> str:
             "",
         ]
 
-    if "committee" in results:
+    if "committee" in results and "error" not in results["committee"]:
         cm = results["committee"]
         v = cm["vote"]
         lines += [
@@ -258,6 +272,16 @@ def format_workflow_summary(data: Dict[str, Any]) -> str:
     if "sentiment" in results and "error" not in results["sentiment"]:
         s = results["sentiment"]
         lines += [f"── Sentiment ──  Score: {s['score']:+.2f}", ""]
+
+    failed_steps = [
+        step for step, val in results.items()
+        if isinstance(val, dict) and "error" in val
+    ]
+    if failed_steps:
+        lines += ["── Step Errors ──"]
+        for step in failed_steps:
+            lines.append(f"  ✗ {step}: {results[step]['error']}")
+        lines.append("")
 
     warnings = data.get("warnings", [])
     if warnings:

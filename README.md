@@ -10,8 +10,8 @@
 
 *18位传奇投资人，同时分析，一次共识*
 
-[![v10.16.1](https://img.shields.io/badge/v10.16.1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2065 Tests](https://img.shields.io/badge/2065_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.16.2](https://img.shields.io/badge/v10.16.2-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2072 Tests](https://img.shields.io/badge/2072_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-可安装应用-blue?style=for-the-badge)](#-dashboard-web-界面)
@@ -284,7 +284,15 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 想看本次更新更详细的功能说明（非技术向）？见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.16.1 — MCP 终端工作区工具 + 委员会预设接线 (current)</strong></summary>
+<summary><strong>v10.16.2 — 工作流局部失败容错 + 工作区 ETag (current)</strong></summary>
+
+- **`augur_workflow` 局部失败不再中断整条流水线**：analyze / consensus / committee 任一步骤抛错时，会把错误记录进该步骤结果（`{"error": ...}`），其余步骤继续执行；汇总摘要新增"Step Errors"小节，错误一目了然。
+- **`mcp_augur_workspace_get` 支持条件请求（ETag）**：客户端可携带上次返回的 ETag，配置未变化时返回 304，减少不必要的全量传输。
+- **文档纠错**：修正 `docs/AGENT_PEER_REVIEW_SYNTHESIS.md` 中 P1-8（用户反馈路径）的状态——该功能已在 v10.15.0 的 consensus 第三轮中落地（`USER_FEEDBACK_DIR` 覆盖优先级），并非"待办"。
+</details>
+
+<details>
+<summary><strong>v10.16.1 — MCP 终端工作区工具 + 委员会预设接线</strong></summary>
 
 - **`mcp_augur_workspace_get/set/profiles`**：任意 MCP 客户端（Claude Desktop / Hermes / OpenClaw）现在可以读取并代你修改 Dashboard 终端布局、启用大师子集、委员会预设——agent 不再只是"问答助手"，而是能感知并操作你的工作区。
 - **共识引擎可配置化**：MetaModel 中位数混合权重不再是隐藏的固定 50/50，可通过 `consensus.meta_model_weight` 调节（0 = 完全关闭）。

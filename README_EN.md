@@ -10,8 +10,8 @@
 
 *18 legendary investors. Simultaneous analysis. One verdict.*
 
-[![v10.16.1](https://img.shields.io/badge/v10.16.1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2065 Tests](https://img.shields.io/badge/2065_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.16.2](https://img.shields.io/badge/v10.16.2-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2072 Tests](https://img.shields.io/badge/2072_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-Installable_App-blue?style=for-the-badge)](#-dashboard)
@@ -284,7 +284,15 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > For a more detailed, non-technical walkthrough of this release, see [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
 
 <details open>
-<summary><strong>v10.16.1 — MCP terminal workspace tools + committee-preset wiring (current)</strong></summary>
+<summary><strong>v10.16.2 — Workflow partial-failure resilience + workspace ETag (current)</strong></summary>
+
+- **`augur_workflow` no longer aborts on a single step's failure**: if analyze / consensus / committee throws, the error is captured in that step's result (`{"error": ...}`) and the remaining steps still run; the summary now has a "Step Errors" section so failures are visible at a glance.
+- **`mcp_augur_workspace_get` supports conditional requests (ETag)**: clients can pass back the previous ETag and get a 304 when the config hasn't changed, avoiding unnecessary full transfers.
+- **Doc correction**: fixed the status of P1-8 (user feedback path) in `docs/AGENT_PEER_REVIEW_SYNTHESIS.md` — it was already shipped in v10.15.0's third consensus round (`USER_FEEDBACK_DIR` override precedence), not actually pending.
+</details>
+
+<details>
+<summary><strong>v10.16.1 — MCP terminal workspace tools + committee-preset wiring</strong></summary>
 
 - **`mcp_augur_workspace_get/set/profiles`**: Any MCP client (Claude Desktop / Hermes / OpenClaw) can now read and modify your Dashboard terminal layout, enabled-master subset, and committee preset on your behalf — the agent is no longer just a Q&A assistant, it can sense and operate your workspace.
 - **Configurable consensus blending**: The MetaModel median blend is no longer a hidden fixed 50/50 — tune it via `consensus.meta_model_weight` (0 disables it entirely).

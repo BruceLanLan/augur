@@ -61,17 +61,17 @@ Workspace MCP tools (P1-1), profile i18n (P1-3), step_status envelope (P1-6) rem
 
 ### P1 — Next session high value
 
-| ID | Item | Source | Status v10.16.1 |
+| ID | Item | Source | Status v10.16.2 |
 |----|------|--------|------------------|
 | P1-1 | MCP workspace tools (`augur_workspace_get/set/profiles`) | #8 | ✅ Implemented |
 | P1-2 | Regenerate all persona `manifest.json` + Hermes yaml with 13 tools | #8 | ✅ Implemented |
 | P1-3 | Complete workspace profile i18n keys in `i18n.js` (9 keys × 4 locales) | #4 | ✅ Already done (verified, predates v10.16.0) |
 | P1-4 | Wire `committee_preset` to committee page defaults | #1 | ✅ Implemented |
 | P1-5 | `enabled_personas` multi-select in Settings UI | #1 | ✅ Already done (verified, predates v10.16.0) |
-| P1-6 | Per-step `step_status` envelope + partial failure in workflow | #2 | Pending |
-| P1-7 | `GET /api/workspace` ETag / conditional GET | #4 | Pending |
-| P1-8 | Feedback path → `~/.augur/feedback/` for PyPI installs | #2, #3 | Pending |
-| P1-9 | Extract `dashboard/routes/workspace.py` (R1) | #4, #9 | Pending |
+| P1-6 | Per-step `step_status` envelope + partial failure in workflow | #2 | ✅ Implemented (envelope existed; analyze/consensus/committee lacked try/except — fixed) |
+| P1-7 | `GET /api/workspace` ETag / conditional GET | #4 | ✅ Implemented |
+| P1-8 | Feedback path → `~/.augur/feedback/` for PyPI installs | #2, #3 | ✅ Already done (verified, shipped in agent3-consensus round 3, predates v10.15.0) |
+| P1-9 | Extract `dashboard/routes/workspace.py` (R1) | #4, #9 | Pending — deferred, larger architectural refactor, held back pending user product review |
 
 ### P2 — Maturity / architecture
 
@@ -121,4 +121,4 @@ Nine reviewers rotate **one promotion each** — each agent implements one P1 it
 
 ## Verdict
 
-v10.15.0 closed the **highest-risk integration gaps** between terminal workspace, workflow pipeline, and consensus weighting. v10.16.0/10.16.1 closed the remaining agentic gap: agent hosts are no longer chat-sidecars now that `augur_workspace_get/set/profiles` (P1-1) has shipped, and the committee page itself now reflects workspace state (P1-4). The Bloomberg terminal story is credible end-to-end (Dashboard + CLI/MCP). **Do not treat consensus outputs as risk inputs** until P1-8 feedback paths and P2-3 regime validation land — those remain the open architectural risks.
+v10.15.0 closed the **highest-risk integration gaps** between terminal workspace, workflow pipeline, and consensus weighting. v10.16.0/10.16.1 closed the remaining agentic gap: agent hosts are no longer chat-sidecars now that `augur_workspace_get/set/profiles` (P1-1) has shipped, and the committee page itself now reflects workspace state (P1-4). v10.16.2 added workflow partial-failure resilience (P1-6) and workspace ETag support (P1-7); P1-8's feedback path was confirmed already shipped (predates v10.15.0), not a gap. The Bloomberg terminal story is credible end-to-end (Dashboard + CLI/MCP). **Do not treat consensus outputs as risk inputs** until P2-3 regime validation lands — that remains the one open architectural risk. P1-9 (router split) is the only remaining P1 item, deliberately deferred pending real-world product feedback.

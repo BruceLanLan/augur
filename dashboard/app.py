@@ -1386,15 +1386,21 @@ class WorkspaceActiveBody(BaseModel):
 
 
 @app.get("/api/workspace", summary="获取终端工作区配置")
-async def api_get_workspace():
+async def api_get_workspace(request: Request):
     """Return Bloomberg-style terminal workspace preferences."""
     state = get_workspace_state()
-    return {
+    data = {
         "status": "ok",
         "workspace": get_workspace(),
         "active_profile": state["active_profile"],
         "profiles": list_profiles(),
     }
+    data_json = json.dumps(data, sort_keys=True, default=str)
+    etag = hashlib.md5(data_json.encode()).hexdigest()
+    if_none_match = request.headers.get("if-none-match")
+    if if_none_match and if_none_match.strip('"') == etag:
+        return JSONResponse(status_code=304, content=None, headers={"ETag": f'"{etag}"'})
+    return JSONResponse(content=data, headers={"ETag": f'"{etag}"'})
 
 
 @app.get("/api/workspace/presets", summary="列出工作区布局预设")

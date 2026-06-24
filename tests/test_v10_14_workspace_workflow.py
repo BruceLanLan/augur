@@ -240,6 +240,47 @@ class TestWorkflow:
                     assert "buffett" in result["results"]["analyze"]
                     assert result["results"]["consensus"]["signal"] == "bullish"
 
+    def test_run_workflow_analyze_failure_does_not_abort_pipeline(self):
+        """P1-6: a step-level exception must not kill the whole workflow."""
+        from augur.personas.base import MarketContext
+        from augur.registry import DecisionCoordinator
+
+        ctx = MarketContext(ticker="TEST", pe=20, roe=0.15, price=100)
+
+        with patch("augur.data.fetch_market_context", return_value=ctx):
+            with patch.object(DecisionCoordinator, "analyze_with_all", side_effect=RuntimeError("boom")):
+                from augur.workflow import run_workflow
+                result = run_workflow("TEST", steps="fetch,analyze,consensus,sentiment")
+
+                assert result["results"]["fetch"]["price"] == 100
+                assert "error" in result["results"]["analyze"]
+                assert "consensus" not in result["results"]
+                assert any("analyze_failed" in w for w in result.get("warnings", []))
+                assert result["step_status"]["fetch"] == "ok"
+                assert result["step_status"]["analyze"] == "error"
+                assert result["step_status"]["consensus"] == "empty"
+                assert "summary" in result
+
+    def test_run_workflow_consensus_failure_does_not_abort_pipeline(self):
+        from augur.personas.base import MarketContext, AgentResponse, SignalType
+        from augur.registry import DecisionCoordinator
+
+        ctx = MarketContext(ticker="TEST", pe=20, roe=0.15, price=100)
+        mock_response = AgentResponse(
+            agent_id="buffett", agent_name="Buffett",
+            signal=SignalType.BULLISH, confidence=0.8, score=7.0, reasoning="Test",
+        )
+
+        with patch("augur.data.fetch_market_context", return_value=ctx):
+            with patch.object(DecisionCoordinator, "analyze_with_all", return_value={"buffett": mock_response}):
+                with patch.object(DecisionCoordinator, "get_consensus", side_effect=RuntimeError("boom")):
+                    from augur.workflow import run_workflow
+                    result = run_workflow("TEST", steps="fetch,analyze,consensus")
+
+                    assert "buffett" in result["results"]["analyze"]
+                    assert "error" in result["results"]["consensus"]
+                    assert result["step_status"]["consensus"] == "error"
+
     def test_format_workflow_summary(self):
         from augur.workflow import format_workflow_summary
         summary = format_workflow_summary({
@@ -278,6 +319,25 @@ class TestWorkspaceAPI:
         r3 = client.get("/api/workspace")
         assert r3.status_code == 200
         assert r3.json()["workspace"]["default_page"] == "/stocks"
+
+    def test_workspace_get_etag_conditional(self):
+        """P1-7: GET /api/workspace supports ETag + If-None-Match -> 304."""
+        from fastapi.testclient import TestClient
+        from dashboard.app import app
+
+        client = TestClient(app)
+        r1 = client.get("/api/workspace")
+        assert r1.status_code == 200
+        etag = r1.headers.get("etag")
+        assert etag
+
+        r2 = client.get("/api/workspace", headers={"If-None-Match": etag})
+        assert r2.status_code == 304
+
+        client.put("/api/workspace", json={"default_ticker": "ZZZZ"})
+        r3 = client.get("/api/workspace", headers={"If-None-Match": etag})
+        assert r3.status_code == 200
+        assert r3.headers.get("etag") != etag
 
     def test_workspace_committee_preset(self):
         from fastapi.testclient import TestClient

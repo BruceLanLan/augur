@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-24，当前版本 **v10.16.1**（P1-2/P1-4 落地 + README/RELEASE_NOTES 公开发布文档收尾，2065 tests passing）
+> 最后更新：2026-06-24，当前版本 **v10.16.2**（P1-6/P1-7 落地 + P1-8 文档纠错，2072 tests passing）
 
 ---
 
@@ -16,7 +16,7 @@
 
 **仓库分工：**
 - `augur`（github.com/BruceLanLan/augur）= 稳定版，当前 **v8.2.3**（公开，227★/34 fork，最后一次发布 2026-06-08——已落后 augur-next 两个以上大版本）
-- `augur-next`（github.com/BruceLanLan/augur-next）= 开发版，当前 **v10.16.1**
+- `augur-next`（github.com/BruceLanLan/augur-next）= 开发版，当前 **v10.16.2**
 - 本地：`feature/v9-dev` 分支跟踪 augur-next/main
 - 推送命令：`git push augur-next feature/v9-dev:main`
 - **下一里程碑：** 把 augur-next 稳定功能挑选打包，正式发布一版到公开 `augur`（见下方"公开发布准备"）
@@ -55,14 +55,15 @@
 | 10.15.0 | v10.14 功能正式发布 + **Agent Peer Review** 集成：persona 权重重归一化、服务端 landing 302、workflow 去重/low_participation；`scanner/` legacy；synthesis backlog |
 | 10.16.0 | **P1-1 MCP Workspace 工具**：`augur_workspace_get/set/profiles`（agent 可读写用户的 Dashboard 布局/启用人格，闭合 agentic 接入缺口）；代码审查 4 项修复（registry.py `concurrent.futures.TimeoutError` 漏捕获、meta_model 混合权重可配置化 `consensus.meta_model_weight`、macro_features.py 缓存加锁、缺失的 `beautifulsoup4` dev 依赖）；新增 manifest-sync 回归测试（AST 校验 `.mcp.json` 与 `@mcp.tool()` 一致）；README/RELEASE_NOTES 公开发布文档重写 |
 | 10.16.1 | **P1-4 committee_preset 接线**：`/committee` 页面加载时读取 `/api/workspace`，自动套用保存的委员会预设；**P1-2 manifest/Hermes yaml 版本同步**：18 个 persona 的 `manifest.json`/`SKILL.md`/`hermes-agents/*.yaml` 从硬编码旧版本号改为动态读取 `augur.__version__`，工具说明从 5/13 补全为 13/13；纠正此前误判为"未完成"的 P1-3（i18n 已完整）、P1-5（enabled_personas 多选 UI 已存在）两项文档状态 |
+| 10.16.2 | **P1-6 workflow 局部失败容错**：`augur_workflow` 的 analyze/consensus/committee 任一步骤抛错时捕获为 `{"error": ...}`，其余步骤继续执行而不中断整条流水线；同步修复 `format_workflow_summary()` 在步骤结果为 error 形态时的 KeyError，新增"Step Errors"摘要小节；**P1-7 `/api/workspace` ETag**：支持条件请求，配置未变时返回 304；纠正此前误判为"未完成"的 P1-8（`USER_FEEDBACK_DIR` 用户反馈路径，已在 v10.15.0 落地） |
 
-**当前能力盘点（v10.16.1）：**
+**当前能力盘点（v10.16.2）：**
 - MCP 工具 13 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona, workflow, **workspace_get, workspace_set, workspace_profiles**
 - CLI 命令：analyze, consensus, report, serve, watch, skills, portfolio, backtest, chat, sentiment, inject-soul, telegram, slack, wechat, lark, cron-* 等
 - Dashboard 19 页（含 committee, hermes-setup），委员会页已接入工作区配置
 - 19 个 skill 目录（SKILL.md + manifest.json），版本号与 `augur.__version__` 自动同步
 - i18n：中/英/日/韩四语言，降级链，workspace profile 9 key × 4 语言全部完整
-- 测试基线：**2065 passed, 0 failed**（含 `data` extra 后全绿，无需排除网络测试）
+- 测试基线：**2072 passed, 0 failed**（含 `data` extra 后全绿，无需排除网络测试）
 
 ### scanner/ 弃用说明
 
@@ -89,7 +90,11 @@
 - committee_preset 接线、persona manifest/Hermes yaml 版本同步
 - P1-3（i18n）、P1-5（enabled_personas 多选）实际在 v10.14.0/10.15.0 就已完成，本次仅更新文档状态
 
-**下 session P1 剩余：** P1-6（per-step status envelope）、P1-7（`/api/workspace` ETag）、P1-8（PyPI 安装的 feedback 路径）、P1-9（dashboard router 拆分）——均为内部架构打磨项，详见 synthesis 文档 P1 表。
+**v10.16.2 已落地 P1-6、P1-7，并纠正 P1-8 的文档误判：**
+- workflow 局部失败容错（per-step error envelope）+ `format_workflow_summary()` KeyError 修复、`/api/workspace` ETag 条件请求
+- P1-8（`USER_FEEDBACK_DIR` 用户反馈路径）实际在 v10.15.0 consensus 第三轮就已完成，本次仅更新文档状态
+
+**下 session P1 剩余：** P1-9（dashboard router 拆分）——内部架构打磨项，待用户自行体验产品后再决定是否推进，详见 synthesis 文档 P1 表。
 
 ---
 
