@@ -10,8 +10,8 @@
 
 *18位传奇投资人，同时分析，一次共识*
 
-[![v10.16.4](https://img.shields.io/badge/v10.16.4-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2077 Tests](https://img.shields.io/badge/2077_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.16.6](https://img.shields.io/badge/v10.16.6-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2100 Tests](https://img.shields.io/badge/2100_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-可安装应用-blue?style=for-the-badge)](#-dashboard-web-界面)
@@ -284,7 +284,26 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 想看本次更新更详细的功能说明（非技术向）？见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.16.4 — 修复投资委员会 Kelly 仓位显示错误 (current)</strong></summary>
+<summary><strong>v10.16.6 — 大幅缓解（非彻底解决）投委会/深度报告卡顿 (current)</strong></summary>
+
+- **同一根因延伸到投委会与深度报告**：`analyze_ticker`(`/api/analyze`)、`report_ticker`(`/api/report`，即"深度报告")、`api_committee`(`/api/committee`)、`api_compare`、`api_debate`、`compare_personas`、`get_persona_opinion`、`api_run_watchlist_analysis` 共 8 个接口同样是 `async def` 却内部同步调用 yfinance 和 18 位投资大师分析，函数体里完全没有 `await`。全部改为同步 `def`。
+- **`/ws/analyze`、`/ws/committee` 两个 WebSocket 接口不能改成同步 `def`**（Starlette 要求 WebSocket 路由必须是 `async def`），改为用 `run_in_threadpool` 把里面阻塞的 yfinance 调用丢进线程池，不再占用事件循环。
+- 顺手修掉一个潜在的隐藏 bug：`analyze_ticker` 里原来用 `asyncio.get_event_loop().run_in_executor(...)` 做通知规则的"fire-and-forget"派发，转成同步函数后这行在线程池里会直接报错（被外层 `except Exception` 默默吞掉，导致规则通知静默失效），改成普通后台线程后语义不变且不再依赖事件循环。
+- 新增/扩展测试，回归测试覆盖的接口数从 11 个增加到 19 个。
+- **已知局限**：实测发现这次只是把"整个服务器彻底卡死"变成"其他请求被拖慢 3 秒以上"——根因是 18 位投资大师的分析是纯 CPU 计算，丢进线程池绕不开 Python GIL，无法真正并行。彻底解决需要给分析逻辑提速或换成多进程，目前先如实记录为已知限制，详见 [CHANGELOG.md](CHANGELOG.md)。
+</details>
+
+<details>
+<summary><strong>v10.16.5 — 修复首页仪表盘点不动/数据加不出来</strong></summary>
+
+- **修复事件循环被同步 yfinance 调用阻塞**：板块行情、加密货币总览、大宗商品、国债收益率、热门标的、单标的实时行情、搜索、7日迷你走势图、全球市场总览、涨跌幅领先、恐慌贪婪指数共 11 个接口被声明成 `async def`，但内部做的是同步阻塞的 yfinance 网络请求；单进程 uvicorn 服务器下，这会让整个事件循环卡住，期间所有其他并发请求（包括用户点击触发的请求）都会被一起拖住——这正是用户反馈"首页仪表盘点不动""很多地方数据不显示"的根因。改为同步 `def` 后交给 Starlette 线程池执行，不再阻塞事件循环。
+- **板块行情接口补上并行抓取 + 超时保护**：原来 11 个 ETF 是逐个同步抓取、无超时、无降级，曾实测单次耗时 9.8s~15s+（甚至完全超时）。现在改为线程池并行抓取，单标的超时 10 秒自动降级为 0，不再拖累整体响应。
+- 用 Playwright 真实浏览器复现并确认修复：并发请求一个慢接口和一个快接口，修复前两者耗时被拖到一致（同步阻塞证据），修复后两者解耦，首页全部 widget 在 15 秒内加载完成，不再有卡死的加载骨架屏。
+- 新增测试，包括一条结构性回归测试，直接断言这 11 个接口必须是同步 `def`，防止未来再误标成 `async def`。
+</details>
+
+<details>
+<summary><strong>v10.16.4 — 修复投资委员会 Kelly 仓位显示错误</strong></summary>
 
 - **修复 `/api/committee` 与 `/ws/committee` 仓位百分比双重放大**：`position_pct` 在共识层已经是百分数（如 19.9 代表 19.9%），committee 接口又乘了一次 100，导致页面显示 "1990.0%" 这种明显错误的数字。两处统一改为直接使用原值。
 - 新增回归测试覆盖 REST 与 WebSocket 两条路径的 `kelly_pct` 取值，防止再次回归。

@@ -35,6 +35,7 @@ try:
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.staticfiles import StaticFiles
     from fastapi.exceptions import RequestValidationError
+    from fastapi.concurrency import run_in_threadpool
     from starlette.exceptions import HTTPException as StarletteHTTPException
     from pydantic import BaseModel
     import uvicorn
@@ -792,7 +793,7 @@ async def api_scanner_run(body: ScannerRunBody):
 
 
 @app.get("/api/analyze/{ticker}", summary="分析指定标的")
-async def analyze_ticker(
+def analyze_ticker(
     ticker: str,
     price: float = 0,
     pe: float = 0,
@@ -817,6 +818,10 @@ async def analyze_ticker(
 
     基本用法: GET /api/analyze/AAPL (自动获取实时数据)
     手动指标: GET /api/analyze/AAPL?price=210&pe=32&gross_margins=0.46
+
+    同步 def：fetch_market_context 同步调用 yfinance，且 18 位投资大师的
+    分析也是同步执行，async def 会在此期间阻塞事件循环——这正是「投委会」
+    和「深度报告」体验卡死的根因之一。
     """
     # Validate ticker format to prevent injection issues with yfinance or URLs
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
@@ -933,7 +938,7 @@ async def analyze_ticker(
     try:
         engine = _get_rules_engine()
         if engine.get_rules():
-            import asyncio
+            import threading
             rule_data = {
                 "ticker": ticker.upper(),
                 "signal": consensus_resp.signal,
@@ -943,9 +948,10 @@ async def analyze_ticker(
                 "price": ctx.price,
                 "sector": ctx.sector,
             }
-            asyncio.get_event_loop().run_in_executor(
-                None, engine.evaluate, rule_data
-            )
+            # 这是同步 def，在线程池里跑，没有正在运行的事件循环可挂，
+            # 所以不能再用 asyncio.get_event_loop().run_in_executor；
+            # 用普通后台线程保持原来的 fire-and-forget 语义。
+            threading.Thread(target=engine.evaluate, args=(rule_data,), daemon=True).start()
     except Exception:
         pass  # Rules errors never block analysis response
 
@@ -953,13 +959,15 @@ async def analyze_ticker(
 
 
 @app.get("/api/persona/compare", summary="对比两位投资大师对同一标的的观点")
-async def compare_personas(persona1: str, persona2: str, ticker: str):
+def compare_personas(persona1: str, persona2: str, ticker: str):
     """
     对比两位投资大师对同一标的的分析观点。
 
     - persona1: 第一位投资人ID
     - persona2: 第二位投资人ID
     - ticker: 股票代码
+
+    同步 def：fetch_market_context 同步调用 yfinance，async def 会阻塞事件循环。
     """
     # Validate ticker format
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
@@ -1032,13 +1040,15 @@ async def get_persona(agent_id: str):
 
 
 @app.get("/api/persona/{agent_id}/opinion", summary="获取单个投资人对标的的分析观点")
-async def get_persona_opinion(agent_id: str, ticker: str, question: Optional[str] = None):
+def get_persona_opinion(agent_id: str, ticker: str, question: Optional[str] = None):
     """
     使用单个投资大师分析指定标的，返回其独立观点。
 
     - agent_id: 投资人ID (如 buffett, munger, dalio)
     - ticker: 股票代码 (如 AAPL, NVDA)
     - question: 可选的用户问题上下文
+
+    同步 def：fetch_market_context 同步调用 yfinance，async def 会阻塞事件循环。
     """
     # Validate ticker format
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
@@ -1089,7 +1099,7 @@ async def get_persona_opinion(agent_id: str, ticker: str, question: Optional[str
 
 
 @app.get("/api/report/{ticker}", summary="生成深度分析报告")
-async def report_ticker(
+def report_ticker(
     ticker: str,
     price: float = 0,
     pe: float = 0,
@@ -1114,6 +1124,9 @@ async def report_ticker(
 
     基本用法: GET /api/report/AAPL (自动获取实时数据)
     手动指标: GET /api/report/AAPL?price=210&pe=32&auto_fetch=false
+
+    同步 def：fetch_market_context 同步调用 yfinance，且 18 位投资大师的
+    分析也是同步执行，async def 会阻塞事件循环——这是「深度报告」加载卡死的根因之一。
     """
     # Validate ticker format
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
@@ -1954,8 +1967,12 @@ async def api_remove_from_watchlist(ticker: str):
 
 
 @app.post("/api/watchlist/run", summary="批量分析自选股")
-async def api_run_watchlist_analysis():
-    """Run consensus analysis on all watchlist tickers"""
+def api_run_watchlist_analysis():
+    """Run consensus analysis on all watchlist tickers
+
+    同步 def：对自选股列表里的每个标的都要跑全部投资大师的同步分析，
+    标的多时累积耗时不短，async def 会阻塞事件循环。
+    """
     import time
     from augur.cron import load_watchlist
     from augur.personas.base import MarketContext
@@ -2231,8 +2248,11 @@ _HAS_AUGUR_DATA = _is_available("augur.data")
 
 
 @app.get("/api/fetch/{ticker}", summary="获取实时行情数据")
-async def api_fetch_ticker(ticker: str):
-    """Fetch real-time market data for a ticker via yfinance"""
+def api_fetch_ticker(ticker: str):
+    """Fetch real-time market data for a ticker via yfinance.
+
+    同步 def：fetch_market_context 同步调用 yfinance，async def 会阻塞事件循环。
+    """
     # Validate ticker format to prevent injection issues
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         raise HTTPException(
@@ -2262,8 +2282,11 @@ async def api_fetch_ticker(ticker: str):
 
 
 @app.get("/api/search", summary="搜索标的")
-async def api_search_tickers(q: str = ""):
-    """Search for tickers by name/symbol"""
+def api_search_tickers(q: str = ""):
+    """Search for tickers by name/symbol.
+
+    同步 def：search_ticker 同步调用 yfinance，async def 会阻塞事件循环。
+    """
     # Reject empty / excessively long queries up front
     if not q or len(q) < 1:
         return {"results": []}
@@ -2297,8 +2320,12 @@ async def api_search_tickers(q: str = ""):
 # ============ Sparkline API Route ============
 
 @app.get("/api/sparkline/{ticker}", summary="获取7日迷你走势数据")
-async def api_sparkline(ticker: str):
-    """Return last 7 trading days close prices for sparkline rendering."""
+def api_sparkline(ticker: str):
+    """Return last 7 trading days close prices for sparkline rendering.
+
+    同步 def：fetch_history 在缓存未命中时同步调用 yfinance，
+    async def 会阻塞事件循环——首页一次要并发渲染多个标的的迷你走势图。
+    """
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format")
     try:
@@ -2317,10 +2344,13 @@ async def api_sparkline(ticker: str):
 # ============ Hot Tickers API Route ============
 
 @app.get("/api/hot-tickers", summary="热门标的实时行情")
-async def api_hot_tickers(request: Request, refresh: bool = False):
+def api_hot_tickers(request: Request, refresh: bool = False):
     """热门标的实时行情：AAPL, NVDA, TSLA, MSFT, GOOGL, AMZN, BTC-USD, ETH-USD, META, AMD。
 
     供首页「热门标的实时行情」面板使用。无 yfinance 时优雅降级为空列表。
+
+    同步 def：fetch_hot_tickers 在缓存未命中时会同步调用 yfinance，
+    声明为 async def 会让那次阻塞 I/O 卡住整个事件循环。
     """
     try:
         if not _HAS_AUGUR_DATA:
@@ -2353,10 +2383,13 @@ async def api_hot_tickers(request: Request, refresh: bool = False):
 # ============ Market Overview API Routes ============
 
 @app.get("/api/market-overview", summary="全球市场总览")
-async def api_market_overview(request: Request, refresh: bool = False):
+def api_market_overview(request: Request, refresh: bool = False):
     """市场总览快照：主要指数、VIX、利率、商品、加密的实时价与涨跌幅。
 
     供首页 Dashboard 的「全球市场总览」板块使用。无 yfinance 时优雅降级为空列表。
+
+    同步 def：fetch_market_overview 在缓存未命中时同步调用 yfinance，
+    async def 会阻塞事件循环。
     """
     if not _HAS_AUGUR_DATA:
         return {
@@ -2391,10 +2424,13 @@ async def api_market_overview(request: Request, refresh: bool = False):
 
 
 @app.get("/api/market-movers", summary="涨跌幅领先")
-async def api_market_movers():
+def api_market_movers():
     """Top 5 gainers and top 5 losers extracted from hot tickers data.
 
     Returns: {"status": "ok", "gainers": [...], "losers": [...]}
+
+    同步 def：fetch_hot_tickers 在缓存未命中时同步调用 yfinance，
+    async def 会阻塞事件循环。
     """
     if not _HAS_AUGUR_DATA:
         return {"status": "degraded", "gainers": [], "losers": []}
@@ -2413,10 +2449,14 @@ async def api_market_movers():
 
 
 @app.get("/api/crypto-overview", summary="加密货币总览")
-async def api_crypto_overview():
+def api_crypto_overview():
     """Fetch BTC, ETH, SOL, DOGE, XRP prices and 24h change from yfinance.
 
     Returns: {"status": "ok", "coins": [{symbol, name, price, change_pct, market_cap}]}
+
+    同步 def：内部已用 ThreadPoolExecutor + future.result(timeout) 抓取多个标的，
+    若声明为 async def，future.result() 仍会阻塞事件循环本身；改成 def 后
+    Starlette 会把整个函数丢进线程池执行，事件循环不受影响。
     """
     if not _HAS_AUGUR_DATA:
         return {"status": "degraded", "coins": []}
@@ -2495,7 +2535,7 @@ async def api_crypto_overview():
 
 
 @app.get("/api/commodities", summary="大宗商品行情")
-async def api_commodities():
+def api_commodities():
     """Fetch Gold, Silver, Oil (WTI), Natural Gas prices and changes from yfinance.
 
     Returns: {"status": "ok", "commodities": [{symbol, name, price, change_pct}]}
@@ -2573,7 +2613,7 @@ async def api_commodities():
 
 
 @app.get("/api/treasury-rates", summary="美国国债收益率")
-async def api_treasury_rates():
+def api_treasury_rates():
     """Fetch US 2Y, 5Y, 10Y, 30Y treasury yields from yfinance.
 
     Symbols: ^IRX (13-week as 2Y proxy), ^FVX (5Y), ^TNX (10Y), ^TYX (30Y)
@@ -2648,11 +2688,14 @@ async def api_treasury_rates():
 
 
 @app.get("/api/fear-greed", summary="恐慌与贪婪指数")
-async def api_fear_greed():
+def api_fear_greed():
     """基于 VIX 计算恐慌与贪婪指数 (0-100)。
 
     公式: index = max(0, min(100, 100 - ((VIX - 12) / 38) * 100))
     0-25: Extreme Fear, 25-45: Fear, 45-55: Neutral, 55-75: Greed, 75-100: Extreme Greed
+
+    同步 def：fetch_market_overview 在缓存未命中时同步调用 yfinance，
+    async def 会阻塞事件循环。
     """
     if not _HAS_AUGUR_DATA:
         return {
@@ -3025,10 +3068,14 @@ async def api_cron_run_now():
 # ============ Sector Performance API Route ============
 
 @app.get("/api/sector-performance", summary="板块行情")
-async def api_sector_performance(request: Request, refresh: bool = False):
+def api_sector_performance(request: Request, refresh: bool = False):
     """板块ETF行情：XLK, XLV, XLF, XLE, XLY, XLP, XLI, XLU。
 
     供首页「板块行情」面板使用。无 yfinance 时优雅降级为空列表。
+
+    同步 def（非 async def）：Starlette 会自动把它丢进线程池执行，
+    不会阻塞事件循环。内部用 ThreadPoolExecutor 并行抓取 11 个 ETF，
+    每个标的最多等待 10 秒，避免单个标的卡住拖慢整体响应。
     """
     if not _HAS_AUGUR_DATA:
         return {
@@ -3053,14 +3100,15 @@ async def api_sector_performance(request: Request, refresh: bool = False):
 
     try:
         import yfinance as yf
+        from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 
-        sectors = []
-        for symbol, cn_name, en_name in sector_etfs:
+        def _fetch_sector(entry):
+            symbol, cn_name, en_name = entry
+            price = 0.0
+            prev = 0.0
             try:
                 tk = yf.Ticker(symbol)
                 fi = getattr(tk, "fast_info", None)
-                price = 0.0
-                prev = 0.0
                 if fi is not None:
                     price = float(getattr(fi, "last_price", 0) or 0)
                     prev = float(getattr(fi, "previous_close", 0) or 0)
@@ -3071,23 +3119,33 @@ async def api_sector_performance(request: Request, refresh: bool = False):
                         if closes:
                             price = price or float(closes[-1])
                             prev = prev or (float(closes[-2]) if len(closes) >= 2 else float(closes[-1]))
-                change_pct = ((price - prev) / prev) if prev else 0.0
-                sectors.append({
-                    "symbol": symbol,
-                    "name": cn_name,
-                    "en_name": en_name,
-                    "price": round(price, 2),
-                    "change_pct": round(change_pct, 4),
-                })
             except Exception as exc:
                 logger.debug("sector fetch failed for %s: %s", symbol, exc)
-                sectors.append({
-                    "symbol": symbol,
-                    "name": cn_name,
-                    "en_name": en_name,
-                    "price": 0,
-                    "change_pct": 0,
-                })
+            change_pct = ((price - prev) / prev) if prev else 0.0
+            return {
+                "symbol": symbol,
+                "name": cn_name,
+                "en_name": en_name,
+                "price": round(price, 2),
+                "change_pct": round(change_pct, 4),
+            }
+
+        sectors = []
+        with ThreadPoolExecutor(max_workers=len(sector_etfs)) as executor:
+            futures = {executor.submit(_fetch_sector, entry): entry for entry in sector_etfs}
+            for future in futures:
+                try:
+                    sectors.append(future.result(timeout=10))
+                except (FuturesTimeoutError, Exception) as exc:
+                    symbol, cn_name, en_name = futures[future]
+                    logger.debug("sector timeout for %s: %s", symbol, exc)
+                    sectors.append({
+                        "symbol": symbol,
+                        "name": cn_name,
+                        "en_name": en_name,
+                        "price": 0,
+                        "change_pct": 0,
+                    })
 
         data = {
             "status": "ok",
@@ -3276,8 +3334,12 @@ async def committee_page(request: Request):
 
 
 @app.post("/api/committee")
-async def api_committee(body: dict):
-    """Run an investment committee session with selected masters."""
+def api_committee(body: dict):
+    """Run an investment committee session with selected masters.
+
+    同步 def：fetch_market_context 同步调用 yfinance，且全部投资人的 analyze()
+    也是同步执行，async def 会阻塞事件循环——这是「投委会」体验卡死的根因之一。
+    """
     from augur.personas.base import MarketContext
     ticker = body.get("ticker", "").upper()
     question = body.get("question", "")
@@ -3377,7 +3439,8 @@ async def performance_page(request: Request):
 
 
 @app.post("/api/compare")
-async def api_compare(body: CompareBody):
+def api_compare(body: CompareBody):
+    """同步 def：fetch_market_context 同步调用 yfinance，async def 会阻塞事件循环。"""
     if not consume_endpoint_token("api_compare"):
         raise HTTPException(
             status_code=429,
@@ -3411,7 +3474,8 @@ async def api_compare(body: CompareBody):
 
 
 @app.post("/api/debate")
-async def api_debate(body: DebateBody):
+def api_debate(body: DebateBody):
+    """同步 def：fetch_market_context 同步调用 yfinance，async def 会阻塞事件循环。"""
     if not consume_endpoint_token("api_debate"):
         raise HTTPException(
             status_code=429,
@@ -3471,8 +3535,11 @@ async def ws_analyze(websocket: WebSocket, ticker: str):
     await websocket.accept()
     try:
         try:
+            # websocket 路由必须保持 async def，但 fetch_market_context 是同步
+            # 调用 yfinance 的阻塞网络请求；用线程池跑掉它，避免卡住事件循环
+            # 让其他用户/其他请求都被拖住。
             from augur.data import fetch_market_context
-            ctx = fetch_market_context(ticker.upper())
+            ctx = await run_in_threadpool(fetch_market_context, ticker.upper())
         except Exception:
             ctx = MarketContext(ticker=ticker.upper())
         registry = get_registry()
@@ -3520,8 +3587,10 @@ async def ws_committee(websocket: WebSocket):
             return
 
         try:
+            # 同 ws_analyze：用线程池跑掉这个阻塞的 yfinance 调用，
+            # 不让「投委会」的网络请求卡住事件循环。
             from augur.data import fetch_market_context
-            ctx = fetch_market_context(ticker)
+            ctx = await run_in_threadpool(fetch_market_context, ticker)
         except Exception:
             ctx = MarketContext(ticker=ticker)
 

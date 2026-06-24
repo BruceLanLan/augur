@@ -10,8 +10,8 @@
 
 *18 legendary investors. Simultaneous analysis. One verdict.*
 
-[![v10.16.4](https://img.shields.io/badge/v10.16.4-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2077 Tests](https://img.shields.io/badge/2077_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.16.6](https://img.shields.io/badge/v10.16.6-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2100 Tests](https://img.shields.io/badge/2100_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-Installable_App-blue?style=for-the-badge)](#-dashboard)
@@ -284,7 +284,26 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > For a more detailed, non-technical walkthrough of this release, see [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
 
 <details open>
-<summary><strong>v10.16.4 — Fixed committee Kelly position-size display bug (current)</strong></summary>
+<summary><strong>v10.16.6 — Significantly reduced (not fully fixed) committee / deep report freezing (current)</strong></summary>
+
+- **Same root cause, extended to the committee and deep-report code path**: `analyze_ticker` (`/api/analyze`), `report_ticker` (`/api/report`, the Deep Report endpoint), `api_committee` (`/api/committee`), `api_compare`, `api_debate`, `compare_personas`, `get_persona_opinion`, and `api_run_watchlist_analysis` — 8 endpoints — were also `async def` with zero `await` anywhere in their bodies, while internally calling blocking yfinance fetches and running all 18 personas' analysis synchronously. Converted all 8 to sync `def`.
+- **`/ws/analyze` and `/ws/committee` can't be converted to sync `def`** (Starlette requires WebSocket routes to stay `async def`). Instead wrapped their blocking `fetch_market_context` calls in `run_in_threadpool`, so the network fetch no longer ties up the event loop during a streaming committee/analyze session.
+- Fixed a related latent bug: `analyze_ticker`'s fire-and-forget rule-notification dispatch used `asyncio.get_event_loop().run_in_executor(...)`, which would have silently failed (swallowed by a broad `except Exception`) once the handler moved to a worker thread with no running loop. Replaced with a plain daemon thread, preserving the original fire-and-forget behavior without depending on an event loop.
+- Extended the regression-guard test to cover all 19 affected handlers (up from 11).
+- **Known limitation**: live testing found this turns "the entire server completely freezes" into "other requests are delayed 3+ seconds" — root cause is that the 18 personas' analysis is CPU-bound, and moving CPU-bound work into a thread pool doesn't escape Python's GIL, so it still can't run truly in parallel. A full fix needs either a faster analysis path or a move to multiple processes; documented as a known limitation for now, see [CHANGELOG.md](CHANGELOG.md).
+</details>
+
+<details>
+<summary><strong>v10.16.5 — Fixed unclickable homepage dashboard / widgets stuck loading</strong></summary>
+
+- **Fixed the event loop being blocked by synchronous yfinance calls**: 11 endpoints — sector-performance, crypto-overview, commodities, treasury-rates, hot-tickers, single-ticker fetch, search, sparkline, market-overview, market-movers, and fear-greed — were declared `async def` but performed blocking synchronous yfinance/augur.data calls inside. On the single-process uvicorn server this froze the entire event loop, stalling every other concurrent request (including ones triggered by user clicks) — the root cause behind "dashboard won't respond to clicks" and "data not showing up" reports. Changed all of them to sync `def` so Starlette dispatches them to its threadpool instead of running them on the event loop thread.
+- **Sector-performance now fetches in parallel with a bounded timeout**: previously fetched all 11 sector ETFs sequentially with no timeout or fallback, measured at 9.8s–15s+ (sometimes timing out completely) in isolation. Now fetched concurrently via a thread pool with a 10s per-symbol timeout, degrading individual symbols to 0 instead of stalling the whole response.
+- Reproduced and verified the fix with a real headless browser (Playwright): firing a slow and a fast request concurrently showed both dragged to the same latency before the fix (proof of blocking) and fully decoupled after; the homepage now finishes loading all widgets within 15s with no stuck loading skeletons.
+- Added new tests, including a structural regression test asserting all 11 handlers must remain sync `def`, to catch any future reintroduction of `async def`.
+</details>
+
+<details>
+<summary><strong>v10.16.4 — Fixed committee Kelly position-size display bug</strong></summary>
 
 - **Fixed double-scaled position percentage in `/api/committee` and `/ws/committee`**: `position_pct` is already a percentage at the consensus layer (e.g. 19.9 means 19.9%), but the committee endpoints multiplied it by 100 again, displaying nonsense like "1990.0%". Both call sites now use the value directly.
 - Added regression tests covering `kelly_pct` on both the REST and WebSocket paths to prevent this from recurring.

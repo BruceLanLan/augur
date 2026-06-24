@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Tests for market data endpoints (market-overview, hot-tickers, sparkline, fear-greed) and rate limiter."""
 
+import inspect
 import time
 import threading
 from unittest.mock import patch, MagicMock
@@ -8,6 +9,7 @@ from unittest.mock import patch, MagicMock
 import pytest
 from fastapi.testclient import TestClient
 
+import dashboard.app as dashboard_app
 from dashboard.app import app, _check_rate_limit, _rate_limits, _rate_limit_lock
 from augur.data import clear_cache
 
@@ -179,6 +181,111 @@ class TestApiFearGreed:
             assert data["label"] in (
                 "Extreme Fear", "Fear", "Neutral", "Greed", "Extreme Greed"
             )
+
+
+# ============ Event-Loop-Blocking Regression Tests ============
+#
+# Found via live user testing: sector-performance/crypto-overview/commodities/
+# treasury-rates/hot-tickers were declared `async def` but made blocking
+# synchronous yfinance calls inside the handler body. On a single-worker
+# uvicorn server this freezes the event loop for ALL concurrent requests
+# while one slow widget loads, which is what made the dashboard look
+# "completely unclickable" with widgets stuck on loading skeletons forever.
+# Fix: declare these as sync `def` so Starlette dispatches them to its
+# threadpool instead of running them on the event loop thread.
+
+
+class TestBlockingHandlersAreSync:
+    """Guard against re-introducing `async def` on handlers with blocking I/O."""
+
+    @pytest.mark.parametrize("name", [
+        "api_sector_performance",
+        "api_crypto_overview",
+        "api_commodities",
+        "api_treasury_rates",
+        "api_hot_tickers",
+        "api_fetch_ticker",
+        "api_search_tickers",
+        "api_sparkline",
+        "api_market_overview",
+        "api_market_movers",
+        "api_fear_greed",
+        "analyze_ticker",
+        "compare_personas",
+        "get_persona_opinion",
+        "report_ticker",
+        "api_committee",
+        "api_compare",
+        "api_debate",
+        "api_run_watchlist_analysis",
+    ])
+    def test_handler_is_not_a_coroutine_function(self, name):
+        handler = getattr(dashboard_app, name)
+        assert not inspect.iscoroutinefunction(handler), (
+            f"{name} must be a sync `def`, not `async def` — it performs "
+            "blocking yfinance calls and/or synchronous persona analysis "
+            "that would freeze the event loop."
+        )
+
+
+class TestApiSectorPerformance:
+    """Integration test for GET /api/sector-performance."""
+
+    @patch("yfinance.Ticker")
+    def test_sector_performance_200(self, mock_ticker_cls):
+        mock_ticker_cls.return_value = _make_mock_yf().Ticker.return_value
+
+        resp = client.get("/api/sector-performance")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "sectors" in data
+        assert isinstance(data["sectors"], list)
+        assert len(data["sectors"]) == 11
+
+
+class TestApiCryptoOverview:
+    """Integration test for GET /api/crypto-overview."""
+
+    @patch("yfinance.Ticker")
+    def test_crypto_overview_200(self, mock_ticker_cls):
+        mock_ticker_cls.return_value = _make_mock_yf().Ticker.return_value
+
+        resp = client.get("/api/crypto-overview")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "coins" in data
+        assert isinstance(data["coins"], list)
+        assert len(data["coins"]) == 5
+
+
+class TestApiCommodities:
+    """Integration test for GET /api/commodities."""
+
+    @patch("yfinance.Ticker")
+    def test_commodities_200(self, mock_ticker_cls):
+        mock_ticker_cls.return_value = _make_mock_yf().Ticker.return_value
+
+        resp = client.get("/api/commodities")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "commodities" in data
+        assert isinstance(data["commodities"], list)
+        assert len(data["commodities"]) == 4
+
+
+class TestApiTreasuryRates:
+    """Integration test for GET /api/treasury-rates."""
+
+    @patch("yfinance.Ticker")
+    def test_treasury_rates_200(self, mock_ticker_cls):
+        mock_ticker_cls.return_value = _make_mock_yf().Ticker.return_value
+
+        resp = client.get("/api/treasury-rates")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "rates" in data
+        assert isinstance(data["rates"], list)
+        assert len(data["rates"]) == 4
 
 
 # ============ Rate Limiter Tests ============
