@@ -1,7 +1,7 @@
 ---
 name: augur-buffett
 description: "Warren Buffett AI — moat-focused value investing, US blue-chip/financial/consumer"
-version: 10.16.2
+version: 10.16.3
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

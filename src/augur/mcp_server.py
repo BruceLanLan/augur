@@ -70,7 +70,7 @@ def _validate_model_name(model: str) -> Optional[str]:
 
 def _run_workflow_tool(
     ticker: str,
-    steps: str = "fetch,analyze,consensus",
+    steps: str = "",
     agents: str = "",
     question: str = "",
 ) -> str:
@@ -711,7 +711,7 @@ def create_server():
     @mcp.tool()
     def augur_workflow(
         ticker: str,
-        steps: str = "fetch,analyze,consensus",
+        steps: str = "",
         agents: str = "",
         question: str = "",
     ) -> str:
@@ -719,7 +719,10 @@ def create_server():
 
         Args:
             ticker: Stock ticker symbol (e.g. AAPL, NVDA)
-            steps: Comma-separated steps: fetch, analyze, consensus, committee, debate, sentiment
+            steps: Comma-separated steps: fetch, analyze, consensus, committee, debate, sentiment.
+                Leave empty to follow the user's active terminal layout preset
+                (analyst=fetch,analyze,consensus; trader/minimal=fetch,consensus;
+                committee=fetch,analyze,consensus,committee).
             agents: Optional comma-separated agent IDs (empty = all personas)
             question: Optional question for committee step
 

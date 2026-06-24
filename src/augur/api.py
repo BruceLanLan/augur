@@ -242,8 +242,11 @@ async def get_persona(agent_id: str):
 class WorkflowRequest(BaseModel):
     ticker: str = Field(..., description="Stock ticker symbol (e.g. AAPL, NVDA)")
     steps: str = Field(
-        default="fetch,analyze,consensus",
-        description="Comma-separated steps: fetch, analyze, consensus, committee, debate, sentiment",
+        default="",
+        description=(
+            "Comma-separated steps: fetch, analyze, consensus, committee, debate, sentiment. "
+            "Empty follows the active terminal layout preset."
+        ),
     )
     agents: str = Field(default="", description="Optional comma-separated agent IDs")
     question: str = Field(default="", description="Optional question for committee step")

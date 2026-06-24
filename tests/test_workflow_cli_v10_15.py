@@ -71,9 +71,31 @@ def mock_response():
 
 class TestWorkflowModule:
     def test_parse_steps_defaults(self):
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        import augur.workspace as ws_mod
         from augur.workflow import parse_steps, DEFAULT_STEPS
 
-        assert parse_steps("") == DEFAULT_STEPS.split(",")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "workspace.yaml"
+            with patch.object(ws_mod, "_workspace_path", return_value=path):
+                ws_mod._workspace = None
+                assert parse_steps("") == DEFAULT_STEPS.split(",")
+
+    def test_parse_steps_defaults_follows_layout_preset(self):
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        import augur.workspace as ws_mod
+        from augur.workflow import parse_steps
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "workspace.yaml"
+            with patch.object(ws_mod, "_workspace_path", return_value=path):
+                ws_mod._workspace = None
+                ws_mod.save_workspace({"layout_preset": "trader"})
+                assert parse_steps("") == ["fetch", "consensus"]
 
     def test_parse_steps_invalid(self):
         from augur.workflow import parse_steps

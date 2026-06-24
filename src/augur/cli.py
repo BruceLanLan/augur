@@ -777,9 +777,12 @@ def fetch_cmd(ticker, as_json):
 @click.argument("ticker")
 @click.option(
     "--steps",
-    default="fetch,analyze,consensus",
-    show_default=True,
-    help="Comma-separated steps: fetch, analyze, consensus, committee, debate, sentiment",
+    default="",
+    help=(
+        "Comma-separated steps: fetch, analyze, consensus, committee, debate, sentiment. "
+        "Default: follows your active terminal layout preset (analyst=fetch,analyze,consensus; "
+        "trader/minimal=fetch,consensus; committee=fetch,analyze,consensus,committee)."
+    ),
 )
 @click.option("--agents", "-a", default="", help="Comma-separated agent IDs (default: all personas)")
 @click.option("--question", "-q", default="", help="Question for the committee step")
@@ -797,7 +800,8 @@ def workflow_cmd(ticker, steps, agents, question, as_json):
     from augur.workflow import run_workflow, VALID_STEPS
 
     if not as_json:
-        click.echo(f"Running workflow for {ticker.upper()} ({steps})...\n")
+        steps_label = steps or "workspace default"
+        click.echo(f"Running workflow for {ticker.upper()} ({steps_label})...\n")
 
     try:
         result = run_workflow(ticker, steps=steps, agents=agents, question=question)

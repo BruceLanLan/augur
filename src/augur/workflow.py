@@ -14,7 +14,18 @@ DEFAULT_STEPS = "fetch,analyze,consensus"
 
 
 def parse_steps(steps: str) -> List[str]:
-    """Parse and validate a comma-separated workflow step list."""
+    """Parse and validate a comma-separated workflow step list.
+
+    An empty/falsy ``steps`` falls back to the active workspace layout
+    preset's default steps (see ``workspace.get_default_workflow_steps``),
+    then to ``DEFAULT_STEPS`` if no workspace is available.
+    """
+    if not steps or not steps.strip():
+        try:
+            from augur.workspace import get_default_workflow_steps
+            steps = get_default_workflow_steps()
+        except Exception:
+            steps = DEFAULT_STEPS
     step_list = [s.strip().lower() for s in steps.split(",") if s.strip()]
     if not step_list:
         step_list = [s for s in DEFAULT_STEPS.split(",")]
@@ -42,7 +53,7 @@ def _record_step_status(output: Dict[str, Any], step_list: List[str]) -> None:
 
 def run_workflow(
     ticker: str,
-    steps: str = "fetch,analyze,consensus",
+    steps: str = "",
     agents: str = "",
     question: str = "",
 ) -> Dict[str, Any]:

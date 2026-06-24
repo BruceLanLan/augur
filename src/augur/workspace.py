@@ -34,18 +34,21 @@ LAYOUT_PRESETS: Dict[str, Dict[str, Any]] = {
         "hidden_nav": [],
         "show_ticker_tape": True,
         "committee_preset": "all",
+        "workflow_steps": "fetch,analyze,consensus",
     },
     "trader": {
         "default_page": "/stocks",
         "hidden_nav": ["backtest", "optimizer", "performance", "hermes-setup"],
         "show_ticker_tape": True,
         "committee_preset": "value",
+        "workflow_steps": "fetch,consensus",
     },
     "committee": {
         "default_page": "/committee",
         "hidden_nav": ["scanner", "backtest", "optimizer"],
         "show_ticker_tape": False,
         "committee_preset": "all",
+        "workflow_steps": "fetch,analyze,consensus,committee",
     },
     "minimal": {
         "default_page": "/stocks",
@@ -55,6 +58,7 @@ LAYOUT_PRESETS: Dict[str, Dict[str, Any]] = {
         ],
         "show_ticker_tape": True,
         "committee_preset": "value",
+        "workflow_steps": "fetch,consensus",
     },
 }
 
@@ -420,6 +424,12 @@ def get_enabled_personas() -> List[str]:
     return get_workspace().get("enabled_personas", []) or []
 
 
+def get_default_workflow_steps() -> str:
+    """Return augur_workflow's default steps for the active profile's layout preset."""
+    preset = get_workspace().get("layout_preset", "analyst")
+    return LAYOUT_PRESETS.get(preset, {}).get("workflow_steps") or "fetch,analyze,consensus"
+
+
 def list_presets() -> Dict[str, Dict[str, Any]]:
     """Return available layout presets for the UI."""
     return {
@@ -429,6 +439,7 @@ def list_presets() -> Dict[str, Dict[str, Any]]:
             "hidden_nav": cfg["hidden_nav"],
             "show_ticker_tape": cfg["show_ticker_tape"],
             "committee_preset": cfg["committee_preset"],
+            "workflow_steps": cfg["workflow_steps"],
         }
         for name, cfg in LAYOUT_PRESETS.items()
     }

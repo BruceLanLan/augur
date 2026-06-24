@@ -4,31 +4,28 @@
 
 ## What this update fixes
 
-The last update (v10.16.1) let agents read and write your terminal workspace. This one focuses on two lower-level issues that still show up in day-to-day use:
-
-1. **A single failed step in `augur_workflow` used to take down the whole pipeline.** Run `fetch → analyze → consensus → committee` and if the consensus step throws (say, due to missing data), the entire pipeline aborted — even the fetch/analyze results computed earlier were thrown away.
-2. **Agents polling your workspace config got a full payload every time, even when nothing changed.** If your agent checks your terminal config periodically, every check was a full JSON round-trip regardless of whether you'd touched anything.
+Until now, `augur_workflow` — whether you ran it from the CLI or an agent called it over MCP — always defaulted to the same fixed three steps, `fetch → analyze → consensus`, completely independent of whatever terminal layout preset you'd picked in `/settings`. In other words, "customization" (your chosen layout) and "agentic" (an agent running the analysis pipeline for you) were disconnected: switching to the "trader" layout only changed what the Dashboard showed — it didn't change what an agent actually did when it ran a workflow on your behalf.
 
 ## What's new
 
-### 1. `augur_workflow` no longer aborts on a single step's failure
+### `augur_workflow`'s default steps now follow your terminal layout preset
 
-If analyze / consensus / committee throws, the error is now captured in that step's own result (as `{"error": "..."}`) and the rest of the pipeline keeps running instead of stopping cold. The final summary report has a new "Step Errors" section, so you can see exactly which step failed and why without digging through logs.
+No longer hardcoded to `fetch,analyze,consensus`. The CLI's `--steps` option, the MCP tool `augur_workflow`'s `steps` parameter, and the Dashboard's `/api/workflow` request field all now resolve to a preset-specific default when left empty:
 
-### 2. Workspace reads support conditional requests (ETag), cutting wasted traffic
+- **Analyst**: `fetch,analyze,consensus` — same as before, full due-diligence flow.
+- **Trader / Minimal**: `fetch,consensus` — skips the per-master score breakdown for a faster signal.
+- **Committee**: `fetch,analyze,consensus,committee` — includes the committee vote directly.
 
-`mcp_augur_workspace_get` now returns an ETag. If your agent passes that ETag back on the next call and the config genuinely hasn't changed, the server just returns "not modified" instead of re-sending the full config. Useful for agents that poll frequently.
+If you pass `--steps` explicitly (or specify `steps` in an MCP call), that still takes priority — this only kicks in when you don't specify anything.
 
-## Doc correction
-
-The last release notes incorrectly listed the user feedback path (`~/.augur/feedback/`, overridable via `USER_FEEDBACK_DIR`) as "not yet implemented." It actually shipped earlier, in v10.15.0's third consensus-engine round, with test coverage already in place. This update corrects that documentation — no new code changed as a result.
+This means the layout you choose in `/settings` no longer just changes what the Dashboard displays — it now also changes what an agent (Claude Desktop / Hermes / OpenClaw, etc.) does by default when it runs a workflow for you. Your customization choices now actually shape agentic behavior.
 
 ## Test status
 
-Full suite: **2072 tests passing**, 0 failures.
+Full suite: **2075 tests passing** (including 5 tests that require network access), 0 failures.
 
 ## What's next
 
-The only item left in the P1 backlog is P1-9 (splitting up the dashboard's router file — a purely internal code-organization change with no user-facing effect). It's intentionally on hold until after some real-world use and feedback on the product as it stands today.
+The only item left in the P1 backlog is P1-9 (splitting up the dashboard's router file — a purely internal code-organization change), still on hold. One P2 item is flagged as a foundational risk rather than a feature gap: **the regime detector (P2-3) currently has no smoothing/hysteresis and no historical backtest** — we re-verified this while working on this release, and it's still a genuinely open risk; don't treat consensus output as a risk-management input until it's addressed. The remaining P2 items (lazy persona loading, real-time workflow progress streaming, etc.) will be scheduled as needed.
 
 See [CHANGELOG.md](../../CHANGELOG.md) for the full technical change log.

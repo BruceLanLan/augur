@@ -46,6 +46,24 @@ class TestWorkspace:
         assert "analyst" in presets
         assert "trader" in presets
         assert presets["committee"]["default_page"] == "/committee"
+        assert presets["analyst"]["workflow_steps"] == "fetch,analyze,consensus"
+        assert presets["trader"]["workflow_steps"] == "fetch,consensus"
+        assert presets["committee"]["workflow_steps"] == "fetch,analyze,consensus,committee"
+
+    def test_get_default_workflow_steps_follows_preset(self):
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        import augur.workspace as ws_mod
+        from augur.workspace import get_default_workflow_steps
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "workspace.yaml"
+            with patch.object(ws_mod, "_workspace_path", return_value=path):
+                ws_mod._workspace = None
+                assert get_default_workflow_steps() == "fetch,analyze,consensus"
+                ws_mod.save_workspace({"layout_preset": "minimal"})
+                assert get_default_workflow_steps() == "fetch,consensus"
 
     def test_apply_preset_committee(self):
         from augur.workspace import apply_preset

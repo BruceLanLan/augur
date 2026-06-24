@@ -4,31 +4,28 @@
 
 ## 这次更新解决了什么问题
 
-上一轮更新（v10.16.1）让 Agent 能读写你的终端工作区。这一轮聚焦在两个更偏底层、但同样会影响实际使用体验的问题：
-
-1. **`augur_workflow` 一条流水线，一步出错全盘报废。** 比如你跑 `fetch → analyze → consensus → committee` 四步，如果 consensus 那一步因为数据缺失抛了异常，过去整条流水线会直接中断，前面 fetch/analyze 已经算好的结果也拿不到。
-2. **Agent 反复读取你的工作区配置，没有变化也要传一次全量数据。** 如果你的 Agent 习惯性地每隔几分钟检查一下你的终端配置有没有变，过去每次都是一次完整的 JSON 往返，即使你压根没改过配置。
+之前 `augur_workflow`（无论是你在终端跑 CLI、还是 Agent 通过 MCP 调用）默认永远是固定的三步 `fetch → analyze → consensus`，跟你在 `/settings` 里选的终端布局预设完全没关系。换句话说，"定制化"（你选的布局）和"agentic"（Agent 帮你跑分析流水线）这两件事是脱钩的——你切换到"交易员"布局只是改了页面展示，Agent 替你跑 workflow 时该干的事一点没变。
 
 ## 新增功能
 
-### 1. `augur_workflow` 局部失败不再拖垮整条流水线
+### `augur_workflow` 默认步骤跟随你的终端布局预设
 
-现在 analyze / consensus / committee 任一步骤出错，会把错误信息记录在该步骤自己的结果里（形如 `{"error": "..."}`），流水线继续往下跑剩下的步骤，而不是直接中断。最终的汇总报告里新增了一个"Step Errors"小节，哪一步出了什么问题一眼能看到，不用再去翻日志猜。
+不再硬编码 `fetch,analyze,consensus`。CLI 的 `--steps`、MCP 工具 `augur_workflow` 的 `steps` 参数、Dashboard `/api/workflow` 接口的 `steps` 字段，留空时现在会去看你当前激活的 Profile 用的是哪个布局预设，按预设选不同的默认步骤组合：
 
-### 2. 工作区读取支持条件请求（ETag），减少无效流量
+- **分析师（analyst）**：`fetch,analyze,consensus`——和之前一样，深度调研流程不变。
+- **交易员 / 极简（trader / minimal）**：`fetch,consensus`——跳过逐个大师的详细打分展开，更快拿到一个信号。
+- **委员会（committee）**：`fetch,analyze,consensus,committee`——直接带上委员会投票结果。
 
-`mcp_augur_workspace_get` 现在会返回一个 ETag。如果你的 Agent 下次请求时带上这个 ETag，且配置真的没变，服务器直接返回"未修改"，不用再传一次完整配置。对高频轮询的 Agent 场景比较有意义。
+如果你显式传了 `--steps`（或 MCP 调用里指定了 steps），还是以你传的为准，这个联动只在你没指定的时候生效。
 
-## 文档纠错
-
-上一轮文档里把"用户反馈路径"（`~/.augur/feedback/`，通过 `USER_FEEDBACK_DIR` 环境变量可覆盖）标成了"待实现"，实际上这个功能在更早的 v10.15.0 共识引擎第三轮改造里就已经做完并有测试覆盖。这次更新里更正了相关文档状态，没有新增代码改动。
+这意味着你在 `/settings` 选好的布局，现在不只是改 Dashboard 怎么显示，也会改变 Agent（Claude Desktop / Hermes / OpenClaw 等）替你跑分析时默认做哪几步——定制化的选择真正影响到了 agentic 的行为。
 
 ## 测试情况
 
-完整测试套件 **2072 个测试全部通过**，没有失败项。
+完整测试套件 **2075 个测试全部通过**（含需要网络访问的 5 个测试），没有失败项。
 
 ## 接下来还会做什么
 
-目前 P1 backlog 里只剩 P1-9（dashboard 的路由文件拆分，纯内部代码组织调整，不影响任何对外行为）。这一项暂不安排，等用户自己实际用一段时间产品、给出反馈之后再决定要不要推进。
+P1 backlog 里只剩 P1-9（dashboard 的路由文件拆分，纯内部代码组织调整），暂不安排。P2 backlog 里有一项被标记为"地基类风险"：**regime 检测（P2-3）目前没有任何平滑/滞后机制，也没有历史回测验证**——这次顺手核实过，确实还是开放风险，在它落地前不建议把共识结果当作风险输入来用。其余 P2 项（懒加载 persona、workflow 进度实时推送等）按需排期。
 
 详细的技术变更记录见 [CHANGELOG.md](../CHANGELOG.md)。

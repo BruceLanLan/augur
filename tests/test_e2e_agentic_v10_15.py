@@ -153,17 +153,43 @@ class TestAgenticWorkflowAPI:
         assert "error" in result["results"]["sentiment"]
 
     def test_default_steps_when_empty(self, tech_context, mock_responses, mock_consensus):
-        with patch("augur.data.fetch_market_context", return_value=tech_context):
-            with patch.object(
-                DecisionCoordinator, "analyze_with_all", return_value=mock_responses,
-            ):
-                with patch.object(
-                    DecisionCoordinator, "get_consensus", return_value=mock_consensus,
-                ):
-                    from augur.workflow import run_workflow
-                    result = run_workflow("AAPL", steps="")
+        import augur.workspace as ws_mod
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "workspace.yaml"
+            with patch.object(ws_mod, "_workspace_path", return_value=path):
+                ws_mod._workspace = None
+                with patch("augur.data.fetch_market_context", return_value=tech_context):
+                    with patch.object(
+                        DecisionCoordinator, "analyze_with_all", return_value=mock_responses,
+                    ):
+                        with patch.object(
+                            DecisionCoordinator, "get_consensus", return_value=mock_consensus,
+                        ):
+                            from augur.workflow import run_workflow
+                            result = run_workflow("AAPL", steps="")
 
         assert result["steps"] == ["fetch", "analyze", "consensus"]
+
+    def test_default_steps_follow_committee_preset(self, tech_context, mock_responses, mock_consensus):
+        import augur.workspace as ws_mod
+
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "workspace.yaml"
+            with patch.object(ws_mod, "_workspace_path", return_value=path):
+                ws_mod._workspace = None
+                ws_mod.save_workspace({"layout_preset": "committee"})
+                with patch("augur.data.fetch_market_context", return_value=tech_context):
+                    with patch.object(
+                        DecisionCoordinator, "analyze_with_all", return_value=mock_responses,
+                    ):
+                        with patch.object(
+                            DecisionCoordinator, "get_consensus", return_value=mock_consensus,
+                        ):
+                            from augur.workflow import run_workflow
+                            result = run_workflow("AAPL", steps="")
+
+        assert result["steps"] == ["fetch", "analyze", "consensus", "committee"]
 
 
 class TestWorkspacePresetsE2E:

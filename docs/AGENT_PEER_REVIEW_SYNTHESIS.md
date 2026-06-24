@@ -75,16 +75,16 @@ Workspace MCP tools (P1-1), profile i18n (P1-3), step_status envelope (P1-6) rem
 
 ### P2 — Maturity / architecture
 
-| ID | Item | Source |
-|----|------|--------|
-| P2-1 | Extract `ConsensusEngine` from `registry.py` (R3) | #9 |
-| P2-2 | Shrink `scanner/` to single compat entry (R2) | #9 |
-| P2-3 | Regime detector v2 (hysteresis, historical `date_str`) | #3 |
-| P2-4 | Unified OOS calibration pipeline | #3 |
-| P2-5 | `/ws/workspace` + workflow progress streaming | #4 |
-| P2-6 | Lazy persona registration per profile | #9 |
-| P2-7 | `workflow_preset` field linked to layout presets | #2 |
-| P2-8 | `augur-terminal` meta-skill + Hermes committee yaml | #8 |
+| ID | Item | Source | Status v10.16.3 |
+|----|------|--------|------------------|
+| P2-1 | Extract `ConsensusEngine` from `registry.py` (R3) | #9 | Pending |
+| P2-2 | Shrink `scanner/` to single compat entry (R2) | #9 | Pending |
+| P2-3 | Regime detector v2 (hysteresis, historical `date_str`) | #3 | Pending — verified still open: `regime_weights.py`/`macro_features.py` classify VIX+SPY into a regime bucket independently each call, no smoothing/hysteresis, no historical backtest. This is a real risk, not a stale doc claim. |
+| P2-4 | Unified OOS calibration pipeline | #3 | Pending |
+| P2-5 | `/ws/workspace` + workflow progress streaming | #4 | Pending |
+| P2-6 | Lazy persona registration per profile | #9 | Pending |
+| P2-7 | `workflow_preset` field linked to layout presets | #2 | ✅ Implemented — `LAYOUT_PRESETS[*]["workflow_steps"]` + `get_default_workflow_steps()`; CLI `--steps` / MCP `augur_workflow` / `POST /api/workflow` default to `""` and resolve via the active profile's layout preset when not explicitly given. |
+| P2-8 | `augur-terminal` meta-skill + Hermes committee yaml | #8 | Pending |
 
 ---
 
@@ -121,4 +121,4 @@ Nine reviewers rotate **one promotion each** — each agent implements one P1 it
 
 ## Verdict
 
-v10.15.0 closed the **highest-risk integration gaps** between terminal workspace, workflow pipeline, and consensus weighting. v10.16.0/10.16.1 closed the remaining agentic gap: agent hosts are no longer chat-sidecars now that `augur_workspace_get/set/profiles` (P1-1) has shipped, and the committee page itself now reflects workspace state (P1-4). v10.16.2 added workflow partial-failure resilience (P1-6) and workspace ETag support (P1-7); P1-8's feedback path was confirmed already shipped (predates v10.15.0), not a gap. The Bloomberg terminal story is credible end-to-end (Dashboard + CLI/MCP). **Do not treat consensus outputs as risk inputs** until P2-3 regime validation lands — that remains the one open architectural risk. P1-9 (router split) is the only remaining P1 item, deliberately deferred pending real-world product feedback.
+v10.15.0 closed the **highest-risk integration gaps** between terminal workspace, workflow pipeline, and consensus weighting. v10.16.0/10.16.1 closed the remaining agentic gap: agent hosts are no longer chat-sidecars now that `augur_workspace_get/set/profiles` (P1-1) has shipped, and the committee page itself now reflects workspace state (P1-4). v10.16.2 added workflow partial-failure resilience (P1-6) and workspace ETag support (P1-7); P1-8's feedback path was confirmed already shipped (predates v10.15.0), not a gap. v10.16.3 (P2-7) closed the loop on the customization↔agentic story specifically for workflows: the layout preset chosen in `/settings` now also drives the default behavior of agent-triggered `augur_workflow` calls, not just Dashboard display. The Bloomberg terminal story is credible end-to-end (Dashboard + CLI/MCP). **Do not treat consensus outputs as risk inputs** until P2-3 regime validation lands — verified still open as of v10.16.3 (no hysteresis/smoothing, no historical backtest in `regime_weights.py`), and remains the one open architectural risk. P1-9 (router split) is the only remaining P1 item, deliberately deferred pending real-world product feedback.

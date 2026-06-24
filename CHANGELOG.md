@@ -2,6 +2,28 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.16.3] - 2026-06-24
+
+落地 Agent Peer Review backlog 中的 P2-7：`augur_workflow` 默认步骤跟随终端布局预设，把"定制化"和"agentic"两条主线在执行层打通。
+
+### Added
+- **`workspace.LAYOUT_PRESETS[*]["workflow_steps"]`**：四个布局预设各自带一个默认 workflow 步骤组合——`analyst`=`fetch,analyze,consensus`，`trader`/`minimal`=`fetch,consensus`，`committee`=`fetch,analyze,consensus,committee`。
+- **`workspace.get_default_workflow_steps()`**：读取当前激活 Profile 的 `layout_preset`，返回对应的默认步骤字符串；无法解析时回退到 `fetch,analyze,consensus`。
+- `list_presets()` / `GET /api/workspace/presets` 响应体新增 `workflow_steps` 字段。
+- 新增 4 个测试：`parse_steps("")` 跟随 trader 预设、`run_workflow(steps="")` 跟随 committee 预设、`get_default_workflow_steps()` 的预设切换、`list_presets()` 的 `workflow_steps` 字段断言。
+
+### Changed
+- `workflow.parse_steps()`：空/留空的 `steps` 不再直接回退到模块级常量 `DEFAULT_STEPS`，而是先查 `workspace.get_default_workflow_steps()`（拿不到工作区时才退回 `DEFAULT_STEPS`）。
+- `workflow.run_workflow()` 的 `steps` 参数默认值从硬编码 `"fetch,analyze,consensus"` 改为 `""`（空字符串触发上述预设解析）。
+- 三个调用点同步把硬编码默认值改成空字符串，交给 `run_workflow`/`parse_steps` 统一解析：CLI `--steps`（`cli.py`）、MCP 工具 `augur_workflow`（`mcp_server.py` 的 `_run_workflow_tool` 与 `@mcp.tool()` 注册函数）、HTTP `POST /api/workflow` 的 `WorkflowRequest.steps`（`api.py`）。显式传入非空 `steps` 时行为不变。
+
+### Verified (re-checked, not a code change)
+- 复核了 `docs/AGENT_PEER_REVIEW_SYNTHESIS.md` Verdict 里关于 P2-3（regime 检测）的风险提示：`regime_weights.py`/`macro_features.py` 目前确实是逐次独立分类 VIX+SPY 阈值，没有任何平滑/滞后机制，也没有历史 `date_str` 回测——这条"不要把共识结果当风险输入"的警告依然成立，不是文档过期误判。
+
+### Notes
+- Full suite: **2075 passed**, 0 failed（含需要网络的 5 个测试）。
+- 测试隔离修正：`test_parse_steps_defaults`、`test_default_steps_when_empty` 原先依赖"空 steps → 固定默认值"的假设，现在显式隔离 `~/.augur/workspace.yaml` 路径，避免开发机/CI 上真实存在的 workspace 配置影响断言结果。
+
 ## [10.16.2] - 2026-06-24
 
 收尾 P1 backlog 剩余的真实缺口（P1-6、P1-7），并纠正一条此前误判为"未完成"的状态（P1-8）。
