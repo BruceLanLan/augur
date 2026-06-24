@@ -2,6 +2,27 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.16.1] - 2026-06-24
+
+收尾 v10.16.0 文档巡检中发现的剩余 P1 项；同时纠正了两条此前误判为"未完成"的状态。
+
+### Added
+- **委员会页面读取工作区配置**（P1-4）：`committee.html` 现在在加载时 `fetch('/api/workspace')`，若存在已保存的 `committee_preset`（value/china/macro/growth/all）则自动套用，不再总是要求用户手动点选预设按钮。
+- `tests/test_p1_followups_v10_16.py`：4 个回归测试，锁定 manifest/Hermes yaml 版本号与 `augur.__version__` 同步、SKILL.md frontmatter 同步、committee 页面的工作区接线。
+
+### Fixed
+- **`scripts/generate_skills.py` 版本漂移**（P1-2）：18 个 `skills/*/manifest.json` + `SKILL.md` 中硬编码的 `9.0.3` / `9.0.0` 改为从 `augur.__version__` 动态读取；`ZH_TOOL_SECTION`/`EN_TOOL_SECTION` 工具说明从仅列 5/13 个工具补全为完整的 13 个。
+- **`hermes-agents/*.yaml` 版本漂移**：18 个文件的 `version: "10.10.0"` 同步为当前版本号（无生成脚本，手工同步）。
+
+### Corrected (not actually bugs)
+- 上一版 `docs/RELEASE_NOTES.md` 的"接下来还会做什么"里提到的两项实际**已经实现**，文档判断有误，本次予以纠正：
+  - `enabled_personas` Settings 页多选 UI 在 v10.14.0/v10.15.0 就已存在（`settings.html` 的 `workspace-persona-enable` checkbox + `collectEnabledPersonas()`）。
+  - workspace profile 的 9 个 i18n key 在 zh/en/ja/ko 四语言中均已完整。
+
+### Notes
+- Full suite: **2065 passed**, 0 failed.
+- P1 backlog 剩余：P1-6（per-step status envelope）、P1-7（ETag）、P1-8（feedback path）、P1-9（router split）——均为内部架构打磨项，详见 `docs/AGENT_PEER_REVIEW_SYNTHESIS.md`。
+
 ## [10.16.0] - 2026-06-24
 
 P1-1（Agent Peer Review backlog）：MCP Workspace 工具，闭合"终端定制 ↔ agentic 接入"的最后一块缺口。

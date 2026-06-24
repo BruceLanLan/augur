@@ -300,6 +300,15 @@ function loadPreset(name) {
 
 var _committeeWs = null;
 
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/workspace').then(function(r) { return r.ok ? r.json() : null; }).then(function(ws) {
+        var preset = ws && ws.committee_preset;
+        if (preset && _PRESETS.hasOwnProperty(preset)) {
+            loadPreset(preset);
+        }
+    }).catch(function() {});
+});
+
 function runCommittee() {
     var ticker = document.getElementById('committee-ticker').value.trim().toUpperCase();
     _committeeTicker = ticker;

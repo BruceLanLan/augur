@@ -1,7 +1,7 @@
 ---
 name: augur-serenity
 description: "Serenity AI — AI/semiconductor supply chain bottlenecks, chokepoint assets"
-version: 9.0.0
+version: 10.16.1
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]
@@ -359,7 +359,7 @@ Serenity比喻: "掌控全球石油通道的霍尔木兹海峡" / "银座怀石�
 
 
 
-## Available Tools (Augur MCP)
+## Available Tools (Augur MCP, 13 total)
 
 Start `augur-mcp` to enable these tools automatically:
 
@@ -368,6 +368,14 @@ Start `augur-mcp` to enable these tools automatically:
 - `mcp_augur_consensus` — Weighted consensus signal + Kelly position
 - `mcp_augur_debate` — Structured debate with other masters
 - `mcp_augur_committee` — Convene an investment committee
+- `mcp_augur_sentiment` — Social sentiment signal (StockTwits + news)
+- `mcp_augur_list_personas` — List all 18 masters
+- `mcp_augur_configure` — Set per-master model parameters
+- `mcp_augur_create_persona` — Create a custom YAML persona
+- `mcp_augur_workflow` — Multi-step pipeline: fetch→analyze→consensus→committee→debate→sentiment
+- `mcp_augur_workspace_get` — Read your terminal layout / enabled masters / committee preset
+- `mcp_augur_workspace_set` — Modify your terminal config on your behalf
+- `mcp_augur_workspace_profiles` — List/create/switch/delete terminal profiles
 
 ## MCP Setup
 

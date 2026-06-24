@@ -1,7 +1,7 @@
 ---
 name: augur-committee
 description: "Augur Investment Committee — Convene 2-18 masters for structured multi-agent analysis and verdict"
-version: 10.14.0
+version: 10.16.1
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]
@@ -33,15 +33,21 @@ For each session:
 4. **Dissent recording** — document any strong disagreements
 5. **Verdict** — weighted consensus signal + confidence + Kelly position
 
-## Available Tools (Augur MCP)
+## Available Tools (Augur MCP, 13 total)
 
-- `mcp_augur_workflow` — Multi-step pipeline: fetch → analyze → consensus → committee → debate → sentiment (composable `steps` and optional `agents`)
 - `mcp_augur_committee` — Run the full committee session (returns structured opinions + verdict)
 - `mcp_augur_analyze` — Individual master scoring
 - `mcp_augur_fetch` — Real-time market data
 - `mcp_augur_consensus` — Weighted consensus calculation
-- `mcp_augur_debate` — Multi-round agent debate
-- `mcp_augur_sentiment` — Social/news sentiment snapshot
+- `mcp_augur_debate` — Structured debate with other masters
+- `mcp_augur_sentiment` — Social sentiment signal (StockTwits + news)
+- `mcp_augur_list_personas` — List all 18 masters
+- `mcp_augur_configure` — Set per-master model parameters
+- `mcp_augur_create_persona` — Create a custom YAML persona
+- `mcp_augur_workflow` — Multi-step pipeline: fetch→analyze→consensus→committee→debate→sentiment
+- `mcp_augur_workspace_get` — Read your terminal layout / enabled masters / committee preset
+- `mcp_augur_workspace_set` — Modify your terminal config on your behalf
+- `mcp_augur_workspace_profiles` — List/create/switch/delete terminal profiles
 
 ## Example Usage
 
@@ -50,9 +56,6 @@ For each session:
 "NVDA 委员会 — 巴菲特、段永平、Cathie Wood 和 Aschenbrenner，当前 PE=35，AI 芯片供应商"
 
 "Convene full committee on TSLA — all 18 masters, focus on whether the EV moat is real"
-
-# Full pipeline in one MCP call (committee step included)
-augur_workflow(ticker="NVDA", steps="fetch,analyze,consensus,committee", question="Is NVDA fairly valued at current PE?")
 ```
 
 ## MCP Setup

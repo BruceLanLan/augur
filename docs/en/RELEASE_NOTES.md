@@ -63,10 +63,6 @@ Full suite: **2065 tests passing**, 0 failures.
 
 ## What's next
 
-This update closes the "agent can read/write your terminal" gap, but a few related pieces are still in progress for upcoming iterations:
-
-- A multi-select UI on the Dashboard Settings page for choosing enabled masters (currently this is set via the agent or a config file, not yet a checkbox list in the UI).
-- Wiring the committee-preset/profile link through to the Committee page UI itself (the backend already supports it; the frontend doesn't reflect it yet).
-- Completing the 4-language (zh/en/ja/ko) translations for the workspace settings UI.
+This update wraps up most of the high-priority items from the last code review: the Committee page now reads your workspace config and auto-applies the matching committee preset, and all 18 masters' `manifest.json` / Hermes configs are back in sync with the current version number and the full 13-tool list. What's left is more architectural polish (per-step status reporting, caching headers on the config endpoint) that won't change day-to-day usage.
 
 See [CHANGELOG.md](../../CHANGELOG.md) for the full technical change log.

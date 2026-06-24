@@ -10,7 +10,7 @@
 
 *18位传奇投资人，同时分析，一次共识*
 
-[![v10.16.0](https://img.shields.io/badge/v10.16.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![v10.16.1](https://img.shields.io/badge/v10.16.1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
 [![2065 Tests](https://img.shields.io/badge/2065_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -284,10 +284,12 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 想看本次更新更详细的功能说明（非技术向）？见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.16.0 — MCP 终端工作区工具（Agent 可读写你的定制） (current)</strong></summary>
+<summary><strong>v10.16.1 — MCP 终端工作区工具 + 委员会预设接线 (current)</strong></summary>
 
 - **`mcp_augur_workspace_get/set/profiles`**：任意 MCP 客户端（Claude Desktop / Hermes / OpenClaw）现在可以读取并代你修改 Dashboard 终端布局、启用大师子集、委员会预设——agent 不再只是"问答助手"，而是能感知并操作你的工作区。
 - **共识引擎可配置化**：MetaModel 中位数混合权重不再是隐藏的固定 50/50，可通过 `consensus.meta_model_weight` 调节（0 = 完全关闭）。
+- **委员会页面接入工作区**：切到 `/committee` 页面时会自动读取你保存的委员会预设并套用，不用每次手动选。
+- **18 位大师的 manifest.json / Hermes 配置版本同步**：不再固定写死旧版本号，工具说明补全到完整的 13 个。
 - **代码审查批次修复**：超时分支误判、缓存并发加锁、文档/manifest 工具数量同步。
 </details>
 

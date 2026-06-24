@@ -1,7 +1,7 @@
 ---
 name: augur-dan-bin
 description: "但斌（东方港湾）AI — 品牌护城河·时代Beta，中国消费龙头"
-version: 9.0.0
+version: 10.16.1
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]
@@ -204,7 +204,7 @@ compatibility: "Hermes Studio, Claude Desktop, any MCP-compatible client"
 
 
 
-## 可用工具（Augur MCP）
+## 可用工具（Augur MCP，共13个）
 
 启动 `augur-mcp` 后，以下工具自动可用：
 
@@ -213,6 +213,14 @@ compatibility: "Hermes Studio, Claude Desktop, any MCP-compatible client"
 - `mcp_augur_consensus` — 获取加权共识信号 + Kelly 仓位建议
 - `mcp_augur_debate` — 与其他大师辩论
 - `mcp_augur_committee` — 召开投资委员会
+- `mcp_augur_sentiment` — 获取社交情绪信号（StockTwits + 新闻）
+- `mcp_augur_list_personas` — 列出全部18位大师
+- `mcp_augur_configure` — 设置单个大师的模型参数
+- `mcp_augur_create_persona` — 创建自定义 YAML 人格
+- `mcp_augur_workflow` — 多步骤流水线：fetch→analyze→consensus→committee→debate→sentiment
+- `mcp_augur_workspace_get` — 读取你的终端布局 / 启用大师 / 委员会预设
+- `mcp_augur_workspace_set` — 代你修改终端配置
+- `mcp_augur_workspace_profiles` — 列出/创建/切换/删除终端配置
 
 ## 配置 MCP
 

@@ -10,7 +10,7 @@
 
 *18 legendary investors. Simultaneous analysis. One verdict.*
 
-[![v10.16.0](https://img.shields.io/badge/v10.16.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![v10.16.1](https://img.shields.io/badge/v10.16.1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
 [![2065 Tests](https://img.shields.io/badge/2065_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -284,10 +284,12 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > For a more detailed, non-technical walkthrough of this release, see [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
 
 <details open>
-<summary><strong>v10.16.0 — MCP terminal workspace tools (agents can read/write your customization) (current)</strong></summary>
+<summary><strong>v10.16.1 — MCP terminal workspace tools + committee-preset wiring (current)</strong></summary>
 
 - **`mcp_augur_workspace_get/set/profiles`**: Any MCP client (Claude Desktop / Hermes / OpenClaw) can now read and modify your Dashboard terminal layout, enabled-master subset, and committee preset on your behalf — the agent is no longer just a Q&A assistant, it can sense and operate your workspace.
 - **Configurable consensus blending**: The MetaModel median blend is no longer a hidden fixed 50/50 — tune it via `consensus.meta_model_weight` (0 disables it entirely).
+- **Committee page now reads your workspace**: visiting `/committee` auto-applies your saved committee preset instead of requiring a manual click every time.
+- **Persona manifest/Hermes config version sync**: all 18 masters' `manifest.json` / Hermes yaml now track the live version instead of a stale hardcoded one, with the full 13-tool list documented.
 - **Code-review fixes**: timeout-branch mismatch, cache concurrency locking, doc/manifest tool-count drift.
 </details>
 

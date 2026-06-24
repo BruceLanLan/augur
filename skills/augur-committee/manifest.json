@@ -1,6 +1,6 @@
 {
   "name": "augur-committee",
-  "version": "10.14.0",
+  "version": "10.16.1",
   "description": "Augur Investment Committee — Convene 2-18 masters for structured multi-agent analysis and verdict",
   "author": "BruceBlue (https://x.com/BruceBlue)",
   "license": "MIT",
@@ -19,9 +19,7 @@
       "mcp_augur_analyze",
       "mcp_augur_fetch",
       "mcp_augur_consensus",
-      "mcp_augur_committee",
-      "mcp_augur_debate",
-      "mcp_augur_workflow"
+      "mcp_augur_committee"
     ]
   },
   "compatibility": [
