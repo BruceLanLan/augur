@@ -10,8 +10,8 @@
 
 *18 legendary investors. Simultaneous analysis. One verdict.*
 
-[![v10.16.3](https://img.shields.io/badge/v10.16.3-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2075 Tests](https://img.shields.io/badge/2075_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.16.4](https://img.shields.io/badge/v10.16.4-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2077 Tests](https://img.shields.io/badge/2077_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-Installable_App-blue?style=for-the-badge)](#-dashboard)
@@ -284,7 +284,14 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > For a more detailed, non-technical walkthrough of this release, see [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
 
 <details open>
-<summary><strong>v10.16.3 — Workflow steps now follow your terminal layout preset (current)</strong></summary>
+<summary><strong>v10.16.4 — Fixed committee Kelly position-size display bug (current)</strong></summary>
+
+- **Fixed double-scaled position percentage in `/api/committee` and `/ws/committee`**: `position_pct` is already a percentage at the consensus layer (e.g. 19.9 means 19.9%), but the committee endpoints multiplied it by 100 again, displaying nonsense like "1990.0%". Both call sites now use the value directly.
+- Added regression tests covering `kelly_pct` on both the REST and WebSocket paths to prevent this from recurring.
+</details>
+
+<details>
+<summary><strong>v10.16.3 — Workflow steps now follow your terminal layout preset</strong></summary>
 
 - **`augur_workflow` default steps follow the active layout preset**: no longer hardcoded to `fetch,analyze,consensus`. When `--steps` (CLI), `steps` (MCP `augur_workflow`), or the `/api/workflow` body field is left empty, it now resolves from the active profile's layout preset — `analyst`=`fetch,analyze,consensus`, `trader`/`minimal`=`fetch,consensus` (faster signal), `committee`=`fetch,analyze,consensus,committee`. Passing `--steps` explicitly still overrides this.
 - **Closes the loop between customization and agentic behavior**: the layout you pick in `/settings` now also changes how an agent's `augur_workflow` calls behave by default, not just what the Dashboard displays.

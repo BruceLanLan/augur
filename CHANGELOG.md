@@ -2,6 +2,20 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.16.4] - 2026-06-24
+
+Bug found and fixed during live user testing of the dashboard: the investment committee's suggested position size was displaying as e.g. "1990.0%" instead of "19.9%".
+
+### Fixed
+- **`dashboard/app.py`** `api_committee()` (`POST /api/committee`) and `ws_committee()` (`/ws/committee`): both read `consensus.metadata["position_sizing"]["position_pct"]` — which is already a percentage value (e.g. `19.9` meaning 19.9%, computed in `src/augur/registry.py`'s half-Kelly sizing as `round(full_kelly * 0.5 * 100, 1)`) — and then multiplied it by 100 again before putting it in the `kelly_pct` field of the response. The committee page's `committee.html` renders this value directly as `v.kelly_pct.toFixed(1) + '%'`, so users saw nonsensical numbers like 1990.0% instead of 19.9%. Other call sites (`workflow.py`, `cli.py`, `mcp_server.py`, `report.py`) already used the value directly without the extra multiplication, so this was specific to the two dashboard committee endpoints.
+
+### Added
+- `tests/test_websocket.py::TestCommitteeWebSocket::test_committee_ws_kelly_pct_matches_position_sizing` and `test_committee_post_kelly_pct_matches_position_sizing`: assert `kelly_pct <= 20.0` (the half-Kelly cap) on both the WebSocket and REST committee paths, to catch any future re-introduction of the double-scaling.
+
+### Notes
+- Found via manual live-testing reproduction (curl + a `websockets` Python client against an isolated `HOME`-overridden test instance, not the developer's real `~/.augur` state) after the user reported committee-page and deep-report bugs while testing the app. Investigated but did not reproduce the user's other two reports ("homepage dashboard widgets not clickable", "missing data in many places") — no browser automation tool is available in this environment, and static JS/CSS analysis plus backend API checks (report/committee/workspace/home-widgets endpoints) did not turn up a root cause. Awaiting browser console output / screenshots from the user to investigate further.
+- Full suite: 2072 passed (excluding 5 network-dependent tests in `test_analyze_api_v12.py`; 2077 with them included), 0 failures.
+
 ## [10.16.3] - 2026-06-24
 
 落地 Agent Peer Review backlog 中的 P2-7：`augur_workflow` 默认步骤跟随终端布局预设，把"定制化"和"agentic"两条主线在执行层打通。

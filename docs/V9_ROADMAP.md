@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-24，当前版本 **v10.16.3**（P2-7 workflow_steps 跟随终端布局预设，2075 tests passing）
+> 最后更新：2026-06-24，当前版本 **v10.16.4**（修复 committee Kelly 仓位显示 bug，2072 tests passing，含网络测试 2077）
 
 ---
 
@@ -16,7 +16,7 @@
 
 **仓库分工：**
 - `augur`（github.com/BruceLanLan/augur）= 稳定版，当前 **v8.2.3**（公开，227★/34 fork，最后一次发布 2026-06-08——已落后 augur-next 两个以上大版本）
-- `augur-next`（github.com/BruceLanLan/augur-next）= 开发版，当前 **v10.16.3**
+- `augur-next`（github.com/BruceLanLan/augur-next）= 开发版，当前 **v10.16.4**
 - 本地：`feature/v9-dev` 分支跟踪 augur-next/main
 - 推送命令：`git push augur-next feature/v9-dev:main`
 - **下一里程碑：** 把 augur-next 稳定功能挑选打包，正式发布一版到公开 `augur`（见下方"公开发布准备"）
@@ -57,15 +57,17 @@
 | 10.16.1 | **P1-4 committee_preset 接线**：`/committee` 页面加载时读取 `/api/workspace`，自动套用保存的委员会预设；**P1-2 manifest/Hermes yaml 版本同步**：18 个 persona 的 `manifest.json`/`SKILL.md`/`hermes-agents/*.yaml` 从硬编码旧版本号改为动态读取 `augur.__version__`，工具说明从 5/13 补全为 13/13；纠正此前误判为"未完成"的 P1-3（i18n 已完整）、P1-5（enabled_personas 多选 UI 已存在）两项文档状态 |
 | 10.16.2 | **P1-6 workflow 局部失败容错**：`augur_workflow` 的 analyze/consensus/committee 任一步骤抛错时捕获为 `{"error": ...}`，其余步骤继续执行而不中断整条流水线；同步修复 `format_workflow_summary()` 在步骤结果为 error 形态时的 KeyError，新增"Step Errors"摘要小节；**P1-7 `/api/workspace` ETag**：支持条件请求，配置未变时返回 304；纠正此前误判为"未完成"的 P1-8（`USER_FEEDBACK_DIR` 用户反馈路径，已在 v10.15.0 落地） |
 | 10.16.3 | **P2-7 `augur_workflow` 默认步骤跟随终端布局预设**：CLI `--steps` / MCP `augur_workflow` / HTTP `/api/workflow` 留空时不再固定走 `fetch,analyze,consensus`，改为查询当前激活 Profile 的 `layout_preset` 对应步骤（`workspace.LAYOUT_PRESETS[*]["workflow_steps"]`）：analyst=`fetch,analyze,consensus`，trader/minimal=`fetch,consensus`，committee=`fetch,analyze,consensus,committee`；显式传入 `--steps` 仍以传入值优先；`list_presets()` / `/api/workspace/presets` 同步暴露 `workflow_steps` 字段 |
+| 10.16.4 | **用户实测发现的 bug 修复**：`/api/committee` 与 `/ws/committee` 把已经是百分数的 `position_pct`（半 Kelly 仓位，如 19.9 代表 19.9%）又乘了一次 100，导致投资委员会页面显示"1990.0%"这种荒谬数字；CLI/MCP/Deep Report 走另一套代码路径未受影响。两处统一改为直接使用原值，新增 2 条回归测试（断言 `kelly_pct <= 20.0`）。首页仪表盘不可点击、多页面数据缺失这两项用户反馈尚未复现——本环境无浏览器自动化工具，已用 curl/WebSocket 直测后端接口排除数据层问题，需要用户提供浏览器控制台报错或截图才能继续 |
 
-**当前能力盘点（v10.16.3）：**
+**当前能力盘点（v10.16.4）：**
 - MCP 工具 13 个：analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona, workflow, **workspace_get, workspace_set, workspace_profiles**
 - CLI 命令：analyze, consensus, report, serve, watch, skills, portfolio, backtest, chat, sentiment, inject-soul, telegram, slack, wechat, lark, cron-* 等
 - Dashboard 19 页（含 committee, hermes-setup），委员会页已接入工作区配置
 - 19 个 skill 目录（SKILL.md + manifest.json），版本号与 `augur.__version__` 自动同步
 - i18n：中/英/日/韩四语言，降级链，workspace profile 9 key × 4 语言全部完整
 - `augur_workflow` 默认步骤跟随终端布局预设（P2-7），定制化与 agentic 行为联动
-- 测试基线：**2075 passed, 0 failed**（含 `data` extra 后全绿，无需排除网络测试）
+- 投资委员会 Kelly 仓位显示已修复（v10.16.4），与 Deep Report 数字一致
+- 测试基线：**2072 passed, 0 failed**（不含 5 个网络测试；含网络测试共 2077）
 
 ### scanner/ 弃用说明
 
@@ -100,7 +102,11 @@
 - `augur_workflow` 默认步骤跟随终端布局预设：CLI/MCP/HTTP 三个调用点的硬编码默认值 `fetch,analyze,consensus` 改为留空时查询活跃 Profile 的 `layout_preset`
 - 把"定制化"（终端布局预设）和"agentic"（agent 调用 workflow 的默认行为）两条主线在执行层打通，而不只是 Dashboard 页面展示层面
 
-**下 session 待定：** P1-9（dashboard router 拆分，内部架构打磨项）仍待用户自行体验产品后再决定是否推进；P2-3（regime 检测加 hysteresis + 历史回测验证）已核实当前仍缺失平滑机制，是 synthesis 文档中唯一标注的"不要把共识结果当风险输入"地基类风险，优先级高于其余 P2 功能项；其余 P2-5/P2-6/P2-8 待选。
+**v10.16.4：用户真机实测发现投委会 Kelly 仓位显示 bug 并修复**（见上方表格行），同时用户反馈整体产品体验问题较多（首页仪表盘点不动、投委会/深度报告多处数据不显示），判断当前还不太像可面向用户的产品形态。**这件事的优先级现在高于继续推 P2 功能 backlog**——下个 session 应该先想办法复现/定位剩余两个 UI 层问题（需要用户提供浏览器控制台报错或截图，当前环境没有浏览器自动化工具），而不是急着实现 P2-1/P2-2/P2-5/P2-6/P2-8。
+
+**P2-3/P2-4 方法论澄清：** 用户已明确授权对 P2-3（regime 检测 hysteresis）和 P2-4（统一 OOS 校准管道）跳过"先观察再设计"的默认原则，直接设计实现——这是针对这两项的一次性授权，不代表"观察先于设计"方法论本身改变。
+
+**下 session 待定：** 用户体验反馈的产品成熟度问题（不可点击/数据缺失）优先处理；P2-3（regime 检测加 hysteresis + 历史回测验证，已获用户授权直接设计）仍是 synthesis 文档中唯一标注的"不要把共识结果当风险输入"地基类风险，功能 backlog 内优先级最高；P1-9（dashboard router 拆分）、P2-1/P2-2/P2-4/P2-5/P2-6/P2-8 待选；用户分享了参考站点 chanlun.oldorange.club 作为产品形态参考，尚待讨论。
 
 ---
 

@@ -4,28 +4,21 @@
 
 ## 这次更新解决了什么问题
 
-之前 `augur_workflow`（无论是你在终端跑 CLI、还是 Agent 通过 MCP 调用）默认永远是固定的三步 `fetch → analyze → consensus`，跟你在 `/settings` 里选的终端布局预设完全没关系。换句话说，"定制化"（你选的布局）和"agentic"（Agent 帮你跑分析流水线）这两件事是脱钩的——你切换到"交易员"布局只是改了页面展示，Agent 替你跑 workflow 时该干的事一点没变。
+用户实际上手测试时发现：投资委员会（Committee）页面给出的"建议仓位"显示成了类似 **1990.0%** 这种明显荒谬的数字，正常应该是 19.9%。
 
-## 新增功能
+根因：仓位百分比在共识计算层（`src/augur/registry.py` 的半 Kelly 仓位算法）已经算成了百分数本身（比如 `19.9` 就代表 19.9%），但 Dashboard 的 `/api/committee` 和 `/ws/committee` 两个接口又把这个数字乘了一次 100，相当于把 19.9% 算成了 1990%。CLI、MCP、深度报告（Deep Report）走的是另一套代码路径，没有这个问题，所以只有投资委员会页面会看到错误数字。
 
-### `augur_workflow` 默认步骤跟随你的终端布局预设
+## 修复内容
 
-不再硬编码 `fetch,analyze,consensus`。CLI 的 `--steps`、MCP 工具 `augur_workflow` 的 `steps` 参数、Dashboard `/api/workflow` 接口的 `steps` 字段，留空时现在会去看你当前激活的 Profile 用的是哪个布局预设，按预设选不同的默认步骤组合：
-
-- **分析师（analyst）**：`fetch,analyze,consensus`——和之前一样，深度调研流程不变。
-- **交易员 / 极简（trader / minimal）**：`fetch,consensus`——跳过逐个大师的详细打分展开，更快拿到一个信号。
-- **委员会（committee）**：`fetch,analyze,consensus,committee`——直接带上委员会投票结果。
-
-如果你显式传了 `--steps`（或 MCP 调用里指定了 steps），还是以你传的为准，这个联动只在你没指定的时候生效。
-
-这意味着你在 `/settings` 选好的布局，现在不只是改 Dashboard 怎么显示，也会改变 Agent（Claude Desktop / Hermes / OpenClaw 等）替你跑分析时默认做哪几步——定制化的选择真正影响到了 agentic 的行为。
+- `/api/committee`（REST）和 `/ws/committee`（WebSocket）的 `kelly_pct` 字段不再多乘一次 100，跟深度报告显示的数字保持一致。
+- 新增两条回归测试，分别覆盖这两个接口，确保仓位百分比不超过半 Kelly 的 20% 上限——以后再出现类似的"翻倍/翻百倍"问题会被测试直接拦下来。
 
 ## 测试情况
 
-完整测试套件 **2075 个测试全部通过**（含需要网络访问的 5 个测试），没有失败项。
+完整测试套件 **2072 个测试全部通过**（不含需要网络访问的 5 个测试；算上的话是 2077 个），没有失败项。
 
-## 接下来还会做什么
+## 还没解决的问题
 
-P1 backlog 里只剩 P1-9（dashboard 的路由文件拆分，纯内部代码组织调整），暂不安排。P2 backlog 里有一项被标记为"地基类风险"：**regime 检测（P2-3）目前没有任何平滑/滞后机制，也没有历史回测验证**——这次顺手核实过，确实还是开放风险，在它落地前不建议把共识结果当作风险输入来用。其余 P2 项（懒加载 persona、workflow 进度实时推送等）按需排期。
+用户测试时还报告了另外两类问题：首页仪表盘的部件完全点不动、以及多个页面数据显示不出来。这次排查了后端的 report / committee / workspace / home-widgets 接口，用 curl 和 WebSocket 客户端直接验证，数据本身都是对的；但当前环境里没有真实浏览器自动化工具，没法像用户一样实际点击复现这两个问题，静态分析 JS/CSS 也没找到确凿根因。这两项还需要用户提供浏览器控制台报错信息或截图才能继续定位。
 
 详细的技术变更记录见 [CHANGELOG.md](../CHANGELOG.md)。

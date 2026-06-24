@@ -10,8 +10,8 @@
 
 *18位传奇投资人，同时分析，一次共识*
 
-[![v10.16.3](https://img.shields.io/badge/v10.16.3-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2075 Tests](https://img.shields.io/badge/2075_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.16.4](https://img.shields.io/badge/v10.16.4-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2077 Tests](https://img.shields.io/badge/2077_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-可安装应用-blue?style=for-the-badge)](#-dashboard-web-界面)
@@ -284,7 +284,14 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 想看本次更新更详细的功能说明（非技术向）？见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.16.3 — 工作流步骤跟随终端布局预设 (current)</strong></summary>
+<summary><strong>v10.16.4 — 修复投资委员会 Kelly 仓位显示错误 (current)</strong></summary>
+
+- **修复 `/api/committee` 与 `/ws/committee` 仓位百分比双重放大**：`position_pct` 在共识层已经是百分数（如 19.9 代表 19.9%），committee 接口又乘了一次 100，导致页面显示 "1990.0%" 这种明显错误的数字。两处统一改为直接使用原值。
+- 新增回归测试覆盖 REST 与 WebSocket 两条路径的 `kelly_pct` 取值，防止再次回归。
+</details>
+
+<details>
+<summary><strong>v10.16.3 — 工作流步骤跟随终端布局预设</strong></summary>
 
 - **`augur_workflow` 默认步骤联动布局预设**：不再硬编码 `fetch,analyze,consensus`；CLI `--steps`、MCP `augur_workflow`、HTTP `/api/workflow` 留空时，会跟随当前激活 Profile 的布局预设——`analyst`=`fetch,analyze,consensus`，`trader`/`minimal`=`fetch,consensus`（更快出信号），`committee`=`fetch,analyze,consensus,committee`。显式传入 `--steps` 时仍以传入值为准。
 - **定制化与 agentic 两条线打通**：你在 `/settings` 选的终端布局，现在会同时改变 Agent 调用 `augur_workflow` 时的默认行为，而不只是改 Dashboard 的页面展示。

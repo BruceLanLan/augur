@@ -199,6 +199,18 @@ class TestCommitteeWebSocket:
             assert agent_count == 2
             assert verdict_received
 
+    def test_committee_post_kelly_pct_matches_position_sizing(self):
+        """v10.16.4 regression: POST /api/committee must not double-scale kelly_pct."""
+        resp = client.post("/api/committee", json={
+            "ticker": "AAPL", "agents": ["buffett"], "question": "Is AAPL undervalued?",
+        })
+        assert resp.status_code == 200
+        verdict = resp.json()["verdict"]
+        assert verdict["kelly_pct"] <= 20.0, (
+            f"kelly_pct={verdict['kelly_pct']} exceeds the 20% half-Kelly cap; "
+            "looks like position_pct got multiplied by 100 twice"
+        )
+
     def test_committee_ws_invalid_ticker_returns_error(self):
         """Invalid ticker format should return error message."""
         with client.websocket_connect("/ws/committee") as ws:
@@ -213,6 +225,24 @@ class TestCommitteeWebSocket:
             msg = ws.receive_json()
             assert msg["type"] == "agent"
             ws.close()
+
+    def test_committee_ws_kelly_pct_matches_position_sizing(self):
+        """v10.16.4 regression: kelly_pct must equal position_sizing.position_pct,
+        not be multiplied by 100 again (position_pct is already a percentage,
+        e.g. 19.9 means 19.9%, not a 0-1 fraction)."""
+        with client.websocket_connect("/ws/committee") as ws:
+            ws.send_json({"ticker": "AAPL", "agents": ["buffett"], "question": "?"})
+            verdict = None
+            for _ in range(20):
+                msg = ws.receive_json()
+                if msg["type"] == "verdict":
+                    verdict = msg["verdict"]
+                    break
+            assert verdict is not None
+            assert verdict["kelly_pct"] <= 20.0, (
+                f"kelly_pct={verdict['kelly_pct']} exceeds the 20% half-Kelly cap; "
+                "looks like position_pct got multiplied by 100 twice"
+            )
 
     def test_committee_ws_verdict_opinions_sorted_by_score(self):
         """Opinions in verdict message should be sorted descending by score."""

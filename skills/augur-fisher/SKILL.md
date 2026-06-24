@@ -1,7 +1,7 @@
 ---
 name: augur-fisher
 description: "Philip Fisher AI — growth quality / scuttlebutt, tech and specialty"
-version: 10.16.3
+version: 10.16.4
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

@@ -3333,7 +3333,7 @@ async def api_committee(body: dict):
             "signal": consensus.signal.value,
             "score": round(consensus.score, 1),
             "confidence": round(consensus.confidence, 2),
-            "kelly_pct": round(kelly * 100, 1) if kelly else 0,
+            "kelly_pct": round(kelly, 1) if kelly else 0,
             "vote": {"bullish": bullish, "neutral": neutral, "bearish": bearish},
         },
         "market_data": {
@@ -3591,7 +3591,7 @@ async def ws_committee(websocket: WebSocket):
             "signal": consensus.signal.value,
             "score": round(consensus.score, 1),
             "confidence": round(consensus.confidence, 2),
-            "kelly_pct": round(kelly * 100, 1) if kelly else 0,
+            "kelly_pct": round(kelly, 1) if kelly else 0,
             "vote": {"bullish": bullish_cnt, "neutral": neutral_cnt, "bearish": bearish_cnt},
         }
         await websocket.send_json({"type": "verdict", "verdict": verdict, "opinions": opinions_sorted})
