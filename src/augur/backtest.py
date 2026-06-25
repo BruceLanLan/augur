@@ -459,6 +459,7 @@ class Backtester:
             BacktestResult with all records and IC calculations
         """
         from augur.data import fetch_history, calculate_technicals
+        from augur.consensus.pit_fundamentals import fetch_pit_fundamentals
 
         # Fetch enough history for forward returns (days + 60)
         total_period = days + 70
@@ -498,14 +499,29 @@ class Backtester:
             history_slice = prices[:i + 1]
             technicals = calculate_technicals(history_slice) if len(history_slice) >= 5 else {}
 
-            historical_data.append({
+            day_record = {
                 "date": date_str,
                 "price": day["close"],
                 "rsi": technicals.get("rsi", 50),
                 "macd": technicals.get("macd", 0),
                 "sma20": technicals.get("sma20", 0),
                 "sma50": technicals.get("sma50", 0),
-            })
+            }
+
+            # Point-in-time fundamentals: only what would actually have been
+            # filed/available as of this historical date (see pit_fundamentals
+            # module docstring for the look-ahead-guard rationale). A day with
+            # no as-of-available annual statement yet is dropped entirely below
+            # rather than silently zero-filled, since a silent zero is
+            # indistinguishable from "this company has no fundamentals" and
+            # would reintroduce the null-by-construction bug this exists to fix.
+            pit = fetch_pit_fundamentals(ticker, date_str, price=day["close"])
+            if pit.get("insufficient"):
+                continue
+            for k, v in pit.items():
+                day_record[k] = v
+
+            historical_data.append(day_record)
 
             # Forward returns
             ret_5d = 0.0
@@ -601,3 +617,374 @@ def generate_sample_data(ticker: str = "AAPL", days: int = 30) -> Tuple[List[Dic
         })
 
     return historical_data, forward_returns
+
+
+# ============ P2-4: Cross-sectional regime-weight OOS validation ============
+#
+# Why this section exists (and why it is NOT a per-ticker time-series IC):
+# free annual fundamentals only update once per fiscal year per ticker, so a
+# per-ticker time series of value-agent scores is a near-constant step
+# function for most of the year (see Task 3 axis-check: within-ticker score
+# stdev ~0.2-2.0 vs a ~10-point persistent cross-ticker gap for marks/graham).
+# Reweighting a near-constant signal cannot move a per-ticker rank-IC -- it
+# only adds a constant offset. The only axis on which "trust value agents
+# more in a bear regime" can actually be tested is the CROSS-SECTIONAL one:
+# on a single day, across many tickers, does ranking by the regime-weighted
+# consensus correlate better with subsequent 20d returns than ranking by a
+# flat equal-weight consensus? This section builds exactly that, once per
+# day, bucketed by the regime that was in force on that day.
+#
+# Must use ``apply_regime_weights(weights, regime)`` -- NOT
+# ``RegimeRouter().get_weights(regime)``, which silently zeroes every agent
+# not named in ``_REGIME_ADJUSTMENTS[regime]``. ``apply_regime_weights``
+# instead multiplies the full base-weight dict by each agent's adjustment
+# (default 1.0 for agents not named) and renormalizes, which is the correct
+# semantics for "reweight a consensus that already includes everyone".
+
+
+def build_date_to_regime(start: str, end: str) -> Dict[str, str]:
+    """Precompute a ``date_str -> regime`` map for ``[start, end]``, once.
+
+    Does exactly one network pull of VIX + SPY daily closes for the whole
+    range, then classifies every date using the same trailing-window pattern
+    as the live path (mirrors ``scripts/regime_backtest_v2.py``'s
+    ``fetch_aligned_series`` + ``new_regime_series``). This must NOT be done
+    by calling ``fetch_macro_features(date_str)`` once per (ticker, date)
+    pair -- that function does a fresh, uncached network fetch on every
+    historical call by design, which would be catastrophically slow and
+    likely rate-limited across a multi-ticker, multi-year backtest.
+    """
+    import pandas as pd
+    import yfinance as yf
+
+    from augur.consensus.macro_features import classify_regime
+
+    # Pad the start backwards so the trailing window has enough warm-up data
+    # to classify the very first requested date correctly (mirrors the live
+    # path's ~95 calendar day lookback in macro_features._macro_from_market).
+    start_dt = datetime.strptime(start, "%Y-%m-%d") - timedelta(days=130)
+    start_padded = start_dt.strftime("%Y-%m-%d")
+
+    vix_hist = yf.Ticker("^VIX").history(start=start_padded, end=end)
+    spy_hist = yf.Ticker("SPY").history(start=start_padded, end=end)
+    if vix_hist is None or spy_hist is None or len(vix_hist) == 0 or len(spy_hist) == 0:
+        return {}
+
+    vix_hist = vix_hist.copy()
+    spy_hist = spy_hist.copy()
+    vix_hist.index = pd.to_datetime(vix_hist.index.date)
+    spy_hist.index = pd.to_datetime(spy_hist.index.date)
+    common = vix_hist.index.intersection(spy_hist.index).sort_values()
+
+    dates = [d.strftime("%Y-%m-%d") for d in common]
+    vix_closes = vix_hist.loc[common, "Close"].tolist()
+    spy_closes = spy_hist.loc[common, "Close"].tolist()
+
+    # Trailing window matching the live path (LIVE_TRADING_WINDOW in
+    # scripts/regime_backtest_v2.py / ~95 calendar days in macro_features).
+    live_window = 65
+    date_to_regime: Dict[str, str] = {}
+    for i, d in enumerate(dates):
+        if d < start or d > end:
+            continue
+        lo = max(0, i - live_window + 1)
+        window_vix = vix_closes[lo:i + 1]
+        window_spy = spy_closes[lo:i + 1]
+        result = classify_regime(window_vix, window_spy, end_idx=len(window_vix) - 1)
+        date_to_regime[d] = result["regime"]
+
+    return date_to_regime
+
+
+def fetch_ticker_replay_records(
+    ticker: str,
+    start: str,
+    end: str,
+    period: str = "5y",
+) -> List[Dict]:
+    """Build a list of per-day records for ``ticker`` spanning ``[start, end]``.
+
+    Unlike ``run_live_backtest``, this fetches a long period directly (no
+    "2y" period_map cap) so multi-year cross-sectional analysis (e.g. back
+    to 2022) is actually reachable. Each record has: date, price, rsi, macd,
+    pe, pb, roe, gross_margins, operating_margins, revenue_growth,
+    earnings_growth, debt_ratio, market_cap, actual_return_20d. Days with
+    insufficient point-in-time fundamentals, or without a realized 20-day
+    forward return yet, are dropped (not zero-filled) -- see
+    ``fetch_pit_fundamentals`` and the realized-return note below.
+    """
+    from augur.data import fetch_history, calculate_technicals
+    from augur.consensus.pit_fundamentals import fetch_pit_fundamentals
+
+    prices = fetch_history(ticker, period=period)
+    if not prices:
+        return []
+
+    records: List[Dict] = []
+
+    for i, day in enumerate(prices):
+        date_str = day["date"]
+        if date_str < start or date_str > end:
+            continue
+        # Realized-return filter: a day whose +20 trading day neighbor
+        # doesn't exist yet has return_20d implicitly 0, which is not a real
+        # "flat" return -- it is "we don't know yet". Since every ticker in
+        # a shared universe has the same trailing ~20 days unrealized, that
+        # would land on the same dates for everyone and produce a
+        # degenerate (all-equal-y) cross-sectional IC. Drop instead.
+        if i + 20 >= len(prices):
+            continue
+
+        history_slice = prices[:i + 1]
+        technicals = calculate_technicals(history_slice) if len(history_slice) >= 5 else {}
+
+        pit = fetch_pit_fundamentals(ticker, date_str, price=day["close"])
+        if pit.get("insufficient"):
+            continue
+
+        record = {
+            "date": date_str,
+            "price": day["close"],
+            "rsi": technicals.get("rsi", 50),
+            "macd": technicals.get("macd", 0),
+        }
+        for k, v in pit.items():
+            record[k] = v
+        record["actual_return_20d"] = (prices[i + 20]["close"] / day["close"]) - 1
+        records.append(record)
+
+    return records
+
+
+def _signed_agent_scores(ticker: str, record: Dict, agents) -> Dict[str, float]:
+    """Run every agent on one (ticker, day) record, return signed scores.
+
+    Signed-score convention (must match ``Backtester._calculate_consensus_ic``
+    exactly, so flat and regime-weighted consensus differ ONLY by weighting,
+    never by a drifted scoring convention): bullish -> +score,
+    bearish -> -score, neutral -> 0.
+    """
+    from augur.personas.base import MarketContext
+
+    ctx_kwargs = {"ticker": ticker.upper()}
+    for k in ["price", "pe", "pb", "roe", "gross_margins", "revenue_growth",
+              "debt_ratio", "fcf", "market_cap", "operating_margins",
+              "rsi", "macd", "earnings_growth", "current_ratio"]:
+        if k in record:
+            ctx_kwargs[k] = record[k]
+    ctx = MarketContext(**ctx_kwargs)
+
+    scores: Dict[str, float] = {}
+    for agent in agents:
+        try:
+            result = agent.analyze(ctx)
+            if result.signal.value == "bullish":
+                scores[agent.agent_id] = result.score
+            elif result.signal.value == "bearish":
+                scores[agent.agent_id] = -result.score
+            else:
+                scores[agent.agent_id] = 0.0
+        except Exception:
+            continue
+    return scores
+
+
+def compute_cross_sectional_regime_ic(
+    records_by_ticker: Dict[str, List[Dict]],
+    date_to_regime: Dict[str, str],
+    min_tickers_per_day: int = 5,
+    bootstrap_resamples: int = 1000,
+    bootstrap_block_size: int = 7,
+    seed: int = 42,
+) -> Dict:
+    """Cross-sectional, per-day, regime-bucketed IC comparison.
+
+    For each calendar date present in >= ``min_tickers_per_day`` tickers'
+    record lists: compute every agent's signed score for every ticker on
+    that date, build (a) a flat equal-weight consensus and (b) an
+    ``apply_regime_weights``-reweighted consensus (using that date's
+    regime), then rank-correlate each consensus across tickers against
+    ``actual_return_20d`` (Spearman, via ``Backtester._rank_correlation``).
+    Per-day ICs are then bucketed by regime and averaged.
+
+    Returns a dict with:
+      - "per_regime": {regime: {"flat_ic_mean", "regime_ic_mean", "delta",
+          "n_days"}}
+      - "per_agent_by_regime": {regime: {agent_id: mean_cross_sectional_ic}} --
+          diagnostic: per-agent daily cross-sectional IC averaged by regime.
+          Tells you whether the agents upweighted in that regime actually
+          predicted better cross-sectionally, not just whether they were
+          more bullish/bearish on average.
+      - "bear_high_vol_bootstrap": {"delta_mean", "ci_low", "ci_high",
+          "n_days", "n_blocks"} or None if BEAR_HIGH_VOL has zero days.
+      - "n_days_total", "n_days_skipped_thin": diagnostics.
+    """
+    import random as _random
+
+    from augur.registry import AgentRegistry
+    from augur.consensus.regime_weights import apply_regime_weights
+
+    registry = AgentRegistry()
+    agents = registry.get_all()
+    agent_ids = [a.agent_id for a in agents]
+    base_weights = {aid: 1.0 / len(agent_ids) for aid in agent_ids}
+
+    bt = Backtester()
+
+    # Build date -> {ticker: record} for tickers that have data on that date.
+    dates_to_ticker_records: Dict[str, Dict[str, Dict]] = {}
+    for ticker, records in records_by_ticker.items():
+        for rec in records:
+            dates_to_ticker_records.setdefault(rec["date"], {})[ticker] = rec
+
+    daily_results = []  # list of dicts: date, regime, flat_ic, regime_ic, agent_scores_by_ticker
+    n_skipped_thin = 0
+
+    for date_str in sorted(dates_to_ticker_records.keys()):
+        ticker_records = dates_to_ticker_records[date_str]
+        if len(ticker_records) < min_tickers_per_day:
+            n_skipped_thin += 1
+            continue
+
+        regime = date_to_regime.get(date_str, "SIDEWAYS")
+        regime_weights = apply_regime_weights(dict(base_weights), regime)
+
+        flat_scores = []
+        regime_scores = []
+        actual_returns = []
+        # per_agent_scores[aid] and per_agent_returns[aid] are parallel lists:
+        # both appended in the same ticker iteration order so _rank_correlation
+        # across them gives each agent's cross-sectional IC for this day.
+        per_agent_scores: Dict[str, List[float]] = {aid: [] for aid in agent_ids}
+        per_agent_returns: Dict[str, List[float]] = {aid: [] for aid in agent_ids}
+
+        for ticker, rec in ticker_records.items():
+            agent_scores = _signed_agent_scores(ticker, rec, agents)
+            if not agent_scores:
+                continue
+            flat_avg = sum(agent_scores.values()) / len(agent_scores)
+            regime_avg = sum(
+                agent_scores.get(aid, 0.0) * regime_weights.get(aid, 0.0)
+                for aid in agent_ids
+            )
+            flat_scores.append(flat_avg)
+            regime_scores.append(regime_avg)
+            actual_returns.append(rec["actual_return_20d"])
+            ret = rec["actual_return_20d"]
+            for aid, sc in agent_scores.items():
+                per_agent_scores.setdefault(aid, []).append(sc)
+                per_agent_returns.setdefault(aid, []).append(ret)
+
+        if len(flat_scores) < min_tickers_per_day:
+            n_skipped_thin += 1
+            continue
+
+        flat_ic = bt._rank_correlation(flat_scores, actual_returns)
+        regime_ic = bt._rank_correlation(regime_scores, actual_returns)
+
+        # Per-agent cross-sectional IC: rank_corr(agent scores across tickers,
+        # actual returns across same tickers). Requires >=3 tickers scored.
+        per_agent_ic: Dict[str, float] = {}
+        for aid in agent_ids:
+            sc_list = per_agent_scores.get(aid, [])
+            ret_list = per_agent_returns.get(aid, [])
+            if len(sc_list) >= 3:
+                per_agent_ic[aid] = bt._rank_correlation(sc_list, ret_list)
+            else:
+                per_agent_ic[aid] = 0.0
+
+        daily_results.append({
+            "date": date_str,
+            "regime": regime,
+            "flat_ic": flat_ic,
+            "regime_ic": regime_ic,
+            "delta": regime_ic - flat_ic,
+            "per_agent_ic": per_agent_ic,
+        })
+
+    # --- Per-regime aggregation ---
+    per_regime: Dict[str, Dict] = {}
+    per_agent_by_regime: Dict[str, Dict[str, float]] = {}
+    for row in daily_results:
+        regime = row["regime"]
+        bucket = per_regime.setdefault(regime, {"flat_ics": [], "regime_ics": [], "deltas": []})
+        bucket["flat_ics"].append(row["flat_ic"])
+        bucket["regime_ics"].append(row["regime_ic"])
+        bucket["deltas"].append(row["delta"])
+
+        agent_bucket = per_agent_by_regime.setdefault(regime, {})
+        for aid, ic_val in row["per_agent_ic"].items():
+            agent_bucket.setdefault(aid, []).append(ic_val)
+
+    per_regime_summary: Dict[str, Dict] = {}
+    for regime, bucket in per_regime.items():
+        n = len(bucket["deltas"])
+        per_regime_summary[regime] = {
+            "flat_ic_mean": round(sum(bucket["flat_ics"]) / n, 4) if n else 0.0,
+            "regime_ic_mean": round(sum(bucket["regime_ics"]) / n, 4) if n else 0.0,
+            "delta_mean": round(sum(bucket["deltas"]) / n, 4) if n else 0.0,
+            "n_days": n,
+        }
+
+    per_agent_by_regime_summary: Dict[str, Dict[str, float]] = {}
+    for regime, agent_bucket in per_agent_by_regime.items():
+        per_agent_by_regime_summary[regime] = {
+            aid: round(sum(vals) / len(vals), 3) for aid, vals in agent_bucket.items() if vals
+        }
+
+    # --- BEAR_HIGH_VOL block bootstrap ---
+    bear_rows = [row for row in daily_results if row["regime"] == "BEAR_HIGH_VOL"]
+    bear_bootstrap = None
+    if bear_rows:
+        deltas = [row["delta"] for row in bear_rows]
+        n = len(deltas)
+        rng = _random.Random(seed)
+        block = max(1, min(bootstrap_block_size, n))
+        n_blocks_needed = max(1, math.ceil(n / block))
+        boot_means = []
+        for _ in range(bootstrap_resamples):
+            sample: List[float] = []
+            for _b in range(n_blocks_needed):
+                start_idx = rng.randint(0, n - block) if n > block else 0
+                sample.extend(deltas[start_idx:start_idx + block])
+            sample = sample[:n]
+            if sample:
+                boot_means.append(sum(sample) / len(sample))
+        boot_means.sort()
+        if boot_means:
+            lo_idx = int(0.05 * len(boot_means))
+            hi_idx = min(len(boot_means) - 1, int(0.95 * len(boot_means)))
+            # Regime is a market-wide label, not a per-ticker one: a wider
+            # ticker universe adds cross-sectional breadth per day, never
+            # more days. BEAR_HIGH_VOL days cluster into a handful of short,
+            # autocorrelated market episodes (e.g. a single-week selloff),
+            # so a small n_days here is not "a small sample of independent
+            # observations" -- it can be just 1-2 *episodes* repeated across
+            # consecutive days. A bootstrap CI computed on that is a
+            # mechanical statistic, not evidence of statistical power, and
+            # must be labeled as such rather than read as significance.
+            low_power = n < 30
+            bear_bootstrap = {
+                "delta_mean": round(sum(deltas) / n, 4),
+                "ci_low": round(boot_means[lo_idx], 4),
+                "ci_high": round(boot_means[hi_idx], 4),
+                "n_days": n,
+                "n_blocks_per_resample": n_blocks_needed,
+                "block_size": block,
+                "low_power_warning": (
+                    "n_days < 30 and BEAR_HIGH_VOL days cluster into a small number of "
+                    "short market episodes (consecutive trading days within the same "
+                    "selloff), not independent draws -- this CI is a mechanical "
+                    "computation, not inferential evidence of statistical power. "
+                    "Treat as directional only."
+                    if low_power else None
+                ),
+            }
+
+    return {
+        "per_regime": per_regime_summary,
+        "per_agent_by_regime": per_agent_by_regime_summary,
+        "bear_high_vol_bootstrap": bear_bootstrap,
+        "n_days_total": len(daily_results),
+        "n_days_skipped_thin": n_skipped_thin,
+    }
