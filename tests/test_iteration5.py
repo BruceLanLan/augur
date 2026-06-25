@@ -304,7 +304,7 @@ class TestScannerBackwardCompat:
             LiLuAgent, DanBinAgent, SerenityAgent, DayuAgent,
         ])
 
-    def test_serenity_shim_exists(self):
-        """scanner.personas.serenity module should exist and export SerenityAgent."""
-        from scanner.personas.serenity import SerenityAgent
+    def test_serenity_importable_from_scanner_personas(self):
+        """SerenityAgent is importable from scanner.personas (P2-2: individual submodules removed)."""
+        from scanner.personas import SerenityAgent
         assert callable(SerenityAgent)

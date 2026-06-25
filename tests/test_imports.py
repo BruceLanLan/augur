@@ -97,10 +97,8 @@ class TestBackwardCompat:
         assert BuffettAgent is not None
 
     def test_scanner_agent_shims(self):
-        from scanner.personas.buffett import BuffettAgent
-        from scanner.personas.graham import GrahamAgent
-        from scanner.personas.dalio import DalioAgent
-        from scanner.personas.munger import MungerAgent
-        from scanner.personas.soros import SorosAgent
+        # Individual scanner.personas.{agent} submodules were removed in P2-2
+        # (shrink to single compat entry). Use scanner.personas or scanner directly.
+        from scanner.personas import BuffettAgent, GrahamAgent, DalioAgent, MungerAgent, SorosAgent
         assert BuffettAgent is not None
         assert SorosAgent is not None
