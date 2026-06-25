@@ -4,21 +4,29 @@
 
 ## What this update fixes
 
-The "data isn't showing up in a lot of places" report from live testing was already partly addressed by v10.16.5/v10.16.6 (homepage + committee/deep-report). This release (v10.16.7) continues the same live-testing sweep across the rest of the dashboard (history, optimizer, portfolio, watchlist, scanner, signals, settings, chat) and found two concrete data-correctness bugs.
+This release (v10.16.8) addresses the one item `docs/AGENT_PEER_REVIEW_SYNTHESIS.md` flags as the system's only remaining "foundational architectural risk": market regime detection (bull/bear/sideways crossed with high/low volatility). The hard rule attached to it was "do not treat consensus outputs as risk inputs until P2-3 regime validation lands."
+
+That risk actually has two halves: (1) regime classification could flip-flop from a single noisy day, and (2) the hand-picked `_REGIME_ADJUSTMENTS` multipliers themselves have never been validated to actually help. **This release resolves only half (1).** Half (2) is left for a later P2-4 (unified out-of-sample calibration pipeline) — it is not touched here, and this release should not be read as a claim that it is.
 
 ## What's fixed
 
-- **The History page's (`/history`) 52-week calendar heatmap never rendered**: the page requested `/api/history?page=1&per_page=365`, but the endpoint's paginated mode caps `per_page` at 100 and returns HTTP 400 above that — the frontend's empty `.catch()` swallowed the error silently, so the calendar card simply never appeared, with no visible error. Fixed by switching to the endpoint's unpaginated `limit` mode (`/api/history?limit=365`, capped at 500), which already exists and is exactly what the calendar needs (a flat list of recent records, no pagination metadata).
-- **The portfolio optimizer (`/optimizer`, `/api/optimize`) computed both its displayed Sharpe ratio and its actual optimal weights with mismatched units**: the optimizer works internally with *daily* returns, but received the risk-free rate as an *annual* rate (e.g. 0.02 for 2%) and subtracted it directly from daily returns before dividing by daily volatility. Since a typical daily mean return (~0.1%-0.3%) is tiny next to an annual rate like 2%, this made the "excess return" strongly negative for nearly every asset — skewing not just the displayed Sharpe ratio (observed -1.44 where the correct value is roughly +2.0) but the analytical max-Sharpe weight solution itself, meaning the "optimal" portfolio it recommended wasn't actually optimal. Fixed by converting the risk-free rate to a daily rate (dividing by 252 trading days) before combining it with daily returns/volatility anywhere in the optimizer. A related follow-up was caught right after: the page already displays return/volatility as annualized figures, but was showing the Sharpe ratio on a daily basis next to them — three numbers on inconsistent time bases, which still looks wrong even after the unit fix above. Now the displayed Sharpe ratio is annualized too (×√252), so all three numbers are on the same basis.
+- **Regime detection had no smoothing — a single noisy day could flip it**: the previous implementation classified the regime from a single live snapshot of VIX/SPY each time it ran. VIX oscillating around the 25 threshold, or a one-day spike, could flip the regime back and forth between adjacent buckets — and that regime gets blended 35% into the persona weights feeding investment consensus, so frequent flips meant frequent, mostly-meaningless perturbation of those weights. This release adds a "confirmation window": a new regime now has to persist for 3 consecutive trading days before it's accepted, and the VIX high/low-volatility threshold switched from one hard cutoff to an asymmetric band (enter at 25, exit at 23) to reduce boundary jitter.
+- **The `date_str` parameter was decorative — there was no real historical/point-in-time capability**: the function signature accepted a date, but the code never actually used it internally, always fetching "now" data regardless. This release makes it actually work — passing a historical date now fetches real VIX/SPY history up to (and not including) that date for classification. Along the way, a related bug was found and fixed: VIX and SPY historical data come back timezone-localized differently (Chicago vs. New York), so the same trading day had mismatched timestamps between the two series, causing them to silently fail to align. This didn't affect anything visible day-to-day, but it would have made historical backtesting return nothing.
+
+## How this was validated
+
+A manual backtest script (`scripts/regime_backtest_v2.py`, not part of the automated test suite since it needs live network access) pulls about 9 years of VIX/SPY history (2015-present) and runs the old single-snapshot classifier and the new confirmation-window classifier side by side over every trading day:
+
+- **Flip count**: 389 (old) vs. 101 (new).
+- **Whipsaw count** (A flips to B and back to A within 3 days): 146 (old) vs. just 10 (new).
+- **Responsiveness**: checked against the 2020 COVID crash and the 2022 bear market — the new method entered "high-vol-bear" only 2-4 days later than the old one, so it didn't become sluggish. The 2018 Q4 window looked odd at first glance (old fired in October, new not until December), but on inspection the October trigger was the old method getting fooled by a single noisy day where both thresholds happened to cross briefly without persisting — exactly the kind of false alarm the confirmation window is designed to filter. The new method's December entry lines up with the real, sustained selloff. That's the confirmation window working as intended, not a lag.
 
 ## Test status
 
-Full suite: **2100 tests passing**, 0 failures.
+Full suite: **2108 tests passing** (2100 existing + 8 new), 0 failures.
 
-## How this was found
+## What this release does NOT do
 
-Continuing the same live-testing approach as v10.16.5/v10.16.6, but this time not looking for the `async def`/event-loop class of bug — instead, walking every remaining dashboard page not yet covered, mapping each page's `fetch()` calls to its backend endpoint, and exercising each one against the running dev server with real tickers, checking for error responses, mismatched response shapes, or numerically implausible results. Most endpoints checked out fine; these two were genuine defects.
-
-The GIL concurrency limitation documented in v10.16.6 (committee/deep-report slowdowns under load) was left untouched this release, per the user's earlier decision to park it.
+Whether the specific numbers in `_REGIME_ADJUSTMENTS` (e.g. boosting Howard Marks's weight to 1.32 in a high-vol bear market) actually improve investment outcomes was not touched or validated here — that requires a larger out-of-sample replay framework and is left for a future P2-4 effort.
 
 See [CHANGELOG.md](../../CHANGELOG.md) for the full technical change log.
