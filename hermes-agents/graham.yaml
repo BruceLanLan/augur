@@ -8,7 +8,7 @@ display_name: "Benjamin Graham"
 description: "Father of value investing — margin of safety · augur_workflow MCP"
 persona_id: graham
 language: en
-version: "10.16.10"
+version: "10.16.12"
 
 mcp:
   command: augur-mcp

@@ -2,6 +2,45 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.16.12] - 2026-06-26
+
+P2-5 + P2-8: Workspace streaming, workflow progress WebSocket, augur-terminal meta-skill, and Hermes committee agent.
+
+### Added
+
+- **`/ws/workspace`** (P2-5): New WebSocket endpoint. Clients receive the current workspace state immediately on connect (`{"type": "workspace_state", "workspace": {...}}`), then receive live push messages (`{"type": "workspace_update", "workspace": {...}}`) whenever `PUT /api/workspace` or `PUT /api/workspace/active` commits a change. Uses an async broadcast fan-out (`_ws_workspace_clients: Set[WebSocket]`) via `asyncio.create_task()`.
+- **`/ws/workflow`** (P2-5): New WebSocket endpoint for step-by-step workflow progress streaming. Client sends `{"ticker": "X", "steps": "fetch,analyze,consensus", "agents": ""}`. Server emits `{"type": "step_start", "step": "fetch", "step_index": 0, "total": 3}` and `{"type": "step_done", "step": "fetch", "result": {...}, "elapsed_ms": N}` for each step, finishing with `{"type": "done", "results": {...}, "step_status": {...}}`. Avoids event-loop blocking by running each step via `run_in_threadpool`.
+- **`skills/augur-terminal/`** (P2-8): New meta-skill covering the full Augur Bloomberg-style terminal. Documents all 13 MCP tools, all 15 dashboard pages, workspace profiles and presets, and a standard workflow. Integrated into `scripts/generate_skills.py` (`terminal_skill()` + `generate_terminal_manifest()`).
+- **`hermes-agents/committee.yaml`** (P2-8): New Hermes agent config for the Committee Chair role. Counterpart to the 18 persona YAMLs; uses `mcp_augur_committee`/`workflow`/`workspace_get` and a neutral facilitator system prompt.
+
+### Changed
+
+- `dashboard/app.py`: added `import asyncio` and `Set` to typing imports; `api_put_workspace` and `api_set_active_workspace_profile` now fire a background broadcast task after writing.
+- `scripts/generate_skills.py`: extended to generate `augur-terminal` skill (SKILL.md + manifest.json) alongside the 18 persona skills and committee skill.
+
+### Test status
+
+- New: 6 tests in `tests/test_websocket.py` (`TestWorkspaceWebSocket` × 2, `TestWorkflowWebSocket` × 4). All 26 WebSocket tests pass.
+
+## [10.16.11] - 2026-06-26
+
+P2-1 + P2-6: ConsensusEngine extraction and lazy persona registration per profile.
+
+### Changed
+
+- **P2-1**: Extracted the full 338-line consensus logic from `DecisionCoordinator.get_consensus` into a new standalone class `ConsensusEngine` in `src/augur/consensus/engine.py`. `DecisionCoordinator.get_consensus` is now a 7-line delegation shim. All external call sites are unchanged. `_normalize_coverage_confidence` moved to `ConsensusEngine` as a `@staticmethod`. Lazy imports inside `ConsensusEngine.compute()` prevent circular dependencies at module load time.
+- **P2-6**: `AgentRegistry._register_default_agents` now reads the active profile's `enabled_personas` list via `get_enabled_personas()` (lazy import). When non-empty, only the listed agents are imported and instantiated; when empty (the default), all 18 built-ins are loaded as before. The manifest is a new module-level `_BUILTIN_AGENTS` dict mapping `agent_id → (module_path, class_name)` for `importlib.import_module` dispatch. YAML personas are always loaded unconditionally (additive). A workspace import error silently falls back to loading all 18 agents.
+
+### Fixed
+
+- `tests/test_no_scanner_imports_v10_15.py`: added `src/augur/consensus/engine.py` to the `ALLOWED_SCANNER_IMPORTS` allowlist (engine.py has the same `scanner.ten_x_screener` optional try/except that `registry.py` already had).
+- `hermes-agents/*.yaml`: bumped all 18 files from `10.16.9` to `10.16.10` (pre-existing drift — `generate_skills.py` only regenerates `SKILL.md`/`manifest.json`, not `hermes-agents/` YAMLs).
+
+### Test status
+
+- New P2-6 tests: `TestLazyPersonaRegistration` in `tests/test_registry.py` — 4 tests covering default all-load, filtered subset, unknown-ID skip, and workspace-error fallback.
+- Full suite: **2109 passed, 21 pre-existing failures** (all in `test_pit_fundamentals.py`, `test_regime_v2.py`, `test_v10_14_workspace_workflow.py` — confirmed pre-existing via `git stash` baseline check before P2-6 changes).
+
 ## [10.16.9] - 2026-06-25
 
 P2-4: the second (and final) half of the regime-weighting gate opened by P2-3 — does the hand-picked `_REGIME_ADJUSTMENTS` table in `src/augur/consensus/regime_weights.py` actually improve out-of-sample prediction quality, vs. a flat equal-weight consensus? Before this release, `Backtester.run_live_backtest` never populated real fundamentals during historical replay (pe/pb/roe stayed at the `MarketContext` dataclass default of 0 for every day), so any prior attempt at this validation would have been null by construction — reweighting a constant-zero value-agent score cannot move a rank-IC regardless of the multiplier. **This release adds the missing point-in-time fundamentals plumbing, a cross-sectional regime-bucketed IC harness, and runs the validation for real. The result: across 37 tickers and ~4.4 years, the regime-weighted consensus shows no clear, consistent improvement over flat weighting — deltas are tiny and mixed-sign in every regime bucket. Do not treat this gate as cleared in the sense of "the multipliers are confirmed to help"; treat it as cleared in the sense of "the multipliers were finally tested against real data, honestly, and the result is a wash."**
