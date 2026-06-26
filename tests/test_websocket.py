@@ -262,3 +262,79 @@ class TestCommitteeWebSocket:
             opinions = verdict_msg.get("opinions", [])
             scores = [op["score"] for op in opinions]
             assert scores == sorted(scores, reverse=True)
+
+
+class TestWorkspaceWebSocket:
+    """P2-5: /ws/workspace — workspace state streaming."""
+
+    def test_ws_workspace_sends_initial_state(self):
+        """/ws/workspace must send current workspace immediately on connect."""
+        with client.websocket_connect("/ws/workspace") as ws:
+            msg = ws.receive_json()
+            assert msg["type"] == "workspace_state"
+            assert "workspace" in msg
+            ws_data = msg["workspace"]
+            assert isinstance(ws_data, dict)
+            assert "enabled_personas" in ws_data
+
+    def test_ws_workspace_route_exists(self):
+        """Verify /ws/workspace is registered and reachable (not 404)."""
+        with client.websocket_connect("/ws/workspace") as ws:
+            msg = ws.receive_json()
+            assert msg["type"] == "workspace_state"
+
+
+class TestWorkflowWebSocket:
+    """P2-5: /ws/workflow — workflow progress streaming."""
+
+    def test_ws_workflow_streams_step_messages(self):
+        """/ws/workflow must emit step_start, step_done per step, then done."""
+        with client.websocket_connect("/ws/workflow") as ws:
+            ws.send_json({"ticker": "AAPL", "steps": "fetch,analyze,consensus", "agents": "buffett,graham"})
+            types_seen = []
+            steps_seen = []
+            for _ in range(20):
+                msg = ws.receive_json()
+                types_seen.append(msg["type"])
+                if "step" in msg:
+                    steps_seen.append(msg["step"])
+                if msg["type"] == "done":
+                    break
+            assert "step_start" in types_seen
+            assert "step_done" in types_seen
+            assert "done" in types_seen
+            assert "fetch" in steps_seen
+
+    def test_ws_workflow_invalid_ticker_returns_error(self):
+        """Invalid ticker should return an error message."""
+        with client.websocket_connect("/ws/workflow") as ws:
+            ws.send_json({"ticker": "AAPL;DROP", "steps": "fetch"})
+            msg = ws.receive_json()
+            assert msg["type"] == "error"
+
+    def test_ws_workflow_done_has_step_status(self):
+        """Final done message must include step_status dict."""
+        with client.websocket_connect("/ws/workflow") as ws:
+            ws.send_json({"ticker": "AAPL", "steps": "fetch", "agents": "buffett"})
+            done_msg = None
+            for _ in range(10):
+                msg = ws.receive_json()
+                if msg["type"] == "done":
+                    done_msg = msg
+                    break
+            assert done_msg is not None
+            assert "step_status" in done_msg
+            assert done_msg["step_status"]["fetch"] == "ok"
+
+    def test_ws_workflow_step_done_has_elapsed_ms(self):
+        """step_done messages must include elapsed_ms timing field."""
+        with client.websocket_connect("/ws/workflow") as ws:
+            ws.send_json({"ticker": "AAPL", "steps": "fetch", "agents": "buffett"})
+            for _ in range(10):
+                msg = ws.receive_json()
+                if msg["type"] == "step_done" and msg.get("step") == "fetch":
+                    assert "elapsed_ms" in msg
+                    assert isinstance(msg["elapsed_ms"], (int, float))
+                    break
+                if msg["type"] == "done":
+                    break

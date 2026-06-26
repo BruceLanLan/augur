@@ -9,6 +9,7 @@ Usage:
     python3 -m dashboard.app --port 8080 --cors
 """
 
+import asyncio
 import sys
 import os
 import re
@@ -21,7 +22,7 @@ import time as _time
 import yaml
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, List, Dict, Any, Tuple, Set
 import argparse
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -1490,6 +1491,7 @@ async def api_set_active_workspace_profile(body: WorkspaceActiveBody):
         workspace = set_active_profile(body.profile)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    asyncio.create_task(_broadcast_workspace_change(workspace))
     return {"status": "ok", "active_profile": body.profile.strip().lower(), "workspace": workspace}
 
 
@@ -1498,6 +1500,7 @@ async def api_put_workspace(body: WorkspaceBody):
     """Save workspace layout preferences to ~/.augur/workspace.yaml."""
     data = body.model_dump(exclude_none=True)
     saved = save_workspace(data)
+    asyncio.create_task(_broadcast_workspace_change(saved))
     return {"status": "ok", "workspace": saved, "active_profile": get_workspace_state()["active_profile"]}
 
 
@@ -3731,6 +3734,248 @@ async def ws_prices(websocket: WebSocket):
     finally:
         if registered:
             await streamer.disconnect(websocket)
+
+
+# ============ P2-5: Workspace change broadcasting + /ws/workspace ============
+
+_ws_workspace_clients: Set[WebSocket] = set()
+
+
+async def _broadcast_workspace_change(state: dict) -> None:
+    """Push workspace state to all connected /ws/workspace subscribers."""
+    disconnected: Set[WebSocket] = set()
+    for ws in list(_ws_workspace_clients):
+        try:
+            await ws.send_json({"type": "workspace_update", "workspace": state})
+        except Exception:
+            disconnected.add(ws)
+    _ws_workspace_clients -= disconnected
+
+
+@app.websocket("/ws/workspace")
+async def ws_workspace(websocket: WebSocket):
+    """Stream workspace state changes to dashboard clients in real time.
+
+    Clients receive the current workspace immediately on connect, then receive
+    ``{"type": "workspace_update", "workspace": {...}}`` push messages whenever
+    any workspace-write endpoint (PUT /api/workspace, PUT /api/workspace/active,
+    etc.) commits a change.
+    """
+    if not _ws_api_token_ok(websocket):
+        await websocket.close(code=1008, reason="Unauthorized")
+        return
+    await websocket.accept()
+    _ws_workspace_clients.add(websocket)
+    try:
+        current = get_workspace()
+        await websocket.send_json({"type": "workspace_state", "workspace": current})
+        # Hold connection; ignore any client messages until disconnect
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        pass
+    except Exception:
+        pass
+    finally:
+        _ws_workspace_clients.discard(websocket)
+
+
+# ============ P2-5: Workflow progress streaming /ws/workflow ============
+
+@app.websocket("/ws/workflow")
+async def ws_workflow(websocket: WebSocket):
+    """Stream workflow step progress to the client.
+
+    Client sends: ``{"ticker": "NVDA", "steps": "fetch,analyze,consensus", "agents": ""}``
+    Server sends one message per step:
+      ``{"type": "step_start", "step": "fetch", "step_index": 0, "total": 3}``
+      ``{"type": "step_done",  "step": "fetch", "result": {...}, "elapsed_ms": 120}``
+    Final message: ``{"type": "done", "results": {...}, "step_status": {...}}``
+    """
+    if not _ws_api_token_ok(websocket):
+        await websocket.close(code=1008, reason="Unauthorized")
+        return
+    await websocket.accept()
+    try:
+        raw = await websocket.receive_json()
+        ticker = str(raw.get("ticker", "")).upper().strip()
+        steps_str = str(raw.get("steps", "")).strip()
+        agents_str = str(raw.get("agents", "")).strip()
+        question = str(raw.get("question", "")).strip()
+
+        if not ticker or not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+            await websocket.send_json({"type": "error", "message": "Invalid ticker"})
+            return
+
+        from augur.workflow import parse_steps, VALID_STEPS, _record_step_status
+        from augur.registry import AgentRegistry, DecisionCoordinator
+
+        try:
+            step_list = parse_steps(steps_str)
+        except ValueError as e:
+            await websocket.send_json({"type": "error", "message": str(e)})
+            return
+
+        registry = AgentRegistry()
+        coordinator = DecisionCoordinator(registry)
+        output: Dict[str, Any] = {"ticker": ticker, "steps": step_list, "results": {}}
+        total = len(step_list)
+
+        ctx = None
+        responses = None
+        consensus_result = None
+
+        # ---------- fetch ----------
+        if "fetch" in step_list:
+            idx = step_list.index("fetch")
+            await websocket.send_json({"type": "step_start", "step": "fetch", "step_index": idx, "total": total})
+            t0 = _time.perf_counter()
+            try:
+                from augur.data import fetch_market_context
+                ctx = await run_in_threadpool(fetch_market_context, ticker)
+                result = {"price": ctx.price, "pe": ctx.pe, "sector": ctx.sector, "industry": ctx.industry}
+                output["results"]["fetch"] = result
+            except Exception as e:
+                result = {"error": str(e)[:200]}
+                output["results"]["fetch"] = result
+            elapsed = round((_time.perf_counter() - t0) * 1000, 1)
+            await websocket.send_json({"type": "step_done", "step": "fetch", "result": result, "elapsed_ms": elapsed})
+        elif any(s in step_list for s in ("analyze", "consensus", "committee", "debate")):
+            # fetch ctx without streaming it (needed for later steps)
+            try:
+                from augur.data import fetch_market_context
+                ctx = await run_in_threadpool(fetch_market_context, ticker)
+            except Exception:
+                ctx = None
+
+        # ---------- agent filter ----------
+        from augur.workspace import get_enabled_personas
+        persona_filter: Optional[List[str]] = None
+        selected_agents = None
+        if agents_str:
+            selected_ids = [a.strip() for a in agents_str.split(",") if a.strip()]
+            all_agents_map = {a.agent_id: a for a in registry.get_all()}
+            selected_agents = {aid: all_agents_map[aid] for aid in selected_ids if aid in all_agents_map}
+        else:
+            persona_filter = get_enabled_personas() or None
+
+        # ---------- analyze ----------
+        if "analyze" in step_list:
+            idx = step_list.index("analyze")
+            await websocket.send_json({"type": "step_start", "step": "analyze", "step_index": idx, "total": total})
+            t0 = _time.perf_counter()
+            if ctx is None:
+                result = {"error": "market data unavailable"}
+                output["results"]["analyze"] = result
+            else:
+                try:
+                    if selected_agents:
+                        responses = await run_in_threadpool(
+                            lambda: {aid: agent.analyze(ctx) for aid, agent in selected_agents.items()}
+                        )
+                    else:
+                        responses = await run_in_threadpool(
+                            coordinator.analyze_with_all, ctx, enabled_personas=persona_filter
+                        )
+                    result = {
+                        aid: {"agent_name": r.agent_name, "signal": r.signal.value, "score": r.score, "confidence": r.confidence}
+                        for aid, r in responses.items()
+                    }
+                    output["results"]["analyze"] = result
+                except Exception as e:
+                    result = {"error": str(e)[:200]}
+                    output["results"]["analyze"] = result
+            elapsed = round((_time.perf_counter() - t0) * 1000, 1)
+            await websocket.send_json({"type": "step_done", "step": "analyze", "result": result, "elapsed_ms": elapsed})
+
+        # ---------- consensus ----------
+        if "consensus" in step_list or ("committee" in step_list and responses):
+            if responses and "consensus" in step_list:
+                idx = step_list.index("consensus")
+                await websocket.send_json({"type": "step_start", "step": "consensus", "step_index": idx, "total": total})
+            t0 = _time.perf_counter()
+            if responses:
+                try:
+                    consensus_result = await run_in_threadpool(
+                        coordinator.get_consensus, responses, ticker=ticker, context=ctx
+                    )
+                    meta = consensus_result.metadata or {}
+                    cons_dict = {
+                        "signal": consensus_result.signal.value,
+                        "score": consensus_result.score,
+                        "confidence": consensus_result.confidence,
+                        "reasoning": consensus_result.reasoning,
+                        "kelly_pct": meta.get("position_sizing", {}).get("position_pct"),
+                        "regime": (meta.get("regime_features") or {}).get("regime"),
+                    }
+                    if "consensus" in step_list:
+                        output["results"]["consensus"] = cons_dict
+                except Exception as e:
+                    cons_dict = {"error": str(e)[:200]}
+                    if "consensus" in step_list:
+                        output["results"]["consensus"] = cons_dict
+                    consensus_result = None
+            else:
+                cons_dict = {"error": "no agent responses available"}
+                if "consensus" in step_list:
+                    output["results"]["consensus"] = cons_dict
+            if "consensus" in step_list:
+                elapsed = round((_time.perf_counter() - t0) * 1000, 1)
+                await websocket.send_json({"type": "step_done", "step": "consensus", "result": cons_dict, "elapsed_ms": elapsed})
+
+        # ---------- committee ----------
+        if "committee" in step_list and responses:
+            idx = step_list.index("committee")
+            await websocket.send_json({"type": "step_start", "step": "committee", "step_index": idx, "total": total})
+            t0 = _time.perf_counter()
+            try:
+                consensus = consensus_result or await run_in_threadpool(
+                    coordinator.get_consensus, responses, ticker=ticker, context=ctx
+                )
+                bullish = sum(1 for r in responses.values() if r.signal.value == "bullish")
+                bearish = sum(1 for r in responses.values() if r.signal.value == "bearish")
+                result = {
+                    "verdict": consensus.signal.value,
+                    "score": consensus.score,
+                    "vote": {"bullish": bullish, "neutral": len(responses) - bullish - bearish, "bearish": bearish},
+                    "opinions": [
+                        {"agent": r.agent_name, "signal": r.signal.value, "score": r.score}
+                        for r in sorted(responses.values(), key=lambda x: -x.score)
+                    ],
+                }
+                output["results"]["committee"] = result
+            except Exception as e:
+                result = {"error": str(e)[:200]}
+                output["results"]["committee"] = result
+            elapsed = round((_time.perf_counter() - t0) * 1000, 1)
+            await websocket.send_json({"type": "step_done", "step": "committee", "result": result, "elapsed_ms": elapsed})
+
+        # ---------- sentiment ----------
+        if "sentiment" in step_list:
+            idx = step_list.index("sentiment")
+            await websocket.send_json({"type": "step_start", "step": "sentiment", "step_index": idx, "total": total})
+            t0 = _time.perf_counter()
+            try:
+                from augur.sentiment import SentimentAnalyzer
+                sentiment = await run_in_threadpool(SentimentAnalyzer().get_sentiment, ticker)
+                result = sentiment
+                output["results"]["sentiment"] = result
+            except Exception as e:
+                result = {"error": str(e)[:200]}
+                output["results"]["sentiment"] = result
+            elapsed = round((_time.perf_counter() - t0) * 1000, 1)
+            await websocket.send_json({"type": "step_done", "step": "sentiment", "result": result, "elapsed_ms": elapsed})
+
+        _record_step_status(output, step_list)
+        await websocket.send_json({"type": "done", "results": output["results"], "step_status": output["step_status"]})
+
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        try:
+            await websocket.send_json({"type": "error", "message": str(e)[:300]})
+        except Exception:
+            pass
 
 
 # ============ v8: Sentiment API ============
