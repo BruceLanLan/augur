@@ -11,6 +11,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # Optional legacy modules not yet migrated to augur.*
 ALLOWED_SCANNER_IMPORTS: dict[str, set[str]] = {
     "src/augur/registry.py": {"scanner.ten_x_screener"},
+    "src/augur/consensus/engine.py": {"scanner.ten_x_screener"},
 }
 
 _SCANNER_IMPORT_RE = re.compile(
