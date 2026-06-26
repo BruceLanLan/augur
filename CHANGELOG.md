@@ -2,6 +2,20 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.16.13] - 2026-06-26
+
+P1-9: Dashboard router split — workspace routes extracted to `dashboard/routes/workspace.py`.
+
+### Changed
+
+- **`dashboard/routes/workspace.py`** (new): All `/api/workspace*` REST endpoints (11 routes), `/ws/workspace` WebSocket, `_ws_workspace_clients` broadcast state, `_broadcast_workspace_change()`, and `WorkspaceBody`/`WorkspaceProfileBody`/`WorkspaceActiveBody` models moved here as an `APIRouter`. `authenticate_websocket` called directly instead of going through the `_ws_api_token_ok` wrapper.
+- **`dashboard/routes/__init__.py`** (new): Package marker for the routes sub-package.
+- **`dashboard/app.py`**: Shrunk from 4338 → 4133 lines (−205). Mounts workspace router via `app.include_router(_workspace_router)`. Trimmed `from augur.workspace import (...)` to only the 3 symbols used outside workspace routes: `get_workspace`, `get_enabled_personas`, `resolve_landing_url`.
+
+### Test status
+
+- 2136 passed, 0 failures. All existing workspace and WebSocket tests pass without modification.
+
 ## [10.16.12] - 2026-06-26
 
 P2-5 + P2-8: Workspace streaming, workflow progress WebSocket, augur-terminal meta-skill, and Hermes committee agent.

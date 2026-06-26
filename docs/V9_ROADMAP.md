@@ -140,7 +140,7 @@
 
 `tests/test_pit_fundamentals.py` 新增 16 个离线确定性单测，覆盖 90 天滞后保护的边界（恰好 90 天、89 天）、pe/pb/roe/margin 算术、YoY 增长率、`insufficient` 路径，以及本次发现的两个 bug 各自的回归测试（NaN 老列不被误判为可用、空抓取重试后不污染缓存）。完整测试套件改动前后各跑一遍：2104 passed（不含本次新增测试）/2120 passed（含新增 16 个）/0 failed——本文档此前记录的 2108 这个基线数字本次未能精确对账（差 4 个），怀疑是跨 session 的日期/网络门控测试波动，不是本次改动引入的回归（本次改动只涉及 `pit_fundamentals.py`/`backtest.py`，未触碰任何既有测试文件，且 `--collect-only` 与 `passed` 数字完全一致，说明没有静默跳过）。**诚实声明：** synthesis 那条 gate 的两半都已经老实测过了——P2-3 解决了"分类会不会抽风"，P2-4 测了"手工权重数字本身有没有用"，**结果是打平**：不是"验证通过"，也不是"证伪权重设计"，是"这次终于把它放到真实数据里测了一遍，测出来看不出稳定一致的提升"。要不要保留/调整/去掉这些手工乘数，是产品决策，留给用户，不在本次结论范围内。
 
-**下 session 待定：** P2 全部完成（P2-1/2/3/4/5/6/7/8）；P1-9（dashboard router 拆分）仍 deferred；GIL 护航效应已知限制（v10.16.6）仍按用户决定保留；所有 commit 仍**尚未推送到 origin**，需用户明确指示才能 push（推送命令：`git push augur-next feature/v9-dev:main`）；公开的 `augur` 仓库不要碰；预存测试失败 21 个（`test_pit_fundamentals.py`、`test_regime_v2.py`、`test_v10_14_workspace_workflow.py`），已 git stash 确认非本次引入。下一方向：考虑排查预存测试失败、或与用户讨论是否把 augur-next 推到 augur 公开版。
+**2026-06-26 更新：** 所有 P2 + P1-9 均已完成，当前版本 **v10.16.13**。预存 21 个测试失败根因已确认（python3.11 环境缺 yfinance，装完全绿）。所有 commit（包括 P2-1/2/3/4/5/6/7/8 + P1-9）仍**尚未推送到 origin**，需用户明确指示才能 push（推送命令：`git push augur-next feature/v9-dev:main`）；公开的 `augur` 仓库不要碰。GIL 护航效应已知限制（v10.16.6）仍按用户决定保留，未重新打开。下一方向：与用户讨论是否把 augur-next 推到 augur 公开版，或继续拆其他路由模块（home widgets、persona、analyze 等）。
 
 ---
 
