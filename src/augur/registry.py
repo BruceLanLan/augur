@@ -96,6 +96,29 @@ def _get_sentiment_analyzer():
         return _sentiment_analyzer
 
 
+# ============ Builtin agent manifest ============
+# Maps agent_id -> (module_path, class_name) for lazy per-profile loading.
+_BUILTIN_AGENTS: Dict[str, tuple] = {
+    "arps":          ("augur.personas.arps",          "ArpsAgent"),
+    "aschenbrenner": ("augur.personas.aschenbrenner", "AschenbrennerAgent"),
+    "buffett":       ("augur.personas.buffett",        "BuffettAgent"),
+    "cathie_wood":   ("augur.personas.cathie_wood",    "CathieWoodAgent"),
+    "dalio":         ("augur.personas.dalio",          "DalioAgent"),
+    "dan_bin":       ("augur.personas.dan_bin",        "DanBinAgent"),
+    "dayu":          ("augur.personas.dayu",           "DayuAgent"),
+    "duan_yongping": ("augur.personas.duan_yongping",  "DuanYongpingAgent"),
+    "fisher":        ("augur.personas.fisher",         "FisherAgent"),
+    "graham":        ("augur.personas.graham",         "GrahamAgent"),
+    "li_lu":         ("augur.personas.li_lu",          "LiLuAgent"),
+    "lynch":         ("augur.personas.lynch",          "LynchAgent"),
+    "marks":         ("augur.personas.marks",          "MarksAgent"),
+    "munger":        ("augur.personas.munger",         "MungerAgent"),
+    "serenity":      ("augur.personas.serenity",       "SerenityAgent"),
+    "soros":         ("augur.personas.soros",          "SorosAgent"),
+    "thiel":         ("augur.personas.thiel",          "ThielAgent"),
+    "zhang_lei":     ("augur.personas.zhang_lei",      "ZhangLeiAgent"),
+}
+
 # ============ AgentRegistry ============
 
 class AgentRegistry:
@@ -107,37 +130,31 @@ class AgentRegistry:
         self._register_default_agents()
 
     def _register_default_agents(self):
-        """Register default agents"""
-        from augur.personas.buffett import BuffettAgent
-        from augur.personas.graham import GrahamAgent
-        from augur.personas.lynch import LynchAgent
-        from augur.personas.dalio import DalioAgent
-        from augur.personas.munger import MungerAgent
-        from augur.personas.soros import SorosAgent
-        from augur.personas.marks import MarksAgent
-        from augur.personas.cathie_wood import CathieWoodAgent
-        from augur.personas.fisher import FisherAgent
-        from augur.personas.arps import ArpsAgent
-        from augur.personas.aschenbrenner import AschenbrennerAgent
-        from augur.personas.dayu import DayuAgent
-        from augur.personas.thiel import ThielAgent
-        from augur.personas.duan_yongping import DuanYongpingAgent
-        from augur.personas.zhang_lei import ZhangLeiAgent
-        from augur.personas.li_lu import LiLuAgent
-        from augur.personas.dan_bin import DanBinAgent
-        from augur.personas.serenity import SerenityAgent
+        """Register builtin agents, filtered to the active profile's enabled_personas.
 
-        agents = [
-            BuffettAgent(), GrahamAgent(), LynchAgent(), DalioAgent(), MungerAgent(),
-            SorosAgent(), MarksAgent(), CathieWoodAgent(), FisherAgent(), ArpsAgent(),
-            AschenbrennerAgent(),
-            DayuAgent(),
-            ThielAgent(),
-            DuanYongpingAgent(), ZhangLeiAgent(), LiLuAgent(), DanBinAgent(),
-            SerenityAgent(),
-        ]
-        for agent in agents:
-            self._agents[agent.agent_id] = agent
+        An empty enabled_personas list means "use all" (default behaviour).
+        """
+        import importlib
+        try:
+            from augur.workspace import get_enabled_personas
+            enabled = set(get_enabled_personas())
+        except Exception:
+            enabled = set()
+
+        to_load = (
+            {aid: spec for aid, spec in _BUILTIN_AGENTS.items() if aid in enabled}
+            if enabled
+            else _BUILTIN_AGENTS
+        )
+
+        for agent_id, (module_path, class_name) in to_load.items():
+            try:
+                mod = importlib.import_module(module_path)
+                cls = getattr(mod, class_name)
+                self._agents[agent_id] = cls()
+            except Exception as exc:
+                logger.error("Failed to register builtin agent %s: %s", agent_id, exc)
+
         self._register_yaml_personas()
 
     def _register_yaml_personas(self):

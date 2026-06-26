@@ -301,3 +301,49 @@ class TestConsensusEdgeCases:
         assert math.isfinite(consensus.score)
         assert math.isfinite(consensus.confidence)
         assert 0.0 <= consensus.score <= 10.0
+
+
+class TestLazyPersonaRegistration:
+    """P2-6: AgentRegistry respects enabled_personas from the active profile."""
+
+    def test_empty_enabled_personas_loads_all(self):
+        """Default profile (enabled_personas=[]) must still load all 18 builtins."""
+        registry = AgentRegistry()
+        assert len(registry.get_all()) >= 18
+
+    def test_filtered_enabled_personas_loads_subset(self, monkeypatch):
+        """When enabled_personas is non-empty, only those agents should be registered."""
+        import augur.registry as reg_mod
+        monkeypatch.setattr(
+            "augur.workspace.get_enabled_personas",
+            lambda: ["buffett", "graham"],
+        )
+        registry = AgentRegistry()
+        ids = {a.agent_id for a in registry.get_all()}
+        assert "buffett" in ids
+        assert "graham" in ids
+        assert "dalio" not in ids
+        assert "munger" not in ids
+
+    def test_unknown_agent_id_in_profile_is_silently_skipped(self, monkeypatch):
+        """Unknown IDs in enabled_personas are not in _BUILTIN_AGENTS and thus ignored."""
+        import augur.registry as reg_mod
+        monkeypatch.setattr(
+            "augur.workspace.get_enabled_personas",
+            lambda: ["buffett", "nonexistent_persona"],
+        )
+        registry = AgentRegistry()
+        ids = {a.agent_id for a in registry.get_all()}
+        assert "buffett" in ids
+        assert "nonexistent_persona" not in ids
+
+    def test_workspace_error_falls_back_to_all(self, monkeypatch):
+        """If get_enabled_personas() raises, registry falls back to loading all 18."""
+        import augur.workspace as ws_mod
+
+        def _raise():
+            raise RuntimeError("workspace unavailable")
+
+        monkeypatch.setattr(ws_mod, "get_enabled_personas", _raise)
+        registry = AgentRegistry()
+        assert len(registry.get_all()) >= 18
