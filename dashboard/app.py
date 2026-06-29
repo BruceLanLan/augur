@@ -437,6 +437,11 @@ def _persona_meta() -> List[Dict]:
             "status": "\u5df2\u6ce8\u518c",
             "country": country,
             "is_chinese": agent.agent_id in chinese_investors,
+            "chip_name": (
+                enrichment.get("en_name", agent.name)
+                if agent.agent_id in chinese_investors
+                else enrichment.get("en_name", agent.name).split()[-1]
+            ),
             "is_custom": is_custom,
             "quote": agent.philosophy[0] if agent.philosophy else "\u6295\u8d44\uff0c\u5c31\u662f\u6295\u672a\u6765\u3002",
             "model": per_agent.get(agent.agent_id, default_model),
@@ -3060,7 +3065,7 @@ async def history_page(request: Request):
 
 
 @app.get("/api/history")
-async def api_list_history(
+def api_list_history(
     limit: int = 50,
     page: Optional[int] = None,
     per_page: int = 20,

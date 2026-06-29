@@ -187,7 +187,7 @@
         {% for p in personas %}
         <label class="committee-agent-chip" data-id="{{ p.id }}" onclick="toggleAgent('{{ p.id }}', this)">
             <input type="checkbox" value="{{ p.id }}">
-            <span class="chip-name">{{ p.name.split()[-1] }}</span>
+            <span class="chip-name">{{ p.chip_name }}</span>
         </label>
         {% endfor %}
     </div>

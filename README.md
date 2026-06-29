@@ -6,9 +6,9 @@
 
 # 🦉 Augur
 
-**你的 AI 投资决策委员会**
+**18 位传奇投资人，同时分析同一支股票，给出一个共识裁决。**
 
-*18位传奇投资人，同时分析，一次共识*
+把 Warren Buffett、Ray Dalio、段永平、Cathie Wood 放在同一个房间——他们不会同意对方的观点。这正是重点。
 
 [![v10.0.0](https://img.shields.io/badge/v10.0.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
 [![2136 Tests](https://img.shields.io/badge/2136_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
@@ -21,175 +21,130 @@
 
 ---
 
-## 为什么选择 Augur？
-
-| | 单一策略 / ChatGPT | **Augur** |
-|---|---|---|
-| 分析视角 | 1种 | **18种**（价值 / 成长 / 宏观 / 中国派） |
-| 量化评分 | ❌ | ✅ 0–10分 + Kelly仓位建议 |
-| 多空辩论 | ❌ | ✅ 内置 Bull/Bear 对决 |
-| 投资委员会 | ❌ | ✅ 可配置预设委员会 |
-| 实时行情 | ❌ | ✅ yfinance 自动拉取 |
-| AI 对话 | 通用回答 | ✅ 大师人格化对话 + 行情数据卡片 |
-| 组合优化 | ❌ | ✅ Markowitz 有效前沿 |
-| 多平台接入 | ❌ | ✅ Dashboard / MCP / CLI / Bot |
-| 高度 DIY | ❌ | ✅ YAML 无代码创建专属大师 |
-| 独立安装 | ❌ | ✅ PWA 可安装为桌面/手机应用 |
-| **终端定制** | ❌ | ✅ Bloomberg 风格布局 Profile，多套保存切换 |
-| **Agent 可读写你的终端** | ❌ | ✅ MCP Agent 可查询/修改你的布局与启用大师，而不只是聊天 |
-| **多步骤自动化分析** | ❌ | ✅ `augur_workflow`：抓数据→分析→共识→委员会→辩论→情绪，一条流水线 |
-
----
-
-## 🎭 18位投资大师
-
-### 经典价值派
-
-| 大师 | 核心框架 | 代表问题 |
-|------|---------|---------|
-| Warren Buffett | 护城河 · 长期持有 · ROE | 这家公司五年后还有竞争优势吗？ |
-| Benjamin Graham | 安全边际 · 深度价值 · P/B | 现在的价格比内在价值低多少？ |
-| Charlie Munger | 格栅思维 · 逆向 · 反脆弱 | 我们会在哪里犯错？ |
-| Philip Fisher | 闲聊法 · 成长质量 · 管理层 | 这家公司有没有在积极研发？ |
-
-### 成长与创新派
-
-| 大师 | 核心框架 | 代表问题 |
-|------|---------|---------|
-| Peter Lynch | GARP · PEG · 身边机会 | 这个 PEG 是否低于 1？ |
-| Cathie Wood | 颠覆创新 · Wright定律 · AI | 五年后这个市场会有多大？ |
-| Peter Thiel | 0→1 垄断 · 秘密 · 反共识 | 这家公司有没有别人不知道的东西？ |
-| Leopold Aschenbrenner | AGI基础设施 · 地缘 · 算力 | AI算力瓶颈在哪里？ |
-
-### 宏观与周期派
-
-| 大师 | 核心框架 | 代表问题 |
-|------|---------|---------|
-| Ray Dalio | 全天候 · 债务周期 · 相关性 | 这个资产在滞胀时表现如何？ |
-| George Soros | 反身性 · 宏观交易 · 汇率 | 市场的自我强化机制是什么？ |
-| Howard Marks | 钟摆情绪 · 二阶思考 | 大多数人怎么看这个？ |
-| ARPS | 实际利率 · 黄金 · Crypto | 通胀调整后收益率是多少？ |
-
-### 🇨🇳 中国价值派（全中文对话）
-
-| 大师 | 核心框架 | 代表问题 |
-|------|---------|---------|
-| 段永平 | 本分 · 极度集中 · 逆向 | 这家公司的商业本质是什么？ |
-| 张磊（高瓴） | 结构性长期价值 · 赋能 | 这家公司能做到100年吗？ |
-| 李录（喜马拉雅） | 深度价值 · 安全边际 · A股 | 内在价值是否被严重低估？ |
-| 但斌（东方港湾） | 品牌护城河 · 时代Beta | 这是不是时代最好的公司之一？ |
-| 大宇 BTCdayu | 信息差 · 情绪动量 · Crypto | 市场情绪处于哪个阶段？ |
-
-### 特殊策略
-
-| 大师 | 核心框架 |
-|------|---------|
-| Serenity | AI供应链瓶颈 · 算力依赖分析 |
-
----
-
 ## 🚀 30秒上手
 
 ```bash
 git clone https://github.com/BruceLanLan/augur.git && cd augur
 pip install -e ".[data]"
+augur serve --open          # 打开 Dashboard
+```
 
-# 18位大师同时分析 AAPL
-augur analyze AAPL
+或者直接在命令行：
 
-# 加权共识 + Kelly 仓位建议
-augur consensus NVDA
-
-# 启动 Web 仪表盘
-augur serve --open
+```bash
+augur analyze AAPL          # 18位大师同时分析
+augur consensus NVDA        # 加权共识 + Kelly 仓位建议
+augur workflow TSLA         # 一次调用跑完整分析链
 ```
 
 ---
 
-## 📊 Dashboard（Web 界面）
+## ✨ v10.0 有什么新的
 
-<img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur Dashboard — 召唤18位大师" width="100%">
+<img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur v10 首页 — 实时行情 + Bloomberg 风格终端" width="100%">
 
-Bloomberg 终端 × JRPG HD-2D 美学。输入 Ticker，18位大师同时开始分析。
+### 你的专属 Bloomberg 终端
 
-```bash
-augur serve              # 默认 http://localhost:8000
-augur serve --port 8080  # 自定义端口
-docker compose up        # Docker 一键启动
+**`/settings` 页面现在是一个完整的终端配置系统：**
+
+<img src="docs/images/screenshots/workspace-profiles.png" alt="Terminal Workspace — 多套 Profile 保存切换" width="100%">
+
+- **4 套布局预设**：analyst / trader / committee / minimal，一键切换首页和工具栏
+- **多套命名 Profile**：保存"白天看盘"和"周末研究"两套配置，互不影响
+- **启用大师子集**：只让你信任的几位大师参与共识，权重自动重归一化
+- 配置保存在 `~/.augur/workspace.yaml`，换机器也能带走
+
+### AI Agent 现在能操作你的终端
+
+不只是"聊天"——你的 Claude / Hermes Agent 现在可以直接**读取并修改**你的 Augur 工作区：
+
+```python
+# Claude Desktop / Hermes 里直接调用：
+mcp_augur_workspace_get()                       # 查看当前布局和启用的大师
+mcp_augur_workspace_set(layout_preset="trader") # 切换到 trader 模式
+mcp_augur_workspace_profiles()                  # 管理你的所有 Profile
 ```
 
-安装为独立应用（PWA）：浏览器访问后点击地址栏"安装"按钮，即可像本地应用一样使用。
+### 一次调用跑完整分析链
 
-### 股票分析页
+```bash
+augur workflow NVDA --steps fetch,analyze,consensus,committee
+```
 
-<img src="docs/images/screenshots/report-hd2d.png" alt="股票深度分析 — NVDA BUY 7.6分" width="100%">
+`fetch → analyze → consensus → committee → debate → sentiment` 六步流水线，单步失败不中断，步骤跟随你的 Profile 自动调整。
 
-实时抓取市值、PE、ROE、FCF 等数据，18位大师独立评分后合并共识。输出：
-- **Augur 评分**（0–10）+ **BUY / NEUTRAL / SELL**
-- **置信度** + **Kelly 仓位建议**
-- **The Oracle of Augur**：一句话共识裁决
-- **13 Bullish / 5 Neutral / 0 Bearish**：多空分布
+---
 
-### 多空辩论
+## 📊 Dashboard 全貌
 
-<img src="docs/images/screenshots/04-bullish-critical.png" alt="Bull/Bear 深度分析" width="100%">
+<img src="docs/images/screenshots/personas-hd2d.png" alt="18位投资大师 — 四大流派" width="100%">
 
-自动生成多头与空头的完整论据，帮助发现盲点。
+### 股票分析
+
+<img src="docs/images/screenshots/report-hd2d.png" alt="股票分析页 — 输入 Ticker 召唤18位大师" width="100%">
+
+输入任意股票代码（A股 / 美股 / 港股），18位大师同时给出：
+- **Augur 评分**（0–10）+ **BUY / NEUTRAL / SELL** 信号
+- **Kelly 仓位建议**（基于加权共识置信度）
+- **The Oracle of Augur**：一句话裁决
+- 多空分布：`13 Bullish / 5 Neutral / 0 Bearish`
 
 ### 投资委员会
 
-<img src="docs/images/screenshots/committee-hd2d.png" alt="投资委员会 — 预设 + 自选大师组合" width="100%">
+<img src="docs/images/screenshots/committee-hd2d.png" alt="投资委员会 — 预设组合 + 独立意见 + 最终裁决" width="100%">
 
-选择任意大师组合，召开委员会会议，每位大师独立发言后自动生成裁决，并记录在历史中。
+五套预设委员会，也可以自由组合：
+- **经典价值**：Buffett · Graham · Munger · Fisher
+- **中国价值**：段永平 · 张磊 · 李录 · 但斌
+- **宏观全天候**：Dalio · Soros · Marks · ARPS
+- **创新成长**：Cathie Wood · Thiel · Aschenbrenner · Lynch
+- **全体委员会**：18位全部出席
 
-预设委员会：**经典价值** · **中国价值** · **宏观全天候** · **创新成长** · **全体委员会**
+### 多空辩论
 
-### 终端工作区（Terminal Workspace）
+<img src="docs/images/screenshots/04-bullish-critical.png" alt="结构化辩论 — 多空双方自动交锋" width="100%">
 
-像 Bloomberg 终端一样，把 Dashboard 布局变成你自己的：
-
-- **布局预设**：analyst（默认）/ trader / committee / minimal，一键切换默认首页、隐藏导航栏、Ticker Tape 开关。
-- **多套 Profile**：保存多个命名配置（如 "白天看盘" / "周末深度研究"），随时切换，互不影响。
-- **启用大师子集**：只保留你信任的几位大师参与共识计算，权重自动重新归一化，不是简单平分。
-- **委员会预设**绑定到 Profile，切换 Profile 时一并切换默认委员会组合。
-- 配置持久化在 `~/.augur/workspace.yaml`，支持导出/导入，换机器也能带走你的终端。
-- **对 Agent 开放**：见下方"接入任意平台"——任何 MCP 客户端都能读取/修改你的工作区配置，不需要你手动点 Dashboard。
-
-<img src="docs/images/screenshots/workspace-profiles.png" alt="Terminal Workspace — Bloomberg 风格多套 Profile 配置" width="100%">
-
-### 人格大师页
-
-<img src="docs/images/screenshots/personas-hd2d.png" alt="18位投资大师" width="100%">
+选 2–4 位大师就同一标的展开多轮辩论，自动生成完整的多头和空头论据。
 
 ### 历史记录
 
-<img src="docs/images/screenshots/history.png" alt="分析历史记录" width="100%">
+<img src="docs/images/screenshots/history.png" alt="分析历史 — GitHub 风格热力图 + 详细记录" width="100%">
 
-每次分析自动存档，可按时间、评分、信号筛选回溯。
+每次分析自动存档，GitHub 风格 52 周热力图，按信号 / 评分 / 日期筛选。
 
-### 全部页面
+---
 
-Dashboard / 股票分析 / 信号 / 扫描 / 自选股 / 持仓 / 回测 / AI对话 / 组合优化 / **投资委员会** / 对决 / 辩论 / 历史 / 排行 / 大师 / 创建大师 / Hermes接入指南 / 设置（含**终端工作区**）
+## 🎭 18位投资大师
+
+> 4 大流派，覆盖价值 / 成长 / 宏观 / 中国市场。中国大师**全程中文对话**。
+
+| 流派 | 大师 |
+|------|------|
+| 🏦 经典价值 | Warren Buffett · Benjamin Graham · Charlie Munger · Philip Fisher |
+| 🚀 成长创新 | Peter Lynch · Cathie Wood · Peter Thiel · Leopold Aschenbrenner |
+| 🌍 宏观周期 | Ray Dalio · George Soros · Howard Marks · ARPS Crypto/Gold |
+| 🇨🇳 中国价值 | 段永平 · 张磊（高瓴）· 李录（喜马拉雅）· 但斌（东方港湾）· 大宇 BTCdayu |
+| ⚙️ 特殊策略 | Serenity（AI算力供应链）|
+
+每位大师都有独立的 [Hermes Skill](skills/)，可直接在 Hermes Studio 里单独对话。
 
 ---
 
 ## 🔌 接入任意平台
 
-<img src="docs/images/screenshots/05-available-everywhere.png" alt="一键部署到任意平台" width="100%">
-
 | 平台 | 接入方式 |
 |------|---------|
-| **Web Dashboard** | `augur serve` — 内置 FastAPI + 无配置 |
-| **Claude Desktop** | MCP 配置 → `augur-mcp` 命令 |
-| **Hermes Agent** | `/skill augur-buffett` 直接对话 |
+| **Web Dashboard** | `augur serve` |
+| **Claude Desktop** | MCP 配置 → `augur mcp-server` |
+| **Hermes Agent** | `/skill augur-buffett` |
+| **Claude Code** | `.mcp.json` 自动发现（克隆即用） |
 | **OpenClaw** | YAML manifest 自动注册 |
 | **Telegram / Slack** | `augur telegram` / `augur slack` |
-| **Claude Code / Codex** | `.mcp.json` 自动发现 |
 
-### MCP 快速配置
+### MCP 13个工具
 
-**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
+// Claude Desktop (~/.config/claude/claude_desktop_config.json)
 {
   "mcpServers": {
     "augur": { "command": "augur", "args": ["mcp-server"] }
@@ -197,71 +152,59 @@ Dashboard / 股票分析 / 信号 / 扫描 / 自选股 / 持仓 / 回测 / AI对
 }
 ```
 
-**Hermes Studio** (`~/.hermes/config.yaml`):
-```yaml
-mcp_servers:
-  augur:
-    command: augur
-    args: [mcp-server]
-```
-
-### MCP 工具（13个）
-
 | 工具 | 用途 |
 |------|------|
 | `mcp_augur_analyze` | 单个或全部大师分析 |
 | `mcp_augur_consensus` | 加权共识 + Kelly 仓位 |
-| `mcp_augur_committee` | 投资委员会（独立意见+裁决） |
+| `mcp_augur_committee` | 投委会（独立意见 + 裁决） |
 | `mcp_augur_debate` | 多轮结构化辩论 |
-| `mcp_augur_fetch` | 实时行情数据（yfinance） |
-| `mcp_augur_sentiment` | 社交情绪分析（StockTwits + 新闻） |
-| `mcp_augur_list_personas` | 列出全部18位大师 |
-| `mcp_augur_configure` | 配置大师模型参数 |
-| `mcp_augur_create_persona` | 无代码创建自定义大师 |
-| `mcp_augur_workflow` | 多步骤流水线：fetch→analyze→consensus→committee→debate→sentiment |
-| `mcp_augur_workspace_get` | 读取你的终端布局 / 启用大师 / 委员会预设 |
-| `mcp_augur_workspace_set` | 代你修改终端布局（如切到 trader 预设、只启用价值派大师） |
-| `mcp_augur_workspace_profiles` | 列出 / 创建 / 删除 / 切换终端 Profile |
+| `mcp_augur_workflow` | 完整分析流水线 |
+| `mcp_augur_workspace_get` | 🆕 读取你的终端配置 |
+| `mcp_augur_workspace_set` | 🆕 修改你的终端配置 |
+| `mcp_augur_workspace_profiles` | 🆕 管理 Profile |
+| `mcp_augur_fetch` | 实时行情 |
+| `mcp_augur_sentiment` | 社交情绪分析 |
+| `mcp_augur_create_persona` | 创建自定义大师 |
+| `mcp_augur_list_personas` | 列出全部大师 |
+| `mcp_augur_configure` | 配置模型参数 |
 
 ---
 
-## 💻 CLI 命令
+## 💻 CLI 完整命令
 
 ```bash
 # 分析
-augur analyze AAPL                      # 18位大师共识
-augur analyze AAPL --persona buffett    # 单个大师
-augur consensus NVDA                    # 加权共识 + Kelly 仓位
-augur report TSLA                       # 生成深度 Markdown 分析报告
+augur analyze AAPL                              # 18位大师共识
+augur analyze AAPL --persona buffett            # 单个大师
+augur consensus NVDA                            # 加权共识 + Kelly 仓位
+augur workflow TSLA --steps fetch,analyze,consensus,committee
 
-# 实时监控
-augur serve --port 8000 --open          # 启动 Dashboard，自动打开浏览器
-augur watch AAPL NVDA TSLA             # 实时监控（60s 刷新）
-augur watch NVDA --alert-above 7.5     # 评分超阈值时提醒
+# Dashboard
+augur serve --port 8000 --open                  # 启动并自动打开浏览器
 
-# 组合管理
-augur portfolio AAPL NVDA TSLA         # Kelly 组合配置建议
-augur watchlist-add AAPL               # 添加到自选股
-augur backtest AAPL --days 30          # 历史回测
+# 监控
+augur watch AAPL NVDA TSLA                      # 60s 刷新
+augur watch NVDA --alert-above 7.5             # 评分超阈值提醒
 
-# Agent / MCP
-augur mcp-server                       # 启动 MCP server（stdio，供 Claude/Hermes 接入）
-augur workflow AAPL                    # 多步骤流水线：fetch→analyze→consensus→committee→debate→sentiment
-augur workflow NVDA --steps fetch,analyze,consensus,committee --agents buffett,munger,dalio
-augur skills                           # 列出所有 Agent Skill
-augur skills --school value            # 按流派筛选
+# 组合
+augur portfolio AAPL NVDA TSLA                 # Kelly 配置建议
+augur backtest AAPL --days 30                  # 历史回测
 
-# Bot 推送
-augur telegram                         # 启动 Telegram Bot
-augur slack                            # 启动 Slack Bot
+# Agent
+augur mcp-server                               # 启动 MCP server（stdio）
+augur skills                                   # 列出所有 Skill
+augur skills --school value                    # 按流派筛选
+
+# Bot
+augur telegram / augur slack
 ```
 
 ---
 
-## 🎨 高度 DIY — 创建专属大师
+## 🎨 创建专属大师
 
 ```bash
-# 方式一：Dashboard 无代码构建器（推荐）
+# 方式一：Dashboard 无代码构建器
 augur serve
 # 访问 http://localhost:8000/create-persona
 
@@ -283,154 +226,53 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 
 ---
 
-## 📝 版本日志
+## 📝 更新日志
 
-> 想看本次更新更详细的功能说明（非技术向）？见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+> 非技术向用户说明见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
 <summary><strong>v10.0.0 — 终端工作区 + Agentic 工作流 + 13 MCP 工具 + WebSocket 实时推送 (current)</strong></summary>
 
-**这是 Augur v10 的正式公开发布。** 从 v8 到 v10 是一次全面升级：
+**v8 → v10 全面升级要点：**
 
-- **终端工作区**（Bloomberg Terminal 风格）：`/settings` 页全新布局系统——analyst / trader / committee / minimal 四套预设，多套命名 Profile 保存切换，`enabled_personas` 大师子集过滤（权重自动重归一化），委员会预设绑定 Profile，`~/.augur/workspace.yaml` 持久化。
-- **13 个 MCP 工具**：分析、共识、委员会、辩论、情绪、行情获取、工作流、列出大师、创建大师、配置、**工作区读取/写入/Profile 管理**（v10 新增 3 个工作区工具）。任意 MCP 客户端（Claude Desktop / Hermes / OpenClaw / Claude Code）可直接操作你的终端配置。
-- **`augur_workflow` 多步骤流水线**：`fetch→analyze→consensus→committee→debate→sentiment` 单次调用，支持 `enabled_personas` 过滤，步骤跟随工作区布局预设，局部失败不中断。
-- **WebSocket 实时推送**：`/ws/workspace` 工作区变更广播，`/ws/workflow` 逐步骤 `step_start/step_done/done` 消息流，所有分析接口改同步 `def` + `run_in_threadpool`，不再阻塞事件循环。
-- **共识引擎升级**：行业矩阵权重、市场 regime 路由（磁滞+确认扫描）、概率校准、滚动 IC、MetaModel 中位数混合、点时基本面 provider（无前视泄露）。
-- **19 个 Hermes Skills + 1 个 augur-terminal 元技能**：每位大师有完整人格化 system prompt，中国大师全中文对话，augur-terminal 统一入口（13 工具、4 预设、标准工作流指南）。
-- **Dashboard 全面打磨**：4 语言 i18n、GitHub 风格 History 热力图、Optimizer 有效前沿图、PWA 可安装、键盘快捷键面板、Ticker Tape WebSocket 驱动、所有页面 CSV 导出。
-- 测试覆盖：2136 个测试全部通过。
+- 🆕 **Terminal Workspace**：Bloomberg 风格多套 Profile，布局预设，大师子集过滤，委员会预设绑定
+- 🆕 **3 个工作区 MCP 工具**：Agent 可读写你的终端配置（`workspace_get/set/profiles`）
+- 🆕 **`augur_workflow`**：6 步分析流水线，单步失败不中断，步骤联动 Profile
+- 🆕 **WebSocket 实时推送**：`/ws/workspace` 状态广播 + `/ws/workflow` 逐步进度
+- 🆕 **augur-terminal 元技能**：Hermes 统一入口，13 工具 + 15 页面 + 4 预设
+- 🆕 **Hermes committee.yaml**：委员会主席 Agent 角色
+- ✅ 共识引擎：行业权重 · regime 路由 · MetaModel · 点时基本面
+- ✅ Dashboard：4 语言 i18n · 历史热力图 · PWA · 键盘快捷键 · CSV 导出
+- ✅ 2136 个测试全部通过
 </details>
 
 <details>
-<summary><strong>v10.16.x — 内部迭代（v10.0.0 包含所有修复）</strong></summary>
+<summary><strong>v10.16.x — 内部迭代（已全部包含在 v10.0.0 中）</strong></summary>
 
-- v10.16.7：历史页日历热力图修复 + 组合优化器 Sharpe 单位修复
-- v10.16.6：投委会/深度报告阻塞缓解（改同步 def + run_in_threadpool）
-- v10.16.5：首页 11 个接口事件循环阻塞修复
-- v10.16.4：投委会 Kelly 仓位双重放大修复
+- v10.16.7：历史热力图 + Optimizer Sharpe 修复
+- v10.16.6：投委会事件循环阻塞缓解
+- v10.16.5：首页 11 个接口阻塞修复
+- v10.16.4：投委会 Kelly 仓位显示修复
 - v10.16.3：workflow 步骤联动布局预设
-- v10.16.2：workflow 局部失败容错 + 工作区 ETag 条件请求
+- v10.16.2：workflow 局部失败容错 + 工作区 ETag
 - v10.16.1：MCP 工作区工具 + 委员会预设接线
-- v10.16.0：P2 功能批次（WebSocket 推送、懒加载大师注册、augur-terminal 元技能）
-</details>
-
-<details>
-<summary><strong>v10.16.7 — 修复历史页日历热力图不显示 + 组合优化器 Sharpe/权重计算错误</strong></summary>
-
-- **历史记录页 52 周日历热力图一直没显示**：前端请求 `/api/history?page=1&per_page=365`，但接口分页模式限制 `per_page<=100`，超过直接 400，错误被空 `.catch()` 默默吞掉。改为用接口本身支持的非分页 `limit` 模式（`/api/history?limit=365`），日历正常显示。
-- **组合优化器算出来的 Sharpe 比率和最优持仓权重单位不匹配**：优化器内部用的是"每日收益率"，却直接拿"年化无风险利率"去减，导致几乎所有股票的"超额收益"都被算成负数——不仅显示的 Sharpe 比率离谱（实测 -1.44，正确应为 +2 左右），连最优权重的计算公式本身都被污染，给出的持仓建议不可信。修复为先把年化利率换算成每日利率再使用。
-- 测试覆盖：完整测试套件 2136 个全部通过。
-</details>
-
-<details>
-<summary><strong>v10.16.6 — 大幅缓解（非彻底解决）投委会/深度报告卡顿</strong></summary>
-
-- **同一根因延伸到投委会与深度报告**：`analyze_ticker`(`/api/analyze`)、`report_ticker`(`/api/report`，即"深度报告")、`api_committee`(`/api/committee`)、`api_compare`、`api_debate`、`compare_personas`、`get_persona_opinion`、`api_run_watchlist_analysis` 共 8 个接口同样是 `async def` 却内部同步调用 yfinance 和 18 位投资大师分析，函数体里完全没有 `await`。全部改为同步 `def`。
-- **`/ws/analyze`、`/ws/committee` 两个 WebSocket 接口不能改成同步 `def`**（Starlette 要求 WebSocket 路由必须是 `async def`），改为用 `run_in_threadpool` 把里面阻塞的 yfinance 调用丢进线程池，不再占用事件循环。
-- 顺手修掉一个潜在的隐藏 bug：`analyze_ticker` 里原来用 `asyncio.get_event_loop().run_in_executor(...)` 做通知规则的"fire-and-forget"派发，转成同步函数后这行在线程池里会直接报错（被外层 `except Exception` 默默吞掉，导致规则通知静默失效），改成普通后台线程后语义不变且不再依赖事件循环。
-- 新增/扩展测试，回归测试覆盖的接口数从 11 个增加到 19 个。
-- **已知局限**：实测发现这次只是把"整个服务器彻底卡死"变成"其他请求被拖慢 3 秒以上"——根因是 18 位投资大师的分析是纯 CPU 计算，丢进线程池绕不开 Python GIL，无法真正并行。彻底解决需要给分析逻辑提速或换成多进程，目前先如实记录为已知限制，详见 [CHANGELOG.md](CHANGELOG.md)。
-</details>
-
-<details>
-<summary><strong>v10.16.5 — 修复首页仪表盘点不动/数据加不出来</strong></summary>
-
-- **修复事件循环被同步 yfinance 调用阻塞**：板块行情、加密货币总览、大宗商品、国债收益率、热门标的、单标的实时行情、搜索、7日迷你走势图、全球市场总览、涨跌幅领先、恐慌贪婪指数共 11 个接口被声明成 `async def`，但内部做的是同步阻塞的 yfinance 网络请求；单进程 uvicorn 服务器下，这会让整个事件循环卡住，期间所有其他并发请求（包括用户点击触发的请求）都会被一起拖住——这正是用户反馈"首页仪表盘点不动""很多地方数据不显示"的根因。改为同步 `def` 后交给 Starlette 线程池执行，不再阻塞事件循环。
-- **板块行情接口补上并行抓取 + 超时保护**：原来 11 个 ETF 是逐个同步抓取、无超时、无降级，曾实测单次耗时 9.8s~15s+（甚至完全超时）。现在改为线程池并行抓取，单标的超时 10 秒自动降级为 0，不再拖累整体响应。
-- 用 Playwright 真实浏览器复现并确认修复：并发请求一个慢接口和一个快接口，修复前两者耗时被拖到一致（同步阻塞证据），修复后两者解耦，首页全部 widget 在 15 秒内加载完成，不再有卡死的加载骨架屏。
-- 新增测试，包括一条结构性回归测试，直接断言这 11 个接口必须是同步 `def`，防止未来再误标成 `async def`。
-</details>
-
-<details>
-<summary><strong>v10.16.4 — 修复投资委员会 Kelly 仓位显示错误</strong></summary>
-
-- **修复 `/api/committee` 与 `/ws/committee` 仓位百分比双重放大**：`position_pct` 在共识层已经是百分数（如 19.9 代表 19.9%），committee 接口又乘了一次 100，导致页面显示 "1990.0%" 这种明显错误的数字。两处统一改为直接使用原值。
-- 新增回归测试覆盖 REST 与 WebSocket 两条路径的 `kelly_pct` 取值，防止再次回归。
-</details>
-
-<details>
-<summary><strong>v10.16.3 — 工作流步骤跟随终端布局预设</strong></summary>
-
-- **`augur_workflow` 默认步骤联动布局预设**：不再硬编码 `fetch,analyze,consensus`；CLI `--steps`、MCP `augur_workflow`、HTTP `/api/workflow` 留空时，会跟随当前激活 Profile 的布局预设——`analyst`=`fetch,analyze,consensus`，`trader`/`minimal`=`fetch,consensus`（更快出信号），`committee`=`fetch,analyze,consensus,committee`。显式传入 `--steps` 时仍以传入值为准。
-- **定制化与 agentic 两条线打通**：你在 `/settings` 选的终端布局，现在会同时改变 Agent 调用 `augur_workflow` 时的默认行为，而不只是改 Dashboard 的页面展示。
-</details>
-
-<details>
-<summary><strong>v10.16.2 — 工作流局部失败容错 + 工作区 ETag</strong></summary>
-
-- **`augur_workflow` 局部失败不再中断整条流水线**：analyze / consensus / committee 任一步骤抛错时，会把错误记录进该步骤结果（`{"error": ...}`），其余步骤继续执行；汇总摘要新增"Step Errors"小节，错误一目了然。
-- **`mcp_augur_workspace_get` 支持条件请求（ETag）**：客户端可携带上次返回的 ETag，配置未变化时返回 304，减少不必要的全量传输。
-- **文档纠错**：修正 `docs/AGENT_PEER_REVIEW_SYNTHESIS.md` 中 P1-8（用户反馈路径）的状态——该功能已在 v10.15.0 的 consensus 第三轮中落地（`USER_FEEDBACK_DIR` 覆盖优先级），并非"待办"。
-</details>
-
-<details>
-<summary><strong>v10.16.1 — MCP 终端工作区工具 + 委员会预设接线</strong></summary>
-
-- **`mcp_augur_workspace_get/set/profiles`**：任意 MCP 客户端（Claude Desktop / Hermes / OpenClaw）现在可以读取并代你修改 Dashboard 终端布局、启用大师子集、委员会预设——agent 不再只是"问答助手"，而是能感知并操作你的工作区。
-- **共识引擎可配置化**：MetaModel 中位数混合权重不再是隐藏的固定 50/50，可通过 `consensus.meta_model_weight` 调节（0 = 完全关闭）。
-- **委员会页面接入工作区**：切到 `/committee` 页面时会自动读取你保存的委员会预设并套用，不用每次手动选。
-- **18 位大师的 manifest.json / Hermes 配置版本同步**：不再固定写死旧版本号，工具说明补全到完整的 13 个。
-- **代码审查批次修复**：超时分支误判、缓存并发加锁、文档/manifest 工具数量同步。
-</details>
-
-<details>
-<summary><strong>v10.14.0–10.15.1 — 终端工作区 + Agentic 工作流 + 共识增强</strong></summary>
-
-- **Terminal Workspace**（`/settings`）：Bloomberg 风格布局预设（analyst/trader/committee/minimal）、多 Profile 保存切换、隐藏导航、Ticker Tape 开关、导出/导入配置。
-- **`augur_workflow`**：一次调用串联 fetch→analyze→consensus→committee→debate→sentiment 多步骤流水线，支持限定 `enabled_personas`。
-- **共识增强模块**（`augur.consensus`）：行业矩阵权重、市场 regime 路由、概率校准、滚动 IC、宏观特征、风险管理。
-- **Agent Peer Review**：项目内部 9 路自检流程，修复 persona 权重重归一化、服务端首页跳转、workflow 去重等问题。
-</details>
-
-<details>
-<summary><strong>v10.0.0–10.13.0 — 国际化 + Dashboard 体验打磨</strong></summary>
-
-- **四语言 i18n**：新增日语/韩语，中/英/日/韩循环切换 + 降级链。
-- **图表与导出**：因子细分表、Performance IC 柱状图、Signals/Backtest/Scanner/Optimizer 全面支持 CSV 导出，Committee/Debate 报告复制与下载。
-- **History 日历热力图**：GitHub 风格贡献图展示分析活跃度，点击日期筛选。
-- **体验细节**：键盘快捷键帮助面板（`?`）、最近分析 chips、URL 状态同步、Scanner/Stocks 一键加自选股、Signals/History 跨页 Ticker 导航。
-- **`augur-mcp` 独立入口**：专供 Hermes Studio / Claude Desktop 等桌面客户端直接 spawn 的 stdio 入口。
-</details>
-
-<details>
-<summary><strong>v9.0.6 — PWA 可安装独立应用</strong></summary>
-
-- **PWA 支持**：Dashboard 可作为独立应用安装到桌面或手机，离线缓存核心界面。
-- **Ticker Tape**：首页顶部实时价格滚动条（WebSocket 驱动，支持暂停/断线重连）。
-- **Chat 数据卡片**：AI对话页顶部嵌入实时行情卡，Augur 共识信号 60 秒自动刷新。
 </details>
 
 <details>
 <summary><strong>v9.0.x — Hermes Agent + 委员会体系</strong></summary>
 
-- **19个专属 Hermes Skill**：每位大师有完整人格化 system prompt，中国大师全中文对话。
-- **9个 MCP 工具**：新增 committee / sentiment / create_persona / debate。
-- **委员会预设**：一键加载经典价值 / 中国价值 / 宏观全天候 / 创新成长 / 全体委员会。
-- **Hermes 接入指南页**（`/hermes-setup`）：分步骤集成说明，代码一键复制。
-- **.mcp.json 自动发现**：Claude Code / 任意 MCP 客户端自动找到所有工具。
-- **`augur serve / watch / skills / portfolio` CLI**：完整命令行工具集。
-- **install.sh 一键安装脚本**，Docker v9，Makefile v2。
+- 19 个 Hermes Skill，中国大师全中文对话
+- 9 个 MCP 工具（committee / sentiment / create_persona / debate）
+- 委员会预设系统 + Hermes 接入指南页
+- PWA 可安装 + Ticker Tape WebSocket + Chat 数据卡片
 </details>
 
 <details>
-<summary><strong>v8.2.x — Optimizer + Rules→Bot + AI 对话</strong></summary>
+<summary><strong>v8.2.x — HD-2D 设计系统 + Optimizer + AI 对话</strong></summary>
 
-- **Optimizer 有效前沿图**：Markowitz 散点+折线图，金色星标最优组合点。
-- **Rules→Bot 打通**：规则满足时自动推送 Telegram / Slack / WeChat / Lark 通知。
-- **AI 对话升级**：支持真实 LLM（claude-opus-4-8），多轮历史，⚡LLM / 📋模板 徽章。
-- **Scanner 加固**：大小写不敏感去重，单 ticker 失败不阻断批量扫描。
-- **后端线程安全**：double-checked locking，原子写 history，`_write_lock`。
-- **WCAG AA 对比度合规**，CSS 变量全面替换硬编码颜色。
-</details>
-
-<details>
-<summary><strong>v8.2.0 — HD-2D 设计系统全面上线</strong></summary>
-
-- AI Chat（11位大师对话）、Portfolio Optimizer、Committee、Debate、History、Leaderboard 全部上线。
-- LearningEngine（IC自动调权）、SentimentAnalyzer（社交情绪融合）。
-- WebSocket 实时价格推流 `/ws/prices`，RulesEngine DSL 多通道告警。
-- HD-2D 设计系统：ExecCard / OracleSays / ScorecardGrid 组件，响应式断点，双语数字格式。
+- Markowitz 有效前沿图 · Rules→Bot 推送 · AI 对话 LLM 支持
+- HD-2D 设计系统：ExecCard / OracleSays / ScorecardGrid
+- WCAG AA 合规 · 线程安全 · Scanner 加固
 </details>
 
 ---
