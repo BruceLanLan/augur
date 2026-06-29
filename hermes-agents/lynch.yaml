@@ -8,7 +8,7 @@ display_name: "Peter Lynch"
 description: "Fidelity Magellan — PEG ratio & ten-bagger hunter · augur_workflow MCP"
 persona_id: lynch
 language: en
-version: "10.16.13"
+version: "10.0.0"
 
 mcp:
   command: augur-mcp

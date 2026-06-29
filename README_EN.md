@@ -10,8 +10,8 @@
 
 *18 legendary investors. Simultaneous analysis. One verdict.*
 
-[![v10.16.7](https://img.shields.io/badge/v10.16.7-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2100 Tests](https://img.shields.io/badge/2100_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.0.0](https://img.shields.io/badge/v10.0.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2136 Tests](https://img.shields.io/badge/2136_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-Installable_App-blue?style=for-the-badge)](#-dashboard)
@@ -138,6 +138,8 @@ Automatically generates a full bull and bear case to surface blind spots.
 
 ### Investment Committee
 
+<img src="docs/images/screenshots/committee-hd2d.png" alt="Investment Committee — preset + custom master lineup" width="100%">
+
 Select any combination of masters, convene a committee session — each master speaks independently and a verdict is auto-generated, then saved to history.
 
 Preset committees: **Classic Value** · **China Value** · **Macro All-Weather** · **Disruptive Growth** · **Full Council**
@@ -152,6 +154,8 @@ Make the Dashboard your own, Bloomberg-terminal style:
 - **Committee preset bound to profile**: switching profiles also switches your default committee lineup.
 - Persisted to `~/.augur/workspace.yaml`, with export/import — take your terminal setup to a new machine.
 - **Open to agents**: see "Deploy Anywhere" below — any MCP client can read and modify your workspace config without you touching the Dashboard.
+
+<img src="docs/images/screenshots/workspace-profiles.png" alt="Terminal Workspace — Bloomberg-style multi-profile configuration" width="100%">
 
 ### Personas
 
@@ -284,11 +288,39 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > For a more detailed, non-technical walkthrough of this release, see [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
 
 <details open>
-<summary><strong>v10.16.7 — Fixed history page calendar heatmap + optimizer Sharpe/weight unit mismatch (current)</strong></summary>
+<summary><strong>v10.0.0 — Terminal Workspace + Agentic Workflow + 13 MCP Tools + WebSocket Streaming (current)</strong></summary>
+
+**This is the official public launch of Augur v10.** The v8→v10 jump is a full-stack upgrade:
+
+- **Terminal Workspace** (Bloomberg Terminal style): the `/settings` page brings a full layout system — analyst / trader / committee / minimal presets, multiple named profiles you can save and switch between, `enabled_personas` master-subset filtering (weights auto-renormalized), committee preset bound to profile, persisted in `~/.augur/workspace.yaml`.
+- **13 MCP tools**: analyze, consensus, committee, debate, sentiment, market fetch, workflow, list personas, create persona, configure, plus **3 new workspace tools** — workspace get / set / profiles. Any MCP client (Claude Desktop / Hermes / OpenClaw / Claude Code) can directly manipulate your terminal configuration.
+- **`augur_workflow` multi-step pipeline**: `fetch→analyze→consensus→committee→debate→sentiment` in a single call, with `enabled_personas` scoping, step-level failure isolation, and default steps that follow your workspace layout preset.
+- **WebSocket real-time streaming**: `/ws/workspace` broadcasts state changes; `/ws/workflow` streams per-step `step_start/step_done/done` messages. All analysis endpoints converted to sync `def` + `run_in_threadpool` to avoid blocking the event loop.
+- **Consensus engine upgrade**: industry-matrix weighting, market-regime routing (hysteresis + confirmation scan), probability calibration, rolling IC, MetaModel median blending, point-in-time fundamentals provider (look-ahead-free).
+- **19 Hermes Skills + 1 augur-terminal meta-skill**: every master has a full persona-specific system prompt; Chinese masters respond in Chinese. The `augur-terminal` skill provides a unified entry point with all 13 tools, 4 presets, and a standard workflow guide.
+- **Dashboard polish**: 4-language i18n, GitHub-style History heatmap, Optimizer efficient frontier, PWA install, keyboard shortcuts panel, WebSocket-driven Ticker Tape, CSV export on all pages.
+- Test coverage: 2136 tests, all passing.
+</details>
+
+<details>
+<summary><strong>v10.16.x — Internal iteration (v10.0.0 includes all fixes)</strong></summary>
+
+- v10.16.7: History calendar heatmap fix + optimizer Sharpe unit fix
+- v10.16.6: Committee / deep-report event-loop blocking mitigated (sync def + run_in_threadpool)
+- v10.16.5: Homepage 11-handler event-loop blocking fixed
+- v10.16.4: Committee Kelly position double-scaling fixed
+- v10.16.3: workflow steps follow workspace layout preset
+- v10.16.2: workflow partial-failure resilience + workspace ETag conditional GET
+- v10.16.1: MCP workspace tools + committee-preset wiring
+- v10.16.0: P2 feature batch (WebSocket streaming, lazy persona registration, augur-terminal meta-skill)
+</details>
+
+<details>
+<summary><strong>v10.16.7 — Fixed history page calendar heatmap + optimizer Sharpe/weight unit mismatch</strong></summary>
 
 - **History page's 52-week calendar heatmap never rendered**: the page requested `/api/history?page=1&per_page=365`, but the endpoint's paginated mode caps `per_page` at 100 and returns 400 above that — silently swallowed by an empty `.catch()`. Fixed by switching to the endpoint's existing unpaginated `limit` mode (`/api/history?limit=365`).
 - **Portfolio optimizer's Sharpe ratio and optimal weights used mismatched units**: the optimizer works with daily returns internally, but subtracted an annual risk-free rate directly from them — making "excess return" strongly negative for nearly every asset, corrupting both the displayed Sharpe ratio (observed -1.44 where ~+2.0 was correct) and the max-Sharpe weight solution itself. Fixed by converting the risk-free rate to daily before use.
-- Test coverage: full suite, 2100 passing.
+- Test coverage: full suite, 2136 passing.
 </details>
 
 <details>

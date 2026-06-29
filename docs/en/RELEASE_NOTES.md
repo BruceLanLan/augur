@@ -2,6 +2,69 @@
 
 > Plain-language feature notes for users (for the technical diff, see [CHANGELOG.md](../../CHANGELOG.md)).
 
+---
+
+## v10.0.0 — Public launch (2026-06-29)
+
+This is the first official public release of **Augur v10**. The v8.2→v10.0 jump is a full-stack upgrade.
+
+### Terminal Workspace (Bloomberg Terminal style)
+
+The `/settings` page gains a complete layout system so you can make the Dashboard your own:
+
+- **4 layout presets**: `analyst` (default, full features) / `trader` (minimal, fastest signal) / `committee` (committee-centric) / `minimal` (most nav hidden). Switching preset changes the default landing page, Ticker Tape toggle, and which nav items are visible.
+- **Multiple named profiles**: save several workspace configs and switch between them without losing the others — e.g. "day trading" and "weekend deep research" can be completely different setups.
+- **Enabled-master subset**: tick only the masters you trust in Settings; the consensus system renormalizes weights among only those masters — not a simple equal split, but a proper redistribution.
+- **Committee preset bound to profile**: switching profiles also switches your default committee lineup.
+- Persisted in `~/.augur/workspace.yaml`, with export/import — take your setup to a new machine.
+
+### Agents can operate your terminal
+
+Any MCP client (Claude Desktop, Hermes, OpenClaw, Claude Code) can now read and modify your workspace config directly — no manual Dashboard clicks needed:
+
+- `mcp_augur_workspace_get` — read your current terminal layout and enabled masters
+- `mcp_augur_workspace_set` — let an agent switch your preset, update your committee lineup, etc.
+- `mcp_augur_workspace_profiles` — list, create, delete, switch profiles
+
+### `augur_workflow` — full analysis chain in one call
+
+```bash
+augur workflow NVDA --steps fetch,analyze,consensus,committee
+```
+
+Or via MCP: `mcp_augur_workflow`. A single call chains `fetch → analyze → consensus → committee → debate → sentiment`. Any step that fails records its error and the chain continues. Default steps follow your layout preset — `trader` mode defaults to `fetch,consensus` only (faster), `committee` mode adds `committee`.
+
+### WebSocket real-time streaming
+
+- **`/ws/workspace`**: get the current workspace state on connect, then live-push updates whenever any client (Dashboard or MCP) changes the config.
+- **`/ws/workflow`**: per-step progress — `step_start`, `step_done` (with results), `done`.
+
+### 13 MCP tools (3 new workspace tools added in v10)
+
+Full list: analyze, consensus, committee, debate, fetch, sentiment, list_personas, configure, create_persona, workflow, **workspace_get, workspace_set, workspace_profiles**.
+
+### 19 Hermes Skills + augur-terminal meta-skill
+
+Each master has its own Hermes skill. Chinese masters respond in Chinese. New: `augur-terminal` meta-skill as a unified entry point for the full Bloomberg-style terminal (all 13 tools, 15 pages, 4 presets). New: `committee.yaml` Hermes agent for the Committee Chair role.
+
+### Dashboard improvements
+
+- 4-language i18n (zh/en/ja/ko), keyboard shortcuts panel (`?`), PWA installable
+- History 52-week heatmap (GitHub style), Optimizer efficient frontier
+- CSV export on all main pages, WebSocket-driven Ticker Tape
+
+### Consensus engine
+
+Industry-matrix weights, regime routing (hysteresis + confirmation), point-in-time fundamentals (no look-ahead), MetaModel blending, probability calibration, rolling IC.
+
+### Test coverage
+
+2136 tests passing.
+
+---
+
+## v10.16.9 — OOS Validation (internal, included in v10.0.0)
+
 ## What this update fixes
 
 v10.16.8 resolved whether regime detection (bull/bear/sideways crossed with high/low volatility) could flip-flop from a single noisy day. It explicitly left the second half of that gate open: "whether the hand-picked `_REGIME_ADJUSTMENTS` multipliers themselves actually help has never been validated — left for a later P2-4."

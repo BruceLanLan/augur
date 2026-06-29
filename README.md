@@ -10,8 +10,8 @@
 
 *18位传奇投资人，同时分析，一次共识*
 
-[![v10.16.7](https://img.shields.io/badge/v10.16.7-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2100 Tests](https://img.shields.io/badge/2100_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.0.0](https://img.shields.io/badge/v10.0.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2136 Tests](https://img.shields.io/badge/2136_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-可安装应用-blue?style=for-the-badge)](#-dashboard-web-界面)
@@ -138,6 +138,8 @@ docker compose up        # Docker 一键启动
 
 ### 投资委员会
 
+<img src="docs/images/screenshots/committee-hd2d.png" alt="投资委员会 — 预设 + 自选大师组合" width="100%">
+
 选择任意大师组合，召开委员会会议，每位大师独立发言后自动生成裁决，并记录在历史中。
 
 预设委员会：**经典价值** · **中国价值** · **宏观全天候** · **创新成长** · **全体委员会**
@@ -152,6 +154,8 @@ docker compose up        # Docker 一键启动
 - **委员会预设**绑定到 Profile，切换 Profile 时一并切换默认委员会组合。
 - 配置持久化在 `~/.augur/workspace.yaml`，支持导出/导入，换机器也能带走你的终端。
 - **对 Agent 开放**：见下方"接入任意平台"——任何 MCP 客户端都能读取/修改你的工作区配置，不需要你手动点 Dashboard。
+
+<img src="docs/images/screenshots/workspace-profiles.png" alt="Terminal Workspace — Bloomberg 风格多套 Profile 配置" width="100%">
 
 ### 人格大师页
 
@@ -284,11 +288,39 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 想看本次更新更详细的功能说明（非技术向）？见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.16.7 — 修复历史页日历热力图不显示 + 组合优化器 Sharpe/权重计算错误 (current)</strong></summary>
+<summary><strong>v10.0.0 — 终端工作区 + Agentic 工作流 + 13 MCP 工具 + WebSocket 实时推送 (current)</strong></summary>
+
+**这是 Augur v10 的正式公开发布。** 从 v8 到 v10 是一次全面升级：
+
+- **终端工作区**（Bloomberg Terminal 风格）：`/settings` 页全新布局系统——analyst / trader / committee / minimal 四套预设，多套命名 Profile 保存切换，`enabled_personas` 大师子集过滤（权重自动重归一化），委员会预设绑定 Profile，`~/.augur/workspace.yaml` 持久化。
+- **13 个 MCP 工具**：分析、共识、委员会、辩论、情绪、行情获取、工作流、列出大师、创建大师、配置、**工作区读取/写入/Profile 管理**（v10 新增 3 个工作区工具）。任意 MCP 客户端（Claude Desktop / Hermes / OpenClaw / Claude Code）可直接操作你的终端配置。
+- **`augur_workflow` 多步骤流水线**：`fetch→analyze→consensus→committee→debate→sentiment` 单次调用，支持 `enabled_personas` 过滤，步骤跟随工作区布局预设，局部失败不中断。
+- **WebSocket 实时推送**：`/ws/workspace` 工作区变更广播，`/ws/workflow` 逐步骤 `step_start/step_done/done` 消息流，所有分析接口改同步 `def` + `run_in_threadpool`，不再阻塞事件循环。
+- **共识引擎升级**：行业矩阵权重、市场 regime 路由（磁滞+确认扫描）、概率校准、滚动 IC、MetaModel 中位数混合、点时基本面 provider（无前视泄露）。
+- **19 个 Hermes Skills + 1 个 augur-terminal 元技能**：每位大师有完整人格化 system prompt，中国大师全中文对话，augur-terminal 统一入口（13 工具、4 预设、标准工作流指南）。
+- **Dashboard 全面打磨**：4 语言 i18n、GitHub 风格 History 热力图、Optimizer 有效前沿图、PWA 可安装、键盘快捷键面板、Ticker Tape WebSocket 驱动、所有页面 CSV 导出。
+- 测试覆盖：2136 个测试全部通过。
+</details>
+
+<details>
+<summary><strong>v10.16.x — 内部迭代（v10.0.0 包含所有修复）</strong></summary>
+
+- v10.16.7：历史页日历热力图修复 + 组合优化器 Sharpe 单位修复
+- v10.16.6：投委会/深度报告阻塞缓解（改同步 def + run_in_threadpool）
+- v10.16.5：首页 11 个接口事件循环阻塞修复
+- v10.16.4：投委会 Kelly 仓位双重放大修复
+- v10.16.3：workflow 步骤联动布局预设
+- v10.16.2：workflow 局部失败容错 + 工作区 ETag 条件请求
+- v10.16.1：MCP 工作区工具 + 委员会预设接线
+- v10.16.0：P2 功能批次（WebSocket 推送、懒加载大师注册、augur-terminal 元技能）
+</details>
+
+<details>
+<summary><strong>v10.16.7 — 修复历史页日历热力图不显示 + 组合优化器 Sharpe/权重计算错误</strong></summary>
 
 - **历史记录页 52 周日历热力图一直没显示**：前端请求 `/api/history?page=1&per_page=365`，但接口分页模式限制 `per_page<=100`，超过直接 400，错误被空 `.catch()` 默默吞掉。改为用接口本身支持的非分页 `limit` 模式（`/api/history?limit=365`），日历正常显示。
 - **组合优化器算出来的 Sharpe 比率和最优持仓权重单位不匹配**：优化器内部用的是"每日收益率"，却直接拿"年化无风险利率"去减，导致几乎所有股票的"超额收益"都被算成负数——不仅显示的 Sharpe 比率离谱（实测 -1.44，正确应为 +2 左右），连最优权重的计算公式本身都被污染，给出的持仓建议不可信。修复为先把年化利率换算成每日利率再使用。
-- 测试覆盖：完整测试套件 2100 个全部通过。
+- 测试覆盖：完整测试套件 2136 个全部通过。
 </details>
 
 <details>

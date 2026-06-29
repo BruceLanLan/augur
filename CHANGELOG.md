@@ -2,6 +2,25 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.0.0] - 2026-06-29
+
+Public release of Augur v10. Version consolidated from v10.16.13 (internal dev series) to v10.0.0 for the public `augur` repository release. All capabilities from v10.16.13 are included; see README.md changelog for user-facing feature summary.
+
+### Summary of changes since v8.2.3
+
+- Terminal Workspace (Bloomberg-style layout presets, multi-profile save/switch, enabled-persona subset, committee preset binding, workspace import/export)
+- 13 MCP tools including 3 new workspace read/write/profiles tools
+- `augur_workflow` multi-step pipeline with per-step failure isolation and preset-linked default steps
+- WebSocket streaming: `/ws/workspace` state push, `/ws/workflow` step-by-step progress
+- Consensus engine upgrade: industry-matrix weights, regime routing (hysteresis + confirmation), probability calibration, rolling IC, MetaModel blending, point-in-time fundamentals
+- 19 Hermes Skills + augur-terminal meta-skill
+- 4-language i18n, History heatmap, PWA install, Optimizer efficient frontier, keyboard shortcuts
+- 2136 tests passing
+
+### Test status
+
+- 2136 passed, 0 failures.
+
 ## [10.16.13] - 2026-06-26
 
 P1-9: Dashboard router split — workspace routes extracted to `dashboard/routes/workspace.py`.

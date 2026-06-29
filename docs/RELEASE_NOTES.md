@@ -1,6 +1,102 @@
-# Augur 本次更新说明
+# Augur 更新说明
 
 > 面向用户的功能说明（非技术变更日志，技术细节见 [CHANGELOG.md](../CHANGELOG.md)）。
+
+---
+
+## v10.0.0 — 正式公开发布（2026-06-29）
+
+这是 **Augur v10** 的第一个正式公开版本。从 v8.2 到 v10.0，这是一次全面升级：
+
+### 终端工作区（Bloomberg Terminal 风格）
+
+`/settings` 页面新增了完整的布局系统，让你把 Dashboard 变成"自己的终端"：
+
+- **4 套布局预设**：`analyst`（默认，全功能）/ `trader`（极简，快速出信号）/ `committee`（以投委会为核心）/ `minimal`（隐藏大多数导航项）。切换预设可以同时改变默认落地页、Ticker Tape 开关、隐藏哪些导航菜单项。
+- **多套命名 Profile**：保存多个工作区配置，随时切换，互不干扰。比如"白天看盘"和"周末深度研究"可以是完全不同的布局。
+- **启用大师子集**：在 Settings 里只勾选你信任的几位大师，共识计算时会自动把权重重归一化——不是简单平分，而是在你选的人之间重新分配权重。
+- **委员会预设绑定 Profile**：切换 Profile 时，投委会页面的默认大师组合也一起切换。
+- 配置保存在 `~/.augur/workspace.yaml`，支持导出/导入，换机器也能带走你的终端设置。
+
+### Agent 可以操作你的终端
+
+任何 MCP 客户端（Claude Desktop、Hermes、OpenClaw、Claude Code）现在都能直接读取和修改你的工作区配置，不需要你手动点 Dashboard：
+
+```
+mcp_augur_workspace_get        — 查看你当前的终端布局和启用的大师
+mcp_augur_workspace_set        — 让 Agent 帮你切换预设、更新自选股或委员会
+mcp_augur_workspace_profiles   — 列出、创建、删除、切换 Profile
+```
+
+### `augur_workflow` 一次调用跑完整分析链
+
+```bash
+augur workflow NVDA --steps fetch,analyze,consensus,committee
+```
+
+或者通过 MCP：`mcp_augur_workflow`。
+
+一次调用串联 `fetch → analyze → consensus → committee → debate → sentiment` 多个步骤，任一步骤失败不会中断整条链，错误会单独记录到该步骤的结果里。
+
+步骤默认跟随你的布局预设——`trader` 模式默认只跑 `fetch,consensus`，`committee` 模式默认多跑一步 `committee`。
+
+### WebSocket 实时推送
+
+- **`/ws/workspace`**：打开 Dashboard 时立刻收到当前工作区状态；任何修改（通过 API 或 MCP 工具）都会实时推送到所有打开的浏览器标签。
+- **`/ws/workflow`**：逐步推送工作流进度——`step_start`（这一步开始了）、`step_done`（这一步完成了，结果在这里）、`done`（全部结束）。
+- 首页 Dashboard 的 Ticker Tape 也是 WebSocket 驱动的实时价格流。
+
+### 13 个 MCP 工具（新增 3 个工作区工具）
+
+v10.0 在原有 10 个工具基础上新增了 3 个工作区工具（见上文），现在共有 13 个：
+
+| 工具 | 用途 |
+|------|------|
+| `mcp_augur_analyze` | 单个或全部大师独立分析 |
+| `mcp_augur_consensus` | 加权共识 + Kelly 仓位建议 |
+| `mcp_augur_committee` | 投委会（独立意见 + 最终裁决） |
+| `mcp_augur_debate` | 多轮结构化多空辩论 |
+| `mcp_augur_fetch` | 实时行情数据 |
+| `mcp_augur_sentiment` | 社交情绪（StockTwits + 新闻） |
+| `mcp_augur_list_personas` | 列出全部大师 |
+| `mcp_augur_configure` | 配置单个大师的模型参数 |
+| `mcp_augur_create_persona` | 无代码创建自定义大师 |
+| `mcp_augur_workflow` | 多步骤分析流水线 |
+| `mcp_augur_workspace_get` | 读取你的终端布局 |
+| `mcp_augur_workspace_set` | 修改你的终端布局 |
+| `mcp_augur_workspace_profiles` | 管理终端 Profile |
+
+### 19 个 Hermes Skills + augur-terminal 元技能
+
+每位大师都有独立的 Hermes 技能（`/skill augur-buffett` 等），中国大师全中文对话。新增 `augur-terminal` 元技能作为统一入口，涵盖 13 个工具、15 个页面、4 套预设的完整使用指南。
+
+新增 `hermes-agents/committee.yaml`：委员会主席角色的 Hermes Agent 配置，专为多方辩论和综合裁决优化。
+
+### Dashboard 体验改进
+
+- **4 语言国际化**：中文 / 英文 / 日文 / 韩文，设置里一键切换
+- **历史 52 周热力图**：GitHub 风格贡献图，点击日期筛选历史分析
+- **键盘快捷键面板**：按 `?` 打开
+- **PWA 可安装**：浏览器地址栏点"安装"，把 Dashboard 装成独立桌面/手机应用
+- **组合优化器有效前沿图**：Markowitz 散点图，金色★标最优点
+- **所有主要页面支持 CSV 导出**
+
+### 共识引擎升级
+
+- 行业矩阵权重：不同行业（科技/能源/金融）对每位大师的评分因子有差异化权重
+- 市场 Regime 路由：熊市/牛市/高波动识别（带磁滞和确认扫描，减少误报）
+- 点时财务数据：历史回测终于用上了真实的、不偷看未来的 PE/PB/ROE
+- MetaModel 中位数混合、概率校准、滚动 IC
+
+### 测试覆盖
+
+2136 个测试全部通过（较 v8.2 的测试体系大幅扩展）。
+
+---
+
+## v10.16.9 — OOS 验证（2026-06-xx，内部版本）
+
+> 以下为内部迭代记录，已全部包含在 v10.0.0 中。
 
 ## 这次更新解决了什么问题
 
