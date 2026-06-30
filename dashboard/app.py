@@ -78,8 +78,14 @@ app = FastAPI(
 
 from dashboard.routes.workspace import router as _workspace_router  # noqa: E402
 from dashboard.routes.market import router as _market_router  # noqa: E402
+from dashboard.routes.history import router as _history_router  # noqa: E402
+from dashboard.routes.auth import router as _auth_router  # noqa: E402
+from dashboard.routes.notifications_cron import router as _notifications_cron_router  # noqa: E402
 app.include_router(_workspace_router)
 app.include_router(_market_router)
+app.include_router(_history_router)
+app.include_router(_auth_router)
+app.include_router(_notifications_cron_router)
 
 
 # Global exception handler: catch unhandled exceptions, return consistent JSON
@@ -1681,63 +1687,8 @@ async def api_update_custom_persona(agent_id: str, body: CustomPersonaBody):
     return {"status": "ok", "agent_id": agent_id, "path": str(filepath), "hot_loaded": True}
 
 
-@app.get("/api/auth/config", summary="获取认证配置")
-async def api_auth_config():
-    """Return whether auth is enabled and which credential types are accepted."""
-    from augur.auth import get_auth_config
-    return {"status": "ok", **get_auth_config()}
-
-
-@app.get("/api/auth/verify", summary="验证API Token")
-async def api_auth_verify(request: Request):
-    """验证 API Token 或 JWT 有效性。未启用认证时返回 open 模式。"""
-    if not auth_required():
-        return {"status": "ok", "authenticated": True, "mode": "open"}
-    ok, mode = authenticate_request(request)
-    if not ok:
-        return JSONResponse(
-            status_code=401,
-            content=api_error_response(
-                detail="Authentication required",
-                code="AUTH_REQUIRED",
-                suggestion="Provide a valid Bearer token (Authorization: Bearer <token>) and retry.",
-                path=request.url.path,
-            ),
-        )
-    return {"status": "ok", "authenticated": True, "mode": mode}
-
-
-@app.get("/api/auth/me", summary="获取当前登录用户")
-async def api_auth_me(request: Request):
-    """Return the authenticated multi-user JWT identity."""
-    from augur.users import is_multi_user_enabled
-    if not is_multi_user_enabled():
-        raise HTTPException(status_code=403, detail="Set AUGUR_MULTI_USER=1 to enable multi-user mode.")
-    token = extract_bearer_token(request.headers.get("authorization", ""))
-    if not token:
-        raise HTTPException(status_code=401, detail="Authentication required")
-    payload = verify_jwt(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    return {"status": "ok", "user_id": payload["user_id"], "username": payload["username"]}
-
-
-@app.get("/api/schema/persona", summary="获取Persona YAML结构")
-async def api_persona_schema():
-    """返回 Persona YAML 结构描述"""
-    return {
-        "type": "object",
-        "properties": {
-            "agent_id": {"type": "string", "description": "唯一标识符"},
-            "name": {"type": "string", "description": "显示名称"},
-            "identity": {"type": "string", "description": "人格身份描述"},
-            "philosophy": {"type": "array", "items": {"type": "string"}, "description": "投资哲学要点"},
-            "scoring_weights": {"type": "object", "description": "评分权重 (维度 -> 0-1)"},
-            "model": {"type": "string", "description": "使用的 LLM 模型"},
-        },
-        "required": ["agent_id", "name", "identity"],
-    }
-
+# Auth routes moved to dashboard/routes/auth.py (router split R3)
+# Schema route moved to dashboard/routes/auth.py (router split R3)
 
 # ============ Watchlist API Routes ============
 
@@ -2208,183 +2159,7 @@ async def api_test_notification(request: Request):
     return {"status": "error", "detail": "测试失败"}
 
 
-# ============ Notification API Routes ============
-
-class NotificationTestBody(BaseModel):
-    channel: str  # telegram, slack, wechat, lark
-
-
-@app.post("/api/notifications/test", summary="发送测试通知")
-async def api_notifications_test(body: NotificationTestBody):
-    """Test notification channel by sending a test message."""
-    channel = body.channel.lower()
-    if channel not in ("telegram", "slack", "wechat", "lark"):
-        raise HTTPException(status_code=400, detail=f"Unsupported channel: {channel}")
-
-    config = get_config()
-    notifications = config.get("notifications") or {}
-
-    if channel == "telegram":
-        token = notifications.get("telegram_token", "")
-        chat_id = notifications.get("telegram_chat_id", "")
-        if not token or not chat_id:
-            return {"status": "error", "detail": "请先配置 Telegram Bot Token 和 Chat ID"}
-        try:
-            from augur.bots.telegram_bot import send_message
-            send_message(token, chat_id, "Augur 测试通知: 通道配置成功!")
-            return {"status": "ok", "detail": "Telegram 测试消息已发送"}
-        except ImportError:
-            # Fallback to direct HTTP
-            try:
-                import urllib.request
-                import json as _json
-                url = f"https://api.telegram.org/bot{token}/sendMessage"
-                data = _json.dumps({"chat_id": chat_id, "text": "Augur 测试通知: 通道配置成功!"}).encode()
-                req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-                with urllib.request.urlopen(req, timeout=10) as resp:
-                    if resp.status == 200:
-                        return {"status": "ok", "detail": "Telegram 测试消息已发送"}
-            except Exception as e:
-                return {"status": "error", "detail": f"发送失败: {e}"}
-        except Exception as e:
-            return {"status": "error", "detail": f"发送失败: {e}"}
-    elif channel == "slack":
-        webhook = notifications.get("slack_webhook", "")
-        if not webhook:
-            return {"status": "error", "detail": "请先配置 Slack Webhook URL"}
-        try:
-            import urllib.request
-            import json as _json
-            data = _json.dumps({"text": "Augur 测试通知: Slack 通道配置成功!"}).encode()
-            req = urllib.request.Request(webhook, data=data, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                if resp.status == 200:
-                    return {"status": "ok", "detail": "Slack 测试消息已发送"}
-        except Exception as e:
-            return {"status": "error", "detail": f"发送失败: {e}"}
-    elif channel == "lark":
-        webhook = notifications.get("lark_webhook", "")
-        if not webhook:
-            return {"status": "error", "detail": "请先配置飞书 Webhook URL"}
-        try:
-            import urllib.request
-            import json as _json
-            data = _json.dumps({"msg_type": "text", "content": {"text": "Augur 测试通知: 飞书通道配置成功!"}}).encode()
-            req = urllib.request.Request(webhook, data=data, headers={"Content-Type": "application/json"})
-            with urllib.request.urlopen(req, timeout=10) as resp:
-                if resp.status == 200:
-                    return {"status": "ok", "detail": "飞书测试消息已发送"}
-        except Exception as e:
-            return {"status": "error", "detail": f"发送失败: {e}"}
-    elif channel == "wechat":
-        return {"status": "error", "detail": "微信通知需要企业微信配置，请参考文档"}
-
-    return {"status": "error", "detail": "测试失败"}
-
-
-@app.post("/api/notifications/config", summary="保存通知配置")
-async def api_notifications_config_save(request: Request):
-    """Save notification configuration to config/notifications.yaml."""
-    try:
-        body = await request.json()
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid JSON")
-    config_dir = Path(__file__).parent.parent / "config"
-    config_dir.mkdir(parents=True, exist_ok=True)
-    config_file = config_dir / "notifications.yaml"
-    config_file.write_text(yaml.dump(body, allow_unicode=True), encoding="utf-8")
-    # Also update in-memory config
-    set_config("notifications", body)
-    save_config()
-    return {"status": "ok", "message": "通知配置已保存"}
-
-
-@app.get("/api/notifications/config", summary="获取通知配置")
-async def api_notifications_config_get():
-    """Read notification configuration."""
-    config_dir = Path(__file__).parent.parent / "config"
-    config_file = config_dir / "notifications.yaml"
-    if config_file.exists():
-        try:
-            data = yaml.safe_load(config_file.read_text(encoding="utf-8")) or {}
-            return {"status": "ok", "config": data}
-        except Exception:
-            pass
-    # Fallback to in-memory config
-    config = get_config()
-    return {"status": "ok", "config": config.get("notifications", {})}
-
-
-# ============ Cron Config API Routes ============
-
-
-class CronConfigBody(BaseModel):
-    """Request body for cron config update."""
-    schedule: Optional[Dict[str, Any]] = None
-    notifications: Optional[Dict[str, Any]] = None
-
-
-@app.get("/api/cron/config", summary="获取定时监控配置")
-async def api_get_cron_config():
-    """返回当前 cron 配置 (schedule + notifications sections from watchlist.yaml)"""
-    from augur.cron import load_watchlist
-    config = load_watchlist()
-    return {
-        "status": "ok",
-        "schedule": config.get("schedule", {}),
-        "notifications": config.get("notifications", {}),
-    }
-
-
-@app.put("/api/cron/config", summary="更新定时监控配置")
-async def api_put_cron_config(body: CronConfigBody):
-    """更新 schedule/notifications sections in watchlist.yaml"""
-    from augur.cron import load_watchlist, save_watchlist
-    config = load_watchlist()
-
-    if body.schedule is not None:
-        config["schedule"] = body.schedule
-    if body.notifications is not None:
-        config["notifications"] = body.notifications
-
-    save_watchlist(config)
-    return {
-        "status": "ok",
-        "message": "定时监控配置已更新",
-        "schedule": config.get("schedule", {}),
-        "notifications": config.get("notifications", {}),
-    }
-
-
-@app.post("/api/cron/run-now", summary="立即执行一次监控分析")
-async def api_cron_run_now():
-    """触发一次 watchlist 分析并返回结果"""
-    from augur.cron import run_watchlist_analysis
-
-    try:
-        results = run_watchlist_analysis()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"分析执行失败: {e}")
-
-    # Serialize results for JSON response
-    serialized = []
-    for r in results:
-        consensus = r.get("consensus")
-        item = {
-            "ticker": r.get("ticker", ""),
-            "message": r.get("message", ""),
-        }
-        if consensus is not None:
-            item["signal"] = consensus.signal.value if hasattr(consensus, "signal") else ""
-            item["score"] = round(consensus.score, 1) if hasattr(consensus, "score") else 0
-            item["confidence"] = round(consensus.confidence, 2) if hasattr(consensus, "confidence") else 0
-        serialized.append(item)
-
-    return {
-        "status": "ok",
-        "count": len(serialized),
-        "results": serialized,
-    }
+# Notification + cron routes moved to dashboard/routes/notifications_cron.py (router split R3)
 
 
 # ============ v8: I18n helpers ============
@@ -2425,86 +2200,7 @@ def _save_history_safe(ticker: str, result: Any) -> None:
 
 # ============ v8: History API ============
 
-@app.get("/history", response_class=HTMLResponse)
-async def history_page(request: Request):
-    return templates.TemplateResponse(request=request, name="history.html", context={"title": "历史记录"})
-
-
-@app.get("/api/history")
-def api_list_history(
-    limit: int = 50,
-    page: Optional[int] = None,
-    per_page: int = 20,
-    ticker: Optional[str] = None,
-    signal: Optional[str] = None,
-):
-    from augur.history import list_history, count_history
-    if limit < 1 or limit > 500:
-        raise HTTPException(status_code=400, detail="limit must be between 1 and 500")
-    # Validate optional filter params
-    ticker_filter = ticker.strip().upper() if ticker and ticker.strip() else None
-    signal_filter = signal.strip().lower() if signal and signal.strip() in ("bullish", "neutral", "bearish") else None
-    if page is not None:
-        if page < 1 or per_page < 1:
-            raise HTTPException(status_code=400, detail="page and per_page must be >= 1")
-        if per_page > 100:
-            raise HTTPException(status_code=400, detail="per_page must be <= 100")
-        try:
-            total = count_history(ticker_filter=ticker_filter, signal_filter=signal_filter)
-            total_pages = math.ceil(total / per_page) if per_page > 0 else 0
-            records = list_history(page=page, per_page=per_page, ticker_filter=ticker_filter, signal_filter=signal_filter)
-        except Exception as e:
-            logger.warning("history list (paginated) failed: %s", e)
-            return {"items": [], "total": 0, "page": page, "per_page": per_page, "pages": 0, "error": "history_unavailable", "message": f"历史记录读取失败: {e}"}
-        return {"items": records, "total": total, "page": page, "per_page": per_page, "pages": total_pages}
-    try:
-        records = list_history(limit=limit, ticker_filter=ticker_filter, signal_filter=signal_filter)
-    except Exception as e:
-        logger.warning("history list failed: %s", e)
-        return {"records": [], "count": 0, "error": "history_unavailable", "message": f"历史记录读取失败: {e}"}
-    return {"records": records, "count": len(records)}
-
-
-@app.get("/api/history/{history_id}")
-async def api_get_history(history_id: str):
-    # Validate history_id format to prevent path traversal / injection
-    if not re.match(r'^[A-Za-z0-9._\-]{1,64}$', history_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid history_id format. Use 1-64 alphanumeric characters, dots, hyphens, or underscores.",
-        )
-    from augur.history import get_history
-    record = get_history(history_id)
-    if not record:
-        raise HTTPException(status_code=404, detail="History record not found")
-    return record
-
-
-@app.delete("/api/history/{history_id}")
-async def api_delete_history_item(history_id: str):
-    # Validate history_id format to prevent path traversal / injection
-    if not re.match(r'^[A-Za-z0-9._\-]{1,64}$', history_id):
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid history_id format. Use 1-64 alphanumeric characters, dots, hyphens, or underscores.",
-        )
-    from augur.history import delete_history
-    deleted = delete_history(history_id)
-    if not deleted:
-        raise HTTPException(status_code=404, detail="History record not found")
-    return {"status": "ok", "message": "已删除"}
-
-
-@app.delete("/api/history")
-async def api_clear_history():
-    from augur.history import clear_history
-    try:
-        count = clear_history()
-    except Exception as e:
-        # Graceful degradation: storage failure
-        logger.warning("clear history failed: %s", e)
-        raise HTTPException(status_code=500, detail=f"清除历史记录失败: {e}")
-    return {"status": "ok", "deleted": count, "message": f"已清除 {count} 条记录"}
+# History routes moved to dashboard/routes/history.py (router split R3)
 
 
 # ============ v8: Compare & Debate ============
@@ -3227,60 +2923,7 @@ async def api_chat(body: ChatBody):
         raise HTTPException(status_code=500, detail=f"聊天服务暂时不可用: {e}")
 
 
-# ============ v8: Multi-User Auth (opt-in via AUGUR_MULTI_USER=1) ============
-
-class AuthRegisterBody(BaseModel):
-    username: str
-    password: str
-
-class AuthLoginBody(BaseModel):
-    username: str
-    password: str
-
-
-@app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
-    return templates.TemplateResponse(request=request, name="login.html", context={"title": "Login"})
-
-
-@app.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request):
-    return templates.TemplateResponse(request=request, name="register.html", context={"title": "Register"})
-
-
-@app.post("/api/auth/register")
-async def api_auth_register(body: AuthRegisterBody, request: Request):
-    from augur.users import UserManager, is_multi_user_enabled
-    if not is_multi_user_enabled():
-        raise HTTPException(status_code=403, detail="Set AUGUR_MULTI_USER=1 to enable multi-user mode.")
-    client_ip = request.client.host if request.client else "unknown"
-    if not check_auth_rate_limit(client_ip):
-        raise HTTPException(status_code=429, detail="Too many auth attempts. Try again later.")
-    if not body.username or not 3 <= len(body.username) <= 32 or not re.match(r'^[a-zA-Z0-9_]+$', body.username):
-        raise HTTPException(status_code=400, detail="Username: 3-32 chars, letters/numbers/underscore only.")
-    if not body.password or not 6 <= len(body.password) <= 128:
-        raise HTTPException(status_code=400, detail="Password must be 6-128 characters.")
-    manager = UserManager()
-    user = manager.create_user(body.username, body.password)
-    if not user:
-        raise HTTPException(status_code=400, detail="Username already exists or invalid.")
-    return {"status": "ok", "username": user["username"], "id": user["id"]}
-
-
-@app.post("/api/auth/login")
-async def api_auth_login(body: AuthLoginBody, request: Request):
-    from augur.users import UserManager, is_multi_user_enabled
-    if not is_multi_user_enabled():
-        raise HTTPException(status_code=403, detail="Set AUGUR_MULTI_USER=1 to enable multi-user mode.")
-    client_ip = request.client.host if request.client else "unknown"
-    if not check_auth_rate_limit(client_ip):
-        raise HTTPException(status_code=429, detail="Too many auth attempts. Try again later.")
-    if not body.username or len(body.username) > 32 or not body.password or len(body.password) > 128:
-        raise HTTPException(status_code=400, detail="Invalid credentials.")
-    token = UserManager().authenticate(body.username, body.password)
-    if not token:
-        raise HTTPException(status_code=401, detail="Invalid username or password.")
-    return {"status": "ok", "token": token, "username": body.username}
+# Auth HTML pages + register/login routes moved to dashboard/routes/auth.py (router split R3)
 
 
 # ============ v8: Rules Engine ============
