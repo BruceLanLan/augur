@@ -31,7 +31,7 @@ class TestGlobalExceptionHandler:
     def test_dashboard_unhandled_exception_returns_json(self):
         """Simulated unhandled exception should return JSON with status=error."""
         client = TestClient(dashboard_app, raise_server_exceptions=False)
-        with patch("dashboard.app.get_registry", side_effect=RuntimeError("Simulated crash")):
+        with patch("dashboard.routes.personas.get_registry", side_effect=RuntimeError("Simulated crash")):
             resp = client.get("/api/personas")
         assert resp.status_code == 500
         data = resp.json()
@@ -60,7 +60,7 @@ class TestGlobalExceptionHandler:
         """Timestamp in error response should be ISO 8601 with Z suffix."""
         import re
         client = TestClient(dashboard_app, raise_server_exceptions=False)
-        with patch("dashboard.app.get_registry", side_effect=RuntimeError("Crash")):
+        with patch("dashboard.routes.personas.get_registry", side_effect=RuntimeError("Crash")):
             resp = client.get("/api/personas")
         data = resp.json()
         ts = data["timestamp"]

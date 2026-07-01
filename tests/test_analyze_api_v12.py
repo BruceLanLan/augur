@@ -108,7 +108,7 @@ class TestAnalyzeEndpoint:
                 raise RuntimeError("consensus exploded")
 
         with caplog.at_level(logging.ERROR, logger="dashboard.app"):
-            with patch("dashboard.app.get_coordinator", return_value=_BoomCoord()):
+            with patch("dashboard.routes.analysis.get_coordinator", return_value=_BoomCoord()):
                 resp = client.get(
                     "/api/analyze/ERRO",
                     params={"auto_fetch": False},

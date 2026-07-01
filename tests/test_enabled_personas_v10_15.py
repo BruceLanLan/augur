@@ -130,8 +130,8 @@ class TestDashboardEnabledPersonas:
         )
         mock_coord.get_consensus.return_value = mock_response
 
-        with patch("dashboard.app.get_enabled_personas", return_value=["buffett", "graham"]):
-            with patch("dashboard.app.get_coordinator", return_value=mock_coord):
+        with patch("dashboard.routes.analysis.get_enabled_personas", return_value=["buffett", "graham"]):
+            with patch("dashboard.routes.analysis.get_coordinator", return_value=mock_coord):
                 client = TestClient(app)
                 r = client.get("/api/analyze/TEST?auto_fetch=false&price=100")
 

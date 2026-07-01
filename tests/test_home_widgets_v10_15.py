@@ -10,6 +10,7 @@ from bs4 import BeautifulSoup
 from fastapi.testclient import TestClient
 
 import dashboard.app as app_mod
+import dashboard.routes.config as config_routes
 from dashboard.app import app
 
 
@@ -21,10 +22,10 @@ def client():
 @pytest.fixture
 def isolated_home_widgets(tmp_path):
     widgets_path = tmp_path / "home_widgets.yaml"
-    with patch.object(app_mod, "_home_widgets_path", return_value=widgets_path):
-        app_mod._HOME_WIDGETS_CACHE = None
+    with patch.object(config_routes, "_home_widgets_path", return_value=widgets_path):
+        config_routes._HOME_WIDGETS_CACHE = None
         yield widgets_path
-        app_mod._HOME_WIDGETS_CACHE = None
+        config_routes._HOME_WIDGETS_CACHE = None
 
 
 class TestHomeWidgetsAPI:
@@ -79,13 +80,13 @@ class TestHomeWidgetsAPI:
 
 class TestHomeWidgetsHelpers:
     def test_get_save_roundtrip(self, isolated_home_widgets):
-        saved = app_mod.save_home_widgets({
+        saved = config_routes.save_home_widgets({
             "pinned_tickers": ["AAPL"],
             "collapsed_panels": ["market-pulse"],
         })
         assert saved["pinned_tickers"] == ["AAPL"]
-        app_mod._HOME_WIDGETS_CACHE = None
-        loaded = app_mod.get_home_widgets()
+        config_routes._HOME_WIDGETS_CACHE = None
+        loaded = config_routes.get_home_widgets()
         assert loaded["collapsed_panels"] == ["market-pulse"]
 
 

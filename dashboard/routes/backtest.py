@@ -1,0 +1,102 @@
+"""Backtest API routes: demo backtester and IC leaderboard."""
+
+import re
+
+from fastapi import APIRouter, HTTPException, Request
+from fastapi.responses import HTMLResponse
+
+from dashboard.deps import get_registry, templates
+
+router = APIRouter()
+
+
+@router.get("/backtest", response_class=HTMLResponse, summary="历史回测页面")
+async def backtest_page(request: Request):
+    return templates.TemplateResponse(request=request, name="backtest.html", context={
+        "title": "历史回测 - Agent IC",
+    })
+
+
+@router.get("/api/backtest/run", summary="运行历史回测")
+async def api_run_backtest(ticker: str = "AAPL", days: int = 30, initial_capital: float = 100000, strategy: str = "equal_weight"):
+    """Run demo backtest, return results with metrics and signals timeline"""
+    if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
+        raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
+
+    from augur.backtest import Backtester, generate_sample_data
+
+    if days < 5:
+        days = 5
+    if days > 365:
+        days = 365
+
+    historical_data, forward_returns = generate_sample_data(ticker, days)
+    backtester = Backtester()
+    result = backtester.run_backtest(ticker, historical_data, forward_returns)
+
+    agent_ics = result.agent_ics
+    avg_hit_rate = 0.0
+    if agent_ics:
+        avg_hit_rate = sum(a.hit_rate for a in agent_ics) / len(agent_ics)
+
+    avg_gain = 0.02
+    avg_loss = -0.015
+    daily_return = (avg_hit_rate * avg_gain + (1 - avg_hit_rate) * avg_loss)
+    annualized_return = daily_return * 252
+    max_drawdown = -((1 - avg_hit_rate) * 0.15 + 0.05)
+    vol = abs(max_drawdown) * 1.5
+    sharpe_ratio = (annualized_return - 0.04) / vol if vol > 0 else 0.0
+
+    metrics = {
+        "annualized_return": round(annualized_return, 4),
+        "max_drawdown": round(max_drawdown, 4),
+        "sharpe_ratio": round(sharpe_ratio, 2),
+        "win_rate": round(avg_hit_rate, 4),
+    }
+
+    signals_timeline = []
+    for rec in result.records[:50]:
+        signals_timeline.append({
+            "date": rec.date,
+            "ticker": rec.ticker,
+            "signal": rec.signal,
+            "score": round(rec.score, 1),
+            "agent_id": rec.agent_id,
+        })
+    signals_timeline.sort(key=lambda x: x["date"], reverse=True)
+
+    return {
+        "status": "ok",
+        "ticker": result.ticker,
+        "days": days,
+        "initial_capital": initial_capital,
+        "strategy": strategy,
+        "total_records": len(result.records),
+        "consensus_ic": result.consensus_ic,
+        "agent_ics": [a.to_dict() for a in result.agent_ics],
+        "metrics": metrics,
+        "signals_timeline": signals_timeline,
+        "summary": result.summary,
+    }
+
+
+@router.get("/api/backtest/leaderboard", summary="获取IC排行榜")
+async def api_ic_leaderboard():
+    """Get saved IC leaderboard"""
+    from augur.backtest import Backtester
+
+    backtester = Backtester()
+    ics = backtester.get_leaderboard()
+
+    registry = get_registry()
+    def _enrich(d: dict) -> dict:
+        agent = registry.get(d.get("agent_id", ""))
+        if agent:
+            d["agent_name"] = agent.name
+        return d
+
+    return {
+        "status": "ok",
+        "leaderboard": [_enrich(a.to_dict()) for a in ics],
+        "count": len(ics),
+    }

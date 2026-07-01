@@ -129,21 +129,21 @@ class TestChatErrorHandling:
         assert resp.status_code == 400
 
     def test_engine_valueerror_returns_400(self, client):
-        with patch("dashboard.app._get_chat_engine") as mock_engine:
+        with patch("dashboard.routes.chat._get_chat_engine") as mock_engine:
             mock_engine.return_value.get_response.side_effect = ValueError("bad input")
             resp = client.post("/api/chat", json={"message": "hello"})
         assert resp.status_code == 400
         assert "Invalid chat request" in resp.json()["detail"]
 
     def test_engine_runtime_returns_500(self, client):
-        with patch("dashboard.app._get_chat_engine") as mock_engine:
+        with patch("dashboard.routes.chat._get_chat_engine") as mock_engine:
             mock_engine.return_value.get_response.side_effect = RuntimeError("upstream down")
             resp = client.post("/api/chat", json={"message": "hello"})
         assert resp.status_code == 500
         assert "聊天服务暂时不可用" in resp.json()["detail"]
 
     def test_engine_keyerror_returns_404(self, client):
-        with patch("dashboard.app._get_chat_engine") as mock_engine:
+        with patch("dashboard.routes.chat._get_chat_engine") as mock_engine:
             mock_engine.return_value.get_response.side_effect = KeyError("ghost_agent")
             resp = client.post("/api/chat", json={"message": "hi", "agent_id": "ghost"})
         assert resp.status_code == 404

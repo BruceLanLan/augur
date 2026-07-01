@@ -75,9 +75,9 @@ class TestErrorEnvelopeConsistency:
         # Use a syntactically valid but unreachable ticker shape that survives
         # the regex check; then mock-stub the coordinator to raise.
         from unittest.mock import patch
-        from dashboard import app as app_mod
+        import dashboard.routes.analysis as analysis_mod
 
-        with patch.object(app_mod, "get_coordinator") as gc:
+        with patch.object(analysis_mod, "get_coordinator") as gc:
             coord = gc.return_value
 
             def _boom(_ctx, **kwargs):

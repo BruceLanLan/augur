@@ -1,7 +1,7 @@
 # Augur Next v9 — 开发路线图
 
 > 本文件是 augur-next 的开发计划，供新 session 快速恢复上下文。
-> 最后更新：2026-06-26，当前版本 **v10.16.12**（P2-5/P2-8 落地：`/ws/workspace` 实时广播 + `/ws/workflow` 流式步骤进度 + `augur-terminal` meta-skill + `hermes-agents/committee.yaml`；所有 commit 仍未 push；预存测试失败 21 个与本次改动无关）
+> 最后更新：2026-07-01，当前版本 **v10.1.0**（dashboard 路由全量拆分完成：`dashboard/app.py` 从 ~4338 行缩减到 ~438 行纯骨架，17 个路由模块全部就位；111 路由 + 2136 测试基线不变；所有 R2-R14 改动尚未 push）
 
 ---
 
@@ -141,6 +141,8 @@
 `tests/test_pit_fundamentals.py` 新增 16 个离线确定性单测，覆盖 90 天滞后保护的边界（恰好 90 天、89 天）、pe/pb/roe/margin 算术、YoY 增长率、`insufficient` 路径，以及本次发现的两个 bug 各自的回归测试（NaN 老列不被误判为可用、空抓取重试后不污染缓存）。完整测试套件改动前后各跑一遍：2104 passed（不含本次新增测试）/2120 passed（含新增 16 个）/0 failed——本文档此前记录的 2108 这个基线数字本次未能精确对账（差 4 个），怀疑是跨 session 的日期/网络门控测试波动，不是本次改动引入的回归（本次改动只涉及 `pit_fundamentals.py`/`backtest.py`，未触碰任何既有测试文件，且 `--collect-only` 与 `passed` 数字完全一致，说明没有静默跳过）。**诚实声明：** synthesis 那条 gate 的两半都已经老实测过了——P2-3 解决了"分类会不会抽风"，P2-4 测了"手工权重数字本身有没有用"，**结果是打平**：不是"验证通过"，也不是"证伪权重设计"，是"这次终于把它放到真实数据里测了一遍，测出来看不出稳定一致的提升"。要不要保留/调整/去掉这些手工乘数，是产品决策，留给用户，不在本次结论范围内。
 
 **2026-06-26 更新：** 所有 P2 + P1-9 均已完成，当前版本 **v10.16.13**。预存 21 个测试失败根因已确认（python3.11 环境缺 yfinance，装完全绿）。所有 commit（包括 P2-1/2/3/4/5/6/7/8 + P1-9）仍**尚未推送到 origin**，需用户明确指示才能 push（推送命令：`git push augur-next feature/v9-dev:main`）；公开的 `augur` 仓库不要碰。GIL 护航效应已知限制（v10.16.6）仍按用户决定保留，未重新打开。下一方向：与用户讨论是否把 augur-next 推到 augur 公开版，或继续拆其他路由模块（home widgets、persona、analyze 等）。
+
+**2026-07-01 更新：** v10.0.0 公开发布后继续推进 dashboard 路由拆分（R2-R14）。`dashboard/app.py` 从 v10.16.13 时的 ~4338 行（含 R1/workspace 后的 ~4133 行）进一步缩减到 **~438 行纯骨架**，新增 14 个路由模块（R2 market → R14 pages），与 R1 workspace 合计 **17 个路由模块**。整个过程保持 111 HTTP 路由 + 2136 测试基线不变。版本号升为 v10.1.0。R2-R14 改动尚未 commit/push，等用户明确授权。下一步可选：① 推送当前工作到 augur-next；② 继续开发 v10 进展中的新功能（因子级雷达、PyPI 发布等）。
 
 ---
 

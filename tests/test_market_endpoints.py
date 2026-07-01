@@ -11,6 +11,10 @@ from fastapi.testclient import TestClient
 
 import dashboard.app as dashboard_app
 import dashboard.routes.market as market_routes
+import dashboard.routes.personas as personas_routes
+import dashboard.routes.analysis as analysis_routes
+import dashboard.routes.watchlist as watchlist_routes
+import dashboard.routes.committee as committee_routes
 from dashboard.app import app, _check_rate_limit, _rate_limits, _rate_limit_lock
 from augur.data import clear_cache
 
@@ -222,7 +226,15 @@ class TestBlockingHandlersAreSync:
     ])
     def test_handler_is_not_a_coroutine_function(self, name):
         # Market handlers moved to dashboard.routes.market (R2 router split)
-        handler = getattr(dashboard_app, name, None) or getattr(market_routes, name)
+        # Persona handlers moved to dashboard.routes.personas (R4 router split)
+        handler = (
+            getattr(dashboard_app, name, None)
+            or getattr(market_routes, name, None)
+            or getattr(personas_routes, name, None)
+            or getattr(analysis_routes, name, None)
+            or getattr(watchlist_routes, name, None)
+            or getattr(committee_routes, name)
+        )
         assert not inspect.iscoroutinefunction(handler), (
             f"{name} must be a sync `def`, not `async def` — it performs "
             "blocking yfinance calls and/or synchronous persona analysis "

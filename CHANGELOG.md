@@ -2,6 +2,34 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.1.0] - 2026-07-01
+
+Dashboard router split — `dashboard/app.py` fully decomposed into 17 focused `APIRouter` modules under `dashboard/routes/`. No user-visible behavior changes; 111 HTTP routes and 2136 passing tests preserved throughout.
+
+### Changed
+
+- **`dashboard/app.py`**: Shrunk from ~4338 lines to ~438 lines of pure skeleton (imports, FastAPI instance, 17 `include_router` calls, middleware, exception handlers, static mounts, `main()`). All route logic moved to `dashboard/routes/`.
+- **`dashboard/deps.py`**: Expanded to hold all shared singletons and helpers previously living in `app.py` — `get_registry()`, `get_coordinator()`, rate limiting, token bucket, i18n cache/loader, `_save_history_safe`, `_get_rules_engine`, `_APP_START_TIME`. Everything re-exported from `app.py` for backwards-compat (`from dashboard.app import X` still resolves).
+- **New route modules** (each is a self-contained `APIRouter`):
+  - `dashboard/routes/market.py` (R2): market data widgets — sector performance, sparklines, fear/greed, movers, global markets, search, real-time price
+  - `dashboard/routes/history.py` + `auth.py` + `notifications_cron.py` + `config.py` (R3): history CRUD + auth/JWT + notification/cron + system config
+  - `dashboard/routes/personas.py` (R4): persona CRUD + enrichment, `PERSONA_ENRICHMENT` dict, `_persona_meta()` helper
+  - `dashboard/routes/analysis.py` (R5): stock analysis — scanner, `analyze_ticker`, signals, deep report, Leaderboard IC
+  - `dashboard/routes/watchlist.py` (R6): watchlist GET/add/remove/batch-run
+  - `dashboard/routes/backtest.py` (R7): backtest run + IC leaderboard + `/backtest` HTML page
+  - `dashboard/routes/misc.py` (R8): health, robots.txt, PWA manifest, sitemap, cache clear/info
+  - `dashboard/routes/committee.py` (R9): committee/compare/debate API + their HTML pages; `_save_history_safe` and i18n helpers moved to `deps.py`
+  - `dashboard/routes/ws.py` (R10): all four WebSocket handlers — `/ws/analyze`, `/ws/committee`, `/ws/prices`, `/ws/workflow`
+  - `dashboard/routes/chat.py` (R11): sentiment API + chat engine + `/chat` HTML page
+  - `dashboard/routes/rules.py` (R12): rules engine CRUD
+  - `dashboard/routes/optimizer.py` (R13): portfolio optimizer + i18n JSON API + lang cookie
+  - `dashboard/routes/pages.py` (R14): all 10 browser-facing HTML pages (`/`, `/personas`, `/stocks`, `/signals`, `/scanner`, `/watchlist`, `/portfolio`, `/settings`, `/create-persona`, `/report/{ticker}`)
+- **Patch-at-point-of-use** invariant applied throughout: test patch targets updated from `dashboard.app.*` to the new module where each handler now lives.
+
+### Test status
+
+- 2136 passed, 0 failures.
+
 ## [10.0.0] - 2026-06-29
 
 Public release of Augur v10. Version consolidated from v10.16.13 (internal dev series) to v10.0.0 for the public `augur` repository release. All capabilities from v10.16.13 are included; see README.md changelog for user-facing feature summary.
