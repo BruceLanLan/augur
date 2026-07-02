@@ -2,6 +2,7 @@
 {% block title %}股票分析 - Augur{% endblock %}
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script src="/static/js/factor-map.js"></script>
 <style>
 #results { display:none; }
 #results.show { display:block; animation: fadeInUp 0.5s ease forwards; }
@@ -351,6 +352,13 @@
             </div>
             <button onclick="closeAgentDetail()" style="margin-left:auto; background:none; border:none; color:var(--text-muted); font-size:1.2rem; cursor:pointer; padding:4px 8px; line-height:1;">✕</button>
         </div>
+        <div id="agd-factors" style="display:none; margin-bottom:14px;">
+            <div id="agd-factors-cats" style="display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-bottom:6px;"></div>
+            <details>
+                <summary style="font-size:0.72rem; color:var(--text-muted); cursor:pointer;" data-i18n="stocks-expand-factors">展开因子明细</summary>
+                <div id="agd-factors-list" style="margin-top:8px;"></div>
+            </details>
+        </div>
         <div id="agd-findings" style="margin-bottom:12px;"></div>
         <div id="agd-risks" style="margin-bottom:12px;"></div>
         <details style="margin-top:8px;">
@@ -583,6 +591,73 @@ function signalColor(s) {
     return m[(s||'').toLowerCase()] || 'var(--text-muted)';
 }
 
+function _factorLabel(t) {
+    var labels = {
+        valuation: _t('compare-radar-valuation', '估值'),
+        growth: _t('compare-radar-growth', '成长'),
+        quality: _t('compare-radar-quality', '质量'),
+        momentum: _t('compare-radar-momentum', '动量'),
+        safety: _t('compare-radar-safety', '安全')
+    };
+    return labels[t] || t;
+}
+
+function _factorBarColor(val) {
+    return val >= 7 ? 'var(--signal-buy)' : (val >= 4 ? 'var(--accent-orange, #ff9500)' : 'var(--signal-sell)');
+}
+
+function renderAgentFactors(agent) {
+    var section = document.getElementById('agd-factors');
+    var catsEl = document.getElementById('agd-factors-cats');
+    var listEl = document.getElementById('agd-factors-list');
+    if (!section || !catsEl || !listEl) return;
+
+    var factors = (agent.metadata && agent.metadata.factors) ? agent.metadata.factors : null;
+    if (!window.AugurFactorMap || !AugurFactorMap.hasFactors(factors)) {
+        section.style.display = 'none';
+        catsEl.innerHTML = '';
+        listEl.innerHTML = '';
+        return;
+    }
+    section.style.display = 'block';
+
+    // 5 category average mini-bars
+    var catsHtml = '';
+    AugurFactorMap.CATEGORIES.forEach(function(cat) {
+        var v = AugurFactorMap.catAvg(factors, cat);
+        var display = v !== null ? v.toFixed(1) : '—';
+        var color = v !== null ? _factorBarColor(v) : 'var(--text-muted)';
+        var barW = v !== null ? Math.round(v * 10) : 0;
+        catsHtml += '<div style="text-align:center;">' +
+            '<div style="font-size:0.62rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.03em; margin-bottom:2px;">' + escapeHtml(_factorLabel(cat)) + '</div>' +
+            '<div style="height:4px; background:var(--bg-elevated,#2a2a3e); border-radius:2px; overflow:hidden; margin-bottom:2px;">' +
+            '<div style="width:' + barW + '%; height:100%; background:' + color + '; border-radius:2px;"></div></div>' +
+            '<div style="font-size:0.72rem; font-family:var(--font-mono); color:' + color + ';">' + display + '</div>' +
+            '</div>';
+    });
+    catsEl.innerHTML = catsHtml;
+
+    // Per-factor detail, grouped by category
+    var listHtml = '';
+    AugurFactorMap.CATEGORIES.forEach(function(cat) {
+        var keys = (AugurFactorMap.FACTOR_MAP[cat] || []).filter(function(k) { return factors[k] !== undefined; });
+        if (!keys.length) return;
+        listHtml += '<div style="font-size:0.68rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.04em; margin:8px 0 3px;">' + escapeHtml(_factorLabel(cat)) + '</div>';
+        keys.forEach(function(k) {
+            var val = parseFloat(factors[k]) || 0;
+            var color = _factorBarColor(val);
+            var barW = Math.round(val * 10);
+            listHtml += '<div style="display:flex; align-items:center; gap:6px; margin-bottom:3px; font-size:0.74rem;">' +
+                '<div style="flex:0 0 130px; color:var(--text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(k.replace(/_/g, ' ')) + '</div>' +
+                '<div style="flex:1; height:4px; background:var(--bg-elevated,#2a2a3e); border-radius:2px; overflow:hidden;">' +
+                '<div style="width:' + barW + '%; height:100%; background:' + color + '; border-radius:2px;"></div></div>' +
+                '<div style="flex:0 0 28px; text-align:right; font-family:var(--font-mono); color:' + color + ';">' + val.toFixed(1) + '</div>' +
+                '</div>';
+        });
+    });
+    listEl.innerHTML = listHtml;
+}
+
 function showAgentDetail(agent) {
     var overlay = document.getElementById('agent-detail-overlay');
     if (!overlay) return;
@@ -596,6 +671,7 @@ function showAgentDetail(agent) {
         '<span style="color:var(--fg-1);font-family:var(--font-mono);font-weight:700;">' + (agent.score||0).toFixed(1) + '</span>/10' +
         ' &nbsp;|&nbsp; ' +
         'Conf: ' + ((agent.confidence||0)*100).toFixed(0) + '%';
+    renderAgentFactors(agent);
     var findingsEl = document.getElementById('agd-findings');
     var riskEl     = document.getElementById('agd-risks');
     if ((agent.key_findings||[]).length) {
