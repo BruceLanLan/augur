@@ -117,13 +117,22 @@ def api_run_watchlist_analysis():
         if not ticker:
             continue
 
-        ctx_kwargs = {"ticker": ticker.upper()}
+        manual_overrides = {}
         for key in ["pe", "pb", "roe", "gross_margins", "revenue_growth",
                     "debt_ratio", "fcf", "market_cap", "price"]:
             if key in item:
-                ctx_kwargs[key] = item[key]
+                manual_overrides[key] = item[key]
 
-        ctx = MarketContext(**ctx_kwargs)
+        # Live-base + manual-override
+        try:
+            from augur.data import fetch_market_context
+            ctx = fetch_market_context(ticker)
+            for key, val in manual_overrides.items():
+                setattr(ctx, key, val)
+        except Exception:
+            ctx_kwargs = {"ticker": ticker.upper(), **manual_overrides}
+            ctx = MarketContext(**ctx_kwargs)
+
         results = coordinator.analyze_with_all(ctx, enabled_personas=get_enabled_personas())
         consensus = coordinator.get_consensus(results, ticker=ticker, context=ctx)
 
@@ -141,6 +150,21 @@ def api_run_watchlist_analysis():
             "kelly_pct": consensus.metadata.get("position_sizing", {}).get("position_pct"),
         }
         all_results.append(result_item)
+
+        try:
+            from augur.history import save_analysis
+            save_analysis(ticker, {
+                "consensus": {
+                    "signal": result_item["signal"],
+                    "score": result_item["score"],
+                    "confidence": result_item["confidence"],
+                    "key_findings": result_item["key_findings"],
+                },
+                "agent_count": result_item["agent_count"],
+                "source": "watchlist",
+            })
+        except Exception:
+            pass
 
         try:
             engine = _get_rules_engine()

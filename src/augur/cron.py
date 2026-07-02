@@ -202,15 +202,29 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
 
         print(f"Analyzing {ticker}...")
 
-        # Build context from watchlist metrics
-        ctx_kwargs = {"ticker": ticker.upper()}
+        # Manual overrides from watchlist.yaml (user-pinned values win over live data)
+        manual_overrides = {}
         for key in ["pe", "pb", "roe", "gross_margins", "revenue_growth",
                     "debt_ratio", "fcf", "market_cap", "price"]:
             if key in item:
-                ctx_kwargs[key] = item[key]
+                manual_overrides[key] = item[key]
 
         try:
-            ctx = MarketContext(**ctx_kwargs)
+            # Live-base + manual-override: fetch live data, then apply any
+            # user-pinned watchlist metrics on top so analyst-entered values win.
+            try:
+                from augur.data import fetch_market_context
+                ctx = fetch_market_context(ticker)
+                for key, val in manual_overrides.items():
+                    setattr(ctx, key, val)
+            except Exception as _fetch_err:
+                logger.warning(
+                    "Live data fetch failed for %s: %s; falling back to manual metrics",
+                    ticker, _fetch_err,
+                )
+                ctx_kwargs = {"ticker": ticker.upper(), **manual_overrides}
+                ctx = MarketContext(**ctx_kwargs)
+
             results = coordinator.analyze_with_all(ctx)
             consensus = coordinator.get_consensus(results, ticker=ticker, context=ctx)
 
@@ -221,6 +235,22 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
                 "message": format_consensus_message(ticker, consensus, results),
             }
             all_results.append(analysis)
+
+            # Persist to history so Dashboard calendar/heatmap can show cron runs
+            try:
+                from augur.history import save_analysis
+                save_analysis(ticker, {
+                    "consensus": {
+                        "signal": consensus.signal.value,
+                        "score": consensus.score,
+                        "confidence": getattr(consensus, "confidence", 0.0),
+                        "key_findings": (consensus.key_findings or [])[:3],
+                    },
+                    "agent_count": len(results),
+                    "source": "cron",
+                })
+            except Exception as _hist_err:
+                logger.warning("Failed to save history for %s: %s", ticker, _hist_err)
 
             print(f"  {ticker}: {consensus.signal.value.upper()} ({consensus.score:.1f}/10)")
         except Exception as e:

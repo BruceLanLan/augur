@@ -165,7 +165,7 @@ async def api_put_cron_config(body: CronConfigBody):
 
 
 @router.post("/api/cron/run-now", summary="立即执行一次监控分析")
-async def api_cron_run_now():
+def api_cron_run_now():
     """触发一次 watchlist 分析并返回结果"""
     from augur.cron import run_watchlist_analysis
     try:
