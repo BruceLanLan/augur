@@ -241,6 +241,9 @@
             <div class="vote neutral"><b id="vote-neu">0</b><span>NEUTRAL</span></div>
             <div class="vote sell"><b id="vote-bear">0</b><span>BEARISH</span></div>
         </div>
+        <div id="divergence-badge" style="display:none; margin-top:10px; padding:6px 12px; border-radius:6px; background:rgba(255,180,0,0.12); border:1px solid rgba(255,180,0,0.4); font-size:0.72rem; color:var(--amber, #e6b84a); text-align:center; letter-spacing:0.03em;">
+            ⚠ <span id="divergence-label">Agent Divergence</span>
+        </div>
     </div>
 
     <!-- OracleSays -->
@@ -788,6 +791,18 @@ function renderResults(data) {
     document.getElementById('vote-bull').textContent = bull;
     document.getElementById('vote-neu').textContent = neu;
     document.getElementById('vote-bear').textContent = bear;
+
+    // Divergence badge
+    var divBadge = document.getElementById('divergence-badge');
+    var divData = data.divergence || (cons.metadata && cons.metadata.divergence);
+    if (divBadge && divData && divData.is_divergent) {
+        var divScore = (divData.score * 100).toFixed(0);
+        document.getElementById('divergence-label').textContent =
+            'Agent Divergence — ' + divData.bullish_count + 'B / ' + divData.bearish_count + 'Br  (' + divScore + '% split)';
+        divBadge.style.display = 'block';
+    } else if (divBadge) {
+        divBadge.style.display = 'none';
+    }
 
     // OracleSays
     var oracleMsg = 'The council has spoken. <b style="color:var(--gilt-bright)">' + ticker + '</b> draws a <b style="color:var(--signal-' + (sigClass==='neutral'?'warn':sigClass) + ')">' + signalLabel(cons.signal) + '</b> omen — score ' + score.toFixed(1) + ', confidence ' + ((cons.confidence||0)*100).toFixed(0) + '%. The Kelly oracle counsels a <b style="color:var(--gilt-bright)">' + posPct + '</b> position. <br><br>' + escapeHtml(cons.reasoning || '');

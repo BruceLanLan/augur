@@ -335,6 +335,24 @@ class ConsensusEngine:
             if ctx_for_risk and hasattr(ctx_for_risk, "pe") and ctx_for_risk.pe > 30:
                 result.risks.append(f"PE={ctx_for_risk.pe:.1f}, valuation elevated - consider stop-loss")
 
+        # --- Divergence score (raw non-weighted head-counts) ---
+        # Measures bull/bear disagreement independent of agent weights.
+        # score=0.0 means all active agents agree; score=1.0 means 50/50 split.
+        _bull_raw = sum(1 for r in valid_results.values() if r.signal == SignalType.BULLISH)
+        _bear_raw = sum(1 for r in valid_results.values() if r.signal == SignalType.BEARISH)
+        _neu_raw = sum(1 for r in valid_results.values() if r.signal == SignalType.NEUTRAL)
+        _active_raw = _bull_raw + _bear_raw
+        _div_score = round(2.0 * min(_bull_raw, _bear_raw) / _active_raw, 3) if _active_raw > 0 else 0.0
+        result.metadata["divergence"] = {
+            "score": _div_score,
+            "bullish_count": _bull_raw,
+            "bearish_count": _bear_raw,
+            "neutral_count": _neu_raw,
+            "total_valid": len(valid_results),
+            # Requires at least 2 agents on each side to avoid 1v1 false alarms
+            "is_divergent": min(_bull_raw, _bear_raw) >= 2 and _div_score >= 0.4,
+        }
+
         # Clamp final score to valid range [0, 10]
         if not math.isfinite(result.score):
             result.score = 0.0

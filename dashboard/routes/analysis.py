@@ -219,6 +219,7 @@ def analyze_ticker(
             "debt_ratio": ctx.debt_ratio,
         },
         "consensus": consensus_resp.to_dict(),
+        "divergence": consensus_resp.metadata.get("divergence"),
         "agents": [r.to_dict() for r in agent_responses.values()],
         "agent_count": len(agent_responses),
     }
