@@ -21,8 +21,8 @@ from pathlib import Path
 import pytest
 
 
-JS_PATH = Path(__file__).resolve().parents[1] / "dashboard" / "static" / "js" / "i18n.js"
-TPL_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "templates"
+JS_PATH = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "static" / "js" / "i18n.js"
+TPL_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates"
 
 NEW_KEYS = [
     "signals-add-example-aria",

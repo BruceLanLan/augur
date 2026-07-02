@@ -126,7 +126,7 @@ Every analysis auto-archived. GitHub-style 52-week heatmap. Filter by signal, sc
 | 🇨🇳 China Value | Duan Yongping · Zhang Lei (Hillhouse) · Li Lu (Himalaya) · Dan Bin · Dayu BTCdayu |
 | ⚙️ Special | Serenity (AI compute supply chain) |
 
-Each master has a dedicated [Hermes Skill](skills/) for direct persona chat.
+Each master has a dedicated [Hermes Skill](src/skills/) for direct persona chat.
 
 ---
 

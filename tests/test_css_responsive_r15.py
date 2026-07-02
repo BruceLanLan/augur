@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-CSS_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "static" / "css"
+CSS_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "static" / "css"
 
 
 def _read(name: str) -> str:

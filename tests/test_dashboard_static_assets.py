@@ -14,8 +14,8 @@ from fastapi.testclient import TestClient
 
 from dashboard.app import app
 
-STATIC_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "static"
-TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "templates"
+STATIC_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "static"
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates"
 BASE_HTML = TEMPLATES_DIR / "base.html"
 
 

@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "templates"
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates"
 INDEX_HTML = TEMPLATES_DIR / "index.html"
 BASE_HTML = TEMPLATES_DIR / "base.html"
 

@@ -1,0 +1,39 @@
+{
+  "name": "augur-aschenbrenner",
+  "version": "10.2.0",
+  "description": "Leopold Aschenbrenner AI — AGI infrastructure + geopolitics, AI/semiconductor supply chains",
+  "author": "BruceBlue (https://x.com/BruceBlue)",
+  "license": "MIT",
+  "type": "mcp-skill",
+  "model": {
+    "default": "claude-opus-4-8",
+    "alternatives": [
+      "gpt-4o",
+      "deepseek-chat"
+    ]
+  },
+  "mcp": {
+    "server": "augur",
+    "command": "augur-mcp",
+    "required_tools": [
+      "mcp_augur_analyze",
+      "mcp_augur_fetch",
+      "mcp_augur_consensus"
+    ]
+  },
+  "compatibility": [
+    "hermes",
+    "openclaw",
+    "claude-desktop",
+    "any-mcp"
+  ],
+  "tags": [
+    "investing",
+    "aschenbrenner",
+    "ai",
+    "geopolitics",
+    "semiconductor"
+  ],
+  "language": "en",
+  "persona_id": "aschenbrenner"
+}

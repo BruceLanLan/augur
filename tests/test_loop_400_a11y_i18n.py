@@ -6,8 +6,8 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "templates"
-DASHBOARD_DIR = Path(__file__).resolve().parents[1] / "dashboard"
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates"
+DASHBOARD_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard"
 I18N_JS = DASHBOARD_DIR / "static" / "js" / "i18n.js"
 
 

@@ -10,9 +10,9 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "templates"
-STATIC_JS = Path(__file__).resolve().parents[1] / "dashboard" / "static" / "js" / "i18n.js"
-CSS_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "static" / "css"
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates"
+STATIC_JS = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "static" / "js" / "i18n.js"
+CSS_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "static" / "css"
 
 
 def _read(name: str) -> str:

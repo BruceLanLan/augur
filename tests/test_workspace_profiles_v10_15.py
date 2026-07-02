@@ -187,14 +187,14 @@ class TestWorkspaceExportImport:
 
 class TestWorkspaceSettingsHTML:
     def test_save_clears_landing_route_session_flag(self):
-        settings = Path(__file__).resolve().parents[1] / "dashboard" / "templates" / "settings.html"
+        settings = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates" / "settings.html"
         text = settings.read_text(encoding="utf-8")
         assert "function saveWorkspaceConfig" in text
         save_block = text.split("function saveWorkspaceConfig")[1].split("function ")[0]
         assert "sessionStorage.removeItem('augur-workspace-routed')" in save_block
 
     def test_base_landing_redirect_encodes_ticker(self):
-        base = Path(__file__).resolve().parents[1] / "dashboard" / "templates" / "base.html"
+        base = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates" / "base.html"
         text = base.read_text(encoding="utf-8")
         assert "encodeURIComponent(ticker.toUpperCase())" in text
 

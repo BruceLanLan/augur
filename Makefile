@@ -22,7 +22,7 @@ dev:               ## Install all dev dependencies
 
 serve:             ## Start dashboard at http://localhost:$(PORT)
 	@echo "🦉 Augur Dashboard → http://localhost:$(PORT)"
-	$(PYTHON) -m dashboard.app --port $(PORT) --host 0.0.0.0
+	augur serve --port $(PORT) --host 0.0.0.0
 
 run: serve         ## Alias for serve
 

@@ -17,7 +17,7 @@ ROOT = Path(__file__).parent.parent
 
 
 def _persona_manifest_dirs():
-    skills_dir = ROOT / "skills"
+    skills_dir = ROOT / "src" / "skills"
     return [d for d in skills_dir.iterdir() if d.is_dir() and (d / "manifest.json").exists()]
 
 
@@ -57,7 +57,7 @@ class TestHermesAgentVersionSync:
 
 class TestCommitteePresetWiring:
     def test_committee_page_fetches_workspace_on_load(self):
-        html = (ROOT / "dashboard" / "templates" / "committee.html").read_text(encoding="utf-8")
+        html = (ROOT / "src" / "dashboard" / "templates" / "committee.html").read_text(encoding="utf-8")
         assert "fetch('/api/workspace')" in html
         assert "ws.committee_preset" in html
         assert "loadPreset(preset)" in html

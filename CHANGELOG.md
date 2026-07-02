@@ -2,6 +2,29 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.2.0] - 2026-07-02
+
+Fixes a real PyPI packaging gap found during release-readiness verification: `dashboard/` (the entire web dashboard — templates, static assets, i18n, and all route modules) and `skills/` (Hermes/OpenClaw skill profiles) lived at the repo root, outside `src/`, which is the only directory `[tool.setuptools.packages.find]` packages. A local `python -m build` confirmed the built wheel contained zero `dashboard/*` files; `pip install augur-agents` followed by `augur serve` would fail with "Could not import dashboard app" — the dashboard is the flagship feature and this had never been caught because local dev/test runs only worked by incidental cwd-on-sys.path behavior when running from a repo checkout, not through the actual packaging configuration.
+
+### Fixed
+
+- **Moved `dashboard/` and `skills/` into `src/`** (`src/dashboard/`, `src/skills/`) so `packages.find` (and the new `package-data` globs for templates/static/i18n/md/json) actually bundle them into the wheel. No import path changes were needed — `dashboard.app`, `dashboard.routes.*` etc. keep their existing top-level names since both directories are now siblings of `augur/` under `src/`.
+- **`src/augur/cli.py`**: `augur serve` and `augur skills` path resolution changed from `parents[2]` (assumed repo-root-relative, only true in a dev checkout) to `parents[1]` (correct for both a dev checkout and a real pip install, since `dashboard`/`skills` now sit alongside `augur/` in both cases).
+- **`Dockerfile`**: removed the now-redundant separate `COPY dashboard/` and `COPY skills/` steps (already covered by the existing `COPY src/`).
+- **`Makefile`**: `make serve` now calls `augur serve` instead of raw `python -m dashboard.app`, reusing the fixed path-resolution logic instead of duplicating the old repo-root assumption.
+- **`scripts/generate_skills.py`**: `skills_dir` updated to `ROOT / "src" / "skills"`.
+- **~20 test files** that read template/CSS/JS files directly by filesystem path (not via Python import — a common pattern here for i18n/a11y/content assertions) had `"dashboard"` path components updated to `"src" / "dashboard"`; one file updated similarly for `"skills"`.
+
+### Verified
+
+- Built a real wheel locally (`python -m build`), confirmed `dashboard/` (85 files, including all templates/static/i18n) and `skills/` are present in it.
+- Installed that wheel into a throwaway virtualenv and ran `augur serve` end-to-end: server started, `/health` and `/stocks` both returned HTTP 200 — this exact sequence would have failed with an ImportError before this fix.
+- Full test suite: 2180 passed, 0 failures, after both the move and the ~20-file test path-reference fix.
+
+### Known residual gap (not fixed here, out of scope for this release)
+
+- `personas/custom/` (user-defined custom persona YAML overrides, loaded by `registry.py`) and `docs/knowledge/personas/` (persona enrichment markdown, loaded by `soul.py`) have the same theoretical repo-root-relative gap, but both already have graceful multi-candidate fallback logic (including a `Path.cwd()`-based lookup) rather than a hard crash — lower severity than the dashboard's hard ImportError, and intentionally left out of this fix's scope.
+
 ## [10.1.0] - 2026-07-01
 
 Dashboard router split — `dashboard/app.py` fully decomposed into 17 focused `APIRouter` modules under `dashboard/routes/`. No user-visible behavior changes; 111 HTTP routes and 2136 passing tests preserved throughout.

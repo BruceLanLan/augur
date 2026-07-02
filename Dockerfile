@@ -24,12 +24,11 @@ WORKDIR /app
 # Copy installed packages
 COPY --from=builder /install /usr/local
 
-# Copy application code
+# Copy application code (dashboard/ and skills/ live under src/, so the
+# COPY src/ below already brings them in — no separate copy needed)
 COPY src/ ./src/
 COPY config/ ./config/
-COPY skills/ ./skills/
 COPY personas/ ./personas/
-COPY dashboard/ ./dashboard/
 COPY scripts/ ./scripts/
 COPY docs/ ./docs/
 

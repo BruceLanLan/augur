@@ -21,7 +21,7 @@ _SCANNER_IMPORT_RE = re.compile(
 
 
 def _iter_primary_python_files() -> list[Path]:
-    files = [REPO_ROOT / "dashboard" / "app.py"]
+    files = [REPO_ROOT / "src" / "dashboard" / "app.py"]
     files.extend(sorted((REPO_ROOT / "src" / "augur").rglob("*.py")))
     return files
 
@@ -58,7 +58,7 @@ def test_no_scanner_imports_in_primary_codepath(rel_path: str):
 
 
 def test_dashboard_uses_augur_registry_directly():
-    text = (REPO_ROOT / "dashboard" / "app.py").read_text(encoding="utf-8")
+    text = (REPO_ROOT / "src" / "dashboard" / "app.py").read_text(encoding="utf-8")
     assert "from augur.registry import AgentRegistry, DecisionCoordinator" in text
     assert "from augur.personas.base import MarketContext" in text
     assert "from scanner." not in text

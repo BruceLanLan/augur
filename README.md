@@ -126,7 +126,7 @@ augur workflow NVDA --steps fetch,analyze,consensus,committee
 | 🇨🇳 中国价值 | 段永平 · 张磊（高瓴）· 李录（喜马拉雅）· 但斌（东方港湾）· 大宇 BTCdayu |
 | ⚙️ 特殊策略 | Serenity（AI算力供应链）|
 
-每位大师都有独立的 [Hermes Skill](skills/)，可直接在 Hermes Studio 里单独对话。
+每位大师都有独立的 [Hermes Skill](src/skills/)，可直接在 Hermes Studio 里单独对话。
 
 ---
 

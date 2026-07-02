@@ -1,0 +1,38 @@
+{
+  "name": "augur-committee",
+  "version": "10.2.0",
+  "description": "Augur Investment Committee — Convene 2-18 masters for structured multi-agent analysis and verdict",
+  "author": "BruceBlue (https://x.com/BruceBlue)",
+  "license": "MIT",
+  "type": "committee-coordinator",
+  "model": {
+    "default": "claude-sonnet-4-6",
+    "alternatives": [
+      "gpt-4o",
+      "deepseek-chat"
+    ]
+  },
+  "mcp": {
+    "server": "augur",
+    "command": "augur-mcp",
+    "required_tools": [
+      "mcp_augur_analyze",
+      "mcp_augur_fetch",
+      "mcp_augur_consensus",
+      "mcp_augur_committee"
+    ]
+  },
+  "compatibility": [
+    "hermes",
+    "openclaw",
+    "claude-desktop",
+    "any-mcp"
+  ],
+  "tags": [
+    "investing",
+    "committee",
+    "multi-agent",
+    "consensus"
+  ],
+  "language": "en"
+}

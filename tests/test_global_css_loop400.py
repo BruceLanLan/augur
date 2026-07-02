@@ -5,8 +5,8 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "templates"
-LAYOUT_CSS = Path(__file__).resolve().parents[1] / "dashboard" / "static" / "css" / "layout.css"
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates"
+LAYOUT_CSS = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "static" / "css" / "layout.css"
 
 TOOL_PAGES = [
     "signals.html",

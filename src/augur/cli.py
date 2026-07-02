@@ -923,9 +923,13 @@ def serve_cmd(port, host, open_browser):
     import sys
     import os
 
-    # Resolve dashboard app path relative to this file
+    # Resolve dashboard app path relative to this file.
+    # dashboard/ lives alongside augur/ under src/ (parents[1]) so this
+    # resolves correctly both in a dev checkout and a real pip install —
+    # unlike the old repo-root-relative path, which only worked because
+    # dev/test runs happen to have the repo root on sys.path incidentally.
     from pathlib import Path as _Path
-    dashboard_dir = _Path(__file__).resolve().parents[2] / "dashboard"
+    dashboard_dir = _Path(__file__).resolve().parents[1] / "dashboard"
     if str(dashboard_dir) not in sys.path:
         sys.path.insert(0, str(dashboard_dir.parent))
 
@@ -1186,7 +1190,7 @@ def skills_cmd(school, lang):
     import yaml as _yaml
     from pathlib import Path as _Path
 
-    skills_dir = _Path(__file__).resolve().parents[2] / "skills"
+    skills_dir = _Path(__file__).resolve().parents[1] / "skills"
 
     if not skills_dir.exists():
         click.echo(

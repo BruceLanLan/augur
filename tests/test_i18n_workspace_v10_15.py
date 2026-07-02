@@ -6,9 +6,9 @@ from pathlib import Path
 
 import pytest
 
-JS_PATH = Path(__file__).resolve().parents[1] / "dashboard" / "static" / "js" / "i18n.js"
-I18N_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "i18n"
-SETTINGS_HTML = Path(__file__).resolve().parents[1] / "dashboard" / "templates" / "settings.html"
+JS_PATH = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "static" / "js" / "i18n.js"
+I18N_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "i18n"
+SETTINGS_HTML = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates" / "settings.html"
 
 WORKSPACE_KEYS = [
     "settings-section-workspace-title",

@@ -21,7 +21,7 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "templates"
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates"
 SIGNALS_HTML = TEMPLATES_DIR / "signals.html"
 
 

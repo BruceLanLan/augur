@@ -490,7 +490,7 @@ mcp_servers:
 
 def generate_all(only_persona=None, dry_run: bool = False) -> None:
     registry = AgentRegistry()
-    skills_dir = ROOT / "skills"
+    skills_dir = ROOT / "src" / "skills"
 
     targets = list(SKILL_META.items())
     if only_persona:

@@ -93,7 +93,7 @@ class TestHomeWidgetsHelpers:
 class TestHomeDashboardHTML:
     @pytest.fixture(scope="class")
     def index_soup(self):
-        path = Path(__file__).resolve().parents[1] / "dashboard" / "templates" / "index.html"
+        path = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates" / "index.html"
         return BeautifulSoup(path.read_text(encoding="utf-8"), "html.parser")
 
     @pytest.fixture(scope="class")

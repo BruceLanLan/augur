@@ -23,9 +23,9 @@ from pathlib import Path
 import pytest
 from bs4 import BeautifulSoup
 
-TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "templates"
-CSS_DIR = Path(__file__).resolve().parents[1] / "dashboard" / "static" / "css"
-DASHBOARD_DIR = Path(__file__).resolve().parents[1] / "dashboard"
+TEMPLATES_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "templates"
+CSS_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard" / "static" / "css"
+DASHBOARD_DIR = Path(__file__).resolve().parents[1] / "src" / "dashboard"
 INDEX_HTML = TEMPLATES_DIR / "index.html"
 BASE_HTML = TEMPLATES_DIR / "base.html"
 REPORT_VIEW_HTML = TEMPLATES_DIR / "report_view.html"

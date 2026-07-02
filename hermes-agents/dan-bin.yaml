@@ -8,7 +8,7 @@ display_name: "但斌"
 description: "东方港湾 — 时代 β 与消费品护城河 · augur_workflow MCP"
 persona_id: dan_bin
 language: zh
-version: "10.1.0"
+version: "10.2.0"
 
 mcp:
   command: augur-mcp

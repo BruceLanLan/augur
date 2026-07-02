@@ -662,7 +662,7 @@ class TestResponsiveCSS:
 
     @pytest.fixture
     def css_content(self):
-        css_path = Path(__file__).parent.parent / "dashboard" / "static" / "css" / "bloomberg.css"
+        css_path = Path(__file__).parent.parent / "src" / "dashboard" / "static" / "css" / "bloomberg.css"
         return css_path.read_text(encoding="utf-8")
 
     def test_css_has_tablet_breakpoint(self, css_content):

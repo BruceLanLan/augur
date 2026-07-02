@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "augur-agents"
-version = "10.1.0"
+version = "10.2.0"
 description = "Multi-agent investment analysis system with 18 investor persona agents, consensus mechanism, and multi-platform deployment"
 readme = "README.md"
 license = {text = "MIT"}
@@ -105,3 +105,5 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 augur = ["py.typed"]
+dashboard = ["templates/*.html", "static/**/*", "i18n/*.json"]
+skills = ["*.md", "**/*.md", "**/*.json"]
