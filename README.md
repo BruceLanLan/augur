@@ -112,6 +112,18 @@ augur workflow NVDA --steps fetch,analyze,consensus,committee
 
 每次分析自动存档，GitHub 风格 52 周热力图，按信号 / 评分 / 日期筛选。
 
+### 对比分析
+
+<img src="docs/images/screenshots/compare-radar.png" alt="对比分析 — 5维度评分雷达图 + 因子明细" width="100%">
+
+选 2–5 位大师同台对比同一标的，5 维度（估值 / 成长 / 质量 / 动量 / 安全）雷达图一眼看出分歧所在，展开明细表可看到每位大师用了哪些具体因子（PE、护城河、动量等）打出这个分数。
+
+### Hermes Agent 接入
+
+<img src="docs/images/screenshots/hermes-setup.png" alt="Hermes Agent 接入指南 — MCP 一键配置" width="100%">
+
+一步步配置指南：安装 MCP 服务、注册 Claude Desktop / Hermes，把 18 位大师和委员会都接进你的 AI Agent 工作流。
+
 ---
 
 ## 🎭 18位投资大师

@@ -112,6 +112,18 @@ Pick 2–4 masters to debate the same ticker across multiple rounds. Full bull a
 
 Every analysis auto-archived. GitHub-style 52-week heatmap. Filter by signal, score, or date.
 
+### Compare
+
+<img src="docs/images/screenshots/compare-radar.png" alt="Compare — 5-dimension scoring radar + factor breakdown" width="100%">
+
+Put 2–5 masters side by side on the same ticker. A 5-axis radar (valuation / growth / quality / momentum / safety) shows exactly where they disagree at a glance, and the expandable breakdown table shows the concrete factors (PE, moat, momentum, etc.) each master used to arrive at their score.
+
+### Hermes Agent Setup
+
+<img src="docs/images/screenshots/hermes-setup.png" alt="Hermes Agent setup guide — one-click MCP configuration" width="100%">
+
+Step-by-step guide: install the MCP server, register with Claude Desktop / Hermes, and wire all 18 masters plus the committee into your AI agent workflow.
+
 ---
 
 ## 🎭 18 Investment Masters
