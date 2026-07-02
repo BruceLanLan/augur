@@ -35,6 +35,9 @@
             <p class="text-muted mt-16" style="font-size:0.82rem;" data-i18n="perf-loading">加载中...</p>
         </div>
     </div>
+    <div id="winrate-pending" style="display:none; padding:6px 16px 10px; font-size:0.75rem; color:var(--text-muted); border-top:1px solid var(--border-color);">
+        <span id="winrate-pending-text"></span>
+    </div>
 </div>
 
 <!-- IC Bar Chart -->
@@ -86,17 +89,34 @@ function refreshLeaderboard() {
     fetch('/api/backtest/leaderboard')
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            renderLeaderboard(data.leaderboard || []);
+            renderLeaderboard(data.leaderboard || [], data);
         })
         .catch(function(err) {
             content.innerHTML = '<div style="padding:24px; text-align:center; color:var(--text-muted);">' + escapeHtml(_t('perf-no-data')) + '</div>';
         });
 }
 
-function renderLeaderboard(items) {
+function renderLeaderboard(items, meta) {
     var content = document.getElementById('leaderboard-content');
     var exportBtn = document.getElementById('perf-export-btn');
     var chartCard = document.getElementById('perf-chart-card');
+    var pendingEl = document.getElementById('winrate-pending');
+    var pendingText = document.getElementById('winrate-pending-text');
+
+    // Show pending predictions notice when live accuracy engine has data in flight
+    if (pendingEl && pendingText && meta) {
+        var pending = meta.pending_count || 0;
+        if (pending > 0) {
+            pendingText.textContent = pending + ' prediction' + (pending === 1 ? '' : 's') +
+                ' pending outcome (resolves after 30 days)';
+            pendingEl.style.display = '';
+        } else if (meta.has_live_accuracy) {
+            pendingText.textContent = 'Live accuracy based on resolved outcomes';
+            pendingEl.style.display = '';
+        } else {
+            pendingEl.style.display = 'none';
+        }
+    }
 
     if (!items || items.length === 0) {
         content.innerHTML = '<div style="padding:48px; text-align:center; color:var(--text-muted);">' +

@@ -322,6 +322,12 @@ class LearningEngine:
             return any(acc.get("total", 0) >= 3 for acc in self._accuracy.values())
 
     @property
+    def pending_count(self) -> int:
+        """Number of recorded predictions still awaiting outcome resolution."""
+        with self._lock:
+            return sum(1 for p in self._predictions if p["outcome"] is None)
+
+    @property
     def prediction_count(self) -> int:
         """Get total number of recorded predictions."""
         with self._lock:

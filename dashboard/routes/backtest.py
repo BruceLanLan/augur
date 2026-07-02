@@ -82,21 +82,42 @@ async def api_run_backtest(ticker: str = "AAPL", days: int = 30, initial_capital
 
 @router.get("/api/backtest/leaderboard", summary="获取IC排行榜")
 async def api_ic_leaderboard():
-    """Get saved IC leaderboard"""
+    """Get saved IC leaderboard, enriched with live LearningEngine accuracy when available."""
     from augur.backtest import Backtester
 
     backtester = Backtester()
     ics = backtester.get_leaderboard()
+
+    # Fetch live per-agent accuracy from LearningEngine (outcomes resolved after 30+ days).
+    # Silently skipped if no data exists yet.
+    live_accuracy: dict = {}
+    pending_count: int = 0
+    try:
+        from augur.registry import _get_learning_engine
+        le = _get_learning_engine()
+        live_accuracy = le.get_accuracy()
+        pending_count = le.pending_count
+    except Exception:
+        pass
 
     registry = get_registry()
     def _enrich(d: dict) -> dict:
         agent = registry.get(d.get("agent_id", ""))
         if agent:
             d["agent_name"] = agent.name
+        agent_id = d.get("agent_id", "")
+        la = live_accuracy.get(agent_id)
+        if la:
+            d["accuracy"] = la["accuracy_rate"]
+            d["total_predictions"] = la["total_predictions"]
+            d["correct_predictions"] = la["correct_predictions"]
+            d["live_accuracy"] = True
         return d
 
     return {
         "status": "ok",
         "leaderboard": [_enrich(a.to_dict()) for a in ics],
         "count": len(ics),
+        "pending_count": pending_count,
+        "has_live_accuracy": bool(live_accuracy),
     }
