@@ -42,6 +42,31 @@ class TestPortfolioRiskValidation:
         })
         assert resp.status_code == 400
 
+    def test_negative_qty_rejected(self, client):
+        """Negative qty is rejected the same way as zero (not just <=0 vs ==0)."""
+        resp = client.post("/api/portfolio/risk", json={
+            "holdings": [{"ticker": "AAPL", "qty": -5, "current_price": 10.0}]
+        })
+        assert resp.status_code == 400
+
+    def test_negative_current_price_rejected(self, client):
+        """A negative current_price is financially nonsensical and must be rejected
+        (previously unvalidated — could flip total_value negative and produce
+        garbage weights instead of a clean 400)."""
+        resp = client.post("/api/portfolio/risk", json={
+            "holdings": [{"ticker": "AAPL", "qty": 10, "current_price": -50.0}]
+        })
+        assert resp.status_code == 400
+
+    def test_exactly_20_holdings_accepted(self, client):
+        """20 holdings is the boundary — must be accepted (only 21+ is rejected)."""
+        holdings = [{"ticker": f"T{i}", "qty": 1, "current_price": 10.0} for i in range(20)]
+        with patch("augur.data.fetch_history", side_effect=Exception("no network")), \
+             patch("augur.data.fetch_market_context", side_effect=Exception("no network")):
+            resp = client.post("/api/portfolio/risk", json={"holdings": holdings})
+        assert resp.status_code == 200
+        assert len(resp.json()["holdings"]) == 20
+
 
 class TestPortfolioRiskComputation:
     """Structural correctness of the risk decomposition math."""
@@ -196,3 +221,94 @@ class TestPortfolioRiskComputation:
 
         assert resp.status_code == 200
         assert resp.json()["data_source"] == "live"
+
+    def test_second_lot_zero_price_does_not_overwrite_first(self, client):
+        """Aggregation keeps the last *non-zero* price seen — a later lot with
+        current_price=0 (e.g. client didn't have a fresh quote for that entry)
+        must not blank out an already-known price."""
+        with patch("augur.data.fetch_history", side_effect=Exception("no network")), \
+             patch("augur.data.fetch_market_context", return_value=self._mock_ctx("AAPL")):
+            resp = client.post("/api/portfolio/risk", json={
+                "holdings": [
+                    {"ticker": "AAPL", "qty": 5, "current_price": 150.0},
+                    {"ticker": "AAPL", "qty": 5, "current_price": 0},
+                ]
+            })
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["total_value"] == pytest.approx(1500.0)  # 10 shares * 150, not 750
+
+    def test_both_lots_zero_price_gives_zero_value_error(self, client):
+        """If every lot of a ticker has current_price=0, aggregated value is 0
+        -> overall zero-total-value rejection still fires (no silent 0-value ticker)."""
+        resp = client.post("/api/portfolio/risk", json={
+            "holdings": [
+                {"ticker": "AAPL", "qty": 5, "current_price": 0},
+                {"ticker": "AAPL", "qty": 5, "current_price": 0},
+            ]
+        })
+        assert resp.status_code == 400
+
+    def test_holdings_sorted_by_weight_descending(self, client):
+        """Response holdings are sorted largest-weight-first, not insertion order."""
+        contexts = {
+            "SMALL": self._mock_ctx("SMALL", sector="Technology"),
+            "BIG": self._mock_ctx("BIG", sector="Technology"),
+        }
+
+        def fake_ctx(ticker, **kw):
+            return contexts[ticker]
+
+        with patch("augur.data.fetch_history", side_effect=Exception("no network")), \
+             patch("augur.data.fetch_market_context", side_effect=fake_ctx):
+            resp = client.post("/api/portfolio/risk", json={
+                # SMALL submitted first but is the smaller position
+                "holdings": [
+                    {"ticker": "SMALL", "qty": 1, "current_price": 10.0},
+                    {"ticker": "BIG", "qty": 100, "current_price": 100.0},
+                ]
+            })
+
+        assert resp.status_code == 200
+        tickers_in_order = [h["ticker"] for h in resp.json()["holdings"]]
+        assert tickers_in_order == ["BIG", "SMALL"]
+
+    def test_sector_concentration_sorted_by_weight_descending(self, client):
+        """sector_concentration list is sorted largest-sector-first."""
+        contexts = {
+            "SMALLCAP": self._mock_ctx("SMALLCAP", sector="Energy"),
+            "BIGCAP": self._mock_ctx("BIGCAP", sector="Technology"),
+        }
+
+        def fake_ctx(ticker, **kw):
+            return contexts[ticker]
+
+        with patch("augur.data.fetch_history", side_effect=Exception("no network")), \
+             patch("augur.data.fetch_market_context", side_effect=fake_ctx):
+            resp = client.post("/api/portfolio/risk", json={
+                "holdings": [
+                    {"ticker": "SMALLCAP", "qty": 1, "current_price": 10.0},
+                    {"ticker": "BIGCAP", "qty": 100, "current_price": 100.0},
+                ]
+            })
+
+        assert resp.status_code == 200
+        sectors_in_order = [s["sector"] for s in resp.json()["sector_concentration"]]
+        assert sectors_in_order == ["Technology", "Energy"]
+
+    def test_zero_beta_falls_back_to_one(self, client):
+        """A MarketContext.beta_1y of exactly 0.0 is treated as 'no data' and
+        substituted with the neutral default 1.0 (falsy-0 fallback in the
+        route) — locking down current behavior since a real zero-beta asset
+        would be silently overwritten the same way."""
+        with patch("augur.data.fetch_history", side_effect=Exception("no network")), \
+             patch("augur.data.fetch_market_context", return_value=self._mock_ctx("AAPL", beta=0.0)):
+            resp = client.post("/api/portfolio/risk", json={
+                "holdings": [{"ticker": "AAPL", "qty": 10, "current_price": 150.0}]
+            })
+
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["holdings"][0]["beta"] == pytest.approx(1.0)
+        assert data["portfolio"]["beta"] == pytest.approx(1.0)

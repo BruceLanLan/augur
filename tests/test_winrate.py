@@ -187,3 +187,35 @@ class TestLeaderboardWinRate:
         assert items["buffett"]["live_accuracy"] is True
         assert items["buffett"]["accuracy"] == pytest.approx(0.80, abs=0.001)
         assert items["marks"].get("live_accuracy") is not True
+
+    def test_agent_with_only_live_accuracy_is_not_in_leaderboard(self, client):
+        """Documents current (possibly surprising) behavior: the leaderboard is
+        built by iterating Backtester.get_leaderboard() and enriching each
+        entry with live accuracy — it does NOT add agents that exist only in
+        LearningEngine (never backtested). has_live_accuracy can be True while
+        that agent's own row is simply absent from `leaderboard`.
+
+        If this ever needs to change (e.g. a brand-new persona accumulates
+        live predictions before anyone runs a backtest for it), this test is
+        the one to update.
+        """
+        mock_le = MagicMock()
+        mock_le.get_accuracy.return_value = {
+            "brand_new_persona": {
+                "accuracy_rate": 0.90, "total_predictions": 5,
+                "correct_predictions": 4, "ic": 0.6,
+            },
+        }
+        mock_le.pending_count = 0
+
+        with patch("augur.backtest.Backtester") as MockBT, \
+             patch("augur.registry._get_learning_engine", return_value=mock_le):
+            bt = MockBT.return_value
+            bt.get_leaderboard.return_value = [self._mock_leaderboard_item("buffett", 0.55, 20)]
+            resp = client.get("/api/backtest/leaderboard")
+
+        data = resp.json()
+        assert data["has_live_accuracy"] is True
+        agent_ids = {i["agent_id"] for i in data["leaderboard"]}
+        assert "brand_new_persona" not in agent_ids
+        assert agent_ids == {"buffett"}

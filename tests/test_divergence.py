@@ -166,6 +166,45 @@ class TestDivergenceScore:
         assert div["is_divergent"] is True
         assert div["score"] == pytest.approx(1.0, abs=0.001)
 
+    def test_exact_threshold_boundary_is_divergent(self):
+        """2B / 8Br → score = 2*2/10 = 0.4 exactly; min(2,8)=2 exactly.
+
+        Both guard conditions (`score >= 0.4`, `min >= 2`) are inclusive —
+        this is the single case that sits exactly on both boundaries at once,
+        so an off-by-one on either `>=` would flip this test.
+        """
+        results = _make_results(bullish=2, bearish=8)
+        consensus = _run_engine(results)
+        div = consensus.metadata["divergence"]
+        assert div["score"] == pytest.approx(0.4, abs=0.001)
+        assert div["is_divergent"] is True
+
+    def test_all_agents_error_gives_empty_divergence(self):
+        """Every agent returns ERROR (not just some) → valid_results is empty.
+
+        Must degrade to a clean zero/false divergence report, not crash or
+        divide by zero.
+        """
+        results = {}
+        for i in range(3):
+            results[f"broken_{i}"] = AgentResponse(
+                agent_id=f"broken_{i}",
+                agent_name=f"Broken {i}",
+                signal=SignalType.ERROR,
+                score=0.0,
+                confidence=0.0,
+                reasoning="",
+                key_findings=[],
+                risks=[],
+            )
+        consensus = _run_engine(results)
+        div = consensus.metadata["divergence"]
+        assert div["total_valid"] == 0
+        assert div["bullish_count"] == 0
+        assert div["bearish_count"] == 0
+        assert div["score"] == 0.0
+        assert div["is_divergent"] is False
+
 
 # ---------------------------------------------------------------------------
 # Tests: API response exposure

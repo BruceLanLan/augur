@@ -52,6 +52,8 @@ async def api_portfolio_risk(body: PortfolioRiskBody):
             raise HTTPException(status_code=400, detail=f"Invalid ticker: {h.ticker}")
         if h.qty <= 0:
             raise HTTPException(status_code=400, detail=f"Invalid quantity for {ticker}")
+        if h.current_price < 0:
+            raise HTTPException(status_code=400, detail=f"Invalid current_price for {ticker}")
         entry = agg.setdefault(ticker, {"qty": 0.0, "price": h.current_price})
         entry["qty"] += h.qty
         if h.current_price > 0:
