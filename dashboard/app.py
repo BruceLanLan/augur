@@ -92,6 +92,7 @@ from dashboard.routes.ws import router as _ws_router  # noqa: E402
 from dashboard.routes.chat import router as _chat_router  # noqa: E402
 from dashboard.routes.rules import router as _rules_router  # noqa: E402
 from dashboard.routes.optimizer import router as _optimizer_router  # noqa: E402
+from dashboard.routes.portfolio import router as _portfolio_router  # noqa: E402
 from dashboard.routes.pages import router as _pages_router  # noqa: E402
 import dashboard.deps as _deps
 from dashboard.deps import get_registry, get_coordinator, _singleton_init_lock
@@ -121,6 +122,7 @@ app.include_router(_ws_router)
 app.include_router(_chat_router)
 app.include_router(_rules_router)
 app.include_router(_optimizer_router)
+app.include_router(_portfolio_router)
 app.include_router(_pages_router)
 
 

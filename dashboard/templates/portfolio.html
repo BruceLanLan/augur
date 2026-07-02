@@ -146,6 +146,7 @@
         </div>
         <div class="flex gap-8">
             <button type="button" class="btn btn-sm" onclick="runAugurAnalysis()" id="pf-analyze-btn" aria-busy="false">&#x1F9E0; <span data-i18n="portfolio-analyze">Augur 分析</span></button>
+            <button type="button" class="btn btn-sm" onclick="runRiskDecomposition()" id="pf-risk-btn" aria-busy="false">&#x1F4CA; <span data-i18n="portfolio-risk-btn">风险分解</span></button>
             <button type="button" class="btn btn-sm btn-ghost" onclick="exportPortfolioCSV()" data-i18n="portfolio-export-csv">导出 CSV</button>
             <button type="button" class="btn btn-sm btn-ghost" onclick="clearPortfolio()" data-i18n="portfolio-clear">清空</button>
         </div>
@@ -220,6 +221,12 @@
 <div id="pf-analysis-results" style="display:none;" class="card mb-24">
     <div class="section-title spaced" data-i18n="portfolio-analysis-title">Augur 大师评分</div>
     <div id="pf-analysis-content"></div>
+</div>
+
+<!-- Risk Decomposition Results -->
+<div id="pf-risk-results" style="display:none;" class="card mb-24">
+    <div class="section-title spaced" data-i18n="portfolio-risk-title">风险分解</div>
+    <div id="pf-risk-content"></div>
 </div>
 
 {% endblock %}
@@ -403,6 +410,8 @@ function renderPortfolio() {
         document.getElementById('pf-summary').style.display = 'none';
         var analysisSection = document.getElementById('pf-analysis-results');
         if (analysisSection) analysisSection.style.display = 'none';
+        var riskSection = document.getElementById('pf-risk-results');
+        if (riskSection) riskSection.style.display = 'none';
         updateSummary(0, 0);
         return;
     }
@@ -686,6 +695,96 @@ function onAnalysisDone(results) {
     html += '</tbody></table></div><p class="table-scroll-hint">' + escapeHtml(_t('table-scroll-hint')) + '</p>';
     content.innerHTML = html;
     showToast(_t('portfolio-analysis-done'));
+}
+
+function runRiskDecomposition() {
+    var list = getPortfolio();
+    if (!list.length) { showToast(_t('portfolio-empty-warning'), 'warning'); return; }
+
+    var agg = {};
+    list.forEach(function(h) {
+        var price = h.currentPrice || h.buyPrice || 0;
+        if (!agg[h.ticker]) agg[h.ticker] = { ticker: h.ticker, qty: 0, current_price: price };
+        agg[h.ticker].qty += h.qty;
+        if (price > 0) agg[h.ticker].current_price = price;
+    });
+    var holdings = Object.keys(agg).map(function(k) { return agg[k]; });
+
+    var btn = document.getElementById('pf-risk-btn');
+    if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
+
+    fetch('/api/portfolio/risk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ holdings: holdings })
+    })
+        .then(function(r) { return r.json().then(function(data) { return { ok: r.ok, data: data }; }); })
+        .then(function(res) {
+            if (res.ok && res.data.status === 'ok') {
+                renderRiskDecomposition(res.data);
+            } else {
+                showToast(res.data.detail || _t('portfolio-risk-error', '风险分解失败'), 'error');
+            }
+        })
+        .catch(function() { showToast(_t('portfolio-risk-error', '风险分解失败'), 'error'); })
+        .then(function() {
+            if (btn) { btn.disabled = false; btn.setAttribute('aria-busy', 'false'); }
+        });
+}
+
+function renderRiskDecomposition(data) {
+    var section = document.getElementById('pf-risk-results');
+    var content = document.getElementById('pf-risk-content');
+    if (!section || !content) return;
+    section.style.display = 'block';
+
+    var p = data.portfolio;
+    var summaryHtml = '<div class="portfolio-summary" style="margin-bottom:16px;">' +
+        '<div class="card summary-card"><div class="data-value">' + p.volatility_annual_pct.toFixed(1) + '%</div>' +
+        '<div class="data-label">' + escapeHtml(_t('portfolio-risk-vol', '年化波动率')) + '</div></div>' +
+        '<div class="card summary-card"><div class="data-value">' + p.beta.toFixed(2) + '</div>' +
+        '<div class="data-label">' + escapeHtml(_t('portfolio-risk-beta', '组合 Beta')) + '</div></div>' +
+        '<div class="card summary-card"><div class="data-value">' + p.diversification.effective_n_weight.toFixed(1) + '</div>' +
+        '<div class="data-label">' + escapeHtml(_t('portfolio-risk-effn-weight', '有效持仓数(按权重)')) + '</div></div>' +
+        '<div class="card summary-card"><div class="data-value">' + p.diversification.effective_n_risk.toFixed(1) + '</div>' +
+        '<div class="data-label">' + escapeHtml(_t('portfolio-risk-effn-risk', '有效持仓数(按风险)')) + '</div></div>' +
+        '</div>';
+
+    var tableHtml = '<div class="md-table-wrap"><table class="md-table" style="width:100%;"><caption class="sr-only">' +
+        escapeHtml(_t('portfolio-risk-title', '风险分解')) + '</caption><thead><tr>' +
+        '<th scope="col">' + escapeHtml(_t('portfolio-col-ticker')) + '</th>' +
+        '<th scope="col">' + escapeHtml(_t('portfolio-risk-col-weight', '仓位权重')) + '</th>' +
+        '<th scope="col">' + escapeHtml(_t('portfolio-risk-col-contrib', '风险贡献')) + '</th>' +
+        '<th scope="col">Beta</th>' +
+        '<th scope="col">' + escapeHtml(_t('portfolio-risk-col-sector', '行业')) + '</th>' +
+        '</tr></thead><tbody>';
+    data.holdings.forEach(function(h) {
+        var flag = h.risk_contribution_pct > h.weight_pct + 5
+            ? ' <span title="' + escapeHtml(_t('portfolio-risk-overweight', '风险贡献显著高于仓位权重')) + '" style="color:var(--signal-sell); font-size:0.7rem;">&#9650;</span>'
+            : '';
+        tableHtml += '<tr>' +
+            '<td style="font-weight:600; font-family:var(--font-data);">' + escapeHtml(h.ticker) + '</td>' +
+            '<td style="font-family:var(--font-data);">' + h.weight_pct.toFixed(1) + '%</td>' +
+            '<td style="font-family:var(--font-data);">' + h.risk_contribution_pct.toFixed(1) + '%' + flag + '</td>' +
+            '<td style="font-family:var(--font-data);">' + h.beta.toFixed(2) + '</td>' +
+            '<td>' + escapeHtml(h.sector) + '</td>' +
+            '</tr>';
+    });
+    tableHtml += '</tbody></table></div><p class="table-scroll-hint">' + escapeHtml(_t('table-scroll-hint')) + '</p>';
+
+    var sectorHtml = '<div style="margin-top:16px;"><h4 style="font-size:0.82rem; color:var(--text-muted); margin-bottom:8px; text-transform:uppercase;">' +
+        escapeHtml(_t('portfolio-risk-sector-title', '行业集中度')) + '</h4>';
+    data.sector_concentration.forEach(function(s) {
+        sectorHtml += '<div style="display:flex; align-items:center; gap:8px; margin-bottom:4px; font-size:0.78rem;">' +
+            '<div style="width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">' + escapeHtml(s.sector) + '</div>' +
+            '<div style="flex:1; background:rgba(255,140,0,0.08); border-radius:3px; height:8px; overflow:hidden;">' +
+            '<div style="width:' + s.weight_pct + '%; background:var(--accent-orange); height:100%;"></div></div>' +
+            '<div style="width:50px; text-align:right; font-family:var(--font-data);">' + s.weight_pct.toFixed(1) + '%</div>' +
+            '</div>';
+    });
+    sectorHtml += '</div>';
+
+    content.innerHTML = summaryHtml + tableHtml + sectorHtml;
 }
 
 // Initialize
