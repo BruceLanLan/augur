@@ -70,6 +70,7 @@ class TestLeaderboardWinRate:
 
     def _mock_leaderboard_item(self, agent_id="buffett", hit_rate=0.55, total=20):
         item = MagicMock()
+        item.agent_id = agent_id  # route code reads a.agent_id directly, not just via to_dict()
         item.to_dict.return_value = {
             "agent_id": agent_id,
             "hit_rate": hit_rate,
@@ -188,16 +189,12 @@ class TestLeaderboardWinRate:
         assert items["buffett"]["accuracy"] == pytest.approx(0.80, abs=0.001)
         assert items["marks"].get("live_accuracy") is not True
 
-    def test_agent_with_only_live_accuracy_is_not_in_leaderboard(self, client):
-        """Documents current (possibly surprising) behavior: the leaderboard is
-        built by iterating Backtester.get_leaderboard() and enriching each
-        entry with live accuracy — it does NOT add agents that exist only in
-        LearningEngine (never backtested). has_live_accuracy can be True while
-        that agent's own row is simply absent from `leaderboard`.
-
-        If this ever needs to change (e.g. a brand-new persona accumulates
-        live predictions before anyone runs a backtest for it), this test is
-        the one to update.
+    def test_agent_with_only_live_accuracy_gets_synthesized_row(self, client):
+        """An agent with real LearningEngine predictions/outcomes but no
+        backtest history (e.g. a brand-new persona) gets a synthesized
+        leaderboard row rather than being silently dropped — flagged
+        live_only=True and IC fields zeroed (never measured, not "measured
+        as zero") so the frontend can distinguish the two cases.
         """
         mock_le = MagicMock()
         mock_le.get_accuracy.return_value = {
@@ -216,6 +213,43 @@ class TestLeaderboardWinRate:
 
         data = resp.json()
         assert data["has_live_accuracy"] is True
-        agent_ids = {i["agent_id"] for i in data["leaderboard"]}
-        assert "brand_new_persona" not in agent_ids
-        assert agent_ids == {"buffett"}
+        assert data["count"] == 2
+        items = {i["agent_id"]: i for i in data["leaderboard"]}
+        assert set(items.keys()) == {"buffett", "brand_new_persona"}
+
+        synth = items["brand_new_persona"]
+        assert synth["live_only"] is True
+        assert synth["live_accuracy"] is True
+        assert synth["accuracy"] == pytest.approx(0.90, abs=0.001)
+        assert synth["total_predictions"] == 5
+        assert synth["correct_predictions"] == 4
+        assert synth["ic_60d"] == 0.0
+        assert synth["agent_name"]  # falls back to agent_id when not in registry
+
+        # The real backtested agent is untouched and NOT flagged live_only
+        assert items["buffett"].get("live_only") is not True
+
+    def test_agent_with_only_live_accuracy_uses_registry_name(self, client):
+        """When the live-only agent_id IS in the persona registry, its real
+        display name is used instead of falling back to the raw agent_id."""
+        mock_agent = MagicMock()
+        mock_agent.name = "Warren Buffett"
+        mock_registry = MagicMock()
+        mock_registry.get.return_value = mock_agent
+
+        mock_le = MagicMock()
+        mock_le.get_accuracy.return_value = {
+            "buffett": {"accuracy_rate": 0.7, "total_predictions": 4, "correct_predictions": 3, "ic": 0.2},
+        }
+        mock_le.pending_count = 0
+
+        with patch("augur.backtest.Backtester") as MockBT, \
+             patch("augur.registry._get_learning_engine", return_value=mock_le), \
+             patch("dashboard.routes.backtest.get_registry", return_value=mock_registry):
+            bt = MockBT.return_value
+            bt.get_leaderboard.return_value = []  # nothing backtested yet
+            resp = client.get("/api/backtest/leaderboard")
+
+        data = resp.json()
+        assert len(data["leaderboard"]) == 1
+        assert data["leaderboard"][0]["agent_name"] == "Warren Buffett"

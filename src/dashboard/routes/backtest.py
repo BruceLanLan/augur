@@ -114,10 +114,39 @@ async def api_ic_leaderboard():
             d["live_accuracy"] = True
         return d
 
+    leaderboard = [_enrich(a.to_dict()) for a in ics]
+
+    # Agents that have real LearningEngine predictions/outcomes but were
+    # never backtested (e.g. a newly added persona) previously had no row
+    # at all here, even though has_live_accuracy was True for the response
+    # as a whole. Synthesize a leaderboard-shaped entry for them so their
+    # real track record is visible — flagged live_only so the frontend can
+    # tell "no IC because never backtested" apart from "IC computed as 0".
+    backtested_ids = {a.agent_id for a in ics}
+    for agent_id, la in live_accuracy.items():
+        if agent_id in backtested_ids:
+            continue
+        agent = registry.get(agent_id)
+        leaderboard.append({
+            "agent_id": agent_id,
+            "agent_name": agent.name if agent else agent_id,
+            "total_predictions": la["total_predictions"],
+            "correct_predictions": la["correct_predictions"],
+            "ic_5d": 0.0,
+            "ic_20d": 0.0,
+            "ic_60d": 0.0,
+            "hit_rate": la["accuracy_rate"],
+            "avg_score_when_right": 0.0,
+            "avg_score_when_wrong": 0.0,
+            "accuracy": la["accuracy_rate"],
+            "live_accuracy": True,
+            "live_only": True,
+        })
+
     return {
         "status": "ok",
-        "leaderboard": [_enrich(a.to_dict()) for a in ics],
-        "count": len(ics),
+        "leaderboard": leaderboard,
+        "count": len(leaderboard),
         "pending_count": pending_count,
         "has_live_accuracy": bool(live_accuracy),
     }

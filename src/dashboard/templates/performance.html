@@ -146,10 +146,18 @@ function renderLeaderboard(items, meta) {
         var accuracy = item.hit_rate || item.accuracy || 0;
         var signals = item.total_predictions || item.signal_count || 0;
         var icColor = ic > 0 ? 'var(--signal-buy)' : ic < 0 ? 'var(--signal-sell)' : 'var(--text-muted)';
+        // live_only agents were never backtested — 0.0000 would read as "measured
+        // zero IC" instead of "never measured", so show N/A instead.
+        var icDisplay = item.live_only
+            ? '<span class="text-muted" title="' + escapeHtml(_t('perf-live-only-hint', '尚未回测，仅有实盘预测记录')) + '">N/A</span>'
+            : ic.toFixed(4);
+        var nameSuffix = item.live_only
+            ? ' <span class="text-muted" style="font-size:0.68rem;" title="' + escapeHtml(_t('perf-live-only-hint', '尚未回测，仅有实盘预测记录')) + '">(' + escapeHtml(_t('perf-live-only-badge', '仅实盘')) + ')</span>'
+            : '';
         html += '<tr>' +
             '<td><span class="leaderboard-rank' + rankClass + '">' + rank + '</span></td>' +
-            '<td style="font-weight:600;">' + escapeHtml(item.agent_name || item.agent_id || '--') + '</td>' +
-            '<td class="text-right text-mono" style="color:' + icColor + ';">' + ic.toFixed(4) + '</td>' +
+            '<td style="font-weight:600;">' + escapeHtml(item.agent_name || item.agent_id || '--') + nameSuffix + '</td>' +
+            '<td class="text-right text-mono" style="color:' + icColor + ';">' + icDisplay + '</td>' +
             '<td class="text-right text-mono">' + (accuracy * 100).toFixed(1) + '%</td>' +
             '<td class="text-right text-mono">' + signals + '</td>' +
             '</tr>';
@@ -165,12 +173,16 @@ function renderLeaderboard(items, meta) {
 function renderICChart(sorted) {
     var chartCard = document.getElementById('perf-chart-card');
     var canvas = document.getElementById('perf-ic-chart');
-    if (!chartCard || !canvas || !sorted.length) return;
+    // live_only agents have no measured IC at all — plotting them as a 0.0
+    // bar would look identical to a real measured-zero IC, so exclude them
+    // from this specific chart (they still show up in the table with N/A).
+    var chartable = sorted.filter(function(item) { return !item.live_only; });
+    if (!chartCard || !canvas || !chartable.length) return;
 
     chartCard.style.display = '';
 
-    var labels = sorted.map(function(item) { return item.agent_name || item.agent_id || '--'; });
-    var values = sorted.map(function(item) { return +(item.ic_60d || item.ic || 0).toFixed(4); });
+    var labels = chartable.map(function(item) { return item.agent_name || item.agent_id || '--'; });
+    var values = chartable.map(function(item) { return +(item.ic_60d || item.ic || 0).toFixed(4); });
     var bgColors = values.map(function(v) { return v >= 0 ? 'rgba(0,200,100,0.75)' : 'rgba(255,60,60,0.75)'; });
     var borderColors = values.map(function(v) { return v >= 0 ? 'rgba(0,200,100,1)' : 'rgba(255,60,60,1)'; });
 
@@ -219,14 +231,14 @@ function renderICChart(sorted) {
         }
     });
 
-    canvas.style.height = Math.max(200, sorted.length * 22) + 'px';
+    canvas.style.height = Math.max(200, chartable.length * 22) + 'px';
 }
 
 function exportPerfCSV() {
     if (!_perfData.length) { showToast(_t('perf-no-data'), 'warning'); return; }
     var rows = ['﻿' + ['Rank', 'Agent', 'IC_60d', 'Accuracy_%', 'Signals'].join(',')];
     _perfData.forEach(function(item, idx) {
-        var ic = (item.ic_60d || item.ic || 0).toFixed(4);
+        var ic = item.live_only ? 'N/A' : (item.ic_60d || item.ic || 0).toFixed(4);
         var acc = ((item.hit_rate || item.accuracy || 0) * 100).toFixed(1);
         var sig = item.total_predictions || item.signal_count || 0;
         rows.push([idx + 1, item.agent_name || item.agent_id || '--', ic, acc, sig].join(','));
