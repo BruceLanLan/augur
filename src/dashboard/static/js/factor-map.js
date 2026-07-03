@@ -60,16 +60,26 @@
     function catAvg(factors, category) {
         var keys = FACTOR_MAP[category] || [];
         var vals = [];
+        // Track which factor *keys* have already contributed to vals — the
+        // safety-category top-up below must dedupe by key, not by numeric
+        // value. (A value-based `vals.indexOf(v)` check used to live here:
+        // it silently dropped a distinct INVERT factor whenever its raw
+        // score happened to numerically match one already counted, e.g.
+        // debt_safety=8 and tech_risk=8 on the same agent — same value,
+        // different factors, one goes missing from the average.)
+        var counted = {};
         keys.forEach(function (k) {
             if (factors[k] !== undefined) {
                 var v = parseFloat(factors[k]) || 0;
                 vals.push(INVERT[k] ? 10 - v : v);
+                counted[k] = true;
             }
         });
         if (category === 'safety') {
             Object.keys(factors).forEach(function (k) {
-                if (INVERT[k] && vals.indexOf(parseFloat(factors[k])) === -1) {
+                if (INVERT[k] && !counted[k]) {
                     vals.push(10 - (parseFloat(factors[k]) || 0));
+                    counted[k] = true;
                 }
             });
         }
