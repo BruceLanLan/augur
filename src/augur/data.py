@@ -26,6 +26,7 @@ import re
 import threading
 import time
 from dataclasses import fields as _dataclass_fields
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from augur.personas.base import MarketContext
@@ -282,6 +283,52 @@ def _build_context_from_providers(ticker: str) -> MarketContext:
 
 # ============ Public API ============
 
+# Fields fetch_edgar_fundamentals can compute, in the exact shape it
+# returns them -- see _overlay_edgar_fundamentals below.
+_EDGAR_OVERLAY_FIELDS = (
+    "pe", "pb", "roe", "gross_margins", "operating_margins",
+    "revenue_growth", "earnings_growth", "debt_ratio", "market_cap",
+)
+
+
+def _overlay_edgar_fundamentals(ctx: MarketContext) -> None:
+    """Overlay EDGAR-sourced fundamentals onto an already-built context,
+    field by field -- mutates ``ctx`` in place.
+
+    Deliberately NOT a provider in the yfinance/stooq chain: that chain is
+    "first success wins" (whichever provider returns first replaces the
+    whole context), which is wrong for EDGAR -- it only ever has
+    fundamentals, never price/sector/industry/rsi/sma/etc., so if it were
+    inserted as a chain provider ahead of yfinance and "succeeded" the rest
+    of the context would come back empty. Instead this runs *after* the
+    existing chain has already populated everything, and replaces only the
+    specific fields EDGAR actually computed (each is 0.0, its own "could not
+    compute" sentinel, when EDGAR has nothing -- in which case the existing
+    yfinance/stooq value is left untouched). Never raises: any failure here
+    just leaves the context exactly as the provider chain built it.
+    """
+    if not ctx.price or ctx.price <= 0:
+        return
+    try:
+        from augur.consensus.edgar_fundamentals import fetch_edgar_fundamentals
+
+        today = datetime.now().strftime("%Y-%m-%d")
+        edgar = fetch_edgar_fundamentals(ctx.ticker, today, price=ctx.price)
+        if edgar.get("insufficient"):
+            return
+        applied = []
+        for field in _EDGAR_OVERLAY_FIELDS:
+            value = edgar.get(field)
+            if value:
+                setattr(ctx, field, value)
+                applied.append(field)
+        if applied:
+            setattr(ctx, "fundamentals_source", "edgar")
+            logger.debug("EDGAR overlay applied for %s: %s", ctx.ticker, applied)
+    except Exception:
+        logger.debug("EDGAR overlay failed for %s", ctx.ticker, exc_info=True)
+
+
 def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketContext:
     """
     Fetch real-time data for a ticker and return a populated MarketContext.
@@ -289,6 +336,13 @@ def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketCont
     内部走 provider 链（yfinance -> stooq -> 空 context），对调用方完全透明。
     返回的 MarketContext 带有动态属性 ``data_source``，标记实际命中的数据源
     （"yfinance" / "stooq" / "none"）。
+
+    在 provider 链之后，针对有 SEC CIK 的美股标的做一层字段级覆盖：
+    pe/pb/roe/gross_margins/operating_margins/revenue_growth/earnings_growth/
+    debt_ratio/market_cap 若能从 SEC EDGAR 真实财报算出（不含 0），优先采用，
+    yfinance 的值仅在 EDGAR 算不出时保留。非美股 / 无 CIK / EDGAR 不可用时静默
+    跳过，不影响原有数据。命中时 context 上追加动态属性
+    ``fundamentals_source="edgar"``。
 
     Supports:
     - US stocks: AAPL, NVDA, TSLA
@@ -321,6 +375,7 @@ def fetch_market_context(ticker: str, force_refresh: bool = False) -> MarketCont
             return cached
 
     ctx = _build_context_from_providers(ticker)
+    _overlay_edgar_fundamentals(ctx)
     _cache_set(cache_key, ctx)
     return ctx
 

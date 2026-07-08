@@ -19,9 +19,11 @@ construction: reweighting a constant-zero value-agent score cannot move a
 rank-IC no matter what the multiplier is.
 
 This script uses the point-in-time fundamentals provider
-(``augur.consensus.pit_fundamentals.fetch_pit_fundamentals``) to give every
-historical day real, as-of-available fundamentals (or correctly drop the day
-as "insufficient" -- never zero-filled), then asks the only question that is
+(``augur.consensus.edgar_fundamentals.fetch_edgar_fundamentals``, sourced
+from real SEC EDGAR filing dates as of B1 -- see
+docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md) to give every historical day
+real, as-of-available fundamentals (or correctly drop the day as
+"insufficient" -- never zero-filled), then asks the only question that is
 actually testable: on a single day, across many tickers, does ranking by the
 regime-weighted consensus correlate better with subsequent 20-day returns
 than ranking by a flat equal-weight consensus? (See
@@ -52,15 +54,17 @@ this script prints)
    bear markets -- it is, at best, a directional read on two specific
    historical weeks. The script prints an explicit low-power warning
    whenever this applies; do not strip it out of any downstream report.
-3. yfinance itself has been observed to be flakey: a `.financials` fetch
-   for the same ticker, in fresh processes, has returned valid data twice
-   and an empty DataFrame once. ``pit_fundamentals.py`` now retries a few
-   times before accepting an empty result and caching it, and the day's
-   look-ahead guard separately rejects yfinance's NaN-padded oldest annual
-   column as "available" -- but a residual amount of network nondeterminism
-   (timeouts, rate limiting) across a 30-50 ticker multi-year run is still
-   possible and would show up as fewer-than-expected records for some
-   tickers. Re-running this script and comparing record counts per ticker
+3. As of B1, fundamentals come from SEC EDGAR's ``companyfacts`` REST API
+   directly (``edgar_fundamentals.py``), not yfinance's scraped internals --
+   the specific yfinance flakiness ``pit_fundamentals.py`` had to defend
+   against (transiently empty statement fetches, NaN-padded oldest-retained
+   columns) no longer applies. EDGAR is rate-limited (10 req/sec, enforced
+   client-side) and companyfacts payloads are cached to disk
+   (``~/.augur/edgar_cache/``), but a residual amount of network
+   nondeterminism (timeouts, transient 5xx) across a 30-50 ticker
+   multi-year run is still possible and would show up as fewer-than-
+   expected records for some tickers. Re-running this script and comparing
+   record counts per ticker
    is the cheapest way to spot that if results look surprising.
 4. SIDEWAYS and the *_LOW_VOL buckets have far more days and are the more
    statistically meaningful part of this output -- not BEAR_HIGH_VOL.

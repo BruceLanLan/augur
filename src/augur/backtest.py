@@ -490,7 +490,7 @@ class Backtester:
             BacktestResult with all records and IC calculations
         """
         from augur.data import fetch_history, calculate_technicals
-        from augur.consensus.pit_fundamentals import fetch_pit_fundamentals
+        from augur.consensus.edgar_fundamentals import fetch_edgar_fundamentals
 
         # Fetch enough history for forward returns (days + 60)
         total_period = days + 70
@@ -540,13 +540,14 @@ class Backtester:
             }
 
             # Point-in-time fundamentals: only what would actually have been
-            # filed/available as of this historical date (see pit_fundamentals
-            # module docstring for the look-ahead-guard rationale). A day with
-            # no as-of-available annual statement yet is dropped entirely below
+            # filed/available as of this historical date, sourced from real
+            # SEC EDGAR filing dates (see edgar_fundamentals module
+            # docstring for the look-ahead-guard rationale). A day with no
+            # as-of-available annual statement yet is dropped entirely below
             # rather than silently zero-filled, since a silent zero is
             # indistinguishable from "this company has no fundamentals" and
             # would reintroduce the null-by-construction bug this exists to fix.
-            pit = fetch_pit_fundamentals(ticker, date_str, price=day["close"])
+            pit = fetch_edgar_fundamentals(ticker, date_str, price=day["close"])
             if pit.get("insufficient"):
                 continue
             for k, v in pit.items():
@@ -736,16 +737,19 @@ def fetch_ticker_replay_records(
     """Build a list of per-day records for ``ticker`` spanning ``[start, end]``.
 
     Unlike ``run_live_backtest``, this fetches a long period directly (no
-    "2y" period_map cap) so multi-year cross-sectional analysis (e.g. back
-    to 2022) is actually reachable. Each record has: date, price, rsi, macd,
-    pe, pb, roe, gross_margins, operating_margins, revenue_growth,
-    earnings_growth, debt_ratio, market_cap, actual_return_20d. Days with
-    insufficient point-in-time fundamentals, or without a realized 20-day
-    forward return yet, are dropped (not zero-filled) -- see
-    ``fetch_pit_fundamentals`` and the realized-return note below.
+    "2y" period_map cap) so multi-year cross-sectional analysis is actually
+    reachable -- EDGAR annual filings typically cover back to ~2011 for
+    established large caps (yfinance-derived point-in-time fundamentals
+    only reached ~2022; see edgar_fundamentals module docstring). Each
+    record has: date, price, rsi, macd, pe, pb, roe, gross_margins,
+    operating_margins, revenue_growth, earnings_growth, debt_ratio,
+    market_cap, actual_return_20d. Days with insufficient point-in-time
+    fundamentals, or without a realized 20-day forward return yet, are
+    dropped (not zero-filled) -- see ``fetch_edgar_fundamentals`` and the
+    realized-return note below.
     """
     from augur.data import fetch_history, calculate_technicals
-    from augur.consensus.pit_fundamentals import fetch_pit_fundamentals
+    from augur.consensus.edgar_fundamentals import fetch_edgar_fundamentals
 
     prices = fetch_history(ticker, period=period)
     if not prices:
@@ -769,7 +773,7 @@ def fetch_ticker_replay_records(
         history_slice = prices[:i + 1]
         technicals = calculate_technicals(history_slice) if len(history_slice) >= 5 else {}
 
-        pit = fetch_pit_fundamentals(ticker, date_str, price=day["close"])
+        pit = fetch_edgar_fundamentals(ticker, date_str, price=day["close"])
         if pit.get("insufficient"):
             continue
 

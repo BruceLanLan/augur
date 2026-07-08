@@ -52,7 +52,7 @@ class TestDataSourceStamping:
     def test_run_live_backtest_stamps_live(self):
         """run_live_backtest must tag every record data_source='live', since
         that's the whole point of the mechanism — verified via a real call
-        through run_backtest with fetch_history/pit_fundamentals mocked out."""
+        through run_backtest with fetch_history/edgar_fundamentals mocked out."""
         prices = [
             {"date": f"2024-01-{i:02d}", "close": 100.0 + i}
             for i in range(1, 31)
@@ -61,7 +61,7 @@ class TestDataSourceStamping:
             bt = self._tmp_backtester(tmpdir)
             with patch("augur.data.fetch_history", return_value=prices), \
                  patch("augur.data.calculate_technicals", return_value={"rsi": 50, "macd": 0, "sma20": 100, "sma50": 100}), \
-                 patch("augur.consensus.pit_fundamentals.fetch_pit_fundamentals",
+                 patch("augur.consensus.edgar_fundamentals.fetch_edgar_fundamentals",
                        return_value={"insufficient": False, "pe": 20.0}):
                 result = bt.run_live_backtest("LIVE", days=5)
         assert result.records

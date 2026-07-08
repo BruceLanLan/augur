@@ -43,6 +43,31 @@ def isolate_learning_engine(tmp_path, monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def disable_edgar_overlay_by_default(monkeypatch):
+    """Make augur.data._overlay_edgar_fundamentals() a no-op by default.
+
+    fetch_market_context() now overlays SEC EDGAR fundamentals for any
+    ticker with a real CIK and a positive price (Phase B, B1 — see
+    docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md). Since "AAPL" is the most
+    common test fixture ticker in this suite and genuinely has a CIK,
+    tests that call the real fetch_market_context() without mocking this
+    would otherwise make a real network call to SEC EDGAR on every run and
+    silently overwrite mocked yfinance field values with real EDGAR data
+    (confirmed directly: a pre-existing test asserting a mocked
+    market_cap=3000.0 started failing with a real ~$2.8T EDGAR-sourced
+    value once the overlay was wired in). A test that specifically wants to
+    exercise the overlay re-patches fetch_edgar_fundamentals locally, which
+    takes precedence over this default within that test's scope.
+    """
+    from augur.consensus import edgar_fundamentals
+    monkeypatch.setattr(
+        edgar_fundamentals, "fetch_edgar_fundamentals",
+        lambda ticker, as_of_date, price=None: {"insufficient": True},
+    )
+    yield
+
+
+@pytest.fixture(autouse=True)
 def reset_ip_rate_limits():
     """Clear IP-based rate limit state before each test to prevent cross-test pollution."""
     from dashboard.app import _ip_rate_limits, _ip_rate_lock
