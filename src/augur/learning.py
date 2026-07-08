@@ -76,6 +76,7 @@ class LearningEngine:
         self._predictions: List[Dict[str, Any]] = []
         self._weights: Dict[str, float] = {}
         self._accuracy: Dict[str, Dict[str, Any]] = {}
+        self._last_resolution: Optional[Dict[str, Any]] = None
         self._lock = threading.RLock()
         self._load_weights()
 
@@ -87,17 +88,29 @@ class LearningEngine:
                 self._weights = data.get("weights", {})
                 self._accuracy = data.get("accuracy", {})
                 self._predictions = data.get("predictions", [])
+                self._last_resolution = data.get("last_resolution")
             except (json.JSONDecodeError, OSError):
                 self._weights = {}
                 self._accuracy = {}
                 self._predictions = []
+                self._last_resolution = None
 
     def _save_weights(self):
-        """Persist learned weights to disk."""
+        """Persist learned weights to disk.
+
+        Pending predictions (outcome is None) are never pruned — losing one
+        here means it can never be resolved, since this file is the only
+        copy once the process restarts. Resolved predictions are capped to
+        the most recent 100 (kept for visibility/debugging, not reprocessed
+        by anything that needs the full history).
+        """
+        pending = [p for p in self._predictions if p.get("outcome") is None]
+        resolved = [p for p in self._predictions if p.get("outcome") is not None]
         data = {
             "weights": self._weights,
             "accuracy": self._accuracy,
-            "predictions": self._predictions[-100:],  # Keep last 100 predictions
+            "predictions": pending + resolved[-100:],
+            "last_resolution": self._last_resolution,
             "updated_at": time.time(),
         }
         self.weights_path.parent.mkdir(parents=True, exist_ok=True)
@@ -153,6 +166,16 @@ class LearningEngine:
                 "timestamp": time.time(),
                 "outcome": None,  # To be filled in later
             })
+            # Persist immediately. Previously this only happened inside
+            # record_outcome(), so a prediction lived purely in memory until
+            # an outcome resolved for it — meaning a process restart (dev
+            # server reload, deploy, etc.) before that point lost it
+            # permanently. Since outcomes only resolve 30+ days later, in
+            # practice this meant predictions almost never survived long
+            # enough to ever be resolved at all, which is the direct cause
+            # of ~/.augur/learned_weights.json never existing in production
+            # (docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md debt 3).
+            self._save_weights()
 
     def record_outcome(
         self,
@@ -310,6 +333,7 @@ class LearningEngine:
             self._predictions = []
             self._weights = {}
             self._accuracy = {}
+            self._last_resolution = None
             if self.weights_path.exists():
                 self.weights_path.unlink()
 
@@ -332,3 +356,28 @@ class LearningEngine:
         """Get total number of recorded predictions."""
         with self._lock:
             return len(self._predictions)
+
+    @property
+    def last_resolution(self) -> Optional[Dict[str, Any]]:
+        """Metadata from the most recent resolve_pending_outcomes() sweep:
+        {"timestamp": float, "resolved": int, "failed": int}, or None if a
+        sweep has never run."""
+        with self._lock:
+            return dict(self._last_resolution) if self._last_resolution else None
+
+    def record_resolution_run(self, resolved: int, failed: int) -> None:
+        """Record that an outcome-resolution sweep just ran, for dashboard
+        visibility (see registry.resolve_pending_outcomes)."""
+        with self._lock:
+            self._last_resolution = {
+                "timestamp": time.time(),
+                "resolved": resolved,
+                "failed": failed,
+            }
+            self._save_weights()
+
+    def get_pending_tickers(self) -> List[str]:
+        """Distinct tickers with at least one unresolved prediction, sorted
+        for deterministic sweep order."""
+        with self._lock:
+            return sorted({p["ticker"] for p in self._predictions if p["outcome"] is None})

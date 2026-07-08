@@ -37,11 +37,18 @@ def _get_learning_engine():
         return _learning_engine
 
 
-def _check_and_record_outcomes(le, ticker: str) -> None:
+def _check_and_record_outcomes(le, ticker: str) -> Dict[str, object]:
     """
     For any unresolved predictions on `ticker` older than 30 days,
     fetch the actual price change via yfinance and call record_outcome().
     Runs silently — never raises.
+
+    Returns {"attempted": bool, "resolved": int}. attempted=True means there
+    were eligible (30-60 day old) pending predictions and a resolve was
+    tried; resolved is how many predictions actually got an outcome (0 if
+    nothing was eligible, or if the fetch/computation failed after an
+    eligible attempt — those two cases are distinguished by "attempted").
+    Used by resolve_pending_outcomes() below for sweep-wide accounting.
     """
     try:
         cutoff = time.time() - 30 * 86400
@@ -52,22 +59,24 @@ def _check_and_record_outcomes(le, ticker: str) -> None:
             and p.get("timestamp", 0) <= cutoff
         ]
         if not pending:
-            return
+            return {"attempted": False, "resolved": 0}
+
+        pending_before = le.pending_count
 
         # Fetch 35-day history to cover the 30-day window
         from augur.data import fetch_history
         hist = fetch_history(ticker, period="2mo")
         if not hist or len(hist) < 5:
-            return
+            return {"attempted": True, "resolved": 0}
 
         closes_by_ts = {h.get("date"): h.get("close") for h in hist if h.get("close")}
         if not closes_by_ts:
-            return
+            return {"attempted": True, "resolved": 0}
 
         sorted_closes = sorted(closes_by_ts.items())   # [(date_str, price), ...]
         last_close = sorted_closes[-1][1]
         if not last_close:
-            return
+            return {"attempted": True, "resolved": 0}
 
         # Use ~30-day return (closest available bar to 30 days ago vs latest)
         target_ts = time.time() - 30 * 86400
@@ -80,11 +89,56 @@ def _check_and_record_outcomes(le, ticker: str) -> None:
             if bar_ts <= target_ts:
                 ref_close = close
         if not ref_close or ref_close == 0:
-            return
+            return {"attempted": True, "resolved": 0}
         actual_return = (last_close - ref_close) / ref_close
         le.record_outcome(ticker, actual_return, min_age_days=30)
+        resolved = pending_before - le.pending_count
+        return {"attempted": True, "resolved": max(0, resolved)}
+    except Exception:
+        return {"attempted": True, "resolved": 0}
+
+
+def resolve_pending_outcomes(le) -> Dict[str, int]:
+    """Sweep every ticker with unresolved predictions and attempt to resolve
+    any that are 30-60 days old (see _check_and_record_outcomes / the
+    min_age_days=30 + lookback_days=30 window in LearningEngine.record_outcome).
+
+    This is the scheduled-resolution counterpart to the existing per-ticker
+    trigger in ConsensusEngine.compute() (which only fires for whatever
+    ticker happens to be re-analyzed) — without it, a ticker that's never
+    manually re-analyzed after 30+ days can never resolve, and its
+    predictions eventually age past the 60-day cutoff and become
+    permanently unresolvable. Intended to be called from a daily cron job
+    (see augur.cron.run_watchlist_analysis) so pending predictions are
+    swept regardless of whether their ticker is on the watchlist.
+
+    Never raises. Returns {"resolved": total predictions resolved across
+    all tickers, "failed": count of tickers that had eligible pending
+    predictions but couldn't be resolved (fetch/compute failure),
+    "still_pending": total pending predictions remaining after the sweep}.
+    """
+    try:
+        tickers = le.get_pending_tickers()
+    except Exception:
+        tickers = []
+
+    resolved_total = 0
+    failed_total = 0
+    for ticker in tickers:
+        outcome = _check_and_record_outcomes(le, ticker)
+        if outcome["attempted"]:
+            if outcome["resolved"] > 0:
+                resolved_total += outcome["resolved"]
+            else:
+                failed_total += 1
+
+    still_pending = le.pending_count
+    try:
+        le.record_resolution_run(resolved_total, failed_total)
     except Exception:
         pass
+
+    return {"resolved": resolved_total, "failed": failed_total, "still_pending": still_pending}
 
 
 def _get_sentiment_analyzer():

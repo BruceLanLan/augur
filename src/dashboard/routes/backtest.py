@@ -130,11 +130,13 @@ async def api_ic_leaderboard():
     # Silently skipped if no data exists yet.
     live_accuracy: dict = {}
     pending_count: int = 0
+    last_resolution = None
     try:
         from augur.registry import _get_learning_engine
         le = _get_learning_engine()
         live_accuracy = le.get_accuracy()
         pending_count = le.pending_count
+        last_resolution = le.last_resolution
     except Exception:
         pass
 
@@ -187,4 +189,5 @@ async def api_ic_leaderboard():
         "count": len(leaderboard),
         "pending_count": pending_count,
         "has_live_accuracy": bool(live_accuracy),
+        "last_resolution": last_resolution,
     }

@@ -89,6 +89,7 @@ class TestLeaderboardWinRate:
         mock_le = MagicMock()
         mock_le.get_accuracy.return_value = {}
         mock_le.pending_count = 0
+        mock_le.last_resolution = None
 
         with patch("augur.backtest.Backtester") as MockBT, \
              patch("augur.registry._get_learning_engine", return_value=mock_le):
@@ -114,6 +115,7 @@ class TestLeaderboardWinRate:
             }
         }
         mock_le.pending_count = 3
+        mock_le.last_resolution = None
 
         with patch("augur.backtest.Backtester") as MockBT, \
              patch("augur.registry._get_learning_engine", return_value=mock_le):
@@ -138,6 +140,7 @@ class TestLeaderboardWinRate:
         mock_le = MagicMock()
         mock_le.get_accuracy.return_value = {}  # no live data
         mock_le.pending_count = 0
+        mock_le.last_resolution = None
 
         with patch("augur.backtest.Backtester") as MockBT, \
              patch("augur.registry._get_learning_engine", return_value=mock_le):
@@ -174,6 +177,7 @@ class TestLeaderboardWinRate:
             "buffett": {"accuracy_rate": 0.80, "total_predictions": 10, "correct_predictions": 8, "ic": 0.5},
         }
         mock_le.pending_count = 2
+        mock_le.last_resolution = None
 
         with patch("augur.backtest.Backtester") as MockBT, \
              patch("augur.registry._get_learning_engine", return_value=mock_le):
@@ -204,6 +208,7 @@ class TestLeaderboardWinRate:
             },
         }
         mock_le.pending_count = 0
+        mock_le.last_resolution = None
 
         with patch("augur.backtest.Backtester") as MockBT, \
              patch("augur.registry._get_learning_engine", return_value=mock_le):
@@ -242,6 +247,7 @@ class TestLeaderboardWinRate:
             "buffett": {"accuracy_rate": 0.7, "total_predictions": 4, "correct_predictions": 3, "ic": 0.2},
         }
         mock_le.pending_count = 0
+        mock_le.last_resolution = None
 
         with patch("augur.backtest.Backtester") as MockBT, \
              patch("augur.registry._get_learning_engine", return_value=mock_le), \
@@ -253,3 +259,45 @@ class TestLeaderboardWinRate:
         data = resp.json()
         assert len(data["leaderboard"]) == 1
         assert data["leaderboard"][0]["agent_name"] == "Warren Buffett"
+
+
+class TestLastResolutionField:
+    """/api/backtest/leaderboard exposes LearningEngine.last_resolution for
+    dashboard visibility into the R3 outcome-resolution sweep (see
+    docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md debt 3 / augur.registry.
+    resolve_pending_outcomes)."""
+
+    @pytest.fixture(scope="class")
+    def client(self):
+        from fastapi.testclient import TestClient
+        from dashboard.app import app
+        return TestClient(app)
+
+    def test_last_resolution_null_when_sweep_never_ran(self, client):
+        mock_le = MagicMock()
+        mock_le.get_accuracy.return_value = {}
+        mock_le.pending_count = 0
+        mock_le.last_resolution = None
+
+        with patch("augur.backtest.Backtester") as MockBT, \
+             patch("augur.registry._get_learning_engine", return_value=mock_le):
+            MockBT.return_value.get_leaderboard.return_value = []
+            resp = client.get("/api/backtest/leaderboard")
+
+        assert resp.json()["last_resolution"] is None
+
+    def test_last_resolution_reflects_most_recent_sweep(self, client):
+        mock_le = MagicMock()
+        mock_le.get_accuracy.return_value = {}
+        mock_le.pending_count = 4
+        mock_le.last_resolution = {"timestamp": 1750000000.0, "resolved": 6, "failed": 1}
+
+        with patch("augur.backtest.Backtester") as MockBT, \
+             patch("augur.registry._get_learning_engine", return_value=mock_le):
+            MockBT.return_value.get_leaderboard.return_value = []
+            resp = client.get("/api/backtest/leaderboard")
+
+        data = resp.json()["last_resolution"]
+        assert data["resolved"] == 6
+        assert data["failed"] == 1
+        assert data["timestamp"] == pytest.approx(1750000000.0)

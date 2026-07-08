@@ -260,6 +260,25 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
     # Send notifications
     _send_notifications(config, all_results)
 
+    # Sweep every ticker with unresolved LearningEngine predictions (not
+    # just watchlist tickers) so 30+ day old outcomes get resolved even for
+    # tickers analyzed one-off via the dashboard/CLI and never revisited.
+    # Piggybacks on this function's existing daily schedule (see
+    # start_scheduler()) and the manual "run now" trigger, rather than
+    # requiring separate scheduler wiring. Never breaks the watchlist
+    # analysis flow above if this fails.
+    try:
+        from augur.registry import _get_learning_engine, resolve_pending_outcomes
+        le = _get_learning_engine()
+        resolution = resolve_pending_outcomes(le)
+        if resolution["resolved"] or resolution["failed"]:
+            print(
+                f"Outcome resolution: {resolution['resolved']} resolved, "
+                f"{resolution['failed']} failed, {resolution['still_pending']} still pending"
+            )
+    except Exception as e:
+        logger.warning("Outcome resolution sweep failed: %s", e)
+
     return all_results
 
 
