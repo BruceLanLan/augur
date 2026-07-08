@@ -30,7 +30,8 @@
             'contra_bet', 'moat_durability', 'psychological', 'selection_rigor',  // munger
             'founder_quality', 'monopoly_power', 'technology_moat',               // thiel
             'business_model_quality', 'competitive_moat', 'management_excellence', // zhang_lei
-            'information_edge'                                 // dayu
+            'information_edge',                                // dayu
+            'insider_buying_signal'                            // EDGAR Form 4 (Phase C, any persona)
         ],
         momentum: [
             'trend_strength', 'macro_outlook', 'momentum', 'macro_background', 'momentum_signal',

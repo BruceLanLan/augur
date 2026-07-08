@@ -127,6 +127,18 @@ class TestFactorMapJsBehavior:
         out = self._run("console.log(AugurFactorMap.catAvg({tech_risk: 8}, 'safety'));")
         assert float(out) == pytest.approx(2.0)
 
+    def test_insider_buying_signal_registered_under_quality(self):
+        """Phase C (EDGAR Form 4) factor must be wired into the radar's
+        category mapping, not just computed and silently unused by the UI."""
+        out = self._run("console.log(AugurFactorMap.FACTOR_MAP.quality.includes('insider_buying_signal'));")
+        assert out == "true"
+
+    def test_insider_buying_signal_contributes_to_quality_average(self):
+        out = self._run(
+            "console.log(AugurFactorMap.catAvg({insider_buying_signal: 8}, 'quality'));"
+        )
+        assert float(out) == pytest.approx(8.0)
+
     def test_safety_inversion_averages_with_non_inverted_keys(self):
         """Regression test: debt_safety=8 (already safety-direction, not
         inverted) and tech_risk=8 (inverted to 2) sharing the *same raw

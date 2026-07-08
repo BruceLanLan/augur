@@ -94,6 +94,8 @@ logger = logging.getLogger(__name__)
 _CACHE_DIR = Path.home() / ".augur" / "edgar_cache"
 _TICKER_MAP_URL = "https://www.sec.gov/files/company_tickers.json"
 _COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
+_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
+_FILING_DOC_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{accn_nodash}/{filename}"
 
 _TICKER_MAP_TTL_SECONDS = 7 * 86400       # CIK map changes rarely; refresh weekly
 _COMPANYFACTS_TTL_SECONDS = 24 * 3600     # a new annual filing appears at most once a year
@@ -156,6 +158,7 @@ class EdgarClient:
         self._bucket = _TokenBucket()
         self._ticker_to_cik: Optional[Dict[str, int]] = None
         self._contact_email = self._resolve_contact_email()
+        self._filing_doc_cache: Dict[tuple, str] = {}
 
     @staticmethod
     def _resolve_contact_email() -> str:
@@ -297,6 +300,86 @@ class EdgarClient:
             logger.debug("failed to persist EDGAR companyfacts cache for %s", ticker, exc_info=True)
 
         return data
+
+    # ---- submissions (filing index) + raw filing documents ----
+    # Shared by every phase that needs to enumerate a company's filings by
+    # form type (Phase 2: Form 4 insider trading; Phase 3: 13F institutional
+    # holdings, keyed off the *filer's* own submissions instead of the
+    # issuer's) -- see the spec's "all four phases share EdgarClient"
+    # architecture note.
+
+    def _http_get_text(self, url: str) -> Optional[str]:
+        """GET ``url`` and return raw text (for non-JSON documents like
+        Form 4 XML). Same rate limiting / retry / User-Agent as
+        ``_http_get_json``, just skips the JSON parse."""
+        self._bucket.acquire()
+        req = urllib.request.Request(url, headers={"User-Agent": self._user_agent()})
+        for attempt in range(2):
+            try:
+                with urllib.request.urlopen(req, timeout=_HTTP_TIMEOUT) as resp:  # noqa: S310
+                    return resp.read().decode("utf-8", errors="replace")
+            except urllib.error.HTTPError as exc:
+                logger.debug("EDGAR HTTP error for %s: %s", url, exc)
+                return None
+            except Exception as exc:
+                logger.debug("EDGAR request failed for %s (attempt %d/2): %s", url, attempt + 1, exc)
+                if attempt == 0:
+                    continue
+                return None
+        return None
+
+    def _submissions_cache_path(self, cik: int) -> Path:
+        return self._cache_dir / f"submissions_{cik}.json"
+
+    def get_submissions(self, cik: int) -> Optional[Dict[str, Any]]:
+        """Return the raw ``submissions`` payload for a CIK (recent filing
+        index — accession numbers, form types, filing dates). Cached to
+        disk with the same TTL as companyfacts, since new filings appear
+        at most a few times a year for most companies but can appear daily
+        for an actively-traded insider."""
+        path = self._submissions_cache_path(cik)
+        if path.exists():
+            try:
+                age = time.time() - path.stat().st_mtime
+                if age < _COMPANYFACTS_TTL_SECONDS:
+                    return json.loads(path.read_text(encoding="utf-8"))
+            except Exception:
+                logger.debug("EDGAR submissions cache unreadable for CIK %s, refetching", cik, exc_info=True)
+
+        data = self._http_get_json(_SUBMISSIONS_URL.format(cik=cik))
+        if data is None:
+            if path.exists():
+                try:
+                    return json.loads(path.read_text(encoding="utf-8"))
+                except Exception:
+                    return None
+            return None
+
+        try:
+            self._cache_dir.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(data), encoding="utf-8")
+        except Exception:
+            logger.debug("failed to persist EDGAR submissions cache for CIK %s", cik, exc_info=True)
+
+        return data
+
+    def get_filing_document(self, cik: int, accession_number: str, filename: str) -> Optional[str]:
+        """Fetch a single raw document from a filing's directory (e.g. a
+        Form 4's ``form4.xml``). In-memory only (not disk-cached): filed
+        documents are small and immutable once filed, but a disk cache
+        keyed by every (cik, accession, filename) triple would create many
+        tiny files for comparatively little benefit versus just relying on
+        the rate limiter -- this may be revisited if a backtest replay
+        profile shows it's a real bottleneck."""
+        accn_nodash = accession_number.replace("-", "")
+        cache_key = (cik, accession_number, filename)
+        if cache_key in self._filing_doc_cache:
+            return self._filing_doc_cache[cache_key]
+        url = _FILING_DOC_URL.format(cik=cik, accn_nodash=accn_nodash, filename=filename)
+        text = self._http_get_text(url)
+        if text is not None:
+            self._filing_doc_cache[cache_key] = text
+        return text
 
 
 _client_lock = threading.Lock()
