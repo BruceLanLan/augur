@@ -96,6 +96,7 @@ _TICKER_MAP_URL = "https://www.sec.gov/files/company_tickers.json"
 _COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
 _SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"
 _FILING_DOC_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{accn_nodash}/{filename}"
+_FILING_INDEX_URL = "https://www.sec.gov/Archives/edgar/data/{cik}/{accn_nodash}/index.json"
 
 _TICKER_MAP_TTL_SECONDS = 7 * 86400       # CIK map changes rarely; refresh weekly
 _COMPANYFACTS_TTL_SECONDS = 24 * 3600     # a new annual filing appears at most once a year
@@ -380,6 +381,30 @@ class EdgarClient:
         if text is not None:
             self._filing_doc_cache[cache_key] = text
         return text
+
+    def get_filing_index(self, cik: int, accession_number: str) -> Optional[List[str]]:
+        """Return the list of document filenames in a filing's directory
+        (via its ``index.json``). Needed because the raw document filename
+        is not predictable across filings/filers -- confirmed against real
+        13F-HR data: the same issuer's holdings table is named
+        ``form13fInfoTable.xml`` in one year's filing and a filer-generated
+        numeric name (e.g. ``53405.xml``) in another. In-memory cached
+        (same reasoning as ``get_filing_document``)."""
+        accn_nodash = accession_number.replace("-", "")
+        cache_key = (cik, accession_number, "__index__")
+        if cache_key in self._filing_doc_cache:
+            cached = self._filing_doc_cache[cache_key]
+            return json.loads(cached) if cached else None
+        url = _FILING_INDEX_URL.format(cik=cik, accn_nodash=accn_nodash)
+        data = self._http_get_json(url)
+        if data is None:
+            return None
+        try:
+            names = [item["name"] for item in data["directory"]["item"]]
+        except (KeyError, TypeError):
+            return None
+        self._filing_doc_cache[cache_key] = json.dumps(names)
+        return names
 
 
 _client_lock = threading.Lock()
