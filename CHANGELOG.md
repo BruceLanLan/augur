@@ -2,6 +2,22 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.3.0] - 2026-07-08
+
+Phase A of `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md`: a full-project review found three places where the consensus/backtest/learning pipeline was quietly running on unvalidated or synthetic data instead of what it claimed to show the user. This release fixes all three before any new data source (the next phase, SEC EDGAR fundamentals) gets layered on top of them.
+
+### Fixed
+
+- **MetaModel default weight 0.5 → 0.0** (`src/augur/consensus/engine.py`). `MetaModel` is a self-described 24-line stub whose `predict()` is just the cross-agent median score — never validated to improve anything — yet it was blended into every consensus score at 50% weight by default, halving the effect of all the carefully-built industry/regime/learned/diversity weighting logic upstream. The blend mechanism and `consensus.meta_model_weight` config knob are untouched; a user can still opt back into the old behavior explicitly.
+- **Backtest defaults to real historical data, not synthetic** (`src/augur/backtest.py`, `src/dashboard/routes/backtest.py`, `src/augur/cli.py`). The dashboard `/backtest` page and `augur backtest` CLI command both ran on `generate_sample_data()` (hash-seeded synthetic data) by default, with the real-data path (`run_live_backtest`) wired to nothing. Now defaults to live; synthetic data requires explicit opt-in (`mode=demo` / `--demo`) and is visibly flagged, never silently substituted on a live failure. Deeper problem found during the fix: `get_leaderboard()`/`get_ic_report()` aggregated IC across *every* persisted record regardless of source, so historical demo-mode records already on disk would have permanently contaminated the leaderboard even after tagging new ones — fixed by adding a `data_source` field to every `BacktestRecord` and defaulting leaderboard aggregation to `live_only=True` (no historical records deleted, just excluded from the default aggregate).
+- **Learning loop actually closes now** (`src/augur/learning.py`, `src/augur/registry.py`, `src/augur/cron.py`). `~/.augur/learned_weights.json` never existed in production despite the system running for many versions. Root cause, found during implementation and deeper than originally planned: `record_prediction()` never persisted to disk — only `record_outcome()` did — so every prediction lived purely in memory until an outcome resolved for it 30+ days later; any process restart before that point silently wiped it, meaning predictions essentially never survived long enough to ever be resolved at all. Fixed by persisting on every `record_prediction()` call, with pending predictions never pruned (only resolved ones are capped at 100). Added a scheduled sweep (`resolve_pending_outcomes`, wired into the existing daily watchlist cron job) that resolves outcomes across *every* ticker with pending predictions, not just whichever ticker happens to be re-analyzed — the previous only trigger.
+
+### Testing note
+
+Fixed a real test-isolation gap surfaced by the learning-loop fix: with predictions now persisting for real, two existing test files that exercised real consensus computation without mocking the `LearningEngine` singleton started writing genuine synthetic predictions into the developer's real `~/.augur/learned_weights.json` on every test run (verified directly — one test run wrote 36 real-looking records). Added an autouse `tests/conftest.py` fixture that isolates the singleton to a per-test temp file unconditionally, closing the whole class of risk rather than patching individual tests.
+
+Full suite: 2272 passed, 0 failures.
+
 ## [10.2.0] - 2026-07-02
 
 Fixes a real PyPI packaging gap found during release-readiness verification: `dashboard/` (the entire web dashboard — templates, static assets, i18n, and all route modules) and `skills/` (Hermes/OpenClaw skill profiles) lived at the repo root, outside `src/`, which is the only directory `[tool.setuptools.packages.find]` packages. A local `python -m build` confirmed the built wheel contained zero `dashboard/*` files; `pip install augur-agents` followed by `augur serve` would fail with "Could not import dashboard app" — the dashboard is the flagship feature and this had never been caught because local dev/test runs only worked by incidental cwd-on-sys.path behavior when running from a repo checkout, not through the actual packaging configuration.

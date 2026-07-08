@@ -1,7 +1,7 @@
 ---
 name: augur-munger
 description: "Charlie Munger AI — lattice thinking, cross-discipline analysis"
-version: 10.2.0
+version: 10.3.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

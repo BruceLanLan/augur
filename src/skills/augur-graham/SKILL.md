@@ -1,7 +1,7 @@
 ---
 name: augur-graham
 description: "Benjamin Graham AI — deep value / margin of safety, beaten-down stocks"
-version: 10.2.0
+version: 10.3.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]
