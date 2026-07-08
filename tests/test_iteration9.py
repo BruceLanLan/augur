@@ -449,7 +449,14 @@ class TestICReport:
             assert len(result.dates) == 5
 
     def test_leaderboard_sorted_by_ic20d(self):
-        """After run_backtest, get_leaderboard returns agents sorted by ic_20d descending."""
+        """After run_backtest, get_leaderboard returns agents sorted by ic_20d descending.
+
+        get_leaderboard() defaults to live_only=True (R2:
+        docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md debt 2), so this test tags
+        the records data_source="live" to simulate real usage — a bare
+        run_backtest() call with no data_source is "unknown" and would no
+        longer surface here, which is intentional, not this test's concern.
+        """
         historical_data, forward_returns = generate_sample_data("SORT", days=5)
         bt = Backtester()
 
@@ -457,7 +464,7 @@ class TestICReport:
             bt.RECORDS_DIR = Path(tmpdir)
             bt.RECORDS_FILE = Path(tmpdir) / "records.jsonl"
 
-            bt.run_backtest("SORT", historical_data, forward_returns)
+            bt.run_backtest("SORT", historical_data, forward_returns, data_source="live")
             leaderboard = bt.get_leaderboard()
 
             assert len(leaderboard) > 0

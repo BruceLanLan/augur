@@ -18,21 +18,58 @@ async def backtest_page(request: Request):
 
 
 @router.get("/api/backtest/run", summary="运行历史回测")
-async def api_run_backtest(ticker: str = "AAPL", days: int = 30, initial_capital: float = 100000, strategy: str = "equal_weight"):
-    """Run demo backtest, return results with metrics and signals timeline"""
+async def api_run_backtest(
+    ticker: str = "AAPL",
+    days: int = 30,
+    initial_capital: float = 100000,
+    strategy: str = "equal_weight",
+    mode: str = "live",
+):
+    """Run a backtest, return results with metrics and signals timeline.
+
+    mode=live (default): real historical prices + point-in-time fundamentals
+    via yfinance. Requires network and the 'data' extra; failures are
+    reported as errors, never silently swapped for synthetic data.
+    mode=demo: hash-seeded synthetic data, for offline/no-network use —
+    response is flagged data_source=demo so it's never mistaken for a real
+    backtest result.
+    """
     if not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
         raise HTTPException(status_code=400, detail="Invalid ticker format. Use 1-15 alphanumeric characters, dots, or hyphens.")
+    if mode not in ("live", "demo"):
+        raise HTTPException(status_code=400, detail="mode must be 'live' or 'demo'")
 
-    from augur.backtest import Backtester, generate_sample_data
+    from augur.backtest import Backtester
 
     if days < 5:
         days = 5
     if days > 365:
         days = 365
 
-    historical_data, forward_returns = generate_sample_data(ticker, days)
     backtester = Backtester()
-    result = backtester.run_backtest(ticker, historical_data, forward_returns)
+
+    if mode == "demo":
+        from augur.backtest import generate_sample_data
+        historical_data, forward_returns = generate_sample_data(ticker, days)
+        result = backtester.run_backtest(ticker, historical_data, forward_returns, data_source="demo")
+        data_source = "demo"
+    else:
+        from augur.optional_deps import is_available
+        if not is_available("augur.data"):
+            raise HTTPException(
+                status_code=501,
+                detail="Real historical data requires the 'data' extra (pip install 'augur-agents[data]'). "
+                       "Pass mode=demo to use offline synthetic data instead.",
+            )
+        try:
+            result = backtester.run_live_backtest(ticker, days=days)
+        except ImportError as e:
+            raise HTTPException(status_code=501, detail=str(e))
+        except ValueError as e:
+            raise HTTPException(status_code=500, detail=f"Insufficient live data for {ticker.upper()}: {e}")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to fetch live data for {ticker.upper()}: {e}")
+        data_source = "live"
 
     agent_ics = result.agent_ics
     avg_hit_rate = 0.0
@@ -71,6 +108,7 @@ async def api_run_backtest(ticker: str = "AAPL", days: int = 30, initial_capital
         "days": days,
         "initial_capital": initial_capital,
         "strategy": strategy,
+        "data_source": data_source,
         "total_records": len(result.records),
         "consensus_ic": result.consensus_ic,
         "agent_ics": [a.to_dict() for a in result.agent_ics],

@@ -284,6 +284,7 @@
 
 <!-- Result Banner -->
 <div id="bt-banner" class="card" style="display: none; margin-bottom: 1.5rem; border-left: 4px solid var(--accent-green);" role="region" aria-live="polite" aria-busy="false" data-i18n-aria="a11y-backtest-banner" aria-label="回测结果摘要">
+    <div id="bt-demo-badge" style="display: none; padding: 0.5rem 0.75rem; margin-bottom: 0.75rem; background: var(--signal-sell); color: #fff; font-weight: 600; font-size: 0.85rem; border-radius: 4px;" data-i18n="backtest-demo-badge" role="alert">⚠ 演示数据（非真实历史，不计入排行榜）</div>
     <div class="card-body" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
             <div class="bt-banner-label" data-i18n="backtest-banner-consensus">共识 IC (20d)</div>
@@ -499,6 +500,9 @@ function showBacktestError(msg) {
 function renderResults(data) {
     var banner = document.getElementById('bt-banner');
     banner.style.display = 'block';
+
+    var demoBadge = document.getElementById('bt-demo-badge');
+    if (demoBadge) demoBadge.style.display = (data.data_source === 'demo') ? 'block' : 'none';
 
     var ic = data.consensus_ic;
     var icEl = document.getElementById('bt-consensus-ic');

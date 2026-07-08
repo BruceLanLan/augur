@@ -39,6 +39,12 @@ class BacktestRecord:
     actual_return_20d: float = 0.0
     actual_return_60d: float = 0.0
     hit: bool = False     # 预测是否正确
+    # "live" (real yfinance history), "demo" (generate_sample_data synthetic
+    # data), or "unknown" (legacy records persisted before this field existed,
+    # or any direct run_backtest() caller that didn't specify). Leaderboard
+    # aggregation defaults to live-only so a synthetic record can never be
+    # silently blended into a number presented as a real track record.
+    data_source: str = "unknown"
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -102,6 +108,7 @@ class Backtester:
         ticker: str,
         historical_data: List[Dict],
         forward_returns: List[Dict],
+        data_source: str = "unknown",
     ) -> "BacktestResult":
         """
         Run backtest: replay historical data through all agents.
@@ -111,6 +118,12 @@ class Backtester:
             historical_data: List of daily market contexts (dicts with metrics)
             forward_returns: List of forward returns for each date
                              Each dict has: date, return_5d, return_20d, return_60d
+            data_source: Tag stamped on every persisted BacktestRecord —
+                         "live" or "demo" for callers that know which they're
+                         feeding in (run_live_backtest / generate_sample_data
+                         callers), left as "unknown" for direct/legacy
+                         callers. Only "live"-tagged records count toward
+                         get_leaderboard()/get_ic_report() by default.
 
         Returns:
             BacktestResult with all records and IC calculations
@@ -176,6 +189,7 @@ class Backtester:
                         actual_return_20d=ret_20d,
                         actual_return_60d=ret_60d,
                         hit=hit,
+                        data_source=data_source,
                     )
                     records.append(record)
                 except Exception:
@@ -433,16 +447,33 @@ class Backtester:
                     continue
         return records
 
-    def get_ic_report(self, agent_id: Optional[str] = None) -> List[AgentIC]:
-        """Get IC from saved records"""
+    def get_ic_report(self, agent_id: Optional[str] = None, live_only: bool = True) -> List[AgentIC]:
+        """Get IC from saved records.
+
+        live_only=True (default) excludes "demo"/"unknown" records so a
+        synthetic backtest run can never quietly move a number that's
+        presented to the user as real historical performance. Pass
+        live_only=False to see the IC across everything ever persisted,
+        demo included (e.g. for debugging/inspection).
+        """
         records = self.load_records(agent_id=agent_id)
+        if live_only:
+            records = [r for r in records if r.data_source == "live"]
         if not records:
             return []
         return self._calculate_ics(records)
 
-    def get_leaderboard(self) -> List[AgentIC]:
-        """Get IC leaderboard sorted by IC 20d"""
+    def get_leaderboard(self, live_only: bool = True) -> List[AgentIC]:
+        """Get IC leaderboard sorted by IC 20d.
+
+        live_only=True (default): only "live"-tagged records count, so
+        historical demo-mode records already on disk (and any legacy
+        records predating this field) can't silently blend fake data into
+        a leaderboard presented as a real track record. See get_ic_report.
+        """
         records = self.load_records()
+        if live_only:
+            records = [r for r in records if r.data_source == "live"]
         if not records:
             return []
         return self._calculate_ics(records)
@@ -541,7 +572,7 @@ class Backtester:
                 "return_60d": round(ret_60d, 5),
             })
 
-        return self.run_backtest(ticker, historical_data, forward_returns)
+        return self.run_backtest(ticker, historical_data, forward_returns, data_source="live")
 
 
 # ============ Demo Data Generator ============
