@@ -2,6 +2,24 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.7.0] - 2026-07-09
+
+R4 + R5 from `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` §二 (债4, 债6) — both flagged as "low-cost, high-honesty" cleanups with no dependencies.
+
+### Changed
+
+- **R4 — X (Twitter) hash-mock removed from sentiment weighting** (`src/augur/sentiment.py`). The former 20% weight for X, which was *always* a deterministic hash mock (X's free API tier is too restrictive for real use), is no longer blended into `overall_score`. StockTwits and Reddit absorb the freed weight proportionally: 50%→62.5%, 30%→37.5%. `sources["x_score"]` stays present (always `0.0`) for API/schema stability only — nothing reads it for computation. `augur sentiment <ticker>` CLI output updated to show X as explicitly excluded rather than printing a number that looks real.
+- **R5 — `feedback/agent_correlation.json` now real, not a never-copied example** (`scripts/generate_agent_correlation.py`, new). Previously, the diversity-penalty logic in `ConsensusEngine.get_consensus` silently no-oped for every install because only `feedback/agent_correlation.json.example` shipped — nothing ever generated the real file. The new script reuses the exact real-data machinery from Phase D's `regime_weight_oos.py` (`fetch_ticker_replay_records` for EDGAR point-in-time fundamentals, `_signed_agent_scores` for the signed bullish/bearish scoring convention) across the same 37-ticker, 2022-01..2026-06 universe, computes real pairwise Pearson correlation for all 18 agents from 40,922 aligned (ticker, date) observations, and writes the full matrix directly to `feedback/agent_correlation.json`. The diversity penalty is now backed by real data out of the box. Real pairs found with corr > 0.7 (the threshold the penalty acts on): `duan_yongping`/`zhang_lei` (0.757), `thiel`/`zhang_lei` (0.755), `fisher`/`zhang_lei` (0.718), `fisher`/`lynch`(0.712) — all directionally plausible (value-oriented and growth-at-reasonable-price persona pairs).
+
+### Fixed (found while verifying R4 against the full suite)
+
+- `tests/test_iteration8.py::TestKellyMinimumPosition::test_kelly_minimum_position` broke under R4's reweighting: it exercises a deliberately boundary-case mocked consensus score of exactly 5.0, and the real (network-dependent, hash-mock-fallback) sentiment factor for its placeholder ticker `"MINKEL"` happened to nudge the total score across the `score >= 5` Kelly-floor threshold differently under the new StockTwits/Reddit-only weights than under the old three-source weights. This exposed a pre-existing test-hygiene gap — the test's stated intent (Kelly floor logic) was never actually isolated from an uncontrolled external sentiment fetch. Fixed by patching `augur.registry._get_sentiment_analyzer` to return a fixed `0.0` sentiment factor, matching the test's actual intent.
+
+### Tests
+
+- `tests/test_sentiment.py`: weighted-average tests updated for the new 62.5/37.5 split; new `test_x_score_never_blended_even_when_mock_score_nonzero` asserts `_mock_score` is never called for X at all now (not just that its result is unused).
+- Full suite: 2342 passed, 0 failures.
+
 ## [10.6.0] - 2026-07-09
 
 Phase D of `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` — acting on the regime-weight OOS finding shipped in 10.4.0/B1 rather than leaving it undecided.

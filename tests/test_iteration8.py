@@ -377,7 +377,14 @@ class TestKellyMinimumPosition:
     """Test that Kelly criterion gives minimum 1% for bullish signals at threshold."""
 
     def test_kelly_minimum_position(self):
-        """Bullish signal with score=5.0 should get at least 1.0% allocation."""
+        """Bullish signal with score=5.0 should get at least 1.0% allocation.
+
+        Sentiment factor is pinned to 0 here: this test targets the Kelly
+        floor logic on a deliberately boundary-case score (exactly 5.0),
+        which real (or hash-mock-fallback) sentiment noise could otherwise
+        nudge across the >=5 threshold either way -- an unrelated, flaky
+        dependency for what this test actually checks.
+        """
         from augur.registry import DecisionCoordinator
         from augur.personas.base import MarketContext, AgentResponse, SignalType
 
@@ -398,7 +405,9 @@ class TestKellyMinimumPosition:
             )
             mock_results[agent.agent_id] = resp
 
-        consensus = coordinator.get_consensus(mock_results, ticker="MINKEL", context=ctx)
+        with patch("augur.registry._get_sentiment_analyzer") as mock_get_analyzer:
+            mock_get_analyzer.return_value.get_sentiment_factor.return_value = 0.0
+            consensus = coordinator.get_consensus(mock_results, ticker="MINKEL", context=ctx)
         pct = consensus.metadata.get("position_pct", 0)
 
         # Should be at least 1.0% for any bullish signal passing threshold

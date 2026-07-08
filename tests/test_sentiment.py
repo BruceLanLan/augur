@@ -225,23 +225,35 @@ class TestMockScore:
 
 
 class TestScoreCalculation:
-    """Tests for the weighted average: StockTwits 50%, Reddit 30%, X 20%."""
+    """Tests for the weighted average: StockTwits 62.5%, Reddit 37.5% (R4: X excluded)."""
 
     def test_weighted_average_formula(self):
-        """Verify the overall_score is the weighted sum of the three sources."""
-        # Force all three sources to known values by patching the fetchers.
+        """Verify the overall_score is the weighted sum of the two real sources."""
         with patch("augur.sentiment._fetch_stocktwits", return_value=(0.8, 1000)), \
-             patch("augur.sentiment._fetch_reddit", return_value=0.4), \
-             patch("augur.sentiment._mock_score", return_value=0.0):
+             patch("augur.sentiment._fetch_reddit", return_value=0.4):
             analyzer = SentimentAnalyzer()
             analyzer.clear_cache()
             result = analyzer.get_sentiment("TEST")
-        expected = round(0.8 * 0.50 + 0.4 * 0.30 + 0.0 * 0.20, 4)
+        expected = round(0.8 * 0.625 + 0.4 * 0.375, 4)
         assert result.overall_score == expected
         assert result.data_source == "live"
         assert result.sources["stocktwits_score"] == 0.8
         assert result.sources["reddit_score"] == 0.4
         assert result.sources["x_score"] == 0.0
+
+    def test_x_score_never_blended_even_when_mock_score_nonzero(self):
+        """R4: x_score stays 0.0 (and out of the weighted average) even when
+        both real sources succeed, so _mock_score is never called at all
+        (previously it was always called once for X regardless)."""
+        with patch("augur.sentiment._fetch_stocktwits", return_value=(0.8, 1000)), \
+             patch("augur.sentiment._fetch_reddit", return_value=0.4), \
+             patch("augur.sentiment._mock_score", return_value=0.9) as mock_score:
+            analyzer = SentimentAnalyzer()
+            analyzer.clear_cache()
+            result = analyzer.get_sentiment("TEST2")
+        assert result.sources["x_score"] == 0.0
+        assert result.overall_score == round(0.8 * 0.625 + 0.4 * 0.375, 4)
+        mock_score.assert_not_called()
 
     def test_all_mocks_partial_data_source(self):
         """When both real sources fail, data_source == 'mock'."""

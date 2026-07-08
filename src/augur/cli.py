@@ -915,14 +915,15 @@ def sentiment_cmd(ticker):
     sa = SentimentAnalyzer()
     result = sa.get_sentiment(ticker.upper())
     click.echo(f"\nSentiment Analysis: {result.ticker}\n")
-    click.echo(f"{'Overall Score':<20s} {result.overall_score:+.4f}")
-    click.echo(f"{'X (Twitter)':<20s} {result.sources.get('x_score', 0):+.4f}")
-    click.echo(f"{'Reddit':<20s} {result.sources.get('reddit_score', 0):+.4f}")
-    click.echo(f"{'StockTwits':<20s} {result.sources.get('stocktwits_score', 0):+.4f}")
+    click.echo(f"{'Overall Score':<20s} {result.overall_score:+.4f}  (source: {result.data_source})")
+    click.echo(f"{'StockTwits (62.5%)':<20s} {result.sources.get('stocktwits_score', 0):+.4f}")
+    click.echo(f"{'Reddit (37.5%)':<20s} {result.sources.get('reddit_score', 0):+.4f}")
+    click.echo(f"{'X (Twitter)':<20s} excluded (R4: no free real-data source, see CHANGELOG)")
     click.echo(f"{'Volume':<20s} {result.volume:,}")
     click.echo(f"{'Trending':<20s} {'Yes' if result.trending else 'No'}")
     click.echo(f"{'Consensus Factor':<20s} {sa.get_sentiment_factor(ticker.upper()):+.4f}")
-    click.echo("\n[Note: Mock data seeded by ticker hash]")
+    if result.data_source == "mock":
+        click.echo("\n[Note: StockTwits/Reddit unavailable this call -- scores are hash-mock fallback]")
 
 
 @main.command("serve")

@@ -6,9 +6,15 @@ Fetches real sentiment from StockTwits (no auth) and optionally Reddit (PRAW).
 Falls back to hash-based mock when network unavailable or rate-limited.
 
 Sources and weights:
-    StockTwits  50%  — free, no auth, bullish/bearish tags per message
-    Reddit      30%  — optional, needs REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET env vars
-    X (Twitter) 20%  — hash mock (X API free tier too restrictive for real use)
+    StockTwits  62.5% — free, no auth, bullish/bearish tags per message
+    Reddit      37.5% — optional, needs REDDIT_CLIENT_ID + REDDIT_CLIENT_SECRET env vars
+    X (Twitter) excluded (R4) — no free real-data source exists (X API free
+                tier is too restrictive); the former 20% hash-mock weight
+                was removed from the consensus-facing average rather than
+                let fake data influence real scores. `sources["x_score"]`
+                stays present (always 0.0) for API/schema stability only.
+                StockTwits/Reddit absorb the freed weight proportionally
+                (0.50/0.80, 0.30/0.80).
 
 Score ranges:
     overall_score: [-1.0, +1.0]
@@ -197,7 +203,6 @@ class SentimentAnalyzer:
 
         st_score, st_volume = _fetch_stocktwits(ticker)
         reddit_score = _fetch_reddit(ticker)
-        x_score_mock = _mock_score(ticker, "x_twitter")   # X stays mock
 
         live_sources = {}
         data_source = "mock"
@@ -215,13 +220,16 @@ class SentimentAnalyzer:
         else:
             live_sources["reddit_score"] = _mock_score(ticker, "reddit")
 
-        live_sources["x_score"] = x_score_mock
+        # R4: X (Twitter) has no free real-data source. Never blended into
+        # the weighted average -- key kept at a constant 0.0 for schema
+        # stability only. See module docstring.
+        live_sources["x_score"] = 0.0
 
-        # Weighted average: StockTwits 50%, Reddit 30%, X 20%
+        # Weighted average: StockTwits 62.5%, Reddit 37.5% (X's former 20%
+        # redistributed proportionally per R4).
         overall = round(
-            live_sources["stocktwits_score"] * 0.50
-            + live_sources["reddit_score"] * 0.30
-            + live_sources["x_score"] * 0.20,
+            live_sources["stocktwits_score"] * 0.625
+            + live_sources["reddit_score"] * 0.375,
             4,
         )
         overall = max(-1.0, min(1.0, overall))

@@ -68,15 +68,15 @@
 
 排序依据：债 1/2/3 是已批准的 EDGAR 主线的**前置依赖**（理由见 1.3），必须先做；债 4/6 是低成本高诚实收益的顺手项；债 5 依赖数据积累只能延后；债 7 与主线无关放最后。
 
-| 编号 | 内容 | 级别 | 依赖 |
-|------|------|------|------|
-| R1 | MetaModel 默认权重归零 | P0 | 无 |
-| R2 | Dashboard/CLI 回测切真实数据路径 | P0 | 无 |
-| R3 | LearningEngine 定时 resolve 兜底 | P0 | 无 |
-| R4 | X sentiment mock 退出加权 | P1 | 无 |
-| R5 | agent_correlation 生成器脚本 | P1 | 无 |
-| R6 | 真实概率校准 | P2 | R3 积累数据后 |
-| R7 | cli.py 拆分 | P2 | 无 |
+| 编号 | 内容 | 级别 | 依赖 | 状态 |
+|------|------|------|------|------|
+| R1 | MetaModel 默认权重归零 | P0 | 无 | 已完成（v10.3.0） |
+| R2 | Dashboard/CLI 回测切真实数据路径 | P0 | 无 | 已完成（v10.3.0） |
+| R3 | LearningEngine 定时 resolve 兜底 | P0 | 无 | 已完成（v10.3.0） |
+| R4 | X sentiment mock 退出加权 | P1 | 无 | 已完成（v10.7.0） |
+| R5 | agent_correlation 生成器脚本 | P1 | 无 | 已完成（v10.7.0，真实数据：37 ticker、40922 观测点） |
+| R6 | 真实概率校准 | P2 | R3 积累数据后 | 结构性阻塞——`~/.augur/learned_weights.json` 仍全 pending、0 resolved，等 30+ 天真实数据 |
+| R7 | cli.py 拆分 | P2 | 无 | 未开始 |
 
 R1/R2/R3 合计预估 2-3 个开发 session；R4/R5 各半个 session。
 
