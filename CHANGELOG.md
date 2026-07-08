@@ -2,6 +2,22 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.6.0] - 2026-07-09
+
+Phase D of `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` — acting on the regime-weight OOS finding shipped in 10.4.0/B1 rather than leaving it undecided.
+
+### Changed
+
+- **`_REGIME_ADJUSTMENTS` (`src/augur/consensus/regime_weights.py`) disabled — all five regimes emptied to `{}`.** `scripts/regime_weight_oos.py`'s real 37-ticker, 2022-01..2026-06 cross-sectional OOS validation (shipped in 10.4.0, using EDGAR point-in-time fundamentals) found no clear rank-IC improvement from these hand-picked multipliers over a flat equal-weight consensus, and explicitly left "keep / retune / remove" as a product decision for the user. User chose remove. `apply_regime_weights()` and `RegimeRouter.get_weights()` are both no-ops now (return input unchanged / `{}` respectively), so live consensus weighting (`build_consensus_weights` in `weighting.py`) falls back to pure industry-based weights with zero regime tilt. Regime *detection* (VIX+SPY classification via `detect_regime`/`fetch_macro_features`) is untouched and still surfaces in dashboard diagnostics — only the unvalidated reweighting effect is removed. Original multiplier values remain recoverable from git history (commit `f3df8ad` and earlier) if a future retuning pass produces validated numbers.
+- Also corrects the roadmap document's original Phase D hypothesis: EDGAR's longer history did **not** unlock genuine 2022 bear-market coverage as expected. FY2022 10-K filings for the December-fiscal-year-end large caps in this universe carry real `filed` dates clustering around March 2023 (60-90 day post-FYE filing window) — after the 2022 bear market itself had already ended. The BEAR_HIGH_VOL days that did have sufficient point-in-time fundamentals coverage were two later episodes (2024-08 yen-carry-unwind, 2025-04 tariff-shock), not 2022. This is a real, filing-date-driven constraint, not a data-depth problem — extending the OOS window further back (e.g. to 2018-2020, to test whether FY2019 filings — typically available Jan-Feb 2020 for large accelerated filers — land in time for the COVID crash) is a possible future step, not done in this release.
+- Phase D's other two items (real-outcome LearningEngine recalibration, R6 probability calibration) are confirmed structurally time-blocked, not attempted: `~/.augur/learned_weights.json` currently holds 18 predictions, all pending, 0 resolved (R3's persistence-on-write fix only started accumulating data this cycle; outcomes need 30+ real days to resolve). Revisit once enough resolved outcomes exist.
+
+### Tests
+
+- `tests/test_consensus_v10_15.py::TestWeightQuality::test_regime_multipliers_disabled_are_a_noop` (replaces `test_regime_bear_boosts_defensive_agents`, which asserted the now-removed skew).
+- `tests/test_v10_14_workspace_workflow.py::TestConsensusModules::test_regime_router_disabled_returns_empty` (replaces `test_regime_router_normalizes_weights`).
+- Full suite: 2341 passed, 0 failures (same count as 10.5.0 baseline — two tests renamed/repurposed in place, none added or removed).
+
 ## [10.5.0] - 2026-07-08
 
 Phase C of `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` — the EDGAR spec's 阶段2 (Form 4 insider trading) and 阶段3 (13F institutional holdings), both stages. Two new persona-consumable factors join the ~70 already in `metadata.factors`, sourced from real SEC filings rather than any third-party data provider.

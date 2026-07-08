@@ -57,11 +57,13 @@ class TestWeightQuality:
         assert weights
         assert sum(weights.values()) == pytest.approx(1.0, abs=0.001)
 
-    def test_regime_bear_boosts_defensive_agents(self):
+    def test_regime_multipliers_disabled_are_a_noop(self):
+        # Phase D OOS validation found no rank-IC benefit from the hand-picked
+        # regime multipliers (CHANGELOG 10.4.0); they were emptied out, so
+        # apply_regime_weights must now pass weights through unchanged.
         base = {"buffett": 0.34, "graham": 0.33, "cathie_wood": 0.33}
         adj = apply_regime_weights(base, "BEAR_HIGH_VOL")
-        assert adj["graham"] > adj["cathie_wood"]
-        assert adj["buffett"] > adj["cathie_wood"]
+        assert adj == base
 
     def test_trained_matrix_overrides_base(self):
         trained = {"technology": {"buffett": 1.0, "graham": 0.0}}

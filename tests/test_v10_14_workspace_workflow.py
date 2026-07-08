@@ -155,12 +155,14 @@ class TestConsensusModules:
             assert "vix" in features
             assert "regime" in features
 
-    def test_regime_router_normalizes_weights(self):
+    def test_regime_router_disabled_returns_empty(self):
+        # Phase D OOS validation found no rank-IC benefit from the hand-picked
+        # regime multipliers (CHANGELOG 10.4.0); RegimeRouter now returns {}
+        # for every regime so it contributes no tilt to the blended weights.
         from augur.consensus.regime_router import RegimeRouter
         router = RegimeRouter()
         weights = router.get_weights("BEAR_LOW_VOL")
-        assert weights
-        assert sum(weights.values()) == pytest.approx(1.0, abs=0.01)
+        assert weights == {}
 
     def test_risk_manager_high_vix_reduces_size(self):
         from augur.consensus.risk_manager import RiskManager

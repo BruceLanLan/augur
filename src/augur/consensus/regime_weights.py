@@ -5,26 +5,22 @@ from typing import Dict, Optional
 
 from augur.consensus.macro_features import fetch_macro_features
 
+# Disabled as of Phase D (v10.6.0): scripts/regime_weight_oos.py ran a real
+# cross-sectional OOS validation (37 tickers, 2022-01..2026-06, EDGAR
+# point-in-time fundamentals) and found no clear rank-IC improvement from
+# these hand-picked multipliers vs. a flat equal-weight consensus -- see
+# CHANGELOG 10.4.0 for the full result. Rather than delete the mechanism
+# outright, the multiplier tables are emptied so `apply_regime_weights` /
+# `RegimeRouter.get_weights` become no-ops; regime *detection* (VIX+SPY
+# classification) stays wired for display/diagnostics. Original multiplier
+# values are recoverable from git history (commit f3df8ad and earlier) if
+# a future retuning pass produces validated numbers.
 _REGIME_ADJUSTMENTS: Dict[str, Dict[str, float]] = {
-    "BULL_LOW_VOL": {
-        "lynch": 1.22, "cathie_wood": 1.18, "aschenbrenner": 1.12, "thiel": 1.08,
-        "marks": 0.88, "graham": 0.9,
-    },
-    "BULL_HIGH_VOL": {
-        "marks": 1.22, "dalio": 1.18, "graham": 1.12, "munger": 1.08,
-        "cathie_wood": 0.85, "aschenbrenner": 0.88, "soros": 1.05,
-    },
-    "BEAR_LOW_VOL": {
-        "graham": 1.28, "buffett": 1.22, "marks": 1.18, "munger": 1.12,
-        "cathie_wood": 0.75, "aschenbrenner": 0.78, "thiel": 0.82,
-    },
-    "BEAR_HIGH_VOL": {
-        "marks": 1.32, "dalio": 1.28, "soros": 1.18, "graham": 1.15, "buffett": 1.1,
-        "cathie_wood": 0.72, "aschenbrenner": 0.75,
-    },
-    "SIDEWAYS": {
-        "munger": 1.12, "fisher": 1.12, "marks": 1.08, "buffett": 1.05, "lynch": 1.05,
-    },
+    "BULL_LOW_VOL": {},
+    "BULL_HIGH_VOL": {},
+    "BEAR_LOW_VOL": {},
+    "BEAR_HIGH_VOL": {},
+    "SIDEWAYS": {},
 }
 
 

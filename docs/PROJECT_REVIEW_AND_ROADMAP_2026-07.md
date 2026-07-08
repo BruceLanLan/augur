@@ -91,10 +91,26 @@ Phase A  P0 重构（R1+R2+R3，本文档 §四给出交接单）        ← 下
 Phase B  EDGAR 阶段1：XBRL 财报基础设施                    ← spec 已批准
 Phase C  EDGAR 阶段2+3：Form 4 内部人 + 13F 机构持仓
 Phase D  可信度层深化：
-         - 用修好的 LearningEngine + EDGAR 长历史重跑校准
-         - R6 真实概率校准
-         - regime 权重用 2010s 数据重新验证（P2-4 当年受限于
-           yfinance 只回到 2022，熊市桶仅 9 天——EDGAR 解锁后重测）
+         - 用修好的 LearningEngine + EDGAR 长历史重跑校准 —— 结构性时间阻塞：
+           R3 的持久化修复本 session 才生效，pending 预测需真实等 30+ 天才能
+           resolve，`~/.augur/learned_weights.json` 目前 18 条全 pending、
+           0 条 resolved，现在做不了任何有意义的校准。
+         - R6 真实概率校准 —— 同上，阻塞原因相同。
+         - regime 权重重验证 —— **已在 B1（v10.4.0, commit f3df8ad）完成**：
+           `scripts/regime_weight_oos.py` 用 EDGAR 真实 filing date 跑了
+           37 支跨行业 ticker、2022-01～2026-06 全窗口截面 IC，诚实结论是
+           "_REGIME_ADJUSTMENTS 无明显 OOS 提升"（各 regime 桶 delta 小且
+           方向不一）。**原路线图设想的"2010s 数据解锁 2022 熊市"未成立**：
+           EDGAR 数据深度虽够，但 FY2022 年报的真实 filed 日期集中在
+           2023 年 3 月前后（12 月财年结束的大盘股 60~90 天申报窗），
+           已晚于 2022 熊市（大致 1～10 月）本身——这是真实 filing 时点
+           决定的，不是数据覆盖问题。BEAR_HIGH_VOL 桶实际覆盖到的是
+           2024-08（日元套息平仓）与 2025-04（关税冲击）两段插曲，共 9
+           天，仍然稀薄。是否保留/调整/移除 regime multipliers 留给用户
+           决定（详见 CHANGELOG 10.4.0）。如果想进一步验证，把窗口前移到
+           2018～2020（覆盖 2020 COVID 崩盘——12 月财年 FY2019 年报通常
+           1～2 月就报完，时点上可能真的赶在崩盘前可用）是一个具体可执行
+           的下一步，尚未做。
 Phase E  EDGAR 阶段4：LLM 指引抽取（默认关闭，可选）
 Phase F  发布：PyPI 正式发布 + README/对外内容 + R4/R5/R7 收尾
 ```
