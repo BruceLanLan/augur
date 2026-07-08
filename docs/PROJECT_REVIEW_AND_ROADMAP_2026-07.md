@@ -76,7 +76,7 @@
 | R4 | X sentiment mock 退出加权 | P1 | 无 | 已完成（v10.7.0） |
 | R5 | agent_correlation 生成器脚本 | P1 | 无 | 已完成（v10.7.0，真实数据：37 ticker、40922 观测点） |
 | R6 | 真实概率校准 | P2 | R3 积累数据后 | 结构性阻塞——`~/.augur/learned_weights.json` 仍全 pending、0 resolved，等 30+ 天真实数据 |
-| R7 | cli.py 拆分 | P2 | 无 | 未开始 |
+| R7 | cli.py 拆分 | P2 | 无 | 已完成（v10.8.0，1476 行拆成 9 个 cli_commands 模块 + 103 行注册壳） |
 
 R1/R2/R3 合计预估 2-3 个开发 session；R4/R5 各半个 session。
 

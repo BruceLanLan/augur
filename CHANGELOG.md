@@ -2,6 +2,22 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.8.0] - 2026-07-09
+
+R7 from `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` §二 (债7, engineering health, no functional dependency) — split the 1476-line `src/augur/cli.py` God file into focused modules, mirroring the dashboard's 4338-line-to-17-router split from v10.1.0.
+
+### Changed
+
+- **`src/augur/cli.py` is now a 103-line thin registrar.** All 27 commands moved into 9 new `src/augur/cli_commands/*.py` modules grouped by purpose (`analysis.py`: analyze/consensus/report/list-personas; `data.py`: fetch/sentiment; `workflow.py`: workflow/chat/committee; `backtest.py`: backtest/ic-report; `watchlist.py`: watchlist-add/watchlist-show/cron-run/cron-start; `integrations.py`: telegram/slack/wechat/lark/inject-soul; `server.py`: mcp-server/api/serve; `monitor.py`: watch/portfolio; `meta.py`: skills/update). Each module defines bare `@click.command(...)` functions (mirroring how each `dashboard/routes/*.py` defines its own `APIRouter`); `cli.py` imports every command and registers it onto the `main` group via `main.add_command(...)` (the click equivalent of `app.include_router(...)`).
+- Shared helpers used by multiple commands (`_auto_fetch_context`, `_print_result`) moved to a new `src/augur/cli_helpers.py`.
+- `serve_cmd` and `skills_cmd`/`update_cmd` relocated their filesystem-relative path resolution (`Path(__file__).resolve().parents[N]`) to account for the new one-level-deeper `cli_commands/` location — verified against the actual repo layout (`src/dashboard`, `src/skills`, repo `.git`) rather than assumed, since a wrong depth here is exactly the class of bug the v10.2.0 packaging fix was about. `tests/test_packaging_layout.py`'s two regression guards updated to check the new file locations at the correct depth (`parents[2]`, not the old `parents[1]`).
+
+### Tests
+
+- `tests/test_iteration7.py`: one test's patch target updated from `augur.cli._auto_fetch_context` to `augur.cli_commands.analysis._auto_fetch_context` (where the function is now actually called from).
+- Every non-ASCII character (emoji, box-drawing, CJK punctuation) in every moved command was diffed programmatically against the original file to confirm byte-for-byte preservation, not just "looks the same."
+- Full suite: 2353 passed, 0 failures (identical to the pre-refactor baseline — pure move, no behavior change). Also verified via a real `augur analyze AAPL --pe 25 --roe 0.3 --persona buffett` invocation through the installed console-script entry point (not just `python -c` import).
+
 ## [10.7.0] - 2026-07-09
 
 R4 + R5 from `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` §二 (债4, 债6) — both flagged as "low-cost, high-honesty" cleanups with no dependencies.

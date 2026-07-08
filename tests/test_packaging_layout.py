@@ -87,17 +87,25 @@ class TestPackageDataConfig:
 
 
 class TestCliPathResolutionMatchesLayout:
-    """cli.py's `augur serve`/`augur skills` path resolution must point at
-    src/dashboard and src/skills — parents[1] from src/augur/cli.py, not
-    parents[2] (the old repo-root-relative assumption that only worked by
-    incidental cwd-on-sys.path behavior in a dev checkout)."""
+    """`augur serve`/`augur skills` path resolution must point at
+    src/dashboard and src/skills relative to wherever the resolving file
+    actually lives, not a repo-root-relative assumption that only worked by
+    incidental cwd-on-sys.path behavior in a dev checkout.
+
+    R7 (v10.7.0) split cli.py into augur.cli_commands.*; the resolution code
+    now lives in cli_commands/server.py and cli_commands/meta.py, one
+    directory level deeper than the original src/augur/cli.py, so the
+    correct parents[] depth shifted from 1 to 2 accordingly.
+    """
 
     def test_cli_resolves_dashboard_relative_to_src(self):
-        cli_source = (REPO_ROOT / "src" / "augur" / "cli.py").read_text(encoding="utf-8")
-        assert 'parents[1] / "dashboard"' in cli_source
-        assert 'parents[2] / "dashboard"' not in cli_source
+        server_source = (REPO_ROOT / "src" / "augur" / "cli_commands" / "server.py").read_text(encoding="utf-8")
+        assert 'parents[2] / "dashboard"' in server_source
+        assert 'parents[1] / "dashboard"' not in server_source
+        assert 'parents[3] / "dashboard"' not in server_source
 
     def test_cli_resolves_skills_relative_to_src(self):
-        cli_source = (REPO_ROOT / "src" / "augur" / "cli.py").read_text(encoding="utf-8")
-        assert 'parents[1] / "skills"' in cli_source
-        assert 'parents[2] / "skills"' not in cli_source
+        meta_source = (REPO_ROOT / "src" / "augur" / "cli_commands" / "meta.py").read_text(encoding="utf-8")
+        assert 'parents[2] / "skills"' in meta_source
+        assert 'parents[1] / "skills"' not in meta_source
+        assert 'parents[3] / "skills"' not in meta_source

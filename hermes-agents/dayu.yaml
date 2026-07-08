@@ -8,7 +8,7 @@ display_name: "大宇 (BTCdayu)"
 description: "中国加密 KOL — 链上数据 & 叙事周期 · augur_workflow MCP"
 persona_id: dayu
 language: zh
-version: "10.7.0"
+version: "10.8.0"
 
 mcp:
   command: augur-mcp

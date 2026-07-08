@@ -1,7 +1,7 @@
 ---
 name: augur-committee
 description: "Augur Investment Committee — Convene 2-18 masters for structured multi-agent analysis and verdict"
-version: 10.7.0
+version: 10.8.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

@@ -87,7 +87,9 @@ class TestCLIErrorMessages:
         from augur.cli import main
         runner = CliRunner()
         # Directly test _auto_fetch_context by patching the import
-        with patch("augur.cli._auto_fetch_context") as mock_fetch:
+        # (R7: analyze_cmd now lives in augur.cli_commands.analysis, which
+        # imports _auto_fetch_context by name -- patch it there)
+        with patch("augur.cli_commands.analysis._auto_fetch_context") as mock_fetch:
             # Simulate the ImportError path behavior
             from augur.personas.base import MarketContext
             import click as _click
