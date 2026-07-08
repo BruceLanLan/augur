@@ -2,6 +2,43 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.4.0] - 2026-07-08
+
+Phase B (B1) of `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md`, per the approved design in `docs/superpowers/specs/2026-07-03-edgar-fundamentals-design.md`: point-in-time fundamentals for both live analysis and backtest replay now come from real SEC EDGAR filing data instead of yfinance-derived annual statements.
+
+### Added
+
+- **`src/augur/consensus/edgar_fundamentals.py`**: new `EdgarClient` (CIK lookup via SEC's `company_tickers.json`, `companyfacts` XBRL fetch, 10 req/sec rate limiting, disk caching under `~/.augur/edgar_cache/`) and `fetch_edgar_fundamentals(ticker, as_of_date, price)` — same contract as the `pit_fundamentals.py` function it replaces (`{"insufficient": True}` when nothing is as-of available, otherwise pe/pb/roe/gross_margins/operating_margins/revenue_growth/earnings_growth/debt_ratio/market_cap, never raises). Uses each XBRL fact's real `filed` (SEC submission) date for point-in-time discipline instead of a guessed 90-day filing lag, and reaches back to ~2011 for established large caps instead of yfinance's ~2022 floor (confirmed directly against real NVDA data during implementation).
+- **`fetch_market_context()`** (`src/augur/data.py`) gains a field-level EDGAR overlay: after the existing yfinance→stooq provider chain builds a context, EDGAR-sourced values replace pe/pb/roe/gross_margins/operating_margins/revenue_growth/earnings_growth/debt_ratio/market_cap wherever EDGAR could compute them (ticker has a US SEC CIK, price is known), leaving every other field (price, sector, industry, rsi, sma, ...) exactly as the provider chain built it. Deliberately *not* a chain provider itself — the existing chain is "first success wins," which would be wrong for a source that only ever has fundamentals. A successful overlay tags the context with `fundamentals_source="edgar"`.
+- **`tests/test_edgar_fundamentals.py`** (32 tests) and **`tests/test_edgar_overlay.py`** (7 tests).
+
+### Changed
+
+- **`src/augur/backtest.py`**: both point-in-time fundamentals call sites (`run_live_backtest`, `fetch_ticker_replay_records`) switched from `pit_fundamentals.fetch_pit_fundamentals` to `edgar_fundamentals.fetch_edgar_fundamentals`.
+- **`debt_ratio`** is now Liabilities / Assets, not yfinance's narrower "Total Debt" (interest-bearing debt only) that `pit_fundamentals.py` used — XBRL has no single universal tag for total debt the way yfinance's normalized statement does, and both concepts (Liabilities, Assets) are already in the spec's core concept list. A deliberate, documented definitional change, not an oversight; sanity-checked against real JPM data (debt_ratio ≈0.91, consistent with a bank's typically very high balance-sheet leverage).
+
+### Removed
+
+- **`src/augur/consensus/pit_fundamentals.py`** and **`tests/test_pit_fundamentals.py`** (superseded; no remaining functional references — `scripts/regime_weight_oos.py` only imports from `backtest.py`, which is already switched over).
+
+### Fixed (found during implementation, not part of the original plan)
+
+- **Real EDGAR data revealed `form="10-K", fp="FY"` alone does not reliably identify "the annual duration figure."** Confirmed against real NVDA data: the same FY2015 10-K XBRL-tags a supplementary Q4-only figure (a ~90-day span) with the exact same `form`/`fp` combination as the true full-year figure (~363 days), sharing the same period-end date. An unfiltered version of the code computed NVDA's FY2015-vs-Q3FY2015 "YoY growth" as +282%, comparing a full year against a single quarter. Fixed by additionally requiring duration-type records (revenue, net income, EPS, margins) to span ≥300 days; instant-type records (balance sheet items — no `start` date at all) are unaffected.
+- **Restatement duplicates**: the same fiscal-year-end period routinely reappears as a prior-year comparative in one or two later annual filings, each with a later `filed` date. The correct "available from" date is the *earliest* `filed` date across every filing reporting that period, not whichever filing is scanned first.
+- **XBRL tag drift within one company's own history**: Apple reported revenue under the `Revenues` tag through FY2018, then switched to `RevenueFromContractWithCustomerExcludingAssessedTax` starting FY2019 (confirmed against real EDGAR data). Every concept is defined as a family of alternative tags with records merged across all of them, not "first tag with any data wins for the whole company" (the latter would silently lose one side of a tag-switch boundary).
+- **Test isolation**: with the EDGAR overlay wired into `fetch_market_context()`, a pre-existing test asserting a mocked `market_cap=3000.0` for ticker "AAPL" started failing against a real ~$2.8T EDGAR-computed value, since "AAPL" (a real ticker with a real CIK) is this suite's most common test fixture. Added an autouse `tests/conftest.py` fixture (`disable_edgar_overlay_by_default`) stubbing `fetch_edgar_fundamentals` to always return `{"insufficient": True}` for every test by default, matching the same isolation pattern already used for the `LearningEngine` singleton (v10.3.0). `test_edgar_fundamentals.py`'s own tests, which need the *real* function, restore it via an explicit fixture-ordering dependency.
+
+### Verified
+
+Real network calls against live SEC EDGAR and (where the environment's yfinance/`curl_cffi` TLS issue didn't block it) live price data — not just mocks:
+
+- `EdgarClient.get_cik("AAPL")` → 320193, matching SEC's own public mapping.
+- `fetch_edgar_fundamentals("NVDA", "2015-06-01")` → real, non-zero fundamentals (pe/pb/roe/margins/growth), with growth figures matching NVDA's actual known FY2015 results (~13% revenue growth) after the duration-filter bug fix — a year yfinance-derived `pit_fundamentals.py` could never reach.
+- `fetch_market_context("AAPL")`'s EDGAR overlay (verified directly, working around this environment's yfinance failure by supplying a real price manually) correctly replaced `pe`/`roe` with real EDGAR-sourced values and tagged `fundamentals_source="edgar"`; `fetch_market_context("0700.HK")` correctly found no CIK and degraded silently with zero fields changed.
+- `fetch_ticker_replay_records` for AAPL/MSFT/JPM over 2015-2018 (real EDGAR calls, synthetic price series substituted for the broken yfinance price feed in this environment) returned 1023 as-of-available records per ticker with plausible values (JPM debt_ratio≈0.91, consistent with real bank balance-sheet leverage).
+
+Full suite: 2295 passed (2272 baseline − 16 removed `pit_fundamentals` tests + 39 new), 0 failures.
+
 ## [10.3.0] - 2026-07-08
 
 Phase A of `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md`: a full-project review found three places where the consensus/backtest/learning pipeline was quietly running on unvalidated or synthetic data instead of what it claimed to show the user. This release fixes all three before any new data source (the next phase, SEC EDGAR fundamentals) gets layered on top of them.

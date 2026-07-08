@@ -8,7 +8,7 @@ display_name: "Cathie Wood"
 description: "ARK Invest — disruptive innovation & Wright's Law · augur_workflow MCP"
 persona_id: cathie_wood
 language: en
-version: "10.3.0"
+version: "10.4.0"
 
 mcp:
   command: augur-mcp
