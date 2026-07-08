@@ -215,16 +215,19 @@ class ConsensusEngine:
         # --- Meta-model blending ---
         # NOTE: MetaModel.load() always returns an active instance in this stub
         # implementation (never None outside of tests that explicitly patch it),
-        # so the blend weight below is the *only* way to dial down how much the
-        # cross-agent median washes out the industry/regime-tuned weighted score.
+        # and predict() is just the cross-agent median — it has never been
+        # validated to improve anything. Default weight is 0 so this stub is
+        # inert out of the box; the blend/config path stays intact so a real
+        # meta model can be dropped in later, and a user can still opt in via
+        # consensus.meta_model_weight if they want the median blend today.
         mm = MetaModel.load()
         if mm is not None:
             from augur.config import get_config
-            meta_weight = get_config().get("consensus", {}).get("meta_model_weight", 0.5)
+            meta_weight = get_config().get("consensus", {}).get("meta_model_weight", 0.0)
             try:
                 meta_weight = max(0.0, min(1.0, float(meta_weight)))
             except (TypeError, ValueError):
-                meta_weight = 0.5
+                meta_weight = 0.0
             if meta_weight > 0:
                 agent_scores_dict = {aid: resp.score for aid, resp in results.items()}
                 mm_score = mm.predict(agent_scores_dict)
