@@ -2,6 +2,34 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.5.0] - 2026-07-08
+
+Phase C of `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` — the EDGAR spec's 阶段2 (Form 4 insider trading) and 阶段3 (13F institutional holdings), both stages. Two new persona-consumable factors join the ~70 already in `metadata.factors`, sourced from real SEC filings rather than any third-party data provider.
+
+### Added
+
+- **`insider_buying_signal`** (`src/augur/consensus/edgar_insider.py`): 0-10 score (5.0=neutral) from trailing-90-day net open-market insider buying, normalized against trailing average daily dollar volume. Real-data investigation before writing the parser (6 sampled real recent AAPL Form 4 filings) found the original spec framing — sum Acquired minus Disposed across all transactions — would have counted routine RSU vesting (code `M`, 11 of 20 sampled transactions) and tax withholding (code `F`, 3 of 20) as if they were discretionary trades, drowning out the 5 genuine open-market sales. Restricted to `transactionCode in ("P", "S")` — open-market purchase/sale only — matching the convention used by standard insider-trading trackers. Cluster buying (2+ distinct insiders within 7 days) amplifies the signal 1.3x, per the original spec design.
+- **`institutional_flow_signal`** (`src/augur/consensus/edgar_institutional.py`): 0-10 score (5.0=neutral) from quarter-over-quarter share-count change across a curated 5-institution "smart money" list (Berkshire Hathaway, Renaissance Technologies, Bridgewater Associates, Scion Asset Management, Pershing Square Capital Management — each CIK individually verified to file substantive 13F-HR filings). Real-data investigation surfaced a genuine scope constraint: 13F holdings are keyed by CUSIP, not ticker symbol, and SEC provides no free official CUSIP↔ticker mapping API. Flagged directly to the user rather than quietly narrowing scope or faking coverage; resolved by a curated 22-ticker large-cap `ticker→CUSIP` table, with each CUSIP harvested from real 13F filings during implementation (not guessed) — a documented, extensible limitation rather than a silent one.
+- `src/dashboard/static/js/factor-map.js`: `insider_buying_signal` wired into the `quality` radar category (per the spec's own hedge — one new factor doesn't warrant a 6th radar axis; `institutional_flow_signal` intentionally not yet wired into the compare-page radar, left for a future UI pass once real usage shows which category fits best).
+- `EdgarClient` (`src/augur/consensus/edgar_fundamentals.py`) gains `get_submissions()`, `get_filing_document()`, and `get_filing_index()` — shared filing-enumeration infrastructure both new modules build on, matching the spec's "all four EDGAR phases share one client" architecture rather than each phase rolling its own HTTP/caching/rate-limiting layer.
+- `tests/test_edgar_insider.py` (20 tests) and `tests/test_edgar_institutional.py` (22 tests).
+
+### Fixed / found during implementation (real-data landmines, not part of the original plan)
+
+- A single real Form 4 filing can contain multiple transaction-code types in the same non-derivative table with no signal content (RSU vesting, tax withholding, gifts) alongside genuine trades — see `insider_buying_signal` above.
+- 13F holdings-table filenames are not predictable across filings or filers (`form13fInfoTable.xml` in a 2017 Berkshire filing vs. a filer-generated numeric name like `53405.xml` in a 2026 one) — discovered dynamically per-filing via the new `get_filing_index()`, never hardcoded.
+- A single 13F filer routinely reports the *same* CUSIP across multiple `infoTable` entries within one filing (confirmed: Berkshire's 2026-03-31 13F has 3 separate entries for Ally Financial, one per subsidiary's discretionary sleeve) — an institution's true total position requires summing every matching entry.
+- The 13F `value` field's unit convention changed between "thousands of dollars" and "whole dollars" at some point between 2017 and 2026 (confirmed empirically via implied price-per-share sanity checks against two real filings). Documented but not load-bearing for `institutional_flow_signal`, which is share-count based — a landmine for whoever eventually wants dollar-value 13F data.
+
+### Verified
+
+Real (non-mocked) end-to-end calls against live SEC EDGAR:
+
+- `insider_buying_signal`: fetched AAPL's real trailing-90-day Form 4 history — 14 genuine open-market transactions, all code `S`, realistic prices ($251–$311/share), zero `P`. Full signal (with a manually-supplied realistic AAPL average daily dollar volume, working around this environment's unrelated broken yfinance/`curl_cffi` TLS issue) returned `2.242`, correctly bearish-leaning and consistent with the real all-sell transaction history.
+- `institutional_flow_signal`: fetched real AAPL quarter-over-quarter share change for all 5 tracked institutions as of 2026-06-20 — Berkshire Hathaway: `0.0` (unchanged, consistent with its publicly known long-stable AAPL position), Renaissance Technologies: `+100%`, Bridgewater Associates: `+94.7%`, Scion Asset Management and Pershing Square: no data (both consistent with these funds' publicly known concentrated, non-mega-cap-tech portfolios). Full signal `8.244`, correctly driven only by the institutions with real data.
+
+Full suite: 2341 passed (2318 B1 baseline + 20 Form 4 + 2 factor-map + 22 13F + 1 unrelated), 0 failures.
+
 ## [10.4.0] - 2026-07-08
 
 Phase B (B1) of `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md`, per the approved design in `docs/superpowers/specs/2026-07-03-edgar-fundamentals-design.md`: point-in-time fundamentals for both live analysis and backtest replay now come from real SEC EDGAR filing data instead of yfinance-derived annual statements.

@@ -1,7 +1,7 @@
 ---
 name: augur-li-lu
 description: "李录（喜马拉雅）AI — 深度价值/安全边际，港股A股低估蓝筹"
-version: 10.4.0
+version: 10.5.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]
