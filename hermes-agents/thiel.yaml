@@ -8,7 +8,7 @@ display_name: "Peter Thiel"
 description: "Zero to One — contrarian monopoly thinking · augur_workflow MCP"
 persona_id: thiel
 language: en
-version: "10.8.0"
+version: "10.9.0"
 
 mcp:
   command: augur-mcp

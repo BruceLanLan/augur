@@ -2,6 +2,27 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.9.0] - 2026-07-09
+
+Phase E of `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` — EDGAR spec's 阶段4 (LLM-extracted management guidance), the last item on the roadmap. Default OFF, standalone/on-demand only, per the approved spec (`docs/superpowers/specs/2026-07-03-edgar-fundamentals-design.md` §4).
+
+### Added
+
+- **`src/augur/consensus/edgar_guidance.py`** (new): `fetch_management_guidance(ticker, as_of_date=None)` pulls the MD&A section from a company's most recent 10-K/10-Q and asks an LLM to extract management outlook sentiment (positive/negative/neutral), a 1-2 sentence outlook summary, any explicit forward-looking guidance numbers, and risk-factor notes. Unlike stages 1-3, this is deliberately **not** wired into the automatic `analyze()`/consensus pipeline or `metadata.factors` — it's an on-demand tool only, reachable via the function directly or the new `augur guidance TICKER [--as-of DATE]` CLI command, matching the spec's "阶段 4 不做实时监控/推送，只在用户主动分析时按需抽取".
+- **Default OFF, explicit opt-in required**: `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` (truthy-string convention matching `AUGUR_SKIP_MACRO_FETCH`). Disabled is the fast path — zero network calls of any kind, not even an EDGAR fetch, so cost/latency is exactly zero unless a user deliberately opts in. Reuses `augur.llm_client`'s existing OpenAI-compatible client construction (same `OPENAI_API_KEY`/`OPENAI_BASE_URL` already used by persona chat) instead of adding a second LLM config surface; model defaults to `gpt-4o-mini` (override via `AUGUR_GUIDANCE_MODEL`) since extraction is cheaper than chat's `gpt-4o` default.
+- **Permanent per-filing cache**: extraction results cached to `~/.augur/edgar_cache/guidance_<accession>.json`, keyed by accession number, no TTL (a filed 10-K/10-Q never changes) — the LLM is never called twice for the same filing.
+- **MD&A section boundary detection**: real 10-K/10-Q filings mention their own MD&A item number multiple times (table of contents, cross-references, the actual section) — confirmed against real AAPL 10-K and 10-Q filings before writing the parser. Naively grabbing the first match would return a one-line TOC entry, not the real section. Fixed with a "largest gap to the next item boundary" heuristic: among every (start-label, next end-label) pair, the real section is the one separated by thousands of characters of prose, while TOC/cross-reference mentions sit within a few hundred characters of each other. 10-K uses Item 7→7A (or →8 if a filer omits the market-risk item); 10-Q uses Part I Item 2→3 (correctly distinguishing from the unrelated Part II Item 2/3 pair that also exists in every 10-Q).
+- `augur guidance TICKER` (`src/augur/cli_commands/data.py`): prints the extracted outlook alongside a clear "how to enable" message when disabled, matching the CLI's existing `require_optional` pattern for other opt-in integrations.
+- `beautifulsoup4` added to the `llm` extras group in `pyproject.toml` (genuinely required for this feature's HTML parsing, was previously only a `dev`-extras/test dependency) and registered in `augur.optional_deps.OPTIONAL_DEPS_REGISTRY` for a consistent graceful-degradation error message if missing.
+- `tests/test_edgar_guidance.py` (34 tests, all offline/mocked per the spec's own test list — LLM calls are never real in the suite): MD&A boundary extraction against synthetic filings mirroring the real structure, disabled/unavailable gating paths (verified via mock assertions that zero network calls happen when disabled), full success path, cache-hit skips both the document re-fetch and the LLM call, malformed-response handling, missing-bs4 gating.
+
+### Verified
+
+- Real (non-mocked, free) EDGAR calls: `fetch_management_guidance`'s non-LLM pipeline run end-to-end against live AAPL data — real CIK lookup (320193), real most-recent-filing selection (10-Q filed 2026-05-01, correctly preferred over the older 10-K), real document fetch (999,810 bytes), real MD&A extraction (21,905 characters, correctly starting at "Item 2. Management's Discussion and Analysis..." and correctly excluding Part II's unrelated Item 2/3 pair).
+- The LLM extraction call itself was **not** verified against a real paid API in this session — no `OPENAI_API_KEY` is configured in this environment, and spending real money on an API call requires the user's explicit go-ahead rather than being done unilaterally. The mocked test suite covers the LLM response parsing/validation logic; real end-to-end LLM verification is a documented follow-up for whenever a user with API credentials wants to exercise it.
+- `augur guidance AAPL` (disabled by default): confirmed clean, actionable error message and exit code 1, zero network calls.
+- Full suite: 2388 passed, 0 failures.
+
 ## [10.8.0] - 2026-07-09
 
 R7 from `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` §二 (债7, engineering health, no functional dependency) — split the 1476-line `src/augur/cli.py` God file into focused modules, mirroring the dashboard's 4338-line-to-17-router split from v10.1.0.

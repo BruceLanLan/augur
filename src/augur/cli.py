@@ -71,7 +71,7 @@ def main(ctx, no_color):
 
 
 from augur.cli_commands.analysis import analyze_cmd, consensus_cmd, report_cmd, list_personas_cmd
-from augur.cli_commands.data import fetch_cmd, sentiment_cmd
+from augur.cli_commands.data import fetch_cmd, sentiment_cmd, guidance_cmd
 from augur.cli_commands.workflow import workflow_cmd, chat_cmd, committee_cmd
 from augur.cli_commands.backtest import backtest_cmd, ic_report_cmd
 from augur.cli_commands.watchlist import (
@@ -86,7 +86,7 @@ from augur.cli_commands.meta import skills_cmd, update_cmd
 
 for _cmd in (
     analyze_cmd, consensus_cmd, report_cmd, list_personas_cmd,
-    fetch_cmd, sentiment_cmd,
+    fetch_cmd, sentiment_cmd, guidance_cmd,
     workflow_cmd, chat_cmd, committee_cmd,
     backtest_cmd, ic_report_cmd,
     watchlist_add_cmd, watchlist_show_cmd, cron_run_cmd, cron_start_cmd,

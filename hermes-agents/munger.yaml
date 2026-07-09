@@ -8,7 +8,7 @@ display_name: "Charlie Munger"
 description: "Mental models polymath — invert, always invert · augur_workflow MCP"
 persona_id: munger
 language: en
-version: "10.8.0"
+version: "10.9.0"
 
 mcp:
   command: augur-mcp

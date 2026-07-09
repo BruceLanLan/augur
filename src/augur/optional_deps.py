@@ -44,6 +44,10 @@ OPTIONAL_DEPS_REGISTRY = {
         "REST API server",
         "pip install 'augur-agents[api]'",
     ),
+    "bs4": (
+        "EDGAR management guidance extraction (HTML parsing)",
+        "pip install 'augur-agents[llm]'",
+    ),
 }
 
 

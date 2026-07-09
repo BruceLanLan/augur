@@ -111,7 +111,15 @@ Phase D  可信度层深化：
            2018～2020（覆盖 2020 COVID 崩盘——12 月财年 FY2019 年报通常
            1～2 月就报完，时点上可能真的赶在崩盘前可用）是一个具体可执行
            的下一步，尚未做。
-Phase E  EDGAR 阶段4：LLM 指引抽取（默认关闭，可选）
+Phase E  EDGAR 阶段4：LLM 指引抽取（默认关闭，可选）—— **已完成（v10.9.0）**：
+         `edgar_guidance.py` + `augur guidance TICKER`，从最新 10-K/10-Q
+         的 MD&A 章节抽取管理层展望情绪/前瞻指引数字/风险变化，默认关闭
+         （`AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` 显式开启），不接入自动
+         analyze()/consensus 管线（按 spec 要求仅按需调用）。真实验证覆盖
+         到 EDGAR 抓取+MD&A 边界定位（真实 AAPL 10-Q，21905 字符，边界
+         定位正确排除了 Part II 同名 Item 2/3）；LLM 抽取本身受限于本环境
+         无 `OPENAI_API_KEY`，未做真实付费调用验证，单测里全部 mock——
+         真实 LLM 端到端验证是留给有 API key 的用户的后续步骤。
 Phase F  发布：PyPI 正式发布 + README/对外内容 + R4/R5/R7 收尾
 ```
 

@@ -8,7 +8,7 @@ display_name: "段永平"
 description: "步步高创始人 — 本分与长期主义 · augur_workflow MCP"
 persona_id: duan_yongping
 language: zh
-version: "10.8.0"
+version: "10.9.0"
 
 mcp:
   command: augur-mcp
