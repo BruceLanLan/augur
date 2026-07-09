@@ -45,6 +45,7 @@ CLI commands:
 
 import logging
 import os
+import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 
@@ -53,6 +54,17 @@ import yaml
 logger = logging.getLogger(__name__)
 
 WATCHLIST_PATH = Path.home() / ".augur" / "watchlist.yaml"
+
+# Delay between watchlist tickers in run_watchlist_analysis(), to avoid
+# tripping yfinance's rate limit on a watchlist with more than a handful of
+# tickers -- confirmed real (2026-07-09): a 13-ticker watchlist run back to
+# back with no delay hit "Too Many Requests" on yfinance for 9 of 13
+# tickers, and the stooq fallback provider was independently down (its
+# quote-CSV endpoint now 404s for every ticker, confirmed via direct curl --
+# an external breakage, not an augur bug) so those 9 tickers silently fell
+# back to an empty MarketContext instead of erroring loudly. Configurable via
+# AUGUR_WATCHLIST_FETCH_DELAY (seconds); tests set this to 0.
+_WATCHLIST_FETCH_DELAY_SECONDS = float(os.environ.get("AUGUR_WATCHLIST_FETCH_DELAY", "3.0") or "3.0")
 
 DEFAULT_CONFIG = {
     "watchlist": [],
@@ -195,10 +207,13 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
     coordinator = DecisionCoordinator(registry)
     all_results = []
 
-    for item in watchlist:
+    for i, item in enumerate(watchlist):
         ticker = item.get("ticker", "")
         if not ticker:
             continue
+
+        if i > 0 and _WATCHLIST_FETCH_DELAY_SECONDS > 0:
+            time.sleep(_WATCHLIST_FETCH_DELAY_SECONDS)
 
         print(f"Analyzing {ticker}...")
 

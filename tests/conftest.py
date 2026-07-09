@@ -68,6 +68,21 @@ def disable_edgar_overlay_by_default(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def disable_watchlist_fetch_delay(monkeypatch):
+    """Zero out the inter-ticker delay in run_watchlist_analysis() for tests.
+
+    See cron.py's _WATCHLIST_FETCH_DELAY_SECONDS docstring: production runs
+    sleep between watchlist tickers to avoid tripping yfinance's rate limit.
+    Tests mock fetch_market_context so no real network happens either way,
+    but a real time.sleep() would still slow down every multi-ticker
+    watchlist test for no benefit.
+    """
+    import augur.cron as cron
+    monkeypatch.setattr(cron, "_WATCHLIST_FETCH_DELAY_SECONDS", 0.0)
+    yield
+
+
+@pytest.fixture(autouse=True)
 def reset_ip_rate_limits():
     """Clear IP-based rate limit state before each test to prevent cross-test pollution."""
     from dashboard.app import _ip_rate_limits, _ip_rate_lock
