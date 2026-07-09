@@ -239,6 +239,13 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
                 )
                 ctx_kwargs = {"ticker": ticker.upper(), **manual_overrides}
                 ctx = MarketContext(**ctx_kwargs)
+                if not manual_overrides:
+                    # No live data AND no user-pinned metrics -- genuinely
+                    # empty, same as fetch_market_context()'s own internal
+                    # data_source="none" fallback. Tag it the same way so
+                    # ConsensusEngine.compute() skips persisting a prediction
+                    # against it (see engine.py's R6 groundwork comment).
+                    setattr(ctx, "data_source", "none")
 
             results = coordinator.analyze_with_all(ctx)
             consensus = coordinator.get_consensus(results, ticker=ticker, context=ctx)

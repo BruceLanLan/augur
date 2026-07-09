@@ -375,19 +375,36 @@ class ConsensusEngine:
         }
 
         # v8 Phase A: auto-record predictions + check past outcomes
+        # R6 groundwork (2026-07-09): fetch_market_context() never raises --
+        # it tags a context data_source="none" when every provider fails
+        # (_build_context_from_providers) or data_source="error" when the
+        # ticker itself fails input validation before any provider is even
+        # tried (confirmed both happen in practice: "none" from real
+        # yfinance rate-limiting during watchlist testing, "error" from a
+        # too-long/malformed ticker string). Predictions made against either
+        # kind of empty context aren't real signal-conditioned judgments and
+        # would quietly pollute R6's future calibration sample, so they're
+        # skipped here rather than recorded. Still returned normally to the
+        # caller -- only the *learning* record is suppressed, not the
+        # analysis itself.
+        context_is_empty = getattr(context, "data_source", None) in ("none", "error")
         if ticker:
             try:
                 from augur.registry import _get_learning_engine, _check_and_record_outcomes
                 le = _get_learning_engine()
-                # Check if old predictions (>30d) for this ticker need outcomes recorded
+                # Check if old predictions (>30d) for this ticker need outcomes
+                # recorded -- unrelated to *today's* context quality, so this
+                # always runs regardless of context_is_empty.
                 _check_and_record_outcomes(le, ticker)
-                # Record each agent's current prediction for future accuracy tracking
-                for agent_id, resp in results.items():
-                    if resp.signal != SignalType.ERROR:
-                        le.record_prediction(
-                            ticker, agent_id,
-                            resp.signal.value, resp.score, resp.confidence,
-                        )
+                # Record each agent's current prediction for future accuracy
+                # tracking -- skipped when today's context is empty.
+                if not context_is_empty:
+                    for agent_id, resp in results.items():
+                        if resp.signal != SignalType.ERROR:
+                            le.record_prediction(
+                                ticker, agent_id,
+                                resp.signal.value, resp.score, resp.confidence,
+                            )
             except Exception:
                 pass
 
