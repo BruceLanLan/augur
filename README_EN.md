@@ -10,8 +10,9 @@
 
 Put Warren Buffett, Ray Dalio, Duan Yongping and Cathie Wood in the same room — they won't agree. That's exactly the point.
 
-[![v10.0.0](https://img.shields.io/badge/v10.0.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2136 Tests](https://img.shields.io/badge/2136_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.9.0](https://img.shields.io/badge/v10.9.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2388 Tests](https://img.shields.io/badge/2388_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-Real_Filing_Data-4a90d9?style=for-the-badge)](#-18-investment-masters)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-Installable_App-blue?style=for-the-badge)](#-dashboard)
@@ -189,7 +190,15 @@ Each master has a dedicated [Hermes Skill](src/skills/) for direct persona chat.
 augur analyze AAPL                              # 18-master consensus
 augur analyze AAPL --persona buffett            # single master
 augur consensus NVDA                            # weighted consensus + Kelly
+augur report AAPL -o report.md                  # deep-dive report
+augur committee AAPL -q "Is the moat widening or narrowing?"  # investment committee
+augur chat AAPL --persona buffett               # quick chat
 augur workflow TSLA --steps fetch,analyze,consensus,committee
+
+# Data
+augur fetch AAPL                                # live quote + fundamentals
+augur sentiment AAPL                            # social sentiment
+augur guidance AAPL                             # AI-extracted management outlook (opt-in, see below)
 
 # Dashboard
 augur serve --port 8000 --open
@@ -198,16 +207,27 @@ augur serve --port 8000 --open
 augur watch AAPL NVDA TSLA                     # 60s refresh
 augur watch NVDA --alert-above 7.5             # score threshold alert
 
-# Portfolio
+# Portfolio & backtest
 augur portfolio AAPL NVDA TSLA                 # Kelly allocation
-augur backtest AAPL --days 30                  # historical backtest
+augur backtest AAPL --days 30                  # real historical backtest
+augur ic-report                                # Agent IC leaderboard
+
+# Watchlist + scheduling
+augur watchlist-add AAPL --pe 30 --roe 0.55
+augur watchlist-show
+augur cron-run                                  # run watchlist analysis once
+augur cron-start                                # start the scheduler daemon
 
 # Agent
 augur mcp-server                               # stdio MCP server
 augur skills / augur skills --school value
+augur inject-soul -p my_profile --persona buffett  # inject a master's persona into an agent config
 
 # Bots
-augur telegram / augur slack
+augur telegram / augur slack / augur wechat / augur lark
+
+# Update
+augur update                                    # git pull + reinstall (git clone installs only)
 ```
 
 ---
@@ -241,7 +261,24 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > Non-technical release notes: [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md)
 
 <details open>
-<summary><strong>v10.0.0 — Terminal Workspace + Agentic Workflow + 13 MCP Tools + WebSocket Streaming (current)</strong></summary>
+<summary><strong>v10.9.0 — Credibility overhaul + real SEC EDGAR data (current)</strong></summary>
+
+- ✅ **Consensus is no longer diluted by half**: the never-validated MetaModel median blend defaults to zero weight
+- ✅ **Backtests default to real historical data**: Dashboard/CLI no longer show synthetic data by default (`--demo` opt-in, clearly labeled)
+- ✅ **Learning loop actually accumulates data**: predictions persist immediately + a scheduled job auto-resolves due predictions
+- 🆕 **Real SEC EDGAR filings**: PE/ROE/margins etc. now come from official 10-K/10-Q data, historical depth back to ~2011 (US tickers/ADRs)
+- 🆕 **Insider buying signal**: tracks executives'/directors' real trailing-90-day open-market trades
+- 🆕 **Institutional flow signal**: tracks quarterly position changes at Berkshire Hathaway, Renaissance Technologies, Bridgewater, and more
+- 🆕 **`augur guidance`** (opt-in): LLM-extracted management outlook sentiment + forward guidance from the latest filing
+- 🔧 **Sentiment analysis fix**: removed the always-fake X (Twitter) 20% weight from the calculation
+- 🔧 **Regime weights honestly retired**: real-data validation found no clear benefit, so the unvalidated hand-picked rules are disabled
+- ✅ 2388 tests passing
+
+Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
+</details>
+
+<details>
+<summary><strong>v10.0.0 — Terminal Workspace + Agentic Workflow + 13 MCP Tools + WebSocket Streaming</strong></summary>
 
 **v8 → v10 upgrade highlights:**
 

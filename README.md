@@ -10,8 +10,9 @@
 
 把 Warren Buffett、Ray Dalio、段永平、Cathie Wood 放在同一个房间——他们不会同意对方的观点。这正是重点。
 
-[![v10.0.0](https://img.shields.io/badge/v10.0.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2136 Tests](https://img.shields.io/badge/2136_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.9.0](https://img.shields.io/badge/v10.9.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2388 Tests](https://img.shields.io/badge/2388_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-真实财报数据-4a90d9?style=for-the-badge)](#-18位投资大师)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![PWA](https://img.shields.io/badge/PWA-可安装应用-blue?style=for-the-badge)](#-dashboard-web-界面)
@@ -189,7 +190,15 @@ augur workflow NVDA --steps fetch,analyze,consensus,committee
 augur analyze AAPL                              # 18位大师共识
 augur analyze AAPL --persona buffett            # 单个大师
 augur consensus NVDA                            # 加权共识 + Kelly 仓位
+augur report AAPL -o report.md                  # 生成深度分析报告
+augur committee AAPL -q "护城河是在变宽还是变窄？" # 投资委员会
+augur chat AAPL --persona buffett               # 快速对话
 augur workflow TSLA --steps fetch,analyze,consensus,committee
+
+# 数据
+augur fetch AAPL                                # 实时行情 + 财务指标
+augur sentiment AAPL                            # 社交情绪分析
+augur guidance AAPL                             # AI 提炼管理层展望（默认关闭，见下文）
 
 # Dashboard
 augur serve --port 8000 --open                  # 启动并自动打开浏览器
@@ -198,17 +207,28 @@ augur serve --port 8000 --open                  # 启动并自动打开浏览器
 augur watch AAPL NVDA TSLA                      # 60s 刷新
 augur watch NVDA --alert-above 7.5             # 评分超阈值提醒
 
-# 组合
+# 组合与回测
 augur portfolio AAPL NVDA TSLA                 # Kelly 配置建议
-augur backtest AAPL --days 30                  # 历史回测
+augur backtest AAPL --days 30                  # 真实历史数据回测
+augur ic-report                                # Agent IC 排行榜
+
+# 自选股 + 定时任务
+augur watchlist-add AAPL --pe 30 --roe 0.55
+augur watchlist-show
+augur cron-run                                  # 手动跑一次自选股分析
+augur cron-start                                # 启动定时调度守护进程
 
 # Agent
 augur mcp-server                               # 启动 MCP server（stdio）
 augur skills                                   # 列出所有 Skill
 augur skills --school value                    # 按流派筛选
+augur inject-soul -p my_profile --persona buffett  # 把大师人格注入到某个 Agent 配置
 
 # Bot
-augur telegram / augur slack
+augur telegram / augur slack / augur wechat / augur lark
+
+# 更新
+augur update                                    # git pull + 重装（仅 git clone 安装适用）
 ```
 
 ---
@@ -243,7 +263,24 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 非技术向用户说明见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.0.0 — 终端工作区 + Agentic 工作流 + 13 MCP 工具 + WebSocket 实时推送 (current)</strong></summary>
+<summary><strong>v10.9.0 — 可信度全面修复 + SEC EDGAR 真实数据 (current)</strong></summary>
+
+- ✅ **共识计算不再被稀释一半**：从未验证过有效性的 MetaModel 中位数混合默认权重归零
+- ✅ **回测默认真实历史数据**：Dashboard/CLI 不再默认展示合成数据（`--demo` 才用假数据，且明确标注）
+- ✅ **学习机制真正开始积累数据**：预测立即持久化 + 定时任务自动核对到期预测结果
+- 🆕 **SEC EDGAR 真实财报**：18位大师的 PE/ROE/毛利率等指标改用官方 10-K/10-Q 数据，历史回溯到约 2011 年（美股/中概股）
+- 🆕 **内部人交易信号**：追踪高管/董事最近 90 天真实公开市场买卖
+- 🆕 **机构持仓信号**：追踪伯克希尔、文艺复兴科技、桥水基金等知名机构季度持仓变化
+- 🆕 **`augur guidance`**（默认关闭）：LLM 提炼最新财报管理层展望情绪 + 前瞻指引数字
+- 🔧 **情绪分析修正**：剔除了一直是假数据的 X（Twitter）20% 权重
+- 🔧 **Regime 权重诚实下线**：真实数据验证后发现没有明显效果，已停用未经验证的手工规则
+- ✅ 2388 个测试全部通过
+
+详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+</details>
+
+<details>
+<summary><strong>v10.0.0 — 终端工作区 + Agentic 工作流 + 13 MCP 工具 + WebSocket 实时推送</strong></summary>
 
 **v8 → v10 全面升级要点：**
 

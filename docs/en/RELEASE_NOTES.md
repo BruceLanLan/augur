@@ -4,6 +4,49 @@
 
 ---
 
+## v10.9.0 — Credibility overhaul + real SEC EDGAR data (2026-07-09)
+
+No flashy new UI in this release — instead, a top-to-bottom pass on "how much should you actually trust these 18 masters' scores," from the consensus math itself, to whether the learning loop was ever really learning, to whether the fundamentals feeding every persona were real. Everything that could be verified against real data was.
+
+### Consensus scores are no longer quietly diluted by half
+
+A default-on "MetaModel" used to blend the masters' carefully weighted score 50/50 with a plain median — cutting the weight of their actual judgment in half, and it had never been validated as an improvement in the first place. That default weight is now zero, so the consensus score you see actually reflects the weighting differences between masters.
+
+### Backtests no longer default to fake data
+
+The Dashboard's Backtest page and the `augur backtest` CLI command used to default to programmatically generated synthetic data that looked like a real backtest result but wasn't. Real historical data is now the default; synthetic data is still available but requires an explicit `--demo` flag and is clearly labeled "demo data, not counted on the leaderboard."
+
+### The learning loop actually accumulates data now
+
+Augur has advertised "the masters get more accurate the more you use it" since v8, but the underlying learning mechanism never actually accumulated real data — predictions weren't persisted, and nothing ever checked back on what actually happened. Predictions are now persisted immediately, and a scheduled job automatically resolves predictions once they're due. Starting today, you'll see the first real "prediction accuracy" numbers in roughly 30 days.
+
+### SEC EDGAR: real filings, not simplified ratios
+
+The PE, ROE, gross margin, etc. that all 18 masters see used to come from yfinance's simplified calculations. They now come from the U.S. Securities and Exchange Commission's official EDGAR filings (real numbers straight out of 10-K/10-Q reports), with historical depth extended from roughly 2022 back to around 2011 depending on the company. This doesn't change how you call `augur analyze`/`augur consensus` — just how real the numbers behind it are. (US-listed tickers and US-listed Chinese ADRs only; A-shares, Hong Kong stocks, and crypto are unaffected and keep using the existing data source.)
+
+The same SEC pipeline also unlocks two new signals every master can optionally draw on:
+
+- **Insider buying signal**: tracks executives'/directors' real open-market buy/sell activity over the trailing 90 days (excluding RSU vesting and tax-withholding noise), with clustered buying amplified.
+- **Institutional flow signal**: tracks quarter-over-quarter position changes at well-known institutions like Berkshire Hathaway, Renaissance Technologies, and Bridgewater Associates.
+
+### New (opt-in): AI reads the filing and extracts management's outlook
+
+New `augur guidance TICKER` command: an LLM reads the "Management's Discussion and Analysis" section of a company's latest 10-K/10-Q and extracts management's outlook sentiment (positive/negative/neutral), any explicit forward guidance numbers, and notable risk-factor language. Since this makes real, billable LLM API calls, it's **off by default** — set `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` to opt in, and it only ever runs when you explicitly call it (no automatic runs, no push notifications).
+
+### Sentiment analysis fix
+
+The "X (Twitter)" component of social sentiment analysis had always been a fake placeholder (X's API access was never actually available) but still carried a 20% weight in the score. It's now fully removed from the calculation; StockTwits and Reddit (the two real data sources) absorb that weight proportionally.
+
+### Regime weights: honestly retired after validation
+
+Earlier versions had a set of hand-picked rules for shifting master weights based on bull/bear market regime (e.g. "trust Howard Marks more in a bear market"), and those specific numbers had never been validated against real historical data. A real out-of-sample validation across 4 years and 37 stocks was run using the new SEC data, and the honest finding was: **no clear benefit observed**. Rather than keep an unvalidated rule quietly shaping your consensus score, it's been disabled.
+
+### Internal engineering health
+
+The CLI (`cli.py`) was split from a single 1476-line file into 9 purpose-grouped modules. Purely internal — doesn't change how any command is used.
+
+---
+
 ## v10.0.0 — Public launch (2026-06-29)
 
 This is the first official public release of **Augur v10**. The v8.2→v10.0 jump is a full-stack upgrade.
