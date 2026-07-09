@@ -13,6 +13,17 @@ Stooq 仅提供行情（OHLCV），不含基本面数据，因此它作为 yfina
 数据源：至少保证 price / volume / 当日涨跌可用，避免整个 context 为空导致分析无法产出。
 
 符号映射: 美股需加 ``.us`` 后缀（如 ``aapl.us``）；其他带交易所后缀的代码统一小写。
+
+已知现状（2026-07-09 实测确认，非猜测）: 该端点目前对程序化请求已失效——
+``/q/l/`` 报价端点对任意 symbol 均返回 HTTP 404（stooq 自家的品牌化 404 页面，
+不是网络错误，也不是找不到该 symbol，是这条路径本身已下线/迁移）；
+``/q/d/l/`` 历史行情端点则返回 HTTP 200 但页面内容是一个要求 JavaScript 的
+反爬虫挑战页（"This site requires JavaScript to verify your browser"），
+用普通 HTTP 客户端拿不到真实数据。二者都是 stooq 一侧的变更，不是 augur 的
+bug，也没有找到官方新端点的公开文档。在 provider 链里保留它作为最后一环
+成本为零（永远排在 yfinance/finnhub/alphavantage 之后才会被尝试），但目前
+实际不起作用——真正的兜底应该配置 ``FINNHUB_API_KEY``（免费 tier 60
+次/分钟，见 finnhub_provider.py），而不是依赖这个端点。
 """
 
 from __future__ import annotations
