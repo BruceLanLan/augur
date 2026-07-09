@@ -120,7 +120,20 @@ Phase E  EDGAR 阶段4：LLM 指引抽取（默认关闭，可选）—— **已
          定位正确排除了 Part II 同名 Item 2/3）；LLM 抽取本身受限于本环境
          无 `OPENAI_API_KEY`，未做真实付费调用验证，单测里全部 mock——
          真实 LLM 端到端验证是留给有 API key 的用户的后续步骤。
-Phase F  发布：PyPI 正式发布 + README/对外内容 + R4/R5/R7 收尾
+Phase F  发布：PyPI 正式发布 + README/对外内容 + R4/R5/R7 收尾 —— **README/
+         对外内容已完成（commit 86bd46d）**：README.md/README_EN.md 版本号
+         徽章（v10.0.0→v10.9.0）、测试数徽章（2136→2388）、补全缺失的 CLI
+         命令（report/committee/chat/fetch/sentiment/guidance/ic-report/
+         watchlist-*/cron-*/inject-soul/update），RELEASE_NOTES.md 中英文
+         都新增了本轮可信度修复的用户向说明。**只改了 augur-next 本仓库，
+         没碰公开 augur 仓库**（按用户指示）。R4/R5/R7 早已完成（见 §二表格）。
+         **PyPI 正式发布未做**：真实查了 PyPI，`augur-agents` 从未发布过
+         （404），首次发布不可逆（删不掉、只能 yank）。已做的是本地验证——
+         `python -m build` + `twine check` 全过，真实 wheel 装进干净 venv
+         验证 `augur skills`/`augur serve` 的 dashboard import/`augur analyze`
+         全部工作正常（这也顺带把 R7 的 cli_commands/ 路径深度改动在真实
+         安装场景下验证了一遍）。真正 `twine upload` 留给用户提供 token
+         时再做。
 ```
 
 EDGAR 四阶段的完整设计见 `docs/superpowers/specs/2026-07-03-edgar-fundamentals-design.md`（已批准，不在本文档重复）。
