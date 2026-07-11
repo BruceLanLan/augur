@@ -543,4 +543,24 @@ python investment_analysis_tool.py
 
 ---
 
-*本文档为投资分析Skill的数据补充方案，可选择性集成。*
+## 七、2026-07-11 现状更新：实际实现 vs 本文档设计
+
+本文档写于早期设计阶段，示例代码是独立函数风格；实际落地在 `src/augur/datasources/` 里演化成了统一的 `DataProvider` 抽象基类 + provider 链模式（`default_providers()` 按 yfinance → finnhub(需key) → alphavantage(需key) → stooq 顺序尝试，任一源失败自动降级到下一个）。这是调研过 OpenBB 等开源金融数据项目后确认的行业标准做法（fallback chain + 按已配置 key 动态组装），不是本项目自创，说明当前架构方向是对的。
+
+**已确认的现状变化（2026-07-11 实测，非猜测）**：
+
+- **Stooq 已失效**：`/q/l/` 报价端点对任意 symbol 返回 404，`/q/d/l/` 历史端点返回反爬虫 JS 挑战页。二者都是 stooq 一侧的变更（详见 `stooq_provider.py` 里的记录），保留它在链尾成本为零但目前不起作用。
+- **本地开发环境的 yfinance TLS 问题已定位并修复**：`.venv` 此前用 macOS CommandLineTools 自带的 python3.9（链接 Apple LibreSSL 2.8.3），导致 yfinance 底层的 `curl_cffi`（用于 TLS 指纹伪装绕过反爬）报 `SSLError: invalid library`。这不是 augur 的代码 bug，是本机开发环境的 Python 构建链问题——之前几次 CHANGELOG 里"working around this environment's unrelated broken yfinance/curl_cffi TLS issue"说的就是这个。用 homebrew 的 python3.12（链接真 OpenSSL 3.6.3）重建 `.venv` 后，真实 `yfinance.Ticker("AAPL").info` 调用恢复正常（验证返回 `currentPrice=315.32`）。旧 venv 备份在 `.venv.old-libressl-backup/`（未纳入 git，本机专属，未来确认无需回退可删）。
+- **代码层面无需改动即可接入 Finnhub/Alpha Vantage**：`src/augur/datasources/__init__.py` 的 `default_providers()` 已经是"配了 key 就自动加入链"的设计，用户只需在 `.env` 或 Settings 页填 `FINNHUB_API_KEY`（免费 tier 60 req/min，覆盖面最广）/`ALPHAVANTAGE_API_KEY`（免费 tier 仅 25 req/day，做兜底备选）即可生效，不需要额外开发。
+
+**调研到的、当前未接入的候选数据源**（供未来评估，均未验证，只是列出选项）：
+
+| 数据源 | 免费额度 | 相对 Finnhub 的差异点 |
+|--------|----------|----------------------|
+| Twelve Data | 有免费 tier，含 WebSocket 实时推送 | 全球交易所覆盖更广；augur 目前是轮询模式，WebSocket 优势用不上 |
+| EODHD | 免费 tier 较窄 | 主打历史 EOD 数据全面 |
+| Financial Modeling Prep (FMP) | 有免费 tier | 财报/估值指标覆盖类似 Finnhub |
+
+IEX Cloud 已于 2024 年 8 月停止服务，网上仍有旧推荐信息，不要采信。
+
+*本节为本机开发环境排障 + 数据源现状核对记录，不改变本文档第一至六节的原始设计方案。*

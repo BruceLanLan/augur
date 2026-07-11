@@ -76,6 +76,7 @@ dev = [
     "pytest-asyncio>=0.21",
     "httpx>=0.24",
     "beautifulsoup4>=4.11",
+    "setuptools>=68.0",
 ]
 all = [
     "augur-agents[data,mcp,llm,telegram,slack,lark,wechat,cron]",
