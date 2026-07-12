@@ -2,6 +2,63 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.11.0] - 2026-07-12
+
+D2 (local half) from `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` --
+`augur doctor`'s connectivity probe was one-shot, so a dead endpoint (stooq's
+real 404 breakage, documented by hand in commit 24c8609 after being noticed
+by accident) had no way to surface itself as a trend. This release makes
+every `augur doctor` run record its own probe outcome to a small local
+history file, turning repeated diagnostic runs into an early-warning signal.
+
+Scoped deliberately narrow: **only** `augur doctor` writes to this history --
+the live `analyze()`/`consensus`/`fetch` data-fetch path (`data.py`'s
+`_build_context_from_providers`, the actual hot path used on every real
+command) is untouched. Instrumenting that hot path was considered and
+rejected for this pass: it's exercised directly by `tests/test_datasources.py`
+without any path override, so adding an unconditional local-file side effect
+there would have meant either polluting a real `~/.augur/` on every test run
+of the data layer, or reworking that test file's fixtures to inject a path --
+a larger, riskier change than this diagnostic-only feature justifies. The
+CI/CD half of D2 (a weekly scheduled GitHub Actions network smoke test) is
+also deliberately deferred -- modifying the CI pipeline is a more
+visible/harder-to-reverse change than a local opt-in file, and is being left
+for a separate explicit pass rather than folded in here.
+
+### Added
+
+- **`src/augur/provider_stats.py`** (new): `record(provider_name, ok, path=None)`
+  and `summary(path=None)`, backed by a day-bucketed JSON file (default
+  `~/.augur/provider_stats.json`) pruned to a rolling 7-day (`RETENTION_DAYS`)
+  window on every write. Never raises -- a failure to record or read history
+  (corrupt JSON, unwritable path, etc.) is swallowed and logged at debug
+  level, since this is diagnostic-only and must never be able to break
+  anything it's observing.
+- `augur doctor` (non-`--offline` mode) now calls `provider_stats.record()`
+  after each live provider probe, then prints a "Last 7 days (from past
+  `augur doctor` runs)" section aggregating `provider_stats.summary()` --
+  e.g. `stooq 0/7 reachable`. `--offline` runs still display any
+  already-accumulated history (read-only) but record nothing new.
+- `tests/test_provider_stats.py` (13 tests): record/summary round-trip,
+  multi-provider independence, retention-window pruning (including "pruning
+  happens on write, not just read"), and never-raises behavior against
+  corrupt JSON and an unwritable path.
+- `tests/test_doctor_cmd.py`: new `TestProviderStatsHistory` class (5 tests)
+  plus an autouse `isolated_provider_stats` fixture added to the whole file
+  that patches `provider_stats._default_path` to a `tmp_path` for every test
+  in the module -- needed once `doctor` started writing real state, to keep
+  the suite from touching the real `~/.augur/provider_stats.json` on
+  whatever machine runs it.
+
+### Verified
+
+- Real (non-mocked) back-to-back `augur doctor` runs against this machine's
+  fixed venv: first run showed `yfinance 1/1 reachable` / `stooq 0/1
+  reachable`; second run accumulated to `2/2` / `0/2`, confirming the
+  history persists and aggregates correctly across real invocations, not
+  just in mocked tests.
+- Full suite: 2427 passed, 0 failures.
+
 ## [10.10.0] - 2026-07-12
 
 D1 from `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` (2026-07-11) -- a new

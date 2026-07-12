@@ -4,6 +4,10 @@
 
 ---
 
+## v10.11.0 — Data-source connectivity history (2026-07-12)
+
+The previous release's `augur doctor` could only show whether a data source was reachable *right now*, with no trend. This release has every `augur doctor` run record that probe's outcome to a small local history file (`~/.augur/provider_stats.json`, local-only, nothing phoned home), keeping the last 7 days. A dead endpoint like stooq's would now show up in `augur doctor`'s output as "0/7 reachable this week" instead of requiring someone to notice by accident.
+
 ## v10.10.0 — augur doctor environment check (2026-07-12)
 
 Diagnosing local environment problems used to be guesswork -- in fact, development on the previous release ran straight into one: a machine whose Python was linked against Apple's LibreSSL instead of real OpenSSL, which silently broke every yfinance request with no indication of why, and took manual step-by-step digging to track down. This release adds an `augur doctor` command that checks for exactly this class of problem in one shot:

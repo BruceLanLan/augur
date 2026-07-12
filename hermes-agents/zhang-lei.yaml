@@ -8,7 +8,7 @@ display_name: "张磊"
 description: "高瓴资本 — 长期结构性价值 · augur_workflow MCP"
 persona_id: zhang_lei
 language: zh
-version: "10.10.0"
+version: "10.11.0"
 
 mcp:
   command: augur-mcp

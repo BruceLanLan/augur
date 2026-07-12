@@ -228,6 +228,8 @@ def doctor_cmd(offline):
         providers = []
         click.echo(f"  ⚠  Could not load data source chain: {e}")
 
+    from augur import provider_stats as _provider_stats
+
     if offline:
         for p in providers:
             click.echo(f"  ⚪ {p.name:<14s} skipped (--offline)")
@@ -235,9 +237,18 @@ def doctor_cmd(offline):
         for p in providers:
             try:
                 p.fetch("AAPL")
+                _provider_stats.record(p.name, ok=True)
                 click.echo(f"  ✅ {p.name:<14s} reachable")
             except Exception as e:
+                _provider_stats.record(p.name, ok=False)
                 click.echo(f"  ❌ {p.name:<14s} FAILED — {str(e)[:100]}")
+
+    history = _provider_stats.summary()
+    if history:
+        click.echo(f"\n  Last {_provider_stats.RETENTION_DAYS} days (from past `augur doctor` runs):")
+        for name, counts in sorted(history.items()):
+            total = counts["ok"] + counts["fail"]
+            click.echo(f"    {name:<14s} {counts['ok']}/{total} reachable")
 
     # -- Learning engine data accumulation --
     click.echo("\nLearning engine (outcome data for probability calibration):")

@@ -10,8 +10,8 @@
 
 把 Warren Buffett、Ray Dalio、段永平、Cathie Wood 放在同一个房间——他们不会同意对方的观点。这正是重点。
 
-[![v10.10.0](https://img.shields.io/badge/v10.10.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2408 Tests](https://img.shields.io/badge/2408_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.11.0](https://img.shields.io/badge/v10.11.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2427 Tests](https://img.shields.io/badge/2427_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-真实财报数据-4a90d9?style=for-the-badge)](#-18位投资大师)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -267,7 +267,16 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 非技术向用户说明见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.10.0 — augur doctor 环境自检 (current)</strong></summary>
+<summary><strong>v10.11.0 — 数据源连通性历史追踪 (current)</strong></summary>
+
+- 🆕 **`augur doctor` 新增 7 天连通性历史**：每次跑 `augur doctor` 都会把当次探测结果记到本地（`~/.augur/provider_stats.json`），累积成一条短期趋势——像 stooq 端点失效这种问题，以后会在 `augur doctor` 里显示成"0/7 reachable"，不用再靠人工偶然发现
+- ✅ 2427 个测试全部通过
+
+详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+</details>
+
+<details>
+<summary><strong>v10.10.0 — augur doctor 环境自检</strong></summary>
 
 - 🆕 **`augur doctor`**：一键诊断本机环境——Python/SSL 工具链是否有已知会破坏 yfinance 的组合（如 LibreSSL）、可选 API key 配置状态、数据源连通性实测、学习引擎数据积累进度；`--offline` 跳过真实网络请求
 - ✅ 2408 个测试全部通过

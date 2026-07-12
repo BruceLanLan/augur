@@ -7,7 +7,7 @@ name: augur-committee
 display_name: "Augur Committee Chair"
 description: "Investment committee chair — convenes 18 masters, structured debate, weighted verdict · augur_committee MCP"
 language: en
-version: "10.10.0"
+version: "10.11.0"
 
 mcp:
   command: augur-mcp

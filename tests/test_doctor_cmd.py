@@ -22,6 +22,15 @@ def runner():
     return CliRunner()
 
 
+@pytest.fixture(autouse=True)
+def isolated_provider_stats(tmp_path):
+    """Every test gets its own provider_stats.json -- never touch the real
+    ~/.augur/provider_stats.json on the machine running the suite."""
+    stats_path = tmp_path / "provider_stats.json"
+    with patch("augur.provider_stats._default_path", return_value=stats_path):
+        yield stats_path
+
+
 class _FakeProvider(DataProvider):
     def __init__(self, name, should_fail=False):
         self.name = name
@@ -113,6 +122,65 @@ class TestDataSourceConnectivity:
             result = runner.invoke(main, ["doctor", "--offline"])
         assert result.exit_code == 0
         assert "Could not load data source chain" in result.output
+
+
+class TestProviderStatsHistory:
+    """Repeated `augur doctor` runs build up a short local trend, so a dead
+    endpoint (like stooq's real 2026-07-09 404 breakage) shows up as a
+    reachability history instead of requiring someone to notice by hand."""
+
+    def test_first_run_includes_its_own_result_in_history(self, runner):
+        with patch(
+            "augur.datasources.default_providers",
+            return_value=[_FakeProvider("yfinance", should_fail=False)],
+        ):
+            result = runner.invoke(main, ["doctor"])
+        assert result.exit_code == 0
+        assert "Last 7 days" in result.output
+        assert "1/1 reachable" in result.output
+
+    def test_offline_only_run_shows_no_history_yet(self, runner):
+        with patch(
+            "augur.datasources.default_providers",
+            return_value=[_FakeProvider("yfinance", should_fail=False)],
+        ):
+            result = runner.invoke(main, ["doctor", "--offline"])
+        assert result.exit_code == 0
+        assert "Last 7 days" not in result.output
+
+    def test_second_run_shows_accumulated_history(self, runner):
+        with patch(
+            "augur.datasources.default_providers",
+            return_value=[_FakeProvider("stooq", should_fail=True)],
+        ):
+            first = runner.invoke(main, ["doctor"])
+            second = runner.invoke(main, ["doctor"])
+        assert first.exit_code == 0
+        assert second.exit_code == 0
+        assert "Last 7 days" in second.output
+        assert "stooq" in second.output
+        assert "0/2 reachable" in second.output
+
+    def test_offline_run_does_not_record_but_still_shows_prior_history(self, runner):
+        with patch(
+            "augur.datasources.default_providers",
+            return_value=[_FakeProvider("yfinance", should_fail=False)],
+        ):
+            runner.invoke(main, ["doctor"])
+            offline_result = runner.invoke(main, ["doctor", "--offline"])
+        assert offline_result.exit_code == 0
+        assert "Last 7 days" in offline_result.output
+        assert "1/1 reachable" in offline_result.output
+
+    def test_history_survives_stats_write_failure(self, runner):
+        with patch("augur.provider_stats._default_path", side_effect=OSError("disk full")):
+            with patch(
+                "augur.datasources.default_providers",
+                return_value=[_FakeProvider("yfinance", should_fail=False)],
+            ):
+                result = runner.invoke(main, ["doctor"])
+        assert result.exit_code == 0
+        assert "reachable" in result.output
 
 
 class TestLearningEngineReporting:
