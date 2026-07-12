@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""augur.cli_commands.meta - skills / update"""
+"""augur.cli_commands.meta - skills / update / doctor"""
 
 import click
 
@@ -162,3 +162,103 @@ def update_cmd():
         new_version = "unknown"
 
     click.echo(f"✅ Updated to {new_version}.")
+
+
+@click.command("doctor")
+@click.option(
+    "--offline", is_flag=True, default=False,
+    help="Skip live data-source connectivity checks (env/config checks only, no network calls)",
+)
+def doctor_cmd(offline):
+    """Diagnose common local environment issues.
+
+    Checks the Python/SSL toolchain for a known-bad combination that silently
+    breaks yfinance (a macOS CommandLineTools Python linked against LibreSSL
+    instead of real OpenSSL causes curl_cffi to raise SSLError), reports which
+    optional API keys are configured, probes the configured data-source chain
+    for real connectivity, and shows how much learning-engine outcome data has
+    accumulated.
+
+    \b
+    Examples:
+      augur doctor              # Full diagnostic, including live network checks
+      augur doctor --offline    # Environment/config checks only, no network calls
+    """
+    import os
+    import ssl
+    import sys
+
+    click.echo("\n🦉 Augur Doctor\n")
+
+    # -- Python / SSL toolchain --
+    click.echo("Python environment:")
+    click.echo(f"  Python:      {sys.version.split()[0]}  ({sys.executable})")
+    openssl_version = ssl.OPENSSL_VERSION
+    click.echo(f"  SSL backend: {openssl_version}")
+    if "LibreSSL" in openssl_version:
+        click.echo(
+            "  ⚠  LibreSSL detected. yfinance's curl_cffi backend needs real OpenSSL and\n"
+            "     will fail with SSLError on LibreSSL -- this combination commonly happens\n"
+            "     when a venv is built from macOS's bundled CommandLineTools Python.\n"
+            "     Fix: rebuild the venv with a Python linked against real OpenSSL, e.g.\n"
+            "       brew install python@3.12 && /opt/homebrew/bin/python3.12 -m venv .venv"
+        )
+    else:
+        click.echo("  ✅ OpenSSL backend looks fine for yfinance/curl_cffi.")
+
+    # -- Optional API keys --
+    click.echo("\nAPI key configuration:")
+    for env_name, desc in (
+        ("FINNHUB_API_KEY", "Finnhub fallback market data (free tier: 60 req/min)"),
+        ("ALPHAVANTAGE_API_KEY", "Alpha Vantage fallback fundamentals (free tier: 25 req/day)"),
+        ("OPENAI_API_KEY", "LLM features (chat personas, EDGAR guidance extraction)"),
+        ("AUGUR_EDGAR_CONTACT_EMAIL", "SEC EDGAR contact email (required by SEC fair-use policy)"),
+    ):
+        configured = bool(os.environ.get(env_name, "").strip())
+        mark = "✅" if configured else "⚪"
+        state = "configured" if configured else "not set"
+        click.echo(f"  {mark} {env_name:<26s} {state:<12s} — {desc}")
+
+    # -- Data source chain connectivity --
+    click.echo("\nData sources:")
+    try:
+        from augur.datasources import default_providers
+        providers = default_providers()
+    except Exception as e:
+        providers = []
+        click.echo(f"  ⚠  Could not load data source chain: {e}")
+
+    if offline:
+        for p in providers:
+            click.echo(f"  ⚪ {p.name:<14s} skipped (--offline)")
+    else:
+        for p in providers:
+            try:
+                p.fetch("AAPL")
+                click.echo(f"  ✅ {p.name:<14s} reachable")
+            except Exception as e:
+                click.echo(f"  ❌ {p.name:<14s} FAILED — {str(e)[:100]}")
+
+    # -- Learning engine data accumulation --
+    click.echo("\nLearning engine (outcome data for probability calibration):")
+    try:
+        from augur.registry import _get_learning_engine
+        le = _get_learning_engine()
+        total = le.prediction_count
+        pending = le.pending_count
+        resolved = total - pending
+        click.echo(f"  Predictions: {total} total, {resolved} resolved, {pending} pending")
+        last_res = le.last_resolution
+        if last_res:
+            import datetime as _dt
+            ts = _dt.datetime.fromtimestamp(last_res["timestamp"]).strftime("%Y-%m-%d %H:%M")
+            click.echo(
+                f"  Last resolution sweep: {ts} "
+                f"({last_res['resolved']} resolved, {last_res['failed']} failed)"
+            )
+        else:
+            click.echo("  Last resolution sweep: never run")
+    except Exception as e:
+        click.echo(f"  ⚠  Could not read learning engine state: {e}")
+
+    click.echo()

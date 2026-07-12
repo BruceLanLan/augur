@@ -2,6 +2,59 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.10.0] - 2026-07-12
+
+D1 from `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` (2026-07-11) -- a new
+`augur doctor` diagnostic command, motivated directly by a real incident from
+the previous session: this dev machine's `.venv` was built from macOS
+CommandLineTools' bundled python3.9, which links Apple's LibreSSL 2.8.3
+instead of real OpenSSL, silently breaking every yfinance call (`curl_cffi`
+raises `SSLError: invalid library`) with no diagnostic surfaced anywhere in
+the project -- several past CHANGELOG entries note "unable to verify against
+real yfinance data due to an environment TLS issue" without ever naming the
+root cause. Fixed for this machine by rebuilding `.venv` on homebrew
+python3.12 (commit `548fac0`); `augur doctor` exists so the next person (or
+the next machine) doesn't have to rediscover this by hand.
+
+### Added
+
+- **`augur doctor [--offline]`** (`src/augur/cli_commands/meta.py`): reports
+  (1) Python version/executable and `ssl.OPENSSL_VERSION`, with an explicit
+  warning + fix suggestion when LibreSSL is detected; (2) which optional API
+  keys are configured (`FINNHUB_API_KEY`, `ALPHAVANTAGE_API_KEY`,
+  `OPENAI_API_KEY`, `AUGUR_EDGAR_CONTACT_EMAIL`) without ever printing their
+  values; (3) live reachability of every provider in the configured
+  `datasources.default_providers()` chain (skipped with `--offline`); (4)
+  `LearningEngine` prediction/resolution counts, surfacing R6's real-world
+  data-accumulation progress (`~/.augur/learned_weights.json`) from the CLI
+  for the first time without needing to inspect the file directly.
+- `tests/test_doctor_cmd.py` (12 tests): SSL detection (LibreSSL vs. real
+  OpenSSL), `--offline` never touches the network (asserted via a `fetch`
+  mock that raises `AssertionError` if called), API key visibility for both
+  configured and unconfigured cases, provider connectivity success/failure
+  reporting, and learning-engine reporting including the "never run" and
+  read-failure paths -- all offline/mocked, no real network calls in the
+  suite itself.
+
+### Fixed
+
+- `pyproject.toml`'s `dev` extras group was missing `setuptools` --
+  `tests/test_packaging_layout.py` imports `setuptools.find_packages`
+  directly, and Python 3.12's `venv` module no longer bundles `setuptools`
+  by default (unlike 3.9-3.11), so `pip install -e ".[dev]"` on a fresh
+  3.12 venv left that one test failing with `ModuleNotFoundError`. Added
+  `setuptools>=68.0` (already a build-backend requirement, just not a
+  declared runtime/test dependency).
+
+### Verified
+
+- Real (non-mocked) run of `augur doctor` against this machine's fixed venv:
+  `yfinance` reported reachable, `stooq` correctly reported `FAILED -- HTTP
+  Error 404` (matching the dead-endpoint finding already documented in
+  `stooq_provider.py`), learning engine correctly showed 72 total / 0
+  resolved / 72 pending predictions.
+- Full suite: 2408 passed, 0 failures (2396 pre-existing + 12 new).
+
 ## [10.9.0] - 2026-07-09
 
 Phase E of `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` — EDGAR spec's 阶段4 (LLM-extracted management guidance), the last item on the roadmap. Default OFF, standalone/on-demand only, per the approved spec (`docs/superpowers/specs/2026-07-03-edgar-fundamentals-design.md` §4).

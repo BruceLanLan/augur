@@ -18,6 +18,7 @@ Commands:
   augur watchlist-add     - Add ticker to watchlist
   augur watchlist-show    - Show current watchlist
   augur workflow TICKER     - Multi-step agentic pipeline
+  augur doctor [--offline]  - Diagnose local environment (SSL/TLS, API keys, data sources)
 
 This file only defines the ``main`` group and wires up every command from
 ``augur.cli_commands`` (R7 -- was previously a single 1476-line file;
@@ -82,7 +83,7 @@ from augur.cli_commands.integrations import (
 )
 from augur.cli_commands.server import mcp_server_cmd, api_cmd, serve_cmd
 from augur.cli_commands.monitor import watch_cmd, portfolio_cmd
-from augur.cli_commands.meta import skills_cmd, update_cmd
+from augur.cli_commands.meta import skills_cmd, update_cmd, doctor_cmd
 
 for _cmd in (
     analyze_cmd, consensus_cmd, report_cmd, list_personas_cmd,
@@ -93,7 +94,7 @@ for _cmd in (
     inject_soul_cmd, telegram_cmd, slack_cmd, wechat_cmd, lark_cmd,
     mcp_server_cmd, api_cmd, serve_cmd,
     watch_cmd, portfolio_cmd,
-    skills_cmd, update_cmd,
+    skills_cmd, update_cmd, doctor_cmd,
 ):
     main.add_command(_cmd)
 del _cmd

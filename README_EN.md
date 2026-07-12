@@ -10,8 +10,8 @@
 
 Put Warren Buffett, Ray Dalio, Duan Yongping and Cathie Wood in the same room — they won't agree. That's exactly the point.
 
-[![v10.9.0](https://img.shields.io/badge/v10.9.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2388 Tests](https://img.shields.io/badge/2388_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.10.0](https://img.shields.io/badge/v10.10.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2408 Tests](https://img.shields.io/badge/2408_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-Real_Filing_Data-4a90d9?style=for-the-badge)](#-18-investment-masters)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -228,6 +228,10 @@ augur telegram / augur slack / augur wechat / augur lark
 
 # Update
 augur update                                    # git pull + reinstall (git clone installs only)
+
+# Troubleshooting
+augur doctor                                    # Environment check: SSL/TLS, API keys, data source connectivity, learning data progress
+augur doctor --offline                          # Same, but skips real network calls
 ```
 
 ---
@@ -261,7 +265,16 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > Non-technical release notes: [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md)
 
 <details open>
-<summary><strong>v10.9.0 — Credibility overhaul + real SEC EDGAR data (current)</strong></summary>
+<summary><strong>v10.10.0 — augur doctor environment check (current)</strong></summary>
+
+- 🆕 **`augur doctor`**: one-shot local environment diagnostic -- checks the Python/SSL toolchain for known bad combinations that break yfinance (e.g. LibreSSL), optional API key configuration, live data-source connectivity, and learning-engine data accumulation progress; `--offline` skips real network calls
+- ✅ 2408 tests passing
+
+Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
+</details>
+
+<details>
+<summary><strong>v10.9.0 — Credibility overhaul + real SEC EDGAR data</strong></summary>
 
 - ✅ **Consensus is no longer diluted by half**: the never-validated MetaModel median blend defaults to zero weight
 - ✅ **Backtests default to real historical data**: Dashboard/CLI no longer show synthetic data by default (`--demo` opt-in, clearly labeled)

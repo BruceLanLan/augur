@@ -8,7 +8,7 @@ display_name: "李录"
 description: "喜马拉雅资本 — 芒格信任的中国价值投资人 · augur_workflow MCP"
 persona_id: li_lu
 language: zh
-version: "10.9.0"
+version: "10.10.0"
 
 mcp:
   command: augur-mcp

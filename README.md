@@ -10,8 +10,8 @@
 
 把 Warren Buffett、Ray Dalio、段永平、Cathie Wood 放在同一个房间——他们不会同意对方的观点。这正是重点。
 
-[![v10.9.0](https://img.shields.io/badge/v10.9.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2388 Tests](https://img.shields.io/badge/2388_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.10.0](https://img.shields.io/badge/v10.10.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2408 Tests](https://img.shields.io/badge/2408_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-真实财报数据-4a90d9?style=for-the-badge)](#-18位投资大师)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -229,6 +229,10 @@ augur telegram / augur slack / augur wechat / augur lark
 
 # 更新
 augur update                                    # git pull + 重装（仅 git clone 安装适用）
+
+# 排障
+augur doctor                                    # 环境自检：SSL/TLS、API key、数据源连通性、学习数据积累进度
+augur doctor --offline                          # 同上，但跳过真实网络请求
 ```
 
 ---
@@ -263,7 +267,16 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 非技术向用户说明见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.9.0 — 可信度全面修复 + SEC EDGAR 真实数据 (current)</strong></summary>
+<summary><strong>v10.10.0 — augur doctor 环境自检 (current)</strong></summary>
+
+- 🆕 **`augur doctor`**：一键诊断本机环境——Python/SSL 工具链是否有已知会破坏 yfinance 的组合（如 LibreSSL）、可选 API key 配置状态、数据源连通性实测、学习引擎数据积累进度；`--offline` 跳过真实网络请求
+- ✅ 2408 个测试全部通过
+
+详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+</details>
+
+<details>
+<summary><strong>v10.9.0 — 可信度全面修复 + SEC EDGAR 真实数据</strong></summary>
 
 - ✅ **共识计算不再被稀释一半**：从未验证过有效性的 MetaModel 中位数混合默认权重归零
 - ✅ **回测默认真实历史数据**：Dashboard/CLI 不再默认展示合成数据（`--demo` 才用假数据，且明确标注）

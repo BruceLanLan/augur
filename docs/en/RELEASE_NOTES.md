@@ -4,6 +4,17 @@
 
 ---
 
+## v10.10.0 — augur doctor environment check (2026-07-12)
+
+Diagnosing local environment problems used to be guesswork -- in fact, development on the previous release ran straight into one: a machine whose Python was linked against Apple's LibreSSL instead of real OpenSSL, which silently broke every yfinance request with no indication of why, and took manual step-by-step digging to track down. This release adds an `augur doctor` command that checks for exactly this class of problem in one shot:
+
+- Whether the Python/SSL toolchain is a known-bad combination for yfinance (with a fix suggestion)
+- Whether optional config like FINNHUB / Alpha Vantage / OpenAI keys and the EDGAR contact email are set
+- Whether each data source (yfinance / finnhub / alphavantage / stooq) is actually reachable right now
+- How many predictions the learning engine has accumulated and how many have been resolved
+
+Pass `--offline` to skip the network checks.
+
 ## v10.9.0 — Credibility overhaul + real SEC EDGAR data (2026-07-09)
 
 No flashy new UI in this release — instead, a top-to-bottom pass on "how much should you actually trust these 18 masters' scores," from the consensus math itself, to whether the learning loop was ever really learning, to whether the fundamentals feeding every persona were real. Everything that could be verified against real data was.
