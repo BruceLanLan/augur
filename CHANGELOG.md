@@ -2,6 +2,77 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.13.0] - 2026-07-14
+
+B2 from `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` -- the biggest item
+on that list (2-3 sessions estimated), picked up with explicit user
+go-ahead after the smaller D1/D2 items. Every persona's `compute()` derives
+a `metadata["factors"]` dict (Buffett's "moat", Graham's "margin_of_safety",
+etc.) purely from `MarketContext` -- no network calls inside persona
+logic -- which means every one of the ~70-90 named factors across 18
+personas is replayable at any historical (ticker, date) the same way
+`scripts/regime_weight_oos.py` already replays consensus scores. Nobody had
+asked, factor by factor, which of these actually carry cross-sectional
+predictive signal vs. which are noise.
+
+### Added
+
+- **`compute_factor_cross_sectional_ic()`** (`src/augur/backtest.py`): reuses
+  `fetch_ticker_replay_records()`'s point-in-time EDGAR fundamentals (no
+  look-ahead; days without as-of-available fundamentals are dropped, never
+  zero-filled). For each (ticker, date), builds one `MarketContext` and runs
+  every agent once, collecting every numeric `metadata["factors"]` entry
+  namespaced as `"{agent_id}.{factor_name}"` (personas reuse names like
+  "quality" or "value" for different formulas, so namespacing avoids
+  silently averaging unrelated things together). Each factor's daily
+  cross-sectional values are rank-correlated (Spearman) against
+  `actual_return_20d` and averaged across qualifying days.
+- **Multiple-comparison guard**: with ~100 factor keys tested against one
+  window, some will show a "significant" whole-window IC by chance alone --
+  this project has been burned by exactly this shape of false positive
+  before (the regime-weights episode, v10.6.0). Qualifying days are split
+  in half chronologically; `split_half_stable` is `True` only when both
+  halves have >= 3 days, both half-ICs clear a minimum magnitude
+  (`min_half_ic`, default 0.02), and agree in sign. Unstable factors are
+  still reported, never silently dropped, but flagged rather than presented
+  as findings.
+- **`scripts/factor_attribution.py`** (new): manual research script (not
+  part of the pytest suite, same convention as `regime_weight_oos.py` and
+  `generate_agent_correlation.py` -- real network calls, reports numbers
+  rather than pass/fail) over the same 37-ticker cross-sector universe and
+  2022-01..2026-06 window as `regime_weight_oos.py`, for direct
+  comparability. Explicitly documents a real scope boundary: `insider_
+  buying_signal` and `institutional_flow_signal` are point-in-time capable
+  in principle but aren't wired into any persona's `metadata["factors"]` as
+  of this release (confirmed via grep -- no caller outside their own
+  modules), so they're not represented in this pass's output.
+- `tests/test_factor_attribution.py` (10 tests): cross-sectional IC
+  correctness (perfectly correlated / inverted synthetic factors), thin-day
+  filtering, agent-name namespacing (same factor name, different agents,
+  kept separate), non-numeric factor value filtering (strings/bools
+  skipped), one agent raising doesn't break others, and all four split-half
+  stability paths (consistent sign, sign flip, below-threshold magnitude,
+  too few days in a half). Uses duck-typed fake agents rather than the real
+  18 personas or real network calls -- the function's job being tested is
+  the cross-sectional grouping/aggregation logic, which is pure computation
+  over already-built records.
+
+### Verified
+
+- Real (non-mocked, small-scale) run against 5 tickers (AAPL/MSFT/JPM/XOM/
+  KO) over a 5-month window (2024-01..2024-06): 105 qualifying days, 86
+  distinct factor keys discovered across the real 18 personas, 7 flagged
+  `split_half_stable`. The safeguard caught a real example of the exact
+  failure mode it exists to prevent: `graham.margin_of_safety` showed
+  `ic_mean=0.116` over the whole window (would look like a modest finding
+  in isolation) but `first_half_ic=+0.619` / `second_half_ic=-0.378` -- a
+  sign flip correctly flagged `split_half_stable=False`.
+  A full 37-ticker, 2022-2026 run (matching `regime_weight_oos.py`'s
+  universe) was NOT done in this session -- estimated at tens of minutes
+  per the script's own docstring, left as a follow-up now that the pipeline
+  itself is confirmed working end to end on real data.
+- Full suite: 2449 passed, 0 failures.
+
 ## [10.12.0] - 2026-07-14
 
 D2 (CI half) from `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` -- the

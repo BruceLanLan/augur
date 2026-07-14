@@ -10,8 +10,8 @@
 
 Put Warren Buffett, Ray Dalio, Duan Yongping and Cathie Wood in the same room — they won't agree. That's exactly the point.
 
-[![v10.12.0](https://img.shields.io/badge/v10.12.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2439 Tests](https://img.shields.io/badge/2439_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.13.0](https://img.shields.io/badge/v10.13.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2449 Tests](https://img.shields.io/badge/2449_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-Real_Filing_Data-4a90d9?style=for-the-badge)](#-18-investment-masters)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -265,7 +265,16 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > Non-technical release notes: [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md)
 
 <details open>
-<summary><strong>v10.12.0 — Weekly real-network data-source smoke test (current)</strong></summary>
+<summary><strong>v10.13.0 — Factor-level attribution analysis (research script) (current)</strong></summary>
+
+- 🆕 **`scripts/factor_attribution.py`**: new research script computing cross-sectional rank-IC for each of the ~70-90 named factors across the 18 masters' metadata (which factors actually predict future returns), with a built-in split-half stability check to guard against multiple-comparison false positives (the same trap the regime-weight episode ran into before) -- only factors that agree in sign and clear a minimum strength in both halves of the window count as stable candidates; everything else is still printed but explicitly flagged as untrustworthy
+- ✅ 2449 tests passing
+
+Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
+</details>
+
+<details>
+<summary><strong>v10.12.0 — Weekly real-network data-source smoke test</strong></summary>
 
 - 🆕 **Weekly automated smoke test**: new scheduled GitHub Actions job (every Monday) does a real network connectivity check against SEC EDGAR and yfinance -- EDGAR failing fails the job (SEC rarely blocks CI IPs, so a failure is a real signal), yfinance failing only warns without failing the job (Yahoo's rate-limiting/blocking of cloud IP ranges is too common to treat as a real regression)
 - ✅ 2439 tests passing

@@ -10,8 +10,8 @@
 
 把 Warren Buffett、Ray Dalio、段永平、Cathie Wood 放在同一个房间——他们不会同意对方的观点。这正是重点。
 
-[![v10.12.0](https://img.shields.io/badge/v10.12.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2439 Tests](https://img.shields.io/badge/2439_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.13.0](https://img.shields.io/badge/v10.13.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2449 Tests](https://img.shields.io/badge/2449_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-真实财报数据-4a90d9?style=for-the-badge)](#-18位投资大师)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -267,7 +267,16 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 非技术向用户说明见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.12.0 — 每周数据源真实网络烟测 (current)</strong></summary>
+<summary><strong>v10.13.0 — 因子级归因分析（研究脚本） (current)</strong></summary>
+
+- 🆕 **`scripts/factor_attribution.py`**：新增研究脚本，对 18 位大师 metadata 里约 70-90 个具名因子逐个计算横截面 rank-IC（哪个因子在预测未来收益上真的有用），内置"分半稳定性"检验防止多重比较假阳性（类似之前 regime 权重踩过的坑）——只有前后两段时间窗口方向一致且都够强的因子才算"稳定候选"，其余照样打印但明确标注不可信
+- ✅ 2449 个测试全部通过
+
+详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+</details>
+
+<details>
+<summary><strong>v10.12.0 — 每周数据源真实网络烟测</strong></summary>
 
 - 🆕 **每周自动烟测**：新增 GitHub Actions 定时任务（每周一），对 SEC EDGAR 和 yfinance 做真实网络连通性检查——EDGAR 失败会让任务判红（SEC 很少封锁 CI 的 IP，失败是真信号），yfinance 失败只警告不判红（Yahoo 对云端 IP 的限流/封锁太常见，不代表真的坏了）
 - ✅ 2439 个测试全部通过

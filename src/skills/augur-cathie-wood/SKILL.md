@@ -1,7 +1,7 @@
 ---
 name: augur-cathie-wood
 description: "Cathie Wood AI — disruptive innovation, AI/genomics/blockchain"
-version: 10.12.0
+version: 10.13.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

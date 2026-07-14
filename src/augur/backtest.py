@@ -1023,3 +1023,147 @@ def compute_cross_sectional_regime_ic(
         "n_days_total": len(daily_results),
         "n_days_skipped_thin": n_skipped_thin,
     }
+
+
+def _record_to_market_context(ticker: str, record: Dict):
+    """Build a MarketContext from one fetch_ticker_replay_records() record.
+
+    Deliberately a separate small helper from _signed_agent_scores' inline
+    version (same field list) rather than a shared refactor -- this keeps
+    the new, less-tested factor-attribution path from risking a regression
+    in the already-shipped regime-IC path by touching it.
+    """
+    from augur.personas.base import MarketContext
+
+    ctx_kwargs = {"ticker": ticker.upper()}
+    for k in ["price", "pe", "pb", "roe", "gross_margins", "revenue_growth",
+              "debt_ratio", "fcf", "market_cap", "operating_margins",
+              "rsi", "macd", "earnings_growth", "current_ratio"]:
+        if k in record:
+            ctx_kwargs[k] = record[k]
+    return MarketContext(**ctx_kwargs)
+
+
+def compute_factor_cross_sectional_ic(
+    records_by_ticker: Dict[str, List[Dict]],
+    agents,
+    min_tickers_per_day: int = 5,
+    min_half_ic: float = 0.02,
+) -> Dict:
+    """Cross-sectional, per-day, per-factor IC across every persona's
+    ``metadata["factors"]`` output.
+
+    Reuses the same replay records as ``compute_cross_sectional_regime_ic``
+    (see ``fetch_ticker_replay_records``): for each (ticker, date), builds
+    one ``MarketContext`` and runs every agent once, collecting every
+    numeric entry of ``result.metadata["factors"]`` namespaced as
+    ``"{agent_id}.{factor_name}"`` (personas reuse factor names like
+    "quality" or "value" for different formulas, so namespacing avoids
+    silently averaging together two unrelated things). Each factor's daily
+    cross-sectional values are rank-correlated (Spearman, via
+    ``Backtester._rank_correlation``) against ``actual_return_20d`` and
+    averaged across qualifying days (>= ``min_tickers_per_day`` tickers
+    scored that day).
+
+    Multiple-comparison guard: with on the order of a hundred factor keys
+    (18 personas x ~4-6 factors each) tested against the same window, some
+    will show a "significant" whole-window IC by chance alone -- this
+    project has been burned by exactly this shape of false positive before
+    (see docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md's regime-weights
+    section). To guard against it cheaply, the qualifying days are split in
+    half chronologically and each factor's IC is computed independently in
+    each half. ``split_half_stable`` is True only when both halves have
+    >= 3 days, both half-ICs meet ``min_half_ic`` in magnitude, and they
+    agree in sign -- a factor that flips sign or vanishes between halves is
+    still reported (never silently dropped) but flagged as unstable rather
+    than presented as a finding.
+
+    Returns:
+      {"per_factor": {factor_key: {"ic_mean", "n_days", "first_half_ic",
+          "second_half_ic", "split_half_stable"}},
+       "n_days_total", "n_days_skipped_thin"}
+    """
+    bt = Backtester()
+
+    dates_to_ticker_records: Dict[str, Dict[str, Dict]] = {}
+    for ticker, records in records_by_ticker.items():
+        for rec in records:
+            dates_to_ticker_records.setdefault(rec["date"], {})[ticker] = rec
+
+    qualifying_dates: List[str] = []
+    per_factor_by_date: Dict[str, Dict[str, Dict[str, List[float]]]] = {}
+    n_skipped_thin = 0
+
+    for date_str in sorted(dates_to_ticker_records.keys()):
+        ticker_records = dates_to_ticker_records[date_str]
+        if len(ticker_records) < min_tickers_per_day:
+            n_skipped_thin += 1
+            continue
+        qualifying_dates.append(date_str)
+
+        factor_values: Dict[str, List[float]] = {}
+        factor_returns: Dict[str, List[float]] = {}
+        for ticker, rec in ticker_records.items():
+            ctx = _record_to_market_context(ticker, rec)
+            ret = rec["actual_return_20d"]
+            for agent in agents:
+                try:
+                    result = agent.analyze(ctx)
+                except Exception:
+                    continue
+                factors = (result.metadata or {}).get("factors") or {}
+                for fname, fval in factors.items():
+                    if isinstance(fval, bool) or not isinstance(fval, (int, float)):
+                        continue
+                    key = f"{agent.agent_id}.{fname}"
+                    factor_values.setdefault(key, []).append(float(fval))
+                    factor_returns.setdefault(key, []).append(ret)
+        per_factor_by_date[date_str] = {"values": factor_values, "returns": factor_returns}
+
+    n_days_total = len(qualifying_dates)
+    half = n_days_total // 2
+    first_half_dates = set(qualifying_dates[:half])
+    second_half_dates = set(qualifying_dates[half:])
+
+    all_ics: Dict[str, List[float]] = {}
+    first_half_ics: Dict[str, List[float]] = {}
+    second_half_ics: Dict[str, List[float]] = {}
+
+    for date_str, bundle in per_factor_by_date.items():
+        for key, values in bundle["values"].items():
+            returns = bundle["returns"][key]
+            if len(values) < min_tickers_per_day:
+                continue
+            ic = bt._rank_correlation(values, returns)
+            all_ics.setdefault(key, []).append(ic)
+            if date_str in first_half_dates:
+                first_half_ics.setdefault(key, []).append(ic)
+            elif date_str in second_half_dates:
+                second_half_ics.setdefault(key, []).append(ic)
+
+    per_factor: Dict[str, Dict] = {}
+    for key, ics in all_ics.items():
+        n_days = len(ics)
+        ic_mean = sum(ics) / n_days if n_days else 0.0
+        fh = first_half_ics.get(key, [])
+        sh = second_half_ics.get(key, [])
+        fh_mean = sum(fh) / len(fh) if fh else 0.0
+        sh_mean = sum(sh) / len(sh) if sh else 0.0
+        stable = (
+            len(fh) >= 3 and len(sh) >= 3
+            and abs(fh_mean) >= min_half_ic and abs(sh_mean) >= min_half_ic
+            and (fh_mean > 0) == (sh_mean > 0)
+        )
+        per_factor[key] = {
+            "ic_mean": round(ic_mean, 4),
+            "n_days": n_days,
+            "first_half_ic": round(fh_mean, 4),
+            "second_half_ic": round(sh_mean, 4),
+            "split_half_stable": stable,
+        }
+
+    return {
+        "per_factor": per_factor,
+        "n_days_total": n_days_total,
+        "n_days_skipped_thin": n_skipped_thin,
+    }

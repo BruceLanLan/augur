@@ -4,6 +4,26 @@
 
 ---
 
+## v10.13.0 — Factor-level attribution analysis (research script) (2026-07-14)
+
+The 18 masters each carry roughly 70-90 named judgment factors under the
+hood (Buffett's "moat", Graham's "margin of safety"), but nobody had
+systematically checked which of these actually predict future returns
+versus which just sound plausible. This release adds a research script
+that computes a cross-sectional predictive-power score (rank-IC) for each
+factor individually against real historical filing data, with a built-in
+"check both halves of the window separately" safeguard -- only factors
+that agree in direction and clear a minimum strength in both halves count
+as stable candidates; everything else, even if it looks strong over the
+whole window, gets explicitly flagged as "possibly coincidence, not a
+conclusion." This discipline exists because the project got burned by
+exactly this trap before: the regime-weight multipliers looked fine over
+one full window and only fell apart once checked half-by-half.
+
+This is a research script (`scripts/factor_attribution.py`), not a feature
+wired into the automatic analysis pipeline -- it's run manually, and a
+full real-data run takes tens of minutes.
+
 ## v10.12.0 — Weekly real-network data-source smoke test (2026-07-14)
 
 The stooq data-source breakage found earlier (2026-07-09) was pure luck --
