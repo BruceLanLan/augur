@@ -10,8 +10,8 @@
 
 Put Warren Buffett, Ray Dalio, Duan Yongping and Cathie Wood in the same room — they won't agree. That's exactly the point.
 
-[![v10.13.0](https://img.shields.io/badge/v10.13.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2449 Tests](https://img.shields.io/badge/2449_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.14.0](https://img.shields.io/badge/v10.14.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2460 Tests](https://img.shields.io/badge/2460_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-Real_Filing_Data-4a90d9?style=for-the-badge)](#-18-investment-masters)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -265,7 +265,16 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > Non-technical release notes: [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md)
 
 <details open>
-<summary><strong>v10.13.0 — Factor-level attribution analysis (research script) (current)</strong></summary>
+<summary><strong>v10.14.0 — rolling_ic.json generator (current)</strong></summary>
+
+- 🆕 **`scripts/generate_rolling_ic.py`**: the consensus engine has always had a "dynamically reweight by rolling IC" blend, but nothing ever generated `feedback/rolling_ic.json`, so it silently no-opped -- the same gap R5 fixed for `agent_correlation.json`. This script computes each master's real cross-sectional IC from historical data and writes it as weights
+- ✅ 2460 tests passing
+
+Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
+</details>
+
+<details>
+<summary><strong>v10.13.0 — Factor-level attribution analysis (research script)</strong></summary>
 
 - 🆕 **`scripts/factor_attribution.py`**: new research script computing cross-sectional rank-IC for each of the ~70-90 named factors across the 18 masters' metadata (which factors actually predict future returns), with a built-in split-half stability check to guard against multiple-comparison false positives (the same trap the regime-weight episode ran into before) -- only factors that agree in sign and clear a minimum strength in both halves of the window count as stable candidates; everything else is still printed but explicitly flagged as untrustworthy
 - ✅ 2449 tests passing

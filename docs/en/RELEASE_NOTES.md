@@ -4,6 +4,20 @@
 
 ---
 
+## v10.14.0 — rolling_ic.json generator (2026-07-14)
+
+The consensus engine has always had a "dynamically reweight masters by
+recent performance" blend, but there was never actually a script that
+generated the data file it reads -- so that logic has been silently
+no-opping since it shipped, the exact same situation as the diversity-
+penalty feature before its own fix (code waiting on a file nobody ever
+generated). This release adds that generator: it computes each master's
+real "how accurate were recent predictions" score from historical data and
+writes it as a weights file. Whether these weights actually improve
+consensus quality hasn't been validated with a before/after comparison yet
+-- writing the file just stops the logic from being inert, it doesn't by
+itself prove the blend helps.
+
 ## v10.13.0 — Factor-level attribution analysis (research script) (2026-07-14)
 
 The 18 masters each carry roughly 70-90 named judgment factors under the

@@ -2,6 +2,62 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.14.0] - 2026-07-14
+
+B1 from `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` -- the exact same gap
+R5 (v10.7.0) found and fixed for `feedback/agent_correlation.json`, now
+found and fixed for `feedback/rolling_ic.json`:
+`ConsensusEngine.get_consensus`'s `load_rolling_ic_weights()` / the
+`0.5 * w + 0.5 * rolling_ic_weights[...]` blend (`engine.py`) has been
+shipped since before this project's roadmap review, but only
+`feedback/rolling_ic.json.example` ever existed -- nothing generated the
+real file, so the blend has silently no-opped for every install.
+
+### Added
+
+- **`scripts/generate_rolling_ic.py`** (new): manual research script (not
+  part of the pytest suite, same convention as every other real-data
+  `scripts/*.py` in this project) over the same 37-ticker/2022-2026
+  universe as `regime_weight_oos.py`/`generate_agent_correlation.py`/
+  `factor_attribution.py`. Reuses `compute_cross_sectional_regime_ic`
+  purely for the per-agent daily cross-sectional IC it already computes as
+  a byproduct (does not touch or reuse anything about that function's
+  regime-weighted-vs-flat consensus comparison) -- `aggregate_overall_ic()`
+  weight-averages each agent's per-regime IC by that regime's day count
+  into one overall IC per agent, and `ic_to_weight()` linearly rescales and
+  clamps to `[0.1, 3.0]`, the exact same clamp bounds `LearningEngine`
+  already uses for its own IC-derived weights, for consistency between the
+  two IC-driven weighting mechanisms in this codebase.
+- `tests/test_generate_rolling_ic.py` (11 tests): the IC-to-weight
+  transform's center/floor/ceiling behavior and its match to
+  `LearningEngine`'s clamp bounds, and the day-count-weighted aggregation
+  logic (single regime, multi-regime weighted average, an agent missing
+  from some regimes, empty input, zero-day division-by-zero guard). Both
+  functions are pure (no network calls), unlike `main()`'s real EDGAR/
+  yfinance pull which -- consistent with every other research script in
+  this family -- has no pytest coverage and is verified manually.
+
+### Verified
+
+- Real (non-mocked, small-scale) run against the same 5-ticker, 5-month
+  window used to verify B2's factor attribution: 105 qualifying days,
+  per-agent overall IC computed and correctly transformed into weights
+  (e.g. `cathie_wood` IC=0.1473 -> weight=1.2364, a real example of an
+  agent whose recent cross-sectional predictions were strong enough to be
+  upweighted well above the 0.5 center).
+- Full 37-ticker/multi-year run not done this session, same as B2 --
+  left as a follow-up now that the pipeline is confirmed working end to
+  end on real data.
+- Full suite: 2460 passed, 0 failures.
+
+**Honestly scoped, not claimed as validated**: writing `rolling_ic.json`
+makes the existing blend stop being a silent no-op. It does NOT establish
+that the blend improves cross-sectional prediction quality -- that would
+need the same before/after OOS comparison `regime_weight_oos.py` did for
+regime multipliers, which (after real validation) turned out not to help
+and were disabled in v10.6.0. That validation is a natural follow-up, not
+done here.
+
 ## [10.13.0] - 2026-07-14
 
 B2 from `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` -- the biggest item
