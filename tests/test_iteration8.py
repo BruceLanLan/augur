@@ -379,11 +379,13 @@ class TestKellyMinimumPosition:
     def test_kelly_minimum_position(self):
         """Bullish signal with score=5.0 should get at least 1.0% allocation.
 
-        Sentiment factor is pinned to 0 here: this test targets the Kelly
-        floor logic on a deliberately boundary-case score (exactly 5.0),
-        which real (or hash-mock-fallback) sentiment noise could otherwise
-        nudge across the >=5 threshold either way -- an unrelated, flaky
-        dependency for what this test actually checks.
+        Sentiment factor is pinned to 0 and rolling-IC reweighting is pinned
+        to empty here: this test targets the Kelly floor logic on a
+        deliberately boundary-case score (exactly 5.0), which real sentiment
+        noise or a real feedback/rolling_ic.json (present since v10.14.0)
+        could otherwise nudge across the >=5 threshold either way for
+        whichever 4 agents happen to be first in registry order -- both
+        unrelated, flaky dependencies for what this test actually checks.
         """
         from augur.registry import DecisionCoordinator
         from augur.personas.base import MarketContext, AgentResponse, SignalType
@@ -405,7 +407,9 @@ class TestKellyMinimumPosition:
             )
             mock_results[agent.agent_id] = resp
 
-        with patch("augur.registry._get_sentiment_analyzer") as mock_get_analyzer:
+        with patch("augur.registry._get_sentiment_analyzer") as mock_get_analyzer, patch(
+            "augur.consensus.rolling_ic.load_rolling_ic_weights", return_value={}
+        ):
             mock_get_analyzer.return_value.get_sentiment_factor.return_value = 0.0
             consensus = coordinator.get_consensus(mock_results, ticker="MINKEL", context=ctx)
         pct = consensus.metadata.get("position_pct", 0)
