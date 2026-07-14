@@ -2,6 +2,62 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.12.0] - 2026-07-14
+
+D2 (CI half) from `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` -- the
+local half (v10.11.0) made `augur doctor` build a connectivity trend, but
+that only helps if someone actually runs it. This closes the loop with a
+scheduled GitHub Actions job that runs the same class of real-network check
+automatically, on a weekly cadence, so a breakage like stooq's (found by
+hand, documented in commit 24c8609) surfaces on its own next time.
+
+Deliberately deferred in the previous two releases specifically because
+modifying the CI pipeline is a more visible, harder-to-reverse change than
+a local file -- done now with explicit user go-ahead rather than folded in
+unilaterally.
+
+### Added
+
+- **`scripts/smoke_test_datasources.py`** (new): two independent real
+  (non-mocked) network checks -- `check_edgar()` does a real CIK lookup +
+  `get_company_facts()` fetch for AAPL via `EdgarClient`; `check_yfinance()`
+  does a real `YFinanceProvider().fetch("AAPL")` call. Deliberately
+  asymmetric severity: EDGAR failing returns a non-zero exit code (SEC
+  rarely blocks/rate-limits CI runner IPs, so a failure is a meaningful
+  signal); yfinance failing prints a `::warning::` GitHub Actions annotation
+  but never fails the job (Yahoo Finance blocking/rate-limiting cloud IP
+  ranges is common enough that failing the build on it would train people
+  to ignore red builds, not catch real regressions). `--edgar`/
+  `--yfinance`/`--all` flags select which checks run; bare invocation runs
+  the load-bearing EDGAR check only.
+- **`.github/workflows/data-source-smoke.yml`** (new): runs the script on
+  a weekly schedule (`cron: "0 6 * * 1"`, every Monday) plus
+  `workflow_dispatch` for on-demand manual runs, with
+  `AUGUR_EDGAR_CONTACT_EMAIL` set for the SEC User-Agent requirement.
+- `tests/test_smoke_test_datasources.py` (12 tests): severity asymmetry
+  (EDGAR failure fails the job, yfinance failure alone does not, EDGAR
+  failure dominates in `--all` mode even when yfinance succeeds), argument
+  defaults (bare invocation runs EDGAR only, never silently no-ops), and
+  the `::warning::` annotation appearing only on yfinance failure. All
+  mocked -- the real network calls are exercised by the scheduled workflow
+  itself, not the offline suite.
+
+### Verified
+
+- Real (non-mocked) run of `python scripts/smoke_test_datasources.py --all`
+  against live SEC EDGAR and yfinance: `EDGAR: CIK lookup OK -- AAPL ->
+  320193`, `EDGAR: company facts OK`, `yfinance: OK -- AAPL reachable`,
+  exit code 0.
+- Severity asymmetry manually exercised end-to-end (not just via the
+  mocked test suite) before writing the workflow: forcing an EDGAR failure
+  returns exit code 1; forcing a yfinance-only failure returns exit code 0
+  with the warning annotation printed.
+- `.github/workflows/data-source-smoke.yml` validated as syntactically
+  correct YAML (`yaml.safe_load`); not yet exercised by an actual GitHub
+  Actions run (first real trigger is next Monday's schedule, or a manual
+  `workflow_dispatch`).
+- Full suite: 2439 passed, 0 failures.
+
 ## [10.11.0] - 2026-07-12
 
 D2 (local half) from `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` --

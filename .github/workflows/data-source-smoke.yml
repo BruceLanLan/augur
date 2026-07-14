@@ -1,0 +1,37 @@
+name: Data Source Smoke Test
+
+# D2 from docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md -- catches real
+# third-party data-source breakage (like stooq's dead /q/l/ and /q/d/l/
+# endpoints, found by hand and documented in commit 24c8609) automatically
+# on a schedule, instead of requiring someone to notice by accident.
+#
+# EDGAR (SEC) failing here fails the job -- SEC rarely blocks CI IPs, so a
+# failure is a meaningful signal. yfinance failing here only warns -- Yahoo
+# Finance frequently rate-limits/blocks cloud CI IP ranges for reasons
+# unrelated to a real regression, so it must never make this workflow flaky.
+# See scripts/smoke_test_datasources.py for the actual checks.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # every Monday 06:00 UTC
+  workflow_dispatch: {}
+
+jobs:
+  smoke:
+    name: Real network smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -e ".[data,dev]"
+
+      - name: Run smoke test (EDGAR load-bearing, yfinance warn-only)
+        run: python scripts/smoke_test_datasources.py --all
+        env:
+          AUGUR_EDGAR_CONTACT_EMAIL: "ci-smoke-test@augur-agents.invalid"

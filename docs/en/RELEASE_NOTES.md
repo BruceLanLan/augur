@@ -4,6 +4,18 @@
 
 ---
 
+## v10.12.0 — Weekly real-network data-source smoke test (2026-07-14)
+
+The stooq data-source breakage found earlier (2026-07-09) was pure luck --
+noticed by hand while debugging something else. This release adds a
+GitHub Actions job that runs every Monday and makes real network requests
+against SEC EDGAR and yfinance: an EDGAR failure fails the job (SEC rarely
+rate-limits CI runner IPs, so a failure there is a real signal); a yfinance
+failure only warns without failing the job (Yahoo Finance blocking/
+rate-limiting cloud IP ranges is common enough that failing the build on it
+would just create alert fatigue, not catch real regressions). Breakage like
+this should now surface on its own instead of depending on luck.
+
 ## v10.11.0 — Data-source connectivity history (2026-07-12)
 
 The previous release's `augur doctor` could only show whether a data source was reachable *right now*, with no trend. This release has every `augur doctor` run record that probe's outcome to a small local history file (`~/.augur/provider_stats.json`, local-only, nothing phoned home), keeping the last 7 days. A dead endpoint like stooq's would now show up in `augur doctor`'s output as "0/7 reachable this week" instead of requiring someone to notice by accident.

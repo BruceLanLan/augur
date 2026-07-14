@@ -1,7 +1,7 @@
 ---
 name: augur-terminal
 description: "Augur Terminal — Bloomberg-style AI investment research terminal: 18 personas, committee, workflow, workspace"
-version: 10.11.0
+version: 10.12.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]
