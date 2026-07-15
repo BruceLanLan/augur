@@ -109,3 +109,29 @@ class TestCliPathResolutionMatchesLayout:
         assert 'parents[2] / "skills"' in meta_source
         assert 'parents[1] / "skills"' not in meta_source
         assert 'parents[3] / "skills"' not in meta_source
+
+
+class TestDashboardImagesMountResolvesToRepoRoot:
+    """R7's dashboard/ -> src/dashboard/ move (d8af2a0) shifted app.py one
+    directory level deeper without updating IMAGES_DIR's ".parent.parent",
+    which silently 404'd every persona avatar dashboard-wide (the mount's
+    own `if IMAGES_DIR.exists()` guard means this never raised -- found via
+    a real Playwright run during v10.15.0 release prep, not caught by any
+    existing test since nothing exercised actual image loading in a
+    browser). docs/images isn't in package-data (not shipped in the wheel),
+    so this only matters in a dev checkout -- but it must resolve correctly
+    there, where the files really do exist.
+    """
+
+    def test_images_dir_resolves_to_real_repo_root_docs_images(self):
+        app_source = (REPO_ROOT / "src" / "dashboard" / "app.py").read_text(encoding="utf-8")
+        assert 'IMAGES_DIR = Path(__file__).parent.parent.parent / "docs" / "images"' in app_source
+
+        # The literal computation app.py performs, mirrored here rather than
+        # importing dashboard.app (which has heavy import-time side effects)
+        # -- must land on the real docs/images that actually has avatar PNGs.
+        app_py_path = REPO_ROOT / "src" / "dashboard" / "app.py"
+        images_dir = app_py_path.parent.parent.parent / "docs" / "images"
+        assert images_dir == REPO_ROOT / "docs" / "images"
+        assert images_dir.exists()
+        assert (images_dir / "avatars" / "buffett.png").exists()

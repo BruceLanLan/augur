@@ -402,8 +402,15 @@ STATIC_DIR = Path(__file__).parent / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
-# Mount docs/images for avatars
-IMAGES_DIR = Path(__file__).parent.parent / "docs" / "images"
+# Mount docs/images for avatars. Repo-root-relative -- "src/dashboard" ->
+# "src" -> repo root in a dev checkout; docs/ isn't shipped in the wheel
+# (not in package-data) so this correctly no-ops via the exists() guard in
+# a real pip install. Off-by-one here (R7's dashboard/ -> src/dashboard/
+# move shifted this one level without updating this path) silently 404'd
+# every persona avatar dashboard-wide -- found via a real Playwright run,
+# not caught by tests since nothing exercises actual image loading in a
+# browser. See tests/test_packaging_layout.py for the regression guard.
+IMAGES_DIR = Path(__file__).parent.parent.parent / "docs" / "images"
 if IMAGES_DIR.exists():
     app.mount("/docs/images", StaticFiles(directory=str(IMAGES_DIR)), name="images")
 
