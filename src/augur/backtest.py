@@ -1032,6 +1032,32 @@ def _record_to_market_context(ticker: str, record: Dict):
     version (same field list) rather than a shared refactor -- this keeps
     the new, less-tested factor-attribution path from risking a regression
     in the already-shipped regime-IC path by touching it.
+
+    Known gap (found via a real factor_attribution.py run, 2026-07-14):
+    ``insider_ownership`` and ``institutional_ownership`` are never in this
+    field list, so every MarketContext built here has both at the
+    MarketContext dataclass default (0) -- there is no free historical
+    time series for ownership *percentage* the way there is for EDGAR
+    fundamentals (this is a different EDGAR gap than
+    insider_buying_signal/institutional_flow_signal, which track *trading
+    activity*, not ownership %, and are separately not wired into any
+    persona's factors -- see scripts/factor_attribution.py's docstring).
+    Effect: every persona factor that branches on these two fields (11
+    personas as of this writing: aschenbrenner, buffett, dan_bin, dayu,
+    duan_yongping, fisher, li_lu, marks, munger, thiel, zhang_lei) silently
+    collapses to whatever it reduces to with both pinned at 0 in every
+    backtest-replay-based analysis (this function, _signed_agent_scores,
+    and therefore compute_cross_sectional_regime_ic,
+    compute_factor_cross_sectional_ic, regime_weight_oos.py,
+    generate_agent_correlation.py, and generate_rolling_ic.py all inherit
+    this). Concretely: li_lu's "management_quality" and zhang_lei's
+    "management_excellence" both reduce to pure monotonic step functions of
+    roe alone, which is why factor_attribution.py's 2026-07-14 full run
+    found them bit-identical in rank-IC (Spearman only depends on rank, and
+    monotonic transforms of the same underlying variable rank identically)
+    -- a real, structural artifact of this gap, not independent validation
+    of two different "management quality" signals. See
+    docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md for the full writeup.
     """
     from augur.personas.base import MarketContext
 
