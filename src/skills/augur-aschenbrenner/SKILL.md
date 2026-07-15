@@ -1,7 +1,7 @@
 ---
 name: augur-aschenbrenner
 description: "Leopold Aschenbrenner AI — AGI infrastructure + geopolitics, AI/semiconductor supply chains"
-version: 10.14.0
+version: 10.15.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

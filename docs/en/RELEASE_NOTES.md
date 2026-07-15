@@ -4,6 +4,36 @@
 
 ---
 
+## v10.15.0 — Public sync release (2026-07-15)
+
+The last public release was v10.0.0 on 2026-06-29 (Terminal Workspace + 13 MCP tools). This release brings over three and a half weeks of development since then -- it's a lot, organized into four threads.
+
+### Thread one: fundamentals are now real (SEC EDGAR)
+
+The PE, ROE, gross margin, etc. the 18 masters see used to be simplified calculations from yfinance, with historical depth only back to roughly 2022. They now come from the SEC EDGAR system's official filings (real numbers from 10-K/10-Q reports), with historical depth back to roughly 2011 depending on the company (US tickers and US-listed Chinese ADRs only). The same data pull also unlocked two new signals: **insider buying signal** (tracks executives'/directors' real trailing-90-day open-market trades) and **institutional flow signal** (tracks quarterly position changes at Berkshire Hathaway, Renaissance Technologies, Bridgewater, and others). Also new: `augur guidance TICKER` (opt-in, off by default), which uses an LLM to extract management outlook sentiment from the latest filing.
+
+### Thread two: three places that looked like they were working but weren't
+
+- Consensus scores used to be diluted by half through a never-validated stub model -- now off by default.
+- The Dashboard's "backtest" page used to default to synthetic, program-generated data -- now defaults to real historical data; synthetic data is still available but requires an explicit opt-in and is clearly labeled.
+- The system had always advertised "the masters get more accurate with use," but the learning engine never actually accumulated data -- predictions now persist immediately, with a scheduled job auto-resolving due predictions. Also quietly retired two mechanisms that had no real validation behind them: the always-fake X (Twitter) sentiment weight, and the hand-picked regime-weight multipliers, which real-data validation found didn't help.
+
+### Thread three: new tools
+
+- **`augur doctor [--offline]`**: a one-shot local environment diagnostic -- checks the Python/SSL toolchain for known bad combinations that break yfinance, optional API key configuration, live data-source connectivity, and learning-engine data accumulation progress. Every run also records a connectivity data point locally (`~/.augur/provider_stats.json`), building a 7-day trend so a dead data source surfaces early (this release's own sync run is what caught and documented stooq's dead endpoints, for instance).
+- **Weekly real-network data-source smoke test**: a new scheduled GitHub Actions job that runs real connectivity checks automatically.
+- **Two new research scripts**: `scripts/factor_attribution.py` (computes real predictive power for each of ~90 named investment factors individually, with a built-in multiple-comparison guard) and `scripts/generate_rolling_ic.py` (fills in the generator script the consensus engine's "dynamically reweight by recent performance" logic had always been missing). The first full real-data runs of both scripts turned up an honest finding: the historical backtest-replay pipeline has never had real historical data for "insider ownership %" or "institutional ownership %," which silently degrades some masters' related judgments in any historical validation -- not a new problem introduced by this release, but the first time it's been systematically found and documented, and there's currently no free data source to fix it with. See `docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md` for the full writeup.
+
+### Thread four: engineering health
+
+`cli.py` (1476 lines) and the old `dashboard/` God file (4338 lines) have both been split into focused modules; a real packaging bug -- `pip install` producing a package missing the entire dashboard directory -- was found and fixed with a regression test. Right before this sync, an additional real bug was found and fixed: an avatar-image path miscalculated by one directory level during that refactor, 404-ing every persona avatar site-wide -- no existing test caught it; it only surfaced from actually opening the app in a real browser.
+
+### Test coverage
+
+2461 tests passing (2136 at the time of the v10.0.0 release).
+
+---
+
 ## v10.14.0 — rolling_ic.json generator (2026-07-14)
 
 The consensus engine has always had a "dynamically reweight masters by

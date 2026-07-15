@@ -2,6 +2,48 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [10.15.0] - 2026-07-15
+
+Public release sync -- brings the public `augur` repo (last synced at
+v10.0.0, 2026-06-29) up to date with everything developed on `augur-next`
+since, fast-forwarded (`git push augur main:main`, no merge/conflict
+resolution needed, the two histories share a linear ancestor at `9906ca5`).
+Pattern mirrors `545fc09`'s v10.0.0 public-release commit: version sync,
+docs, changelog -- the underlying feature work is already documented in
+its own per-version entries below (v10.1.0 through v10.14.0) and doesn't
+need repeating here.
+
+### Changed
+
+- Version bump to 10.15.0 (`pyproject.toml`, `src/augur/__init__.py`, 19
+  hermes yaml, all skill manifests via `scripts/generate_skills.py`).
+- `README.md`/`README_EN.md`: v10.15.0 badges (2461 tests), new changelog
+  section summarizing the full delta since the v10.0.0 public release
+  across four threads (real EDGAR fundamentals, three credibility fixes,
+  five new tools from this development cycle, engineering health).
+- `docs/RELEASE_NOTES.md`/`docs/en/RELEASE_NOTES.md`: v10.15.0 user-facing
+  summary, written for a reader whose last exposure to the project was the
+  public v10.0.0 release.
+
+### Fixed
+
+- `src/dashboard/app.py`'s `IMAGES_DIR` static-mount path, found during
+  this release's own visual verification pass (see `[10.15.0]`'s sibling
+  commit `e602344` for the full incident writeup) -- every persona avatar
+  had been silently 404ing dashboard-wide since R7's `dashboard/` ->
+  `src/dashboard/` move.
+
+### Verified
+
+- Full suite: 2461 passed, 0 failures.
+- Real Playwright verification pass against a running `augur serve`:
+  `/stocks?ticker=AAPL` (full analysis run, agent-divergence badge and
+  18-master scorecard with working avatars, 0 console errors) and
+  `/portfolio` (0 console errors).
+- `git log augur/main..main` / `main..augur/main` confirmed a clean
+  fast-forward relationship before pushing (43 commits ahead, 0 behind, no
+  divergent public-only history to reconcile).
+
 ## [10.14.0] - 2026-07-14
 
 B1 from `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` -- the exact same gap

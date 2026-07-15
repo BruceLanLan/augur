@@ -10,8 +10,8 @@
 
 Put Warren Buffett, Ray Dalio, Duan Yongping and Cathie Wood in the same room — they won't agree. That's exactly the point.
 
-[![v10.14.0](https://img.shields.io/badge/v10.14.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2460 Tests](https://img.shields.io/badge/2460_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.15.0](https://img.shields.io/badge/v10.15.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2461 Tests](https://img.shields.io/badge/2461_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-Real_Filing_Data-4a90d9?style=for-the-badge)](#-18-investment-masters)
 [![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -265,7 +265,22 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > Non-technical release notes: [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md)
 
 <details open>
-<summary><strong>v10.14.0 — rolling_ic.json generator (current)</strong></summary>
+<summary><strong>v10.15.0 — Public sync release (current)</strong></summary>
+
+Three and a half weeks of development since the last public release (v10.0.0, 2026-06-29):
+
+- 🆕 **Real SEC EDGAR fundamentals**: PE/ROE/margins etc. now come from official 10-K/10-Q data, historical depth back to ~2011; new insider-trading signal, institutional-holdings signal, `augur guidance` (LLM-extracted management outlook, opt-in)
+- ✅ **Three credibility fixes**: MetaModel dilution zeroed out, backtests default to real historical data, learning engine actually accumulates data now; also honestly retired two unvalidated mechanisms (X sentiment weight, hand-picked regime multipliers)
+- 🆕 **`augur doctor` + connectivity history + weekly real-network smoke test**: one-shot local environment diagnostic, 7-day connectivity trend auto-surfaces dead data sources
+- 🆕 **Two new research scripts**: factor-level attribution (`factor_attribution.py`), `rolling_ic.json` generator; the first full real-data runs surfaced an honest limitation -- the historical backtest-replay pipeline is missing real historical data for insider/institutional ownership percentage, see `docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md`
+- 🔧 **Engineering health**: `cli.py`/`dashboard/` splits completed, fixed a real packaging bug (the wheel used to be missing the entire dashboard directory) + a real avatar-image path bug (every avatar 404ing site-wide, only found by actually opening the app in a browser)
+- ✅ 2461 tests passing (2136 at the v10.0.0 release)
+
+Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
+</details>
+
+<details>
+<summary><strong>v10.14.0 — rolling_ic.json generator</strong></summary>
 
 - 🆕 **`scripts/generate_rolling_ic.py`**: the consensus engine has always had a "dynamically reweight by rolling IC" blend, but nothing ever generated `feedback/rolling_ic.json`, so it silently no-opped -- the same gap R5 fixed for `agent_correlation.json`. This script computes each master's real cross-sectional IC from historical data and writes it as weights
 - ✅ 2460 tests passing

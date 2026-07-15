@@ -10,8 +10,8 @@
 
 把 Warren Buffett、Ray Dalio、段永平、Cathie Wood 放在同一个房间——他们不会同意对方的观点。这正是重点。
 
-[![v10.14.0](https://img.shields.io/badge/v10.14.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2460 Tests](https://img.shields.io/badge/2460_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
+[![v10.15.0](https://img.shields.io/badge/v10.15.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
+[![2461 Tests](https://img.shields.io/badge/2461_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
 [![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-真实财报数据-4a90d9?style=for-the-badge)](#-18位投资大师)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -267,7 +267,22 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 > 非技术向用户说明见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 
 <details open>
-<summary><strong>v10.14.0 — rolling_ic.json 生成器 (current)</strong></summary>
+<summary><strong>v10.15.0 — 公开同步发布 (current)</strong></summary>
+
+距上一次公开发布（v10.0.0，2026-06-29）三周半的开发成果同步：
+
+- 🆕 **SEC EDGAR 真实基本面**：18 位大师的 PE/ROE/毛利率等指标改用官方 10-K/10-Q 数据，历史回溯到约 2011 年；新增内部人交易信号、机构持仓信号、`augur guidance`（LLM 提炼管理层展望，默认关闭）
+- ✅ **三处可信度修复**：MetaModel 稀释归零、回测默认真实历史数据、学习引擎真正开始积累数据；同时诚实下线两处未经验证的逻辑（X 情绪权重、regime 权重手工规则）
+- 🆕 **`augur doctor` + 数据源连通性历史 + 每周真实网络烟测**：一键诊断本机环境，7 天连通性趋势自动发现数据源失效
+- 🆕 **两个新研究脚本**：因子级归因分析（`factor_attribution.py`）、`rolling_ic.json` 生成器；首次全量真实数据跑通后发现一个诚实的局限——历史回测管道缺少内部人/机构持股比例的真实历史数据，详见 `docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md`
+- 🔧 **工程健康**：`cli.py`/`dashboard/` 拆分完成，修复一个真实打包 bug（wheel 曾经缺整个 dashboard 目录）+ 一个真实头像图片路径 bug（全站头像 404，靠真实打开浏览器才发现）
+- ✅ 2461 个测试全部通过（v10.0.0 发布时为 2136 个）
+
+详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+</details>
+
+<details>
+<summary><strong>v10.14.0 — rolling_ic.json 生成器</strong></summary>
 
 - 🆕 **`scripts/generate_rolling_ic.py`**：共识引擎里一直有一段"按滚动 IC 动态调权"的混合逻辑，但从来没人写过生成 `feedback/rolling_ic.json` 的脚本，一直静默空跑——跟 R5 修复前的 `agent_correlation.json` 是同一个病。这个脚本用真实历史数据算出每位大师的横截面 IC，转成权重写入该文件
 - ✅ 2460 个测试全部通过
