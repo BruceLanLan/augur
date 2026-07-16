@@ -791,6 +791,19 @@ def fetch_ticker_replay_records(
     return records
 
 
+# Fields fetch_ticker_replay_records() records can populate onto a
+# MarketContext for historical replay. Shared by _signed_agent_scores and
+# _record_to_market_context so there is exactly one place to update when
+# adding a field -- see _record_to_market_context's docstring for the real
+# bug this exact kind of two-copies drift already caused once
+# (insider_ownership/institutional_ownership never being added here).
+_REPLAY_RECORD_FIELDS = (
+    "price", "pe", "pb", "roe", "gross_margins", "revenue_growth",
+    "debt_ratio", "fcf", "market_cap", "operating_margins",
+    "rsi", "macd", "earnings_growth", "current_ratio",
+)
+
+
 def _signed_agent_scores(ticker: str, record: Dict, agents) -> Dict[str, float]:
     """Run every agent on one (ticker, day) record, return signed scores.
 
@@ -802,9 +815,7 @@ def _signed_agent_scores(ticker: str, record: Dict, agents) -> Dict[str, float]:
     from augur.personas.base import MarketContext
 
     ctx_kwargs = {"ticker": ticker.upper()}
-    for k in ["price", "pe", "pb", "roe", "gross_margins", "revenue_growth",
-              "debt_ratio", "fcf", "market_cap", "operating_margins",
-              "rsi", "macd", "earnings_growth", "current_ratio"]:
+    for k in _REPLAY_RECORD_FIELDS:
         if k in record:
             ctx_kwargs[k] = record[k]
     ctx = MarketContext(**ctx_kwargs)
@@ -1029,9 +1040,13 @@ def _record_to_market_context(ticker: str, record: Dict):
     """Build a MarketContext from one fetch_ticker_replay_records() record.
 
     Deliberately a separate small helper from _signed_agent_scores' inline
-    version (same field list) rather than a shared refactor -- this keeps
-    the new, less-tested factor-attribution path from risking a regression
-    in the already-shipped regime-IC path by touching it.
+    version rather than a shared function -- this keeps the new, less-tested
+    factor-attribution path from risking a regression in the already-shipped
+    regime-IC path by touching its control flow. The field list itself
+    (``_REPLAY_RECORD_FIELDS``) IS shared between the two, though -- the two
+    functions duplicating that literal is exactly what caused the gap
+    documented below to go unnoticed, so the list itself is a single source
+    of truth even though the surrounding function bodies stay separate.
 
     Known gap (found via a real factor_attribution.py run, 2026-07-14):
     ``insider_ownership`` and ``institutional_ownership`` are never in this
@@ -1062,9 +1077,7 @@ def _record_to_market_context(ticker: str, record: Dict):
     from augur.personas.base import MarketContext
 
     ctx_kwargs = {"ticker": ticker.upper()}
-    for k in ["price", "pe", "pb", "roe", "gross_margins", "revenue_growth",
-              "debt_ratio", "fcf", "market_cap", "operating_margins",
-              "rsi", "macd", "earnings_growth", "current_ratio"]:
+    for k in _REPLAY_RECORD_FIELDS:
         if k in record:
             ctx_kwargs[k] = record[k]
     return MarketContext(**ctx_kwargs)

@@ -27,7 +27,7 @@ import logging
 import threading
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -64,32 +64,54 @@ def _prune(data: Dict[str, Dict[str, Dict[str, int]]]) -> Dict[str, Dict[str, Di
     return pruned
 
 
+def _aggregate(data: Dict[str, Dict[str, Dict[str, int]]]) -> Dict[str, Dict[str, int]]:
+    return {
+        provider: {
+            "ok": sum(d.get("ok", 0) for d in days.values()),
+            "fail": sum(d.get("fail", 0) for d in days.values()),
+        }
+        for provider, days in data.items()
+    }
+
+
 def record(provider_name: str, ok: bool, path: Optional[Path] = None) -> None:
-    """Record one `augur doctor` connectivity probe outcome. Never raises."""
+    """Record one `augur doctor` connectivity probe outcome. Never raises.
+
+    For recording several outcomes from the same command run (e.g. probing
+    every provider in the chain), prefer record_batch() -- one file
+    read/write for the whole batch instead of one per call.
+    """
+    record_batch([(provider_name, ok)], path=path)
+
+
+def record_batch(
+    outcomes: List[Tuple[str, bool]], path: Optional[Path] = None
+) -> Dict[str, Dict[str, int]]:
+    """Record multiple connectivity outcomes in a single read-modify-write
+    cycle (one file read, one write) instead of one per outcome. Returns
+    the resulting retention-window summary so the caller can display it
+    without a second read. Never raises (returns {} on failure)."""
     try:
         target = path or _default_path()
         with _lock:
             data = _load(target)
             day = _today()
-            bucket = data.setdefault(provider_name, {}).setdefault(day, {"ok": 0, "fail": 0})
-            bucket["ok" if ok else "fail"] += 1
+            for provider_name, ok in outcomes:
+                bucket = data.setdefault(provider_name, {}).setdefault(day, {"ok": 0, "fail": 0})
+                bucket["ok" if ok else "fail"] += 1
             data = _prune(data)
             target.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            return _aggregate(data)
     except Exception:
-        logger.debug("provider_stats.record failed (non-fatal)", exc_info=True)
+        logger.debug("provider_stats.record_batch failed (non-fatal)", exc_info=True)
+        return {}
 
 
 def summary(path: Optional[Path] = None) -> Dict[str, Dict[str, int]]:
     """Return {provider: {"ok": n, "fail": n}} aggregated over the retention window."""
     try:
         target = path or _default_path()
-        return {
-            provider: {
-                "ok": sum(d.get("ok", 0) for d in days.values()),
-                "fail": sum(d.get("fail", 0) for d in days.values()),
-            }
-            for provider, days in _prune(_load(target)).items()
-        }
+        return _aggregate(_prune(_load(target)))
     except Exception:
         logger.debug("provider_stats.summary failed (non-fatal)", exc_info=True)
         return {}

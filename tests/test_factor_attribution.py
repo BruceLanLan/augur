@@ -13,8 +13,52 @@ compute_cross_sectional_regime_ic -- neither has pytest coverage either,
 for the same reason).
 """
 
-from augur.backtest import compute_factor_cross_sectional_ic
+from augur.backtest import (
+    _REPLAY_RECORD_FIELDS,
+    _record_to_market_context,
+    _signed_agent_scores,
+    compute_factor_cross_sectional_ic,
+)
 from augur.personas.base import AgentResponse, SignalType
+
+
+class TestReplayRecordFieldsShared:
+    """_signed_agent_scores and _record_to_market_context used to each hardcode
+    their own copy of this field list -- exactly the kind of drift that caused
+    the insider_ownership/institutional_ownership gap documented in
+    docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md. Both now read from one
+    module-level constant; this guards against a future edit reintroducing
+    two copies that silently diverge."""
+
+    def test_record_to_market_context_uses_the_shared_field_list(self):
+        record = {f: 42.0 for f in _REPLAY_RECORD_FIELDS}
+        record["date"] = "2026-01-01"
+        ctx = _record_to_market_context("AAPL", record)
+        for field in _REPLAY_RECORD_FIELDS:
+            assert getattr(ctx, field) == 42.0
+
+    def test_signed_agent_scores_uses_the_shared_field_list(self):
+        seen_ctx = {}
+
+        class _CapturingAgent:
+            agent_id = "capture"
+
+            def analyze(self, ctx):
+                seen_ctx["ctx"] = ctx
+                return AgentResponse(
+                    agent_id="capture", agent_name="capture", signal=SignalType.NEUTRAL,
+                    confidence=0.5, score=5.0, reasoning="",
+                )
+
+        record = {f: 7.0 for f in _REPLAY_RECORD_FIELDS}
+        _signed_agent_scores("AAPL", record, [_CapturingAgent()])
+        for field in _REPLAY_RECORD_FIELDS:
+            assert getattr(seen_ctx["ctx"], field) == 7.0
+
+    def test_a_field_not_in_the_shared_list_is_not_populated(self):
+        record = {"insider_ownership": 99.0, "date": "2026-01-01"}
+        ctx = _record_to_market_context("AAPL", record)
+        assert ctx.insider_ownership == 0  # MarketContext default, not 99.0
 
 
 class _FakeAgent:

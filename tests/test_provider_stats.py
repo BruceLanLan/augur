@@ -48,6 +48,65 @@ class TestRecordAndSummary:
         assert "yfinance" in data
 
 
+class TestRecordBatch:
+    """record_batch() does one read-modify-write for N outcomes instead of
+    N separate read-modify-writes (see D2 review follow-up, 2026-07-16)."""
+
+    def test_batch_of_one_matches_record(self, stats_path):
+        result = provider_stats.record_batch([("yfinance", True)], path=stats_path)
+        assert result == {"yfinance": {"ok": 1, "fail": 0}}
+        assert provider_stats.summary(path=stats_path) == {"yfinance": {"ok": 1, "fail": 0}}
+
+    def test_batch_of_several_providers_in_one_call(self, stats_path):
+        result = provider_stats.record_batch(
+            [("yfinance", True), ("stooq", False), ("finnhub", True)], path=stats_path
+        )
+        assert result == {
+            "yfinance": {"ok": 1, "fail": 0},
+            "stooq": {"ok": 0, "fail": 1},
+            "finnhub": {"ok": 1, "fail": 0},
+        }
+
+    def test_batch_return_value_matches_disk_state(self, stats_path):
+        result = provider_stats.record_batch([("yfinance", True), ("yfinance", False)], path=stats_path)
+        assert result == provider_stats.summary(path=stats_path)
+
+    def test_only_one_write_for_whole_batch(self, stats_path, monkeypatch):
+        write_calls = []
+        original_write_text = type(stats_path).write_text
+
+        def _counting_write_text(self, *args, **kwargs):
+            write_calls.append(1)
+            return original_write_text(self, *args, **kwargs)
+
+        monkeypatch.setattr(type(stats_path), "write_text", _counting_write_text)
+        provider_stats.record_batch(
+            [("yfinance", True), ("stooq", False), ("finnhub", True), ("alphavantage", False)],
+            path=stats_path,
+        )
+        assert len(write_calls) == 1
+
+    def test_empty_batch_still_returns_current_summary(self, stats_path):
+        provider_stats.record("yfinance", ok=True, path=stats_path)
+        result = provider_stats.record_batch([], path=stats_path)
+        assert result == {"yfinance": {"ok": 1, "fail": 0}}
+
+    def test_batch_accumulates_with_prior_record_calls(self, stats_path):
+        provider_stats.record("yfinance", ok=True, path=stats_path)
+        result = provider_stats.record_batch([("yfinance", True)], path=stats_path)
+        assert result == {"yfinance": {"ok": 2, "fail": 0}}
+
+    def test_survives_corrupt_json_and_unwritable_path(self, stats_path):
+        stats_path.write_text("not valid json {{{", encoding="utf-8")
+        result = provider_stats.record_batch([("yfinance", True)], path=stats_path)
+        assert result == {"yfinance": {"ok": 1, "fail": 0}}
+
+    def test_write_failure_returns_empty_dict_not_raise(self, tmp_path):
+        bad_path = tmp_path / "nonexistent_dir" / "sub" / "provider_stats.json"
+        result = provider_stats.record_batch([("yfinance", True)], path=bad_path)  # must not raise
+        assert result == {}
+
+
 class TestPruning:
     def test_entries_older_than_retention_window_are_dropped(self, stats_path):
         stale_day = (datetime.now(timezone.utc) - timedelta(days=provider_stats.RETENTION_DAYS + 5)).strftime("%Y-%m-%d")

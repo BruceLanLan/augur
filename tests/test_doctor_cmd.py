@@ -123,6 +123,29 @@ class TestDataSourceConnectivity:
         assert result.exit_code == 0
         assert "Could not load data source chain" in result.output
 
+    def test_multiple_providers_recorded_in_one_batched_write(self, runner):
+        """doctor uses provider_stats.record_batch() (one file write for the
+        whole run) rather than calling record() once per provider (one
+        write each) -- see review follow-up, 2026-07-16."""
+        with patch(
+            "augur.datasources.default_providers",
+            return_value=[
+                _FakeProvider("yfinance", should_fail=False),
+                _FakeProvider("stooq", should_fail=True),
+                _FakeProvider("finnhub", should_fail=False),
+            ],
+        ):
+            with patch("augur.provider_stats.record") as mock_record, patch(
+                "augur.provider_stats.record_batch", wraps=None
+            ) as mock_record_batch:
+                mock_record_batch.side_effect = lambda outcomes, path=None: {}
+                result = runner.invoke(main, ["doctor"])
+        assert result.exit_code == 0
+        mock_record.assert_not_called()
+        mock_record_batch.assert_called_once()
+        outcomes = mock_record_batch.call_args[0][0]
+        assert set(outcomes) == {("yfinance", True), ("stooq", False), ("finnhub", True)}
+
 
 class TestProviderStatsHistory:
     """Repeated `augur doctor` runs build up a short local trend, so a dead

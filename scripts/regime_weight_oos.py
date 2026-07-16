@@ -74,34 +74,17 @@ from __future__ import annotations
 
 import sys
 from collections import Counter
+from pathlib import Path
 
 sys.path.insert(0, "src")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from augur.backtest import (  # noqa: E402
     build_date_to_regime,
     fetch_ticker_replay_records,
     compute_cross_sectional_regime_ic,
 )
-
-# 38 tickers, cross-sector: mega-cap tech, banks, energy, consumer staples,
-# healthcare, industrials. Deliberately not curated to favor any agent style.
-UNIVERSE = [
-    # Tech / growth
-    "AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "AMD", "CRM", "ORCL", "ADBE",
-    # Financials
-    "JPM", "BAC", "WFC", "GS", "MS", "C", "AXP",
-    # Energy
-    "XOM", "CVX", "COP", "SLB",
-    # Consumer staples / retail
-    "KO", "PG", "WMT", "COST", "MCD", "PEP",
-    # Healthcare
-    "JNJ", "PFE", "UNH", "MRK", "ABBV", "LLY",
-    # Industrials
-    "CAT", "BA", "HON", "GE",
-]
-
-START = "2022-01-01"
-END = "2026-06-01"
+from _replay_universe import UNIVERSE, START, END  # noqa: E402
 
 
 def main() -> None:

@@ -68,6 +68,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, "src")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from augur.backtest import (  # noqa: E402
     build_date_to_regime,
@@ -75,21 +76,7 @@ from augur.backtest import (  # noqa: E402
     compute_cross_sectional_regime_ic,
 )
 from augur.registry import AgentRegistry  # noqa: E402
-
-# Same 37-ticker cross-sector universe as regime_weight_oos.py /
-# generate_agent_correlation.py / factor_attribution.py, so this run reuses
-# their already-warm EDGAR/price caches.
-UNIVERSE = [
-    "AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "META", "AMD", "CRM", "ORCL", "ADBE",
-    "JPM", "BAC", "WFC", "GS", "MS", "C", "AXP",
-    "XOM", "CVX", "COP", "SLB",
-    "KO", "PG", "WMT", "COST", "MCD", "PEP",
-    "JNJ", "PFE", "UNH", "MRK", "ABBV", "LLY",
-    "CAT", "BA", "HON", "GE",
-]
-
-START = "2022-01-01"
-END = "2026-06-01"
+from _replay_universe import UNIVERSE, START, END  # noqa: E402
 
 OUTPUT_PATH = Path(__file__).resolve().parent.parent / "feedback" / "rolling_ic.json"
 

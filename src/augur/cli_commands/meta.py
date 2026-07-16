@@ -233,17 +233,22 @@ def doctor_cmd(offline):
     if offline:
         for p in providers:
             click.echo(f"  ⚪ {p.name:<14s} skipped (--offline)")
+        history = _provider_stats.summary()
     else:
+        outcomes = []
         for p in providers:
             try:
                 p.fetch("AAPL")
-                _provider_stats.record(p.name, ok=True)
+                outcomes.append((p.name, True))
                 click.echo(f"  ✅ {p.name:<14s} reachable")
             except Exception as e:
-                _provider_stats.record(p.name, ok=False)
+                outcomes.append((p.name, False))
                 click.echo(f"  ❌ {p.name:<14s} FAILED — {str(e)[:100]}")
+        # One read-modify-write for the whole run instead of one per
+        # provider; record_batch() returns the post-write summary directly
+        # so there's no need for a second read via summary().
+        history = _provider_stats.record_batch(outcomes) if outcomes else _provider_stats.summary()
 
-    history = _provider_stats.summary()
     if history:
         click.echo(f"\n  Last {_provider_stats.RETENTION_DAYS} days (from past `augur doctor` runs):")
         for name, counts in sorted(history.items()):
