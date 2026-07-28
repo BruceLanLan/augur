@@ -51,13 +51,13 @@
 
 **风险**：多重比较问题——70 个因子里总有几个碰巧 IC 显著，需要按行业/时间分半验证，避免"regime weights 第二季"。另外部分因子（sentiment 类）在历史重放中不可得（没有时点快照），归因只能覆盖可重放的因子子集，报告里要显式列出覆盖范围。
 
-### B3. regime 权重 2018-2020 COVID 窗口重验证
+### B3. regime 权重 2018-2020 COVID 窗口重验证 —— 已完成（2026-07-28）
 
-**为什么现在能做**：这是 v10.6.0 CHANGELOG 和 roadmap Phase D 自己留下的、写得非常具体的未做项：FY2019 年报（大型加速申报公司通常 2020 年 1-2 月报完）在时点上**可能真的赶在 COVID 崩盘（2020-02~03）之前可用**，这是 2022 窗口验证失败（FY2022 年报 filed 日期集中在 2023-03，晚于熊市本身）之后唯一还站得住的假设。`scripts/regime_weight_oos.py` 现成，只需改窗口参数并确认 EDGAR companyfacts 对 2018-2020 的覆盖。
+**结果**：真做了，两个风险点都遇到了，但结论是终局性的。EDGAR 覆盖没问题（37 票里 36 票拿到 756 条完整记录，只有 XOM 因为一个未查明的原因返回 0 条）；BEAR_HIGH_VOL 桶这次真的覆盖到 38 天、跨 2018-02～2020-11（包含 Volmageddon 和 COVID 崩盘两段真实事件），比 2022 窗口的 9 天厚实得多。但 `regime_ic`（0.1371）反而比 `flat_ic`（0.1396）略低，delta_mean=-0.0025，bootstrap CI=[-0.0123, 0.0010] 跨零。两个独立熊市窗口都测到了、都没看出提升——`_REGIME_ADJUSTMENTS` 保持禁用不需要重新考虑，这是比 2022 那次更强的负结论（那次是"测不到"，这次是"测到了、没用"）。详见 `docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md` Phase D 小节、新脚本 `scripts/regime_weight_oos_2018_2020.py`。
 
-**量级**：1 session。
+**清理选项，未采纳**：既然结论已经终局，`src/augur/consensus/regime_weights.py` 里的 `_REGIME_ADJUSTMENTS`/`apply_regime_weights`/`get_regime_multipliers` 这套永久空转的结构理论上可以删掉（`detect_regime` 仍在用，不受影响）。但这会牵连 `engine.py` 的混合逻辑、`backtest.py` 的 `compute_cross_sectional_regime_ic` 比较机制、以及 `regime_weight_oos.py`/`regime_weight_oos_2018_2020.py` 两个脚本本身——纯粹是代码整洁度收益，不改变任何实际行为（`apply_regime_weights` 对空字典已经是无操作），波及面对收益不成比例，这次没做，留给以后真需要动这块时再决定。
 
-**风险**：两个都可能一试就破。(1) EDGAR companyfacts 对 2018 年的标签覆盖可能不如 2022+（XBRL 标签历史演变）；(2) 即使覆盖够，结论可能仍是"打平"——但那也是终局性结论：两个独立熊市窗口都打平，regime multipliers 这条路就可以永久关闭，删掉 `regime_weights.py` 里的空壳。做这件事的正确预期是"买一个终局结论"，不是"救活 regime 权重"。
+**顺带发现**：`fetch_ticker_replay_records` 的 `period` 默认值 `"5y"` 是从脚本运行当天往回算，不是从请求窗口的 `end` 往回算——第一次跑 2018-2020 窗口时因为用了默认值静默返回全零记录，改成 `period="max"` 才修好，已经补进函数 docstring。
 
 ### B4. 概率校准的评估框架先行
 

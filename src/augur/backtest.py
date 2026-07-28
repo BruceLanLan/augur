@@ -747,6 +747,15 @@ def fetch_ticker_replay_records(
     fundamentals, or without a realized 20-day forward return yet, are
     dropped (not zero-filled) -- see ``fetch_edgar_fundamentals`` and the
     realized-return note below.
+
+    ``period`` is a yfinance lookback window measured from *today* (the
+    day this function actually runs), not from ``end`` -- found the hard
+    way running scripts/regime_weight_oos_2018_2020.py (2026-07-28): the
+    default "5y" silently returned zero price history and therefore zero
+    records for every ticker when ``end`` was 2020-12-31, because 5 years
+    back from a 2026 run date never reaches 2020. For any ``end`` more
+    than ``period`` in the past, pass a longer ``period`` (e.g. "max") or
+    this function will quietly produce empty results with no error.
     """
     from augur.data import fetch_history, calculate_technicals
     from augur.consensus.edgar_fundamentals import fetch_edgar_fundamentals
