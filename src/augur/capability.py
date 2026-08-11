@@ -20,7 +20,7 @@ import jsonschema
 # ---------------------------------------------------------------------------
 # Name format: kebab.case dotted segments, each segment [a-z][a-z0-9-]*
 # ---------------------------------------------------------------------------
-_CAP_NAME_RE = re.compile(r"^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$")
+_CAP_NAME_RE = re.compile(r"^[a-z][a-z0-9_-]*(\.[a-z][a-z0-9_-]*)*$")
 
 
 # ---------------------------------------------------------------------------
@@ -145,6 +145,13 @@ def get_capability_registry() -> CapabilityRegistry:
             _registry = CapabilityRegistry()
             _register_builtin_capabilities(_registry)
         return _registry
+
+
+def reset_capability_registry() -> None:
+    """Reset the singleton (for test isolation)."""
+    global _registry
+    with _registry_lock:
+        _registry = None
 
 
 # ---------------------------------------------------------------------------

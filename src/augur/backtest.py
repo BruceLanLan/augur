@@ -795,6 +795,11 @@ def fetch_ticker_replay_records(
         }
         for k, v in pit.items():
             record[k] = v
+        # F0.3: insider_ownership / institutional_ownership intentionally NOT
+        # added to replay records — no free historical time series exists
+        # for ownership %. _record_to_market_context marks them "missing"
+        # and MarketContext defaults them to None (not 0). Personas guard
+        # with ``is not None`` and abstain/renormalize on missing ownership.
         record["actual_return_20d"] = (prices[i + 20]["close"] / day["close"]) - 1
         records.append(record)
 
@@ -804,9 +809,13 @@ def fetch_ticker_replay_records(
 # Fields fetch_ticker_replay_records() records can populate onto a
 # MarketContext for historical replay. Shared by _signed_agent_scores and
 # _record_to_market_context so there is exactly one place to update when
-# adding a field -- see _record_to_market_context's docstring for the real
-# bug this exact kind of two-copies drift already caused once
-# (insider_ownership/institutional_ownership never being added here).
+# adding a field.
+#
+# F0.3: insider_ownership/institutional_ownership intentionally NOT in this
+# list — they default to None (not 0) via MarketContext, and
+# _record_to_market_context marks them "missing" in field_availability.
+# Personas now guard with ``is not None`` and abstain/renormalize on missing
+# ownership rather than silently treating missing as 0.
 _REPLAY_RECORD_FIELDS = (
     "price", "pe", "pb", "roe", "gross_margins", "revenue_growth",
     "debt_ratio", "fcf", "market_cap", "operating_margins",
@@ -1058,39 +1067,39 @@ def _record_to_market_context(ticker: str, record: Dict):
     documented below to go unnoticed, so the list itself is a single source
     of truth even though the surrounding function bodies stay separate.
 
-    Known gap (found via a real factor_attribution.py run, 2026-07-14):
-    ``insider_ownership`` and ``institutional_ownership`` are never in this
-    field list, so every MarketContext built here has both at the
-    MarketContext dataclass default (0) -- there is no free historical
-    time series for ownership *percentage* the way there is for EDGAR
-    fundamentals (this is a different EDGAR gap than
-    insider_buying_signal/institutional_flow_signal, which track *trading
-    activity*, not ownership %, and are separately not wired into any
-    persona's factors -- see scripts/factor_attribution.py's docstring).
-    Effect: every persona factor that branches on these two fields (11
-    personas as of this writing: aschenbrenner, buffett, dan_bin, dayu,
-    duan_yongping, fisher, li_lu, marks, munger, thiel, zhang_lei) silently
-    collapses to whatever it reduces to with both pinned at 0 in every
-    backtest-replay-based analysis (this function, _signed_agent_scores,
-    and therefore compute_cross_sectional_regime_ic,
-    compute_factor_cross_sectional_ic, regime_weight_oos.py,
-    generate_agent_correlation.py, and generate_rolling_ic.py all inherit
-    this). Concretely: li_lu's "management_quality" and zhang_lei's
-    "management_excellence" both reduce to pure monotonic step functions of
-    roe alone, which is why factor_attribution.py's 2026-07-14 full run
-    found them bit-identical in rank-IC (Spearman only depends on rank, and
-    monotonic transforms of the same underlying variable rank identically)
-    -- a real, structural artifact of this gap, not independent validation
-    of two different "management quality" signals. See
-    docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md for the full writeup.
+    F0.3 fix: ``insider_ownership`` and ``institutional_ownership`` are now
+    explicitly ``None`` (not 0) when replay data lacks them. MarketContext
+    defaults changed from 0 to None; personas guard with ``is not None``
+    and abstain/renormalize on missing ownership. The ``field_availability``
+    dict records "replay" for fields populated from records and "missing"
+    for ownership fields with no historical source.
     """
     from augur.personas.base import MarketContext
 
-    ctx_kwargs = {"ticker": ticker.upper()}
+    ctx_kwargs: Dict[str, Any] = {"ticker": ticker.upper()}
     for k in _REPLAY_RECORD_FIELDS:
         if k in record:
             ctx_kwargs[k] = record[k]
-    return MarketContext(**ctx_kwargs)
+
+    # F0.3: ownership fields are explicitly None, not 0
+    ctx_kwargs.setdefault("institutional_ownership", None)
+    ctx_kwargs.setdefault("insider_ownership", None)
+
+    ctx = MarketContext(**ctx_kwargs)
+
+    # F0.3: set field_availability for replay data
+    availability: Dict[str, str] = {}
+    for k in _REPLAY_RECORD_FIELDS:
+        if k in record:
+            availability[k] = "replay"
+    availability["institutional_ownership"] = "missing"
+    availability["insider_ownership"] = "missing"
+    ctx.field_availability = availability
+
+    # F0.3: as_of_date = record date
+    ctx.as_of_date = record.get("date", None)
+
+    return ctx
 
 
 def compute_factor_cross_sectional_ic(

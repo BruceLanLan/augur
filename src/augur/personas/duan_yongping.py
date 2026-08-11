@@ -86,11 +86,12 @@ class DuanYongpingAgent(BaseAgent):
         # 3. 管理层本分/诚信 (0-10)
         # 段永平高度重视：管理层是否在做正确的事
         mgmt_score = 5.0
-        if context.insider_ownership > 10:
-            mgmt_score += 2.0  # 内部人持股高 = 利益一致
-        if context.insider_ownership > 25:
-            mgmt_score += 1.0
-        if context.institutional_ownership > 50:
+        if context.insider_ownership is not None:
+            if context.insider_ownership > 10:
+                mgmt_score += 2.0  # 内部人持股高 = 利益一致
+            if context.insider_ownership > 25:
+                mgmt_score += 1.0
+        if context.institutional_ownership is not None and context.institutional_ownership > 50:
             mgmt_score += 1.5  # 机构认可
         # FCF转化率：衡量管理层资本配置能力
         if context.fcf > 0 and context.revenue > 0:
@@ -158,7 +159,10 @@ class DuanYongpingAgent(BaseAgent):
         if factors["moat_quality"] >= 7:
             key_findings.append(f"护城河强：毛利率{context.gross_margins*100:.0f}%，ROE{context.roe*100:.0f}%")
         if factors["management_integrity"] >= 7:
-            key_findings.append(f"管理层本分：内部人持股{context.insider_ownership:.1f}%")
+            if context.insider_ownership is not None:
+                key_findings.append(f"管理层本分：内部人持股{context.insider_ownership:.1f}%")
+            else:
+                key_findings.append("管理层本分（内部人持股数据缺失）")
         if context.fcf < 0:
             risks.append("负FCF：商业模式尚未证明可持续")
         if context.debt_ratio > 0.60:
@@ -205,8 +209,8 @@ class DuanYongpingAgent(BaseAgent):
 - ROE: {roe_pct:.1f}% {'✓' if context.roe > 0.15 else '✗'}
 
 **管理层本分: {factors['management_integrity']:.1f}/10**
-- 内部人持股: {context.insider_ownership:.1f}%
-- 机构持股: {context.institutional_ownership:.1f}%
+- 内部人持股: {f'{context.insider_ownership:.1f}%' if context.insider_ownership is not None else 'N/A'}
+- 机构持股: {f'{context.institutional_ownership:.1f}%' if context.institutional_ownership is not None else 'N/A'}
 
 **长期持续性: {factors['long_term_durability']:.1f}/10**
 - 营收增速: {context.revenue_growth*100:.1f}%

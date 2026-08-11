@@ -16,14 +16,12 @@ from typing import Any, Dict, List
 
 import yaml
 
-from augur.skill_spec import (
+from augur.schemas.skill_spec import (
     SkillSpec,
     SkillPermissions,
     EvidencePolicy,
     WorkflowStep,
     SkillEvals,
-    EvalFixture,
-    EvalGate,
     validate_skill_spec,
 )
 
@@ -107,20 +105,13 @@ def load_skill(path: Path) -> SkillSpec:
             "\n".join(f"  - {v}" for v in violations)
         )
 
-    # 2. Map YAML field names → SkillSpec field names
-    spec_dict = copy.deepcopy(raw)
-
-    if "compatibility" in spec_dict:
-        spec_dict["compatibility"] = _map_compatibility(spec_dict["compatibility"])
-
-    if "evidence_policy" in spec_dict:
-        spec_dict["evidence_policy"] = _map_evidence_policy(spec_dict["evidence_policy"])
-
-    if "evals" in spec_dict:
-        spec_dict["evals"] = _map_evals(spec_dict["evals"])
-
-    # 3. Build SkillSpec
-    return SkillSpec.from_dict(spec_dict)
+    # 2. Build SkillSpec — YAML fields map directly (no field renaming needed)
+    try:
+        return SkillSpec.model_validate(raw)
+    except Exception as e:
+        raise ValueError(
+            f"Skill {raw.get('id', path.name)!r} model validation failed: {e}"
+        ) from e
 
 
 def load_builtin_skills() -> List[SkillSpec]:

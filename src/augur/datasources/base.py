@@ -16,9 +16,11 @@ data.py 通过 provider 链按优先级依次尝试，实现多数据源 fallbac
 
 from __future__ import annotations
 
+import hashlib
 import math
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from datetime import datetime, timezone
+from typing import Any, Dict, List, Optional
 
 
 class DataProviderError(Exception):
@@ -85,6 +87,74 @@ class DataProvider(ABC):
             DataProviderError: 当该数据源无法提供有效数据时（触发 fallback）。
         """
         raise NotImplementedError
+
+    # ------------------------------------------------------------------
+    # EvidenceItem helpers (F0.3)
+    # ------------------------------------------------------------------
+
+    def to_evidence_item(
+        self,
+        field: str,
+        value: Any,
+        ticker: str,
+        *,
+        effective_at: Optional[datetime] = None,
+        available_at: Optional[datetime] = None,
+    ) -> Optional[Dict[str, Any]]:
+        """Build a minimal EvidenceItem dict for one MarketContext field.
+
+        Returns None when the value is None/missing (caller should mark
+        ``coverage="missing"`` separately). The returned dict is a *plain*
+        dict (not a Pydantic model) so it can be attached to MarketContext
+        without importing the schemas package in every provider.
+
+        Args:
+            field: MarketContext field name (e.g. "pe", "institutional_ownership").
+            value: The field value (None → return None).
+            ticker: Normalized ticker symbol.
+            effective_at: When the data became effective (e.g. fiscal quarter end).
+            available_at: When the data became publicly available (e.g. filing date).
+        """
+        if value is None:
+            return None
+
+        retrieved_at = datetime.now(timezone.utc)
+        content_str = f"{self.name}:{ticker}:{field}:{value}"
+        content_hash = hashlib.sha256(content_str.encode()).hexdigest()
+        from augur.schemas.evidence import generate_evidence_id
+
+        return {
+            "evidence_id": generate_evidence_id(self.name, content_hash),
+            "source": self.name,
+            "source_locator": f"provider://{self.name}/{ticker}",
+            "content_hash": content_hash,
+            "instrument": ticker,
+            "metric": field,
+            "value": float(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else None,
+            "unit": None,
+            "currency": None,
+            "effective_at": effective_at,
+            "available_at": available_at,
+            "retrieved_at": retrieved_at,
+            "transform_version": None,
+            "schema_version": "1.0",
+            "code_version": None,
+            "coverage": 1.0,
+            "missing": False,
+            "degraded": False,
+            "license": None,
+            "redistribution_allowed": True,
+            "metadata": {},
+        }
+
+    def coverage_report(self) -> Dict[str, str]:
+        """Return per-field coverage status for this provider.
+
+        Default implementation reports "unknown" for every field the
+        provider *could* supply. Subclasses should override to report
+        "live" for fields they actually supply.
+        """
+        return {}  # pragma: no cover — overridden by subclasses
 
     def __repr__(self) -> str:  # pragma: no cover - 调试辅助
         return f"<DataProvider {self.name}>"

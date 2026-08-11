@@ -234,6 +234,25 @@ def _market_context_field_names() -> set:
     return {f.name for f in _dataclass_fields(MarketContext)}
 
 
+def _is_market_context_default(field_name: str, value: Any) -> bool:
+    """Check whether a field value matches MarketContext's declared default.
+
+    Returns True for default-constructed values (0, 0.0, "", empty list/dict)
+    so we can distinguish "provider didn't supply" from "intentionally zero".
+    """
+    if value is None:
+        return False  # None means explicitly missing, not default
+    if isinstance(value, bool):
+        return not value
+    if isinstance(value, (int, float)):
+        return value == 0
+    if isinstance(value, str):
+        return value == ""
+    if isinstance(value, (list, dict)):
+        return len(value) == 0
+    return False
+
+
 def _build_context_from_providers(ticker: str) -> MarketContext:
     """按 provider 链顺序尝试获取数据并构建 MarketContext。
 
@@ -242,9 +261,16 @@ def _build_context_from_providers(ticker: str) -> MarketContext:
     - 返回的 context 上附带动态属性 ``data_source`` 标记来源（不修改 MarketContext 定义）。
     - 失败时同时附带 ``data_error`` 字段，给出人类可读的具体原因（区分网络错误、
       数据源返回空、未知 ticker 等场景），避免调用方只能靠 ``data_source=="none"`` 推断。
+    - F0.3: 为每个有值的字段生成最小 EvidenceItem，标记缺失字段的 coverage。
     """
+    from datetime import datetime as dt_module
+
     valid_fields = _market_context_field_names()
     upper = ticker.upper()
+
+    # Fields that providers typically cannot supply but MarketContext declares.
+    # These are marked ``missing`` if the provider didn't return them.
+    _OWNERSHIP_FIELDS = frozenset({"institutional_ownership", "insider_ownership"})
 
     errors: List[str] = []
 
@@ -268,6 +294,78 @@ def _build_context_from_providers(ticker: str) -> MarketContext:
         kwargs = {k: v for k, v in raw.items() if k in valid_fields and k != "ticker"}
         ctx = MarketContext(ticker=upper, **kwargs)
         setattr(ctx, "data_source", source)
+
+        # ---- F0.3: EvidenceItem generation & missingness ----
+        evidence_items: list = []
+        availability: Dict[str, str] = {}
+        now_iso = dt_module.now().strftime("%Y-%m-%d")
+
+        # Use the provider's own to_evidence_item if available
+        to_ev = getattr(provider, "to_evidence_item", None)
+
+        for field_name in valid_fields:
+            if field_name == "ticker":
+                continue
+            val = getattr(ctx, field_name, None)
+            is_ownership = field_name in _OWNERSHIP_FIELDS
+            is_default = _is_market_context_default(field_name, val)
+
+            if val is not None and not is_default:
+                availability[field_name] = "live"
+                if to_ev is not None:
+                    ev = to_ev(field_name, val, upper,
+                               available_at=dt_module.now())
+                    if ev is not None:
+                        evidence_items.append(ev)
+            elif is_ownership:
+                # Ownership fields: explicitly mark as missing (not default-zero)
+                availability[field_name] = "missing"
+                if to_ev is not None:
+                    ev = to_ev(field_name, None, upper)
+                    # to_evidence_item returns None for None values;
+                    # create a minimal missing marker manually
+                    import hashlib
+                    from augur.schemas.evidence import generate_evidence_id
+                    retrieved_at = dt_module.now()
+                    content_str = f"{name}:{upper}:{field_name}:missing"
+                    content_hash = hashlib.sha256(content_str.encode()).hexdigest()
+                    evidence_items.append({
+                        "evidence_id": generate_evidence_id(name, content_hash),
+                        "source": name,
+                        "source_locator": f"provider://{name}/{upper}",
+                        "content_hash": content_hash,
+                        "instrument": upper,
+                        "metric": field_name,
+                        "value": None,
+                        "unit": None,
+                        "currency": None,
+                        "effective_at": None,
+                        "available_at": retrieved_at,
+                        "retrieved_at": retrieved_at,
+                        "transform_version": None,
+                        "schema_version": "1.0",
+                        "code_version": None,
+                        "coverage": 0.0,
+                        "missing": True,
+                        "degraded": False,
+                        "license": None,
+                        "redistribution_allowed": True,
+                        "metadata": {"reason": "provider does not supply this field"},
+                    })
+            else:
+                # Non-ownership default: mark unknown (provider may have it but it's zero/default)
+                availability[field_name] = "live"  # default-zero is a real value for most fields
+                if val is not None and val != 0 and to_ev is not None:
+                    ev = to_ev(field_name, val, upper,
+                               available_at=dt_module.now())
+                    if ev is not None:
+                        evidence_items.append(ev)
+
+        ctx.field_availability = availability
+        ctx.as_of_date = now_iso
+        ctx.evidence_items = evidence_items
+        # ---- end F0.3 ----
+
         return ctx
 
     # 所有数据源均失败：返回空 context，但带来源标记与具体错误，便于下游识别“无数据”状态

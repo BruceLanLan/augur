@@ -142,3 +142,19 @@ def assert_hermetic_data_dir():
         f"get_data_dir() returned {actual!r}, expected {expected!r} "
         f"(AUGUR_DATA_DIR). Test isolation is broken."
     )
+
+
+@pytest.fixture(autouse=True)
+def reset_capability_registry_singleton():
+    """Reset the CapabilityRegistry singleton before each test."""
+    try:
+        from augur.capability import reset_capability_registry
+        reset_capability_registry()
+    except Exception:
+        pass
+    yield
+    try:
+        from augur.capability import reset_capability_registry
+        reset_capability_registry()
+    except Exception:
+        pass

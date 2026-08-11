@@ -29,16 +29,19 @@ from pydantic import BaseModel, Field, model_validator
 # Forbidden-pattern constants (searched case-insensitively in the raw spec)
 # ---------------------------------------------------------------------------
 
-_FORBIDDEN_KEYS: tuple[str, ...] = (
-    "module_path",
+_FORBIDDEN_KEYS_EXACT: tuple[str, ...] = (
     "import",
     "shell",
     "exec",
     "eval",
+    "compile",
+)
+
+_FORBIDDEN_KEYS_CONTAINS: tuple[str, ...] = (
+    "module_path",
     "subprocess",
     "os.system",
     "__import__",
-    "compile",
 )
 
 # Keys whose *values* must not look like file-system paths.
@@ -157,13 +160,13 @@ class EvalGate(BaseModel):
 class SkillEvals(BaseModel):
     """Evaluation configuration for a skill.
 
-    Attributes:
-        fixtures: Evaluation fixtures.
-        gates: Quality gates.
+    Accepts both string-based and structured forms:
+      - fixtures: ``["earnings-prep-v1"]`` or ``[{"input":..., "expected_output":...}]``
+      - gates: ``["citation_validity"]`` or ``[{"metric":..., "threshold":...}]``
     """
 
-    fixtures: List[EvalFixture] = Field(default_factory=list)
-    gates: List[EvalGate] = Field(default_factory=list)
+    fixtures: List[Any] = Field(default_factory=list)
+    gates: List[Any] = Field(default_factory=list)
 
 
 # ---------------------------------------------------------------------------
@@ -214,9 +217,9 @@ class SkillSpec(BaseModel):
         None,
         description="License identifier (SPDX or custom)",
     )
-    compatibility: Dict[str, str] = Field(
-        default_factory=dict,
-        description="Compatibility constraints (e.g. {'augur': '>=10.15'})",
+    compatibility: str = Field(
+        default="",
+        description="Compatibility constraints (e.g. '>=11,<12')",
     )
 
     # ---- I/O schemas ----
@@ -283,9 +286,14 @@ def _collect_forbidden_keys(obj: Any, path: str, violations: List[str]) -> None:
     if isinstance(obj, dict):
         for key, value in obj.items():
             key_lower = key.lower()
-            for forbidden in _FORBIDDEN_KEYS:
-                # Match whole-key or contains (e.g. "shell_cmd" also flags "shell")
-                if forbidden in key_lower or key_lower == forbidden:
+            for forbidden in _FORBIDDEN_KEYS_EXACT:
+                if key_lower == forbidden:
+                    violations.append(
+                        f"Forbidden key {key!r} at {path}: "
+                        f"SkillSpec v1 prohibits '{forbidden}'"
+                    )
+            for forbidden in _FORBIDDEN_KEYS_CONTAINS:
+                if forbidden in key_lower:
                     violations.append(
                         f"Forbidden key {key!r} at {path}: "
                         f"SkillSpec v1 prohibits '{forbidden}'"

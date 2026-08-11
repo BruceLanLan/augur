@@ -182,7 +182,7 @@ def test_skill_spec_round_trip():
         version="1.0.0",
         description="Prepare earnings data for a ticker",
         inputs_schema={"ticker": {"type": "string"}},
-        compatibility={"augur": ">=10.15"},
+        compatibility=">=10.15",
     )
     reloaded = SkillSpec.model_validate(original.model_dump())
 

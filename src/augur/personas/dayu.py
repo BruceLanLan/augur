@@ -194,18 +194,20 @@ class DayuAgent(BaseAgent):
         score = 5.0
 
         # 机构关注度 (低=信息差大)
-        inst_own = ctx.institutional_ownership or 0
-        if inst_own < 15:
-            score += 2  # 低机构覆盖 = 信息差机会
-        elif inst_own < 30:
-            score += 1
+        if ctx.institutional_ownership is not None:
+            inst_own = ctx.institutional_ownership
+            if inst_own < 15:
+                score += 2  # 低机构覆盖 = 信息差机会
+            elif inst_own < 30:
+                score += 1
 
         # 内部人持有 (高=信心)
-        insider = ctx.insider_ownership or 0
-        if insider > 30:
-            score += 2
-        elif insider > 15:
-            score += 1
+        if ctx.insider_ownership is not None:
+            insider = ctx.insider_ownership
+            if insider > 30:
+                score += 2
+            elif insider > 15:
+                score += 1
 
         # 小市值弹性
         mc = ctx.market_cap or 0
@@ -415,7 +417,7 @@ class DayuAgent(BaseAgent):
 
 **信息优势: {factors['information_edge']:.1f}/10**
 - PE: {pe_str} | 营收增速: {f'{ctx.revenue_growth*100:.0f}%' if ctx.revenue_growth else 'N/A'}
-- 机构持股: {f'{ctx.institutional_ownership:.1f}%' if ctx.institutional_ownership else 'N/A'}
+- 机构持股: {f'{ctx.institutional_ownership:.1f}%' if ctx.institutional_ownership is not None else 'N/A'}
 
 **仓位风险: {factors['risk_capital']:.1f}/10**
 - 20日波动: {f'{ctx.volatility_20d:.1f}%' if ctx.volatility_20d else 'N/A'}

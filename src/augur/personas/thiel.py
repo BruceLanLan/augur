@@ -138,12 +138,13 @@ class ThielAgent(BaseAgent):
         founder_score = 5
 
         # 高内部人持有 = 创始人/管理层下注
-        if context.insider_ownership > 30:
-            founder_score += 3  # 创始人全力下注
-        elif context.insider_ownership > 15:
-            founder_score += 2
-        elif context.insider_ownership > 5:
-            founder_score += 1
+        if context.insider_ownership is not None:
+            if context.insider_ownership > 30:
+                founder_score += 3  # 创始人全力下注
+            elif context.insider_ownership > 15:
+                founder_score += 2
+            elif context.insider_ownership > 5:
+                founder_score += 1
 
         # 高毛利率+高增长 = 创始人有产品vision
         if context.gross_margins > 0.60 and context.revenue_growth > 0.20:
@@ -218,7 +219,7 @@ class ThielAgent(BaseAgent):
             long_score += 1
 
         # 高内部人持有 = 长期愿景
-        if context.insider_ownership > 20:
+        if context.insider_ownership is not None and context.insider_ownership > 20:
             long_score += 1
 
         # 大市值 = 已经验证了长期商业模式
@@ -284,11 +285,11 @@ class ThielAgent(BaseAgent):
 **逆向时机: {factors['contrarian_timing']}/10** (权重{self.scoring_weights['contrarian_timing']:.0%})
 - PE: {context.pe:.1f} {'📉 被忽略' if context.pe < 20 else '📈 过热' if context.pe > 50 else ''}
 - PS: {context.ps:.1f}
-- 机构持仓: {context.institutional_ownership:.1f}%
-- 内部人持仓: {context.insider_ownership:.1f}%
+- 机构持仓: {f'{context.institutional_ownership:.1f}%' if context.institutional_ownership is not None else 'N/A'}
+- 内部人持仓: {f'{context.insider_ownership:.1f}%' if context.insider_ownership is not None else 'N/A'}
 
 **创始人质量: {factors['founder_quality']}/10** (权重{self.scoring_weights['founder_quality']:.0%})
-- 内部人持仓: {context.insider_ownership:.1f}% {'👨‍💼 强力下注' if context.insider_ownership > 20 else ''}
+- 内部人持仓: {f'{context.insider_ownership:.1f}%' if context.insider_ownership is not None else 'N/A'} {'👨‍💼 强力下注' if context.insider_ownership is not None and context.insider_ownership > 20 else ''}
 - 毛利率+增长: {context.gross_margins*100:.1f}% / {context.revenue_growth*100:.1f}%
 - 负债率: {context.debt_ratio*100:.1f}%
 

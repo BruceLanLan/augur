@@ -55,7 +55,7 @@ class TestEarningsPrep:
         assert spec.license == "Apache-2.0"
 
     def test_compatibility(self, spec):
-        assert spec.compatibility == {"augur": ">=11,<12"}
+        assert spec.compatibility == ">=11,<12"
 
     def test_inputs_schema(self, spec):
         assert spec.inputs_schema["required"] == ["ticker", "event_id", "as_of"]
@@ -94,15 +94,15 @@ class TestEarningsPrep:
         ]
 
     def test_evals(self, spec):
-        fixture_names = [f.input.get("fixture_id") for f in spec.evals.fixtures]
-        gate_names = [g.metric for g in spec.evals.gates]
+        fixture_names = [f if isinstance(f, str) else f.get("fixture_id", "") for f in spec.evals.fixtures]
+        gate_names = [g if isinstance(g, str) else g.get("metric", "") for g in spec.evals.gates]
         assert fixture_names == ["earnings-prep-v1"]
         assert gate_names == ["citation_validity", "no_lookahead", "missingness_visible"]
 
     def test_round_trip(self, spec):
-        """to_dict → from_dict → equals original"""
-        d = spec.to_dict()
-        rehydrated = SkillSpec.from_dict(d)
+        """model_dump → model_validate → equals original"""
+        d = spec.model_dump()
+        rehydrated = SkillSpec.model_validate(d)
         assert rehydrated.id == spec.id
         assert rehydrated.description == spec.description
         assert rehydrated.required_capabilities == spec.required_capabilities
@@ -161,14 +161,14 @@ class TestFilingDelta:
         ]
 
     def test_evals(self, spec):
-        fixture_names = [f.input.get("fixture_id") for f in spec.evals.fixtures]
-        gate_names = [g.metric for g in spec.evals.gates]
+        fixture_names = [f if isinstance(f, str) else f.get("fixture_id", "") for f in spec.evals.fixtures]
+        gate_names = [g if isinstance(g, str) else g.get("metric", "") for g in spec.evals.gates]
         assert fixture_names == ["filing-delta-v1"]
         assert gate_names == ["citation_validity", "no_lookahead"]
 
     def test_round_trip(self, spec):
-        d = spec.to_dict()
-        rehydrated = SkillSpec.from_dict(d)
+        d = spec.model_dump()
+        rehydrated = SkillSpec.model_validate(d)
         assert rehydrated.id == spec.id
         assert rehydrated.required_capabilities == spec.required_capabilities
         assert len(rehydrated.workflow) == len(spec.workflow)
