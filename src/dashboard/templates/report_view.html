@@ -333,6 +333,14 @@
 .report-verdict-strip .verdict-dot.dot-sell { background: var(--signal-sell); }
 .report-verdict-strip .verdict-dot.dot-neutral { background: var(--signal-neutral); }
 
+/* Provenance source badges */
+.badge-source { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; }
+.badge-live { background: rgba(0,200,83,0.15); color: var(--signal-buy); border: 1px solid rgba(0,200,83,0.4); }
+.badge-replay { background: rgba(33,150,243,0.15); color: #42a5f5; border: 1px solid rgba(33,150,243,0.4); }
+.badge-demo { background: rgba(255,152,0,0.15); color: var(--accent-orange); border: 1px solid rgba(255,152,0,0.4); }
+.badge-fresh { background: rgba(0,200,83,0.12); color: var(--signal-buy); border: 1px solid rgba(0,200,83,0.3); }
+.badge-stale { background: rgba(255,214,0,0.12); color: var(--signal-neutral); border: 1px solid rgba(255,214,0,0.35); }
+
 /* Markdown report panels — parchment in light, terminal card in dark */
 .report-section-body .md-report,
 .report-md-panel {
@@ -417,6 +425,12 @@ html.light .report-verdict-strip [style*="text-primary"] {
                 <button type="button" class="btn btn-sm btn-ghost" onclick="expandAllReportSections()" data-i18n="report-expand-all">展开全部</button>
                 <button type="button" class="btn btn-sm btn-ghost" onclick="collapseAllReportSections()" data-i18n="report-collapse-all">收起全部</button>
             </div>
+        </div>
+
+        <!-- Provenance Badges -->
+        <div class="report-verdict-strip" id="rp-provenance-strip" style="display:none;">
+            <span style="font-weight:600;color:var(--text-primary);">Source:</span>
+            <span class="verdict-item"><span id="rp-source-badge" class="badge"></span></span>
         </div>
 
         <!-- Verdict Strip -->
@@ -667,6 +681,19 @@ function renderReportPage(data) {
 
     // Executive summary
     renderExecSummary(score, signal, confidence);
+
+    // Provenance badges
+    if (data.provenance) {
+        var provStrip = document.getElementById('rp-provenance-strip');
+        var source = data.provenance.data_source || 'unknown';
+        var freshness = data.provenance.freshness || 'unknown';
+        var sourceLabel = source.charAt(0).toUpperCase() + source.slice(1);
+        var freshnessLabel = freshness.charAt(0).toUpperCase() + freshness.slice(1);
+        provStrip.style.display = 'flex';
+        document.getElementById('rp-source-badge').innerHTML =
+            '<span class="badge-source badge-' + source + '">' + sourceLabel + '</span> ' +
+            '<span class="badge-source badge-' + freshness + '">' + freshnessLabel + '</span>';
+    }
 
     // Voting table (parse from markdown)
     renderVotingTable();

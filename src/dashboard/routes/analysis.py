@@ -21,6 +21,40 @@ from dashboard.deps import _check_rate_limit, _get_rules_engine, get_coordinator
 router = APIRouter()
 
 
+def _build_api_provenance(
+    ticker: str,
+    data_source: str,
+    personas_enabled: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    """Build a lightweight provenance dict for REST API responses."""
+    from augur import __version__
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    source_map = {
+        "yfinance": "live",
+        "finnhub": "live",
+        "alphavantage": "live",
+        "manual": "demo",
+        "fallback": "demo",
+        "cached": "replay",
+    }
+
+    return {
+        "analysis_as_of": now,
+        "data_source": source_map.get(data_source, data_source),
+        "freshness": "stale" if data_source in ("fallback", "cached") else "fresh",
+        "schema_version": __version__,
+        "code_version": __version__,
+        "personas_enabled": personas_enabled or [],
+        "personas_skipped": {},
+        "missing_fields": {},
+        "degraded_fields": {},
+        "calibration_status": "raw",
+    }
+
+
 # ============ Scanner API ============
 
 class ScannerRunBody(BaseModel):
@@ -246,6 +280,17 @@ def analyze_ticker(
     except Exception:
         pass
 
+    # Attach provenance metadata
+    try:
+        personas = get_enabled_personas() or None
+        response["provenance"] = _build_api_provenance(
+            ticker,
+            data_source,
+            personas_enabled=personas,
+        )
+    except Exception:
+        response["provenance"] = None
+
     return response
 
 
@@ -341,12 +386,23 @@ def report_ticker(
 
     report = generate_report(ticker.upper(), ctx, agent_responses, consensus_resp)
 
+    try:
+        personas = get_enabled_personas() or None
+        provenance = _build_api_provenance(
+            ticker,
+            data_source,
+            personas_enabled=personas,
+        )
+    except Exception:
+        provenance = None
+
     return {
         "status": "ok",
         "ticker": ticker.upper(),
         "report": report,
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "data_source": data_source,
+        "provenance": provenance,
     }
 
 

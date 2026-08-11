@@ -84,6 +84,24 @@ def _run_workflow_tool(
         summary = result.get("summary", "")
         ran = ", ".join(result.get("steps", []))
         header = f"Workflow complete ({ran}) for {ticker.upper()}\n\n"
+
+        # Append provenance metadata
+        provenance = result.get("provenance")
+        if provenance and isinstance(provenance, dict):
+            prov_lines = [
+                "\n── Provenance ──",
+                f"  Analysis as-of: {provenance.get('analysis_as_of', 'N/A')}",
+                f"  Data source:    {provenance.get('data_source', 'unknown')}",
+                f"  Freshness:      {provenance.get('freshness', 'unknown')}",
+                f"  Schema version: {provenance.get('schema_version', 'N/A')}",
+            ]
+            if provenance.get('personas_enabled'):
+                prov_lines.append(f"  Personas enabled: {', '.join(provenance['personas_enabled'])}")
+            if provenance.get('degraded_fields'):
+                df = provenance['degraded_fields']
+                prov_lines.append(f"  Degraded fields: {', '.join(f'{k}: {v}' for k, v in df.items())}")
+            header += "\n".join(prov_lines) + "\n"
+
         return header + summary if summary else header + str(result)
     except ValueError as e:
         return f"Error: {e}\nValid steps: {', '.join(VALID_STEPS)}"
@@ -319,10 +337,14 @@ def create_server():
         if err:
             return err
 
+        has_metrics = any([pe, pb, roe, gross_margins, revenue_growth, market_cap, price])
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
                              fcf, market_cap, price, institutional_ownership, insider_ownership,
                              rsi, sector=sector, industry=industry)
         registry = AgentRegistry()
+
+        source = "demo" if has_metrics else "live"
+        freshness = "fresh" if not has_metrics else "unknown"
 
         if persona:
             agent = registry.get(persona)
@@ -334,6 +356,7 @@ def create_server():
                 f"Signal: {result.signal.value.upper()}",
                 f"Score: {result.score:.1f}/10",
                 f"Confidence: {result.confidence:.0%}",
+                f"Source: {source}  Freshness: {freshness}",
             ]
             if result.key_findings:
                 lines.append("Key Findings:")
@@ -346,7 +369,7 @@ def create_server():
             lines.append(f"\nReasoning:\n{result.reasoning}")
             return "\n".join(lines)
         else:
-            lines = [f"Analysis of {ticker.upper()} with {len(registry.get_all())} agents:\n"]
+            lines = [f"Analysis of {ticker.upper()} with {len(registry.get_all())} agents (source: {source}, freshness: {freshness}):\n"]
             for agent in registry.get_all():
                 try:
                     result = agent.analyze(ctx)

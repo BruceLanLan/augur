@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 """Consensus enhancement modules (industry/regime weighting, calibration)."""
 
+from augur.consensus.calibration import CalibrationStatus, MIN_SAMPLES, determine_status
 from augur.consensus.industry_matrix import classify_industry, detect_industry, get_agent_weights
 from augur.consensus.macro_features import fetch_macro_features
+from augur.consensus.oos_harness import (
+    MIN_SAMPLES_FOR_CALIBRATION,
+    OOSResult,
+    evaluate_from_backtest_records,
+    run_purged_walkforward,
+)
 from augur.consensus.paths import feedback_path, load_feedback_json
 from augur.consensus.probability_calibrator import calibrate_confidence
 from augur.consensus.regime_router import RegimeRouter
@@ -15,7 +22,11 @@ from augur.consensus.weighting import (
 )
 
 __all__ = [
+    "CalibrationStatus",
     "ConsensusWeightContext",
+    "MIN_SAMPLES",
+    "MIN_SAMPLES_FOR_CALIBRATION",
+    "OOSResult",
     "RegimeRouter",
     "apply_regime_weights",
     "build_consensus_weights",
@@ -23,6 +34,8 @@ __all__ = [
     "classify_industry",
     "detect_industry",
     "detect_regime",
+    "determine_status",
+    "evaluate_from_backtest_records",
     "feedback_path",
     "fetch_macro_features",
     "get_agent_weights",
@@ -30,4 +43,5 @@ __all__ = [
     "load_feedback_json",
     "load_global_consensus_weights",
     "restrict_weights_to_agents",
+    "run_purged_walkforward",
 ]

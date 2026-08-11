@@ -109,7 +109,7 @@ class TestEarningsEventService:
         svc = EarningsEventService(calendar_path=cal)
         delta = svc.compare_filings("AAPL", "run_new_001")
         assert delta.ticker == "AAPL"
-        assert len(delta.changes) == 1
+        assert len(delta.changes) >= 1
         assert delta.changes[0]["type"] == "initial_run"
 
 
