@@ -560,10 +560,23 @@ class CovenantReviewer:
 
         for pattern, ctype in self._COVENANT_PATTERNS:
             for match in pattern.finditer(text):
-                # Extract surrounding context (sentence or clause)
-                start = max(0, match.start() - 100)
-                end = min(len(text), match.end() + 200)
-                context = text[start:end].strip()
+                # Extract context: find enclosing sentence boundaries
+                before = text[:match.start()]
+                sentence_start = 0
+                for delim in ('. ', '.\n', ': ', ':\n'):
+                    pos = before.rfind(delim)
+                    if pos > sentence_start:
+                        sentence_start = pos + len(delim)
+
+                end = min(len(text), match.end() + 300)
+                after = text[match.end():end]
+                for delim in ('. ', '.\n'):
+                    pos = after.find(delim)
+                    if pos > 20:
+                        end = match.end() + pos + 1
+                        break
+
+                context = text[sentence_start:end].strip()
 
                 # Clean up context to a readable description
                 description = self._clean_context(context)
@@ -574,8 +587,12 @@ class CovenantReviewer:
                     continue
                 seen_descriptions.add(norm)
 
-                # Try to extract a numerical threshold
-                threshold = self._extract_threshold(context)
+                # Try to extract a numerical threshold — search the
+                # 300-char window right after the match for tighter scoping
+                window = text[match.start():min(len(text), match.end() + 300)]
+                threshold = self._extract_threshold(window)
+                if threshold is None:
+                    threshold = self._extract_threshold(context)
 
                 covenants.append(CovenantItem(
                     covenant_id=f"cov-{len(covenants) + 1:03d}",
@@ -683,7 +700,7 @@ class CovenantReviewer:
 
         # "must not exceed", "less than", "below", "maximum of" → value must be ≤ threshold
         if any(phrase in desc_lower for phrase in [
-            "not exceed", "less than", "below", "maximum of",
+            "not exceed", "not to exceed", "less than", "below", "maximum of",
             "not greater than", "not be greater",
         ]):
             return current <= threshold
@@ -691,7 +708,7 @@ class CovenantReviewer:
         # "must be at least", "greater than", "above", "minimum of" → value must be ≥ threshold
         if any(phrase in desc_lower for phrase in [
             "at least", "greater than", "above", "minimum of",
-            "not less than", "maintain", "not be less",
+            "not less than", "not be less",
         ]):
             return current >= threshold
 
