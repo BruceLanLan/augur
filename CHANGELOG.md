@@ -2,6 +2,51 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [11.0.0-rc1] - 2026-08-12
+
+v11 is a trustworthiness and product-foundation release. It does not add new
+personas or dashboard pages. Instead it hardens the data foundation, makes
+missing data explicit, freezes schema contracts, and adds infrastructure for
+evidence-tracked research workflows.
+
+### Added
+
+- **F0.1** Unified `AUGUR_DATA_DIR` with hermetic test isolation and CI assertions
+- **F0.2** Dual-form wheel/sdist build targets (`make build test-wheel test-sdist`)
+- **F0.3** Replay schema v2: ownership fields are `Optional[float]` (not 0),
+  `field_availability` metadata, provider→EvidenceItem output
+- **F0.5** Security baseline: PBKDF2 600k iterations, SQLite corruption
+  rename-to-backup, unified CORS env var
+- **E1.1** Frozen v1 schemas: `EvidenceItem` (three time semantics),
+  `Claim` (classified evidence refs), `StepResult` (typed output),
+  `RunBundle` (immutable manifest + CoverageStats + supersedes)
+- **E1.2** `RunTracker`: phase wrapping, checkpoint save/resume with input
+  hash verification, RunBundle persistence
+- **E1.3** `CapabilityRegistry`: singleton typed-capability store with
+  budget/timeout control
+- **E1.4** Two built-in Skills: `earnings-prep` and `filing-delta` YAML
+  manifests with Pydantic validation
+- **E1.5** MCP resources: `augur://evidence/{id}` and `augur://runs/{id}`
+- **E1.6** `SkillPermissionEnforcer` and `CitationValidator`
+- **C1.1** Rolling IC purged walk-forward OOS A/B harness with pre-registered gates
+- **C1.2** Calibration status labels: raw/experimental/validated-calibrated/insufficient
+- **C1.3** `ProvenanceBlock`: analysis-as-of, data source, freshness, persona
+  skip reasons, missing/degraded fields
+- **P2.1** `EarningsEventService`: event detection, dossier readiness,
+  filing delta comparison
+
+### Changed
+
+- `MarketContext.insider_ownership` and `institutional_ownership`: `float = 0` → `Optional[float] = None`
+- `ConsensusEngine` no longer blends rolling-IC weights by default without
+  `validated-calibrated` status
+- Old replay records without `field_availability` are rejected (not silently loaded)
+
+### Fixed
+
+- CORS env var unified: API now reads `AUGUR_CORS_ORIGINS` (same as Dashboard)
+- SQLite `_init_db` no longer deletes user database on transient errors
+
 ## [10.15.0] - 2026-07-15
 
 Public release sync -- brings the public `augur` repo (last synced at

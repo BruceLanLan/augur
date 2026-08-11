@@ -10,12 +10,12 @@
 
 把 Warren Buffett、Ray Dalio、段永平、Cathie Wood 放在同一个房间——他们不会同意对方的观点。这正是重点。
 
-[![v10.15.0](https://img.shields.io/badge/v10.15.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2461 Tests](https://img.shields.io/badge/2461_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
-[![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-真实财报数据-4a90d9?style=for-the-badge)](#-18位投资大师)
+[![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur-next)
+[![240+ Tests](https://img.shields.io/badge/240+_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
+[![Evidence-First](https://img.shields.io/badge/Evidence-First_📋-4a90d9?style=for-the-badge)](#-evidence--run-可复验研究)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
-[![PWA](https://img.shields.io/badge/PWA-可安装应用-blue?style=for-the-badge)](#-dashboard-web-界面)
+[![Local-First](https://img.shields.io/badge/Local--First_🔒-blue?style=for-the-badge)](#-安装)
 [![MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
 </div>
@@ -25,8 +25,12 @@
 ## 🚀 30秒上手
 
 ```bash
-git clone https://github.com/BruceLanLan/augur.git && cd augur
+git clone https://github.com/BruceLanLan/augur-next.git && cd augur-next
 pip install -e ".[data]"
+
+# (可选) 设置独立数据目录，避免污染 ~/.augur
+export AUGUR_DATA_DIR=$(pwd)/.augur_dev
+
 augur serve --open          # 打开 Dashboard
 ```
 
@@ -37,6 +41,52 @@ augur analyze AAPL          # 18位大师同时分析
 augur consensus NVDA        # 加权共识 + Kelly 仓位建议
 augur workflow TSLA         # 一次调用跑完整分析链
 ```
+
+---
+
+## ✨ v11.0.0-rc1 有什么新的
+
+> **Augur 从 "AI 报告生成器" 升级为 "Research Memory System"。**
+> 缺失数据不会冒充事实；每条结论可追溯到 SEC filing；每次运行留下不可变 RunBundle。
+
+### 📋 Evidence & Run — 可复验研究
+
+四个核心 schema，把 "AI 说了什么" 变成 "可验证的研究产物"：
+
+| Schema | 做什么 |
+|---|---|
+| `EvidenceItem` | 三类时间（effective/available/retrieved），缺失显式传播 |
+| `Claim` | 证据分类引用（supports/contradicts/insufficient），无证据 abstain |
+| `StepResult` | typed 输出 + provenance + content_hash |
+| `RunBundle` | 不可变运行快照 + CoverageStats + supersedes 链 |
+
+```python
+from augur.schemas import EvidenceItem
+from datetime import datetime
+
+ev = EvidenceItem(
+    source="sec_edgar", content_hash="abc123",
+    instrument="AAPL", metric="revenue", value=383.5e9,
+    effective_at=datetime(2025, 9, 28),   # 业务时点
+    available_at=datetime(2025, 10, 31),   # 市场可获得时间
+    retrieved_at=datetime(2025, 11, 1),    # 系统获取时间
+)
+```
+
+### 🔬 内置研究 Skill + 🔌 MCP Resources
+
+```bash
+augur skill run earnings-prep --ticker AAPL   # 财报前研究包
+augur skill run filing-delta --ticker AAPL    # Filing 变化对比
+```
+
+外部 Agent 只读访问：`augur://evidence/{id}` · `augur://runs/{id}`
+
+### 🛡️ 信任底座
+
+Hermetic 测试隔离 · 缺失≠0 · PBKDF2 600k · SQLite corruption backup · OOS harness
+
+完整变更 → [`docs/RELEASE_NOTES_v11.md`](docs/RELEASE_NOTES_v11.md) · Skill 使用 → [`docs/skills-guide.md`](docs/skills-guide.md)
 
 ---
 
