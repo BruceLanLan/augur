@@ -231,7 +231,13 @@ class RunTracker:
                             result, sort_keys=True, default=str
                         ).encode("utf-8")
                     ).hexdigest()
-                return sr
+                # Re-validate to catch schema violations (e.g. plain-string
+                # result).  Pydantic validators run on construction; after
+                # mutation we rebuild through model_validate to trigger them.
+                validated = StepResult.model_validate(sr.model_dump())
+                idx = self._step_results.index(sr)
+                self._step_results[idx] = validated
+                return validated
         raise ValueError(f"Step {step_id!r} not found in tracker")
 
     # ------------------------------------------------------------------
