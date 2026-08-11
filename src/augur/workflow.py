@@ -172,6 +172,12 @@ def run_workflow(
                 if "fetch" in step_list:
                     output["results"]["fetch"] = {"error": str(e)}
                 output.setdefault("warnings", []).append(f"fetch_failed: {e}")
+                output["degradation"].append({
+                    "type": "error",
+                    "error_type": type(e).__name__,
+                    "message": str(e),
+                    "step_name": "fetch",
+                })
                 if tracker and sid:
                     tracker.finish_step(
                         sid, StepStatus.FAILURE, diagnostics=str(e)
@@ -287,6 +293,12 @@ def run_workflow(
                 if "analyze" in step_list:
                     output["results"]["analyze"] = {"error": str(e)}
                 output.setdefault("warnings", []).append(f"analyze_failed: {e}")
+                output["degradation"].append({
+                    "type": "error",
+                    "error_type": type(e).__name__,
+                    "message": str(e),
+                    "step_name": "analyze",
+                })
                 if tracker and sid:
                     tracker.finish_step(
                         sid, StepStatus.FAILURE, diagnostics=str(e)
@@ -355,6 +367,12 @@ def run_workflow(
                 output.setdefault("warnings", []).append(
                     f"consensus_failed: {e}"
                 )
+                output["degradation"].append({
+                    "type": "error",
+                    "error_type": type(e).__name__,
+                    "message": str(e),
+                    "step_name": "consensus",
+                })
                 if tracker and sid:
                     tracker.finish_step(
                         sid, StepStatus.FAILURE, diagnostics=str(e)
@@ -429,6 +447,12 @@ def run_workflow(
                 output.setdefault("warnings", []).append(
                     f"committee_failed: {e}"
                 )
+                output["degradation"].append({
+                    "type": "error",
+                    "error_type": type(e).__name__,
+                    "message": str(e),
+                    "step_name": "committee",
+                })
                 if tracker and sid:
                     tracker.finish_step(
                         sid, StepStatus.FAILURE, diagnostics=str(e)
@@ -472,6 +496,12 @@ def run_workflow(
                     )
             except Exception as e:
                 output["results"]["debate"] = {"error": str(e)}
+                output["degradation"].append({
+                    "type": "error",
+                    "error_type": type(e).__name__,
+                    "message": str(e),
+                    "step_name": "debate",
+                })
                 if tracker and sid:
                     tracker.finish_step(
                         sid, StepStatus.FAILURE, diagnostics=str(e)
@@ -507,6 +537,12 @@ def run_workflow(
                     )
             except Exception as e:
                 output["results"]["sentiment"] = {"error": str(e)}
+                output["degradation"].append({
+                    "type": "error",
+                    "error_type": type(e).__name__,
+                    "message": str(e),
+                    "step_name": "sentiment",
+                })
                 if tracker and sid:
                     tracker.finish_step(
                         sid, StepStatus.FAILURE, diagnostics=str(e)
@@ -526,6 +562,16 @@ def run_workflow(
         }
 
     _record_step_status(output, step_list)
+
+    # Build and attach provenance block
+    try:
+        from augur.provenance import build_provenance, provenance_to_dict
+
+        prov = build_provenance(output, tracker=tracker)
+        output["provenance"] = provenance_to_dict(prov)
+    except Exception:
+        output["provenance"] = None
+
     output["summary"] = format_workflow_summary(output)
 
     if tracker is not None:
@@ -610,6 +656,26 @@ def format_workflow_summary(data: Dict[str, Any]) -> str:
         lines += ["── Warnings ──"]
         for w in warnings:
             lines.append(f"  ! {w}")
+        lines.append("")
+
+    # Append provenance section when available
+    provenance = data.get("provenance")
+    if provenance and isinstance(provenance, dict):
+        from augur.provenance import ProvenanceBlock, format_provenance_cli
+
+        block = ProvenanceBlock(**provenance)
+        lines.append(format_provenance_cli(block))
+
+    # Show degradation entries
+    degradation = data.get("degradation", [])
+    if degradation:
+        lines += ["── Degradation ──"]
+        for d in degradation:
+            if isinstance(d, dict):
+                lines.append(
+                    f"  [{d.get('step_name', '?')}] {d.get('error_type', 'Error')}: "
+                    f"{d.get('message', '')}"
+                )
         lines.append("")
 
     return "\n".join(lines)

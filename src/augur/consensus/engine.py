@@ -83,6 +83,21 @@ class ConsensusEngine:
         # Rolling IC dynamic weight override
         rolling_ic_weights = load_rolling_ic_weights() or {}
 
+        # --- Calibration safety gate (C1.2) ---
+        # Only auto-apply rolling-IC blend weights when the calibration
+        # status is VALIDATED_CALIBRATED.  Otherwise the blend is an
+        # experimental signal that should not shift consensus by default.
+        _calibration_status = _check_calibration_status()
+        if rolling_ic_weights and _calibration_status != "validated-calibrated":
+            logger.info(
+                "Rolling IC weights present but calibration status is %s — "
+                "skipping 50/50 blend; override with AUGUR_FORCE_RIC=1",
+                _calibration_status,
+            )
+            import os
+            if not os.environ.get("AUGUR_FORCE_RIC"):
+                rolling_ic_weights = {}
+
         # v8: Learned weights from LearningEngine (60% base + 40% learned)
         learned_weights = {}
         try:
@@ -374,6 +389,14 @@ class ConsensusEngine:
             "consensus_ms": consensus_ms,
         }
 
+        # --- Calibration status annotation (C1.2) ---
+        result.metadata["calibration_status"] = _calibration_status
+        result.metadata["calibration"] = {
+            "status": _calibration_status,
+            "rolling_ic_active": bool(rolling_ic_weights),
+            "sufficient_data": _calibration_status != "insufficient-data",
+        }
+
         # v8 Phase A: auto-record predictions + check past outcomes
         # R6 groundwork (2026-07-09): fetch_market_context() never raises --
         # it tags a context data_source="none" when every provider fails
@@ -418,3 +441,23 @@ class ConsensusEngine:
         if not math.isfinite(coverage):
             return 1.0
         return max(0.0, min(1.0, float(coverage)))
+
+
+def _check_calibration_status() -> str:
+    """Check the persisted calibration status for the rolling-IC blend.
+
+    Looks for an OOS evaluation result saved by the harness.  Returns one
+    of the CalibrationStatus values as a string: "raw", "experimental",
+    "validated-calibrated", or "insufficient-data".
+
+    This is deliberately lightweight — it reads a small JSON file rather
+    than running the full OOS harness on every consensus call.
+    """
+    try:
+        from augur.consensus.paths import load_feedback_json
+        oos_data = load_feedback_json("oos_evaluation.json")
+        if not oos_data:
+            return "raw"
+        return oos_data.get("calibration_status", "raw")
+    except Exception:
+        return "raw"
