@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import logging
 import uuid
-from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Tuple
 
 import numpy as np
 
@@ -191,6 +191,11 @@ def _prepare_paired_data(
     for key, outcome in outcome_data.items():
         base_p = base_lookup.get(key)
         cand_p = cand_lookup.get(key)
+        # Fallback: try matching by ticker if run_id lookup fails
+        if base_p is None:
+            base_p = base_lookup.get(key.split("_")[-1] if "_" in key else key)
+        if cand_p is None:
+            cand_p = cand_lookup.get(key.split("_")[-1] if "_" in key else key)
         if base_p is not None and cand_p is not None:
             baseline_probs.append(base_p)
             candidate_probs.append(cand_p)
@@ -256,7 +261,7 @@ class ChronologicalEvaluator:
             EvalResult 包含所有指标和结论
         """
         metrics: List[EvalMetric] = []
-        all_run_ids = [r.run_id for r in baseline_runs] + [r.run_id for r in candidate_runs]
+        _ = [r.run_id for r in baseline_runs] + [r.run_id for r in candidate_runs]  # reserved for future use
         tickers = sorted({_extract_ticker(r) for r in baseline_runs + candidate_runs})
         n_obs = 0
 

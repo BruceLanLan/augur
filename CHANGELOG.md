@@ -47,6 +47,38 @@ evidence-tracked research workflows.
 - CORS env var unified: API now reads `AUGUR_CORS_ORIGINS` (same as Dashboard)
 - SQLite `_init_db` no longer deletes user database on transient errors
 
+### Stress Test Additions (2026-08-12, DSH continuous loop)
+
+- **Thesis Journal** (`src/augur/thesis.py`): create, track, and update investment
+  theses with falsification conditions. ThesisDelta compares two RunBundles and
+  identifies fact/valuation/language changes.
+- **Decision Log** (`src/augur/thesis.py`): record buy/sell/hold decisions with
+  linked evidence and thesis IDs.
+- **Disagreement Map** (`src/augur/disagreement.py`): distill 18 persona outputs
+  into 3-5 decision-relevant conflicts with evidence refs and "what would resolve
+  this" guidance.
+- **DCF Valuation Engine** (`src/augur/valuation.py`): pure Python `decimal.Decimal`
+  WACC builder, two-stage DCF, sensitivity grid, reverse DCF, bull/base/bear
+  scenario lab.
+- **Filing Delta** (`src/augur/filing_delta.py`): structured comparison of
+  consecutive SEC filings — 20+ financial metrics, text section changes, guidance
+  direction tracking (raised/lowered/withdrawn).
+- **Guidance Tracker** (`src/augur/guidance_tracker.py`): track management guidance
+  ranges across quarters, compare vs actual results, compute accuracy.
+- **Research Inbox** (`src/augur/research_inbox.py`): aggregate earnings events,
+  filing deltas, thesis reviews, and guidance changes into a prioritized queue.
+- **Risk-factor Review** (`src/augur/risk_review.py`): categorize and compare risk
+  factor changes (new/escalated/removed) across filings.
+- **Evaluation Lab** (`src/augur/eval_lab.py`): walk-forward comparison of baseline
+  vs candidate RunBundles with Brier/log-loss/accuracy/IC metrics and bootstrap
+  significance testing. Persona ablation to identify marginal contributors.
+- **Export System** (`src/augur/export.py`): Markdown, PDF, JSON, and Evidence
+  Pack (.zip) export from RunBundle.
+- **UI Enhancements**: Evidence Graph (force-directed Canvas), Source Cards
+  template, Command Palette (⌘K universal search with 15 actions), responsive
+  layout (mobile/tablet/desktop), dark mode CSS foundation.
+- **417 tests passing** (zero regressions from 240 baseline)
+
 ## [10.15.0] - 2026-07-15
 
 Public release sync -- brings the public `augur` repo (last synced at
