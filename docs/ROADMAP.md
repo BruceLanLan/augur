@@ -5,6 +5,7 @@
 **维护仓库**：`BruceLanLan/augur-next`
 **当前基线**：`eade71a` / v10.15.0
 **详细审计**：[`docs/reviews/PROJECT_REVIEW_2026-08-11.md`](reviews/PROJECT_REVIEW_2026-08-11.md)
+**后续方向**：[`docs/PRODUCT_DIRECTIONS.md`](PRODUCT_DIRECTIONS.md)
 
 ## 这份文档的权威性
 

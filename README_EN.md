@@ -262,7 +262,7 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 
 ## 🗺️ Development roadmap
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) for the current project review, repository responsibilities, and seven-day v11 Release Candidate sprint.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for the project review, repository responsibilities, and seven-day v11 Release Candidate sprint; see [docs/PRODUCT_DIRECTIONS.md](docs/PRODUCT_DIRECTIONS.md) for the post-v11 feature and product direction map.
 
 ---
 
