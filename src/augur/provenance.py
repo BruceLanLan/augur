@@ -9,7 +9,7 @@ Designed to be attached to Dashboard, CLI, and MCP outputs uniformly.
 
 import dataclasses
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
 
 @dataclasses.dataclass

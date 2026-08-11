@@ -467,7 +467,7 @@ def create_server():
             persona_id: The persona ID to configure (e.g. buffett, graham)
             model: The model to use (e.g. claude-sonnet-4-6, deepseek-v4)
         """
-        from augur.config import get_config, set_config, save_config
+        from augur.config import set_config, save_config
         from augur.registry import AgentRegistry
 
         # Validate persona_id: must be a non-empty string of safe identifier chars

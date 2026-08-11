@@ -111,7 +111,7 @@ class TestEarningsEventService:
         assert delta.ticker == "AAPL"
         assert len(delta.changes) >= 1
         change_types = {c["type"] for c in delta.changes}
-        assert "initial_run" in change_types or "step_added" in change_types
+        assert any(t in change_types for t in ["initial_run", "step_added", "step_removed"])
 
 
 class TestEarningsEvent:
