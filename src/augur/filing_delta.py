@@ -8,7 +8,6 @@ and guidance between consecutive 10-K/10-Q/8-K filings.
 
 from __future__ import annotations
 
-import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 

@@ -52,9 +52,9 @@ def sample_evidence_items():
         coverage=0.95,
     )
     ev2 = EvidenceItem(
-        evidence_id="ev_yfinance_xyz789abc012",
+        evidence_id="ev_yfinance_abc789def012",
         source="yfinance",
-        content_hash="xyz789abc0123456789012345678901234567890abcdef1234567890abcd",
+        content_hash="abc789def0123456789012345678901234567890abcdef1234567890abcd",
         instrument="AAPL",
         metric="market_cap",
         value=3.2e12,
@@ -82,7 +82,7 @@ def sample_claims(sample_evidence_items):
         status=ClaimStatus.ACTIVE,
     )
     c2 = Claim(
-        claim_id="cl_xyz789abc012",
+        claim_id="cl_abc789def012",
         text="AAPL market cap exceeds $3 trillion, indicating strong market position.",
         persona_id="munger",
         supports=[ev2.evidence_id],
@@ -194,10 +194,10 @@ class TestMarkdownExport:
         assert "consensus" in md
         assert "## Claims" in md
         assert "cl_abc123def456" in md
-        assert "cl_xyz789abc012" in md
+        assert "cl_abc789def012" in md
         assert "## Evidence" in md
         assert "ev_sec_edgar_abc123def456" in md
-        assert "ev_yfinance_xyz789abc012" in md
+        assert "ev_yfinance_abc789def012" in md
         assert "## Provenance" in md
         assert "1.0" in md
 
@@ -283,7 +283,7 @@ class TestJSONExport:
 
         claim_ids = {c["claim_id"] for c in data["claims"]}
         assert "cl_abc123def456" in claim_ids
-        assert "cl_xyz789abc012" in claim_ids
+        assert "cl_abc789def012" in claim_ids
 
     def test_to_json_contains_evidence_ids(self, sample_run_bundle):
         """JSON export evidence should match input evidence."""
@@ -293,7 +293,7 @@ class TestJSONExport:
 
         ev_ids = {e["evidence_id"] for e in data["evidence_items"]}
         assert "ev_sec_edgar_abc123def456" in ev_ids
-        assert "ev_yfinance_xyz789abc012" in ev_ids
+        assert "ev_yfinance_abc789def012" in ev_ids
 
 
 # ---------------------------------------------------------------------------
@@ -321,7 +321,7 @@ class TestEvidencePack:
                 assert "manifest.json" in names
                 assert "run_bundle.json" in names
                 assert "evidence/ev_sec_edgar_abc123def456.json" in names
-                assert "evidence/ev_yfinance_xyz789abc012.json" in names
+                assert "evidence/ev_yfinance_abc789def012.json" in names
 
                 # Verify manifest content
                 manifest = json.loads(zf.read("manifest.json"))
@@ -339,7 +339,7 @@ class TestEvidencePack:
 
             # Should not raise — validation passes
             with zipfile.ZipFile(zip_path, "r") as zf:
-                for ev_id in ("ev_sec_edgar_abc123def456", "ev_yfinance_xyz789abc012"):
+                for ev_id in ("ev_sec_edgar_abc123def456", "ev_yfinance_abc789def012"):
                     safe_name = f"evidence/{ev_id}.json"
                     assert safe_name in zf.namelist()
 
@@ -347,7 +347,7 @@ class TestEvidencePack:
         """Claims referencing evidence not in step results should still get placeholders."""
         # Add a claim referencing a non-existent evidence ID
         extra_claim = Claim(
-            claim_id="cl_extra000000",
+            claim_id="cl_eeee00000001",
             text="Extra claim with missing evidence.",
             persona_id="dalio",
             supports=["ev_missing_source_aaaaaaaaaaaa"],

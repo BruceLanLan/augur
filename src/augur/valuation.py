@@ -8,8 +8,8 @@ Provenance: standard corporate finance methodology
 (Brealey-Myers, Damodaran, McKinsey Valuation).
 """
 
-from dataclasses import dataclass, field
-from decimal import Decimal, getcontext, ROUND_HALF_UP
+from dataclasses import dataclass
+from decimal import Decimal, getcontext
 from typing import Dict, List, Optional, Tuple
 
 # ---------------------------------------------------------------------------

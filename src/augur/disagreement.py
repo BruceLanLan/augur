@@ -220,7 +220,7 @@ class DisagreementMapBuilder:
             return points
 
         # All agree on sector classification
-        points.append(f"Industry sector is consistently identified across personas")
+        points.append("Industry sector is consistently identified across personas")
 
         # Most agree on financial health if both sides have similar debt views
         if len(bulls) > len(bears) * 2:

@@ -21,17 +21,16 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
-from jinja2 import Environment, BaseLoader, TemplateNotFound
+from jinja2 import Environment, BaseLoader
 
 from augur.data_dir import get_data_dir
 from augur.schemas.run_bundle import RunBundle
-from augur.schemas.step_result import StepResult, StepStatus
+from augur.schemas.step_result import StepStatus
 from augur.schemas.claim import Claim
 from augur.schemas.evidence import EvidenceItem
 
