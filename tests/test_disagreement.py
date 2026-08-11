@@ -99,6 +99,23 @@ class TestDisagreementMap:
         assert dm.consensus_strength == "moderate"
         assert dm.conflict_points == []
 
+    def test_all_fields_initialized(self):
+        dm = DisagreementMap(
+            ticker="TSLA",
+            run_id="run_002",
+            consensus_strength="strong",
+            agreement_points=["All agree on sector"],
+            conflict_points=[ConflictPoint(claim="Test")],
+            silent_personas=["neut_0"],
+            summary="Strong consensus.",
+        )
+        assert dm.ticker == "TSLA"
+        assert dm.consensus_strength == "strong"
+        assert len(dm.agreement_points) == 1
+        assert len(dm.conflict_points) == 1
+        assert len(dm.silent_personas) == 1
+        assert len(dm.summary) > 0
+
 
 # ---------------------------------------------------------------------------
 # DisagreementMapBuilder
@@ -144,3 +161,28 @@ class TestBuilder:
         result = builder.build(balanced_outputs)
         assert isinstance(result.summary, str)
         assert len(result.summary) > 10
+
+    def test_build_with_evidence_manifest(self, balanced_outputs):
+        manifest = {"ev_001": {"source": "edgar", "metric": "revenue"}}
+        builder = DisagreementMapBuilder("AAPL", "run_001")
+        result = builder.build(balanced_outputs, evidence_manifest=manifest)
+        assert result.ticker == "AAPL"
+        assert result.consensus_strength in ("weak", "divided")
+
+    def test_build_only_neutrals(self):
+        neutrals = {}
+        for i in range(5):
+            neutrals[f"neut_{i}"] = {"signal": "neutral", "score": 5.0, "confidence": 0.3}
+        builder = DisagreementMapBuilder("TEST", "run_neut")
+        result = builder.build(neutrals)
+        # All neutral → 0% bull, 0% bear → abs(0-0) < 0.15 → divided
+        assert result.consensus_strength == "divided"
+        assert len(result.silent_personas) == 5
+
+    def test_build_single_persona(self):
+        outputs = {"bull_0": {"signal": "bullish", "score": 8.0, "confidence": 0.9}}
+        builder = DisagreementMapBuilder("TEST", "run_one")
+        result = builder.build(outputs)
+        # 1/1 = 100% bull → strong
+        assert result.consensus_strength == "strong"
+        assert len(result.silent_personas) == 0

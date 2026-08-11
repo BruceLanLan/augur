@@ -442,11 +442,8 @@ html.dark .theme-toggle-fab .icon-sun  { display: inline; }
 
 /* --- Tables in dark mode --- */
 [data-theme="dark"] table,
-html.dark table,
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]):not(.light) table {
-    border-color: var(--border);
-  }
+html.dark table {
+  border-color: var(--border);
 }
 [data-theme="dark"] th,
 html.dark th {

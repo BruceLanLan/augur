@@ -1,0 +1,74 @@
+
+/* ============ Skeleton Loading ============ */
+@keyframes augur-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--bg-muted, #e5e7eb) 25%, var(--bg-card, #f9fafb) 50%, var(--bg-muted, #e5e7eb) 75%);
+  background-size: 200% 100%;
+  animation: augur-skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+.skeleton-text { height: 16px; margin-bottom: 8px; width: 80%; }
+.skeleton-text.short { width: 50%; }
+.skeleton-text.long { width: 95%; }
+.skeleton-card { height: 180px; border-radius: 12px; }
+.skeleton-avatar { width: 48px; height: 48px; border-radius: 50%; }
+.skeleton-row { display: flex; gap: 12px; }
+.skeleton-row > * { flex: 1; }
+
+/* ============ Spinner ============ */
+@keyframes augur-spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 32px; height: 32px;
+  border: 3px solid var(--border, #e5e7eb);
+  border-top-color: var(--accent, #ff6b35);
+  border-radius: 50%;
+  animation: augur-spin 0.8s linear infinite;
+}
+.spinner-lg { width: 48px; height: 48px; border-width: 4px; }
+.spinner-sm { width: 20px; height: 20px; border-width: 2px; }
+.spinner-center { margin: 40px auto; }
+
+/* ============ Empty State ============ */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 60px 20px; text-align: center; color: var(--text-muted, #9ca3af);
+}
+.empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
+.empty-state-title { font-size: 18px; font-weight: 600; color: var(--text, #374151); margin-bottom: 8px; }
+.empty-state-desc { font-size: 14px; max-width: 360px; margin-bottom: 20px; line-height: 1.6; }
+.empty-state .btn { display: inline-block; }
+
+/* ============ Progress Bar ============ */
+.progress-bar {
+  height: 6px; background: var(--bg-muted, #e5e7eb); border-radius: 3px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; background: var(--accent, #ff6b35); border-radius: 3px;
+  transition: width 0.3s ease;
+}
+.progress-bar-fill.indeterminate {
+  width: 40%; animation: augur-progress-indeterminate 1.5s ease-in-out infinite;
+}
+@keyframes augur-progress-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(350%); }
+}
+
+/* ============ Toast Notification ============ */
+.toast-container {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.toast {
+  padding: 12px 20px; border-radius: 8px; font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: augur-toast-in 0.3s ease;
+  max-width: 380px;
+}
+.toast-success { background: #10b981; color: #fff; }
+.toast-error { background: #ef4444; color: #fff; }
+.toast-info { background: #3b82f6; color: #fff; }
+@keyframes augur-toast-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
