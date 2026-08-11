@@ -50,7 +50,7 @@ _USERNAME_RE = re.compile(r"^[a-zA-Z0-9_]{3,32}$")
 
 # JWT secret - require from env or persist to disk (survives restarts)
 _JWT_EXPIRY = 86400 * 7  # 7 days
-_PBKDF2_ITERATIONS = 100_000
+_PBKDF2_ITERATIONS = 600_000  # OWASP 2025 recommendation for PBKDF2-HMAC-SHA256
 
 
 def _get_jwt_secret() -> str:
@@ -234,9 +234,13 @@ class UserManager:
             finally:
                 conn.close()
         except sqlite3.DatabaseError:
-            # Handle corruption: remove and recreate
-            if self.db_path.exists():
-                self.db_path.unlink()
+            # Handle corruption: atomically rename to .corrupted backup
+            # before recreating.  Do NOT unlink the user's data silently.
+            corrupted = self.db_path.with_suffix(self.db_path.suffix + ".corrupted")
+            try:
+                self.db_path.rename(corrupted)
+            except OSError:
+                pass
             conn = sqlite3.connect(str(self.db_path), timeout=10)
             try:
                 conn.execute("""

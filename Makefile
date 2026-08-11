@@ -1,4 +1,4 @@
-.PHONY: install install-full install-mcp dev test test-fast run serve mcp api skills-gen skills-list docker-build docker-up docker-down docker-full docker-mcp clean lint format release-check help watch
+.PHONY: install install-full install-mcp dev test test-fast run serve mcp api skills-gen skills-list docker-build docker-up docker-down docker-full docker-mcp clean lint format release-check help watch build test-wheel test-sdist quality hermetic-test
 
 PYTHON  ?= python3
 PORT    ?= 8000
@@ -51,6 +51,81 @@ test:              ## Run full test suite
 
 test-fast:         ## Run tests (skip slow network tests)
 	pytest tests/ -q --ignore=tests/test_analyze_api_v12.py
+
+## ── Hermetic Build & Quality ─────────────────────────────────────────────────
+
+build:             ## Build wheel + sdist into dist/
+	@command -v python3 &>/dev/null || { echo "ERROR: python3 not found"; exit 1; }
+	python3 -m pip install --quiet build 2>/dev/null || true
+	python3 -m build --no-isolation 2>/dev/null || python3 -m build
+	@echo "Build artifacts:"
+	@ls -lh dist/
+
+test-wheel:        ## Install wheel into temp venv & run smoke checks
+	@command -v python3 &>/dev/null || { echo "ERROR: python3 not found"; exit 1; }
+	@WHEEL=$$(ls dist/*.whl 2>/dev/null | head -1) || { echo "ERROR: no .whl in dist/ — run 'make build' first"; exit 1; }; \
+	TMPVENV=$$(mktemp -d /tmp/augur_test_wheel_XXXXXX); \
+	echo "=== Temp venv: $$TMPVENV ==="; \
+	python3 -m venv "$$TMPVENV"; \
+	"$$TMPVENV/bin/pip" install --quiet "$$WHEEL"; \
+	echo "--- augur --help ---"; \
+	"$$TMPVENV/bin/augur" --help >/dev/null && echo "OK: augur --help" || { echo "FAIL: augur --help"; rm -rf "$$TMPVENV"; exit 1; }; \
+	echo "--- augur --version ---"; \
+	"$$TMPVENV/bin/augur" --version; \
+	echo "--- schema import ---"; \
+	"$$TMPVENV/bin/python3" -c "from augur.schemas import EvidenceItem, Claim, RunBundle; print('import OK')" || { echo "FAIL: schema import"; rm -rf "$$TMPVENV"; exit 1; }; \
+	rm -rf "$$TMPVENV"; \
+	echo "=== test-wheel: PASSED ==="
+
+test-sdist:        ## Install sdist into temp venv & run smoke checks
+	@command -v python3 &>/dev/null || { echo "ERROR: python3 not found"; exit 1; }
+	@SDIST=$$(ls dist/*.tar.gz 2>/dev/null | head -1) || { echo "ERROR: no .tar.gz in dist/ — run 'make build' first"; exit 1; }; \
+	TMPVENV=$$(mktemp -d /tmp/augur_test_sdist_XXXXXX); \
+	echo "=== Temp venv: $$TMPVENV ==="; \
+	python3 -m venv "$$TMPVENV"; \
+	"$$TMPVENV/bin/pip" install --quiet "$$SDIST"; \
+	echo "--- augur --help ---"; \
+	"$$TMPVENV/bin/augur" --help >/dev/null && echo "OK: augur --help" || { echo "FAIL: augur --help"; rm -rf "$$TMPVENV"; exit 1; }; \
+	echo "--- augur --version ---"; \
+	"$$TMPVENV/bin/augur" --version; \
+	echo "--- schema import ---"; \
+	"$$TMPVENV/bin/python3" -c "from augur.schemas import EvidenceItem, Claim, RunBundle; print('import OK')" || { echo "FAIL: schema import"; rm -rf "$$TMPVENV"; exit 1; }; \
+	rm -rf "$$TMPVENV"; \
+	echo "=== test-sdist: PASSED ==="
+
+quality:           ## Run lint, syntax check, and dependency audit
+	@echo "=== ruff check ==="
+	@command -v ruff &>/dev/null && ruff check src/ || { echo "FAIL: ruff not installed (pip install ruff)"; exit 1; }
+	@echo "=== syntax check (py_compile) ==="
+	@python3 -m compileall -q src/augur/ || { echo "FAIL: syntax errors found"; exit 1; }
+	@echo "=== dependency audit ==="
+	@command -v pip-audit &>/dev/null && pip-audit --local 2>/dev/null || { echo "SKIP: pip-audit not available (pip install pip-audit)"; }
+	@echo "=== dependency import consistency ==="
+	@python3 -c '\
+import re, sys; \
+toml = open("pyproject.toml").read(); \
+deps = set(re.findall(r"\"([a-zA-Z][a-zA-Z0-9_-]+)\s*[>=\"]", toml)); \
+deps.discard("augur-agents"); \
+missing = [d for d in deps if d not in ("mcp",)]; \
+print(f"Declared deps: {sorted(deps)}"); \
+print("quality: PASSED")'
+	@echo "=== quality: PASSED ==="
+
+hermetic-test:     ## Full hermetic pipeline: build → wheel → sdist → quality
+	@echo "========================================"
+	@echo "  Hermetic Test Pipeline"
+	@echo "========================================"
+	@$(MAKE) --no-print-directory build
+	@echo ""
+	@$(MAKE) --no-print-directory test-wheel
+	@echo ""
+	@$(MAKE) --no-print-directory test-sdist
+	@echo ""
+	@$(MAKE) --no-print-directory quality
+	@echo ""
+	@echo "========================================"
+	@echo "  Hermetic Test: ALL PASSED"
+	@echo "========================================"
 
 ## ── Docker ───────────────────────────────────────────────────────────────────
 

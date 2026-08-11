@@ -82,10 +82,10 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 
 
 # CORS: restrict to a configurable allowlist to prevent any-origin access
-# in deployments with auth. Set AUGUR_CORS_ALLOW_ORIGINS to a comma-separated
-# list of allowed origins (e.g. "https://app.example.com,https://admin.example.com").
+# in deployments with auth. Reads AUGUR_CORS_ORIGINS (shared with Dashboard)
+# with AUGUR_CORS_ALLOW_ORIGINS as a deprecated fallback.
 # Default is "*" for backwards compatibility with local/dev usage.
-_cors_origins_env = os.environ.get("AUGUR_CORS_ALLOW_ORIGINS", "").strip()
+_cors_origins_env = os.environ.get("AUGUR_CORS_ORIGINS", os.environ.get("AUGUR_CORS_ALLOW_ORIGINS", "")).strip()
 if _cors_origins_env:
     _cors_allow_origins = [o.strip() for o in _cors_origins_env.split(",") if o.strip()]
 else:
