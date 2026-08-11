@@ -2,17 +2,15 @@
 
 <div align="center">
 
-<img src="docs/images/zh/hero-banner.png" alt="Augur — 你的 AI 投资决策委员会" width="100%">
+<img src="docs/images/zh/hero-banner.png" alt="Augur — Research Memory System" width="100%">
 
 # 🦉 Augur
 
-**18 位传奇投资人，同时分析同一支股票，给出一个共识裁决。**
-
-把 Warren Buffett、Ray Dalio、段永平、Cathie Wood 放在同一个房间——他们不会同意对方的观点。这正是重点。
+**不是又一个 AI 股票分析工具。是一个帮你记住"你何时知道什么、什么变了、谁在什么事实上分歧"的研究记忆系统。**
 
 [![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur-next)
 [![240+ Tests](https://img.shields.io/badge/240+_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
-[![Evidence-First](https://img.shields.io/badge/Evidence-First_📋-4a90d9?style=for-the-badge)](#-evidence--run-可复验研究)
+[![Evidence-First](https://img.shields.io/badge/Evidence-First_📋-4a90d9?style=for-the-badge)](#-为什么-augur-不一样)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
 [![Local-First](https://img.shields.io/badge/Local--First_🔒-blue?style=for-the-badge)](#-安装)
@@ -22,13 +20,31 @@
 
 ---
 
+## 🤔 为什么 Augur 不一样
+
+大多数 AI 金融工具会给你一个答案。Augur 给你的是**可验证的研究产物**。
+
+区别在哪？假设你问一个 AI "AAPL 值得买吗"——
+
+| | 普通 AI 工具 | Augur |
+|---|---|---|
+| 给你什么 | 一段 "一方面…另一方面…" 的分析，最后加一句 "投资有风险" | 18 位大师的独立判断 + 他们在什么事实上一致、在什么事实上打架 |
+| 数据从哪来 | 不知道。可能是训练数据里的记忆 | 每条结论带 source locator — SEC filing URL、accession number、获取时间 |
+| 缺失数据怎么处理 | 静默填 0。你以为它有数据，其实没有 | 显式标注 `missing`。依赖该字段的大师明确 `abstain` 并说明原因 |
+| 三个月后回头看 | 不记得上次说了什么 | RunBundle 保存了整个运行的输入快照、步骤结果、覆盖统计。可以和这次对比，精确知道 "什么变了" |
+| 你的数据在哪 | 云端。你不知道谁在看 | 本地。`~/.augur`。你控制一切 |
+
+**Augur 不是帮你做决策，是帮你建立决策的 evidence trail。**
+
+---
+
 ## 🚀 30秒上手
 
 ```bash
 git clone https://github.com/BruceLanLan/augur-next.git && cd augur-next
 pip install -e ".[data]"
 
-# (可选) 设置独立数据目录，避免污染 ~/.augur
+# (推荐) 设置独立数据目录，不污染 ~/.augur
 export AUGUR_DATA_DIR=$(pwd)/.augur_dev
 
 augur serve --open          # 打开 Dashboard
@@ -38,91 +54,67 @@ augur serve --open          # 打开 Dashboard
 
 ```bash
 augur analyze AAPL          # 18位大师同时分析
-augur consensus NVDA        # 加权共识 + Kelly 仓位建议
-augur workflow TSLA         # 一次调用跑完整分析链
+augur consensus NVDA        # 加权共识
+augur workflow TSLA         # 六步分析流水线
 ```
 
 ---
 
-## ✨ v11.0.0-rc1 有什么新的
+## ✨ v11：从 "AI 报告" 到 "研究记忆"
 
-> **Augur 从 "AI 报告生成器" 升级为 "Research Memory System"。**
-> 缺失数据不会冒充事实；每条结论可追溯到 SEC filing；每次运行留下不可变 RunBundle。
+v11 是一次**地基重建**。我们没有加新的 dashboard 页面，没有加第 19 个大师，没有做 portfolio tracking。我们做了一件更基础的事：**让 Augur 说过的每一句话都能被验证、被复现、被比较。**
 
-### 📋 Evidence & Run — 可复验研究
+### 1. 缺失数据不再是 0
 
-四个核心 schema，把 "AI 说了什么" 变成 "可验证的研究产物"：
+这是 v11 最重要的修复。
 
-| Schema | 做什么 |
-|---|---|
-| `EvidenceItem` | 三类时间（effective/available/retrieved），缺失显式传播 |
-| `Claim` | 证据分类引用（supports/contradicts/insufficient），无证据 abstain |
-| `StepResult` | typed 输出 + provenance + content_hash |
-| `RunBundle` | 不可变运行快照 + CoverageStats + supersedes 链 |
+之前：`insider_ownership` 和 `institutional_ownership` 在历史回放中默认值是 `0`。11 位依赖这些字段的大师——Buffett、Munger、Li Lu、段永平——在"不知道"的情况下给出了 "确认为零持股" 的判断。
+
+现在：`None`。缺失就是缺失。依赖它的大师明确 `abstain`，输出机器可读的降级原因。不是什么魔法修复——只是诚实。
+
+### 2. 每条数据带三个时间
 
 ```python
-from augur.schemas import EvidenceItem
-from datetime import datetime
-
-ev = EvidenceItem(
-    source="sec_edgar", content_hash="abc123",
-    instrument="AAPL", metric="revenue", value=383.5e9,
-    effective_at=datetime(2025, 9, 28),   # 业务时点
-    available_at=datetime(2025, 10, 31),   # 市场可获得时间
-    retrieved_at=datetime(2025, 11, 1),    # 系统获取时间
+EvidenceItem(
+    effective_at=datetime(2025, 9, 28),   # ← 业务时点：Q4 结束日
+    available_at=datetime(2025, 10, 31),   # ← 市场最早能知道的时间：filing 日
+    retrieved_at=datetime(2025, 11, 1),    # ← 系统获取时间：下载日
 )
 ```
 
-### 🔬 内置研究 Skill + 🔌 MCP Resources
+为什么这很重要？因为如果你在 10 月 15 日做回测、却用了 10 月 31 日才公开的 13F 数据——那就是 look-ahead bias。几乎所有竞品都在用 `retrieved_at` 替代 `available_at`。Augur 拒绝这种替代。**这是整个产品最深的技术护城河。**
+
+### 3. 每次运行留下不可变快照
+
+```
+run_AAPL_20251101T120000_abc12345.json
+├── manifest: 输入 hash + 配置/模型/代码版本
+├── step_results:
+│   ├── fetch   → success, 234ms, content_hash=f3a2…
+│   ├── analyze → success, 12.4s, 18 persona outputs
+│   ├── consensus → success, score=7.2, Brier=0.14
+│   └── debate  → degraded, 2 agent timeout
+└── coverage: 24 total, 18 covered, 4 missing, 2 degraded
+```
+
+中断了？checkpoint 从断点恢复。想比较两次运行？不用重新生成——diff 两个 RunBundle 就知道什么变了。外部 Agent 通过 MCP 只读访问：`augur://runs/{run_id}`。
+
+### 4. 内置研究 Skill（声明式，不包含代码）
 
 ```bash
 augur skill run earnings-prep --ticker AAPL   # 财报前研究包
 augur skill run filing-delta --ticker AAPL    # Filing 变化对比
 ```
 
-外部 Agent 只读访问：`augur://evidence/{id}` · `augur://runs/{id}`
+两个 Skill 都是纯 YAML 声明——不包含 `module_path`、`shell`、`import`、`eval`。运行时权限由 `SkillPermissionEnforcer` 逐项检查，拒绝访问记录到 audit log。这意味着**你可以信任一个 Skill 而不用读它的源代码**。
 
-### 🛡️ 信任底座
+### 5. 信任底座加固
 
-Hermetic 测试隔离 · 缺失≠0 · PBKDF2 600k · SQLite corruption backup · OOS harness
+- **测试隔离**：`AUGUR_DATA_DIR` 环境变量控制全部持久化路径。240+ 测试在独立 temp 目录运行，不碰真实 `~/.augur`
+- **安全基线**：PBKDF2 从 100k 升至 600k 迭代（OWASP 2025）；SQLite 损坏时 rename-to-backup 不再删除用户数据库
+- **校准诚实**：每个概率输出标注 `raw` / `experimental` / `validated-calibrated` / `insufficient_data`。未经 OOS gate 验证的权重不以默认启用。样本不足时不显示 "已校准"
 
-完整变更 → [`docs/RELEASE_NOTES_v11.md`](docs/RELEASE_NOTES_v11.md) · Skill 使用 → [`docs/skills-guide.md`](docs/skills-guide.md)
-
----
-
-## ✨ v10.0 有什么新的
-
-<img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur v10 首页 — 实时行情 + Bloomberg 风格终端" width="100%">
-
-### 你的专属 Bloomberg 终端
-
-**`/settings` 页面现在是一个完整的终端配置系统：**
-
-<img src="docs/images/screenshots/workspace-profiles.png" alt="Terminal Workspace — 多套 Profile 保存切换" width="100%">
-
-- **4 套布局预设**：analyst / trader / committee / minimal，一键切换首页和工具栏
-- **多套命名 Profile**：保存"白天看盘"和"周末研究"两套配置，互不影响
-- **启用大师子集**：只让你信任的几位大师参与共识，权重自动重归一化
-- 配置保存在 `~/.augur/workspace.yaml`，换机器也能带走
-
-### AI Agent 现在能操作你的终端
-
-不只是"聊天"——你的 Claude / Hermes Agent 现在可以直接**读取并修改**你的 Augur 工作区：
-
-```python
-# Claude Desktop / Hermes 里直接调用：
-mcp_augur_workspace_get()                       # 查看当前布局和启用的大师
-mcp_augur_workspace_set(layout_preset="trader") # 切换到 trader 模式
-mcp_augur_workspace_profiles()                  # 管理你的所有 Profile
-```
-
-### 一次调用跑完整分析链
-
-```bash
-augur workflow NVDA --steps fetch,analyze,consensus,committee
-```
-
-`fetch → analyze → consensus → committee → debate → sentiment` 六步流水线，单步失败不中断，步骤跟随你的 Profile 自动调整。
+完整变更 → [`docs/RELEASE_NOTES_v11.md`](docs/RELEASE_NOTES_v11.md)  ·  Schema 参考 → [`docs/schema-reference.md`](docs/schema-reference.md)  ·  Skill 使用 → [`docs/skills-guide.md`](docs/skills-guide.md)
 
 ---
 
@@ -138,42 +130,24 @@ augur workflow NVDA --steps fetch,analyze,consensus,committee
 - **Augur 评分**（0–10）+ **BUY / NEUTRAL / SELL** 信号
 - **Kelly 仓位建议**（基于加权共识置信度）
 - **The Oracle of Augur**：一句话裁决
-- 多空分布：`13 Bullish / 5 Neutral / 0 Bearish`
+- 多空分布
 
 ### 投资委员会
 
-<img src="docs/images/screenshots/committee-hd2d.png" alt="投资委员会 — 预设组合 + 独立意见 + 最终裁决" width="100%">
+<img src="docs/images/screenshots/committee-hd2d.png" alt="投资委员会" width="100%">
 
-五套预设委员会，也可以自由组合：
+五套预设委员会，自由组合：
 - **经典价值**：Buffett · Graham · Munger · Fisher
 - **中国价值**：段永平 · 张磊 · 李录 · 但斌
 - **宏观全天候**：Dalio · Soros · Marks · ARPS
 - **创新成长**：Cathie Wood · Thiel · Aschenbrenner · Lynch
 - **全体委员会**：18位全部出席
 
-### 多空辩论
+### 多空辩论 · 历史记录 · 对比分析
 
-<img src="docs/images/screenshots/04-bullish-critical.png" alt="结构化辩论 — 多空双方自动交锋" width="100%">
+<img src="docs/images/screenshots/04-bullish-critical.png" alt="结构化辩论" width="32%"> <img src="docs/images/screenshots/history.png" alt="分析历史" width="32%"> <img src="docs/images/screenshots/compare-radar.png" alt="对比分析" width="32%">
 
-选 2–4 位大师就同一标的展开多轮辩论，自动生成完整的多头和空头论据。
-
-### 历史记录
-
-<img src="docs/images/screenshots/history.png" alt="分析历史 — GitHub 风格热力图 + 详细记录" width="100%">
-
-每次分析自动存档，GitHub 风格 52 周热力图，按信号 / 评分 / 日期筛选。
-
-### 对比分析
-
-<img src="docs/images/screenshots/compare-radar.png" alt="对比分析 — 5维度评分雷达图 + 因子明细" width="100%">
-
-选 2–5 位大师同台对比同一标的，5 维度（估值 / 成长 / 质量 / 动量 / 安全）雷达图一眼看出分歧所在，展开明细表可看到每位大师用了哪些具体因子（PE、护城河、动量等）打出这个分数。
-
-### Hermes Agent 接入
-
-<img src="docs/images/screenshots/hermes-setup.png" alt="Hermes Agent 接入指南 — MCP 一键配置" width="100%">
-
-一步步配置指南：安装 MCP 服务、注册 Claude Desktop / Hermes，把 18 位大师和委员会都接进你的 AI Agent 工作流。
+结构化多空辩论 · GitHub 风格 52 周热力图 · 五维度雷达图对比分歧
 
 ---
 
@@ -189,7 +163,7 @@ augur workflow NVDA --steps fetch,analyze,consensus,committee
 | 🇨🇳 中国价值 | 段永平 · 张磊（高瓴）· 李录（喜马拉雅）· 但斌（东方港湾）· 大宇 BTCdayu |
 | ⚙️ 特殊策略 | Serenity（AI算力供应链）|
 
-每位大师都有独立的 [Hermes Skill](src/skills/)，可直接在 Hermes Studio 里单独对话。
+每位大师都有独立的分析哲学、scoring weights 和 Hermes Skill。
 
 ---
 
@@ -203,8 +177,9 @@ augur workflow NVDA --steps fetch,analyze,consensus,committee
 | **Claude Code** | `.mcp.json` 自动发现（克隆即用） |
 | **OpenClaw** | YAML manifest 自动注册 |
 | **Telegram / Slack** | `augur telegram` / `augur slack` |
+| **外部 Agent (v11 新增)** | `augur://evidence/{id}` · `augur://runs/{id}` MCP resources |
 
-### MCP 13个工具
+### MCP 工具一览
 
 ```json
 // Claude Desktop (~/.config/claude/claude_desktop_config.json)
@@ -222,9 +197,9 @@ augur workflow NVDA --steps fetch,analyze,consensus,committee
 | `mcp_augur_committee` | 投委会（独立意见 + 裁决） |
 | `mcp_augur_debate` | 多轮结构化辩论 |
 | `mcp_augur_workflow` | 完整分析流水线 |
-| `mcp_augur_workspace_get` | 🆕 读取你的终端配置 |
-| `mcp_augur_workspace_set` | 🆕 修改你的终端配置 |
-| `mcp_augur_workspace_profiles` | 🆕 管理 Profile |
+| `mcp_augur_workspace_get` | 读取你的终端配置 |
+| `mcp_augur_workspace_set` | 修改你的终端配置 |
+| `mcp_augur_workspace_profiles` | 管理 Profile |
 | `mcp_augur_fetch` | 实时行情 |
 | `mcp_augur_sentiment` | 社交情绪分析 |
 | `mcp_augur_create_persona` | 创建自定义大师 |
@@ -248,7 +223,7 @@ augur workflow TSLA --steps fetch,analyze,consensus,committee
 # 数据
 augur fetch AAPL                                # 实时行情 + 财务指标
 augur sentiment AAPL                            # 社交情绪分析
-augur guidance AAPL                             # AI 提炼管理层展望（默认关闭，见下文）
+augur guidance AAPL                             # AI 提炼管理层展望
 
 # Dashboard
 augur serve --port 8000 --open                  # 启动并自动打开浏览器
@@ -277,12 +252,9 @@ augur inject-soul -p my_profile --persona buffett  # 把大师人格注入到某
 # Bot
 augur telegram / augur slack / augur wechat / augur lark
 
-# 更新
-augur update                                    # git pull + 重装（仅 git clone 安装适用）
-
 # 排障
-augur doctor                                    # 环境自检：SSL/TLS、API key、数据源连通性、学习数据积累进度
-augur doctor --offline                          # 同上，但跳过真实网络请求
+augur doctor                                    # 环境自检
+augur doctor --offline                          # 跳过真实网络请求
 ```
 
 ---
@@ -314,134 +286,51 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 
 ## 🗺️ 开发路线图
 
-当前项目审计、仓库分工和 7 天 v11 Release Candidate 冲刺计划见 [docs/ROADMAP.md](docs/ROADMAP.md)；后续功能与产品方向见 [docs/PRODUCT_DIRECTIONS.md](docs/PRODUCT_DIRECTIONS.md)；金融平台、分析 Agent 与 Skill/MCP 的融合方案见 [生态调研](docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)。
+当前项目审计、仓库分工和 7 天 v11 Release Candidate 冲刺计划见 [docs/ROADMAP.md](docs/ROADMAP.md)；后续功能与产品方向见 [docs/PRODUCT_DIRECTIONS.md](docs/PRODUCT_DIRECTIONS.md)；竞品调研与差异化策略见 [docs/DIFFERENTIATION_STRATEGY.md](docs/DIFFERENTIATION_STRATEGY.md)；金融平台、分析 Agent 与 Skill/MCP 的融合方案见 [生态调研](docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)。
 
 ---
 
 ## 📝 更新日志
 
-> 非技术向用户说明见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
-
 <details open>
-<summary><strong>v10.15.0 — 公开同步发布 (current)</strong></summary>
+<summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
 
-距上一次公开发布（v10.0.0，2026-06-29）三周半的开发成果同步：
+v11 是一次地基重建。核心交付：
 
-- 🆕 **SEC EDGAR 真实基本面**：18 位大师的 PE/ROE/毛利率等指标改用官方 10-K/10-Q 数据，历史回溯到约 2011 年；新增内部人交易信号、机构持仓信号、`augur guidance`（LLM 提炼管理层展望，默认关闭）
-- ✅ **三处可信度修复**：MetaModel 稀释归零、回测默认真实历史数据、学习引擎真正开始积累数据；同时诚实下线两处未经验证的逻辑（X 情绪权重、regime 权重手工规则）
-- 🆕 **`augur doctor` + 数据源连通性历史 + 每周真实网络烟测**：一键诊断本机环境，7 天连通性趋势自动发现数据源失效
-- 🆕 **两个新研究脚本**：因子级归因分析（`factor_attribution.py`）、`rolling_ic.json` 生成器；首次全量真实数据跑通后发现一个诚实的局限——历史回测管道缺少内部人/机构持股比例的真实历史数据，详见 `docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md`
-- 🔧 **工程健康**：`cli.py`/`dashboard/` 拆分完成，修复一个真实打包 bug（wheel 曾经缺整个 dashboard 目录）+ 一个真实头像图片路径 bug（全站头像 404，靠真实打开浏览器才发现）
-- ✅ 2461 个测试全部通过（v10.0.0 发布时为 2136 个）
+- **EvidenceItem / Claim / StepResult / RunBundle** 四个不可变 schema
+- **三类时间语义**（effective_at / available_at / retrieved_at），拒绝 look-ahead bias
+- **缺失数据显式传播**：ownership 字段 `0 → None`，11 位 persona 显式 abstain
+- **RunTracker**：checkpoint 保存/恢复，RunBundle 持久化
+- **两个内置 Skill**（`earnings-prep`、`filing-delta`）+ Capability registry + 权限执行器
+- **安全基线**：PBKDF2 600k、SQLite corruption backup、统一 CORS
+- **MCP resources**：`augur://evidence/{id}` · `augur://runs/{id}`
+- **Rolling IC OOS harness** + 校准状态标注
 
-详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+详见 [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md)。
 </details>
 
 <details>
-<summary><strong>v10.14.0 — rolling_ic.json 生成器</strong></summary>
+<summary><strong>v10.15.0 — 公开同步发布</strong></summary>
 
-- 🆕 **`scripts/generate_rolling_ic.py`**：共识引擎里一直有一段"按滚动 IC 动态调权"的混合逻辑，但从来没人写过生成 `feedback/rolling_ic.json` 的脚本，一直静默空跑——跟 R5 修复前的 `agent_correlation.json` 是同一个病。这个脚本用真实历史数据算出每位大师的横截面 IC，转成权重写入该文件
-- ✅ 2460 个测试全部通过
-
-详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+距 v10.0.0 三周半的开发成果同步：SEC EDGAR 真实基本面、三处可信度修复、`augur doctor`、数据源连通性历史、因子级归因分析。2461 个测试全部通过。详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
 </details>
 
 <details>
-<summary><strong>v10.13.0 — 因子级归因分析（研究脚本）</strong></summary>
+<summary><strong>v10.14.0 ~ v10.9.0 — 迭代记录</strong></summary>
 
-- 🆕 **`scripts/factor_attribution.py`**：新增研究脚本，对 18 位大师 metadata 里约 70-90 个具名因子逐个计算横截面 rank-IC（哪个因子在预测未来收益上真的有用），内置"分半稳定性"检验防止多重比较假阳性（类似之前 regime 权重踩过的坑）——只有前后两段时间窗口方向一致且都够强的因子才算"稳定候选"，其余照样打印但明确标注不可信
-- ✅ 2449 个测试全部通过
-
-详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+v10.14: rolling_ic.json 生成器 · v10.13: 因子级归因分析 · v10.12: 每周真实网络烟测 · v10.11: 数据源连通性历史 · v10.10: augur doctor 环境自检 · v10.9: SEC EDGAR 真实数据 + 可信度全面修复
 </details>
 
 <details>
-<summary><strong>v10.12.0 — 每周数据源真实网络烟测</strong></summary>
+<summary><strong>v10.0.0 — 终端工作区 + Agentic 工作流</strong></summary>
 
-- 🆕 **每周自动烟测**：新增 GitHub Actions 定时任务（每周一），对 SEC EDGAR 和 yfinance 做真实网络连通性检查——EDGAR 失败会让任务判红（SEC 很少封锁 CI 的 IP，失败是真信号），yfinance 失败只警告不判红（Yahoo 对云端 IP 的限流/封锁太常见，不代表真的坏了）
-- ✅ 2439 个测试全部通过
-
-详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
+Bloomberg 风格多套 Profile、布局预设、大师子集过滤。6 步分析流水线。WebSocket 实时推送。13 MCP 工具。2136 测试通过。
 </details>
 
 <details>
-<summary><strong>v10.11.0 — 数据源连通性历史追踪</strong></summary>
+<summary><strong>v9.0.x 及更早</strong></summary>
 
-- 🆕 **`augur doctor` 新增 7 天连通性历史**：每次跑 `augur doctor` 都会把当次探测结果记到本地（`~/.augur/provider_stats.json`），累积成一条短期趋势——像 stooq 端点失效这种问题，以后会在 `augur doctor` 里显示成"0/7 reachable"，不用再靠人工偶然发现
-- ✅ 2427 个测试全部通过
-
-详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
-</details>
-
-<details>
-<summary><strong>v10.10.0 — augur doctor 环境自检</strong></summary>
-
-- 🆕 **`augur doctor`**：一键诊断本机环境——Python/SSL 工具链是否有已知会破坏 yfinance 的组合（如 LibreSSL）、可选 API key 配置状态、数据源连通性实测、学习引擎数据积累进度；`--offline` 跳过真实网络请求
-- ✅ 2408 个测试全部通过
-
-详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
-</details>
-
-<details>
-<summary><strong>v10.9.0 — 可信度全面修复 + SEC EDGAR 真实数据</strong></summary>
-
-- ✅ **共识计算不再被稀释一半**：从未验证过有效性的 MetaModel 中位数混合默认权重归零
-- ✅ **回测默认真实历史数据**：Dashboard/CLI 不再默认展示合成数据（`--demo` 才用假数据，且明确标注）
-- ✅ **学习机制真正开始积累数据**：预测立即持久化 + 定时任务自动核对到期预测结果
-- 🆕 **SEC EDGAR 真实财报**：18位大师的 PE/ROE/毛利率等指标改用官方 10-K/10-Q 数据，历史回溯到约 2011 年（美股/中概股）
-- 🆕 **内部人交易信号**：追踪高管/董事最近 90 天真实公开市场买卖
-- 🆕 **机构持仓信号**：追踪伯克希尔、文艺复兴科技、桥水基金等知名机构季度持仓变化
-- 🆕 **`augur guidance`**（默认关闭）：LLM 提炼最新财报管理层展望情绪 + 前瞻指引数字
-- 🔧 **情绪分析修正**：剔除了一直是假数据的 X（Twitter）20% 权重
-- 🔧 **Regime 权重诚实下线**：真实数据验证后发现没有明显效果，已停用未经验证的手工规则
-- ✅ 2388 个测试全部通过
-
-详见 [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md)。
-</details>
-
-<details>
-<summary><strong>v10.0.0 — 终端工作区 + Agentic 工作流 + 13 MCP 工具 + WebSocket 实时推送</strong></summary>
-
-**v8 → v10 全面升级要点：**
-
-- 🆕 **Terminal Workspace**：Bloomberg 风格多套 Profile，布局预设，大师子集过滤，委员会预设绑定
-- 🆕 **3 个工作区 MCP 工具**：Agent 可读写你的终端配置（`workspace_get/set/profiles`）
-- 🆕 **`augur_workflow`**：6 步分析流水线，单步失败不中断，步骤联动 Profile
-- 🆕 **WebSocket 实时推送**：`/ws/workspace` 状态广播 + `/ws/workflow` 逐步进度
-- 🆕 **augur-terminal 元技能**：Hermes 统一入口，13 工具 + 15 页面 + 4 预设
-- 🆕 **Hermes committee.yaml**：委员会主席 Agent 角色
-- ✅ 共识引擎：行业权重 · regime 路由 · MetaModel · 点时基本面
-- ✅ Dashboard：4 语言 i18n · 历史热力图 · PWA · 键盘快捷键 · CSV 导出
-- ✅ 2136 个测试全部通过
-</details>
-
-<details>
-<summary><strong>v10.16.x — 内部迭代（已全部包含在 v10.0.0 中）</strong></summary>
-
-- v10.16.7：历史热力图 + Optimizer Sharpe 修复
-- v10.16.6：投委会事件循环阻塞缓解
-- v10.16.5：首页 11 个接口阻塞修复
-- v10.16.4：投委会 Kelly 仓位显示修复
-- v10.16.3：workflow 步骤联动布局预设
-- v10.16.2：workflow 局部失败容错 + 工作区 ETag
-- v10.16.1：MCP 工作区工具 + 委员会预设接线
-</details>
-
-<details>
-<summary><strong>v9.0.x — Hermes Agent + 委员会体系</strong></summary>
-
-- 19 个 Hermes Skill，中国大师全中文对话
-- 9 个 MCP 工具（committee / sentiment / create_persona / debate）
-- 委员会预设系统 + Hermes 接入指南页
-- PWA 可安装 + Ticker Tape WebSocket + Chat 数据卡片
-</details>
-
-<details>
-<summary><strong>v8.2.x — HD-2D 设计系统 + Optimizer + AI 对话</strong></summary>
-
-- Markowitz 有效前沿图 · Rules→Bot 推送 · AI 对话 LLM 支持
-- HD-2D 设计系统：ExecCard / OracleSays / ScorecardGrid
-- WCAG AA 合规 · 线程安全 · Scanner 加固
+v9: Hermes Agent + 委员会体系 · v8: HD-2D 设计系统 + Optimizer + AI 对话
 </details>
 
 ---
