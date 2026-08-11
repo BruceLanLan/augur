@@ -396,8 +396,18 @@ class TestExportErrors:
 
     def test_invalid_format_raises_value_error(self, sample_run_bundle):
         """Unknown format should raise ValueError."""
-        exporter = ReportExporter()
         with tempfile.TemporaryDirectory() as tmpdir:
+            data_dir = Path(tmpdir) / "data"
+            runs_dir = data_dir / "runs"
+            runs_dir.mkdir(parents=True)
+
+            # Save the bundle so _load_run_bundle succeeds
+            run_path = runs_dir / f"{sample_run_bundle.run_id}.json"
+            run_path.write_text(
+                sample_run_bundle.model_dump_json(indent=2), encoding="utf-8"
+            )
+
+            exporter = ReportExporter(data_dir=data_dir)
             with pytest.raises(ValueError) as exc_info:
                 exporter.export_from_run_id(
                     sample_run_bundle.run_id,

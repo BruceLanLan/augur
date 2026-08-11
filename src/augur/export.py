@@ -553,10 +553,13 @@ pre {{ background: #f4f4f8; padding: 16px; border-radius: 6px; overflow-x: auto;
         referenced_ids = _collect_evidence_ids_from_claims(claims)
         for ev_id in referenced_ids:
             if ev_id not in evidence_by_id:
-                # Create a placeholder for referenced but not inlined evidence
+                # Create a placeholder for referenced but not inlined evidence.
+                # Parse the source from the evidence_id: ev_{source}_{hash[:12]}
+                parts = ev_id.split("_", 2)  # ["ev", "source", "hash"]
+                source = parts[1] if len(parts) >= 2 else "unknown"
                 evidence_by_id[ev_id] = EvidenceItem(
                     evidence_id=ev_id,
-                    source="unknown",
+                    source=source,
                     content_hash=hashlib.sha256(b"placeholder").hexdigest(),
                     missing=True,
                 )
