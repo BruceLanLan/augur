@@ -45,12 +45,7 @@ jobs:
       - name: Assert version matches pyproject.toml
         run: |
           PKG=$(python -c "import augur; print(augur.__version__)")
-          TOML=$(python -c "
- import re
- t = open('pyproject.toml').read()
- m = re.search(r'^version\s*=\s*\"([^\"]+)\"', t, re.MULTILINE)
- print(m.group(1) if m else 'NOT-FOUND')
- ")
+          TOML=$(python -c "import re; t=open('pyproject.toml').read(); m=re.search(r'^version\s*=\s*\\\"([^\\\"]+)\\\"', t, re.MULTILINE); print(m.group(1) if m else 'NOT-FOUND')")
           if [ "${PKG}" != "${TOML}" ]; then echo "FAIL: ${PKG} != ${TOML}"; exit 1; fi
           echo "OK: ${PKG}"
 

@@ -43,13 +43,7 @@ jobs:
       - name: Assert augur.__version__ matches pyproject.toml
         run: |
           PKG_VERSION=$(python -c "import augur; print(augur.__version__)")
-          # Parse version from pyproject.toml without tomllib (works on 3.9+)
-          TOML_VERSION=$(python -c "
- import re
- t = open('pyproject.toml').read()
- m = re.search(r'^version\\s*=\\s*\"([^\"]+)\"', t, re.MULTILINE)
- print(m.group(1) if m else 'NOT-FOUND')
- ")
+          TOML_VERSION=$(python -c "import re; t=open('pyproject.toml').read(); m=re.search(r'^version\s*=\s*\\\"([^\\\"]+)\\\"', t, re.MULTILINE); print(m.group(1) if m else 'NOT-FOUND')")
           echo "augur.__version__  = ${PKG_VERSION}"
           echo "pyproject.toml     = ${TOML_VERSION}"
           if [ "${PKG_VERSION}" != "${TOML_VERSION}" ]; then
