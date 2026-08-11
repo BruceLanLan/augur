@@ -706,3 +706,73 @@
     return { scale: scale, offsetX: offsetX, offsetY: offsetY };
   };
 })();
+
+// ============ Disagreement Map Renderer ============
+
+/**
+ * Render a DisagreementMap onto the evidence graph canvas.
+ * @param {Object} map - DisagreementMap JSON with ticker, conflict_points, etc.
+ */
+window.renderDisagreementMap = function (map) {
+  if (!map || !map.conflict_points) return;
+
+  var nodes = [];
+  var edges = [];
+  var centerX = 400, centerY = 300;
+
+  // Central node: the ticker
+  nodes.push({
+    id: 'ticker',
+    label: map.ticker || '???',
+    type: 'ticker',
+    x: centerX, y: centerY, fixed: true,
+  });
+
+  var conflicts = map.conflict_points.slice(0, 5);
+  var radius = 200;
+  conflicts.forEach(function (cp, i) {
+    var angle = (2 * Math.PI * i) / conflicts.length - Math.PI / 2;
+    var nx = centerX + radius * Math.cos(angle);
+    var ny = centerY + radius * Math.sin(angle);
+
+    // Conflict node
+    var cid = 'conflict_' + i;
+    nodes.push({
+      id: cid,
+      label: cp.claim ? cp.claim.slice(0, 40) : 'Conflict ' + (i + 1),
+      type: 'conflict',
+      x: nx, y: ny,
+      details: cp,
+    });
+    edges.push({ from: 'ticker', to: cid, type: 'conflict' });
+
+    // Bullish personas as sub-nodes
+    (cp.bullish_personas || []).slice(0, 3).forEach(function (pid, j) {
+      var bid = 'bull_' + i + '_' + j;
+      nodes.push({
+        id: bid,
+        label: pid,
+        type: 'bullish',
+        x: nx + 60 + j * 20,
+        y: ny - 20 + j * 15,
+      });
+      edges.push({ from: cid, to: bid, type: 'supports' });
+    });
+
+    // Bearish personas as sub-nodes
+    (cp.bearish_personas || []).slice(0, 3).forEach(function (pid, j) {
+      var bid = 'bear_' + i + '_' + j;
+      nodes.push({
+        id: bid,
+        label: pid,
+        type: 'bearish',
+        x: nx - 60 - j * 20,
+        y: ny + 20 - j * 15,
+      });
+      edges.push({ from: cid, to: bid, type: 'contradicts' });
+    });
+  });
+
+  window.__evidenceGraphData = { nodes: nodes, edges: edges };
+  if (window.__evidenceGraphRender) window.__evidenceGraphRender();
+};
