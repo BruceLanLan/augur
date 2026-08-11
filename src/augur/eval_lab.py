@@ -158,33 +158,36 @@ def _prepare_paired_data(
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """将 baseline 和 candidate RunBundles 与 outcome 配对。
 
+    Matching strategy (tried in order):
+      1. Exact run_id match in both lookups (outcome key is a shared run_id).
+      2. Positional pairing: baseline[i] ↔ candidate[i], outcome keyed by
+         baseline run_id, candidate run_id, or shared ticker.
+
     outcome_data 的 key 为 run_id 或 ticker，value 为实际收益/结果（0/1 或连续值）。
 
     Returns:
         (baseline_probs, candidate_probs, outcomes) 三个对齐的 numpy 数组
     """
-    baseline_probs = []
-    candidate_probs = []
-    outcomes = []
+    baseline_probs: List[float] = []
+    candidate_probs: List[float] = []
+    outcomes: List[float] = []
 
-    # Build lookup: run_id -> prob
+    # --- Strategy 1: exact key match ---
     base_lookup: Dict[str, float] = {}
     for b in baseline_runs:
         prob = _extract_probability(b)
         if prob is not None:
             base_lookup[b.run_id] = prob
-            # Also index by ticker
-            ticker = _extract_ticker(b)
-            base_lookup[ticker] = prob
+            base_lookup[_extract_ticker(b)] = prob
 
     cand_lookup: Dict[str, float] = {}
     for c in candidate_runs:
         prob = _extract_probability(c)
         if prob is not None:
             cand_lookup[c.run_id] = prob
-            ticker = _extract_ticker(c)
-            cand_lookup[ticker] = prob
+            cand_lookup[_extract_ticker(c)] = prob
 
+    matched_keys: set = set()
     for key, outcome in outcome_data.items():
         base_p = base_lookup.get(key)
         cand_p = cand_lookup.get(key)
@@ -192,6 +195,28 @@ def _prepare_paired_data(
             baseline_probs.append(base_p)
             candidate_probs.append(cand_p)
             outcomes.append(outcome)
+            matched_keys.add(key)
+
+    # --- Strategy 2: positional pairing for unmatched entries ---
+    n = min(len(baseline_runs), len(candidate_runs))
+    for i in range(n):
+        base_p = _extract_probability(baseline_runs[i])
+        cand_p = _extract_probability(candidate_runs[i])
+        if base_p is None or cand_p is None:
+            continue
+
+        # Try each candidate key for outcome lookup
+        for candidate_key in (
+            baseline_runs[i].run_id,
+            candidate_runs[i].run_id,
+            _extract_ticker(baseline_runs[i]),
+        ):
+            outcome = outcome_data.get(candidate_key)
+            if outcome is not None:
+                baseline_probs.append(base_p)
+                candidate_probs.append(cand_p)
+                outcomes.append(outcome)
+                break
 
     return (
         np.array(baseline_probs, dtype=np.float64),
