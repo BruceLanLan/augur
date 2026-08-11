@@ -1,0 +1,8 @@
+{
+  "_comment": "Old EvidenceItem format — missing evidence_id, uses 'timestamp' instead of three time semantics",
+  "source": "yfinance",
+  "evidence_type": "price",
+  "content": 150.25,
+  "timestamp": "2025-01-15T10:30:00Z",
+  "metadata": {}
+}

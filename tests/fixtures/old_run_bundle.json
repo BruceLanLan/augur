@@ -1,0 +1,8 @@
+{
+  "_comment": "Old RunBundle format — missing manifest, missing created_at, no supersedes",
+  "run_id": "run_AAPL_20250115",
+  "steps": [],
+  "started_at": "2025-01-15T10:30:00Z",
+  "finished_at": "2025-01-15T10:31:00Z",
+  "metadata": {}
+}

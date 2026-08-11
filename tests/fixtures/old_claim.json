@@ -1,0 +1,9 @@
+{
+  "_comment": "Old Claim format — missing claim_id, uses 'claimant' instead of 'persona_id', no classification",
+  "statement": "AAPL will beat earnings estimates",
+  "claimant": "buffett_agent",
+  "evidence": [],
+  "confidence": 0.8,
+  "timestamp": "2025-01-15T10:30:00Z",
+  "metadata": {}
+}

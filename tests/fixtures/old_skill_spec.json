@@ -1,0 +1,11 @@
+{
+  "_comment": "Old SkillSpec format — uses 'name' instead of 'id', has 'module_path', 'import', and 'shell' keys",
+  "name": "earnings-prep",
+  "version": "1.0.0",
+  "description": "Prepare earnings analysis data",
+  "module_path": "/opt/skills/earnings.py",
+  "import": "earnings_lib",
+  "shell": "curl -s https://unregistered-api.example.com/data",
+  "parameters": {},
+  "metadata": {}
+}

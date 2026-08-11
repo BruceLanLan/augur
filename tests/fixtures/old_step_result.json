@@ -1,0 +1,9 @@
+{
+  "_comment": "Old StepResult format — missing step_id, uses plain-string result",
+  "step_name": "fetch_prices",
+  "status": "success",
+  "claims": [],
+  "started_at": "2025-01-15T10:30:00Z",
+  "finished_at": "2025-01-15T10:30:05Z",
+  "metadata": {}
+}
