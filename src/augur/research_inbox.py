@@ -196,17 +196,24 @@ class ResearchInbox:
           - *filing_deltas*: objects with ``ticker``, ``new_accession``, ``overall_assessment``
           - *thesis_reviews*: objects with ``ticker``, ``status``
 
-        Existing items with the same id are **not** duplicated.
+        Existing items with the same ``(ticker, item_type)`` are **not** duplicated.
         """
         now = datetime.utcnow().isoformat()
-        existing_ids = {d["item_id"] for d in self._load_all()}
+        existing_keys = {
+            (d["ticker"], d["item_type"]) for d in self._load_all()
+        }
         new_items: List[InboxItem] = []
+
+        def _is_new(ticker: str, item_type: str) -> bool:
+            return (ticker.upper(), item_type) not in existing_keys
 
         # Earnings events
         for ev in (earnings_events or []):
             ticker = getattr(ev, "ticker", "")
             event_date = getattr(ev, "event_date", "")
             fiscal_period = getattr(ev, "fiscal_period", "")
+            if not _is_new(ticker, "earnings_event"):
+                continue
             item = InboxItem(
                 item_id="",
                 item_type="earnings_event",
@@ -220,15 +227,16 @@ class ResearchInbox:
                 created_at=now,
             )
             item.item_id = self._generate_id(item.ticker, item.title, item.created_at)
-            if item.item_id not in existing_ids:
-                new_items.append(item)
-                existing_ids.add(item.item_id)
+            new_items.append(item)
+            existing_keys.add((ticker.upper(), "earnings_event"))
 
         # Filing deltas
         for fd in (filing_deltas or []):
             ticker = getattr(fd, "ticker", "")
             assessment = getattr(fd, "overall_assessment", "")
             accession = getattr(fd, "new_accession", "")
+            if not _is_new(ticker, "filing_delta"):
+                continue
             priority = (
                 "high" if assessment == "significant_changes"
                 else "medium" if assessment == "minor_changes"
@@ -247,14 +255,15 @@ class ResearchInbox:
                 created_at=now,
             )
             item.item_id = self._generate_id(item.ticker, item.title, item.created_at)
-            if item.item_id not in existing_ids:
-                new_items.append(item)
-                existing_ids.add(item.item_id)
+            new_items.append(item)
+            existing_keys.add((ticker.upper(), "filing_delta"))
 
         # Thesis reviews
         for tr in (thesis_reviews or []):
             ticker = getattr(tr, "ticker", "")
             status = getattr(tr, "status", "pending")
+            if not _is_new(ticker, "thesis_review"):
+                continue
             item = InboxItem(
                 item_id="",
                 item_type="thesis_review",
@@ -267,9 +276,8 @@ class ResearchInbox:
                 created_at=now,
             )
             item.item_id = self._generate_id(item.ticker, item.title, item.created_at)
-            if item.item_id not in existing_ids:
-                new_items.append(item)
-                existing_ids.add(item.item_id)
+            new_items.append(item)
+            existing_keys.add((ticker.upper(), "thesis_review"))
 
         # Persist new items
         if new_items:

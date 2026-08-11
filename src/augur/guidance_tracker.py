@@ -28,13 +28,13 @@ class GuidanceRecord:
     """A single management guidance range for one metric/period."""
 
     ticker: str
-    metric: str              # "revenue", "eps", "fcf"
-    fiscal_period: str       # "Q4 2025", "FY2025"
+    metric: str
+    fiscal_period: str
     low: float
     high: float
+    source_filing: str
+    published_date: str
     actual_result: Optional[float] = None  # filled post-hoc
-    source_filing: str       # accession number
-    published_date: str      # ISO date
 
 
 # ---------------------------------------------------------------------------

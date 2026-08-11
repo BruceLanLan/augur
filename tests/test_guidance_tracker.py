@@ -11,9 +11,9 @@ from augur.guidance_tracker import GuidanceRecord, GuidanceTracker
 # ---------------------------------------------------------------------------
 
 @pytest.fixture
-def tracker():
-    """Return a fresh GuidanceTracker (hermetic via conftest AUGUR_DATA_DIR)."""
-    return GuidanceTracker()
+def tracker(tmp_path):
+    """Return a fresh GuidanceTracker in a per-test temp directory."""
+    return GuidanceTracker(data_dir=tmp_path)
 
 
 @pytest.fixture
