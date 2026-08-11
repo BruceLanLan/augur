@@ -4,6 +4,7 @@
 - **研究日期**：2026-08-11
 - **适用基线**：v11 Release Candidate 之后
 - **执行计划**：[`docs/ROADMAP.md`](ROADMAP.md)
+- **生态融合调研**：[`docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md`](research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)
 
 ## 一句话定位
 

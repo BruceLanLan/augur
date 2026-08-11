@@ -264,7 +264,7 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 
 ## 🗺️ 开发路线图
 
-当前项目审计、仓库分工和 7 天 v11 Release Candidate 冲刺计划见 [docs/ROADMAP.md](docs/ROADMAP.md)；后续功能与产品方向见 [docs/PRODUCT_DIRECTIONS.md](docs/PRODUCT_DIRECTIONS.md)。
+当前项目审计、仓库分工和 7 天 v11 Release Candidate 冲刺计划见 [docs/ROADMAP.md](docs/ROADMAP.md)；后续功能与产品方向见 [docs/PRODUCT_DIRECTIONS.md](docs/PRODUCT_DIRECTIONS.md)；金融平台、分析 Agent 与 Skill/MCP 的融合方案见 [生态调研](docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)。
 
 ---
 
