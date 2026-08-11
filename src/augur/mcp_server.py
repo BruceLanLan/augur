@@ -23,6 +23,7 @@ for premium sources, env keys such as FINNHUB_API_KEY / ALPHAVANTAGE_API_KEY.
 Without them, augur_fetch / auto-fetch falls back to yfinance or returns a clear error.
 """
 
+import json
 import logging
 import re
 from typing import Optional
@@ -600,6 +601,7 @@ def create_server():
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
                              fcf, market_cap, price, sector=sector)
 
+        from augur.registry import AgentRegistry, DecisionCoordinator
         registry = AgentRegistry()
         coordinator = DecisionCoordinator(registry)
 
@@ -829,7 +831,6 @@ def create_server():
         human-readable error when not found.
         """
         from augur.data_dir import get_data_dir
-        import json
 
         ev_dir = get_data_dir() / "evidence"
         if not ev_dir.exists():
