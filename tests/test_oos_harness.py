@@ -484,7 +484,11 @@ class TestEngineCalibrationSafety:
             ),
         }
 
-        result = engine.compute(results, ticker="TEST")
+        # Avoid filesystem / network hits during test
+        with patch("augur.consensus.rolling_ic.load_rolling_ic_weights", return_value={}):
+            with patch("augur.consensus.engine._check_calibration_status",
+                       return_value="raw"):
+                result = engine.compute(results, ticker="TEST")
         assert "calibration_status" in result.metadata
         assert "calibration" in result.metadata
         assert "status" in result.metadata["calibration"]

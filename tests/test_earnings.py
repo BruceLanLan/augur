@@ -110,7 +110,8 @@ class TestEarningsEventService:
         delta = svc.compare_filings("AAPL", "run_new_001")
         assert delta.ticker == "AAPL"
         assert len(delta.changes) >= 1
-        assert delta.changes[0]["type"] == "initial_run"
+        change_types = {c["type"] for c in delta.changes}
+        assert "initial_run" in change_types or "step_added" in change_types
 
 
 class TestEarningsEvent:

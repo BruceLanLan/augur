@@ -410,11 +410,15 @@ def create_server():
         if err:
             return err
 
+        has_metrics = any([pe, pb, roe, gross_margins, revenue_growth, market_cap, price])
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
                              fcf, market_cap, price, institutional_ownership, insider_ownership,
                              rsi, sector=sector, industry=industry)
         registry = AgentRegistry()
         coordinator = DecisionCoordinator(registry)
+
+        source = "demo" if has_metrics else "live"
+        freshness = "fresh" if not has_metrics else "unknown"
 
         results = coordinator.analyze_with_all(ctx)
         consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
@@ -426,6 +430,7 @@ def create_server():
             f"  Signal: {consensus.signal.value.upper()}",
             f"  Score: {consensus.score:.1f}/10",
             f"  Confidence: {consensus.confidence:.0%}",
+            f"  Source: {source}  Freshness: {freshness}",
         ]
         if kelly is not None:
             lines.append(f"  Kelly Position: {kelly:.1f}%")
