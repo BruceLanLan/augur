@@ -3,7 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ff6b35" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#1a1a2e" media="(prefers-color-scheme: dark)">
     <title>{% block title %}Augur - 投资大师分析{% endblock %}</title>
+    <!-- Preconnect to CDN origins for faster font/icon loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com">
+    <!-- Critical CSS preload -->
+    <link rel="preload" href="/static/css/layout.css?v=11.0.0" as="style">
+    <link rel="preload" href="/static/css/colors_and_type.css?v=11.0.0" as="style">
     <meta name="description" content="Augur - Multi-agent investment analysis platform with 18 investor personas">
     <meta name="keywords" content="Augur, AI投资分析, 多智能体, 股票分析, 巴菲特, 投资大师, 共识分析, Multi-Agent, Investment Analysis">
     <meta property="og:title" data-i18n-meta="meta-og-title" content="{% block og_title %}Augur - 18位投资大师AI共识分析系统{% endblock %}">
@@ -24,6 +32,7 @@
     <link href="/static/css/augur.css?v=8.1.0" rel="stylesheet">
     <link href="/static/css/layout.css?v=8.1.0" rel="stylesheet">
     <link href="/static/css/evidence.css?v=8.1.0" rel="stylesheet">
+    <link href="/static/css/loading.css?v=8.1.0" rel="stylesheet">
     {% block extra_head %}{% endblock %}
     <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#d4a017">
@@ -39,8 +48,8 @@
     <div class="app app-layout">
         <!-- Sidebar (grid column 1) -->
         <aside class="sb sidebar bg-grid" id="sidebar" aria-label="Main navigation">
-            <div class="sb-logo" onclick="window.location.href='/'">
-                <img class="pixelated" src="/static/images/augur-owl-64.png" alt="Augur" width="32" height="32">
+            <div class="sb-logo" onclick="window.location.href='/'" role="link" tabindex="0" aria-label="Augur home" title="Augur home">
+                <img class="pixelated" src="/static/images/augur-owl-64.png" alt="Augur logo" width="32" height="32">
                 <span class="sb-word">Augur</span>
             </div>
 
@@ -52,7 +61,7 @@
                 <!-- 分析 Group -->
                 <div class="sb-group" data-i18n="group-analysis">Analysis</div>
                 <a class="sb-item nav-item" href="/" data-page="home">
-                    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                     <span data-i18n="nav-dashboard">Dashboard</span>
                 </a>
                 <a class="sb-item nav-item" href="/stocks" data-page="stocks">
@@ -173,23 +182,23 @@
 
     <!-- Bottom nav for mobile — max 5 tabs, others accessible via sidebar -->
     <nav class="bottom-nav" id="bottom-nav" aria-label="Mobile navigation">
-        <a class="bottom-nav-item" href="/" data-page="home">
-            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <a class="bottom-nav-item" href="/" data-page="home" aria-label="Dashboard">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
             <span data-i18n="bottom-home">首页</span>
         </a>
-        <a class="bottom-nav-item" href="/stocks" data-page="stocks">
+        <a class="bottom-nav-item" href="/stocks" data-page="stocks" aria-label="Stock Analysis">
             <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
             <span data-i18n="bottom-analysis">分析</span>
         </a>
-        <a class="bottom-nav-item" href="/committee" data-page="committee">
+        <a class="bottom-nav-item" href="/committee" data-page="committee" aria-label="Committee">
             <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span data-i18n="bottom-committee">委员会</span>
         </a>
-        <a class="bottom-nav-item" href="/history" data-page="history">
+        <a class="bottom-nav-item" href="/history" data-page="history" aria-label="History">
             <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
             <span data-i18n="bottom-history">历史</span>
         </a>
-        <a class="bottom-nav-item" href="/settings" data-page="settings">
+        <a class="bottom-nav-item" href="/settings" data-page="settings" aria-label="Settings">
             <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15"/></svg>
             <span data-i18n="bottom-settings">设置</span>
         </a>
@@ -202,7 +211,7 @@
     <div id="kbd-modal" role="dialog" aria-modal="true" aria-labelledby="kbd-modal-heading" onclick="if(event.target===this)closeKbdModal()" style="display:none;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;">
         <div style="background:var(--bg-card,#1a1a2e);border:1px solid var(--border,#333);border-radius:12px;padding:28px 32px;min-width:340px;max-width:480px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5);position:relative;">
             <h2 id="kbd-modal-heading" data-i18n="kbd-modal-title" style="margin:0 0 20px;font-size:1.1rem;font-weight:600;color:var(--text-primary,#fff);letter-spacing:.02em;">键盘快捷键</h2>
-            <table style="width:100%;border-collapse:collapse;">
+            <table style="width:100%;border-collapse:collapse;" role="grid" aria-label="Keyboard shortcuts">
                 <tbody>
                     <tr style="border-bottom:1px solid var(--border,#333);">
                         <td style="padding:10px 0;color:var(--text-secondary,#aaa);font-size:.875rem;" data-i18n="kbd-focus-ticker">聚焦 Ticker 输入框</td>

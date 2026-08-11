@@ -1,74 +1,279 @@
+/* ============================================================
+   AUGUR — Loading States
+   loading.css
 
-/* ============ Skeleton Loading ============ */
-@keyframes augur-skeleton-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
+   Skeleton screens, spinners, empty-state patterns, progress
+   bars and toast notifications. Uses design tokens from
+   colors_and_type.css for theme-aware rendering.
+   ============================================================ */
+
+/* ============================================================
+   1 · SKELETON SCREEN — shimmer pulse placeholder
+   ============================================================ */
 .skeleton {
-  background: linear-gradient(90deg, var(--bg-muted, #e5e7eb) 25%, var(--bg-card, #f9fafb) 50%, var(--bg-muted, #e5e7eb) 75%);
-  background-size: 200% 100%;
-  animation: augur-skeleton-pulse 1.5s ease-in-out infinite;
-  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--bg-tertiary, #1e2a4a) 25%,
+    var(--bg-card-hover, #1c2a4a) 37%,
+    var(--bg-tertiary, #1e2a4a) 63%
+  );
+  background-size: 400% 100%;
+  animation: augur-skeleton-shimmer 1.6s ease-in-out infinite;
+  border-radius: var(--r-sm, 4px);
+  color: transparent !important;
+  user-select: none;
+  pointer-events: none;
 }
-.skeleton-text { height: 16px; margin-bottom: 8px; width: 80%; }
-.skeleton-text.short { width: 50%; }
-.skeleton-text.long { width: 95%; }
-.skeleton-card { height: 180px; border-radius: 12px; }
-.skeleton-avatar { width: 48px; height: 48px; border-radius: 50%; }
-.skeleton-row { display: flex; gap: 12px; }
-.skeleton-row > * { flex: 1; }
+.skeleton * { visibility: hidden; }
 
-/* ============ Spinner ============ */
-@keyframes augur-spin { to { transform: rotate(360deg); } }
-.spinner {
-  width: 32px; height: 32px;
-  border: 3px solid var(--border, #e5e7eb);
-  border-top-color: var(--accent, #ff6b35);
-  border-radius: 50%;
-  animation: augur-spin 0.8s linear infinite;
+@keyframes augur-skeleton-shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
-.spinner-lg { width: 48px; height: 48px; border-width: 4px; }
-.spinner-sm { width: 20px; height: 20px; border-width: 2px; }
+
+/* Skeleton shapes */
+.skeleton-text {
+  height: 1em;
+  margin-bottom: 0.5em;
+  width: 100%;
+}
+.skeleton-text.short { width: 50%; }
+.skeleton-text.long  { width: 95%; }
+.skeleton-text:last-child { width: 60%; }
+
+.skeleton-heading {
+  height: 1.4em;
+  margin-bottom: 0.6em;
+  width: 40%;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.skeleton-card {
+  min-height: 120px;
+  height: 180px;
+  border-radius: var(--r-md, 8px);
+}
+
+.skeleton-row {
+  display: flex;
+  gap: var(--space-3, 12px);
+  margin-bottom: var(--space-3, 12px);
+}
+.skeleton-row .skeleton-text { flex: 1; }
+.skeleton-row .skeleton-text:last-child { flex: 0.4; }
+
+/* Skeleton table row */
+.skeleton-table-row {
+  display: flex;
+  gap: var(--space-2, 8px);
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border, #2a2a4a);
+}
+.skeleton-table-row .skeleton-text { margin-bottom: 0; }
+.skeleton-table-row .skeleton-text:nth-child(1) { flex: 1; }
+.skeleton-table-row .skeleton-text:nth-child(2) { flex: 2; }
+.skeleton-table-row .skeleton-text:nth-child(3) { flex: 1; }
+.skeleton-table-row .skeleton-text:nth-child(4) { flex: 0.6; }
+
+/* ============================================================
+   2 · SPINNER — rotating loading indicator
+   ============================================================ */
+.spinner {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border: 2.5px solid var(--border, #2a2a4a);
+  border-top-color: var(--amber, #ff6b35);
+  border-radius: 50%;
+  animation: augur-spinner-rotate 0.65s linear infinite;
+  flex-shrink: 0;
+}
+.spinner-sm  { width: 16px; height: 16px; border-width: 2px; }
+.spinner-lg  { width: 40px; height: 40px; border-width: 3px; }
 .spinner-center { margin: 40px auto; }
 
-/* ============ Empty State ============ */
-.empty-state {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 60px 20px; text-align: center; color: var(--text-muted, #9ca3af);
+@keyframes augur-spinner-rotate {
+  to { transform: rotate(360deg); }
 }
-.empty-state-icon { font-size: 48px; margin-bottom: 16px; opacity: 0.5; }
-.empty-state-title { font-size: 18px; font-weight: 600; color: var(--text, #374151); margin-bottom: 8px; }
-.empty-state-desc { font-size: 14px; max-width: 360px; margin-bottom: 20px; line-height: 1.6; }
+
+/* Spinner block — centered with label */
+.spinner-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: var(--space-7, 48px) var(--space-4, 16px);
+  color: var(--fg-2, #8892b0);
+  font: var(--body-sm);
+}
+.spinner-block .spinner {
+  width: 36px;
+  height: 36px;
+}
+
+/* Inline spinner next to text */
+.spinner-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--fg-2, #8892b0);
+  font: var(--body-sm);
+}
+
+/* Full-page overlay spinner */
+.spinner-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9995;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 10, 15, 0.6);
+  backdrop-filter: blur(4px);
+}
+.spinner-overlay .spinner {
+  width: 48px;
+  height: 48px;
+  border-width: 3.5px;
+}
+
+/* ============================================================
+   3 · EMPTY STATE — centered icon + text + action button
+   ============================================================ */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--space-8, 64px) var(--space-4, 16px);
+  min-height: 240px;
+  color: var(--fg-2, #8892b0);
+}
+.empty-state-icon {
+  font-size: 2.5rem;
+  margin-bottom: var(--space-4, 16px);
+  opacity: 0.5;
+  line-height: 1;
+}
+.empty-state-illustration {
+  width: 120px;
+  height: 120px;
+  margin-bottom: var(--space-5, 24px);
+  opacity: 0.35;
+  filter: grayscale(0.5);
+}
+.empty-state-title {
+  font: var(--h3);
+  color: var(--fg-1, #e0e0e0);
+  margin: 0 0 var(--space-2, 8px);
+}
+.empty-state-desc {
+  font: var(--body);
+  color: var(--fg-2, #8892b0);
+  margin: 0 0 var(--space-5, 24px);
+  max-width: 360px;
+}
 .empty-state .btn { display: inline-block; }
 
-/* ============ Progress Bar ============ */
+.empty-state-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--amber, #ff6b35);
+  color: #0a0a0f;
+  border: none;
+  border-radius: var(--r-md, 8px);
+  font: var(--label);
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--dur-fast, 0.15s) var(--ease);
+}
+.empty-state-action:hover {
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.empty-state-action:focus-visible {
+  outline: 2px solid var(--amber, #ff6b35);
+  outline-offset: 2px;
+}
+
+/* Compact empty state for cards/widgets */
+.empty-state-compact {
+  min-height: 120px;
+  padding: var(--space-5, 24px) var(--space-4, 16px);
+}
+.empty-state-compact .empty-state-icon {
+  font-size: 1.8rem;
+  margin-bottom: var(--space-2, 8px);
+}
+.empty-state-compact .empty-state-title {
+  font: var(--h4);
+}
+.empty-state-compact .empty-state-desc {
+  font: var(--body-sm);
+  margin-bottom: var(--space-3, 12px);
+}
+
+/* ============================================================
+   4 · PROGRESS BAR — determinate + indeterminate
+   ============================================================ */
 .progress-bar {
-  height: 6px; background: var(--bg-muted, #e5e7eb); border-radius: 3px; overflow: hidden;
+  height: 6px;
+  background: var(--bg-tertiary, #1e2a4a);
+  border-radius: 3px;
+  overflow: hidden;
 }
 .progress-bar-fill {
-  height: 100%; background: var(--accent, #ff6b35); border-radius: 3px;
+  height: 100%;
+  background: var(--amber, #ff6b35);
+  border-radius: 3px;
   transition: width 0.3s ease;
 }
 .progress-bar-fill.indeterminate {
-  width: 40%; animation: augur-progress-indeterminate 1.5s ease-in-out infinite;
+  width: 40%;
+  animation: augur-progress-indeterminate 1.5s ease-in-out infinite;
 }
 @keyframes augur-progress-indeterminate {
-  0% { transform: translateX(-100%); }
+  0%   { transform: translateX(-100%); }
   100% { transform: translateX(350%); }
 }
 
-/* ============ Toast Notification ============ */
+/* ============================================================
+   5 · TOAST NOTIFICATION
+   ============================================================ */
 .toast-container {
-  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
-  display: flex; flex-direction: column; gap: 8px;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .toast {
-  padding: 12px 20px; border-radius: 8px; font-size: 14px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  animation: augur-toast-in 0.3s ease;
+  padding: 12px 20px;
+  border-radius: var(--r-md, 8px);
+  font-size: 14px;
+  font-family: var(--font-sans);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  animation: augur-toast-in 0.3s var(--ease);
   max-width: 380px;
 }
-.toast-success { background: #10b981; color: #fff; }
-.toast-error { background: #ef4444; color: #fff; }
-.toast-info { background: #3b82f6; color: #fff; }
-@keyframes augur-toast-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.toast-success { background: var(--signal-buy, #00c853); color: #fff; }
+.toast-error   { background: var(--signal-sell, #ff1744); color: #fff; }
+.toast-info    { background: var(--crystal, #5cc8ff); color: #0a0a0f; }
+.toast-warning { background: var(--signal-neutral, #ffd600); color: #0a0a0f; }
+
+@keyframes augur-toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
