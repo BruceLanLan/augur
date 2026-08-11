@@ -10,7 +10,6 @@ Public API:
 
 from __future__ import annotations
 
-import copy
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -18,10 +17,6 @@ import yaml
 
 from augur.schemas.skill_spec import (
     SkillSpec,
-    SkillPermissions,
-    EvidencePolicy,
-    WorkflowStep,
-    SkillEvals,
     validate_skill_spec,
 )
 
