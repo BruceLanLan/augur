@@ -120,6 +120,7 @@ def run_workflow(
         "ticker": ticker,
         "steps": step_list,
         "results": {},
+        "degradation": [],
     }
     if tracker is not None:
         output["run_id"] = tracker.run_id
