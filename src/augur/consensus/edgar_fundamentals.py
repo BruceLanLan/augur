@@ -91,7 +91,9 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-_CACHE_DIR = Path.home() / ".augur" / "edgar_cache"
+from augur.data_dir import get_data_dir
+
+_CACHE_DIR = get_data_dir() / "edgar_cache"
 _TICKER_MAP_URL = "https://www.sec.gov/files/company_tickers.json"
 _COMPANYFACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik:010d}.json"
 _SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:010d}.json"

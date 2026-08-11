@@ -1,0 +1,147 @@
+name: Hermetic Smoke
+
+# Day-1 isolation gate (F0.1 / E1.1).
+# Runs only the smoke tests — not the full 2473-test suite — across three
+# independent jobs.  Every job sets its own ``AUGUR_DATA_DIR`` so there is
+# no cross-job contamination and no writes to ``~/.augur``.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  # ------------------------------------------------------------------
+  # Job 1 — source editable install smoke
+  # ------------------------------------------------------------------
+  source-editable-smoke:
+    name: Source editable smoke (Python 3.12)
+    runs-on: ubuntu-latest
+    env:
+      AUGUR_DATA_DIR: /tmp/augur_smoke_src_${{ github.run_id }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install editable
+        run: pip install -e ".[data,dev]"
+
+      - name: Assert augur installed from checkout
+        run: |
+          IMPORT_PATH=$(python -c "import augur; print(augur.__file__)")
+          echo "augur.__file__ = ${IMPORT_PATH}"
+          case "${IMPORT_PATH}" in
+            "${{ github.workspace }}/src/augur/"*) echo "OK";;
+            *) echo "FAIL: ${IMPORT_PATH}"; exit 1;;
+          esac
+
+      - name: Assert version matches pyproject.toml
+        run: |
+          PKG=$(python -c "import augur; print(augur.__version__)")
+          TOML=$(python -c "
+ import re
+ t = open('pyproject.toml').read()
+ m = re.search(r'^version\s*=\s*\"([^\"]+)\"', t, re.MULTILINE)
+ print(m.group(1) if m else 'NOT-FOUND')
+ ")
+          if [ "${PKG}" != "${TOML}" ]; then echo "FAIL: ${PKG} != ${TOML}"; exit 1; fi
+          echo "OK: ${PKG}"
+
+      - name: Run hermetic smoke test
+        run: python tests/smoke_test_hermetic.py
+
+      - name: Assert no writes to ~/.augur
+        run: |
+          if [ -d "${HOME}/.augur" ]; then
+            echo "FAIL: ~/.augur exists"; find "${HOME}/.augur" -type f; exit 1
+          fi
+          echo "OK: ~/.augur absent"
+
+  # ------------------------------------------------------------------
+  # Job 2 — wheel install smoke
+  # ------------------------------------------------------------------
+  wheel-install-smoke:
+    name: Wheel install smoke (Python 3.12)
+    runs-on: ubuntu-latest
+    env:
+      AUGUR_DATA_DIR: /tmp/augur_smoke_wheel_${{ github.run_id }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build wheel
+        run: pip install build && python -m build --wheel
+
+      - name: Install from wheel
+        run: |
+          WHEEL=$(ls dist/*.whl | head -1)
+          echo "Installing ${WHEEL}"
+          pip install "${WHEEL}[data]"
+
+      - name: Assert augur installed from site-packages (not checkout)
+        run: |
+          IMPORT_PATH=$(python -c "import augur; print(augur.__file__)")
+          echo "augur.__file__ = ${IMPORT_PATH}"
+          case "${IMPORT_PATH}" in
+            *site-packages*) echo "OK: wheel installed to site-packages";;
+            *) echo "FAIL: not in site-packages — ${IMPORT_PATH}"; exit 1;;
+          esac
+
+      - name: Assert version import works
+        run: python -c "from augur import __version__; print(__version__)"
+
+      - name: Run hermetic smoke test (from installed wheel)
+        run: |
+          # The smoke test lives in the checkout, not in the wheel.
+          # Run it with PYTHONPATH pointed at the checkout tests/ dir.
+          PYTHONPATH="${{ github.workspace }}" \
+            python -m pytest "${{ github.workspace }}/tests/smoke_test_hermetic.py" -v
+
+      - name: Assert no writes to ~/.augur
+        run: |
+          if [ -d "${HOME}/.augur" ]; then
+            echo "FAIL: ~/.augur exists"; find "${HOME}/.augur" -type f; exit 1
+          fi
+          echo "OK: ~/.augur absent"
+
+  # ------------------------------------------------------------------
+  # Job 3 — schema validation smoke
+  # ------------------------------------------------------------------
+  schema-validation-smoke:
+    name: Schema validation smoke (Python 3.12)
+    runs-on: ubuntu-latest
+    env:
+      AUGUR_DATA_DIR: /tmp/augur_smoke_schema_${{ github.run_id }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install editable (no data extras needed for schemas)
+        run: pip install -e ".[dev]"
+
+      - name: Run schema smoke test
+        run: python tests/smoke_test_schemas.py
+
+      - name: Assert no writes to ~/.augur
+        run: |
+          if [ -d "${HOME}/.augur" ]; then
+            echo "FAIL: ~/.augur exists"; find "${HOME}/.augur" -type f; exit 1
+          fi
+          echo "OK: ~/.augur absent"

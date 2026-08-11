@@ -36,7 +36,7 @@ def client_multi_user(monkeypatch, tmp_path):
     monkeypatch.delenv("AUGUR_API_TOKEN", raising=False)
     monkeypatch.setenv("AUGUR_MULTI_USER", "1")
     monkeypatch.setenv("AUGUR_JWT_SECRET", "test-jwt-secret-for-pytest")
-    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path))
     from augur.users import UserManager
     UserManager().create_user("testuser", "password123")
     from dashboard.app import app
@@ -124,7 +124,7 @@ class TestAuthDualMode:
         monkeypatch.setenv("AUGUR_API_TOKEN", "dual-secret-token")
         monkeypatch.setenv("AUGUR_MULTI_USER", "1")
         monkeypatch.setenv("AUGUR_JWT_SECRET", "dual-jwt-secret")
-        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path))
         from augur.users import UserManager
         UserManager().create_user("dualuser", "password123")
         from dashboard.app import app

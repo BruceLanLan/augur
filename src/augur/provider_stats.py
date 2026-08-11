@@ -36,7 +36,8 @@ _lock = threading.Lock()
 
 
 def _default_path() -> Path:
-    augur_dir = Path.home() / ".augur"
+    from augur.data_dir import get_data_dir
+    augur_dir = get_data_dir()
     augur_dir.mkdir(parents=True, exist_ok=True)
     return augur_dir / "provider_stats.json"
 

@@ -14,6 +14,10 @@ jobs:
       matrix:
         python-version: ["3.9", "3.11", "3.12"]
 
+    env:
+      AUGUR_DATA_DIR: /tmp/augur_test_${{ github.run_id }}
+      AUGUR_LOG_LEVEL: WARNING
+
     steps:
       - uses: actions/checkout@v4
 
@@ -25,10 +29,61 @@ jobs:
       - name: Install dependencies
         run: pip install -e ".[data,dev]"
 
+      # --- CI assertions (pre-test) ---
+
+      - name: Assert augur installed from checkout (not site-packages)
+        run: |
+          IMPORT_PATH=$(python -c "import augur; print(augur.__file__)")
+          echo "augur.__file__ = ${IMPORT_PATH}"
+          case "${IMPORT_PATH}" in
+            "${{ github.workspace }}/src/augur/"*) echo "OK: augur resolved from checkout";;
+            *) echo "FAIL: augur resolved outside checkout — ${IMPORT_PATH}"; exit 1;;
+          esac
+
+      - name: Assert augur.__version__ matches pyproject.toml
+        run: |
+          PKG_VERSION=$(python -c "import augur; print(augur.__version__)")
+          # Parse version from pyproject.toml without tomllib (works on 3.9+)
+          TOML_VERSION=$(python -c "
+ import re
+ t = open('pyproject.toml').read()
+ m = re.search(r'^version\\s*=\\s*\"([^\"]+)\"', t, re.MULTILINE)
+ print(m.group(1) if m else 'NOT-FOUND')
+ ")
+          echo "augur.__version__  = ${PKG_VERSION}"
+          echo "pyproject.toml     = ${TOML_VERSION}"
+          if [ "${PKG_VERSION}" != "${TOML_VERSION}" ]; then
+            echo "FAIL: version mismatch"
+            exit 1
+          fi
+          echo "OK: versions match"
+
+      # --- Run tests ---
+
       - name: Run tests
         run: |
           python -m pytest tests/ -q --tb=short \
             --ignore=tests/test_analyze_api_v12.py \
             2>&1 | tail -20
-        env:
-          AUGUR_LOG_LEVEL: WARNING
+
+      # --- CI assertions (post-test) ---
+
+      - name: Assert no writes to ~/.augur
+        run: |
+          if [ -d "${HOME}/.augur" ]; then
+            echo "FAIL: ~/.augur exists — tests wrote to the default user directory"
+            echo "Contents:"
+            find "${HOME}/.augur" -type f 2>/dev/null || true
+            exit 1
+          fi
+          echo "OK: ~/.augur does not exist (AUGUR_DATA_DIR respected)"
+
+      - name: Assert AUGUR_DATA_DIR was used
+        run: |
+          if [ -d "${AUGUR_DATA_DIR}" ]; then
+            echo "OK: AUGUR_DATA_DIR exists (tests wrote here as expected)"
+            echo "Contents:"
+            find "${AUGUR_DATA_DIR}" -type f 2>/dev/null || true
+          else
+            echo "NOTE: AUGUR_DATA_DIR does not exist — no persistence occurred"
+          fi

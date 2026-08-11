@@ -33,7 +33,7 @@ from augur.schemas import (
     generate_evidence_id,
     generate_run_id,
 )
-from augur.skill_spec import SkillSpec, validate_skill_spec
+from augur.schemas.skill_spec import SkillSpec, validate_skill_spec
 
 # ---------------------------------------------------------------------------
 # Path to fixture directory
@@ -522,7 +522,7 @@ class TestSkillSpecRoundTrip:
     """SkillSpec Pydantic model: JSON serialize → deserialize → equality."""
 
     def test_round_trip_full(self):
-        from augur.skill_spec import (
+        from augur.schemas.skill_spec import (
             EvalFixture,
             EvalGate,
             EvidencePolicy,

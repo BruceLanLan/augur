@@ -53,7 +53,9 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
-WATCHLIST_PATH = Path.home() / ".augur" / "watchlist.yaml"
+from augur.data_dir import get_data_dir
+
+WATCHLIST_PATH = get_data_dir() / "watchlist.yaml"
 
 # Delay between watchlist tickers in run_watchlist_analysis(), to avoid
 # tripping yfinance's rate limit on a watchlist with more than a handful of

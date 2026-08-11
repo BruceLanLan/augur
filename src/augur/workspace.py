@@ -77,7 +77,8 @@ WORKSPACE_EXPORT_KEY = "workspace"
 
 
 def _workspace_path() -> Path:
-    data_dir = Path.home() / ".augur"
+    from augur.data_dir import get_data_dir
+    data_dir = get_data_dir()
     data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir / "workspace.yaml"
 

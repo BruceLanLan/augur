@@ -48,7 +48,8 @@ logger = logging.getLogger(__name__)
 
 def _get_weights_path() -> Path:
     """Get the path for persisting learned weights."""
-    augur_dir = Path.home() / ".augur"
+    from augur.data_dir import get_data_dir
+    augur_dir = get_data_dir()
     augur_dir.mkdir(parents=True, exist_ok=True)
     return augur_dir / "learned_weights.json"
 

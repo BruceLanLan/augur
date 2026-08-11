@@ -250,7 +250,8 @@ def format_single_agent_wechat(ticker: str, result) -> str:
 
 def _load_gewechat_config() -> Dict[str, Any]:
     """Load GeWeChat config from ~/.augur/wechat.yaml."""
-    config_path = Path.home() / ".augur" / "wechat.yaml"
+    from augur.data_dir import get_data_dir
+    config_path = get_data_dir() / "wechat.yaml"
     if config_path.exists():
         try:
             import yaml
@@ -263,7 +264,8 @@ def _load_gewechat_config() -> Dict[str, Any]:
 
 def _save_gewechat_config(config: Dict[str, Any]):
     """Save GeWeChat config to ~/.augur/wechat.yaml."""
-    config_path = Path.home() / ".augur" / "wechat.yaml"
+    from augur.data_dir import get_data_dir
+    config_path = get_data_dir() / "wechat.yaml"
     config_path.parent.mkdir(parents=True, exist_ok=True)
     try:
         import yaml

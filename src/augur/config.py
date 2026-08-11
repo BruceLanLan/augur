@@ -21,7 +21,8 @@ _lock = threading.RLock()  # protect shared config state
 
 def _find_config_file() -> Path:
     """Find config file: ~/.augur/config.yaml > config/agents.yaml (repo relative)"""
-    user_config = Path.home() / ".augur" / "config.yaml"
+    from augur.data_dir import get_data_dir
+    user_config = get_data_dir() / "config.yaml"
     if user_config.exists():
         return user_config
 
@@ -98,7 +99,8 @@ def save_config() -> Path:
             import yaml
         except ImportError as exc:
             raise ImportError("pyyaml is required: pip install pyyaml") from exc
-        save_path = Path.home() / ".augur" / "config.yaml"
+        from augur.data_dir import get_data_dir
+        save_path = get_data_dir() / "config.yaml"
         save_path.parent.mkdir(parents=True, exist_ok=True)
         save_path.write_text(yaml.dump(_config, default_flow_style=False, allow_unicode=True), encoding="utf-8")
         _config_path = save_path

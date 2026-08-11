@@ -12,7 +12,9 @@ logger = logging.getLogger(__name__)
 # repo root: src/augur/consensus/paths.py -> parents[3]
 _REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 FEEDBACK_DIR = _REPO_ROOT / "feedback"
-USER_FEEDBACK_DIR = Path.home() / ".augur" / "feedback"
+from augur.data_dir import get_data_dir
+
+USER_FEEDBACK_DIR = get_data_dir() / "feedback"
 
 
 def feedback_path(name: str) -> Path:

@@ -1,6 +1,35 @@
 # -*- coding: utf-8 -*-
 """Global test fixtures for augur test suite."""
+import os
+import tempfile
+import atexit
+import shutil
+
 import pytest
+
+
+# ---------------------------------------------------------------------------
+# Hermetic data root: set AUGUR_DATA_DIR before ANY augur module is imported
+# so that module-level get_data_dir() calls resolve to a temp directory.
+# ---------------------------------------------------------------------------
+
+_hermetic_root = tempfile.mkdtemp(prefix="augur_test_")
+
+
+def _cleanup_hermetic_root():
+    if os.path.isdir(_hermetic_root):
+        shutil.rmtree(_hermetic_root, ignore_errors=True)
+
+
+atexit.register(_cleanup_hermetic_root)
+
+
+def pytest_configure(config):
+    """Set AUGUR_DATA_DIR before collection so every import sees the temp root."""
+    os.environ["AUGUR_DATA_DIR"] = _hermetic_root
+
+
+# ---------------------------------------------------------------------------
 
 
 @pytest.fixture(autouse=True)
@@ -101,3 +130,15 @@ def reset_ip_rate_limits():
     yield
     with _ip_rate_lock:
         _ip_rate_limits.clear()
+
+
+@pytest.fixture(autouse=True)
+def assert_hermetic_data_dir():
+    """Assert that get_data_dir() returns the temp root, not ~/.augur."""
+    from augur.data_dir import get_data_dir
+    actual = str(get_data_dir())
+    expected = os.environ.get("AUGUR_DATA_DIR", "")
+    assert actual == expected, (
+        f"get_data_dir() returned {actual!r}, expected {expected!r} "
+        f"(AUGUR_DATA_DIR). Test isolation is broken."
+    )

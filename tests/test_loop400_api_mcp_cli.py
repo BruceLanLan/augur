@@ -117,7 +117,7 @@ class TestDashboardAuthAndRateLimits:
         monkeypatch.delenv("AUGUR_API_TOKEN", raising=False)
         monkeypatch.setenv("AUGUR_MULTI_USER", "1")
         monkeypatch.setenv("AUGUR_JWT_SECRET", "loop400-jwt")
-        monkeypatch.setenv("HOME", str(tmp_path))
+        monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path))
         from augur.auth import _auth_rate_limits, _auth_rate_lock, check_auth_rate_limit
         with _auth_rate_lock:
             _auth_rate_limits.clear()

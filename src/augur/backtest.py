@@ -97,7 +97,8 @@ class BacktestResult:
 class Backtester:
     """历史回测引擎"""
 
-    RECORDS_DIR = Path.home() / ".augur" / "backtest"
+    from augur.data_dir import get_data_dir
+    RECORDS_DIR = get_data_dir() / "backtest"
     RECORDS_FILE = RECORDS_DIR / "records.jsonl"
 
     def __init__(self):

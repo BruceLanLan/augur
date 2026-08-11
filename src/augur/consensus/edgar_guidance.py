@@ -48,7 +48,9 @@ from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-_CACHE_DIR = Path.home() / ".augur" / "edgar_cache"
+from augur.data_dir import get_data_dir
+
+_CACHE_DIR = get_data_dir() / "edgar_cache"
 
 _DEFAULT_GUIDANCE_MODEL = "gpt-4o-mini"  # cheaper than chat's gpt-4o default; extraction, not conversation
 _MAX_MDNA_CHARS = 40_000  # bound LLM cost/latency; real MD&A sections observed at ~15-25KB

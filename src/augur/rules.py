@@ -172,7 +172,8 @@ class RulesEngine:
         if rules_path:
             self._rules_path = Path(rules_path)
         else:
-            self._rules_path = Path.home() / ".augur" / "rules.yaml"
+            from augur.data_dir import get_data_dir
+            self._rules_path = get_data_dir() / "rules.yaml"
         self._rules: List[Rule] = []
         self._dispatcher = NotificationDispatcher()
         self._load_rules()

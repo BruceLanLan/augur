@@ -62,7 +62,8 @@ def _get_jwt_secret() -> str:
     if env_secret:
         return env_secret
 
-    secret_path = Path.home() / ".augur" / "jwt_secret"
+    from augur.data_dir import get_data_dir
+    secret_path = get_data_dir() / "jwt_secret"
     if secret_path.exists():
         return secret_path.read_text(encoding="utf-8").strip()
 
@@ -87,7 +88,8 @@ def is_multi_user_enabled() -> bool:
 
 def _get_db_path() -> Path:
     """Get the SQLite database path."""
-    augur_dir = Path.home() / ".augur"
+    from augur.data_dir import get_data_dir
+    augur_dir = get_data_dir()
     augur_dir.mkdir(parents=True, exist_ok=True)
     return augur_dir / "users.db"
 

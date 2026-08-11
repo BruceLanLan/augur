@@ -21,7 +21,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-HISTORY_DIR = Path.home() / ".augur" / "history"
+from augur.data_dir import get_data_dir
+
+HISTORY_DIR = get_data_dir() / "history"
 
 # Lock protecting file writes so concurrent requests don't corrupt history files
 _write_lock = threading.Lock()

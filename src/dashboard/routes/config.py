@@ -61,7 +61,8 @@ _DEFAULT_HOME_WIDGETS: Dict[str, Any] = {
 
 
 def _home_widgets_path() -> Path:
-    path = Path.home() / ".augur" / "home_widgets.yaml"
+    from augur.data_dir import get_data_dir
+    path = get_data_dir() / "home_widgets.yaml"
     path.parent.mkdir(parents=True, exist_ok=True)
     return path
 
