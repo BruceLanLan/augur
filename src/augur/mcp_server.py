@@ -790,6 +790,50 @@ def create_server():
         """
         return _run_workspace_profiles_tool(action=action, name=name, copy_from=copy_from)
 
+    # ---- MCP Resources: Evidence & RunBundle (E1.5) ----
+
+    @mcp.resource("augur://evidence/{evidence_id}")
+    def get_evidence_resource(evidence_id: str) -> str:
+        """Read-only access to a specific EvidenceItem by ID.
+
+        Searches the local evidence store under get_data_dir()/evidence/.
+        Returns a JSON string of the matching EvidenceItem, or a
+        human-readable error when not found.
+        """
+        from augur.data_dir import get_data_dir
+        import json
+
+        ev_dir = get_data_dir() / "evidence"
+        if not ev_dir.exists():
+            return json.dumps({"error": "evidence store not found", "evidence_id": evidence_id})
+
+        # Search for evidence file matching the ID
+        for f in ev_dir.glob("*.json"):
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+                if data.get("evidence_id") == evidence_id:
+                    return json.dumps(data, indent=2, ensure_ascii=False)
+            except Exception:
+                continue
+
+        return json.dumps({"error": "evidence not found", "evidence_id": evidence_id})
+
+    @mcp.resource("augur://runs/{run_id}")
+    def get_run_resource(run_id: str) -> str:
+        """Read-only access to a RunBundle by run_id.
+
+        Looks up the run bundle file under get_data_dir()/runs/{run_id}.json.
+        Returns the full RunBundle as JSON, or an error if not found.
+        """
+        from augur.data_dir import get_data_dir
+
+        runs_dir = get_data_dir() / "runs"
+        run_path = runs_dir / f"{run_id}.json"
+        if not run_path.exists():
+            return json.dumps({"error": "run not found", "run_id": run_id})
+
+        return run_path.read_text(encoding="utf-8")
+
     return mcp
 
 

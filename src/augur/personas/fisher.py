@@ -78,7 +78,7 @@ class FisherAgent(BaseAgent):
             mgmt_score += 2  # 低负债=保守财务管理
         elif context.debt_ratio > 0.70:
             mgmt_score -= 2
-        if context.institutional_ownership > 60:
+        if context.institutional_ownership is not None and context.institutional_ownership > 60:
             mgmt_score += 1  # 机构认可管理层
         factors["management_quality"] = min(max(mgmt_score, 0), 10)
 

@@ -1,0 +1,34 @@
+id: filing-delta
+version: 1.0.0
+description: Compare the latest SEC filing to the previous one and surface material changes.
+license: Apache-2.0
+compatibility: ">=11,<12"
+inputs_schema:
+  required: [ticker, new_accession, previous_accession]
+required_capabilities:
+  - sec.filings.read
+  - fundamentals.snapshot
+  - runs.compare
+permissions:
+  resources: [evidence.read, runs.read]
+  network_domains: [sec.gov]
+evidence_policy:
+  information_time_required: true
+  missing: abstain
+  min_claim_coverage: 0.90
+workflow:
+  - id: fetch_new
+    uses: sec.filings.read
+  - id: fetch_old
+    uses: sec.filings.read
+  - id: compare
+    uses: runs.compare
+    needs: [fetch_new, fetch_old]
+  - id: delta_report
+    uses: report.earnings_dossier
+    needs: [compare]
+outputs_schema:
+  required: [run_id, delta_report, evidence_manifest]
+evals:
+  fixtures: [filing-delta-v1]
+  gates: [citation_validity, no_lookahead]

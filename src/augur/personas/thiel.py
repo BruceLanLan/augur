@@ -116,13 +116,14 @@ class ThielAgent(BaseAgent):
             contrarian_score += 2
 
         # 低机构持有 = 华尔街还没发现
-        if context.institutional_ownership < 30:
-            contrarian_score += 2
-        elif context.institutional_ownership < 50:
-            contrarian_score += 1
+        if context.institutional_ownership is not None:
+            if context.institutional_ownership < 30:
+                contrarian_score += 2
+            elif context.institutional_ownership < 50:
+                contrarian_score += 1
 
         # 低内部人持有 = 没人看好（逆向判断：可能市场对的）
-        if context.insider_ownership < 2:
+        if context.insider_ownership is not None and context.insider_ownership < 2:
             contrarian_score -= 1
 
         # 小市值 = 更多逆向空间

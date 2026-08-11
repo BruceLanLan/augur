@@ -136,9 +136,9 @@ class LiLuAgent(BaseAgent):
 
         # 4. 管理层质量 (0-10)
         mgmt_score = 5.0
-        if context.insider_ownership > 15:
+        if context.insider_ownership is not None and context.insider_ownership > 15:
             mgmt_score += 2.0
-        if context.institutional_ownership > 40:
+        if context.institutional_ownership is not None and context.institutional_ownership > 40:
             mgmt_score += 1.5
         # ROE稳定性代理：当前ROE作为历史一致性指标
         if context.roe > 0.15:
@@ -231,7 +231,7 @@ class LiLuAgent(BaseAgent):
 - 流动比: {context.current_ratio:.2f}
 
 **管理层质量: {factors['management_quality']:.1f}/10**
-- 内部人持股: {context.insider_ownership:.1f}%
+- 内部人持股: {f'{context.insider_ownership:.1f}%' if context.insider_ownership is not None else 'N/A'}
 
 **行业顺风: {factors['industry_tailwinds']:.1f}/10**
 - 营收增速: {context.revenue_growth*100:.1f}%

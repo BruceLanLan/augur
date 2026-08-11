@@ -56,16 +56,89 @@ def run_workflow(
     steps: str = "",
     agents: str = "",
     question: str = "",
+    resume_from: str = "",
+    track: bool = True,
 ) -> Dict[str, Any]:
-    """Execute an agentic workflow and return structured results."""
+    """Execute an agentic workflow and return structured results.
+
+    Args:
+        ticker: Stock ticker symbol.
+        steps: Comma-separated step list (fetch,analyze,consensus,committee,debate,sentiment).
+        agents: Comma-separated agent IDs to restrict analysis.
+        question: Optional question for committee/debate.
+        resume_from: Path to a checkpoint JSON file to resume from.
+        track: When True (default), wrap execution with RunTracker for
+            StepResult tracking, checkpointing, and RunBundle generation.
+
+    Returns:
+        Dict with ``ticker``, ``steps``, ``results``, ``run_id`` (when tracked),
+        and ``run_bundle_path`` (when tracked).
+    """
     from augur.registry import AgentRegistry, DecisionCoordinator
+
+    # --- RunTracker setup (E1.2) ---
+    tracker = None
+    if track:
+        from augur.run_tracker import RunTracker, _compute_input_snapshot_hash
+
+        input_hash = _compute_input_snapshot_hash(ticker, steps, agents, question)
+
+        if resume_from:
+            tracker = RunTracker.resume_from_checkpoint(
+                resume_from,
+                ticker=ticker,
+                steps=steps,
+                agents=agents,
+                question=question,
+            )
+            tracker.start_run(input_snapshot_hash=input_hash)
+        else:
+            tracker = RunTracker(ticker=ticker, code_version="11.0.0")
+            tracker.start_run(input_snapshot_hash=input_hash)
+        output: Dict[str, Any] = {
+            "ticker": ticker,
+            "steps": step_list,
+            "results": {},
+            "run_id": tracker.run_id,
+        }
+    else:
+        output = {"ticker": ticker, "steps": step_list, "results": {}}
+
+    step_timings: Dict[str, float] = {}
+
+    # Helper: wrap a phase
+    def _phase(name: str, fn, input_refs=None):
+        nonlocal tracker
+        if tracker and tracker.is_step_completed(name):
+            # Already completed in a resumed checkpoint — skip
+            return
+        sid = tracker.start_step(name, input_refs=input_refs) if tracker else None
+        t0 = time.perf_counter()
+        try:
+            result = fn()
+            if tracker and sid:
+                tracker.finish_step(sid, StepStatus.SUCCESS, result=result)
+        except Exception as e:
+            if tracker and sid:
+                tracker.finish_step(
+                    sid, StepStatus.FAILURE,
+                    diagnostics=str(e),
+                )
+            raise
+        finally:
+            elapsed = round(time.perf_counter() - t0, 3)
+            step_timings[name] = elapsed
+        if tracker:
+            tracker.save_checkpoint()
+
+    # Lazy import for step status
+    if track:
+        from augur.schemas.step_result import StepStatus
 
     step_list = parse_steps(steps)
     ticker = ticker.upper()
     registry = AgentRegistry()
     coordinator = DecisionCoordinator(registry)
-    output: Dict[str, Any] = {"ticker": ticker, "steps": step_list, "results": {}}
-    step_timings: Dict[str, float] = {}
 
     ctx = None
     if any(s in step_list for s in ("fetch", "analyze", "consensus", "committee", "debate")):

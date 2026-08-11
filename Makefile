@@ -97,7 +97,15 @@ quality:           ## Run lint, syntax check, and dependency audit
 	@echo "=== ruff check ==="
 	@command -v ruff &>/dev/null && ruff check src/ || { echo "FAIL: ruff not installed (pip install ruff)"; exit 1; }
 	@echo "=== syntax check (py_compile) ==="
-	@python3 -m compileall -q src/augur/ || { echo "FAIL: syntax errors found"; exit 1; }
+	@python3 -c '\
+import sys, py_compile, pathlib; \
+errors = []; \
+for p in pathlib.Path("src").rglob("*.py"): \
+    try: py_compile.compile(str(p), doraise=True) \
+    except py_compile.PyCompileError as e: errors.append(str(e)) \
+    except (PermissionError, OSError): pass; \
+if errors: print("FAIL: syntax errors found"); [print(e) for e in errors]; sys.exit(1); \
+print("syntax OK: no SyntaxErrors detected")'
 	@echo "=== dependency audit ==="
 	@command -v pip-audit &>/dev/null && pip-audit --local 2>/dev/null || { echo "SKIP: pip-audit not available (pip install pip-audit)"; }
 	@echo "=== dependency import consistency ==="

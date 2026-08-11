@@ -100,10 +100,11 @@ class BuffettAgent(BaseAgent):
 
         # 4. 管理质量 (0-10)
         mgmt_score = 5
-        if context.institutional_ownership > 50:
-            mgmt_score += 3
-        if context.institutional_ownership > 70:
-            mgmt_score += 2
+        if context.institutional_ownership is not None:
+            if context.institutional_ownership > 50:
+                mgmt_score += 3
+            if context.institutional_ownership > 70:
+                mgmt_score += 2
         factors["management_quality"] = min(max(mgmt_score, 0), 10)
 
         # 5. 估值 (0-10)
@@ -183,7 +184,7 @@ class BuffettAgent(BaseAgent):
 - 流动比率: {context.current_ratio:.2f}
 
 **管理质量: {factors['management_quality']}/10**
-- 机构持股: {context.institutional_ownership:.1f}%
+- 机构持股: {f'{context.institutional_ownership:.1f}%' if context.institutional_ownership is not None else 'N/A'}
 
 **估值: {factors['valuation']}/10**
 - PE: {pe_str}

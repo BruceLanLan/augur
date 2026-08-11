@@ -161,10 +161,11 @@ class AschenbrennerAgent(BaseAgent):
         elif context.gross_margins > 0.50:
             moat_score += 1
         # 机构高持仓=市场认可
-        if context.institutional_ownership > 70:
-            moat_score += 2  # 机构重仓=护城河得到市场确认
-        elif context.institutional_ownership > 50:
-            moat_score += 1
+        if context.institutional_ownership is not None:
+            if context.institutional_ownership > 70:
+                moat_score += 2  # 机构重仓=护城河得到市场确认
+            elif context.institutional_ownership > 50:
+                moat_score += 1
         # 高ROE=可持续竞争优势
         if context.roe > 0.30:
             moat_score += 2
@@ -178,14 +179,15 @@ class AschenbrennerAgent(BaseAgent):
         # 6. management_vision (0-10): 管理层AGI视野
         vision_score = 5
         # 内部人持仓=管理层信心
-        if context.insider_ownership > 20:
-            vision_score += 3  # 管理层超级有信心
-        elif context.insider_ownership > 10:
-            vision_score += 2
-        elif context.insider_ownership > 5:
-            vision_score += 1
+        if context.insider_ownership is not None:
+            if context.insider_ownership > 20:
+                vision_score += 3  # 管理层超级有信心
+            elif context.insider_ownership > 10:
+                vision_score += 2
+            elif context.insider_ownership > 5:
+                vision_score += 1
         # 机构信任
-        if context.institutional_ownership > 60:
+        if context.institutional_ownership is not None and context.institutional_ownership > 60:
             vision_score += 2
         # 大市值公司更可能有AGI视野
         if context.market_cap > 500:
@@ -268,11 +270,11 @@ class AschenbrennerAgent(BaseAgent):
 **AI强化护城河: {factors['moat_reinforcement']}/10** (权重{self.scoring_weights['moat_reinforcement']:.0%})
 - 毛利率: {context.gross_margins*100:.1f}%
 - ROE: {context.roe*100:.1f}%
-- 机构持仓: {context.institutional_ownership:.1f}%
+- 机构持仓: {f'{context.institutional_ownership:.1f}%' if context.institutional_ownership is not None else 'N/A'}
 
 **管理层AGI视野: {factors['management_vision']}/10** (权重{self.scoring_weights['management_vision']:.0%})
-- 内部人持仓: {context.insider_ownership:.1f}%
-- 机构持仓: {context.institutional_ownership:.1f}%
+- 内部人持仓: {f'{context.insider_ownership:.1f}%' if context.insider_ownership is not None else 'N/A'}
+- 机构持仓: {f'{context.institutional_ownership:.1f}%' if context.institutional_ownership is not None else 'N/A'}
 
 **综合评分: {total_score:.1f}/10**
 **AGI超级乐观框架结论：{'🚀 重仓AGI基础设施，这是本世纪的曼哈顿计划' if avg_score >= self.thresholds.get('bullish_threshold', 7.0) else '⚠️ 需要更多AI基础设施投入信号' if avg_score <= self.thresholds.get('bearish_threshold', 4.0) else '⏳ 中性，等待算力投入加速信号'}**

@@ -112,6 +112,12 @@ class RunTracker:
         # Set of step names already completed (from a checkpoint resume)
         self._completed_steps: Set[str] = set()
 
+        # Intermediate state snapshot for checkpoint resume.
+        # Populated by run_workflow with serializable proxies of ctx,
+        # responses, consensus_result so that skipped steps can still
+        # provide their outputs to downstream steps.
+        self._checkpoint_state: Dict[str, Any] = {}
+
     # ------------------------------------------------------------------
     # Run lifecycle
     # ------------------------------------------------------------------
@@ -325,6 +331,7 @@ class RunTracker:
             "config_version": self.config_version,
             "model_version": self.model_version,
             "code_version": self.code_version,
+            "_checkpoint_state": self._checkpoint_state,
         }
         file_path.write_text(
             json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
@@ -418,6 +425,7 @@ class RunTracker:
                 completed_steps.add(sr.step_name)
 
         tracker._completed_steps = completed_steps
+        tracker._checkpoint_state = raw.get("_checkpoint_state", {})
         return tracker
 
     # ------------------------------------------------------------------
@@ -428,6 +436,14 @@ class RunTracker:
         """Return ``True`` if *step_name* was already completed in a
         resumed checkpoint and should be skipped."""
         return step_name in self._completed_steps
+
+    def get_checkpoint_state(self, key: str, default: Any = None) -> Any:
+        """Retrieve a value from the intermediate checkpoint state."""
+        return self._checkpoint_state.get(key, default)
+
+    def set_checkpoint_state(self, key: str, value: Any) -> None:
+        """Store a serializable value in the intermediate checkpoint state."""
+        self._checkpoint_state[key] = value
 
     @property
     def step_results(self) -> List[StepResult]:

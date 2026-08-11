@@ -95,11 +95,12 @@ class ZhangLeiAgent(BaseAgent):
         # 3. 管理层卓越程度 (0-10)
         mgmt_score = 5.0
         # 内部人持股：创始人控制 = 长期视野
-        if context.insider_ownership > 20:
-            mgmt_score += 2.0
-        elif context.insider_ownership > 10:
-            mgmt_score += 1.0
-        if context.institutional_ownership > 40:
+        if context.insider_ownership is not None:
+            if context.insider_ownership > 20:
+                mgmt_score += 2.0
+            elif context.insider_ownership > 10:
+                mgmt_score += 1.0
+        if context.institutional_ownership is not None and context.institutional_ownership > 40:
             mgmt_score += 1.5
         # 资本配置效率
         if context.roe > 0.25:
@@ -165,7 +166,10 @@ class ZhangLeiAgent(BaseAgent):
         if factors["business_model_quality"] >= 7:
             key_findings.append(f"商业模式优质：毛利率{context.gross_margins*100:.0f}%，FCF正向")
         if factors["management_excellence"] >= 7:
-            key_findings.append(f"管理层卓越：创始人持股{context.insider_ownership:.1f}%，ROE{context.roe*100:.0f}%")
+            if context.insider_ownership is not None:
+                key_findings.append(f"管理层卓越：创始人持股{context.insider_ownership:.1f}%，ROE{context.roe*100:.0f}%")
+            else:
+                key_findings.append(f"管理层卓越：ROE{context.roe*100:.0f}%（内部人持股数据缺失）") if context.insider_ownership is not None else key_findings.append(f"管理层卓越：ROE{context.roe*100:.0f}%（内部人持股数据缺失）")
         if context.revenue_growth < 0.10:
             risks.append("增速不足，结构性机会可能已过峰值")
         if context.operating_margins < -0.15 and context.revenue_growth < 0.30:
@@ -208,7 +212,7 @@ class ZhangLeiAgent(BaseAgent):
 - FCF: {context.fcf:,.0f} {'✓' if context.fcf > 0 else '✗'}
 
 **管理层卓越度: {factors['management_excellence']:.1f}/10**
-- 内部人持股: {context.insider_ownership:.1f}%
+- 内部人持股: {f'{context.insider_ownership:.1f}%' if context.insider_ownership is not None else 'N/A'}
 - ROE: {context.roe*100:.1f}%
 
 **竞争护城河: {factors['competitive_moat']:.1f}/10**

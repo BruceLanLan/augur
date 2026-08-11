@@ -90,10 +90,11 @@ class MarksAgent(BaseAgent):
         second_level_score = 5
         if context.short_interest > 0.10:
             second_level_score += 3  # 高空头=共识做空=可能反向
-        if context.institutional_ownership > 75:
-            second_level_score -= 2  # 机构高持股=共识看多=已定价
-        elif context.institutional_ownership < 30:
-            second_level_score += 2  # 机构低持股=被忽视
+        if context.institutional_ownership is not None:
+            if context.institutional_ownership > 75:
+                second_level_score -= 2  # 机构高持股=共识看多=已定价
+            elif context.institutional_ownership < 30:
+                second_level_score += 2  # 机构低持股=被忽视
         if context.price_vs_52w_high < -25:
             second_level_score += 2  # 深度回撤=市场悲观=逆向机会
         factors["second_level_thinking"] = min(max(second_level_score, 0), 10)
@@ -144,7 +145,7 @@ class MarksAgent(BaseAgent):
 
 **二阶思维: {factors['second_level_thinking']}/10**
 - 空头比例: {context.short_interest*100:.1f}%
-- 机构持股: {context.institutional_ownership:.1f}%
+- 机构持股: {f'{context.institutional_ownership:.1f}%' if context.institutional_ownership is not None else 'N/A'}
 - 距52周高点: {context.price_vs_52w_high:.1f}%
 
 **困境折价: {factors['distressed_discount']}/10**

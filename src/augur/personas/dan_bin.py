@@ -120,7 +120,7 @@ class DanBinAgent(BaseAgent):
             china_score += 1.0
         if context.market_cap > 20:
             china_score += 0.5
-        if context.institutional_ownership > 40:
+        if context.institutional_ownership is not None and context.institutional_ownership > 40:
             china_score += 1.0
         if context.revenue_growth > 0.10:
             china_score += 0.5
@@ -213,7 +213,7 @@ class DanBinAgent(BaseAgent):
 - FCF: {context.fcf:,.0f} {'✓' if context.fcf > 0 else '✗'}
 
 **中国结构性主题: {factors['china_structural_theme']:.1f}/10**
-- 机构持股: {context.institutional_ownership:.1f}%
+- 机构持股: {f'{context.institutional_ownership:.1f}%' if context.institutional_ownership is not None else 'N/A'}
 
 **估值可接受度: {factors['valuation_acceptability']:.1f}/10**
 - PE: {pe_str}

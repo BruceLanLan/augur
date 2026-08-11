@@ -66,7 +66,7 @@ class MungerAgent(BaseAgent):
         elif context.price_vs_52w_high < -20:
             contra_score += 2
 
-        if context.institutional_ownership < 30:
+        if context.institutional_ownership is not None and context.institutional_ownership < 30:
             contra_score += 1  # 机构低持股，可能被忽视
 
         if context.rsi < 35:
@@ -113,7 +113,7 @@ class MungerAgent(BaseAgent):
 
 **逆向程度: {factors['contra_bet']}/10**
 - 距52周高点: {context.price_vs_52w_high:.1f}% {'✓ 超卖' if context.price_vs_52w_high < -20 else ''}
-- 机构持股: {context.institutional_ownership:.1f}% {'低持股' if context.institutional_ownership < 30 else ''}
+- 机构持股: {f'{context.institutional_ownership:.1f}%' if context.institutional_ownership is not None else 'N/A'} {'低持股' if context.institutional_ownership is not None and context.institutional_ownership < 30 else ''}
 - RSI: {context.rsi:.1f}
 
 **心理因素: {factors['psychological']}/10**

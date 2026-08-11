@@ -11,7 +11,7 @@ Agent人格系统 — 基类与类型定义
   - DebateProtocol (辩论协议)
 """
 
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 from datetime import datetime
@@ -86,13 +86,21 @@ class MarketContext:
     debt_ratio: float = 0
     current_ratio: float = 0
     quick_ratio: float = 0
-    institutional_ownership: float = 0
-    insider_ownership: float = 0
+    institutional_ownership: Optional[float] = None
+    insider_ownership: Optional[float] = None
     price_vs_52w_high: float = 0
     price_vs_52w_low: float = 0
     sector: str = ""
     industry: str = ""
     business_summary: str = ""  # yfinance longBusinessSummary，用于判断公司真实业务
+
+    # ---- data provenance / missingness ----
+    field_availability: Dict[str, str] = field(default_factory=dict)
+    # ^ per-field availability status: "live" | "replay" | "missing" | "unknown"
+    as_of_date: Optional[str] = None
+    # ^ snapshot date of the data (ISO format); None when not known
+    evidence_items: List[Any] = field(default_factory=list)
+    # ^ minimal EvidenceItem list attached after provider fetch
 
     # 技术指标
     volume: float = 0           # 成交量
