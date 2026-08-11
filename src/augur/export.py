@@ -594,7 +594,7 @@ pre {{ background: #f4f4f8; padding: 16px; border-radius: 6px; overflow-x: auto;
             for ev_id, ev in sorted(evidence_by_id.items()):
                 safe_name = ev_id.replace("/", "_").replace("\\", "_")
                 zf.writestr(
-                    f"evidence/{safe_name}.json",
+                    "evidence/" + safe_name + ".json",
                     ev.model_dump_json(indent=2),
                 )
 
@@ -614,8 +614,9 @@ pre {{ background: #f4f4f8; padding: 16px; border-radius: 6px; overflow-x: auto;
 
         unresolved: List[str] = []
         for ev_id in sorted(referenced_ids):
-            safe_name = f"evidence/{ev_id.replace('/', '_').replace('\\\\', '_')}.json"
-            if safe_name not in names:
+            safe_name = ev_id.replace("/", "_").replace("\\", "_")
+            file_name = "evidence/" + safe_name + ".json"
+            if file_name not in names:
                 unresolved.append(ev_id)
 
         if unresolved:

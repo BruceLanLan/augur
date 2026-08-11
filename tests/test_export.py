@@ -13,7 +13,6 @@ import pytest
 from click.testing import CliRunner
 
 from augur.cli import main
-from augur.data_dir import get_data_dir
 from augur.export import (
     EXPORT_SCHEMA_VERSION,
     ReportExporter,
