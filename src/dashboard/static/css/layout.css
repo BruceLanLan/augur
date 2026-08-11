@@ -696,3 +696,19 @@ html.light .council-hero {
     border-top-color: #ddd6c6;
   }
 }
+
+/* ============ Command Palette (⌘K) ============ */
+#augur-cmd-palette { display: none; position: fixed; inset: 0; z-index: 10000; align-items: flex-start; justify-content: center; padding-top: 15vh; }
+#augur-cmd-palette .acp-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(2px); }
+#augur-cmd-palette .acp-dialog { position: relative; width: 560px; max-width: 92vw; background: var(--bg-card, #fff); border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+#augur-cmd-palette .acp-header { display: flex; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border, #e5e7eb); }
+#augur-cmd-palette .acp-input { flex: 1; border: none; outline: none; font-size: 16px; background: transparent; color: var(--text, #1f2937); }
+#augur-cmd-palette .acp-hint { font-size: 11px; color: var(--text-muted, #9ca3af); background: var(--bg-muted, #f3f4f6); padding: 2px 8px; border-radius: 4px; }
+#augur-cmd-palette .acp-list { list-style: none; margin: 0; padding: 8px 0; max-height: 320px; overflow-y: auto; }
+#augur-cmd-palette .acp-item { display: flex; align-items: center; gap: 10px; padding: 8px 16px; cursor: pointer; font-size: 14px; color: var(--text, #374151); transition: background 0.1s; }
+#augur-cmd-palette .acp-item.active,
+#augur-cmd-palette .acp-item:hover { background: var(--bg-hover, #f0f4ff); }
+#augur-cmd-palette .acp-icon { font-size: 18px; width: 24px; text-align: center; }
+#augur-cmd-palette .acp-label { flex: 1; }
+#augur-cmd-palette .acp-shortcut { font-size: 10px; padding: 1px 6px; border-radius: 3px; background: var(--bg-muted, #f3f4f6); color: var(--text-muted, #6b7280); }
+#augur-cmd-palette .acp-footer { display: flex; gap: 16px; padding: 8px 16px; font-size: 11px; color: var(--text-muted, #9ca3af); border-top: 1px solid var(--border, #e5e7eb); }
