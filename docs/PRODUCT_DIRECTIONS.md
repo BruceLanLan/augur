@@ -136,17 +136,105 @@ flowchart LR
 - source、persona、report template、event workflow 的稳定 extension contract；
 - 小团队的私有数据适配、共享模板和 self-hosted Research Ops。
 
-## 六个月发展路径
+## 功能总登记册：方向已记录，尚未排期
 
-| 阶段 | 产品结果 | 进入下一阶段的门 |
-|---|---|---|
-| v11 周 | RC、可复现安装、最小 earnings workflow | first valid report <10 分钟；无 P0 provenance/degradation 缺陷 |
-| Month 1 | Evidence Ledger + Run Bundle | 核心 claims 全部带来源/时点；snapshot 可复验 |
-| Month 2 | Earnings Queue + pre/post dossier + change ledger | 支持范围内 ≥80% 事件在 24 小时前 ready |
-| Month 3 | Thesis Journal + catalyst alerts | 5 位用户进入第二个财报周期；提醒无明显疲劳 |
-| Month 4 | Scorecard + Evaluation Lab + 公开 evidence pack | ≥100 个历史事件具备明确 missingness 的 pre/post replay |
-| Month 5 | 一个互操作入口与贡献规范 | 一个非维护者完成扩展并跨 release 通过兼容测试 |
-| Month 6 | 小规模 Research Ops 付费试点 | 3 个合格访谈，至少 1 个付费试点或明确的否定证据 |
+当前唯一有日期的开发计划是 [`docs/ROADMAP.md`](ROADMAP.md) 中的 7 天 v11 RC。下面是未来产品池，不代表月度承诺；只有满足依赖、指标和 owner 取舍后，才会进入新的 7 天计划。
+
+### A. 证据、可信度与研究记忆
+
+| ID | 功能 | 用户价值 | 进入条件 |
+|---|---|---|---|
+| A01 | Claim-level Source Cards | 从结论直接打开原始 filing/数据片段 | EvidenceItem locator/hash 稳定 |
+| A02 | Evidence Graph | 查看事实、claim、反例和缺口关系 | Claim edge schema 通过 fixture |
+| A03 | Research Run Explorer | 浏览每步输入、输出、耗时、失败和版本 | RunBundle/checkpoint 可离线读取 |
+| A04 | Citation Correction Queue | 用户报告错误引用并形成回归用例 | 可定位 claim/evidence ID |
+| A05 | Coverage & Data Health Center | 明确哪些 ticker/指标/时期不支持 | provider coverage/freshness 可统计 |
+| A06 | Reproducible Research Pack | 导出 manifest、缓存证据和验证结果 | 数据许可允许对应导出 |
+
+### B. 财报事件与持续跟踪
+
+| ID | 功能 | 用户价值 | 进入条件 |
+|---|---|---|---|
+| B01 | Watchlist Earnings Queue | 将 watchlist 变成待研究事件队列 | 财报时间来源和置信规则稳定 |
+| B02 | Pre-earnings Dossier | 财报前集中查看 guidance/KPI/风险/问题 | `earnings-prep` 通过证据 gate |
+| B03 | Post-earnings Scorecard | 对照事前问题与实际结果 | pre-event snapshot 不可变 |
+| B04 | Cross-quarter Change Ledger | 只看较上季真正变化的事实与措辞 | 连续两期 RunBundle 有效 |
+| B05 | Guidance Tracker | 结构化跟踪 guidance 区间和修订 | guidance locator/单位规范稳定 |
+| B06 | Management Language Diff | 捕获风险、需求和资本配置措辞变化 | filing section 对齐准确率达标 |
+| B07 | Material Catalyst Alerts | 只提醒明确状态变化 | dedupe/cooldown/误报反馈可用 |
+| B08 | Event Readiness Score | 告知 dossier 是否可生成及缺什么 | coverage 不被压成不透明总分 |
+
+### C. Filing 与专题研究 Skill
+
+| ID | 功能 | 用户价值 | 进入条件 |
+|---|---|---|---|
+| C01 | Filing Delta | 10-K/10-Q/8-K 的数字和章节变化 | `filing-delta` fixture 通过 |
+| C02 | Risk-factor Review | 区分新增、删除和措辞升级风险 | section/locator 稳定 |
+| C03 | Debt Covenant Review | 提取债务约束、流动性与触发条件 | fact/inference/source-gap gate |
+| C04 | Capital Allocation Review | 回购、分红、并购、capex 连续变化 | cash-flow/filing 数据覆盖达标 |
+| C05 | Insider Cluster Review | 识别连续或集群内部人行为 | Form 4 coverage/身份归一化稳定 |
+| C06 | Institutional Ownership Delta | 展示持仓变化并明确披露滞后 | 13F available-at 语义正确 |
+| C07 | Accounting Quality Review | 应计、现金转换和一次性项目检查 | 确定性公式与单位测试完备 |
+| C08 | Peer Comparison Pack | 统一口径对比经营和估值指标 | peer universe 与口径可解释 |
+
+### D. 估值、情景和确定性计算
+
+| ID | 功能 | 用户价值 | 进入条件 |
+|---|---|---|---|
+| D01 | Deterministic DCF | LLM 只解释、Python 负责计算 | 输入 provenance 与公式 golden tests |
+| D02 | WACC Builder | 显示每个资本成本输入与来源 | risk-free/beta/premium 时点明确 |
+| D03 | Relative Valuation | 可复算的 comps 和分位数 | peer selection policy 冻结 |
+| D04 | Bull/Base/Bear Scenario Lab | 用户修改少量驱动变量观察结果 | 不输出默认目标价/仓位建议 |
+| D05 | Sensitivity & Reverse DCF | 看到市场价格隐含假设 | 单位、货币、稀释口径可靠 |
+| D06 | Unit Economics/KPI Model | 支持行业特定 KPI 桥接 | 行业 schema 不污染核心合约 |
+
+### E. Thesis、决策与协作
+
+| ID | 功能 | 用户价值 | 进入条件 |
+|---|---|---|---|
+| E01 | Thesis Journal | 保存 thesis、催化剂、风险与证伪条件 | 用户身份/本地存储迁移稳定 |
+| E02 | Thesis Delta | 新证据如何改变 thesis | 两个有效 RunBundle 可比较 |
+| E03 | Decision Log | 记录当时知道什么和为什么行动/不行动 | evidence snapshot 可冻结 |
+| E04 | Open Questions Queue | 跨事件保留未解决问题 | question 状态模型稳定 |
+| E05 | Research Template Library | 按行业/事件复用研究 SOP | 内置 Skill compatibility 稳定 |
+| E06 | Review & Comment | 小团队对 claim/evidence 留审阅意见 | 单用户复访和团队需求被验证 |
+| E07 | Shared Watchlist Workspace | 共享研究队列、状态和责任人 | 权限/审计设计完成后再做 |
+
+### F. Agent、Persona 与评估实验室
+
+| ID | 功能 | 用户价值 | 进入条件 |
+|---|---|---|---|
+| F01 | Evidence-seeking Debate | 只对争议 claim 查找反证并修订 | 固定集证明准确率收益大于成本 |
+| F02 | Persona Ablation | 判断 18 个镜头谁有增量价值 | baseline 与 outcome 定义冻结 |
+| F03 | Prompt/Model Evaluation | 改 prompt/model 前检测事实退化 | replay corpus 有代表性样本 |
+| F04 | Chronological Factor Lab | point-in-time OOS 比较因子/权重 | available-at 覆盖完整 |
+| F05 | Disagreement Map | 展示事实、假设和未决问题上的分歧 | claim/evidence 结构化率达标 |
+| F06 | Cost/Latency Budgeting | 每个 Skill 展示耗时、token 和失败率 | StepResult telemetry 稳定 |
+| F07 | Promotion Gate | 人工批准实验能力成为默认 | 指标、阈值和回滚均预注册 |
+
+### G. 数据、互操作与生态
+
+| ID | 功能 | 用户价值 | 进入条件 |
+|---|---|---|---|
+| G01 | OpenBB Optional Provider | 使用更多 provider 而不改变核心 | canonical Evidence schema 稳定 |
+| G02 | Private Data Adapter SDK | 团队接入自有数据 | credential/permission 边界稳定 |
+| G03 | MCP Resources & Prompts Pack | 外部 Agent 读取同一 Evidence/Run | typed output 与授权测试通过 |
+| G04 | Qlib/MLflow Run Export | 将研究实验接入现有评估工具 | RunBundle versioning 稳定 |
+| G05 | Markdown/PDF/JSON Export | 便于分享且保留证据 manifest | export 后引用仍可定位 |
+| G06 | Official Skill Catalog | 安装经过验证的研究 SOP | 至少一个外部贡献者通过兼容门 |
+| G07 | Compatibility Badge | 标记 provider/Skill 支持的版本与能力 | 自动 compatibility suite 可公开运行 |
+| G08 | Provider Health Dashboard | 观察延迟、覆盖、fallback 和失败 | provider metrics 结构化 |
+
+### H. 产品体验与 Research Ops
+
+| ID | 功能 | 用户价值 | 进入条件 |
+|---|---|---|---|
+| H01 | Research Inbox | 聚合需要处理的事件、缺口和提醒 | 状态变化事件模型稳定 |
+| H02 | Universal Command Palette | 从任意页面启动 Skill/打开证据 | 核心动作边界清晰 |
+| H03 | Saved Research Views | 保存筛选、字段和报告布局 | Dashboard 信息架构稳定 |
+| H04 | Self-hosted Deployment Pack | 可靠部署、升级、备份和诊断 | fresh-install/upgrade gate 长期稳定 |
+| H05 | Team Audit & Admin | 私有数据、权限和审计 | 出现真实团队付费需求 |
+| H06 | Research Ops Support | 私有 adapter、模板和评估支持 | 三个团队验证同类运维问题 |
 
 ## 北极星指标与 kill criteria
 
@@ -157,7 +245,7 @@ flowchart LR
 - 支持 universe 中 ≥80% 的事件在 24 小时前生成 ready dossier；
 - 抽样 claim/source 对应准确率 ≥98%；
 - 用户研究准备时间中位数下降 ≥50%；
-- 六个月内 ≥10 位独立用户使用 watchlist，≥5 位连续使用两个财报周期；
+- ≥10 位独立用户使用 watchlist，且 ≥5 位连续使用两个财报周期后，再扩大协作与生态投入；
 - 维护数据源故障的时间不超过维护者容量的 25%-30%。
 
 ### 停止或收缩条件
@@ -166,7 +254,7 @@ flowchart LR
 - 引用准确率达不到 98%：停止新增功能，先修证据链。
 - 用户认为它只是“LLM summary + links”：重新验证产品定位。
 - persona OOS 不优于简单 baseline：取消排名、预测性语言和默认权重，仅保留可引用的定性镜头。
-- 六个月后不足 5 位用户进入第二个财报周期：停止扩张并重新做问题发现。
+- 完成设计伙伴验证后仍不足 5 位用户进入第二个财报周期：停止扩张并重新做问题发现。
 
 ## 项目与商业化方向
 
@@ -176,11 +264,11 @@ flowchart LR
 2. 用 official/compatible policy、兼容测试和 trademark/发行规范建立“官方可信版本”，而不是急着建 marketplace。
 3. 社区贡献对象优先是 replay fixture、citation correction、source adapter、report template 和 challenge case，而不是继续增加 persona 数量。
 4. 初期商业化卖部署可靠性、私有 source adapter、共享模板、升级支持和 evaluation setup，不卖“秘密 alpha”或准确率承诺。
-5. 至少三个团队独立为相同协作/运维问题付费后，才评估 hosted control plane、团队权限和订阅产品。
+5. 至少三个团队独立验证相同协作/运维问题后，才评估 hosted control plane、团队权限和订阅产品。
 
 数据与分发需要遵守来源条款。[SEC Developer Resources](https://www.sec.gov/about/developer-resources) 明确要求负责任地访问 EDGAR；商业数据、新闻、社交和 LLM 输出默认采用 BYO-key/provider，未核实再分发权利前不打包转售。
 
-## 六个月内明确拒绝
+## 当前明确拒绝
 
 - 泛化的“AI 股票推荐/多 Agent 炒股”定位；
 - 自动交易、broker sync、目标价、仓位建议和投资回报承诺；

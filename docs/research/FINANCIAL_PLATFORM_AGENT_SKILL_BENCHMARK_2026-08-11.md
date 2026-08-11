@@ -232,7 +232,7 @@ v1 禁止 module path、import、shell、任意文件访问、表达式求值和
 | `debt-covenant-review` | 债务约束和流动性风险是什么？ | 以 filing 为权威来源，区分事实/推断，列出 source gaps |
 | `post-earnings-scorecard` | 财报前问题和场景后来怎样？ | 逐项 `confirmed/refuted/unknown`，不做事后改写 |
 
-这些 Skill 应先作为仓库内置、固定版本、带 fixture 的官方 Skill。至少等一个外部贡献者能通过兼容套件、权限检查和证据 gate 后，再考虑第三方目录；六个月内不做开放 marketplace。
+这些 Skill 应先作为仓库内置、固定版本、带 fixture 的官方 Skill。至少等一个外部贡献者能通过兼容套件、权限检查和证据 gate 后，再考虑第三方目录；当前不做开放 marketplace。
 
 ## Build / Adapt / Defer 决策
 
@@ -261,37 +261,29 @@ v1 禁止 module path、import、shell、任意文件访问、表达式求值和
 
 ## 开发顺序
 
-本调研不扩大当前 7 天 v11 RC 的交付范围。v11 只需要保持现有接口兼容，并为后续 schema/versioning 留出迁移空间。RC 后按以下四个增量推进：
+本调研中的第一批基础能力已经纳入唯一有日期的 7 天 v11 RC 计划，详细日程、降级策略和退出门见 [`docs/ROADMAP.md`](../ROADMAP.md)：
 
-### Increment 1：Trust contracts（1 周）
+- Day 1 冻结 Evidence/Claim/StepResult/RunBundle schema、三类时间与 Skill 安全边界；
+- Day 2 用 phase wrapper 生成第一份 RunBundle 和本地 checkpoint，不重写 `run_workflow`；
+- Day 3 将 replay/provider 输出接入 Evidence 与 missingness/no-lookahead contract；
+- Day 4 实现最小 Capability registry、SkillSpec validator 和两个内置 Skill fixtures；
+- Day 5 增加 Evidence/Run MCP resources、typed results 和权限拒绝审计；
+- Day 6 通过 `earnings-prep`/`filing-delta` 完成财报前 dossier 与变化比较；
+- Day 7 完成 citation、permission、replay、source/wheel 和 release gates。
 
-- 冻结四个核心 schema 与三类时间语义；
-- 用 feature flag 包裹现有一个 earnings workflow，产出第一份 RunBundle；
-- 不重写 `run_workflow`，只在现有 phase 边界记录 StepResult；
-- contract/provenance/no-lookahead/replay tests 通过。
+本周只实现支撑两个内置 Skill 的最小执行面，不建设通用 DAG、第三方脚本运行时或 marketplace。若 Day 3 仍无法在不改变现有结果的情况下生成 baseline-equivalent RunBundle，则停止 state-machine 扩展，只保留 schema、phase wrapper 和 feature flag，优先保证 RC 正确性。
 
-**停止条件**：第 3 天仍无法在不改变现有输出的情况下生成 baseline-equivalent RunBundle，则停止 state-machine 改造，只交付 schema 与 phase wrapper。
+以下集成已经登记，但不设置日期，后续只有进入新的 7 天计划才算承诺开发：
 
-### Increment 2：Constrained skills（1 周）
-
-- capability registry 与 SkillSpec validator；
-- 上线 `earnings-prep`、`filing-delta` 两个内置 Skill；
-- 权限、budget、timeout、cache、abstention 生效；
-- Skill 无法调用未注册 capability 或任意代码。
-
-### Increment 3：MCP interoperability（1 周）
-
-- Evidence/Run/Event/Skill resources；
-- research prompts 与原子 tools；
-- typed outputs、resource links 和 citation aggregation；
-- unit、mocked integration、少量 nightly real-model eval 三层测试。
-
-### Increment 4：Optional ecosystem adapters（1–2 周）
-
-- 只选择一个 OpenBB provider adapter 做端到端验证；
-- Qlib/MLflow-compatible run export；
-- 用 TradingAgents/FinRobot/Dexter 场景建立对抗 benchmark，而不是引入其 runtime；
-- 外部贡献者跑通 compatibility suite 后再决定是否扩展 catalog。
+| 候选 | 进入条件 |
+|---|---|
+| 完整 evidence-seeking debate | 固定评估集证明 citation/矛盾发现收益，且成本在预算内 |
+| OpenBB provider adapter | canonical Evidence schema 经真实运行稳定，adapter 故障可隔离 |
+| Qlib/MLflow-compatible export | RunBundle versioning 和信息时点语义冻结 |
+| 更多官方 research Skills | 前两个 Skill 的 fixture、权限和 missingness gate 稳定 |
+| 外部 Agent client / MCP provider | 外部结果能 normalize/persist，且授权/超时/许可可审计 |
+| 社区兼容套件与 catalog | 至少一个外部贡献者通过安全、许可和跨版本测试 |
+| 通用 checkpoint state machine | phase wrapper 的真实数据证明抽象可复用，不围绕单一 workflow 设计 |
 
 ## 安全、许可证与维护门
 
