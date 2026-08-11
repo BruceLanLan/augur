@@ -139,6 +139,10 @@
                 <button type="button" onclick="openKbdModal()" class="lang-toggle-btn" data-i18n-aria="kbd-show-help" aria-label="显示快捷键帮助" title="Keyboard shortcuts (?)">
                     ?
                 </button>
+                <button type="button" class="theme-toggle-btn" onclick="augurTheme.toggle()" aria-label="Toggle dark/light theme" title="Toggle theme">
+                    <span id="theme-icon">🌙</span>
+                    <span id="theme-label">Dark</span>
+                </button>
                 <div class="sb-status status-indicator connected"><span class="dot live status-dot"></span><span class="status-text" data-i18n="status-ready">Oracle online · yfinance live</span></div>
                 <div class="sb-ver" data-i18n="powered-by">AUGUR v8.1.0</div>
             </div>
@@ -1037,6 +1041,7 @@
     </script>
     <script src="/static/js/i18n.js?v=8.1.0"></script>
     <script src="/static/js/command-palette.js?v=11.0.0"></script>
+    <script src="/static/js/theme-toggle.js?v=8.1.0"></script>
     {% block extra_scripts %}{% endblock %}
 
     <script>
@@ -1166,5 +1171,11 @@ if ('serviceWorker' in navigator) {
         setInterval(fetchPrices, 60000);
     })();
     </script>
+
+    <!-- Theme toggle FAB (fixed bottom-right) -->
+    <button type="button" class="theme-toggle-fab" onclick="augurTheme.toggle()" aria-label="Toggle dark/light theme" title="Toggle theme">
+        <span class="icon-moon" aria-hidden="true">🌙</span>
+        <span class="icon-sun" aria-hidden="true">☀️</span>
+    </button>
 </body>
 </html>

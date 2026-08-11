@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Thesis Journal — {{ ticker or "Augur" }}{% endblock %}
+{% block content %}
+<div class="thesis-journal" data-ticker="{{ ticker or '' }}">
+  <!-- Header -->
+  <div class="tj-header">
+    <div class="tj-title-row">
+      <h1>📝 Thesis Journal</h1>
+      {% if ticker %}<span class="tj-ticker-badge">{{ ticker }}</span>{% endif %}
+    </div>
+    <p class="tj-subtitle">Track your investment theses, falsification conditions, and decision history.</p>
+  </div>
+
+  <!-- New Thesis Form -->
+  <div class="tj-section">
+    <button class="btn btn-primary" onclick="document.getElementById('tj-new-form').classList.toggle('hidden')">
+      + New Thesis
+    </button>
+    <form id="tj-new-form" class="tj-form hidden" onsubmit="createThesis(event)">
+      <div class="form-group">
+        <label for="tj-ticker">Ticker</label>
+        <input id="tj-ticker" type="text" value="{{ ticker or '' }}" placeholder="AAPL" required>
+      </div>
+      <div class="form-group">
+        <label for="tj-statement">Thesis Statement</label>
+        <textarea id="tj-statement" rows="3" placeholder="e.g. Apple's services revenue will surpass hardware within 2 years" required></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="tj-catalysts">Catalysts (one per line)</label>
+          <textarea id="tj-catalysts" rows="2" placeholder="Growing installed base&#10;Services margin expansion"></textarea>
+        </div>
+        <div class="form-group">
+          <label for="tj-risks">Risks (one per line)</label>
+          <textarea id="tj-risks" rows="2" placeholder="Regulatory pressure&#10;Competition from Android"></textarea>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="tj-falsify">Falsification Conditions (one per line)</label>
+        <textarea id="tj-falsify" rows="2" placeholder="Services growth drops below 10%&#10;Gross margin declines 3 consecutive quarters"></textarea>
+      </div>
+      <button type="submit" class="btn btn-accent">Create Thesis</button>
+    </form>
+  </div>
+
+  <!-- Active Theses -->
+  <div class="tj-section">
+    <h2>Active Theses</h2>
+    <div id="tj-active-list" class="tj-list">
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-title">No active theses yet</div>
+        <div class="empty-state-desc">Create your first investment thesis to start tracking.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Thesis History -->
+  <div class="tj-section">
+    <h2>History</h2>
+    <div id="tj-history-list" class="tj-list">
+      <div class="skeleton skeleton-text"></div>
+      <div class="skeleton skeleton-text short"></div>
+      <div class="skeleton skeleton-text long"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+.tj-header { margin-bottom: 32px; }
+.tj-title-row { display: flex; align-items: center; gap: 12px; }
+.tj-ticker-badge {
+  padding: 4px 12px; border-radius: 20px;
+  background: var(--accent, #ff6b35); color: #fff;
+  font-size: 14px; font-weight: 600;
+}
+.tj-subtitle { color: var(--text-muted, #6b7280); margin-top: 4px; }
+.tj-section { margin-bottom: 32px; }
+.tj-section h2 { font-size: 18px; margin-bottom: 12px; }
+.tj-form {
+  margin-top: 16px; padding: 20px;
+  background: var(--bg-card, #fff); border-radius: 12px;
+  border: 1px solid var(--border, #e5e7eb);
+}
+.tj-form .form-group { margin-bottom: 12px; }
+.tj-form .form-row { display: flex; gap: 12px; }
+.tj-form .form-row .form-group { flex: 1; }
+.tj-form label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
+.tj-form input, .tj-form textarea {
+  width: 100%; padding: 8px 12px; border: 1px solid var(--border, #d1d5db);
+  border-radius: 6px; font-size: 14px; background: var(--bg, #fff);
+  color: var(--text, #1f2937); box-sizing: border-box;
+}
+.tj-form textarea { resize: vertical; }
+.tj-list { min-height: 60px; }
+.tj-card {
+  padding: 16px; margin-bottom: 12px;
+  background: var(--bg-card, #fff); border-radius: 10px;
+  border: 1px solid var(--border, #e5e7eb);
+}
+.tj-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.tj-card-statement { font-size: 15px; font-weight: 600; flex: 1; }
+.tj-card-status {
+  padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase;
+}
+.tj-card-status.active { background: #dbeafe; color: #1d4ed8; }
+.tj-card-status.weakened { background: #fef3c7; color: #b45309; }
+.tj-card-status.refuted { background: #fee2e2; color: #b91c1c; }
+.tj-card-status.confirmed { background: #d1fae5; color: #047857; }
+.tj-card-meta { font-size: 12px; color: var(--text-muted, #9ca3af); }
+.tj-card-details { margin-top: 8px; font-size: 13px; }
+.tj-card-details .tj-label { font-weight: 600; color: var(--text-muted, #6b7280); }
+.tj-card-details ul { margin: 4px 0 0 16px; padding: 0; }
+.hidden { display: none !important; }
+</style>
+
+<script>
+async function loadTheses() {
+  try {
+    var resp = await fetch('/api/thesis/list' + (document.querySelector('.tj-journal').dataset.ticker ? '?ticker=' + document.querySelector('.tj-journal').dataset.ticker : ''));
+    var data = await resp.json();
+    renderTheses(data.theses || []);
+  } catch(e) {
+    document.getElementById('tj-active-list').innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Failed to load</div></div>';
+  }
+}
+
+function renderTheses(theses) {
+  var active = theses.filter(function(t) { return t.status === 'active' || t.status === 'weakened'; });
+  var history = theses.filter(function(t) { return t.status === 'refuted' || t.status === 'confirmed'; });
+  
+  var activeEl = document.getElementById('tj-active-list');
+  var historyEl = document.getElementById('tj-history-list');
+  
+  if (active.length === 0) {
+    activeEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">No active theses</div><div class="empty-state-desc">Create your first investment thesis to start tracking.</div></div>';
+  } else {
+    activeEl.innerHTML = active.map(renderThesisCard).join('');
+  }
+  
+  if (history.length === 0) {
+    historyEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📜</div><div class="empty-state-title">No thesis history</div></div>';
+  } else {
+    historyEl.innerHTML = history.map(renderThesisCard).join('');
+  }
+}
+
+function renderThesisCard(t) {
+  return '<div class="tj-card">'
+    + '<div class="tj-card-header">'
+    + '<span class="tj-card-statement">' + escapeHtml(t.statement) + '</span>'
+    + '<span class="tj-card-status ' + t.status + '">' + t.status + '</span>'
+    + '</div>'
+    + '<div class="tj-card-meta">' + (t.ticker || '') + ' · Created ' + (t.created_at || '').slice(0, 10) + '</div>'
+    + (t.catalysts && t.catalysts.length ? '<div class="tj-card-details"><span class="tj-label">Catalysts:</span><ul>' + t.catalysts.map(function(c){return '<li>'+escapeHtml(c)+'</li>';}).join('') + '</ul></div>' : '')
+    + (t.risks && t.risks.length ? '<div class="tj-card-details"><span class="tj-label">Risks:</span><ul>' + t.risks.map(function(r){return '<li>'+escapeHtml(r)+'</li>';}).join('') + '</ul></div>' : '')
+    + (t.falsification_conditions && t.falsification_conditions.length ? '<div class="tj-card-details"><span class="tj-label">Falsification:</span><ul>' + t.falsification_conditions.map(function(f){return '<li>'+escapeHtml(f)+'</li>';}).join('') + '</ul></div>' : '')
+    + '</div>';
+}
+
+function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+function createThesis(e) {
+  e.preventDefault();
+  var data = {
+    ticker: document.getElementById('tj-ticker').value.toUpperCase(),
+    statement: document.getElementById('tj-statement').value,
+    catalysts: document.getElementById('tj-catalysts').value.split('\n').filter(Boolean),
+    risks: document.getElementById('tj-risks').value.split('\n').filter(Boolean),
+    falsification_conditions: document.getElementById('tj-falsify').value.split('\n').filter(Boolean),
+  };
+  fetch('/api/thesis/create', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+  }).then(function(r) { return r.json(); }).then(function() {
+    document.getElementById('tj-new-form').classList.add('hidden');
+    document.getElementById('tj-new-form').reset();
+    loadTheses();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', loadTheses);
+</script>
+{% endblock %}

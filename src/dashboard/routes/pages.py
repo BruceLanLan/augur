@@ -117,6 +117,14 @@ async def create_persona_page(request: Request):
     })
 
 
+@router.get("/thesis", response_class=HTMLResponse, summary="Thesis Journal — 投资论文追踪")
+async def thesis_page(request: Request, ticker: str = ""):
+    return templates.TemplateResponse(request=request, name="thesis.html", context={
+        "title": "Thesis Journal — Augur",
+        "ticker": ticker.upper() if ticker else "",
+    })
+
+
 @router.get("/report/{ticker}", response_class=HTMLResponse, summary="深度分析报告全屏页面")
 async def report_view_page(request: Request, ticker: str):
     """Dedicated full-page report view for a ticker. Auto-fetches report on load."""

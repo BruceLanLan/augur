@@ -217,10 +217,15 @@ class UserManager:
         self._init_db()
 
     def _init_db(self):
-        """Initialize the database schema."""
+        """Initialize the database schema with WAL mode for concurrency."""
         try:
             conn = sqlite3.connect(str(self.db_path), timeout=10)
             try:
+                # Enable WAL mode for better read concurrency
+                conn.execute("PRAGMA journal_mode=WAL")
+                conn.execute("PRAGMA synchronous=NORMAL")
+                conn.execute("PRAGMA cache_size=-8000")  # 8MB cache
+                conn.execute("PRAGMA foreign_keys=ON")
                 conn.execute("""
                     CREATE TABLE IF NOT EXISTS users (
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -229,6 +234,11 @@ class UserManager:
                         salt TEXT NOT NULL,
                         created_at REAL NOT NULL
                     )
+                """)
+                # Index for login lookups
+                conn.execute("""
+                    CREATE INDEX IF NOT EXISTS idx_users_username
+                    ON users(username)
                 """)
                 conn.commit()
             finally:
