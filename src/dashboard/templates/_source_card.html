@@ -1,0 +1,55 @@
+{# _source_card.html — reusable Source Card template fragment #}
+{# Expected context variables:                                   #}
+{#   source: { name, locator, available_at, coverage, url,       #}
+{#             calibration, is_missing }                         #}
+{# Usage: {% with source=item %}{% include '_source_card.html' %}{% endwith %} #}
+<a href="{{ source.url or '#' }}"
+   class="source-card"
+   {% if source.url %}target="_blank" rel="noopener noreferrer"{% endif %}
+   {% if not source.url %}onclick="return false;" style="cursor:default;"{% endif %}
+   aria-label="Source: {{ source.name or 'Unknown' }}">
+
+  <div class="source-card__header">
+    <span class="source-card__name" title="{{ source.name or '' }}">
+      {{ source.name or 'Unknown Source' }}
+    </span>
+    {% if source.url %}
+    <svg class="source-card__link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+      <polyline points="15 3 21 3 21 9"/>
+      <line x1="10" y1="14" x2="21" y2="3"/>
+    </svg>
+    {% endif %}
+  </div>
+
+  {% if source.locator %}
+  <div class="source-card__locator" title="{{ source.locator }}">
+    {{ source.locator }}
+  </div>
+  {% endif %}
+
+  {% if source.available_at %}
+  <div class="source-card__available-at" title="{{ source.available_at }}">
+    Available: {{ source.available_at }}
+  </div>
+  {% endif %}
+
+  <div class="source-card__footer">
+    <span class="source-card__coverage">
+      Coverage: {{ source.coverage or '--' }}
+    </span>
+
+    {% if source.calibration %}
+    <span class="calib-badge calib-badge--{{ source.calibration }}">
+      <span class="calib-badge__dot"></span>
+      {{ source.calibration }}
+    </span>
+    {% endif %}
+  </div>
+
+  {% if source.is_missing %}
+  <div class="missing-data-indicator" style="margin-top:8px; min-height:32px; padding:8px;">
+    <span class="missing-data-label">Data Missing</span>
+  </div>
+  {% endif %}
+</a>

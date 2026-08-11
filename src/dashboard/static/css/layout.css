@@ -412,3 +412,287 @@ html.light .council-hero {
   color: var(--signal-sell);
   font-size: 0.9rem;
 }
+
+/* ============================================================
+   RESPONSIVE — Tablet (768px – 1024px): two-column layout
+   ============================================================ */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .app.app-layout {
+    grid-template-columns: var(--sidebar-collapsed, 64px) minmax(0, 1fr);
+  }
+
+  .council-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .sc-grid {
+    grid-template-columns: repeat(5, 1fr);
+  }
+
+  .grid-2-1 {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .mboard {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .exec-metrics {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  /* Compact sidebar on tablet */
+  .app-layout .sidebar:not(.open) .sb-word,
+  .app-layout .sidebar:not(.open) .sb-group,
+  .app-layout .sidebar:not(.open) .sb-item span,
+  .app-layout .sidebar:not(.open) .sb-badge,
+  .app-layout .sidebar:not(.open) .sb-status,
+  .app-layout .sidebar:not(.open) .sb-ver {
+    display: none;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — Mobile (< 768px): single column, sidebar → bottom tab bar
+   ============================================================ */
+@media (max-width: 768px) {
+  .app.app-layout {
+    display: block;
+    padding-bottom: 64px; /* room for bottom-nav */
+  }
+
+  .app-layout .sidebar,
+  .app-layout .sb,
+  .app-layout .main,
+  .app-layout .app-main {
+    grid-column: auto;
+    grid-row: auto;
+  }
+
+  .app-layout .sidebar,
+  .app-layout .sb {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 101;
+    width: var(--sidebar-width, 240px);
+    height: 100vh;
+    transform: translateX(-100%);
+    transition: transform var(--transition-speed, 0.25s) ease;
+  }
+
+  .app-layout .sidebar.open,
+  .app-layout .sb.open {
+    transform: translateX(0);
+  }
+
+  .mobile-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: rgba(0, 0, 0, 0.5);
+  }
+  .mobile-backdrop.visible {
+    display: block;
+  }
+
+  .hamburger-btn {
+    display: flex;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 99;
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--r-sm);
+    cursor: pointer;
+    color: var(--fg-1);
+  }
+  .hamburger-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  /* Bottom nav as sticky tab bar */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 98;
+    background: var(--bg-panel);
+    border-top: 1px solid var(--border);
+    justify-content: space-around;
+    align-items: center;
+    height: 60px;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  .bottom-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-width: 48px;
+    min-height: 44px;
+    padding: 4px 8px;
+    color: var(--fg-3);
+    text-decoration: none;
+    font-size: 0.6rem;
+    font-weight: 500;
+    border-radius: var(--r-sm);
+    transition: color var(--dur-fast);
+  }
+  .bottom-nav-item.active {
+    color: var(--amber);
+  }
+  .bottom-nav-item svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Single column for cards */
+  .mboard { grid-template-columns: repeat(2, 1fr); }
+  .sc-grid { grid-template-columns: repeat(3, 1fr); }
+  .council-grid { grid-template-columns: repeat(2, 1fr); }
+  .exec-metrics { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+  .debate { grid-template-columns: 1fr; }
+  .grid-2-1 { grid-template-columns: 1fr; }
+
+  /* Ticker tape hidden on mobile */
+  .ticker-tape-wrap {
+    display: none;
+  }
+
+  /* Hide sidebar collapse button on mobile */
+  .sidebar-collapse-btn {
+    display: none;
+  }
+
+  /* Full-width inputs */
+  .hero-input {
+    flex-direction: column;
+    align-items: stretch;
+    max-width: 100%;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .page-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE — Small phones (< 480px)
+   ============================================================ */
+@media (max-width: 480px) {
+  .mboard { grid-template-columns: 1fr; }
+  .sc-grid { grid-template-columns: repeat(2, 1fr); }
+  .council-grid { grid-template-columns: 1fr; }
+  .exec-metrics { grid-template-columns: 1fr; gap: 10px; }
+  .hero-owl { display: none; }
+  .hero-title { font-size: 1.35rem; }
+
+  .hero-input .field,
+  .hero-input .pixel-btn,
+  .hero-input .btn {
+    width: 100%;
+    min-height: 44px;
+  }
+}
+
+/* ============================================================
+   TOUCH-FRIENDLY — minimum 44×44 px tap targets
+   ============================================================ */
+@media (pointer: coarse) {
+  .btn,
+  button:not(.sidebar-collapse-btn):not(.graph-detail-panel__close),
+  .pixel-btn,
+  .sb-item,
+  .nav-item,
+  .bottom-nav-item,
+  .filter-tag,
+  .source-card,
+  select,
+  input[type="submit"],
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .sb-item {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  .bottom-nav-item {
+    padding: 6px 10px;
+  }
+
+  /* Increase spacing between tappable items */
+  .sb-item + .sb-item {
+    margin-top: 2px;
+  }
+
+  .filter-tag {
+    padding: 10px 18px;
+  }
+}
+
+/* ============================================================
+   DARK MODE — prefers-color-scheme: dark
+   Augur defaults to dark (.dark class on <html>), but OS-level
+   dark preference provides a fallback when the class is absent.
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  html:not(.light) {
+    /* These reinforce the :root dark tokens from colors_and_type.css */
+    color-scheme: dark;
+  }
+
+  html:not(.light) .app {
+    background: var(--bg-void);
+  }
+
+  html:not(.light) .bottom-nav {
+    background: #10101a;
+    border-top-color: #1e1e2e;
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  html:not(.dark) {
+    color-scheme: light;
+  }
+
+  html:not(.dark) .app {
+    background: #f4f1ea;
+  }
+
+  html:not(.dark) .sb {
+    background: #ffffff;
+    border-right-color: #ddd6c6;
+  }
+
+  html:not(.dark) .bottom-nav {
+    background: #ffffff;
+    border-top-color: #ddd6c6;
+  }
+}
