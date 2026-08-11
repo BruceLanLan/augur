@@ -71,6 +71,22 @@ class TestConflictPoint:
         assert cp.bullish_personas == []
         assert cp.impact == "medium"
 
+    def test_with_abstaining_and_evidence(self):
+        cp = ConflictPoint(
+            claim="Moat is widening",
+            bullish_personas=["buffett", "munger"],
+            bearish_personas=["dalio"],
+            abstaining_personas={"soros": "Insufficient data"},
+            evidence_supporting=["ev_001", "ev_002"],
+            evidence_contradicting=["ev_003"],
+            information_that_would_resolve="Market share report",
+            impact="high",
+        )
+        assert len(cp.abstaining_personas) == 1
+        assert "soros" in cp.abstaining_personas
+        assert cp.evidence_supporting == ["ev_001", "ev_002"]
+        assert cp.evidence_contradicting == ["ev_003"]
+
 
 # ---------------------------------------------------------------------------
 # DisagreementMap

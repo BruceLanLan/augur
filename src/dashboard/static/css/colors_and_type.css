@@ -284,3 +284,288 @@
 
 /* Pixel-perfect image rendering — keep sprites crisp, never blurred */
 .pixelated { image-rendering: pixelated; image-rendering: crisp-edges; }
+
+/* ============================================================
+   DARK MODE — explicit [data-theme="dark"] selector
+   Variables: bg #1a1a2e, card #16213e, text #e0e0e0,
+   muted #8892b0, border #2a2a4a, accent #ff6b35
+   ============================================================ */
+[data-theme="dark"] {
+  --bg-void:        #1a1a2e;
+  --bg-panel:       #14142a;
+  --bg-card:        #16213e;
+  --bg-card-hover:  #1c2a4a;
+  --bg-tertiary:    #1e2a4a;
+  --bg-elevated:    #1c2848;
+  --bg-secondary:   #14142a;
+  --bg-hover:       #1c2a4a;
+
+  --amber:          #ff6b35;
+  --amber-bright:   #ff8855;
+  --amber-glow:     rgba(255,107,53,0.15);
+  --amber-wash:     rgba(255,107,53,0.08);
+
+  --border:         #2a2a4a;
+  --border-hover:   #3a3a5a;
+  --border-subtle:  #1e1e3a;
+
+  --fg-1: #e0e0e0;
+  --fg-2: #8892b0;
+  --fg-3: #6a7490;
+
+  --text-primary:   var(--fg-1);
+  --text-secondary: var(--fg-2);
+  --text-muted:     var(--fg-3);
+  --bg-primary:     var(--bg-void);
+  --bg-sidebar:     var(--bg-panel);
+  --border-color:   var(--border);
+  --accent-orange:  var(--amber);
+
+  --bg-surface:     #1a2444;
+}
+
+/* ============================================================
+   SYSTEM DARK MODE — @media (prefers-color-scheme: dark)
+   Applies when no explicit data-theme is set
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light) {
+    --bg-void:        #1a1a2e;
+    --bg-panel:       #14142a;
+    --bg-card:        #16213e;
+    --bg-card-hover:  #1c2a4a;
+    --bg-tertiary:    #1e2a4a;
+    --bg-elevated:    #1c2848;
+    --bg-secondary:   #14142a;
+    --bg-hover:       #1c2a4a;
+
+    --amber:          #ff6b35;
+    --amber-bright:   #ff8855;
+    --amber-glow:     rgba(255,107,53,0.15);
+    --amber-wash:     rgba(255,107,53,0.08);
+
+    --border:         #2a2a4a;
+    --border-hover:   #3a3a5a;
+    --border-subtle:  #1e1e3a;
+
+    --fg-1: #e0e0e0;
+    --fg-2: #8892b0;
+    --fg-3: #6a7490;
+
+    --text-primary:   var(--fg-1);
+    --text-secondary: var(--fg-2);
+    --text-muted:     var(--fg-3);
+    --bg-primary:     var(--bg-void);
+    --bg-sidebar:     var(--bg-panel);
+    --border-color:   var(--border);
+    --accent-orange:  var(--amber);
+
+    --bg-surface:     #1a2444;
+  }
+}
+
+/* ============================================================
+   THEME TOGGLE BUTTON — fixed bottom-right, moon/sun icons
+   ============================================================ */
+.theme-toggle-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9990;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--fg-1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  transition: all var(--dur) var(--ease);
+  -webkit-tap-highlight-color: transparent;
+}
+.theme-toggle-fab:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+.theme-toggle-fab:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+.theme-toggle-fab .icon-sun,
+.theme-toggle-fab .icon-moon {
+  transition: transform var(--dur) var(--ease), opacity var(--dur) var(--ease);
+}
+/* In light mode: show moon (offer dark), hide sun */
+.theme-toggle-fab .icon-moon { display: inline; }
+.theme-toggle-fab .icon-sun  { display: none; }
+/* In dark mode: show sun (offer light), hide moon */
+[data-theme="dark"] .theme-toggle-fab .icon-moon,
+html.dark .theme-toggle-fab .icon-moon { display: none; }
+[data-theme="dark"] .theme-toggle-fab .icon-sun,
+html.dark .theme-toggle-fab .icon-sun  { display: inline; }
+
+/* Inline theme toggle (sidebar footer variant) */
+.theme-toggle-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  color: var(--fg-2);
+  cursor: pointer;
+  padding: 6px 10px;
+  font-size: 0.82rem;
+  transition: all var(--dur-fast) var(--ease);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+}
+.theme-toggle-btn:hover {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.theme-toggle-btn:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   DARK MODE COMPONENT STYLES
+   Ensures tables, forms, buttons, cards, modals, code blocks
+   are readable in dark mode
+   ============================================================ */
+
+/* --- Tables in dark mode --- */
+[data-theme="dark"] table,
+html.dark table,
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light) table {
+    border-color: var(--border);
+  }
+}
+[data-theme="dark"] th,
+html.dark th {
+  background: var(--bg-tertiary);
+  color: var(--fg-1);
+  border-color: var(--border);
+}
+[data-theme="dark"] td,
+html.dark td {
+  color: var(--fg-1);
+  border-color: var(--border);
+}
+[data-theme="dark"] tr:nth-child(even),
+html.dark tr:nth-child(even) {
+  background: rgba(255,255,255,0.02);
+}
+[data-theme="dark"] tr:hover,
+html.dark tr:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+/* --- Forms in dark mode --- */
+[data-theme="dark"] input,
+[data-theme="dark"] textarea,
+[data-theme="dark"] select,
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background: var(--bg-tertiary);
+  color: var(--fg-1);
+  border-color: var(--border);
+}
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder,
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: var(--fg-3);
+}
+[data-theme="dark"] input:focus,
+[data-theme="dark"] textarea:focus,
+[data-theme="dark"] select:focus,
+html.dark input:focus,
+html.dark textarea:focus,
+html.dark select:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px var(--amber-glow);
+}
+
+/* --- Buttons in dark mode --- */
+[data-theme="dark"] button:not(.theme-toggle-fab):not(.theme-toggle-btn),
+html.dark button:not(.theme-toggle-fab):not(.theme-toggle-btn) {
+  color: var(--fg-1);
+}
+[data-theme="dark"] .btn-primary,
+html.dark .btn-primary {
+  background: var(--amber);
+  color: #0a0a0f;
+  border-color: var(--amber);
+}
+[data-theme="dark"] .btn-secondary,
+html.dark .btn-secondary {
+  background: var(--bg-tertiary);
+  color: var(--fg-1);
+  border-color: var(--border);
+}
+
+/* --- Cards in dark mode --- */
+[data-theme="dark"] .card,
+html.dark .card {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--fg-1);
+}
+
+/* --- Modals in dark mode --- */
+[data-theme="dark"] [role="dialog"],
+html.dark [role="dialog"] {
+  background: var(--bg-card);
+  border-color: var(--border);
+  color: var(--fg-1);
+}
+[data-theme="dark"] [role="dialog"] .modal-header,
+html.dark [role="dialog"] .modal-header {
+  border-bottom-color: var(--border);
+}
+[data-theme="dark"] [role="dialog"] .modal-footer,
+html.dark [role="dialog"] .modal-footer {
+  border-top-color: var(--border);
+}
+
+/* --- Code blocks in dark mode --- */
+[data-theme="dark"] code,
+[data-theme="dark"] pre,
+html.dark code,
+html.dark pre {
+  background: var(--bg-tertiary);
+  color: var(--amber);
+  border-color: var(--border);
+}
+[data-theme="dark"] pre,
+html.dark pre {
+  border: 1px solid var(--border);
+}
+
+/* --- Skip-link visibility --- */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 8px;
+  z-index: 10001;
+  background: var(--amber);
+  color: #0a0a0f;
+  padding: 8px 16px;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-decoration: none;
+  transition: top var(--dur-fast) var(--ease);
+}
+.skip-link:focus {
+  top: 0;
+}

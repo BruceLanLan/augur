@@ -624,3 +624,85 @@
   global.EvidenceGraph = EvidenceGraph;
 
 })(typeof window !== 'undefined' ? window : this);
+
+// ============ Interaction enhancements ============
+
+(function () {
+  'use strict';
+  var canvas = document.getElementById('evidence-graph-canvas');
+  if (!canvas) return;
+
+  var ctx = canvas.getContext('2d');
+  var scale = 1, offsetX = 0, offsetY = 0;
+  var isDragging = false, dragStartX = 0, dragStartY = 0;
+
+  // Zoom with mouse wheel
+  canvas.addEventListener('wheel', function (e) {
+    e.preventDefault();
+    var delta = e.deltaY > 0 ? 0.9 : 1.1;
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    offsetX = mx - delta * (mx - offsetX);
+    offsetY = my - delta * (my - offsetY);
+    scale *= delta;
+    scale = Math.max(0.3, Math.min(3, scale));
+  }, { passive: false });
+
+  // Pan with mouse drag
+  canvas.addEventListener('mousedown', function (e) {
+    isDragging = true;
+    dragStartX = e.clientX - offsetX;
+    dragStartY = e.clientY - offsetY;
+    canvas.style.cursor = 'grabbing';
+  });
+  canvas.addEventListener('mousemove', function (e) {
+    if (!isDragging) return;
+    offsetX = e.clientX - dragStartX;
+    offsetY = e.clientY - dragStartY;
+  });
+  canvas.addEventListener('mouseup', function () {
+    isDragging = false;
+    canvas.style.cursor = 'grab';
+  });
+  canvas.addEventListener('mouseleave', function () {
+    isDragging = false;
+    canvas.style.cursor = 'grab';
+  });
+
+  // Touch support
+  var lastTouchDist = 0;
+  canvas.addEventListener('touchstart', function (e) {
+    if (e.touches.length === 2) {
+      lastTouchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  });
+  canvas.addEventListener('touchmove', function (e) {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      var dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      if (lastTouchDist > 0) {
+        var delta = dist / lastTouchDist;
+        scale *= delta;
+        scale = Math.max(0.3, Math.min(3, scale));
+      }
+      lastTouchDist = dist;
+    }
+  }, { passive: false });
+
+  // Reset zoom on double-click
+  canvas.addEventListener('dblclick', function () {
+    scale = 1; offsetX = 0; offsetY = 0;
+  });
+
+  // Export current transform for use by rendering code
+  window.__evidenceGraphTransform = function () {
+    return { scale: scale, offsetX: offsetX, offsetY: offsetY };
+  };
+})();
