@@ -1,0 +1,87 @@
+# -*- coding: utf-8 -*-
+"""augur.cli_commands.export_cmd — export RunBundle to Markdown / JSON / PDF / Evidence Pack"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import click
+
+
+@click.command("export")
+@click.argument("ticker")
+@click.option(
+    "--run-id", "-r",
+    required=True,
+    help="Run ID to export (e.g. run_AAPL_20250101T120000_abc12345).",
+)
+@click.option(
+    "--format", "-f",
+    "fmt",
+    type=click.Choice(["md", "json", "pdf", "evidence-pack"], case_sensitive=False),
+    default="md",
+    help="Export format: md, json, pdf, or evidence-pack.",
+)
+@click.option(
+    "--output", "-o",
+    default=None,
+    help=(
+        "Output file path. Defaults to "
+        "'{run_id}_report.{ext}' in the current directory."
+    ),
+)
+@click.option(
+    "--template", "-t",
+    default="default",
+    help="Jinja2 template string or 'default' for the built-in template (Markdown only).",
+)
+def export_cmd(
+    ticker: str,
+    run_id: str,
+    fmt: str,
+    output: str | None,
+    template: str,
+) -> None:
+    """Export a completed analysis run.
+
+    \b
+    Examples:
+      augur export AAPL --run-id run_AAPL_xxx --format md
+      augur export AAPL --run-id run_AAPL_xxx --format pdf -o report.pdf
+      augur export AAPL --run-id run_AAPL_xxx --format evidence-pack
+    """
+    from augur.export import ReportExporter
+
+    # Determine output path
+    ext_map = {
+        "md": ".md",
+        "json": ".json",
+        "pdf": ".pdf",
+        "evidence-pack": ".zip",
+    }
+    if output is None:
+        output = f"{run_id}_report{ext_map.get(fmt, '.md')}"
+
+    output_path = Path(output)
+
+    try:
+        exporter = ReportExporter()
+        result_path = exporter.export_from_run_id(
+            run_id=run_id,
+            output_path=output_path,
+            fmt=fmt,
+            template=template,
+        )
+    except FileNotFoundError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
+    except ImportError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
+    except ValueError as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
+
+    click.echo(f"✓ Exported {fmt} to {result_path}")
+    click.echo(f"  Ticker: {ticker.upper()}")
+    click.echo(f"  Run ID: {run_id}")

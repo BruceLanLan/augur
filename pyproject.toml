@@ -71,6 +71,10 @@ lark = [
 cron = [
     "apscheduler>=3.10.0",
 ]
+export = [
+    "markdown>=3.4",
+    "weasyprint>=60.0",
+]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.21",

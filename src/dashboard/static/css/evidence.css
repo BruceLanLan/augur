@@ -1,0 +1,468 @@
+/* ============================================================
+   Augur UI — Evidence Layer
+   evidence.css
+
+   Source Cards, Evidence Graph, Calibration Badges,
+   Missing Data Indicators, Provenance Bar.
+
+   Depends on colors_and_type.css for --var tokens.
+   ============================================================ */
+
+/* ============================================================
+   1 · SOURCE CARD — compact card for evidence provenance
+   ============================================================ */
+.source-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  cursor: pointer;
+  transition: border-color var(--dur-fast) var(--ease),
+              box-shadow var(--dur-fast) var(--ease),
+              transform var(--dur-fast) var(--ease);
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+}
+.source-card:hover {
+  border-color: var(--border-gilt);
+  box-shadow: 0 2px 12px rgba(255,140,0,0.08);
+  transform: translateY(-1px);
+}
+.source-card:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+}
+
+.source-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.source-card__name {
+  font: 600 0.82rem/1.2 var(--font-sans);
+  color: var(--fg-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.source-card__locator {
+  font: 500 0.68rem/1.3 var(--font-mono);
+  color: var(--fg-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+.source-card__available-at {
+  font: 400 0.66rem/1.3 var(--font-mono);
+  color: var(--fg-3);
+  word-break: break-all;
+}
+
+.source-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.source-card__coverage {
+  font: 600 0.58rem/1 var(--font-pixfin);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--fg-2);
+}
+
+.source-card__link-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  color: var(--fg-3);
+  transition: color var(--dur-fast);
+}
+.source-card:hover .source-card__link-icon {
+  color: var(--amber);
+}
+
+/* Source card grid (responsive) */
+.source-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+/* ============================================================
+   2 · EVIDENCE GRAPH — force-directed graph container
+   ============================================================ */
+.evidence-graph-container {
+  position: relative;
+  width: 100%;
+  min-height: 420px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+
+.evidence-graph-container canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.evidence-graph-container .graph-tooltip {
+  position: absolute;
+  pointer-events: none;
+  z-index: 50;
+  padding: 8px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-gilt);
+  border-radius: var(--r-sm);
+  font: 500 0.72rem/1.3 var(--font-sans);
+  color: var(--fg-1);
+  box-shadow: var(--shadow-pop);
+  max-width: 240px;
+  opacity: 0;
+  transform: translate(10px, -50%);
+  transition: opacity 0.15s ease;
+}
+.evidence-graph-container .graph-tooltip.visible {
+  opacity: 1;
+}
+
+/* Loading / empty states */
+.evidence-graph-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--fg-3);
+  font: var(--body-sm);
+  gap: 12px;
+}
+
+.evidence-graph-placeholder .placeholder-icon {
+  font-size: 2rem;
+  opacity: 0.4;
+}
+
+/* Graph legend */
+.graph-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 12px;
+  margin-top: 8px;
+  font: 500 0.64rem/1 var(--font-sans);
+  color: var(--fg-3);
+  flex-wrap: wrap;
+}
+
+.graph-legend__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.graph-legend__dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.graph-legend__dot.legend-support     { background: #00c853; }
+.graph-legend__dot.legend-contradict  { background: #ff1744; }
+.graph-legend__dot.legend-insufficient { background: #666; }
+
+.graph-legend__node {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+.graph-legend__node.legend-claim         { background: var(--amber); border-radius: 3px; }
+.graph-legend__node.legend-evidence-item { background: var(--crystal); border-radius: 50%; }
+
+/* Graph detail panel (click to open) */
+.graph-detail-panel {
+  display: none;
+  padding: 16px 20px;
+  margin-top: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-gilt);
+  border-radius: var(--r-md);
+}
+.graph-detail-panel.open {
+  display: block;
+}
+.graph-detail-panel__title {
+  font: 600 0.85rem/1.2 var(--font-sans);
+  color: var(--amber);
+  margin-bottom: 8px;
+}
+.graph-detail-panel__body {
+  font: var(--body-sm);
+  color: var(--fg-2);
+  line-height: 1.55;
+}
+.graph-detail-panel__close {
+  float: right;
+  background: none;
+  border: none;
+  color: var(--fg-3);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 2px 6px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--r-sm);
+}
+.graph-detail-panel__close:hover {
+  color: var(--amber);
+  background: var(--bg-card-hover);
+}
+
+/* ============================================================
+   3 · CALIBRATION BADGES — raw / experimental / validated / insufficient
+   ============================================================ */
+.calib-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font: 600 0.58rem/1 var(--font-pixfin);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.calib-badge--raw {
+  background: rgba(158,158,158,0.15);
+  color: #9e9e9e;
+  border: 1px solid rgba(158,158,158,0.35);
+}
+.calib-badge--experimental {
+  background: rgba(33,150,243,0.12);
+  color: #42a5f5;
+  border: 1px solid rgba(33,150,243,0.35);
+}
+.calib-badge--validated {
+  background: rgba(0,200,83,0.12);
+  color: var(--signal-buy);
+  border: 1px solid rgba(0,200,83,0.35);
+}
+.calib-badge--insufficient {
+  background: rgba(255,152,0,0.12);
+  color: var(--amber);
+  border: 1px solid rgba(255,152,0,0.35);
+}
+
+.calib-badge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.calib-badge--raw .calib-badge__dot          { background: #9e9e9e; }
+.calib-badge--experimental .calib-badge__dot { background: #42a5f5; }
+.calib-badge--validated .calib-badge__dot    { background: var(--signal-buy); }
+.calib-badge--insufficient .calib-badge__dot { background: var(--amber); }
+
+/* Light mode adjustments */
+html.light .calib-badge--raw {
+  background: rgba(0,0,0,0.06);
+  color: #616161;
+  border-color: rgba(0,0,0,0.15);
+}
+html.light .calib-badge--experimental {
+  background: rgba(21,101,192,0.08);
+  color: #1565c0;
+  border-color: rgba(21,101,192,0.25);
+}
+html.light .calib-badge--validated {
+  background: rgba(27,138,75,0.08);
+  border-color: rgba(27,138,75,0.25);
+}
+html.light .calib-badge--insufficient {
+  background: rgba(207,111,0,0.08);
+  border-color: rgba(207,111,0,0.25);
+}
+
+/* ============================================================
+   4 · MISSING DATA INDICATOR — red dashed border + label
+   ============================================================ */
+.missing-data-indicator {
+  position: relative;
+  border: 2px dashed rgba(255,23,68,0.45);
+  border-radius: var(--r-md);
+  padding: 16px;
+  background: rgba(255,23,68,0.04);
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.missing-data-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font: 600 0.7rem/1 var(--font-sans);
+  color: var(--signal-sell);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.missing-data-label::before {
+  content: '⚠';
+  font-size: 0.85rem;
+}
+
+/* Inline variant (inside a card row) */
+.missing-data-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px dashed rgba(255,23,68,0.35);
+  border-radius: 4px;
+  font: 500 0.62rem/1 var(--font-mono);
+  color: var(--signal-sell);
+  white-space: nowrap;
+}
+
+/* Light mode */
+html.light .missing-data-indicator {
+  border-color: rgba(198,40,40,0.4);
+  background: rgba(198,40,40,0.03);
+}
+
+/* ============================================================
+   5 · PROVENANCE BAR — bottom-fixed info bar
+   ============================================================ */
+.provenance-bar {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width, 240px);
+  right: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 20px;
+  background: var(--bg-panel);
+  border-top: 1px solid var(--border);
+  font: 500 0.66rem/1.3 var(--font-mono);
+  color: var(--fg-2);
+  overflow-x: auto;
+  white-space: nowrap;
+  transition: left var(--transition-speed, 0.25s) ease;
+  min-height: 40px;
+}
+
+/* Slide with collapsed sidebar */
+.app-layout:has(.sidebar.collapsed) ~ .provenance-bar,
+.sidebar.collapsed ~ .provenance-bar {
+  left: var(--sidebar-collapsed, 64px);
+}
+
+.provenance-bar__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.provenance-bar__label {
+  font: 600 0.56rem/1 var(--font-pixfin);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--fg-3);
+}
+
+.provenance-bar__value {
+  color: var(--fg-1);
+  font: 500 0.68rem/1 var(--font-mono);
+}
+
+.provenance-bar__separator {
+  width: 1px;
+  height: 14px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+/* Make room for provenance bar in main content */
+body.has-provenance-bar .app-main {
+  padding-bottom: 48px;
+}
+
+/* Light mode provenance bar */
+html.light .provenance-bar {
+  background: var(--bg-panel);
+  border-top-color: var(--border);
+}
+
+/* ============================================================
+   6 · RESPONSIVE — evidence components
+   ============================================================ */
+@media (max-width: 768px) {
+  .provenance-bar {
+    left: 0;
+    gap: 10px;
+    padding: 6px 12px;
+    font-size: 0.6rem;
+    min-height: 36px;
+  }
+  .provenance-bar__separator {
+    height: 10px;
+  }
+  .source-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  .evidence-graph-container {
+    min-height: 300px;
+  }
+  .graph-legend {
+    gap: 10px;
+    font-size: 0.6rem;
+  }
+}
+
+/* ============================================================
+   7 · DARK MODE — prefers-color-scheme
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  /* Augur defaults to dark, so these are already set in :root.
+     This block reinforces dark-specific overrides for evidence
+     components when the OS signals dark mode and no explicit
+     theme toggle has been set. */
+  html:not(.light) .source-card {
+    background: var(--bg-card);
+  }
+  html:not(.light) .evidence-graph-container {
+    background: var(--bg-card);
+  }
+}
+
+@media (prefers-color-scheme: light) {
+  /* When OS prefers light and no explicit dark class is set,
+     ensure evidence components respect light palette. */
+  html:not(.dark) .source-card {
+    background: var(--bg-card);
+  }
+  html:not(.dark) .provenance-bar {
+    background: var(--bg-panel);
+  }
+}
