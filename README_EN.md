@@ -262,7 +262,7 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 
 ## 🗺️ Development roadmap
 
-See [docs/ROADMAP.md](docs/ROADMAP.md) for the current project review, repository responsibilities, and 90-day development plan.
+See [docs/ROADMAP.md](docs/ROADMAP.md) for the current project review, repository responsibilities, and seven-day v11 Release Candidate sprint.
 
 ---
 

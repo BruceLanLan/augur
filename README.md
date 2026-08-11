@@ -264,7 +264,7 @@ mcp_augur_create_persona(yaml_content="agent_id: ...")
 
 ## 🗺️ 开发路线图
 
-当前项目审计、仓库分工和未来 90 天开发计划见 [docs/ROADMAP.md](docs/ROADMAP.md)。
+当前项目审计、仓库分工和 7 天 v11 Release Candidate 冲刺计划见 [docs/ROADMAP.md](docs/ROADMAP.md)。
 
 ---
 
