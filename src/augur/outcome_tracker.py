@@ -2,7 +2,7 @@
 """Decision outcome tracking — score decision quality over time (E03 enhancement)."""
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict
 
 
 @dataclass

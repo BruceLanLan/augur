@@ -9,11 +9,10 @@ coverage. Stores results in get_data_dir()/provider_health.json.
 from __future__ import annotations
 
 import json
-import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 
 from augur.data_dir import get_data_dir
 

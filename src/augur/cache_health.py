@@ -7,8 +7,7 @@ Usage::
 """
 from __future__ import annotations
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import List, Optional, Tuple
+from typing import List, Tuple
 from augur.data_dir import get_data_dir
 
 # Default max age for EDGAR companyfacts cache (7 days for annual data)

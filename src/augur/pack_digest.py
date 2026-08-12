@@ -2,9 +2,8 @@
 """Research pack digest — verify exported evidence packs (G05 enhancement)."""
 from __future__ import annotations
 import hashlib
-import json
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict
 
 
 def compute_manifest_digest(pack_dir: Path) -> Dict[str, str]:
