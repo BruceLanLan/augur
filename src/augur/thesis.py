@@ -526,3 +526,27 @@ class DecisionLog:
             "recommendation": recommendation,
             "n_conditions": len(th.falsification_conditions),
         }
+
+    def update_outcome(self, decision_id: str, outcome: str) -> Optional[Decision]:
+        """Record the outcome of a past decision for post-hoc review."""
+        d = self._decisions.get(decision_id)
+        if d is None:
+            return None
+        updated = Decision(
+            decision_id=d.decision_id, ticker=d.ticker, action=d.action,
+            reasoning=d.reasoning, evidence_run_ids=list(d.evidence_run_ids),
+            thesis_ids=list(d.thesis_ids), created_at=d.created_at, outcome=outcome,
+        )
+        self._decisions[decision_id] = updated
+        self.save()
+        return updated
+
+    def get_outcomes(self, ticker: str = "") -> List[dict]:
+        """Return all decisions with outcomes for review."""
+        decisions = self.list_by_ticker(ticker) if ticker else list(self._decisions.values())
+        return [
+            {"decision_id": d.decision_id, "ticker": d.ticker, "action": d.action,
+             "outcome": d.outcome, "created_at": d.created_at,
+             "reasoning": d.reasoning[:80]}
+            for d in decisions if d.outcome
+        ]

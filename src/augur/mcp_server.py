@@ -863,6 +863,52 @@ def create_server():
 
         return run_path.read_text(encoding="utf-8")
 
+    # ---- MCP Prompts (G03) ----
+
+    @mcp.prompt()
+    def earnings_prep_prompt(ticker: str) -> str:
+        """Generate a pre-earnings research dossier prompt."""
+        return (
+            f"Build a point-in-time pre-earnings research dossier for {ticker}. "
+            f"Include: prior guidance, key KPI changes, recent filing/insider/institutional "
+            f"activity, major risks, persona disagreement, and unanswered questions. "
+            f"Every factual claim must cite its SEC filing source."
+        )
+
+    @mcp.prompt()
+    def filing_delta_prompt(ticker: str, new_accession: str, previous_accession: str = "") -> str:
+        """Generate a filing delta comparison prompt."""
+        return (
+            f"Compare the latest SEC filing ({new_accession}) for {ticker} "
+            f"against the previous one. Identify material changes in: "
+            f"financial metrics (20+ key items), risk factors (new/escalated/removed), "
+            f"management guidance (raised/lowered/withdrawn), and MD&A language shifts. "
+            f"Only report changes that exceed the 5% materiality threshold."
+        )
+
+    @mcp.prompt()
+    def thesis_review_prompt(ticker: str, thesis_statement: str = "") -> str:
+        """Generate a thesis review prompt."""
+        base = f"Review the investment thesis for {ticker}."
+        if thesis_statement:
+            base += f" Thesis: '{thesis_statement}'."
+        return (
+            base + " Compare the most recent RunBundle against the previous one. "
+            "Identify: fact changes, valuation changes, language changes, "
+            "and any triggered falsification conditions. "
+            "Output: intact / weakened / strengthened / refuted with evidence."
+        )
+
+    @mcp.prompt()
+    def debt_covenant_review_prompt(ticker: str) -> str:
+        """Generate a debt covenant review prompt."""
+        return (
+            f"Review all debt covenants for {ticker}. Check: debt/EBITDA ratio, "
+            f"interest coverage ratio, current ratio, and any affirmative/negative "
+            f"covenants disclosed in the latest 10-K/10-Q. Flag any near-breach "
+            f"or in-breach conditions. Distinguish facts from inferences."
+        )
+
     return mcp
 
 
