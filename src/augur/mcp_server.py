@@ -956,6 +956,34 @@ def create_server():
             f"or in-breach conditions. Distinguish facts from inferences."
         )
 
+    @mcp.prompt()
+    def insider_cluster_review_prompt(ticker: str) -> str:
+        """Generate an insider cluster review prompt."""
+        return (
+            f"Analyze the last 90 days of insider trading for {ticker}. "
+            f"Identify: cluster buying or selling by executives/directors, "
+            f"net insider sentiment, and any unusual transaction patterns. "
+            f"Compare against historical insider behavior for this company."
+        )
+
+    @mcp.prompt()
+    def capital_allocation_review_prompt(ticker: str) -> str:
+        """Generate a capital allocation review prompt."""
+        return (
+            f"Review capital allocation for {ticker}: buyback history, dividend "
+            f"growth, M&A activity, capex trends, and how free cash flow is deployed. "
+            f"Assess whether management is shareholder-friendly and capital-disciplined."
+        )
+
+    @mcp.prompt()
+    def accounting_quality_review_prompt(ticker: str) -> str:
+        """Generate an accounting quality review prompt."""
+        return (
+            f"Assess accounting quality for {ticker}. Check: accruals vs cash flow, "
+            f"revenue recognition policies, one-time items, Beneish M-Score signals, "
+            f"and Altman Z-Score. Flag any red flags with specific filing citations."
+        )
+
     return mcp
 
 
