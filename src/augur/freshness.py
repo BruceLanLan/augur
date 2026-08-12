@@ -52,4 +52,5 @@ class FreshnessTracker:
         try:
             for k, v in json.loads(self._path.read_text(encoding="utf-8")).items():
                 self._records[k] = FreshnessRecord(key=v.get("key", k), last_updated=v.get("last_updated", ""), max_age_hours=v.get("max_age_hours", 24.0))
-        except: self._records = {}
+        except (json.JSONDecodeError, OSError):
+            self._records = {}
