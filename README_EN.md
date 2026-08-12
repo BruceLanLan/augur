@@ -9,7 +9,7 @@
 **Not another AI stock picker. A research memory system that remembers what you knew, when you knew it, what changed, and who disagrees — and why.**
 
 [![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur-next)
-[![431 Tests](https://img.shields.io/badge/431_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
+[![350+ Tests](https://img.shields.io/badge/431_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
 [![Evidence-First](https://img.shields.io/badge/Evidence-First_📋-4a90d9?style=for-the-badge)](#-why-augur)
 [![18 Masters](https://img.shields.io/badge/18-Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
