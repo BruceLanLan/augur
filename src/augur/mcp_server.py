@@ -863,6 +863,37 @@ def create_server():
 
         return run_path.read_text(encoding="utf-8")
 
+    @mcp.resource("augur://thesis/{thesis_id}")
+    def get_thesis_resource(thesis_id: str) -> str:
+        """Read-only access to a Thesis by ID."""
+        from augur.data_dir import get_data_dir
+        from pathlib import Path
+        thesis_dir = get_data_dir() / "thesis"
+        for f in Path(thesis_dir).glob("*.json") if Path(thesis_dir).exists() else []:
+            try:
+                data = json.loads(f.read_text(encoding="utf-8"))
+                if isinstance(data, list):
+                    for t in data:
+                        if t.get("thesis_id") == thesis_id:
+                            return json.dumps(t, indent=2)
+                elif data.get("thesis_id") == thesis_id:
+                    return json.dumps(data, indent=2)
+            except Exception:
+                continue
+        return json.dumps({"error": "thesis not found", "thesis_id": thesis_id})
+
+    @mcp.resource("augur://ledger/{ticker}/{quarter}")
+    def get_ledger_resource(ticker: str, quarter: str) -> str:
+        """Read-only access to a cross-quarter change ledger."""
+        from augur.change_ledger import ChangeLedger
+        from pathlib import Path
+        from augur.data_dir import get_data_dir
+        ledger_dir = get_data_dir() / "ledgers"
+        path = Path(ledger_dir) / f"{ticker}_{quarter}.json"
+        if path.exists():
+            return path.read_text(encoding="utf-8")
+        return json.dumps({"error": "ledger not found", "ticker": ticker, "quarter": quarter})
+
     # ---- MCP Prompts (G03) ----
 
     @mcp.prompt()
