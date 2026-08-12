@@ -100,6 +100,7 @@ from dashboard.routes.ownership import router as _ownership_router  # noqa: E402
 from dashboard.routes.thesis_api import router as _thesis_api_router  # noqa: E402
 from dashboard.routes.inbox_api import router as _inbox_api_router  # noqa: E402
 from dashboard.routes.coverage_api import router as _coverage_api_router  # noqa: E402
+from dashboard.routes.batch_api import router as _batch_api_router  # noqa: E402
 from dashboard.routes.pages import router as _pages_router  # noqa: E402
 import dashboard.deps as _deps
 from dashboard.deps import get_registry, get_coordinator, _singleton_init_lock
@@ -137,6 +138,7 @@ app.include_router(_ownership_router)
 app.include_router(_thesis_api_router)
 app.include_router(_inbox_api_router)
 app.include_router(_coverage_api_router)
+app.include_router(_batch_api_router)
 app.include_router(_pages_router)
 
 
