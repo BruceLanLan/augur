@@ -776,3 +776,32 @@ window.renderDisagreementMap = function (map) {
   window.__evidenceGraphData = { nodes: nodes, edges: edges };
   if (window.__evidenceGraphRender) window.__evidenceGraphRender();
 };
+
+// ============ Disagreement Map Hover Tooltip ============
+(function () {
+  'use strict';
+  var tooltip = document.createElement('div');
+  tooltip.id = 'eg-tooltip';
+  tooltip.style.cssText = 'position:fixed;display:none;background:var(--bg-card,#16213e);color:var(--text,#e0e0e0);padding:10px 14px;border-radius:8px;border:1px solid var(--border,#2a2a4a);font-size:12px;max-width:320px;z-index:10001;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.3);';
+  document.body.appendChild(tooltip);
+
+  window.showEvidenceTooltip = function (x, y, details) {
+    if (!details) { tooltip.style.display = 'none'; return; }
+    var html = '<strong>' + escapeHtmlText(details.label || '') + '</strong>';
+    if (details.claim) html += '<br>' + escapeHtmlText(details.claim.slice(0, 120));
+    if (details.bullish && details.bullish.length) html += '<br><span style="color:#10b981">Bullish: ' + escapeHtmlText(details.bullish.join(', ')) + '</span>';
+    if (details.bearish && details.bearish.length) html += '<br><span style="color:#ef4444">Bearish: ' + escapeHtmlText(details.bearish.join(', ')) + '</span>';
+    if (details.resolve) html += '<br><em>Resolves with: ' + escapeHtmlText(details.resolve.slice(0, 100)) + '</em>';
+    if (details.impact) html += '<br>Impact: ' + escapeHtmlText(details.impact);
+    tooltip.innerHTML = html;
+    tooltip.style.display = 'block';
+    tooltip.style.left = Math.min(x + 14, window.innerWidth - 340) + 'px';
+    tooltip.style.top = Math.min(y + 14, window.innerHeight - 140) + 'px';
+  };
+
+  window.hideEvidenceTooltip = function () {
+    tooltip.style.display = 'none';
+  };
+
+  function escapeHtmlText(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+})();
