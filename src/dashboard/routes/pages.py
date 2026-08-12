@@ -125,6 +125,14 @@ async def thesis_page(request: Request, ticker: str = ""):
     })
 
 
+@router.get("/scorecard", response_class=HTMLResponse, summary="Post-Earnings Scorecard")
+async def scorecard_page(request: Request, ticker: str = ""):
+    return templates.TemplateResponse(request=request, name="scorecard.html", context={
+        "title": "Post-Earnings Scorecard — Augur",
+        "ticker": ticker.upper() if ticker else "",
+    })
+
+
 @router.get("/report/{ticker}", response_class=HTMLResponse, summary="深度分析报告全屏页面")
 async def report_view_page(request: Request, ticker: str):
     """Dedicated full-page report view for a ticker. Auto-fetches report on load."""
