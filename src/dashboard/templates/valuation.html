@@ -1,24 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}DCF Valuation - Augur{% endblock %}
+{% block title %}Valuation Lab - Augur{% endblock %}
 
 {% block content %}
-<div class="page-content content-max" aria-label="DCF valuation sensitivity analysis">
+<div class="page-content content-max" aria-label="Valuation Lab — DCF sensitivity analysis">
     <header class="page-header">
         <div class="page-header__text">
-            <h1 class="page-title" data-i18n="valuation-title">DCF Sensitivity Analysis</h1>
-            <p class="page-lead">WACC × Terminal Growth → Fair Value per Share — two-stage DCF model</p>
+            <h1 class="page-title" data-i18n="valuation-title">Valuation Lab</h1>
+            <p class="page-lead">Two-stage DCF — WACC × Terminal Growth → Fair Value, with Bull / Base / Bear scenarios</p>
         </div>
     </header>
 
     <!-- Input Parameters Form -->
-    <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;" role="form" aria-label="DCF valuation parameters">
+    <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;" role="form" aria-label="DCF valuation parameters">
         <h3 style="margin-bottom: 1rem; color: var(--text-primary);">DCF Parameters</h3>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem;">
             <div>
                 <label for="val-fcf" style="display: block; color: var(--text-secondary); margin-bottom: 0.35rem; font-size: 0.85rem;">Free Cash Flow ($M)</label>
-                <input type="number" id="val-fcf" value="10000" step="1" min="0"
+                <input type="number" id="val-fcf" value="10000" step="1"
                     style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;"
                     aria-label="Free cash flow in millions">
             </div>
@@ -47,22 +47,35 @@
                     aria-label="Shares outstanding in millions">
             </div>
             <div>
+                <label for="val-net-debt" style="display: block; color: var(--text-secondary); margin-bottom: 0.35rem; font-size: 0.85rem;">Net Debt ($M)</label>
+                <input type="number" id="val-net-debt" value="0" step="1"
+                    style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;"
+                    aria-label="Net debt in millions — total debt minus cash">
+            </div>
+            <div>
                 <label for="val-years" style="display: block; color: var(--text-secondary); margin-bottom: 0.35rem; font-size: 0.85rem;">Stage 1 Years</label>
                 <input type="number" id="val-years" value="5" step="1" min="1" max="20"
                     style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;"
                     aria-label="Explicit forecast period in years">
             </div>
+            <div>
+                <label for="val-spread" style="display: block; color: var(--text-secondary); margin-bottom: 0.35rem; font-size: 0.85rem;">Scenario Spread (pp)</label>
+                <input type="number" id="val-spread" value="5" step="0.5" min="0" max="50"
+                    style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;"
+                    aria-label="Bull and bear scenario growth spread in percentage points around the base case">
+            </div>
         </div>
 
-        <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
             <button class="btn btn-primary" onclick="runValuation()" id="val-btn"
-                style="padding: 0.7rem 2rem; border-radius: 8px; font-weight: 600;" aria-label="Run DCF sensitivity analysis">
-                Compute Sensitivity Grid
+                style="padding: 0.7rem 2rem; border-radius: 8px; font-weight: 600;" aria-label="Run DCF valuation">
+                Compute Valuation
             </button>
             <button type="button" class="btn btn-ghost" onclick="resetValuationForm()"
                 style="padding: 0.7rem 1.25rem; border-radius: 8px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer;">
                 Reset Defaults
             </button>
+            <span style="color: var(--text-muted); font-size: 0.78rem;">Updates live as you type</span>
         </div>
     </div>
 
@@ -76,6 +89,23 @@
                 <span id="val-base-fair-value" style="font-size: 2rem; font-weight: 700; color: var(--signal-buy);">--</span>
                 <span style="color: var(--text-secondary); font-size: 0.9rem;">per share</span>
             </div>
+            <div id="val-summary-breakdown" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; margin-top: 1rem;"></div>
+        </div>
+
+        <!-- Bull / Base / Bear Scenario Cards -->
+        <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 0.25rem; color: var(--text-primary);">Bull / Base / Bear Scenarios</h3>
+            <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">
+                Growth varies ±<span id="val-spread-label">5.0</span> pp around the base case; FCF is scaled by margin ratio (20% base operating margin).
+            </p>
+            <div id="val-scenario-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;"></div>
+            <div id="val-prob-weighted" style="margin-top: 1rem; padding: 0.75rem 1rem; border-radius: 8px; background: var(--amber-wash); color: var(--text-primary); font-size: 0.9rem;"></div>
+        </div>
+
+        <!-- Scenario Bar Chart -->
+        <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Scenario Fair Value Comparison</h3>
+            <div id="val-scenario-chart" role="img" aria-label="Bar chart comparing bull, base, and bear fair value per share"></div>
         </div>
 
         <!-- Sensitivity Grid Table -->
@@ -116,7 +146,7 @@
         </div>
     </div>
 
-    <div id="val-error" style="display: none; color: var(--signal-sell); padding: 1rem; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); border-radius: 8px; margin-top: 1rem;" role="alert"></div>
+    <div id="val-error" style="display: none; color: var(--signal-sell); padding: 1rem; background: rgba(255,23,68,0.1); border: 1px solid rgba(255,23,68,0.3); border-radius: 8px; margin-top: 1rem;" role="alert"></div>
 </div>
 
 <style>
@@ -174,10 +204,120 @@
     color: var(--signal-sell);
 }
 .sensitivity-table tr:hover td {
-    background: rgba(212, 160, 23, 0.06);
+    background: rgba(255, 140, 0, 0.06);
 }
 .sensitivity-table td:first-child:hover {
     background: var(--bg-primary);
+}
+
+/* Summary breakdown tiles */
+.summary-tile {
+    padding: 0.6rem 0.8rem;
+    border-radius: 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+}
+.summary-tile .tile-label {
+    display: block;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.2rem;
+}
+.summary-tile .tile-value {
+    display: block;
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Scenario cards */
+.scenario-card {
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--border-color);
+    background: var(--bg-primary);
+    border-top: 3px solid var(--border-color);
+}
+.scenario-card--bull { border-top-color: var(--signal-buy); }
+.scenario-card--base { border-top-color: var(--amber); }
+.scenario-card--bear { border-top-color: var(--signal-sell); }
+.scenario-card .sc-name {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+    margin-bottom: 0.15rem;
+}
+.scenario-card .sc-meta {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    margin-bottom: 0.5rem;
+}
+.scenario-card .sc-fv {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+.scenario-card .sc-fv--bull { color: var(--signal-buy); }
+.scenario-card .sc-fv--base { color: var(--amber); }
+.scenario-card .sc-fv--bear { color: var(--signal-sell); }
+.scenario-card .sc-weight {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+}
+
+/* Scenario bar chart */
+.chart-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 110px;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+}
+.chart-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.chart-track {
+    position: relative;
+    height: 22px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+}
+.chart-zero {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: var(--text-muted);
+    opacity: 0.5;
+}
+.chart-bar {
+    position: absolute;
+    top: 3px;
+    bottom: 3px;
+    border-radius: 3px;
+    min-width: 2px;
+}
+.chart-value {
+    font-size: 0.82rem;
+    color: var(--text-primary);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
 }
 
 /* Responsive */
@@ -187,16 +327,25 @@
     #val-base-fair-value { font-size: 1.5rem !important; }
     .sensitivity-table th,
     .sensitivity-table td { padding: 6px 8px; font-size: 0.72rem; }
+    .chart-row { grid-template-columns: 100px 1fr 90px; }
 }
 @media (max-width: 375px) {
     .page-content { padding: 0.5rem !important; }
     .card { padding: 1rem !important; }
+    .chart-row { grid-template-columns: 90px 1fr 80px; }
 }
 </style>
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
+// ---------------------------------------------------------------------------
+// Valuation Lab — pure front-end DCF engine.
+// Mirrors augur/valuation.py `_dcf_core`, `_build_sensitivity`, and
+// `run_scenarios` (two-stage Gordon Growth model). parseFloat is sufficient
+// for UI display; the backend remains the source of truth for persistence.
+// ---------------------------------------------------------------------------
+
 // Cached grid data for export
 var _gridData = null;
 var _params = {};
@@ -207,114 +356,306 @@ var DEFAULT_PARAMS = {
     wacc: 10,
     terminal: 2.5,
     shares: 1000,
-    years: 5
+    netDebt: 0,
+    years: 5,
+    spread: 5
 };
 
+// Scenario model constants (mirrors augur/valuation.py ScenarioInputs defaults)
+var BASE_MARGIN = 0.20;   // base operating margin used to scale FCF
+var SCENARIO_PROBS = { bull: 0.25, base: 0.50, bear: 0.25 };
+
+function $(id) { return document.getElementById(id); }
+
 function resetValuationForm() {
-    document.getElementById('val-fcf').value = DEFAULT_PARAMS.fcf;
-    document.getElementById('val-growth').value = DEFAULT_PARAMS.growth;
-    document.getElementById('val-wacc').value = DEFAULT_PARAMS.wacc;
-    document.getElementById('val-terminal').value = DEFAULT_PARAMS.terminal;
-    document.getElementById('val-shares').value = DEFAULT_PARAMS.shares;
-    document.getElementById('val-years').value = DEFAULT_PARAMS.years;
+    $('val-fcf').value = DEFAULT_PARAMS.fcf;
+    $('val-growth').value = DEFAULT_PARAMS.growth;
+    $('val-wacc').value = DEFAULT_PARAMS.wacc;
+    $('val-terminal').value = DEFAULT_PARAMS.terminal;
+    $('val-shares').value = DEFAULT_PARAMS.shares;
+    $('val-net-debt').value = DEFAULT_PARAMS.netDebt;
+    $('val-years').value = DEFAULT_PARAMS.years;
+    $('val-spread').value = DEFAULT_PARAMS.spread;
+    runValuation();
 }
 
 function readFormParams() {
     return {
-        free_cash_flow: parseFloat(document.getElementById('val-fcf').value) * 1_000_000 || 10_000_000_000,
-        growth_rate_stage1: parseFloat(document.getElementById('val-growth').value) / 100 || 0.12,
-        wacc: parseFloat(document.getElementById('val-wacc').value) / 100 || 0.10,
-        growth_rate_terminal: parseFloat(document.getElementById('val-terminal').value) / 100 || 0.025,
-        shares_outstanding: parseFloat(document.getElementById('val-shares').value) * 1_000_000 || 1_000_000_000,
-        stage1_years: parseInt(document.getElementById('val-years').value) || 5,
-        steps: 9
+        fcf: parseFloat($('val-fcf').value) * 1e6 || 0,
+        growth: (parseFloat($('val-growth').value) || 0) / 100,
+        wacc: (parseFloat($('val-wacc').value) || 0) / 100,
+        gTerm: (parseFloat($('val-terminal').value) || 0) / 100,
+        shares: parseFloat($('val-shares').value) * 1e6 || 0,
+        netDebt: parseFloat($('val-net-debt').value) * 1e6 || 0,
+        years: parseInt($('val-years').value) || 5,
+        spread: (parseFloat($('val-spread').value) || 0) / 100
     };
 }
 
-async function runValuation() {
-    var btn = document.getElementById('val-btn');
-    var results = document.getElementById('val-results');
-    var errorDiv = document.getElementById('val-error');
+// ---------------------------------------------------------------------------
+// DCF core — mirrors `_dcf_core` in augur/valuation.py
+// ---------------------------------------------------------------------------
+function dcfCore(fcf, g1, years, gTerm, wacc, shares, netDebt) {
+    var stage1Pv = 0;
+    for (var t = 1; t <= years; t++) {
+        stage1Pv += (fcf * Math.pow(1 + g1, t)) / Math.pow(1 + wacc, t);
+    }
+    var fcfN = fcf * Math.pow(1 + g1, years);
+    var terminalValue = (fcfN * (1 + gTerm)) / (wacc - gTerm); // Gordon Growth Model
+    var terminalPv = terminalValue / Math.pow(1 + wacc, years);
+
+    var ev = stage1Pv + terminalPv;       // enterprise value
+    var equity = ev - netDebt;            // equity value
+    var fv = equity / shares;             // fair value per share
+
+    return { ev: ev, equity: equity, fv: fv, stage1Pv: stage1Pv, terminalPv: terminalPv };
+}
+
+// ---------------------------------------------------------------------------
+// Scenarios — mirrors `run_scenarios` (margin-scaled FCF per scenario)
+// ---------------------------------------------------------------------------
+function scenarioDCF(params, growth) {
+    var marginRatio = (BASE_MARGIN + growth - params.growth) / BASE_MARGIN;
+    var adjustedFcf = Math.max(params.fcf * marginRatio, 0);
+    return dcfCore(adjustedFcf, growth, params.years, params.gTerm, params.wacc, params.shares, params.netDebt);
+}
+
+// ---------------------------------------------------------------------------
+// Sensitivity grid — mirrors `sensitivity_grid` (±2 pp, 9 steps)
+// ---------------------------------------------------------------------------
+function buildSensitivity(params) {
+    var steps = 9;
+    var waccMin = params.wacc - 0.02, waccMax = params.wacc + 0.02;
+    var gMin = params.gTerm - 0.02, gMax = params.gTerm + 0.02;
+
+    var waccLabels = [];
+    var growthLabels = [];
+    var i, j;
+    for (i = 0; i < steps; i++) waccLabels.push(waccMin + (waccMax - waccMin) * i / (steps - 1));
+    for (j = 0; j < steps; j++) growthLabels.push(gMin + (gMax - gMin) * j / (steps - 1));
+
+    var grid = [];
+    for (i = 0; i < steps; i++) {
+        var row = [];
+        var w = waccLabels[i];
+        for (j = 0; j < steps; j++) {
+            var g = growthLabels[j];
+            if (w <= g) {
+                row.push(null); // Gordon model invalid (WACC ≤ growth)
+            } else {
+                var r = dcfCore(params.fcf, params.growth, params.years, g, w, params.shares, params.netDebt);
+                row.push(r.fv);
+            }
+        }
+        grid.push(row);
+    }
+    return { grid: grid, wacc_labels: waccLabels, growth_labels: growthLabels };
+}
+
+// ---------------------------------------------------------------------------
+// Main compute + render
+// ---------------------------------------------------------------------------
+function runValuation() {
+    var btn = $('val-btn');
+    var results = $('val-results');
+    var errorDiv = $('val-error');
 
     btn.disabled = true;
     btn.textContent = 'Computing...';
-    results.style.display = 'none';
     errorDiv.style.display = 'none';
-    _gridData = null;
 
     var params = readFormParams();
+    _params = {
+        free_cash_flow: params.fcf,
+        growth_rate_stage1: params.growth,
+        wacc: params.wacc,
+        growth_rate_terminal: params.gTerm,
+        shares_outstanding: params.shares,
+        net_debt: params.netDebt,
+        stage1_years: params.years
+    };
+
+    // Validation
+    if (params.wacc <= params.gTerm) {
+        showError('Invalid inputs: WACC must be greater than terminal growth rate (Gordon model requires WACC > g).');
+        btn.disabled = false;
+        btn.textContent = 'Compute Valuation';
+        return;
+    }
+    if (!(params.shares > 0)) {
+        showError('Invalid inputs: shares outstanding must be greater than zero.');
+        btn.disabled = false;
+        btn.textContent = 'Compute Valuation';
+        return;
+    }
+    if (params.years < 1) {
+        showError('Invalid inputs: stage 1 years must be at least 1.');
+        btn.disabled = false;
+        btn.textContent = 'Compute Valuation';
+        return;
+    }
 
     try {
-        var resp = await fetch('/api/valuation/sensitivity', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(params)
-        });
-        var data = await resp.json();
+        // Base case
+        var base = dcfCore(params.fcf, params.growth, params.years, params.gTerm, params.wacc, params.shares, params.netDebt);
 
-        if (!resp.ok) {
-            errorDiv.style.display = 'block';
-            errorDiv.textContent = data.detail || 'Valuation computation failed';
-            return;
+        // Scenarios
+        var bullGrowth = params.growth + params.spread;
+        var bearGrowth = Math.max(params.growth - params.spread, 0);
+        var scenarios = [
+            { key: 'bull', name: 'Bull', emoji: '🐂', growth: bullGrowth, prob: SCENARIO_PROBS.bull, out: scenarioDCF(params, bullGrowth) },
+            { key: 'base', name: 'Base', emoji: '⚖️', growth: params.growth, prob: SCENARIO_PROBS.base, out: base },
+            { key: 'bear', name: 'Bear', emoji: '🐻', growth: bearGrowth, prob: SCENARIO_PROBS.bear, out: scenarioDCF(params, bearGrowth) }
+        ];
+        var weighted = 0;
+        for (var i = 0; i < scenarios.length; i++) {
+            weighted += scenarios[i].prob * scenarios[i].out.fv;
         }
 
-        _gridData = data;
-        _params = params;
+        // Sensitivity grid
+        _gridData = buildSensitivity(params);
 
-        renderGrid(data);
+        renderSummary(base);
+        renderScenarios(scenarios, weighted);
+        renderChart(scenarios, weighted);
+        renderGrid(_gridData);
+
+        $('val-spread-label').textContent = (params.spread * 100).toFixed(1);
         results.style.display = 'block';
-
-        // Scroll results into view
         results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     } catch (e) {
-        errorDiv.style.display = 'block';
-        errorDiv.textContent = 'Request failed: ' + e.message;
+        showError('Computation failed: ' + e.message);
     } finally {
         btn.disabled = false;
-        btn.textContent = 'Compute Sensitivity Grid';
+        btn.textContent = 'Compute Valuation';
     }
 }
 
-function renderGrid(data) {
-    // Fair value at base case (center of grid)
-    var centerIdx = Math.floor(data.wacc_labels.length / 2);
-    var baseFairValue = data.grid[centerIdx] ? data.grid[centerIdx][centerIdx] : null;
-    var fvEl = document.getElementById('val-base-fair-value');
-    if (baseFairValue && baseFairValue > 0) {
-        fvEl.textContent = '$' + baseFairValue.toFixed(2);
-    } else {
-        fvEl.textContent = 'N/A';
-        fvEl.style.color = 'var(--signal-sell)';
+function showError(msg) {
+    var results = $('val-results');
+    var errorDiv = $('val-error');
+    results.style.display = 'none';
+    errorDiv.style.display = 'block';
+    errorDiv.textContent = msg;
+}
+
+function fmtMoney(v) {
+    if (v === null || v === undefined || !isFinite(v)) return 'N/A';
+    return '$' + v.toFixed(2);
+}
+function fmtPct(v) {
+    return (v * 100).toFixed(1) + '%';
+}
+
+function renderSummary(base) {
+    var fvEl = $('val-base-fair-value');
+    fvEl.textContent = fmtMoney(base.fv);
+    fvEl.style.color = base.fv >= 0 ? 'var(--signal-buy)' : 'var(--signal-sell)';
+
+    var tiles = [
+        { label: 'Enterprise Value', value: fmtMoney(base.ev) },
+        { label: 'Equity Value', value: fmtMoney(base.equity) },
+        { label: 'Stage 1 PV', value: fmtMoney(base.stage1Pv) },
+        { label: 'Terminal PV', value: fmtMoney(base.terminalPv) },
+        { label: 'Net Debt', value: fmtMoney(_params.net_debt) }
+    ];
+
+    var html = '';
+    for (var i = 0; i < tiles.length; i++) {
+        html += '<div class="summary-tile"><span class="tile-label">' + tiles[i].label + '</span><span class="tile-value">' + tiles[i].value + '</span></div>';
+    }
+    $('val-summary-breakdown').innerHTML = html;
+}
+
+function renderScenarios(scenarios, weighted) {
+    var html = '';
+    for (var i = 0; i < scenarios.length; i++) {
+        var s = scenarios[i];
+        html +=
+            '<div class="scenario-card scenario-card--' + s.key + '">' +
+                '<div class="sc-name">' + s.emoji + ' ' + s.name + '</div>' +
+                '<div class="sc-meta">Growth ' + fmtPct(s.growth) + '</div>' +
+                '<div class="sc-fv sc-fv--' + s.key + '">' + fmtMoney(s.out.fv) + '</div>' +
+                '<div class="sc-weight">Probability weight ' + (s.prob * 100).toFixed(0) + '%</div>' +
+            '</div>';
+    }
+    $('val-scenario-cards').innerHTML = html;
+
+    var w = $('val-prob-weighted');
+    w.innerHTML = 'Probability-weighted fair value: <strong style="font-variant-numeric: tabular-nums;">' +
+        fmtMoney(weighted) + '</strong> per share';
+}
+
+function renderChart(scenarios, weighted) {
+    var values = scenarios.map(function (s) { return s.out.fv; });
+    var minV = Math.min(0, values[0], values[1], values[2]);
+    var maxV = Math.max(0, values[0], values[1], values[2]);
+    var span = (maxV - minV) || 1;
+    var zeroPct = ((0 - minV) / span) * 100;
+
+    var colors = { bull: 'var(--signal-buy)', base: 'var(--amber)', bear: 'var(--signal-sell)' };
+
+    var html = '';
+    for (var i = 0; i < scenarios.length; i++) {
+        var s = scenarios[i];
+        var v = s.out.fv;
+        var pct = Math.abs(v) / span * 100;
+        var left, width;
+        if (v >= 0) {
+            left = zeroPct;
+            width = pct;
+        } else {
+            left = zeroPct - pct;
+            width = pct;
+        }
+        html +=
+            '<div class="chart-row">' +
+                '<span class="chart-label">' + s.emoji + ' ' + s.name + '</span>' +
+                '<div class="chart-track">' +
+                    '<span class="chart-zero" style="left:' + zeroPct.toFixed(2) + '%;"></span>' +
+                    '<span class="chart-bar" style="left:' + left.toFixed(2) + '%; width:' + width.toFixed(2) + '%; background:' + colors[s.key] + ';"></span>' +
+                '</div>' +
+                '<span class="chart-value">' + fmtMoney(v) + '</span>' +
+            '</div>';
     }
 
+    // Probability-weighted marker line
+    html +=
+        '<div style="margin-top: 0.5rem; color: var(--text-muted); font-size: 0.78rem;">' +
+            'Probability-weighted: <strong style="color: var(--text-primary);">' + fmtMoney(weighted) + '</strong>' +
+        '</div>';
+
+    $('val-scenario-chart').innerHTML = html;
+}
+
+function renderGrid(data) {
     // Find max fair value for heatmap coloring
     var maxFV = 0;
-    for (var i = 0; i < data.grid.length; i++) {
-        for (var j = 0; j < data.grid[i].length; j++) {
-            if (data.grid[i][j] > maxFV) maxFV = data.grid[i][j];
+    var i, j;
+    for (i = 0; i < data.grid.length; i++) {
+        for (j = 0; j < data.grid[i].length; j++) {
+            if (data.grid[i][j] !== null && data.grid[i][j] > maxFV) maxFV = data.grid[i][j];
         }
     }
 
-    // Build table header
-    var thead = document.getElementById('val-grid-head');
+    // Table header
     var hdrHtml = '<tr><th>WACC ↓ \\ Growth →</th>';
-    for (var j = 0; j < data.growth_labels.length; j++) {
+    for (j = 0; j < data.growth_labels.length; j++) {
         hdrHtml += '<th>' + (data.growth_labels[j] * 100).toFixed(1) + '%</th>';
     }
     hdrHtml += '</tr>';
-    thead.innerHTML = hdrHtml;
+    $('val-grid-head').innerHTML = hdrHtml;
 
-    // Build table body
-    var tbody = document.getElementById('val-grid-body');
+    // Table body
     var bodyHtml = '';
-    for (var i = 0; i < data.wacc_labels.length; i++) {
+    for (i = 0; i < data.wacc_labels.length; i++) {
         bodyHtml += '<tr>';
         bodyHtml += '<td>' + (data.wacc_labels[i] * 100).toFixed(1) + '%</td>';
-        for (var j = 0; j < data.growth_labels.length; j++) {
+        for (j = 0; j < data.growth_labels.length; j++) {
             var fv = data.grid[i][j];
             var cellClass = '';
-            if (fv <= 0) {
+            if (fv === null || fv <= 0) {
                 cellClass = 'cell-invalid';
             } else if (maxFV > 0) {
                 var ratio = fv / maxFV;
@@ -322,12 +663,12 @@ function renderGrid(data) {
                 else if (ratio > 0.35) cellClass = 'cell-mid';
                 else cellClass = 'cell-low';
             }
-            var displayVal = (fv > 0) ? '$' + fv.toFixed(2) : 'N/A';
+            var displayVal = (fv !== null && fv > 0) ? '$' + fv.toFixed(2) : 'N/A';
             bodyHtml += '<td class="' + cellClass + '">' + displayVal + '</td>';
         }
         bodyHtml += '</tr>';
     }
-    tbody.innerHTML = bodyHtml;
+    $('val-grid-body').innerHTML = bodyHtml;
 }
 
 // ---- Export ----
@@ -335,17 +676,16 @@ function renderGrid(data) {
 function buildExportPayload(format) {
     if (!_gridData) return null;
 
-    // Build rows: first column is WACC label, rest are fair values
-    var headers = _gridData.growth_labels.map(function(g) {
+    var headers = _gridData.growth_labels.map(function (g) {
         return (g * 100).toFixed(1) + '% growth';
     });
 
     var rows = [];
     for (var i = 0; i < _gridData.wacc_labels.length; i++) {
-        var row = [( _gridData.wacc_labels[i] * 100).toFixed(1) + '% WACC'];
+        var row = [(_gridData.wacc_labels[i] * 100).toFixed(1) + '% WACC'];
         for (var j = 0; j < _gridData.growth_labels.length; j++) {
             var fv = _gridData.grid[i][j];
-            row.push(fv > 0 ? fv.toFixed(2) : 'N/A');
+            row.push((fv !== null && fv > 0) ? fv.toFixed(2) : 'N/A');
         }
         rows.push(row);
     }
@@ -356,18 +696,19 @@ function buildExportPayload(format) {
         headers: headers,
         rows: rows,
         params: {
-            'FCF ($M)': (_params.free_cash_flow / 1_000_000).toFixed(0),
+            'FCF ($M)': (_params.free_cash_flow / 1e6).toFixed(0),
             'Stage 1 Growth': ((_params.growth_rate_stage1 || 0.12) * 100).toFixed(1) + '%',
             'WACC': ((_params.wacc || 0.10) * 100).toFixed(1) + '%',
             'Terminal Growth': ((_params.growth_rate_terminal || 0.025) * 100).toFixed(1) + '%',
-            'Shares (M)': (_params.shares_outstanding / 1_000_000).toFixed(0),
-            'Stage 1 Years': _params.stage1_years || 5,
+            'Shares (M)': (_params.shares_outstanding / 1e6).toFixed(0),
+            'Net Debt ($M)': (_params.net_debt / 1e6).toFixed(0),
+            'Stage 1 Years': _params.stage1_years || 5
         }
     };
 }
 
 async function exportValuation(format) {
-    var statusEl = document.getElementById('export-status');
+    var statusEl = $('export-status');
     statusEl.textContent = 'Generating ' + format.toUpperCase() + ' export...';
     statusEl.style.color = 'var(--text-secondary)';
 
@@ -386,16 +727,14 @@ async function exportValuation(format) {
         });
 
         if (!resp.ok) {
-            var errData = await resp.json().catch(function() { return null; });
+            var errData = await resp.json().catch(function () { return null; });
             statusEl.textContent = 'Export failed: ' + ((errData && errData.detail) || resp.statusText);
             statusEl.style.color = 'var(--signal-sell)';
             return;
         }
 
-        // For JSON, parse and display inline
         if (format === 'json') {
             var jsonData = await resp.json();
-            // Trigger file download
             var blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
             downloadBlob(blob, 'valuation.json');
             statusEl.textContent = 'JSON exported successfully.';
@@ -403,7 +742,6 @@ async function exportValuation(format) {
             return;
         }
 
-        // For Markdown and PDF, download the blob
         var blob = await resp.blob();
         var ext = format === 'pdf' ? 'pdf' : 'md';
         var mimeType = format === 'pdf' ? 'application/pdf' : 'text/markdown';
@@ -427,5 +765,24 @@ function downloadBlob(blob, filename, mimeType) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+// ---------------------------------------------------------------------------
+// Real-time recompute: debounce input events, then recompute in-browser.
+// ---------------------------------------------------------------------------
+(function () {
+    var ids = ['val-fcf', 'val-growth', 'val-wacc', 'val-terminal', 'val-shares', 'val-net-debt', 'val-years', 'val-spread'];
+    var timer = null;
+    function schedule() {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(runValuation, 250);
+    }
+    for (var i = 0; i < ids.length; i++) {
+        var el = $(ids[i]);
+        if (el) el.addEventListener('input', schedule);
+    }
+
+    // Initial compute on page load
+    runValuation();
+})();
 </script>
 {% endblock %}
