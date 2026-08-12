@@ -697,3 +697,23 @@ document.addEventListener('augur:theme-change', function() {
 });
 </script>
 {% endblock %}
+
+<!-- ============ Disagreement Map View ============ -->
+<div id="disagreement-view" style="margin-top: 32px;">
+  <h2>⚡ Disagreement Map</h2>
+  <canvas id="disagreement-canvas" width="800" height="500" style="width:100%;max-width:800px;border:1px solid var(--border);border-radius:8px;cursor:grab;"></canvas>
+  <p style="font-size:12px;color:var(--text-muted);margin-top:4px;">🖱 Drag to pan · Scroll to zoom · Double-click to reset</p>
+</div>
+<script>
+(function(){
+  var canvas = document.getElementById('disagreement-canvas');
+  if (!canvas || typeof window.renderDisagreementMap !== 'function') return;
+  // Fetch disagreement data from API
+  var ticker = new URLSearchParams(window.location.search).get('ticker') || '';
+  if (!ticker) { canvas.style.display = 'none'; return; }
+  fetch('/api/disagreement?ticker=' + ticker)
+    .then(function(r){ return r.json(); })
+    .then(function(map){ window.renderDisagreementMap(map); })
+    .catch(function(){});
+})();
+</script>
