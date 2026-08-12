@@ -118,3 +118,35 @@ Developed by DeepSeek Harness (DSH) multi-agent continuous integration loop
 across 11 commits, 77 files, 8,830 lines. Agents: A (data root), B (schemas),
 C (CI), D (wheel build), E (run tracker), F (missingness), G (capabilities),
 H (OOS harness), I (provenance).
+
+---
+
+## 补充更新 (Round 4-7, 持续循环)
+
+### 新增模块
+
+- `change_ledger.py` — Cross-quarter Change Ledger（6 分类变更账本）
+- `citation_queue.py` — Citation Correction Queue（用户纠错队列）
+- `coverage_health.py` — Coverage Health Center + Promotion Gate
+- `provider_health.py` — Provider Health Dashboard
+- `freshness.py` — Data Freshness Tracker
+- `cache_health.py` — EDGAR 缓存新鲜度 + 大小统计
+- `relative_val.py` — Relative Valuation（同行对比）
+- `cost_budget.py` — Cost/Latency Budgeting
+- `team_audit.py` — Team Audit 基础
+- `compatibility.py` — Compatibility Badge（semver 约束）
+- `prompt_eval.py` — Prompt/Model Evaluation + Factor Lab
+- `adapters/openbb_adapter.py` — OpenBB schema-only adapter
+
+### UI 新增
+
+- `/thesis` — Thesis Journal + Decision Log + Open Questions 面板
+- `/scorecard` — Post-Earnings Scorecard
+- `/earnings` — Earnings Queue
+- `/inbox` — Research Inbox
+- `/valuation` — Valuation Lab（DCF 参数表单 + 敏感度网格）
+- ⌘K 命令面板 · 暗色模式 · Evidence Graph（zoom/pan/tooltip）· 骨架屏/空状态/Toast
+
+### 测试
+
+249 tests 全部通过（零回归）
