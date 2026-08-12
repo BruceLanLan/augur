@@ -99,6 +99,18 @@ evidence-tracked research workflows.
 - **OpenBB Schema Adapter** (G01): field mapping without runtime dependency
 - **UI**: mobile hamburger, dark mode complete, error boundary, skeleton loading, valuation page
 
+
+### Round 7 Additions (2026-08-12, continuous loop)
+
+- **REST API surface**: thesis CRUD, questions, decisions, inbox, alerts, disagreement map, evidence lookup, insider activity, ownership delta, coverage health, provider health
+- **Outcome Tracker** (E03): decision win-rate + PnL attribution
+- **Batch falsification scan**: auto-check all active theses against latest RunBundles
+- **Research pack integrity** (G05): manifest digests + tamper verification
+- **Compatibility report CLI** (G07)
+- **HTTP cache headers**: immutable static assets, no-store HTML
+- **EDGAR cache health**: freshness check + size report
+- **Full test suite: 3358 passing, zero failures**
+
 ## [10.15.0] - 2026-07-15
 
 Public release sync -- brings the public `augur` repo (last synced at
@@ -930,6 +942,18 @@ P1-1（Agent Peer Review backlog）：MCP Workspace 工具，闭合"终端定制
 - **Saved Research Views** (H03): localStorage-based filter persistence
 - **OpenBB Schema Adapter** (G01): field mapping without runtime dependency
 - **UI**: mobile hamburger, dark mode complete, error boundary, skeleton loading, valuation page
+
+
+### Round 7 Additions (2026-08-12, continuous loop)
+
+- **REST API surface**: thesis CRUD, questions, decisions, inbox, alerts, disagreement map, evidence lookup, insider activity, ownership delta, coverage health, provider health
+- **Outcome Tracker** (E03): decision win-rate + PnL attribution
+- **Batch falsification scan**: auto-check all active theses against latest RunBundles
+- **Research pack integrity** (G05): manifest digests + tamper verification
+- **Compatibility report CLI** (G07)
+- **HTTP cache headers**: immutable static assets, no-store HTML
+- **EDGAR cache health**: freshness check + size report
+- **Full test suite: 3358 passing, zero failures**
 
 ## [10.15.0] - 2026-06-22
 
