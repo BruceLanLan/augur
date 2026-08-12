@@ -453,3 +453,47 @@ class FilingDeltaBuilder:
         ]
         section_lower = section.lower()
         return any(kw in section_lower for kw in material_keywords)
+
+
+# ---------------------------------------------------------------------------
+# Filing Delta CLI entry point
+# ---------------------------------------------------------------------------
+
+
+class FilingDeltaCLI:
+    """Command-line entry point for filing-delta comparison.
+
+    Usage::
+
+        cli = FilingDeltaCLI()
+        report = cli.run("AAPL", new_data=..., prev_data=...)
+        print(report.to_markdown())
+        print(report.to_json())
+    """
+
+    @staticmethod
+    def run(
+        ticker: str,
+        new_data: Dict[str, Any],
+        prev_data: Dict[str, Any],
+        new_accession: str = "",
+        prev_accession: str = "",
+        run_id: Optional[str] = None,
+    ) -> FilingDeltaReport:
+        """Build and return a FilingDeltaReport from two filing evidence dicts."""
+        builder = FilingDeltaBuilder(
+            ticker=ticker,
+            new_accession=new_accession or new_data.get("accession_number", "new"),
+            previous_accession=prev_accession or prev_data.get("accession_number", "prev"),
+        )
+        return builder.build(new_data, prev_data, run_id=run_id)
+
+    @staticmethod
+    def format_output(
+        report: FilingDeltaReport,
+        fmt: str = "md",
+    ) -> str:
+        """Render a report in the requested format (``"md"`` or ``"json"``)."""
+        if fmt == "json":
+            return report.to_json()
+        return report.to_markdown()

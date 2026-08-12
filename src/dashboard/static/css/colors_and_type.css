@@ -582,6 +582,172 @@ html.dark pre {
   border: 1px solid var(--border);
 }
 
+/* --- Checkboxes & radios in dark mode --- */
+[data-theme="dark"] input[type="checkbox"],
+[data-theme="dark"] input[type="radio"],
+html.dark input[type="checkbox"],
+html.dark input[type="radio"] {
+  accent-color: var(--amber);
+}
+
+/* --- Range slider in dark mode --- */
+[data-theme="dark"] input[type="range"],
+html.dark input[type="range"] {
+  background: var(--bg-tertiary);
+  accent-color: var(--amber);
+}
+[data-theme="dark"] input[type="range"]::-webkit-slider-runnable-track,
+html.dark input[type="range"]::-webkit-slider-runnable-track {
+  background: var(--bg-tertiary);
+}
+[data-theme="dark"] input[type="range"]::-webkit-slider-thumb,
+html.dark input[type="range"]::-webkit-slider-thumb {
+  background: var(--amber);
+  border: 2px solid var(--border);
+}
+
+/* --- File input in dark mode --- */
+[data-theme="dark"] input[type="file"],
+html.dark input[type="file"] {
+  color: var(--fg-2);
+}
+[data-theme="dark"] input[type="file"]::file-selector-button,
+html.dark input[type="file"]::file-selector-button {
+  background: var(--bg-tertiary);
+  color: var(--fg-1);
+  border: 1px solid var(--border);
+}
+
+/* --- Select options panel in dark mode --- */
+[data-theme="dark"] select option,
+html.dark select option {
+  background: var(--bg-card);
+  color: var(--fg-1);
+}
+
+/* --- Fieldset & legend in dark mode --- */
+[data-theme="dark"] fieldset,
+html.dark fieldset {
+  border-color: var(--border);
+}
+[data-theme="dark"] legend,
+html.dark legend {
+  color: var(--fg-1);
+}
+
+/* --- Badges, tags, chips in dark mode --- */
+[data-theme="dark"] .badge,
+[data-theme="dark"] .tag,
+[data-theme="dark"] .chip,
+html.dark .badge,
+html.dark .tag,
+html.dark .chip {
+  background: var(--bg-tertiary);
+  color: var(--fg-1);
+  border-color: var(--border);
+}
+[data-theme="dark"] .badge.badge-amber,
+[data-theme="dark"] .tag.tag-amber,
+html.dark .badge.badge-amber,
+html.dark .tag.tag-amber {
+  background: var(--amber-wash);
+  color: var(--amber);
+  border-color: var(--amber);
+}
+
+/* --- Markdown rendered elements in dark mode --- */
+[data-theme="dark"] .md-table-wrap,
+html.dark .md-table-wrap {
+  overflow-x: auto;
+}
+[data-theme="dark"] .md-table,
+html.dark .md-table {
+  border-color: var(--border);
+}
+[data-theme="dark"] .md-table th,
+html.dark .md-table th {
+  background: var(--bg-tertiary);
+  color: var(--amber);
+  border-color: var(--border);
+}
+[data-theme="dark"] .md-table td,
+html.dark .md-table td {
+  color: var(--fg-1);
+  border-color: var(--border);
+}
+[data-theme="dark"] .md-table tr:nth-child(even),
+html.dark .md-table tr:nth-child(even) {
+  background: rgba(255,255,255,0.02);
+}
+[data-theme="dark"] .md-code,
+html.dark .md-code {
+  background: var(--bg-tertiary);
+  color: var(--amber);
+  border: 1px solid var(--border);
+}
+[data-theme="dark"] .md-quote,
+html.dark .md-quote {
+  border-left-color: var(--amber);
+  color: var(--fg-2);
+  background: var(--amber-wash);
+}
+[data-theme="dark"] .md-hr,
+html.dark .md-hr {
+  border-top-color: var(--border);
+}
+[data-theme="dark"] .md-h,
+html.dark .md-h {
+  color: var(--fg-1);
+}
+
+/* --- Tooltips & popovers in dark mode --- */
+[data-theme="dark"] .tooltip,
+[data-theme="dark"] .popover,
+html.dark .tooltip,
+html.dark .popover {
+  background: var(--bg-elevated);
+  color: var(--fg-1);
+  border-color: var(--border);
+}
+
+/* --- Dropdown menus in dark mode --- */
+[data-theme="dark"] .dropdown-menu,
+html.dark .dropdown-menu {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+}
+[data-theme="dark"] .dropdown-item,
+html.dark .dropdown-item {
+  color: var(--fg-1);
+}
+[data-theme="dark"] .dropdown-item:hover,
+html.dark .dropdown-item:hover {
+  background: var(--bg-card-hover);
+}
+[data-theme="dark"] .dropdown-divider,
+html.dark .dropdown-divider {
+  border-top-color: var(--border);
+}
+
+/* --- HR / dividers in dark mode --- */
+[data-theme="dark"] hr,
+html.dark hr {
+  border-color: var(--border);
+}
+
+/* --- Disabled form controls in dark mode --- */
+[data-theme="dark"] input:disabled,
+[data-theme="dark"] textarea:disabled,
+[data-theme="dark"] select:disabled,
+[data-theme="dark"] button:disabled,
+html.dark input:disabled,
+html.dark textarea:disabled,
+html.dark select:disabled,
+html.dark button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* --- Skip-link visibility --- */
 .skip-link {
   position: absolute;

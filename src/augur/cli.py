@@ -18,6 +18,8 @@ Commands:
   augur watchlist-add     - Add ticker to watchlist
   augur watchlist-show    - Show current watchlist
   augur workflow TICKER     - Multi-step agentic pipeline
+  augur filing-delta TICKER --new X --prev Y  - Compare two SEC filing snapshots
+  augur insider TICKER      - Insider trading summary (90-day)
   augur doctor [--offline]  - Diagnose local environment (SSL/TLS, API keys, data sources)
 
 This file only defines the ``main`` group and wires up every command from
@@ -85,6 +87,8 @@ from augur.cli_commands.integrations import (
 from augur.cli_commands.server import mcp_server_cmd, api_cmd, serve_cmd
 from augur.cli_commands.monitor import watch_cmd, portfolio_cmd
 from augur.cli_commands.meta import skills_cmd, update_cmd, doctor_cmd
+from augur.cli_commands.filing_delta_cmd import filing_delta_cmd
+from augur.cli_commands.insider_cmd import insider_cmd
 
 for _cmd in (
     analyze_cmd, consensus_cmd, report_cmd, list_personas_cmd,
@@ -96,6 +100,7 @@ for _cmd in (
     mcp_server_cmd, api_cmd, serve_cmd,
     watch_cmd, portfolio_cmd,
     skills_cmd, update_cmd, doctor_cmd,
+    filing_delta_cmd, insider_cmd,
 ):
     main.add_command(_cmd)
 del _cmd

@@ -276,6 +276,38 @@
         if (hb) hb.setAttribute('aria-expanded', 'false');
     }
 
+    // Swipe-to-open sidebar on mobile (right-edge → left swipe)
+    (function() {
+        var touchStartX = 0, touchStartY = 0, touchMoved = false;
+        var SWIPE_THRESHOLD = 50;
+        var EDGE_WIDTH = 32;
+        document.addEventListener('touchstart', function(e) {
+            if (e.touches.length !== 1) return;
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            touchMoved = false;
+        }, { passive: true });
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches.length !== 1) return;
+            var dx = e.touches[0].clientX - touchStartX;
+            var dy = e.touches[0].clientY - touchStartY;
+            if (Math.abs(dx) > 10 || Math.abs(dy) > 10) touchMoved = true;
+        }, { passive: true });
+        document.addEventListener('touchend', function() {
+            if (!touchMoved) return;
+            var sidebar = document.getElementById('sidebar');
+            if (!sidebar) return;
+            // Right-edge swipe left → open sidebar
+            if (touchStartX <= EDGE_WIDTH && window.innerWidth <= 768) {
+                openSidebar();
+            }
+            // Swipe left on open sidebar → close
+            if (sidebar.classList.contains('open') && touchStartX > 180) {
+                closeSidebar();
+            }
+        });
+    })();
+
     // Theme toggle
     function toggleTheme() {
         var html = document.documentElement;
