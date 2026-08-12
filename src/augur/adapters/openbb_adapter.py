@@ -149,10 +149,18 @@ def to_evidence_item(
 
     # -- resolve instrument --------------------------------------------------
     instrument = ticker or openbb_output.get("symbol")
-    symbol = openbb_output.get("symbol") or ticker
+    output_symbol = openbb_output.get("symbol")
 
-    # -- pick the first recognised key as the primary metric -----------------
-    primary_key = next(iter(recognised))
+    # -- pick the primary metric key (prefer data over metadata keys) ---------
+    _METADATA_KEYS = {"symbol", "name"}
+    primary_key: Optional[str] = None
+    for key in recognised:
+        if key not in _METADATA_KEYS:
+            primary_key = key
+            break
+    if primary_key is None:
+        # All keys are metadata — pick the first one
+        primary_key = next(iter(recognised))
     primary_meta = metamodel.lookup(primary_key) or {}
     primary_value = recognised[primary_key]
 
@@ -171,7 +179,7 @@ def to_evidence_item(
     return EvidenceItem(
         evidence_id=generate_evidence_id(source, content_hash),
         source=source,
-        source_locator=f"openbb://{symbol}" if symbol else None,
+        source_locator=f"openbb://{output_symbol}" if output_symbol else None,
         content_hash=content_hash,
         instrument=instrument,
         metric=primary_meta.get("metric"),
