@@ -94,6 +94,7 @@ from dashboard.routes.rules import router as _rules_router  # noqa: E402
 from dashboard.routes.optimizer import router as _optimizer_router  # noqa: E402
 from dashboard.routes.portfolio import router as _portfolio_router  # noqa: E402
 from dashboard.routes.earnings import router as _earnings_router  # noqa: E402
+from dashboard.routes.valuation import router as _valuation_router  # noqa: E402
 from dashboard.routes.pages import router as _pages_router  # noqa: E402
 import dashboard.deps as _deps
 from dashboard.deps import get_registry, get_coordinator, _singleton_init_lock
@@ -125,6 +126,7 @@ app.include_router(_rules_router)
 app.include_router(_optimizer_router)
 app.include_router(_portfolio_router)
 app.include_router(_earnings_router)
+app.include_router(_valuation_router)
 app.include_router(_pages_router)
 
 

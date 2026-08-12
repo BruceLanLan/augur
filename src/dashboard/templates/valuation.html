@@ -1,0 +1,431 @@
+{% extends "base.html" %}
+
+{% block title %}DCF Valuation - Augur{% endblock %}
+
+{% block content %}
+<div class="page-content content-max" aria-label="DCF valuation sensitivity analysis">
+    <header class="page-header">
+        <div class="page-header__text">
+            <h1 class="page-title" data-i18n="valuation-title">DCF Sensitivity Analysis</h1>
+            <p class="page-lead">WACC × Terminal Growth → Fair Value per Share — two-stage DCF model</p>
+        </div>
+    </header>
+
+    <!-- Input Parameters Form -->
+    <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;" role="form" aria-label="DCF valuation parameters">
+        <h3 style="margin-bottom: 1rem; color: var(--text-primary);">DCF Parameters</h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+            <div>
+                <label for="val-fcf" style="display: block; color: var(--text-secondary); margin-bottom: 0.35rem; font-size: 0.85rem;">Free Cash Flow ($M)</label>
+                <input type="number" id="val-fcf" value="10000" step="1" min="0"
+                    style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;"
+                    aria-label="Free cash flow in millions">
+            </div>
+            <div>
+                <label for="val-growth" style="display: block; color: var(--text-secondary); margin-bottom: 0.35rem; font-size: 0.85rem;">Stage 1 Growth (%)</label>
+                <input type="number" id="val-growth" value="12" step="0.1" min="0" max="100"
+                    style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;"
+                    aria-label="Stage 1 growth rate percentage">
+            </div>
+            <div>
+                <label for="val-wacc" style="display: block; color: var(--text-secondary); margin-bottom: 0.35rem; font-size: 0.85rem;">WACC (%)</label>
+                <input type="number" id="val-wacc" value="10" step="0.1" min="0.1" max="50"
+                    style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;"
+                    aria-label="Weighted average cost of capital percentage">
+            </div>
+            <div>
+                <label for="val-terminal" style="display: block; color: var(--text-secondary); margin-bottom: 0.35rem; font-size: 0.85rem;">Terminal Growth (%)</label>
+                <input type="number" id="val-terminal" value="2.5" step="0.1" min="0" max="10"
+                    style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;"
+                    aria-label="Terminal growth rate percentage">
+            </div>
+            <div>
+                <label for="val-shares" style="display: block; color: var(--text-secondary); margin-bottom: 0.35rem; font-size: 0.85rem;">Shares Outstanding (M)</label>
+                <input type="number" id="val-shares" value="1000" step="1" min="1"
+                    style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;"
+                    aria-label="Shares outstanding in millions">
+            </div>
+            <div>
+                <label for="val-years" style="display: block; color: var(--text-secondary); margin-bottom: 0.35rem; font-size: 0.85rem;">Stage 1 Years</label>
+                <input type="number" id="val-years" value="5" step="1" min="1" max="20"
+                    style="width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); box-sizing: border-box;"
+                    aria-label="Explicit forecast period in years">
+            </div>
+        </div>
+
+        <div style="margin-top: 1.25rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button class="btn btn-primary" onclick="runValuation()" id="val-btn"
+                style="padding: 0.7rem 2rem; border-radius: 8px; font-weight: 600;" aria-label="Run DCF sensitivity analysis">
+                Compute Sensitivity Grid
+            </button>
+            <button type="button" class="btn btn-ghost" onclick="resetValuationForm()"
+                style="padding: 0.7rem 1.25rem; border-radius: 8px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer;">
+                Reset Defaults
+            </button>
+        </div>
+    </div>
+
+    <!-- Results Area -->
+    <div id="val-results" style="display: none;" role="region" aria-label="Valuation results" aria-live="polite">
+
+        <!-- Fair Value Summary -->
+        <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+            <h3 style="margin-bottom: 0.75rem; color: var(--text-primary);">Base-Case Fair Value</h3>
+            <div style="display: flex; gap: 1rem; align-items: baseline; flex-wrap: wrap;">
+                <span id="val-base-fair-value" style="font-size: 2rem; font-weight: 700; color: var(--signal-buy);">--</span>
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">per share</span>
+            </div>
+        </div>
+
+        <!-- Sensitivity Grid Table -->
+        <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; overflow-x: auto;">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Sensitivity Grid: Fair Value per Share</h3>
+            <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">
+                Rows: WACC (discount rate) &nbsp;|&nbsp; Columns: Terminal Growth Rate
+            </p>
+            <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                <table id="val-grid-table" class="sensitivity-table" style="width: 100%; border-collapse: collapse; font-size: 0.85rem; min-width: 600px;" role="grid" aria-label="DCF sensitivity grid">
+                    <thead id="val-grid-head"></thead>
+                    <tbody id="val-grid-body"></tbody>
+                </table>
+            </div>
+            <p style="color: var(--text-muted); font-size: 0.75rem; margin-top: 0.75rem;">
+                Cells marked <span style="color: var(--signal-sell);">N/A</span> are invalid (WACC ≤ Terminal Growth).
+            </p>
+        </div>
+
+        <!-- Export Buttons -->
+        <div class="card" style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="margin-bottom: 1rem; color: var(--text-primary);">Export Results</h3>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <button type="button" class="btn btn-primary" onclick="exportValuation('markdown')" id="export-md-btn"
+                    style="padding: 0.6rem 1.5rem; border-radius: 8px; font-weight: 500; background: var(--amber); color: #000; border: none; cursor: pointer;">
+                    📄 Export as Markdown
+                </button>
+                <button type="button" class="btn btn-primary" onclick="exportValuation('json')" id="export-json-btn"
+                    style="padding: 0.6rem 1.5rem; border-radius: 8px; font-weight: 500; background: var(--accent-orange); color: #000; border: none; cursor: pointer;">
+                    📋 Export as JSON
+                </button>
+                <button type="button" class="btn btn-primary" onclick="exportValuation('pdf')" id="export-pdf-btn"
+                    style="padding: 0.6rem 1.5rem; border-radius: 8px; font-weight: 500; background: var(--signal-sell); color: #fff; border: none; cursor: pointer;">
+                    🖨️ Export as PDF
+                </button>
+            </div>
+            <div id="export-status" style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);" aria-live="polite"></div>
+        </div>
+    </div>
+
+    <div id="val-error" style="display: none; color: var(--signal-sell); padding: 1rem; background: rgba(255,59,48,0.1); border: 1px solid rgba(255,59,48,0.3); border-radius: 8px; margin-top: 1rem;" role="alert"></div>
+</div>
+
+<style>
+/* Sensitivity table styles */
+.sensitivity-table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 600px;
+}
+.sensitivity-table th,
+.sensitivity-table td {
+    border: 1px solid var(--border-color);
+    padding: 8px 10px;
+    text-align: right;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.82rem;
+}
+.sensitivity-table th {
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+.sensitivity-table th:first-child {
+    text-align: left;
+    color: var(--accent-orange);
+    min-width: 90px;
+}
+.sensitivity-table td:first-child {
+    background: var(--bg-primary);
+    font-weight: 600;
+    color: var(--accent-orange);
+    text-align: left;
+}
+.sensitivity-table td.cell-invalid {
+    color: var(--signal-sell);
+    opacity: 0.5;
+    font-style: italic;
+}
+.sensitivity-table td.cell-high {
+    color: var(--signal-buy);
+    font-weight: 600;
+}
+.sensitivity-table td.cell-mid {
+    color: var(--amber);
+}
+.sensitivity-table td.cell-low {
+    color: var(--signal-sell);
+}
+.sensitivity-table tr:hover td {
+    background: rgba(212, 160, 23, 0.06);
+}
+.sensitivity-table td:first-child:hover {
+    background: var(--bg-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-content { padding: 1rem !important; }
+    .page-content h1 { font-size: 1.3rem !important; }
+    #val-base-fair-value { font-size: 1.5rem !important; }
+    .sensitivity-table th,
+    .sensitivity-table td { padding: 6px 8px; font-size: 0.72rem; }
+}
+@media (max-width: 375px) {
+    .page-content { padding: 0.5rem !important; }
+    .card { padding: 1rem !important; }
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Cached grid data for export
+var _gridData = null;
+var _params = {};
+
+var DEFAULT_PARAMS = {
+    fcf: 10000,
+    growth: 12,
+    wacc: 10,
+    terminal: 2.5,
+    shares: 1000,
+    years: 5
+};
+
+function resetValuationForm() {
+    document.getElementById('val-fcf').value = DEFAULT_PARAMS.fcf;
+    document.getElementById('val-growth').value = DEFAULT_PARAMS.growth;
+    document.getElementById('val-wacc').value = DEFAULT_PARAMS.wacc;
+    document.getElementById('val-terminal').value = DEFAULT_PARAMS.terminal;
+    document.getElementById('val-shares').value = DEFAULT_PARAMS.shares;
+    document.getElementById('val-years').value = DEFAULT_PARAMS.years;
+}
+
+function readFormParams() {
+    return {
+        free_cash_flow: parseFloat(document.getElementById('val-fcf').value) * 1_000_000 || 10_000_000_000,
+        growth_rate_stage1: parseFloat(document.getElementById('val-growth').value) / 100 || 0.12,
+        wacc: parseFloat(document.getElementById('val-wacc').value) / 100 || 0.10,
+        growth_rate_terminal: parseFloat(document.getElementById('val-terminal').value) / 100 || 0.025,
+        shares_outstanding: parseFloat(document.getElementById('val-shares').value) * 1_000_000 || 1_000_000_000,
+        stage1_years: parseInt(document.getElementById('val-years').value) || 5,
+        steps: 9
+    };
+}
+
+async function runValuation() {
+    var btn = document.getElementById('val-btn');
+    var results = document.getElementById('val-results');
+    var errorDiv = document.getElementById('val-error');
+
+    btn.disabled = true;
+    btn.textContent = 'Computing...';
+    results.style.display = 'none';
+    errorDiv.style.display = 'none';
+    _gridData = null;
+
+    var params = readFormParams();
+
+    try {
+        var resp = await fetch('/api/valuation/sensitivity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(params)
+        });
+        var data = await resp.json();
+
+        if (!resp.ok) {
+            errorDiv.style.display = 'block';
+            errorDiv.textContent = data.detail || 'Valuation computation failed';
+            return;
+        }
+
+        _gridData = data;
+        _params = params;
+
+        renderGrid(data);
+        results.style.display = 'block';
+
+        // Scroll results into view
+        results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (e) {
+        errorDiv.style.display = 'block';
+        errorDiv.textContent = 'Request failed: ' + e.message;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Compute Sensitivity Grid';
+    }
+}
+
+function renderGrid(data) {
+    // Fair value at base case (center of grid)
+    var centerIdx = Math.floor(data.wacc_labels.length / 2);
+    var baseFairValue = data.grid[centerIdx] ? data.grid[centerIdx][centerIdx] : null;
+    var fvEl = document.getElementById('val-base-fair-value');
+    if (baseFairValue && baseFairValue > 0) {
+        fvEl.textContent = '$' + baseFairValue.toFixed(2);
+    } else {
+        fvEl.textContent = 'N/A';
+        fvEl.style.color = 'var(--signal-sell)';
+    }
+
+    // Find max fair value for heatmap coloring
+    var maxFV = 0;
+    for (var i = 0; i < data.grid.length; i++) {
+        for (var j = 0; j < data.grid[i].length; j++) {
+            if (data.grid[i][j] > maxFV) maxFV = data.grid[i][j];
+        }
+    }
+
+    // Build table header
+    var thead = document.getElementById('val-grid-head');
+    var hdrHtml = '<tr><th>WACC ↓ \\ Growth →</th>';
+    for (var j = 0; j < data.growth_labels.length; j++) {
+        hdrHtml += '<th>' + (data.growth_labels[j] * 100).toFixed(1) + '%</th>';
+    }
+    hdrHtml += '</tr>';
+    thead.innerHTML = hdrHtml;
+
+    // Build table body
+    var tbody = document.getElementById('val-grid-body');
+    var bodyHtml = '';
+    for (var i = 0; i < data.wacc_labels.length; i++) {
+        bodyHtml += '<tr>';
+        bodyHtml += '<td>' + (data.wacc_labels[i] * 100).toFixed(1) + '%</td>';
+        for (var j = 0; j < data.growth_labels.length; j++) {
+            var fv = data.grid[i][j];
+            var cellClass = '';
+            if (fv <= 0) {
+                cellClass = 'cell-invalid';
+            } else if (maxFV > 0) {
+                var ratio = fv / maxFV;
+                if (ratio > 0.75) cellClass = 'cell-high';
+                else if (ratio > 0.35) cellClass = 'cell-mid';
+                else cellClass = 'cell-low';
+            }
+            var displayVal = (fv > 0) ? '$' + fv.toFixed(2) : 'N/A';
+            bodyHtml += '<td class="' + cellClass + '">' + displayVal + '</td>';
+        }
+        bodyHtml += '</tr>';
+    }
+    tbody.innerHTML = bodyHtml;
+}
+
+// ---- Export ----
+
+function buildExportPayload(format) {
+    if (!_gridData) return null;
+
+    // Build rows: first column is WACC label, rest are fair values
+    var headers = _gridData.growth_labels.map(function(g) {
+        return (g * 100).toFixed(1) + '% growth';
+    });
+
+    var rows = [];
+    for (var i = 0; i < _gridData.wacc_labels.length; i++) {
+        var row = [( _gridData.wacc_labels[i] * 100).toFixed(1) + '% WACC'];
+        for (var j = 0; j < _gridData.growth_labels.length; j++) {
+            var fv = _gridData.grid[i][j];
+            row.push(fv > 0 ? fv.toFixed(2) : 'N/A');
+        }
+        rows.push(row);
+    }
+
+    return {
+        format: format,
+        title: 'Augur DCF Sensitivity Analysis',
+        headers: headers,
+        rows: rows,
+        params: {
+            'FCF ($M)': (_params.free_cash_flow / 1_000_000).toFixed(0),
+            'Stage 1 Growth': ((_params.growth_rate_stage1 || 0.12) * 100).toFixed(1) + '%',
+            'WACC': ((_params.wacc || 0.10) * 100).toFixed(1) + '%',
+            'Terminal Growth': ((_params.growth_rate_terminal || 0.025) * 100).toFixed(1) + '%',
+            'Shares (M)': (_params.shares_outstanding / 1_000_000).toFixed(0),
+            'Stage 1 Years': _params.stage1_years || 5,
+        }
+    };
+}
+
+async function exportValuation(format) {
+    var statusEl = document.getElementById('export-status');
+    statusEl.textContent = 'Generating ' + format.toUpperCase() + ' export...';
+    statusEl.style.color = 'var(--text-secondary)';
+
+    var payload = buildExportPayload(format);
+    if (!payload) {
+        statusEl.textContent = 'No data to export. Run the computation first.';
+        statusEl.style.color = 'var(--signal-sell)';
+        return;
+    }
+
+    try {
+        var resp = await fetch('/api/export', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!resp.ok) {
+            var errData = await resp.json().catch(function() { return null; });
+            statusEl.textContent = 'Export failed: ' + ((errData && errData.detail) || resp.statusText);
+            statusEl.style.color = 'var(--signal-sell)';
+            return;
+        }
+
+        // For JSON, parse and display inline
+        if (format === 'json') {
+            var jsonData = await resp.json();
+            // Trigger file download
+            var blob = new Blob([JSON.stringify(jsonData, null, 2)], { type: 'application/json' });
+            downloadBlob(blob, 'valuation.json');
+            statusEl.textContent = 'JSON exported successfully.';
+            statusEl.style.color = 'var(--signal-buy)';
+            return;
+        }
+
+        // For Markdown and PDF, download the blob
+        var blob = await resp.blob();
+        var ext = format === 'pdf' ? 'pdf' : 'md';
+        var mimeType = format === 'pdf' ? 'application/pdf' : 'text/markdown';
+        downloadBlob(blob, 'valuation.' + ext, mimeType);
+        statusEl.textContent = format.toUpperCase() + ' exported successfully.';
+        statusEl.style.color = 'var(--signal-buy)';
+
+    } catch (e) {
+        statusEl.textContent = 'Export request failed: ' + e.message;
+        statusEl.style.color = 'var(--signal-sell)';
+    }
+}
+
+function downloadBlob(blob, filename, mimeType) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %}

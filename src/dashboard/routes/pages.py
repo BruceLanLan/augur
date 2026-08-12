@@ -147,6 +147,13 @@ async def inbox_page(request: Request):
     })
 
 
+@router.get("/valuation", response_class=HTMLResponse, summary="DCF估值敏感度分析页面")
+async def valuation_page(request: Request):
+    return templates.TemplateResponse(request=request, name="valuation.html", context={
+        "title": "DCF Sensitivity Analysis — Augur",
+    })
+
+
 @router.get("/report/{ticker}", response_class=HTMLResponse, summary="深度分析报告全屏页面")
 async def report_view_page(request: Request, ticker: str):
     """Dedicated full-page report view for a ticker. Auto-fetches report on load."""
