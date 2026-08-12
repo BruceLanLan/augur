@@ -245,3 +245,62 @@ function addQuestion(e) {
 }
 document.addEventListener('DOMContentLoaded', function() { loadQuestions(); });
 </script>
+
+<!-- ============ Decision Log ============ -->
+<div class="tj-section" style="margin-top: 32px;">
+  <h2>📋 Decision Log</h2>
+  <div id="tj-decisions-list" class="tj-list">
+    <div class="skeleton skeleton-text"></div>
+  </div>
+  <button class="btn" onclick="document.getElementById('tj-decision-form').classList.toggle('hidden')" style="margin-top: 8px;">+ Record Decision</button>
+  <form id="tj-decision-form" class="tj-form hidden" onsubmit="recordDecision(event)">
+    <div class="form-group">
+      <label>Action</label>
+      <select id="tj-d-action"><option value="buy">Buy</option><option value="sell">Sell</option><option value="hold">Hold</option><option value="wait">Wait</option></select>
+    </div>
+    <div class="form-group">
+      <label>Reasoning</label>
+      <textarea id="tj-d-reasoning" rows="2" placeholder="Why this action?" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-accent">Record</button>
+  </form>
+</div>
+
+<script>
+function loadDecisions() {
+  var ticker = document.querySelector('.tj-journal').dataset.ticker || '';
+  fetch('/api/decisions/list' + (ticker ? '?ticker=' + ticker : ''))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var el = document.getElementById('tj-decisions-list');
+      var decisions = data.decisions || [];
+      if (decisions.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><div class="empty-state-title">No decisions recorded</div></div>';
+        return;
+      }
+      el.innerHTML = decisions.map(function(d) {
+        return '<div class="tj-card"><div class="tj-card-header">'
+          + '<span class="tj-card-statement">' + d.action.toUpperCase() + ' — ' + escapeHtml(d.reasoning || '') + '</span>'
+          + '<span class="tj-card-meta">' + (d.created_at || '').slice(0, 10) + '</span>'
+          + (d.outcome ? '<span class="tj-card-status confirmed">' + d.outcome + '</span>' : '')
+          + '</div></div>';
+      }).join('');
+    });
+}
+function recordDecision(e) {
+  e.preventDefault();
+  var data = {
+    ticker: document.querySelector('.tj-journal').dataset.ticker || '',
+    action: document.getElementById('tj-d-action').value,
+    reasoning: document.getElementById('tj-d-reasoning').value,
+  };
+  fetch('/api/decisions/record', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+  }).then(function() {
+    document.getElementById('tj-decision-form').classList.add('hidden');
+    document.getElementById('tj-decision-form').reset();
+    loadDecisions();
+  });
+}
+document.addEventListener('DOMContentLoaded', function() { loadDecisions(); });
+</script>

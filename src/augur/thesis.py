@@ -487,3 +487,42 @@ class DecisionLog:
                 outcome=item.get("outcome"),
             )
             self._decisions[d.decision_id] = d
+
+    # -- Auto-falsification check -----------------------------------------
+
+    def check_falsification(self, thesis_id: str, new_data: dict) -> dict:
+        """Check if any falsification conditions are triggered by new data.
+
+        Scans each falsification condition against keys in *new_data* using
+        simple keyword matching. Returns a dict with triggered conditions
+        and a recommendation.
+        """
+        th = self._theses.get(thesis_id)
+        if not th:
+            return {"error": "thesis not found", "thesis_id": thesis_id}
+
+        triggered: List[str] = []
+        data_text = " ".join(f"{k}={v}" for k, v in new_data.items()).lower()
+
+        for condition in th.falsification_conditions:
+            # Simple keyword matching: if all words in condition appear in data
+            cond_words = condition.lower().split()
+            if all(w in data_text for w in cond_words):
+                triggered.append(condition)
+
+        recommendation = "intact"
+        if len(triggered) >= len(th.falsification_conditions) * 0.5:
+            recommendation = "refuted"
+            self.update_status(thesis_id, "refuted",
+                               f"Falsification triggered: {', '.join(triggered)}")
+        elif len(triggered) > 0:
+            recommendation = "weakened"
+            self.update_status(thesis_id, "weakened",
+                               f"Falsification partially triggered: {', '.join(triggered)}")
+
+        return {
+            "thesis_id": thesis_id,
+            "triggered": triggered,
+            "recommendation": recommendation,
+            "n_conditions": len(th.falsification_conditions),
+        }
