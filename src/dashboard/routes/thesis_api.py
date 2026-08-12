@@ -7,6 +7,35 @@ from pydantic import BaseModel
 
 router = APIRouter()
 
+# Module-level singletons so POST/GET share state (in-memory stores)
+_thesis_journal = None
+_question_queue = None
+_decision_log = None
+
+
+def _journal():
+    global _thesis_journal
+    if _thesis_journal is None:
+        from augur.thesis import ThesisJournal
+        _thesis_journal = ThesisJournal()
+    return _thesis_journal
+
+
+def _questions():
+    global _question_queue
+    if _question_queue is None:
+        from augur.questions import QuestionQueue
+        _question_queue = QuestionQueue()
+    return _question_queue
+
+
+def _decisions():
+    global _decision_log
+    if _decision_log is None:
+        from augur.thesis import DecisionLog
+        _decision_log = DecisionLog()
+    return _decision_log
+
 
 class ThesisCreate(BaseModel):
     ticker: str
@@ -31,8 +60,7 @@ class DecisionRecord(BaseModel):
 @router.get("/api/thesis/list")
 async def thesis_list(ticker: str = "") -> Dict[str, Any]:
     """List theses, optionally filtered by ticker."""
-    from augur.thesis import ThesisJournal
-    journal = ThesisJournal()
+    journal = _journal()
     theses = journal.list_by_ticker(ticker) if ticker else journal.list_all()
     items = []
     for t in theses:
@@ -48,8 +76,8 @@ async def thesis_list(ticker: str = "") -> Dict[str, Any]:
 @router.post("/api/thesis/create")
 async def thesis_create(body: ThesisCreate) -> Dict[str, Any]:
     """Create a new thesis."""
-    from augur.thesis import Thesis, ThesisJournal
-    journal = ThesisJournal()
+    from augur.thesis import Thesis
+    journal = _journal()
     thesis = Thesis(
         thesis_id="", ticker=body.ticker.upper(), statement=body.statement,
         catalysts=body.catalysts, risks=body.risks,
@@ -63,8 +91,7 @@ async def thesis_create(body: ThesisCreate) -> Dict[str, Any]:
 @router.get("/api/questions/list")
 async def questions_list(ticker: str = "", status: str = "open") -> Dict[str, Any]:
     """List research questions."""
-    from augur.questions import QuestionQueue
-    q = QuestionQueue()
+    q = _questions()
     questions = q.list(ticker, status)
     return {"questions": [
         {"question_id": x.question_id, "ticker": x.ticker, "question": x.question,
@@ -77,8 +104,8 @@ async def questions_list(ticker: str = "", status: str = "open") -> Dict[str, An
 @router.post("/api/questions/add")
 async def questions_add(body: QuestionAdd) -> Dict[str, Any]:
     """Add a research question."""
-    from augur.questions import QuestionQueue, ResearchQuestion
-    q = QuestionQueue()
+    from augur.questions import ResearchQuestion
+    q = _questions()
     rq = ResearchQuestion(
         question_id="", ticker=body.ticker.upper(), question=body.question,
         context=body.context, created_at="", status="open",
@@ -90,8 +117,7 @@ async def questions_add(body: QuestionAdd) -> Dict[str, Any]:
 @router.get("/api/decisions/list")
 async def decisions_list(ticker: str = "") -> Dict[str, Any]:
     """List decisions."""
-    from augur.thesis import DecisionLog
-    log = DecisionLog()
+    log = _decisions()
     decisions = log.list_by_ticker(ticker) if ticker else []
     return {"decisions": [
         {"decision_id": d.decision_id, "ticker": d.ticker, "action": d.action,
@@ -103,8 +129,8 @@ async def decisions_list(ticker: str = "") -> Dict[str, Any]:
 @router.post("/api/decisions/record")
 async def decisions_record(body: DecisionRecord) -> Dict[str, Any]:
     """Record a decision."""
-    from augur.thesis import Decision, DecisionLog
-    log = DecisionLog()
+    from augur.thesis import Decision
+    log = _decisions()
     decision = Decision(
         decision_id="", ticker=body.ticker.upper(), action=body.action,
         reasoning=body.reasoning, evidence_run_ids=[], thesis_ids=[],
