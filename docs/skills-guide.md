@@ -159,3 +159,36 @@ print(spec.id, spec.version)
 - [SkillSpec v1 Schema Reference](schema-reference.md)
 - [Capability Registry API](#) (待完善)
 - [Release Notes v11](RELEASE_NOTES_v11.md)
+
+---
+
+## 新增内置 Skills (Round 6)
+
+### `debt-covenant-review` — 债务约束审查
+
+检查 debt/EBITDA、利息覆盖率、流动性约束和 covenant 合规性。
+
+```bash
+augur skill run debt-covenant-review --ticker AAPL
+```
+
+**权限**：只读 `evidence.read`、`runs.read`；网络仅 `sec.gov`
+
+### `insider-cluster-review` — 内部人交易集群检测
+
+识别高管/董事连续或集群买卖行为。
+
+```bash
+augur skill run insider-cluster-review --ticker AAPL
+```
+
+**权限**：只读 `evidence.read`；网络仅 `sec.gov`
+
+## MCP Prompts 列表
+
+| Prompt | 用途 |
+|---|---|
+| `earnings_prep_prompt` | 生成财报前研究包 |
+| `filing_delta_prompt` | Filing 变化对比 |
+| `thesis_review_prompt` | Thesis 审查 |
+| `debt_covenant_review_prompt` | 债务约束审查 |
