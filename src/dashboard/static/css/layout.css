@@ -514,6 +514,14 @@ html.light .council-hero {
     border-radius: var(--r-sm);
     cursor: pointer;
     color: var(--fg-1);
+    -webkit-tap-highlight-color: transparent;
+    transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), transform var(--dur-fast) var(--ease);
+  }
+  .hamburger-btn:active,
+  .hamburger-btn.pressed {
+    background: var(--bg-card-hover);
+    border-color: var(--amber);
+    transform: scale(0.94);
   }
   .hamburger-btn svg {
     width: 22px;

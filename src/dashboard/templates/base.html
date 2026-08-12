@@ -579,18 +579,59 @@
         }
     };
 
-    // Global error handler - show toast for uncaught errors
+    // Global error handler — user-friendly toast for uncaught errors
     window.onerror = function(msg, url, line) {
+        var friendly = _friendlyError(msg);
         if (typeof showToast === 'function') {
-            showToast('JS Error: ' + (msg || 'Unknown error'), 'error');
+            showToast(friendly, 'error');
         }
         return false;
     };
     window.addEventListener('unhandledrejection', function(event) {
         if (typeof showToast === 'function') {
             var reason = event.reason ? (event.reason.message || String(event.reason)) : 'Promise rejected';
-            showToast('Error: ' + reason, 'error');
+            showToast(_friendlyError(reason), 'error');
         }
+    });
+
+    // Map raw error strings → user-friendly Chinese messages
+    function _friendlyError(msg) {
+        if (!msg) return '发生了一个未知错误，请刷新页面重试';
+        var s = String(msg);
+        if (/failed to fetch|networkerror|network\s+error|fetch\s+failed/i.test(s))
+            return '网络连接失败，请检查网络后重试';
+        if (/timeout|timed\s*out|abort/i.test(s))
+            return '请求超时，服务器响应较慢，请稍后重试';
+        if (/401|unauthorized/i.test(s))
+            return '登录已过期，请重新登录';
+        if (/403|forbidden/i.test(s))
+            return '没有权限执行此操作';
+        if (/404|not\s*found/i.test(s))
+            return '请求的资源不存在';
+        if (/500|internal\s*server/i.test(s))
+            return '服务器内部错误，请稍后重试';
+        if (/502|503|504|gateway|unavailable/i.test(s))
+            return '服务暂时不可用，请稍后重试';
+        if (/cors|cross-origin/i.test(s))
+            return '跨域请求被阻止，请联系管理员';
+        if (s.length > 120) s = s.slice(0, 117) + '...';
+        return '出错了：' + s;
+    }
+
+    // Online/offline detection — show reconnect toast
+    window.addEventListener('offline', function() {
+        if (typeof showToast === 'function') {
+            showToast('网络已断开，部分功能不可用', 'warning');
+        }
+        var indicator = document.querySelector('.status-indicator');
+        if (indicator) { indicator.classList.remove('connected'); indicator.classList.add('disconnected'); }
+    });
+    window.addEventListener('online', function() {
+        if (typeof showToast === 'function') {
+            showToast('网络已恢复', 'success');
+        }
+        var indicator = document.querySelector('.status-indicator');
+        if (indicator) { indicator.classList.add('connected'); indicator.classList.remove('disconnected'); }
     });
 
     // Shared API/JWT token for dashboard fetch + WebSocket (?token=) when auth is enabled.
@@ -625,7 +666,18 @@
             if (typeof url === 'string') {
                 options = augurAttachAuth(url, options || {});
             }
-            return nativeFetch.call(this, url, options);
+            // Only intercept API calls for user-friendly error toasts
+            var isApiCall = typeof url === 'string' && (url.indexOf('/api/') !== -1 || url.indexOf('/health') !== -1);
+            var promise = nativeFetch.call(this, url, options);
+            if (isApiCall) {
+                return promise.catch(function(err) {
+                    if (typeof showToast === 'function') {
+                        showToast(_friendlyError(err.message || String(err)), 'error');
+                    }
+                    throw err;
+                });
+            }
+            return promise;
         };
     })();
 
