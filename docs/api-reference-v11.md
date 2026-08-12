@@ -120,3 +120,46 @@ This document covers the Python public API and REST endpoints.
 - `filing_delta_prompt(ticker, new_accession, previous_accession)`
 - `thesis_review_prompt(ticker, thesis_statement)`
 - `debt_covenant_review_prompt(ticker)`
+
+## 新增模块（持续循环补充）
+
+| 模块 | 类/函数 | 说明 |
+|---|---|---|
+| `augur.change_ledger` | `ChangeLedgerBuilder` | 跨季度变更账本（6 分类） |
+| `augur.citation_queue` | `CitationCorrectionQueue` | 引用纠错队列 |
+| `augur.coverage_health` | `CoverageAnalyzer` | 数据覆盖健康中心 |
+| `augur.coverage_health` | `PromotionGate` | 实验→默认晋级门 |
+| `augur.provider_health` | `ProviderHealthTracker` | 数据源健康追踪 |
+| `augur.freshness` | `FreshnessTracker` | 数据新鲜度检查 |
+| `augur.cache_health` | `check_edgar_cache_freshness` | EDGAR 缓存健康 |
+| `augur.relative_val` | `build_peer_table` | 同行估值对比 |
+| `augur.cost_budget` | `CostTracker` | 成本/延迟预算 |
+| `augur.team_audit` | `AuditLog` | 团队审计 |
+| `augur.compatibility` | `CompatibilityMatrix` | 兼容矩阵 |
+| `augur.prompt_eval` | `PromptEvaluator` | Prompt 评估 |
+| `augur.prompt_eval` | `FactorLab` | 因子实验室 |
+| `augur.outcome_tracker` | `OutcomeTracker` | 决策结果追踪 |
+| `augur.portfolio_risk` | `PortfolioRiskAnalyzer` | 组合集中度分析 |
+| `augur.pack_digest` | `compute_manifest_digest` | 研究包完整性 |
+| `augur.research_report` | `ResearchReportBuilder` | 综合研究报告 |
+| `augur.adapters.openbb_adapter` | — | OpenBB schema-only 适配器 |
+
+## 新增 REST 端点（持续循环补充）
+
+| Method | Path | 说明 |
+|---|---|---|
+| GET | `/api/disagreement?ticker=` | 分歧图 JSON |
+| GET | `/api/evidence/{id}` | 证据查询 |
+| GET | `/api/insider/{ticker}` | 内部人交易 |
+| GET | `/api/ownership/{ticker}` | 机构持仓 |
+| GET | `/api/inbox/list` | 研究收件箱 |
+| GET | `/api/alerts/active` | 活跃提醒 |
+| GET | `/api/coverage/{ticker}` | 数据覆盖报告 |
+| GET | `/api/providers/health` | Provider 健康 |
+| POST | `/api/batch/analyze` | 批量分析 |
+| GET | `/api/freshness` | 新鲜度报告 |
+| GET | `/api/cache/health` | 缓存健康 |
+| GET | `/api/thesis/list` + POST `/api/thesis/create` | Thesis CRUD |
+| GET | `/api/questions/list` + POST `/api/questions/add` | 问题队列 |
+| GET | `/api/decisions/list` + POST `/api/decisions/record` | 决策日志 |
+| GET | `/api/report/{ticker}` | 综合研究报告 |
