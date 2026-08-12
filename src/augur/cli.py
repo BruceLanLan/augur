@@ -94,6 +94,7 @@ from augur.cli_commands.valuation_cmd import valuation_cmd
 from augur.cli_commands.compat_cmd import compat_cmd
 from augur.cli_commands.dossier_cmd import dossier_cmd
 from augur.cli_commands.ledger_cmd import ledger_cmd
+from augur.cli_commands.research_report_cmd import research_report_cmd
 
 for _cmd in (
     analyze_cmd, consensus_cmd, report_cmd, list_personas_cmd,
@@ -106,7 +107,7 @@ for _cmd in (
     watch_cmd, portfolio_cmd,
     skills_cmd, update_cmd, doctor_cmd,
     filing_delta_cmd, insider_cmd,
-    batch_cmd, valuation_cmd, compat_cmd, dossier_cmd, ledger_cmd,
+    batch_cmd, valuation_cmd, compat_cmd, dossier_cmd, ledger_cmd, research_report_cmd,
 ):
     main.add_command(_cmd)
 del _cmd
