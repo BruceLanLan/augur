@@ -543,3 +543,21 @@ class ChangeLedgerBuilder:
     def _text_ref(kind: str, text: str) -> str:
         digest = hashlib.sha1(text.encode("utf-8")).hexdigest()[:8]
         return f"{kind}:{digest}"
+
+    @staticmethod
+    def _consensus_strength(d: Any) -> str:
+        """Extract a consensus-strength label from a disagreement payload."""
+        if isinstance(d, dict):
+            return str(d.get("consensus_strength") or "unknown")
+        return "unknown"
+
+    @staticmethod
+    def _conflict_count(d: Any) -> int:
+        """Count conflict points in a disagreement payload."""
+        if isinstance(d, dict):
+            cps = d.get("conflict_points")
+            if isinstance(cps, list):
+                return len(cps)
+        if isinstance(d, list):
+            return len(d)
+        return 0
