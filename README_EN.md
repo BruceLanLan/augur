@@ -2,382 +2,191 @@
 
 <div align="center">
 
-<img src="docs/images/en/hero-banner.png" alt="Augur — Your AI Investment Committee" width="100%">
+<img src="docs/images/en/hero-banner.png" alt="Augur — Research Memory System" width="100%">
 
 # 🦉 Augur
 
-**18 legendary investors. Same stock. One verdict.**
+**Not another AI stock picker. A research memory system that remembers what you knew, when you knew it, what changed, and who disagrees — and why.**
 
-Put Warren Buffett, Ray Dalio, Duan Yongping and Cathie Wood in the same room — they won't agree. That's exactly the point.
-
-[![v10.15.0](https://img.shields.io/badge/v10.15.0-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur/releases)
-[![2461 Tests](https://img.shields.io/badge/2461_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur/actions)
-[![SEC EDGAR](https://img.shields.io/badge/SEC_EDGAR-Real_Filing_Data-4a90d9?style=for-the-badge)](#-18-investment-masters)
-[![18 Masters](https://img.shields.io/badge/18-Investment_Masters-gold?style=for-the-badge)](#-18-investment-masters)
+[![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur-next)
+[![431 Tests](https://img.shields.io/badge/431_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
+[![Evidence-First](https://img.shields.io/badge/Evidence-First_📋-4a90d9?style=for-the-badge)](#-why-augur)
+[![18 Masters](https://img.shields.io/badge/18-Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
-[![PWA](https://img.shields.io/badge/PWA-Installable_App-blue?style=for-the-badge)](#-dashboard)
+[![Local-First](https://img.shields.io/badge/Local--First_🔒-blue?style=for-the-badge)](#-quick-start)
 [![MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
 </div>
 
 ---
 
-## 🚀 30-Second Quickstart
+## 🤔 Why Augur
+
+Most AI finance tools give you an answer. Augur gives you **verifiable research artifacts**.
+
+| | Generic AI Tool | Augur |
+|---|---|---|
+| What you get | "On one hand… on the other… invest at your own risk" | 18 independent judgments + where they agree and clash |
+| Data provenance | Unknown. Possibly training data | Every conclusion: source locator — SEC filing URL, accession number, retrieval time |
+| Missing data | Silently filled with 0 | Explicitly `missing`. Dependent masters `abstain` with reason |
+| Look back in 3 months | No memory | RunBundle: immutable input snapshot, step results, coverage stats. Diff to see exactly what changed |
+| Your data | Cloud. Unknown access | Local. `~/.augur`. You control everything |
+
+**Augur doesn't make decisions for you. It builds your evidence trail.**
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-git clone https://github.com/BruceLanLan/augur.git && cd augur
+git clone https://github.com/BruceLanLan/augur-next.git && cd augur-next
 pip install -e ".[data]"
-augur serve --open          # Launch Dashboard
+
+export AUGUR_DATA_DIR=$(pwd)/.augur_dev   # isolated data root
+
+augur serve --open          # Dashboard · ⌘K for command palette
 ```
 
-Or straight from the terminal:
+Or CLI-only:
 
 ```bash
-augur analyze AAPL          # 18 masters in parallel
-augur consensus NVDA        # Weighted consensus + Kelly sizing
-augur workflow TSLA         # Full analysis pipeline in one call
+augur analyze AAPL          # 18 masters
+augur workflow TSLA         # 6-stage pipeline
+augur export AAPL --format md  # Export Markdown report
 ```
 
 ---
 
-## ✨ What's New in v10.0
+## ✨ What's New in v11
 
-<img src="docs/images/screenshots/dashboard-hd2d.png" alt="Augur v10 Home — Live market data + Bloomberg-style terminal" width="100%">
+v11 is a **foundation rebuild** — from "AI report generator" to "Research Memory System."
 
-### Your Personal Bloomberg Terminal
+### 14 New Modules
 
-**The `/settings` page is now a full terminal configuration system:**
+| Module | Purpose |
+|---|---|
+| `thesis.py` | Thesis Journal + ThesisDelta + DecisionLog — track, update, and review your investment theses |
+| `valuation.py` | DCF + WACC + Scenario Lab — pure `decimal.Decimal`, LLM never touches arithmetic |
+| `disagreement.py` | Distill 18 persona outputs into 3-5 decision-relevant conflicts |
+| `filing_delta.py` | Compare 20+ financial metrics, text sections, and guidance between SEC filings |
+| `guidance_tracker.py` | Track management guidance ranges across quarters, compute accuracy |
+| `research_inbox.py` | Aggregate events into a prioritized research queue |
+| `risk_review.py` | Risk factor categorization + covenant compliance review |
+| `eval_lab.py` | Walk-forward OOS evaluation + persona ablation |
+| `export.py` | Markdown / PDF / JSON / Evidence Pack export |
+| `earnings.py` | Earnings event detection + dossier readiness |
+| `run_tracker.py` | StepResult wrapper + checkpoint save/resume |
+| `provenance.py` | ProvenanceBlock — source, freshness, degradation metadata |
+| `capability.py` | Capability Registry with budget/timeout control |
+| `schemas/` | EvidenceItem / Claim / StepResult / RunBundle / SkillSpec v1 |
 
-<img src="docs/images/screenshots/workspace-profiles.png" alt="Terminal Workspace — Save and switch between multiple profiles" width="100%">
+### Key Improvements
 
-- **4 layout presets**: analyst / trader / committee / minimal — switch landing page and nav in one click
-- **Named profiles**: save "day trading" and "weekend research" as separate configs, switch anytime
-- **Master subset filter**: keep only the masters you trust in consensus — weights auto-renormalized
-- Config lives in `~/.augur/workspace.yaml`, export/import to take it to a new machine
+1. **Missing data is no longer zero** — ownership fields are `None`, not `0`. 11 personas explicitly abstain.
+2. **Three time semantics** — `effective_at` / `available_at` / `retrieved_at`. No look-ahead bias.
+3. **Immutable RunBundle** — every run snapshotted. Checkpoint resume. Diff between runs.
+4. **Declarative Skills** — pure YAML. No `module_path`, `shell`, or `import`. Runtime permission enforcement.
+5. **UI/UX** — ⌘K Command Palette · Dark Mode · Evidence Graph (force-directed) · Thesis Journal page · Skeleton/Empty-state/Toast · Responsive
+6. **431 tests** — hermetic, zero user-directory pollution. PBKDF2 600k. SQLite WAL + corruption backup.
 
-### AI Agents That Operate Your Terminal
-
-Not just "chat" — your Claude / Hermes Agent can now **read and modify** your Augur workspace directly:
-
-```python
-# Call from Claude Desktop / Hermes / Claude Code:
-mcp_augur_workspace_get()                       # see your current layout
-mcp_augur_workspace_set(layout_preset="trader") # switch to trader mode
-mcp_augur_workspace_profiles()                  # manage all profiles
-```
-
-### Full Analysis Pipeline in One Call
-
-```bash
-augur workflow NVDA --steps fetch,analyze,consensus,committee
-```
-
-`fetch → analyze → consensus → committee → debate → sentiment` — six steps chained, single-step failures don't break the chain, and default steps follow your active Profile.
+Full details → [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md)
 
 ---
 
 ## 📊 Dashboard
 
-<img src="docs/images/screenshots/personas-hd2d.png" alt="18 Investment Masters — Four schools of thought" width="100%">
-
-### Stock Analysis
-
-<img src="docs/images/screenshots/report-hd2d.png" alt="Stock Analysis — Enter any ticker to summon 18 masters" width="100%">
-
-Enter any ticker (US / HK / A-share). 18 masters respond with:
-- **Augur Score** (0–10) + **BUY / NEUTRAL / SELL**
-- **Kelly position sizing** (based on consensus confidence)
-- **The Oracle of Augur**: one-line verdict
-- Sentiment split: `13 Bullish / 5 Neutral / 0 Bearish`
-
-### Investment Committee
-
-<img src="docs/images/screenshots/committee-hd2d.png" alt="Investment Committee — Preset lineups + independent opinions + final verdict" width="100%">
-
-Five preset committees, or build your own:
-- **Classic Value**: Buffett · Graham · Munger · Fisher
-- **China Value**: Duan Yongping · Zhang Lei · Li Lu · Dan Bin
-- **Macro All-Weather**: Dalio · Soros · Marks · ARPS
-- **Disruptive Growth**: Cathie Wood · Thiel · Aschenbrenner · Lynch
-- **Full Council**: All 18 masters
-
-### Bull / Bear Debate
-
-<img src="docs/images/screenshots/04-bullish-critical.png" alt="Structured debate — bull and bear cases auto-generated" width="100%">
-
-Pick 2–4 masters to debate the same ticker across multiple rounds. Full bull and bear arguments generated automatically.
-
-### History
-
-<img src="docs/images/screenshots/history.png" alt="Analysis history — GitHub-style heatmap + detailed records" width="100%">
-
-Every analysis auto-archived. GitHub-style 52-week heatmap. Filter by signal, score, or date.
-
-### Compare
-
-<img src="docs/images/screenshots/compare-radar.png" alt="Compare — 5-dimension scoring radar + factor breakdown" width="100%">
-
-Put 2–5 masters side by side on the same ticker. A 5-axis radar (valuation / growth / quality / momentum / safety) shows exactly where they disagree at a glance, and the expandable breakdown table shows the concrete factors (PE, moat, momentum, etc.) each master used to arrive at their score.
-
-### Hermes Agent Setup
-
-<img src="docs/images/screenshots/hermes-setup.png" alt="Hermes Agent setup guide — one-click MCP configuration" width="100%">
-
-Step-by-step guide: install the MCP server, register with Claude Desktop / Hermes, and wire all 18 masters plus the committee into your AI agent workflow.
+| Page | Path | Feature |
+|---|---|---|
+| Home | `/` | Real-time quotes + master overview |
+| Stock Analysis | `/stocks` | 18 masters analyze one ticker |
+| Committee | `/committee` | 5 presets + custom combinations |
+| Debate | `/debate` | Structured bull vs bear |
+| **Thesis Journal** | `/thesis` | 🆕 Create, track, review investment theses |
+| History | `/history` | 52-week heatmap |
+| Portfolio | `/portfolio` | Kelly position sizing |
+| Watchlist | `/watchlist` | Batch management + cron scheduling |
 
 ---
 
 ## 🎭 18 Investment Masters
 
-> Four schools. Value / Growth / Macro / China. Chinese masters respond **in Chinese**.
-
 | School | Masters |
-|--------|---------|
-| 🏦 Classic Value | Warren Buffett · Benjamin Graham · Charlie Munger · Philip Fisher |
-| 🚀 Growth & Innovation | Peter Lynch · Cathie Wood · Peter Thiel · Leopold Aschenbrenner |
-| 🌍 Macro & Cycles | Ray Dalio · George Soros · Howard Marks · ARPS Crypto/Gold |
-| 🇨🇳 China Value | Duan Yongping · Zhang Lei (Hillhouse) · Li Lu (Himalaya) · Dan Bin · Dayu BTCdayu |
-| ⚙️ Special | Serenity (AI compute supply chain) |
-
-Each master has a dedicated [Hermes Skill](src/skills/) for direct persona chat.
+|---|---|
+| 🏦 Value | Buffett · Graham · Munger · Fisher |
+| 🚀 Growth | Lynch · Cathie Wood · Thiel · Aschenbrenner |
+| 🌍 Macro | Dalio · Soros · Marks · ARPS |
+| 🇨🇳 China Value | Duan Yongping · Zhang Lei · Li Lu · Dan Bin · Dayu |
+| ⚙️ Special | Serenity (AI supply chain) |
 
 ---
 
-## 🔌 Deploy Anywhere
+## 🔌 Integrations
 
-| Platform | How |
-|----------|-----|
-| **Web Dashboard** | `augur serve` |
-| **Claude Desktop** | MCP config → `augur mcp-server` |
-| **Hermes Agent** | `/skill augur-buffett` |
-| **Claude Code** | `.mcp.json` auto-discovery (clone and go) |
-| **OpenClaw** | YAML manifest auto-registration |
-| **Telegram / Slack** | `augur telegram` / `augur slack` |
-
-### 13 MCP Tools
-
-```json
-// Claude Desktop
-{
-  "mcpServers": {
-    "augur": { "command": "augur", "args": ["mcp-server"] }
-  }
-}
-```
-
-| Tool | Purpose |
+| Platform | Method |
 |------|---------|
-| `mcp_augur_analyze` | All-master or single-master analysis |
-| `mcp_augur_consensus` | Weighted consensus + Kelly position |
-| `mcp_augur_committee` | Committee (independent opinions + verdict) |
-| `mcp_augur_debate` | Multi-round structured debate |
-| `mcp_augur_workflow` | Full analysis pipeline |
-| `mcp_augur_workspace_get` | 🆕 Read your terminal config |
-| `mcp_augur_workspace_set` | 🆕 Modify your terminal config |
-| `mcp_augur_workspace_profiles` | 🆕 Manage profiles |
-| `mcp_augur_fetch` | Live market data |
-| `mcp_augur_sentiment` | Social sentiment analysis |
-| `mcp_augur_create_persona` | Create a custom master |
-| `mcp_augur_list_personas` | List all masters |
-| `mcp_augur_configure` | Set per-master model params |
+| **Web Dashboard** | `augur serve` |
+| **Claude Desktop** | MCP → `augur mcp-server` |
+| **External Agents** | `augur://evidence/{id}` · `augur://runs/{id}` |
 
 ---
 
-## 💻 CLI Reference
+## 💻 CLI Commands
 
 ```bash
 # Analysis
-augur analyze AAPL                              # 18-master consensus
-augur analyze AAPL --persona buffett            # single master
-augur consensus NVDA                            # weighted consensus + Kelly
-augur report AAPL -o report.md                  # deep-dive report
-augur committee AAPL -q "Is the moat widening or narrowing?"  # investment committee
-augur chat AAPL --persona buffett               # quick chat
-augur workflow TSLA --steps fetch,analyze,consensus,committee
+augur analyze AAPL · augur workflow TSLA · augur committee AAPL
+
+# Export (v11)
+augur export AAPL --format md | pdf | evidence-pack
+
+# Skills (v11)
+augur skill run earnings-prep --ticker AAPL
+augur skill run filing-delta --ticker AAPL
+
+# Valuation (v11)
+augur valuation AAPL
 
 # Data
-augur fetch AAPL                                # live quote + fundamentals
-augur sentiment AAPL                            # social sentiment
-augur guidance AAPL                             # AI-extracted management outlook (opt-in, see below)
+augur fetch AAPL · augur sentiment AAPL · augur backtest AAPL
 
-# Dashboard
-augur serve --port 8000 --open
-
-# Monitoring
-augur watch AAPL NVDA TSLA                     # 60s refresh
-augur watch NVDA --alert-above 7.5             # score threshold alert
-
-# Portfolio & backtest
-augur portfolio AAPL NVDA TSLA                 # Kelly allocation
-augur backtest AAPL --days 30                  # real historical backtest
-augur ic-report                                # Agent IC leaderboard
-
-# Watchlist + scheduling
-augur watchlist-add AAPL --pe 30 --roe 0.55
-augur watchlist-show
-augur cron-run                                  # run watchlist analysis once
-augur cron-start                                # start the scheduler daemon
-
-# Agent
-augur mcp-server                               # stdio MCP server
-augur skills / augur skills --school value
-augur inject-soul -p my_profile --persona buffett  # inject a master's persona into an agent config
-
-# Bots
-augur telegram / augur slack / augur wechat / augur lark
-
-# Update
-augur update                                    # git pull + reinstall (git clone installs only)
-
-# Troubleshooting
-augur doctor                                    # Environment check: SSL/TLS, API keys, data source connectivity, learning data progress
-augur doctor --offline                          # Same, but skips real network calls
+# Dashboard · Monitor · Bots
+augur serve · augur watch · augur cron-run · augur telegram
 ```
 
 ---
 
-## 🎨 Custom Personas
+## 🗺️ Docs
 
-```bash
-# Option 1: Dashboard no-code builder
-augur serve  →  http://localhost:8000/create-persona
-
-# Option 2: YAML
-cat > personas/custom/my_quant.yaml << EOF
-agent_id: my_quant
-name: "My Quant Strategy"
-philosophy: ["momentum", "value", "low_vol"]
-scoring_weights:
-  momentum: 0.40
-  value: 0.35
-  safety: 0.25
-EOF
-augur analyze AAPL --persona my_quant
-
-# Option 3: MCP
-mcp_augur_create_persona(yaml_content="agent_id: ...")
-```
-
----
-
-## 🗺️ Development roadmap
-
-See [docs/ROADMAP.md](docs/ROADMAP.md) for the project review, repository responsibilities, and seven-day v11 Release Candidate sprint; see [docs/PRODUCT_DIRECTIONS.md](docs/PRODUCT_DIRECTIONS.md) for the post-v11 feature and product direction map.
+| Document | Content |
+|---|---|
+| [ROADMAP.md](docs/ROADMAP.md) | 7-day v11 RC sprint + backlog |
+| [PRODUCT_DIRECTIONS.md](docs/PRODUCT_DIRECTIONS.md) | Product direction + feature map |
+| [DIFFERENTIATION_STRATEGY.md](docs/DIFFERENTIATION_STRATEGY.md) | Competitive differentiation |
+| [RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md) | Full release notes + migration guide |
+| [schema-reference.md](docs/schema-reference.md) | Schema field reference |
+| [skills-guide.md](docs/skills-guide.md) | Skill tutorial + security model |
 
 ---
 
 ## 📝 Changelog
 
-> Non-technical release notes: [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md)
-
 <details open>
-<summary><strong>v10.15.0 — Public sync release (current)</strong></summary>
+<summary><strong>v11.0.0-rc1 — Research Memory System</strong></summary>
 
-Three and a half weeks of development since the last public release (v10.0.0, 2026-06-29):
+Foundation rebuild: 431 tests, 14 new modules, 116 files.
 
-- 🆕 **Real SEC EDGAR fundamentals**: PE/ROE/margins etc. now come from official 10-K/10-Q data, historical depth back to ~2011; new insider-trading signal, institutional-holdings signal, `augur guidance` (LLM-extracted management outlook, opt-in)
-- ✅ **Three credibility fixes**: MetaModel dilution zeroed out, backtests default to real historical data, learning engine actually accumulates data now; also honestly retired two unvalidated mechanisms (X sentiment weight, hand-picked regime multipliers)
-- 🆕 **`augur doctor` + connectivity history + weekly real-network smoke test**: one-shot local environment diagnostic, 7-day connectivity trend auto-surfaces dead data sources
-- 🆕 **Two new research scripts**: factor-level attribution (`factor_attribution.py`), `rolling_ic.json` generator; the first full real-data runs surfaced an honest limitation -- the historical backtest-replay pipeline is missing real historical data for insider/institutional ownership percentage, see `docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md`
-- 🔧 **Engineering health**: `cli.py`/`dashboard/` splits completed, fixed a real packaging bug (the wheel used to be missing the entire dashboard directory) + a real avatar-image path bug (every avatar 404ing site-wide, only found by actually opening the app in a browser)
-- ✅ 2461 tests passing (2136 at the v10.0.0 release)
-
-Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
+- Schema contracts: EvidenceItem (three-time), Claim, StepResult, RunBundle, SkillSpec v1
+- Research loop: Thesis Journal → Filing Delta → Disagreement Map → Guidance Tracker → Research Inbox
+- Valuation engine: pure Decimal DCF + WACC + Scenario Lab
+- Eval: Chronological Evaluation Lab + Persona Ablation + OOS harness
+- UI: ⌘K palette · dark mode · evidence graph · thesis page · skeleton/empty-state
+- Trust: PBKDF2 600k · SQLite WAL · calibration labels · 431 hermetic tests
 </details>
 
 <details>
-<summary><strong>v10.14.0 — rolling_ic.json generator</strong></summary>
+<summary><strong>v10.x and earlier</strong></summary>
 
-- 🆕 **`scripts/generate_rolling_ic.py`**: the consensus engine has always had a "dynamically reweight by rolling IC" blend, but nothing ever generated `feedback/rolling_ic.json`, so it silently no-opped -- the same gap R5 fixed for `agent_correlation.json`. This script computes each master's real cross-sectional IC from historical data and writes it as weights
-- ✅ 2460 tests passing
-
-Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
-</details>
-
-<details>
-<summary><strong>v10.13.0 — Factor-level attribution analysis (research script)</strong></summary>
-
-- 🆕 **`scripts/factor_attribution.py`**: new research script computing cross-sectional rank-IC for each of the ~70-90 named factors across the 18 masters' metadata (which factors actually predict future returns), with a built-in split-half stability check to guard against multiple-comparison false positives (the same trap the regime-weight episode ran into before) -- only factors that agree in sign and clear a minimum strength in both halves of the window count as stable candidates; everything else is still printed but explicitly flagged as untrustworthy
-- ✅ 2449 tests passing
-
-Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
-</details>
-
-<details>
-<summary><strong>v10.12.0 — Weekly real-network data-source smoke test</strong></summary>
-
-- 🆕 **Weekly automated smoke test**: new scheduled GitHub Actions job (every Monday) does a real network connectivity check against SEC EDGAR and yfinance -- EDGAR failing fails the job (SEC rarely blocks CI IPs, so a failure is a real signal), yfinance failing only warns without failing the job (Yahoo's rate-limiting/blocking of cloud IP ranges is too common to treat as a real regression)
-- ✅ 2439 tests passing
-
-Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
-</details>
-
-<details>
-<summary><strong>v10.11.0 — Data-source connectivity history</strong></summary>
-
-- 🆕 **`augur doctor` now tracks a 7-day connectivity history**: every `augur doctor` run records that probe's outcome locally (`~/.augur/provider_stats.json`), building up a short trend -- a dead endpoint like stooq's would now show up as "0/7 reachable" in `augur doctor` instead of requiring someone to notice by accident
-- ✅ 2427 tests passing
-
-Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
-</details>
-
-<details>
-<summary><strong>v10.10.0 — augur doctor environment check</strong></summary>
-
-- 🆕 **`augur doctor`**: one-shot local environment diagnostic -- checks the Python/SSL toolchain for known bad combinations that break yfinance (e.g. LibreSSL), optional API key configuration, live data-source connectivity, and learning-engine data accumulation progress; `--offline` skips real network calls
-- ✅ 2408 tests passing
-
-Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
-</details>
-
-<details>
-<summary><strong>v10.9.0 — Credibility overhaul + real SEC EDGAR data</strong></summary>
-
-- ✅ **Consensus is no longer diluted by half**: the never-validated MetaModel median blend defaults to zero weight
-- ✅ **Backtests default to real historical data**: Dashboard/CLI no longer show synthetic data by default (`--demo` opt-in, clearly labeled)
-- ✅ **Learning loop actually accumulates data**: predictions persist immediately + a scheduled job auto-resolves due predictions
-- 🆕 **Real SEC EDGAR filings**: PE/ROE/margins etc. now come from official 10-K/10-Q data, historical depth back to ~2011 (US tickers/ADRs)
-- 🆕 **Insider buying signal**: tracks executives'/directors' real trailing-90-day open-market trades
-- 🆕 **Institutional flow signal**: tracks quarterly position changes at Berkshire Hathaway, Renaissance Technologies, Bridgewater, and more
-- 🆕 **`augur guidance`** (opt-in): LLM-extracted management outlook sentiment + forward guidance from the latest filing
-- 🔧 **Sentiment analysis fix**: removed the always-fake X (Twitter) 20% weight from the calculation
-- 🔧 **Regime weights honestly retired**: real-data validation found no clear benefit, so the unvalidated hand-picked rules are disabled
-- ✅ 2388 tests passing
-
-Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
-</details>
-
-<details>
-<summary><strong>v10.0.0 — Terminal Workspace + Agentic Workflow + 13 MCP Tools + WebSocket Streaming</strong></summary>
-
-**v8 → v10 upgrade highlights:**
-
-- 🆕 **Terminal Workspace**: Bloomberg-style multi-profile layout system with preset filters and master-subset controls
-- 🆕 **3 workspace MCP tools**: agents can read/write your terminal config (`workspace_get/set/profiles`)
-- 🆕 **`augur_workflow`**: 6-step pipeline, single-step failure isolation, steps follow your active Profile
-- 🆕 **WebSocket streaming**: `/ws/workspace` state broadcast + `/ws/workflow` per-step progress
-- 🆕 **augur-terminal meta-skill**: Hermes unified entry point — 13 tools, 15 pages, 4 presets
-- 🆕 **Hermes committee.yaml**: Committee Chair agent role
-- ✅ Consensus engine: industry weights · regime routing · MetaModel · point-in-time fundamentals
-- ✅ Dashboard: 4-language i18n · History heatmap · PWA · keyboard shortcuts · CSV export
-- ✅ 2136 tests passing
-</details>
-
-<details>
-<summary><strong>v9.0.x — Hermes Agent + Committee System</strong></summary>
-
-- 19 Hermes Skills; Chinese masters in Chinese
-- 9 MCP tools (committee / sentiment / create_persona / debate)
-- Committee presets + Hermes setup guide page
-- PWA install + WebSocket Ticker Tape + Chat data cards
-</details>
-
-<details>
-<summary><strong>v8.2.x — HD-2D Design System + Optimizer + AI Chat</strong></summary>
-
-- Markowitz efficient frontier · Rules→Bot push · real LLM chat
-- HD-2D design system: ExecCard / OracleSays / ScorecardGrid
-- WCAG AA compliance · thread safety · scanner hardening
+v10: Bloomberg-style terminal, 6-stage workflow, 13 MCP tools · v9: Hermes Agent · v8: HD-2D design system
 </details>
 
 ---
@@ -386,6 +195,6 @@ Full details in [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md).
 
 MIT License · Built with ❤️ by <a href="https://github.com/BruceLanLan">BruceLanLan</a>
 
-*For educational purposes only — not investment advice*
+*For educational and research purposes only. Not investment advice.*
 
 </div>
