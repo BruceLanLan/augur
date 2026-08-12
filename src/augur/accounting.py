@@ -416,8 +416,13 @@ class AccountingReviewer:
                 return fallback
             return num / den
 
+        ta = financials.get("total_assets", 0.0)
+        if ta == 0:
+            # Total assets is the denominator for four of five ratios;
+            # a meaningful Z-Score cannot be computed.
+            return 0.0
+
         wc = financials.get("working_capital", 0.0)
-        ta = financials.get("total_assets", 1.0)
         re_ = financials.get("retained_earnings", 0.0)
         ebit = financials.get("ebit", 0.0)
         mcap = financials.get("market_cap", 0.0)
