@@ -766,3 +766,48 @@ html.dark button:disabled {
 .skip-link:focus {
   top: 0;
 }
+
+/* ============ Dark Mode Detail Polish ============ */
+[data-theme="dark"] {
+  --bg: #1a1a2e;
+  --bg-card: #16213e;
+  --bg-muted: #0f3460;
+  --bg-hover: #1a3a5c;
+  --text: #e0e0e0;
+  --text-muted: #8892b0;
+  --border: #2a2a4a;
+  --accent: #ff6b35;
+}
+
+/* Dark mode: tables */
+[data-theme="dark"] table { border-color: #2a2a4a; }
+[data-theme="dark"] th { background: #0f3460; color: #e0e0e0; }
+[data-theme="dark"] td { border-color: #2a2a4a; color: #e0e0e0; }
+[data-theme="dark"] tr:hover { background: #1a3a5c; }
+
+/* Dark mode: forms */
+[data-theme="dark"] input, [data-theme="dark"] select, [data-theme="dark"] textarea {
+  background: #0f3460; color: #e0e0e0; border-color: #2a2a4a;
+}
+[data-theme="dark"] input::placeholder { color: #8892b0; }
+
+/* Dark mode: code blocks */
+[data-theme="dark"] code, [data-theme="dark"] pre {
+  background: #0f3460; color: #7fd1ff; border-color: #2a2a4a;
+}
+
+/* Dark mode: modals */
+[data-theme="dark"] .modal-content, [data-theme="dark"] .acp-dialog {
+  background: #16213e; border-color: #2a2a4a;
+}
+
+/* Dark mode: cards and panels */
+[data-theme="dark"] .tj-card, [data-theme="dark"] .eq-item, [data-theme="dark"] .ib-item,
+[data-theme="dark"] .sc-item, [data-theme="dark"] .sc-stat, [data-theme="dark"] .sc-controls {
+  background: #16213e; border-color: #2a2a4a;
+}
+
+/* Smooth theme transition */
+body, .tj-card, .eq-item, .ib-item, .sc-item, input, select, textarea, table, code {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
