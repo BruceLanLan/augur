@@ -87,6 +87,25 @@ v11 是一次**从 "AI 报告生成器" 到 "Research Memory System" 的全面�
 | `guidance_tracker.py` | Guidance 区间追踪 + 准确率 | "管理层上次说 Q4 营收 92-96B，实际呢？" |
 | `research_inbox.py` | 事件聚合优先队列 | 财报临近 + filing 变化 + thesis 需要 review → 一个 inbox |
 | `risk_review.py` | Risk factor + covenant review | 新增/升级/删除的风险因素 + 债务约束检查 |
+| `debate_engine.py` | Evidence-seeking Debate | 4-stage: claim→challenge→requery→revision |
+| `scorecard.py` | Post-earnings Scorecard + Language Diff | 事前预测 vs 实际结果 + 管理层措辞变化检测 |
+| `capital_allocation.py` | Capital Allocation + Peer Comparison | 回购/分红/M&A/capex + 同行业对标 |
+| `questions.py` | Open Questions Queue + Templates | 跨事件保留未解决问题 + 可复用研究 SOP 模板 |
+| `change_ledger.py` | Cross-quarter Change Ledger | 6 分类跨季度变更账本 |
+| `citation_queue.py` | Citation Correction Queue | 用户纠错→回归测试语料 |
+| `coverage_health.py` | Coverage Health + Promotion Gate | 字段级覆盖分析 + 实验→默认晋级 |
+| `provider_health.py` | Provider Health Dashboard | 数据源延迟/成功率/覆盖跟踪 |
+| `freshness.py` + `cache_health.py` | Data Freshness + EDGAR 缓存健康 | 陈旧检测 + 缓存统计 |
+| `relative_val.py` | Relative Valuation | 同行 P/E/P/B/P/S 倍数 + 分位数 |
+| `cost_budget.py` | Cost/Latency Budgeting | 每步 token/成本追踪 |
+| `team_audit.py` | Team Audit | 团队操作审计日志 |
+| `compatibility.py` | Compatibility Badge | Skill/Provider 版本兼容矩阵 |
+| `prompt_eval.py` | Prompt/Model Evaluation | Prompt 变体对比 + Factor Lab |
+| `accounting.py` | Accounting Quality | Beneish M-Score + Altman Z-Score |
+| `ownership.py` | Insider + Institutional | 内部人集群 + 机构持仓变化 |
+| `alerts.py` | Material Catalyst Alerts | 财报/filing/内部人变化提醒 |
+| `covenant.py` | Debt Covenant + KPI Model | 债务约束检查 + 单位经济模型 |
+
 | `scorecard.py` | Post-earnings Scorecard + Language Diff | 事前预测 vs 实际结果 + 管理层措辞变化检测 |
 | `capital_allocation.py` | Capital Allocation + Peer Comparison | 回购/分红/M&A/capex + 同行业对标 |
 | `questions.py` | Open Questions Queue + Templates | 跨事件保留未解决问题 + 可复用研究 SOP 模板 |
