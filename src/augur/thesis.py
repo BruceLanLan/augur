@@ -255,6 +255,69 @@ class ThesisDelta:
     overall_assessment: str = "intact"
 
 
+
+
+def format_thesis_delta_report(
+    thesis: Thesis,
+    delta: ThesisDelta,
+) -> str:
+    """Generate a human-readable auto report from a ThesisDelta.
+
+    Produces a Markdown report with sections for fact changes, valuation
+    changes, language changes, and triggered falsification conditions.
+    """
+    lines: List[str] = []
+    lines.append(f"# Thesis Review: {thesis.ticker}")
+    lines.append("")
+    lines.append(f"**Statement**: {thesis.statement}")
+    lines.append("")
+    lines.append(f"**Assessment**: `{delta.overall_assessment}`")
+    lines.append("")
+
+    if delta.fact_changes:
+        lines.append("## Fact Changes")
+        lines.append("")
+        for change in delta.fact_changes:
+            field = change.get("field", "?")
+            before = change.get("before", "—")
+            after = change.get("after", "—")
+            lines.append(f"- **{field}**: {before} → {after}")
+        lines.append("")
+
+    if delta.valuation_changes:
+        lines.append("## Valuation Changes")
+        lines.append("")
+        for change in delta.valuation_changes:
+            field = change.get("field", "?")
+            before = change.get("before", "—")
+            after = change.get("after", "—")
+            lines.append(f"- **{field}**: {before} → {after}")
+        lines.append("")
+
+    if delta.language_changes:
+        lines.append("## Language Changes")
+        lines.append("")
+        for change in delta.language_changes:
+            field = change.get("field", "?")
+            before = change.get("before", "—")
+            after = change.get("after", "—")
+            lines.append(f"- **{field}**: {before} → {after}")
+        lines.append("")
+
+    if delta.falsification_triggered:
+        lines.append("## ⚠️ Falsification Triggered")
+        lines.append("")
+        for cond in delta.falsification_triggered:
+            lines.append(f"- {cond}")
+        lines.append("")
+    else:
+        lines.append("## Falsification")
+        lines.append("")
+        lines.append("No falsification conditions triggered.")
+        lines.append("")
+
+    lines.append(f"*Compared {delta.previous_run_id} → {delta.new_run_id}*")
+    return "\n".join(lines)
 def compute_thesis_delta(
     thesis: Thesis,
     prev_run: dict,
@@ -295,8 +358,12 @@ def compute_thesis_delta(
         else:
             fact_changes.append(change)
 
-    # --- deep scan of nested dicts for extra fact/valuation signals --------
-    _deep_scan(prev_run, new_run, fact_changes, valuation_changes, language_changes)
+    # --- deep scan ONLY nested dict values (top level already covered) ----
+    for key in sorted(all_keys):
+        before = prev_run.get(key)
+        after = new_run.get(key)
+        if isinstance(before, dict) and isinstance(after, dict) and before != after:
+            _deep_scan(before, after, fact_changes, valuation_changes, language_changes, prefix=key)
 
     # --- falsification check -----------------------------------------------
     new_run_text = json.dumps(new_run, default=str).lower()

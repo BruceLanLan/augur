@@ -243,6 +243,18 @@ def _run_workspace_profiles_tool(
         return f"Error: {e}"
 
 
+def _run_decision_resource(decision_id: str) -> str:
+    """Execute augur://decisions/{decision_id} resource logic (testable without FastMCP)."""
+    from dataclasses import asdict
+
+    from augur.thesis import DecisionLog
+
+    decision = DecisionLog().get(decision_id)
+    if decision is None:
+        return json.dumps({"error": "decision not found", "decision_id": decision_id})
+    return json.dumps(asdict(decision), indent=2, ensure_ascii=False)
+
+
 def _build_context(ticker: str, pe: float = 0, pb: float = 0, roe: float = 0,
                    gross_margins: float = 0, revenue_growth: float = 0,
                    debt_ratio: float = 0, fcf: float = 0, market_cap: float = 0,
@@ -881,6 +893,11 @@ def create_server():
             except Exception:
                 continue
         return json.dumps({"error": "thesis not found", "thesis_id": thesis_id})
+
+    @mcp.resource("augur://decisions/{decision_id}")
+    def get_decision_resource(decision_id: str) -> str:
+        """Read-only access to a Decision by ID."""
+        return _run_decision_resource(decision_id)
 
     @mcp.resource("augur://ledger/{ticker}/{quarter}")
     def get_ledger_resource(ticker: str, quarter: str) -> str:

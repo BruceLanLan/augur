@@ -18,8 +18,11 @@ workflow:
   - id: fetch_form4
     uses: sec.filings.read
   - id: cluster_detect
-    uses: report.insider_clusters
+    uses: ownership.cluster_detect
     needs: [fetch_form4]
+  - id: report
+    uses: report.insider_cluster
+    needs: [cluster_detect]
 outputs_schema:
   required: [run_id, cluster_report, evidence_manifest]
 evals:

@@ -3,8 +3,6 @@
 
 import json
 
-import pytest
-
 from augur.change_ledger import (
     CATEGORIES,
     ChangeLedger,

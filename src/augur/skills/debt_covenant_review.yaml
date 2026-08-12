@@ -19,8 +19,11 @@ workflow:
   - id: fetch_filings
     uses: sec.filings.read
   - id: covenant_check
-    uses: report.covenant_review
+    uses: covenant.review
     needs: [fetch_filings]
+  - id: report
+    uses: report.covenant_review
+    needs: [covenant_check]
 outputs_schema:
   required: [run_id, covenant_report, evidence_manifest]
 evals:

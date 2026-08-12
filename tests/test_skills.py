@@ -18,6 +18,8 @@ from augur.skills.loader import load_skill, load_builtin_skills
 SKILLS_DIR = Path(__file__).resolve().parent.parent / "src" / "augur" / "skills"
 EARNINGS_PREP = SKILLS_DIR / "earnings_prep.yaml"
 FILING_DELTA = SKILLS_DIR / "filing_delta.yaml"
+DEBT_COVENANT = SKILLS_DIR / "debt_covenant_review.yaml"
+INSIDER_CLUSTER = SKILLS_DIR / "insider_cluster_review.yaml"
 
 
 # ---------------------------------------------------------------------------
@@ -25,10 +27,15 @@ FILING_DELTA = SKILLS_DIR / "filing_delta.yaml"
 # ---------------------------------------------------------------------------
 
 class TestLoadBuiltinSkills:
-    def test_loads_both_fixtures(self):
+    def test_loads_all_four_fixtures(self):
         specs = load_builtin_skills()
         ids = {s.id for s in specs}
-        assert ids == {"earnings-prep", "filing-delta"}
+        assert ids == {
+            "earnings-prep",
+            "filing-delta",
+            "debt-covenant-review",
+            "insider-cluster-review",
+        }
 
     def test_every_spec_is_valid_skill_spec(self):
         for spec in load_builtin_skills():
