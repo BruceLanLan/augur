@@ -9,8 +9,11 @@ from augur.data_dir import get_data_dir
 
 @dataclass
 class FreshnessRecord:
-    key: str; last_updated: str; max_age_hours: float = 24.0
-    is_stale: bool = False; age_hours: float = 0.0
+    key: str
+    last_updated: str
+    max_age_hours: float = 24.0
+    is_stale: bool = False
+    age_hours: float = 0.0
 
 class FreshnessTracker:
     def __init__(self, path: Path = None):
@@ -21,7 +24,9 @@ class FreshnessTracker:
     def touch(self, key: str, max_age_hours: float = 24.0) -> FreshnessRecord:
         now = datetime.now(timezone.utc).isoformat()
         r = FreshnessRecord(key=key, last_updated=now, max_age_hours=max_age_hours)
-        self._records[key] = r; self._save(); return r
+        self._records[key] = r
+        self._save()
+        return r
 
     def check(self, key: str) -> Optional[FreshnessRecord]:
         r = self._records.get(key)
