@@ -317,4 +317,11 @@ function recordDecision(e) {
   });
 }
 document.addEventListener('DOMContentLoaded', function() { loadDecisions(); });
+
+// Auto-refresh every 60s to pick up new falsification scans / outcomes
+setInterval(function() {
+  loadTheses();
+  loadQuestions();
+  loadDecisions();
+}, 60000);
 </script>
