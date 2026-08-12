@@ -58,7 +58,7 @@ class TestReplayRecordFieldsShared:
     def test_a_field_not_in_the_shared_list_is_not_populated(self):
         record = {"insider_ownership": 99.0, "date": "2026-01-01"}
         ctx = _record_to_market_context("AAPL", record)
-        assert ctx.insider_ownership == 0  # MarketContext default, not 99.0
+        assert ctx.insider_ownership is None  # v11 missingness: None, not 0
 
 
 class _FakeAgent:

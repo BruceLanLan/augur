@@ -286,5 +286,18 @@
     "save_cron": "保存定时配置",
     "run_now": "立即执行一次",
     "coming_soon": "即将支持"
-  }
+  },
+  "inbox-title": "研究收件箱",
+  "inbox-empty": "全部处理完毕",
+  "inbox-empty-sub": "没有待处理的提醒或事件",
+  "inbox-filter-ticker": "按股票筛选",
+  "inbox-filter-type": "按类型筛选",
+  "inbox-filter-priority": "按优先级筛选",
+  "inbox-save-view": "保存视图",
+  "inbox-saved-views": "已保存视图",
+  "inbox-no-saved-views": "还没有保存的视图",
+  "inbox-reset": "重置筛选",
+  "inbox-readiness": "就绪度",
+  "nav-valuation": "估值实验室",
+  "valuation-title": "DCF 估值实验室"
 }

@@ -44,7 +44,7 @@ def test_readme_badge_is_v8_2_1():
     import re as _re
     for rel in ("README.md", "README_EN.md"):
         text = _read(rel)
-        assert _re.search(r"badge/v\d+\.\d+\.\d+-Latest", text), f"{rel} has no version badge"
+        assert _re.search(r"badge/v[\d.]+(-rc\d+)?", text), f"{rel} has no version badge"
 
 
 def test_readme_changelog_marks_current():

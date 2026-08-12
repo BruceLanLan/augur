@@ -171,7 +171,7 @@ augur serve · augur watch · augur cron-run · augur telegram
 ## 📝 Changelog
 
 <details open>
-<summary><strong>v11.0.0-rc1 — Research Memory System</strong></summary>
+<summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
 
 Foundation rebuild: 431 tests, 14 new modules, 116 files.
 
