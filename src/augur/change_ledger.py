@@ -308,6 +308,8 @@ class ChangeLedgerBuilder:
             if p_f == 0 and n_f == 0:
                 continue
             change_pct = ChangeLedgerBuilder._change_pct(p_f, n_f)
+            if abs(change_pct) < 0.01:
+                continue  # unchanged metric — skip entirely
             material = abs(change_pct) >= _MATERIALITY_THRESHOLD_PCT
 
             entries.append(LedgerEntry(
@@ -359,6 +361,27 @@ class ChangeLedgerBuilder:
                 evidence_refs=[ChangeLedgerBuilder._text_ref("risk", text)],
             ))
         return entries
+
+
+    # ------------------------------------------------------------------
+    # Disagreement helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _consensus_strength(d: Any) -> str:
+        """Extract consensus strength from a disagreement dict."""
+        if isinstance(d, dict):
+            return str(d.get("consensus_strength", d.get("strength", "unknown")))
+        return "unknown"
+
+    @staticmethod
+    def _conflict_count(d: Any) -> int:
+        """Count conflict points in a disagreement dict."""
+        if isinstance(d, dict):
+            conflicts = d.get("conflict_points", d.get("conflicts", []))
+            if isinstance(conflicts, list):
+                return len(conflicts)
+        return 0
 
     # ------------------------------------------------------------------
     # Disagreement diff
