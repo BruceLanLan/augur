@@ -23,3 +23,14 @@ def build_compatibility_report() -> str:
     lines.append("")
     lines.append(f"Total skills: {len(matrix.all_skills())}")
     return "\n".join(lines)
+
+
+import click
+
+from augur.cli_commands.compat_cmd import build_compatibility_report
+
+
+@click.command("compat")
+def compat_cmd():
+    """Show skill/provider compatibility matrix."""
+    click.echo(build_compatibility_report())

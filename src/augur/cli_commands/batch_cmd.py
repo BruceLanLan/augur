@@ -41,3 +41,16 @@ def run_batch_analyze(tickers: List[str], max_workers: int = 5) -> str:
     lines.append("")
     lines.append(f"{len(contexts)}/{len(tickers)} tickers fetched")
     return "\n".join(lines)
+
+
+import click
+
+from augur.cli_commands.batch_cmd import run_batch_analyze
+
+
+@click.command("batch")
+@click.argument("tickers", nargs=-1, required=True)
+@click.option("--workers", default=5, help="Max concurrent fetches")
+def batch_cmd(tickers, workers):
+    """Analyze multiple tickers in parallel."""
+    click.echo(run_batch_analyze(list(tickers), max_workers=workers))

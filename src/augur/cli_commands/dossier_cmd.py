@@ -68,3 +68,17 @@ def run_earnings_dossier(ticker: str, event_id: str = "", as_of: str = "", outpu
     if output_format == "markdown":
         return "\n\n".join(f"## {s}" if s.startswith("──") else s for s in sections)
     return dossier
+
+
+import click
+
+from augur.cli_commands.dossier_cmd import run_earnings_dossier
+
+
+@click.command("dossier")
+@click.argument("ticker")
+@click.option("--event-id", default="", help="Earnings event ID")
+@click.option("--format", "fmt", default="text", type=click.Choice(["text", "markdown"]))
+def dossier_cmd(ticker, event_id, fmt):
+    """Generate a pre-earnings research dossier."""
+    click.echo(run_earnings_dossier(ticker, event_id=event_id, output_format=fmt))

@@ -51,3 +51,20 @@ def run_valuation(ticker: str, fcf: float = 0, growth: float = 0.08, wacc: float
             lines.append("  Verdict: fairly valued within ±20% band")
 
     return "\n".join(lines)
+
+
+import click
+
+from augur.cli_commands.valuation_cmd import run_valuation
+
+
+@click.command("valuation")
+@click.argument("ticker")
+@click.option("--fcf", type=float, default=0.0, help="Free cash flow (auto-fetched if 0)")
+@click.option("--growth", type=float, default=0.08, help="Stage-1 growth rate")
+@click.option("--wacc", type=float, default=0.10, help="Discount rate")
+@click.option("--shares", type=float, default=0.0, help="Shares outstanding (auto-fetched if 0)")
+@click.option("--net-debt", type=float, default=0.0, help="Net debt")
+def valuation_cmd(ticker, fcf, growth, wacc, shares, net_debt):
+    """DCF valuation with fair-value vs market comparison."""
+    click.echo(run_valuation(ticker, fcf=fcf, growth=growth, wacc=wacc, shares=shares, net_debt=net_debt))
