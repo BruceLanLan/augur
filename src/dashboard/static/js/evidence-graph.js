@@ -742,7 +742,13 @@ window.renderDisagreementMap = function (map) {
       label: cp.claim ? cp.claim.slice(0, 40) : 'Conflict ' + (i + 1),
       type: 'conflict',
       x: nx, y: ny,
-      details: cp,
+      detail: [
+        cp.claim,
+        cp.bullish_personas && cp.bullish_personas.length ? 'Bull: ' + cp.bullish_personas.join(', ') : '',
+        cp.bearish_personas && cp.bearish_personas.length ? 'Bear: ' + cp.bearish_personas.join(', ') : '',
+        cp.information_that_would_resolve ? 'Resolves: ' + cp.information_that_would_resolve : '',
+        cp.impact ? 'Impact: ' + cp.impact : '',
+      ].filter(Boolean).join(' | '),
     });
     edges.push({ from: 'ticker', to: cid, type: 'conflict' });
 
