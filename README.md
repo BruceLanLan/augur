@@ -262,6 +262,9 @@ augur mcp-server · augur skills · augur telegram
 | [RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md) | v11 完整发布说明 + 迁移指南 |
 | [schema-reference.md](docs/schema-reference.md) | EvidenceItem/Claim/RunBundle/SkillSpec 字段参考 |
 | [skills-guide.md](docs/skills-guide.md) | Skill 使用教程 + 安全模型 + 自定义 Skill |
+| [api-reference-v11.md](docs/api-reference-v11.md) | Python API + REST + MCP 完整参考 |
+| [examples.md](docs/examples.md) | 10 个实战示例（研究闭环/估值/辩论/导出） |
+| [self-hosted-guide.md](docs/self-hosted-guide.md) | 自托管部署（Docker/systemd/nginx/备份） |
 | [COMPETITIVE_LANDSCAPE_SUPPLEMENT](docs/research/COMPETITIVE_LANDSCAPE_SUPPLEMENT_2026-08-12.md) | Mira/AI Berkshire/FinSight/LATO 等 8 个竞品深度分析 |
 | [FINANCIAL_PLATFORM_BENCHMARK](docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md) | OpenBB/Qlib/LEAN/TradingAgents 等生态融合方案 |
 
