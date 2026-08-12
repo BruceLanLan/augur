@@ -372,6 +372,25 @@
   .eq-kpi-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
+
+<!-- Saved Views (H03) shared styles -->
+<style>
+.saved-views-list { list-style: none; margin: 6px 0 0; padding: 0; }
+.saved-view-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 5px; cursor: pointer; font-size: 0.78rem; color: var(--text-primary, #e8e8f0); transition: background 0.15s; gap: 6px; }
+.saved-view-item:hover { background: var(--bg-hover, rgba(255,255,255,0.05)); }
+.saved-view-item.active { background: rgba(255,140,0,0.12); color: var(--accent-orange, #ff8c00); }
+.saved-view-item .view-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.saved-view-item .view-delete { opacity: 0; background: none; border: none; color: var(--signal-sell, #ff1744); cursor: pointer; font-size: 0.9rem; padding: 0 2px; line-height: 1; transition: opacity 0.15s; }
+.saved-view-item:hover .view-delete { opacity: 1; }
+.save-view-row { display: flex; gap: 6px; margin-top: 10px; }
+.save-view-input { flex: 1; padding: 6px 10px; background: var(--bg-primary, #0d1117); border: 1px solid var(--border-color, #333); border-radius: 5px; color: var(--text-primary, #e8e8f0); font-size: 0.78rem; font-family: var(--font-sans, Inter, sans-serif); }
+.save-view-input:focus { outline: none; border-color: var(--accent-orange, #ff8c00); }
+.save-view-btn { padding: 6px 12px; background: var(--accent-orange, #ff8c00); color: #000; border: none; border-radius: 5px; font-size: 0.75rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: opacity 0.15s; }
+.save-view-btn:hover { opacity: 0.85; }
+.inbox-filter-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-muted, #888); margin-bottom: 6px; font-weight: 600; }
+</style>
+
+<script src="/static/js/saved-views.js?v=11.0.0"></script>
 {% endblock %}
 
 {% block content %}
@@ -416,6 +435,21 @@
       </select>
     </div>
     <button type="button" class="btn btn-sm" onclick="loadEarningsQueue()">🔄 Refresh</button>
+  </div>
+</div>
+
+<!-- Saved Views (H03) -->
+<div class="card mb-20" id="saved-views-card">
+  <div class="inbox-filter-label">Saved Views</div>
+  <ul class="saved-views-list" id="saved-views-list">
+    <li class="text-muted" style="font-size:0.72rem; padding:6px 0;">No saved views yet</li>
+  </ul>
+  <div class="save-view-row">
+    <input class="save-view-input" id="save-view-name" type="text"
+           placeholder="View name…" maxlength="40"
+           aria-label="New view name"
+           onkeydown="if(event.key==='Enter')saveCurrentView()">
+    <button class="save-view-btn" onclick="saveCurrentView()" type="button">Save</button>
   </div>
 </div>
 
@@ -744,7 +778,27 @@ function generateDossier(ticker) {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
+  initSavedViews();
   loadEarningsQueue();
 });
+
+// ── Saved Views (H03) — delegates to saved-views.js ──
+function initSavedViews() {
+  augurSavedViews.init({
+    storageKey: 'augur-earnings-queue-views',
+    listElementId: 'saved-views-list',
+    captureState: function() {
+      return { lookahead: document.getElementById('eq-lookahead').value };
+    },
+    applyState: function(state) {
+      document.getElementById('eq-lookahead').value = state.lookahead || '60';
+      loadEarningsQueue();
+    }
+  });
+}
+
+function saveCurrentView() {
+  augurSavedViews.saveFromInput();
+}
 </script>
 {% endblock %}

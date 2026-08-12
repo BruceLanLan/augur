@@ -553,13 +553,11 @@ var SAMPLE_EVENTS = [
 
 // ── State ──
 var _dismissedIds = new Set();
-var _savedViews = [];
-var _activeViewId = null;
 
 // ── Init ──
 document.addEventListener('DOMContentLoaded', function() {
     loadDismissed();
-    loadSavedViews();
+    initSavedViews();
     renderAll();
 });
 
@@ -585,14 +583,16 @@ function saveDismissed() {
     _lsSet('augur-inbox-dismissed', Array.from(_dismissedIds));
 }
 
-// ── Saved Views (H03) ──
-function loadSavedViews() {
-    _savedViews = _lsGet('augur-inbox-views', []);
-    renderSavedViews();
-}
-
-function saveViewsToStorage() {
-    _lsSet('augur-inbox-views', _savedViews);
+// ── Saved Views (H03) — delegates to saved-views.js ──
+function initSavedViews() {
+    augurSavedViews.init({
+        storageKey: 'augur-inbox-views',
+        listElementId: 'saved-views-list',
+        captureState: getCurrentFilterState,
+        applyState: function(state) {
+            setFilterState(state);
+        }
+    });
 }
 
 function getCurrentFilterState() {
@@ -610,54 +610,7 @@ function setFilterState(state) {
 }
 
 function saveCurrentView() {
-    var nameInput = document.getElementById('save-view-name');
-    var name = (nameInput.value || '').trim();
-    if (!name) { showToast('Please enter a view name', 'warning'); return; }
-
-    var state = getCurrentFilterState();
-    // Generate a simple id
-    var id = 'view-' + Date.now();
-
-    _savedViews.push({ id: id, name: name, state: state });
-    saveViewsToStorage();
-    nameInput.value = '';
-    _activeViewId = id;
-    renderSavedViews();
-    showToast('View "' + name + '" saved', 'success');
-}
-
-function loadView(viewId) {
-    var view = _savedViews.find(function(v) { return v.id === viewId; });
-    if (!view) return;
-    _activeViewId = viewId;
-    setFilterState(view.state);
-    renderSavedViews();
-}
-
-function deleteView(viewId, e) {
-    if (e) { e.stopPropagation(); e.preventDefault(); }
-    _savedViews = _savedViews.filter(function(v) { return v.id !== viewId; });
-    if (_activeViewId === viewId) _activeViewId = null;
-    saveViewsToStorage();
-    renderSavedViews();
-}
-
-function renderSavedViews() {
-    var list = document.getElementById('saved-views-list');
-    if (!list) return;
-    if (_savedViews.length === 0) {
-        list.innerHTML = '<li class="text-muted" style="font-size:0.72rem; padding:6px 0;" data-i18n="inbox-no-saved-views">No saved views yet</li>';
-        return;
-    }
-    var html = '';
-    _savedViews.forEach(function(view) {
-        var activeClass = view.id === _activeViewId ? ' active' : '';
-        html += '<li class="saved-view-item' + activeClass + '" onclick="loadView(\'' + view.id + '\')" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();loadView(\'' + view.id + '\')}">' +
-            '<span class="view-name" title="' + escapeHtml(view.name) + '">' + escapeHtml(view.name) + '</span>' +
-            '<button class="view-delete" onclick="deleteView(\'' + view.id + '\', event)" aria-label="Delete view ' + escapeHtml(view.name) + '" title="Delete">×</button>' +
-            '</li>';
-    });
-    list.innerHTML = html;
+    augurSavedViews.saveFromInput();
 }
 
 // ── Filtering & Rendering ──
@@ -683,13 +636,14 @@ function getFilteredEvents() {
 function applyFilters() {
     // Clear active view when filters change manually
     var currentState = getCurrentFilterState();
-    if (_activeViewId) {
-        var activeView = _savedViews.find(function(v) { return v.id === _activeViewId; });
+    var activeId = augurSavedViews.getActiveViewId();
+    if (activeId) {
+        var views = augurSavedViews.getViews();
+        var activeView = views.find(function(v) { return v.id === activeId; });
         if (activeView) {
             var vs = activeView.state;
             if (vs.ticker !== currentState.ticker || vs.type !== currentState.type || vs.priority !== currentState.priority) {
-                _activeViewId = null;
-                renderSavedViews();
+                augurSavedViews.clearActive();
             }
         }
     }
@@ -700,8 +654,7 @@ function resetFilters() {
     document.getElementById('filter-ticker').value = '';
     document.getElementById('filter-type').value = 'all';
     document.getElementById('filter-priority').value = 'all';
-    _activeViewId = null;
-    renderSavedViews();
+    augurSavedViews.clearActive();
     applyFilters();
 }
 
