@@ -48,7 +48,8 @@ class FreshnessTracker:
         self._path.write_text(json.dumps({k: {"key": v.key, "last_updated": v.last_updated, "max_age_hours": v.max_age_hours} for k, v in self._records.items()}, indent=2), encoding="utf-8")
 
     def _load(self):
-        if not self._path.exists(): return
+        if not self._path.exists():
+            return
         try:
             for k, v in json.loads(self._path.read_text(encoding="utf-8")).items():
                 self._records[k] = FreshnessRecord(key=v.get("key", k), last_updated=v.get("last_updated", ""), max_age_hours=v.get("max_age_hours", 24.0))
