@@ -79,6 +79,26 @@ evidence-tracked research workflows.
   layout (mobile/tablet/desktop), dark mode CSS foundation.
 - **417 tests passing** (zero regressions from 240 baseline)
 
+
+### Stress Test Round 2-6 Additions (2026-08-12)
+
+- **Compatibility Badge** (G07): SkillCompatibility + ProviderCompatibility + semver constraint
+- **Relative Valuation** (D03): peer P/E/P/B/P/S/EV multiples + percentile ranking
+- **Citation Correction Queue** (A04): user-reported citation errors → regression corpus
+- **Coverage Health Center** (A05): field-level coverage analysis + stale data detection
+- **Earnings Queue Dashboard** (B01/B02): `/earnings` page with readiness indicators
+- **Research Inbox Dashboard** (H01): `/inbox` page with priority filtering
+- **Cost/Latency Budgeting** (F06): per-step token/cost tracking with model-specific rates
+- **Review & Comment** (E06): claim/evidence commenting system
+- **Team Audit** (H05): action logging for small-team accountability
+- **Promotion Gate** (F07): experimental→default feature promotion with eval criteria
+- **MCP Prompts Pack** (G03): earnings-prep, filing-delta, thesis-review, covenant-review
+- **Provider Health Dashboard** (G08): per-provider latency/success/coverage tracking
+- **Self-hosted Deployment Guide** (H04): Docker/systemd/nginx/backup documentation
+- **Saved Research Views** (H03): localStorage-based filter persistence
+- **OpenBB Schema Adapter** (G01): field mapping without runtime dependency
+- **UI**: mobile hamburger, dark mode complete, error boundary, skeleton loading, valuation page
+
 ## [10.15.0] - 2026-07-15
 
 Public release sync -- brings the public `augur` repo (last synced at
@@ -890,6 +910,26 @@ P1-1（Agent Peer Review backlog）：MCP Workspace 工具，闭合"终端定制
 
 ### Notes
 - Full suite: **2043 passed**, 0 failed (rounds 2–10); see `docs/iterations/agent5-fullsuite-SUMMARY.md`.
+
+
+### Stress Test Round 2-6 Additions (2026-08-12)
+
+- **Compatibility Badge** (G07): SkillCompatibility + ProviderCompatibility + semver constraint
+- **Relative Valuation** (D03): peer P/E/P/B/P/S/EV multiples + percentile ranking
+- **Citation Correction Queue** (A04): user-reported citation errors → regression corpus
+- **Coverage Health Center** (A05): field-level coverage analysis + stale data detection
+- **Earnings Queue Dashboard** (B01/B02): `/earnings` page with readiness indicators
+- **Research Inbox Dashboard** (H01): `/inbox` page with priority filtering
+- **Cost/Latency Budgeting** (F06): per-step token/cost tracking with model-specific rates
+- **Review & Comment** (E06): claim/evidence commenting system
+- **Team Audit** (H05): action logging for small-team accountability
+- **Promotion Gate** (F07): experimental→default feature promotion with eval criteria
+- **MCP Prompts Pack** (G03): earnings-prep, filing-delta, thesis-review, covenant-review
+- **Provider Health Dashboard** (G08): per-provider latency/success/coverage tracking
+- **Self-hosted Deployment Guide** (H04): Docker/systemd/nginx/backup documentation
+- **Saved Research Views** (H03): localStorage-based filter persistence
+- **OpenBB Schema Adapter** (G01): field mapping without runtime dependency
+- **UI**: mobile hamburger, dark mode complete, error boundary, skeleton loading, valuation page
 
 ## [10.15.0] - 2026-06-22
 
