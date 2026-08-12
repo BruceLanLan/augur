@@ -401,9 +401,30 @@ class AnalyzeResponse(BaseModel):
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
 
-# Mount static files
+# Mount static files with cache headers (immutable content hash + long TTL)
 STATIC_DIR = Path(__file__).parent / "static"
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
+
+
+@app.middleware("http")
+async def _static_cache_headers(request, call_next):
+    """Add Cache-Control headers for static assets.
+
+    JS/CSS/images are versioned via ?v= query strings, so they can be
+    cached aggressively. HTML responses are never cached.
+    """
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/static/") or path.startswith("/docs/images/"):
+        if path.endswith((".js", ".css", ".png", ".svg", ".jpg", ".ico", ".json")):
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        else:
+            response.headers["Cache-Control"] = "public, max-age=3600"
+    else:
+        response.headers["Cache-Control"] = "no-store"
+    return response
+
+
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Mount docs/images for avatars. Repo-root-relative -- "src/dashboard" ->
