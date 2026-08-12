@@ -12,6 +12,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+from augur.change_ledger import ChangeLedger, ChangeLedgerBuilder
+
 
 # ---------------------------------------------------------------------------
 # Models
@@ -74,6 +76,9 @@ class FilingDeltaReport:
     overall_assessment: str = ""  # "significant_changes" | "minor_changes" | "no_material_changes"
     run_id: Optional[str] = None
 
+    # Cross-quarter change ledger (B04)
+    ledger: Optional[ChangeLedger] = None
+
     # ------------------------------------------------------------------
     # Serialization helpers
     # ------------------------------------------------------------------
@@ -121,6 +126,7 @@ class FilingDeltaReport:
             "material_change_count": self.material_change_count,
             "overall_assessment": self.overall_assessment,
             "run_id": self.run_id,
+            "ledger": self.ledger.to_dict() if self.ledger else None,
         }
 
     def to_json(self, indent: int = 2) -> str:
@@ -183,6 +189,22 @@ class FilingDeltaReport:
                 prev_str = f"{gc.previous_range[0]:,.0f} – {gc.previous_range[1]:,.0f}" if gc.previous_range else "—"
                 new_str = f"{gc.new_range[0]:,.0f} – {gc.new_range[1]:,.0f}" if gc.new_range else "—"
                 lines.append(f"| {gc.metric} | {prev_str} | {new_str} | {gc.direction} |")
+            lines.append("")
+
+        # Cross-quarter change ledger
+        if self.ledger and self.ledger.entries:
+            lines.append("")
+            lines.append("## Change Ledger")
+            lines.append("")
+            lines.append("| # | Category | Before | After | Material |")
+            lines.append("|---|----------|--------|-------|----------|")
+            for e in self.ledger.entries:
+                material_mark = "⚠️ Yes" if e.material else "No"
+                before = e.before.replace("|", "\\|")
+                after = e.after.replace("|", "\\|")
+                lines.append(
+                    f"| {e.entry_id} | {e.category} | {before} | {after} | {material_mark} |"
+                )
             lines.append("")
 
         return "\n".join(lines)
@@ -266,6 +288,10 @@ class FilingDeltaBuilder:
             report.overall_assessment = "minor_changes"
         else:
             report.overall_assessment = "no_material_changes"
+
+        # Cross-quarter change ledger (B04): auto-extract guidance, fundamentals,
+        # risk, and disagreement changes from the same two snapshots.
+        report.ledger = ChangeLedgerBuilder.build(prev_data, new_data, self._ticker)
 
         return report
 
