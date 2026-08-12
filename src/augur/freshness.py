@@ -30,7 +30,8 @@ class FreshnessTracker:
 
     def check(self, key: str) -> Optional[FreshnessRecord]:
         r = self._records.get(key)
-        if not r: return None
+        if not r:
+            return None
         try:
             ts = datetime.fromisoformat(r.last_updated)
             age = (datetime.now(timezone.utc) - ts).total_seconds() / 3600
