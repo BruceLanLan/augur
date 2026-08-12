@@ -1,0 +1,819 @@
+{% extends "base.html" %}
+{% block title %}Research Inbox — Augur{% endblock %}
+{% block extra_head %}
+<style>
+/* ── Inbox Layout ── */
+.inbox-shell {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+@media (max-width: 900px) {
+    .inbox-shell { flex-direction: column; }
+}
+
+/* ── Sidebar (filters + saved views) ── */
+.inbox-sidebar {
+    flex: 0 0 260px;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    position: sticky;
+    top: 16px;
+}
+.inbox-sidebar .card {
+    padding: 14px 16px;
+    background: var(--bg-secondary, #1a1a2e);
+    border: 1px solid var(--border-color, #333);
+    border-radius: var(--radius-sm, 8px);
+}
+.inbox-filter-label {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted, #888);
+    margin-bottom: 6px;
+    font-weight: 600;
+}
+.inbox-filter-select {
+    width: 100%;
+    padding: 7px 10px;
+    background: var(--bg-primary, #0d1117);
+    border: 1px solid var(--border-color, #333);
+    border-radius: 6px;
+    color: var(--text-primary, #e8e8f0);
+    font-size: 0.82rem;
+    font-family: var(--font-data, 'JetBrains Mono', monospace);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    cursor: pointer;
+}
+.inbox-filter-select:focus {
+    outline: none;
+    border-color: var(--accent-orange, #ff8c00);
+    box-shadow: 0 0 0 2px rgba(255,140,0,0.15);
+}
+.inbox-filter-input {
+    width: 100%;
+    padding: 7px 10px;
+    background: var(--bg-primary, #0d1117);
+    border: 1px solid var(--border-color, #333);
+    border-radius: 6px;
+    color: var(--text-primary, #e8e8f0);
+    font-size: 0.82rem;
+    font-family: var(--font-data, 'JetBrains Mono', monospace);
+    text-transform: uppercase;
+}
+.inbox-filter-input:focus {
+    outline: none;
+    border-color: var(--accent-orange, #ff8c00);
+    box-shadow: 0 0 0 2px rgba(255,140,0,0.15);
+}
+.inbox-filter-row {
+    margin-bottom: 12px;
+}
+.inbox-filter-row:last-child { margin-bottom: 0; }
+.inbox-filter-reset {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 0.72rem;
+    color: var(--accent-orange, #ff8c00);
+    cursor: pointer;
+    font-weight: 600;
+    background: none;
+    border: none;
+    padding: 0;
+}
+.inbox-filter-reset:hover { text-decoration: underline; }
+
+/* ── Saved Views ── */
+.saved-views-list {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+}
+.saved-view-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.78rem;
+    color: var(--text-primary, #e8e8f0);
+    transition: background 0.15s;
+    gap: 6px;
+}
+.saved-view-item:hover { background: var(--bg-hover, rgba(255,255,255,0.05)); }
+.saved-view-item.active { background: rgba(255,140,0,0.12); color: var(--accent-orange, #ff8c00); }
+.saved-view-item .view-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.saved-view-item .view-delete {
+    opacity: 0;
+    background: none;
+    border: none;
+    color: var(--signal-sell, #ff1744);
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 0 2px;
+    line-height: 1;
+    transition: opacity 0.15s;
+}
+.saved-view-item:hover .view-delete { opacity: 1; }
+.save-view-row {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+}
+.save-view-input {
+    flex: 1;
+    padding: 6px 10px;
+    background: var(--bg-primary, #0d1117);
+    border: 1px solid var(--border-color, #333);
+    border-radius: 5px;
+    color: var(--text-primary, #e8e8f0);
+    font-size: 0.78rem;
+    font-family: var(--font-sans, Inter, sans-serif);
+}
+.save-view-input:focus {
+    outline: none;
+    border-color: var(--accent-orange, #ff8c00);
+}
+.save-view-btn {
+    padding: 6px 12px;
+    background: var(--accent-orange, #ff8c00);
+    color: #000;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.15s;
+}
+.save-view-btn:hover { opacity: 0.85; }
+
+/* ── Main inbox area ── */
+.inbox-main {
+    flex: 1;
+    min-width: 0;
+}
+.inbox-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.inbox-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-primary, #fff);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.inbox-count {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text-muted, #888);
+    background: var(--bg-secondary, #1a1a2e);
+    padding: 3px 10px;
+    border-radius: 12px;
+    border: 1px solid var(--border-color, #333);
+}
+.inbox-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.inbox-stat {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+.inbox-stat.high { color: var(--signal-sell, #ff1744); background: rgba(255,23,68,0.1); }
+.inbox-stat.medium { color: var(--accent-orange, #ff8c00); background: rgba(255,140,0,0.1); }
+.inbox-stat.low { color: var(--text-muted, #888); background: rgba(255,255,255,0.05); }
+
+/* ── Readiness Score ── */
+.readiness-card {
+    background: var(--bg-secondary, #1a1a2e);
+    border: 1px solid var(--border-color, #333);
+    border-radius: var(--radius-sm, 8px);
+    padding: 14px 16px;
+    margin-bottom: 16px;
+}
+.readiness-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.readiness-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted, #888);
+    font-weight: 600;
+}
+.readiness-value {
+    font-size: 1.1rem;
+    font-family: var(--font-data, 'JetBrains Mono', monospace);
+    font-weight: 700;
+    color: var(--accent-orange, #ff8c00);
+}
+.readiness-bar-track {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-primary, #0d1117);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border-color, #333);
+}
+.readiness-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--signal-sell, #ff1744), var(--accent-orange, #ff8c00), var(--signal-buy, #00c853));
+    transition: width 0.5s ease;
+}
+.readiness-breakdown {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.65rem;
+    color: var(--text-muted, #888);
+    flex-wrap: wrap;
+}
+.readiness-breakdown span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.readiness-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* ── Event List ── */
+.event-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.event-card {
+    background: var(--bg-secondary, #1a1a2e);
+    border: 1px solid var(--border-color, #333);
+    border-radius: var(--radius-sm, 8px);
+    padding: 12px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color 0.15s, transform 0.1s;
+    cursor: default;
+}
+.event-card:hover {
+    border-color: var(--accent-orange, #ff8c00);
+    transform: translateX(2px);
+}
+.event-card.priority-high { border-left: 3px solid var(--signal-sell, #ff1744); }
+.event-card.priority-medium { border-left: 3px solid var(--accent-orange, #ff8c00); }
+.event-card.priority-low { border-left: 3px solid var(--text-muted, #666); }
+.event-card.dismissed {
+    opacity: 0;
+    max-height: 0;
+    padding: 0 16px;
+    margin: 0;
+    border-width: 0;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+.event-type-icon {
+    flex: 0 0 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+}
+.event-type-icon.earnings { background: rgba(0,200,83,0.12); }
+.event-type-icon.filing { background: rgba(33,150,243,0.12); }
+.event-type-icon.thesis { background: rgba(156,39,176,0.12); }
+.event-type-icon.guidance { background: rgba(255,152,0,0.12); }
+.event-type-icon.risk { background: rgba(255,23,68,0.12); }
+.event-body { flex: 1; min-width: 0; }
+.event-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 3px;
+    flex-wrap: wrap;
+}
+.event-ticker {
+    font-family: var(--font-data, 'JetBrains Mono', monospace);
+    font-weight: 700;
+    font-size: 0.88rem;
+    color: var(--text-primary, #e8e8f0);
+}
+.event-type-tag {
+    font-size: 0.58rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-weight: 600;
+}
+.event-type-tag.earnings { background: rgba(0,200,83,0.15); color: #00c853; }
+.event-type-tag.filing { background: rgba(33,150,243,0.15); color: #2196f3; }
+.event-type-tag.thesis { background: rgba(156,39,176,0.15); color: #ce93d8; }
+.event-type-tag.guidance { background: rgba(255,152,0,0.15); color: #ff9800; }
+.event-type-tag.risk { background: rgba(255,23,68,0.15); color: #ff1744; }
+.event-priority-badge {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.4px;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+.event-priority-badge.high { color: #ff1744; background: rgba(255,23,68,0.12); }
+.event-priority-badge.medium { color: #ff8c00; background: rgba(255,140,0,0.12); }
+.event-priority-badge.low { color: #888; background: rgba(255,255,255,0.06); }
+.event-title {
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: var(--text-primary, #e8e8f0);
+    margin-bottom: 2px;
+}
+.event-desc {
+    font-size: 0.75rem;
+    color: var(--text-muted, #888);
+    line-height: 1.5;
+}
+.event-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+    font-size: 0.65rem;
+    color: var(--text-muted, #777);
+}
+.event-dismiss {
+    flex: 0 0 auto;
+    background: none;
+    border: 1px solid transparent;
+    color: var(--text-muted, #666);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+    line-height: 1;
+    transition: color 0.15s, border-color 0.15s;
+    align-self: center;
+}
+.event-dismiss:hover {
+    color: var(--signal-sell, #ff1744);
+    border-color: rgba(255,23,68,0.3);
+}
+.event-dismiss-label {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+}
+
+/* ── Empty State ── */
+.inbox-empty {
+    text-align: center;
+    padding: 48px 24px;
+    color: var(--text-muted, #888);
+}
+.inbox-empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.inbox-empty-msg { font-size: 0.88rem; }
+.inbox-empty-sub { font-size: 0.72rem; margin-top: 4px; opacity: 0.7; }
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .inbox-sidebar {
+        flex: 0 0 auto;
+        width: 100%;
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .inbox-sidebar .card {
+        flex: 1;
+        min-width: 230px;
+    }
+}
+@media (max-width: 600px) {
+    .inbox-header { flex-direction: column; align-items: flex-start; }
+    .inbox-stats { gap: 6px; }
+    .event-card { padding: 10px 12px; gap: 8px; }
+    .event-type-icon { flex: 0 0 28px; width: 28px; height: 28px; font-size: 0.9rem; }
+}
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="inbox-shell">
+    <!-- Sidebar: Filters + Saved Views -->
+    <aside class="inbox-sidebar" aria-label="Inbox filters">
+        <!-- Readiness Score -->
+        <div class="readiness-card" id="readiness-card">
+            <div class="readiness-header">
+                <span class="readiness-label" data-i18n="inbox-readiness">Research Readiness</span>
+                <span class="readiness-value" id="readiness-score">--</span>
+            </div>
+            <div class="readiness-bar-track">
+                <div class="readiness-bar-fill" id="readiness-bar" style="width:0%;"></div>
+            </div>
+            <div class="readiness-breakdown" id="readiness-breakdown"></div>
+        </div>
+
+        <!-- Filters -->
+        <div class="card" id="filter-card">
+            <div class="inbox-filter-label" data-i18n="inbox-filter-ticker">Ticker</div>
+            <div class="inbox-filter-row">
+                <input class="inbox-filter-input" id="filter-ticker" type="text"
+                       placeholder="e.g. AAPL" maxlength="15"
+                       oninput="applyFilters()"
+                       aria-label="Filter by ticker">
+            </div>
+
+            <div class="inbox-filter-label" data-i18n="inbox-filter-type">Event Type</div>
+            <div class="inbox-filter-row">
+                <select class="inbox-filter-select" id="filter-type" onchange="applyFilters()" aria-label="Filter by event type">
+                    <option value="all">All Types</option>
+                    <option value="earnings">Earnings</option>
+                    <option value="filing">Filing Delta</option>
+                    <option value="thesis">Thesis Review</option>
+                    <option value="guidance">Guidance Change</option>
+                    <option value="risk">Risk Alert</option>
+                </select>
+            </div>
+
+            <div class="inbox-filter-label" data-i18n="inbox-filter-priority">Priority</div>
+            <div class="inbox-filter-row">
+                <select class="inbox-filter-select" id="filter-priority" onchange="applyFilters()" aria-label="Filter by priority">
+                    <option value="all">All Priorities</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                </select>
+            </div>
+
+            <button class="inbox-filter-reset" onclick="resetFilters()" type="button" data-i18n="inbox-reset">Reset Filters</button>
+        </div>
+
+        <!-- Saved Views (H03) -->
+        <div class="card" id="saved-views-card">
+            <div class="inbox-filter-label" data-i18n="inbox-saved-views">Saved Views</div>
+            <ul class="saved-views-list" id="saved-views-list">
+                <li class="text-muted" style="font-size:0.72rem; padding:6px 0;" data-i18n="inbox-no-saved-views">No saved views yet</li>
+            </ul>
+            <div class="save-view-row">
+                <input class="save-view-input" id="save-view-name" type="text"
+                       placeholder="View name…" maxlength="40"
+                       aria-label="New view name"
+                       onkeydown="if(event.key==='Enter')saveCurrentView()">
+                <button class="save-view-btn" onclick="saveCurrentView()" type="button" data-i18n="inbox-save-view">Save</button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Inbox -->
+    <main class="inbox-main">
+        <div class="inbox-header">
+            <div class="inbox-title">
+                &#x1F4E8; <span data-i18n="inbox-title">Research Inbox</span>
+                <span class="inbox-count" id="inbox-count">--</span>
+            </div>
+            <div class="inbox-stats" id="inbox-stats"></div>
+        </div>
+
+        <div class="event-list" id="event-list" aria-live="polite" aria-label="Research inbox events"></div>
+
+        <div class="inbox-empty" id="inbox-empty" style="display:none;">
+            <div class="inbox-empty-icon">&#x1F389;</div>
+            <div class="inbox-empty-msg" data-i18n="inbox-empty">All clear — no pending research events</div>
+            <div class="inbox-empty-sub" data-i18n="inbox-empty-sub">New events will appear here as they arrive</div>
+        </div>
+    </main>
+</div>
+
+{% endblock %}
+{% block extra_scripts %}
+<script>
+// ── Event Type Definitions ──
+var EVENT_TYPES = {
+    earnings:   { icon: '&#x1F4CA;', label: 'Earnings',       cssClass: 'earnings' },
+    filing:     { icon: '&#x1F4C4;', label: 'Filing Delta',   cssClass: 'filing' },
+    thesis:     { icon: '&#x1F4D6;', label: 'Thesis Review',  cssClass: 'thesis' },
+    guidance:   { icon: '&#x1F4C8;', label: 'Guidance Change',cssClass: 'guidance' },
+    risk:       { icon: '&#x26A0;',  label: 'Risk Alert',      cssClass: 'risk' }
+};
+
+// ── Sample Data (would be replaced by API) ──
+var SAMPLE_EVENTS = [
+    { id: 1,  type: 'earnings', ticker: 'NVDA',  priority: 'high',   title: 'Q3 2026 Earnings Beat — Revenue +22% YoY',  description: 'NVDA reported Q3 revenue of $42.1B vs consensus $38.6B. Data center segment drove 85% of growth. EPS $0.89 vs $0.78 expected.', created_at: '2026-08-11T09:30:00Z' },
+    { id: 2,  type: 'risk',     ticker: 'TSLA',  priority: 'high',   title: 'Margin Compression Risk — Q2 Gross Margin 15.2%', description: 'Automotive gross margin fell to 15.2%, lowest since 2020. Price cuts in China and EU markets may continue pressuring profitability.', created_at: '2026-08-10T14:15:00Z' },
+    { id: 3,  type: 'filing',   ticker: 'AAPL',  priority: 'high',   title: '10-K Delta: Services Revenue Recognition Change', description: 'Apple changed services revenue recognition from gross to net for certain App Store transactions. -$3.2B recognized revenue impact over trailing 12 months.', created_at: '2026-08-11T08:00:00Z' },
+    { id: 4,  type: 'guidance', ticker: 'MSFT',  priority: 'medium', title: 'Azure Growth Guidance Lowered to 25-26%', description: 'Microsoft revised Azure constant-currency growth guidance from 28-29% to 25-26% for Q4 FY2026, citing enterprise deal cycle elongation.', created_at: '2026-08-10T16:45:00Z' },
+    { id: 5,  type: 'thesis',   ticker: 'META',  priority: 'medium', title: 'Ad Revenue Thesis Review — AI-Driven Targeting', description: 'Quarterly thesis review triggered. Ad impressions +18% YoY with avg price +6%. AI ad tools (Advantage+) now drive 40% of revenue. Thesis remains intact.', created_at: '2026-08-09T11:00:00Z' },
+    { id: 6,  type: 'risk',     ticker: 'GOOGL', priority: 'medium', title: 'DOJ Antitrust — Search Defaults Ruling Appeal', description: 'Appeals court hearing scheduled for September 2026. Potential remedies include search default prohibition. Ad revenue at risk: ~$48B annually from Safari + Firefox defaults.', created_at: '2026-08-09T10:30:00Z' },
+    { id: 7,  type: 'earnings', ticker: 'AMZN',  priority: 'medium', title: 'Q3 2026 — AWS Accelerates, Retail Margin Improves', description: 'AWS revenue +19% YoY to $28.3B. North America retail operating margin 6.8% vs 5.2% a year ago. Advertising revenue +24% to $14.7B.', created_at: '2026-08-08T20:00:00Z' },
+    { id: 8,  type: 'guidance', ticker: 'TSLA',  priority: 'medium', title: 'Cybertruck Ramp Delayed — Volume Guidance Cut', description: 'Tesla revised Cybertruck annual production target from 250K to 180K units. Battery cell constraint at Austin cited. Margin impact estimated -80bps in H2 2026.', created_at: '2026-08-08T13:00:00Z' },
+    { id: 9,  type: 'filing',   ticker: 'NVDA',  priority: 'low',    title: '13F Delta: Institutional Holdings +3.2% QoQ', description: '13F filings show institutional ownership increased from 67.8% to 71.0%. Notable new positions: T. Rowe Price (+$4.2B), Fidelity (+$3.1B).', created_at: '2026-08-07T15:00:00Z' },
+    { id: 10, type: 'thesis',   ticker: 'BABA',  priority: 'low',    title: 'BABA Thesis: China Consumer Recovery Checkpoint', description: 'Scheduled quarterly review. GMV +6% YoY in core commerce. Cloud profitability turned positive first time. Thesis held at moderate conviction pending Q4 consumer data.', created_at: '2026-08-07T09:00:00Z' },
+    { id: 11, type: 'risk',     ticker: 'AAPL',  priority: 'low',    title: 'iPhone Cycle Risk — Upgrade Rate Below Trend', description: 'Early iPhone 18 cycle data shows upgrade rate of 8.2% vs 10.5% typical for launch quarter. Services growth (+14%) partially offsets hardware softness.', created_at: '2026-08-06T12:00:00Z' },
+    { id: 12, type: 'earnings', ticker: 'DIS',   priority: 'low',    title: 'Q4 FY2026: Streaming Profitability Inflects Positively', description: 'Disney+ core subscribers 158M (+4M QoQ). Streaming segment posted $480M operating profit vs -$120M consensus. Parks revenue +11% on international rebound.', created_at: '2026-08-05T16:00:00Z' }
+];
+
+// ── State ──
+var _dismissedIds = new Set();
+var _savedViews = [];
+var _activeViewId = null;
+
+// ── Init ──
+document.addEventListener('DOMContentLoaded', function() {
+    loadDismissed();
+    loadSavedViews();
+    renderAll();
+});
+
+// ── Persistence Helpers ──
+function _storageAvail() {
+    try { var t = '__t__'; localStorage.setItem(t, '1'); localStorage.removeItem(t); return true; } catch(e) { return false; }
+}
+function _lsGet(key, fallback) {
+    if (!_storageAvail()) return fallback;
+    try { var v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; } catch(e) { return fallback; }
+}
+function _lsSet(key, val) {
+    if (!_storageAvail()) return;
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch(e) {}
+}
+
+function loadDismissed() {
+    var arr = _lsGet('augur-inbox-dismissed', []);
+    _dismissedIds = new Set(arr);
+}
+
+function saveDismissed() {
+    _lsSet('augur-inbox-dismissed', Array.from(_dismissedIds));
+}
+
+// ── Saved Views (H03) ──
+function loadSavedViews() {
+    _savedViews = _lsGet('augur-inbox-views', []);
+    renderSavedViews();
+}
+
+function saveViewsToStorage() {
+    _lsSet('augur-inbox-views', _savedViews);
+}
+
+function getCurrentFilterState() {
+    var ticker = (document.getElementById('filter-ticker').value || '').trim().toUpperCase();
+    var type = document.getElementById('filter-type').value;
+    var priority = document.getElementById('filter-priority').value;
+    return { ticker: ticker, type: type, priority: priority };
+}
+
+function setFilterState(state) {
+    document.getElementById('filter-ticker').value = state.ticker || '';
+    document.getElementById('filter-type').value = state.type || 'all';
+    document.getElementById('filter-priority').value = state.priority || 'all';
+    applyFilters();
+}
+
+function saveCurrentView() {
+    var nameInput = document.getElementById('save-view-name');
+    var name = (nameInput.value || '').trim();
+    if (!name) { showToast('Please enter a view name', 'warning'); return; }
+
+    var state = getCurrentFilterState();
+    // Generate a simple id
+    var id = 'view-' + Date.now();
+
+    _savedViews.push({ id: id, name: name, state: state });
+    saveViewsToStorage();
+    nameInput.value = '';
+    _activeViewId = id;
+    renderSavedViews();
+    showToast('View "' + name + '" saved', 'success');
+}
+
+function loadView(viewId) {
+    var view = _savedViews.find(function(v) { return v.id === viewId; });
+    if (!view) return;
+    _activeViewId = viewId;
+    setFilterState(view.state);
+    renderSavedViews();
+}
+
+function deleteView(viewId, e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    _savedViews = _savedViews.filter(function(v) { return v.id !== viewId; });
+    if (_activeViewId === viewId) _activeViewId = null;
+    saveViewsToStorage();
+    renderSavedViews();
+}
+
+function renderSavedViews() {
+    var list = document.getElementById('saved-views-list');
+    if (!list) return;
+    if (_savedViews.length === 0) {
+        list.innerHTML = '<li class="text-muted" style="font-size:0.72rem; padding:6px 0;" data-i18n="inbox-no-saved-views">No saved views yet</li>';
+        return;
+    }
+    var html = '';
+    _savedViews.forEach(function(view) {
+        var activeClass = view.id === _activeViewId ? ' active' : '';
+        html += '<li class="saved-view-item' + activeClass + '" onclick="loadView(\'' + view.id + '\')" role="button" tabindex="0" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();loadView(\'' + view.id + '\')}">' +
+            '<span class="view-name" title="' + escapeHtml(view.name) + '">' + escapeHtml(view.name) + '</span>' +
+            '<button class="view-delete" onclick="deleteView(\'' + view.id + '\', event)" aria-label="Delete view ' + escapeHtml(view.name) + '" title="Delete">×</button>' +
+            '</li>';
+    });
+    list.innerHTML = html;
+}
+
+// ── Filtering & Rendering ──
+function getFilteredEvents() {
+    var filterState = getCurrentFilterState();
+    var events = SAMPLE_EVENTS.filter(function(ev) {
+        if (_dismissedIds.has(ev.id)) return false;
+        if (filterState.ticker && ev.ticker !== filterState.ticker) return false;
+        if (filterState.type !== 'all' && ev.type !== filterState.type) return false;
+        if (filterState.priority !== 'all' && ev.priority !== filterState.priority) return false;
+        return true;
+    });
+    // Sort by priority: high → medium → low, then by created_at desc within same priority
+    var priOrder = { high: 0, medium: 1, low: 2 };
+    events.sort(function(a, b) {
+        var priDiff = priOrder[a.priority] - priOrder[b.priority];
+        if (priDiff !== 0) return priDiff;
+        return new Date(b.created_at) - new Date(a.created_at);
+    });
+    return events;
+}
+
+function applyFilters() {
+    // Clear active view when filters change manually
+    var currentState = getCurrentFilterState();
+    if (_activeViewId) {
+        var activeView = _savedViews.find(function(v) { return v.id === _activeViewId; });
+        if (activeView) {
+            var vs = activeView.state;
+            if (vs.ticker !== currentState.ticker || vs.type !== currentState.type || vs.priority !== currentState.priority) {
+                _activeViewId = null;
+                renderSavedViews();
+            }
+        }
+    }
+    renderEvents();
+}
+
+function resetFilters() {
+    document.getElementById('filter-ticker').value = '';
+    document.getElementById('filter-type').value = 'all';
+    document.getElementById('filter-priority').value = 'all';
+    _activeViewId = null;
+    renderSavedViews();
+    applyFilters();
+}
+
+function dismissEvent(eventId) {
+    _dismissedIds.add(eventId);
+    saveDismissed();
+    // Animate out
+    var card = document.getElementById('event-' + eventId);
+    if (card) {
+        card.classList.add('dismissed');
+        setTimeout(function() { renderAll(); }, 350);
+    } else {
+        renderAll();
+    }
+}
+
+function renderAll() {
+    renderEvents();
+    renderReadiness();
+    renderStats();
+}
+
+function renderEvents() {
+    var events = getFilteredEvents();
+    var list = document.getElementById('event-list');
+    var empty = document.getElementById('inbox-empty');
+    var count = document.getElementById('inbox-count');
+
+    if (events.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        count.textContent = '0';
+        return;
+    }
+
+    empty.style.display = 'none';
+    count.textContent = events.length;
+
+    var html = '';
+    events.forEach(function(ev) {
+        var et = EVENT_TYPES[ev.type] || { icon: '&#x1F4CC;', label: ev.type, cssClass: '' };
+        html += '<div class="event-card priority-' + ev.priority + '" id="event-' + ev.id + '">' +
+            '<div class="event-type-icon ' + et.cssClass + '" aria-hidden="true">' + et.icon + '</div>' +
+            '<div class="event-body">' +
+                '<div class="event-head">' +
+                    '<span class="event-ticker">' + escapeHtml(ev.ticker) + '</span>' +
+                    '<span class="event-type-tag ' + et.cssClass + '">' + escapeHtml(et.label) + '</span>' +
+                    '<span class="event-priority-badge ' + ev.priority + '">' + ev.priority + '</span>' +
+                '</div>' +
+                '<div class="event-title">' + escapeHtml(ev.title) + '</div>' +
+                '<div class="event-desc">' + escapeHtml(ev.description) + '</div>' +
+                '<div class="event-meta">' +
+                    '<span>' + relativeTime(ev.created_at) + '</span>' +
+                '</div>' +
+            '</div>' +
+            '<button class="event-dismiss" onclick="dismissEvent(' + ev.id + ')" aria-label="Dismiss event: ' + escapeHtml(ev.title) + '" title="Dismiss">' +
+                '<span class="event-dismiss-label">✕</span>' +
+            '</button>' +
+        '</div>';
+    });
+    list.innerHTML = html;
+}
+
+function renderReadiness() {
+    var events = getFilteredEvents();
+    var total = SAMPLE_EVENTS.length;
+    var dismissed = _dismissedIds.size;
+    var remaining = total - dismissed;
+    var score = total > 0 ? Math.round((dismissed / total) * 100) : 0;
+
+    var scoreEl = document.getElementById('readiness-score');
+    var barEl = document.getElementById('readiness-bar');
+    var breakdownEl = document.getElementById('readiness-breakdown');
+
+    if (scoreEl) scoreEl.textContent = score + '/100';
+    if (barEl) barEl.style.width = score + '%';
+
+    // Count by type for breakdown
+    var typeCounts = {};
+    SAMPLE_EVENTS.forEach(function(ev) {
+        if (_dismissedIds.has(ev.id)) return;
+        typeCounts[ev.type] = (typeCounts[ev.type] || 0) + 1;
+    });
+
+    if (breakdownEl) {
+        var dots = { earnings: '#00c853', filing: '#2196f3', thesis: '#ce93d8', guidance: '#ff9800', risk: '#ff1744' };
+        var parts = [];
+        Object.keys(EVENT_TYPES).forEach(function(t) {
+            var cnt = typeCounts[t] || 0;
+            if (cnt > 0) {
+                parts.push('<span><span class="readiness-dot" style="background:' + (dots[t] || '#888') + ';"></span>' + EVENT_TYPES[t].label + ': ' + cnt + '</span>');
+            }
+        });
+        breakdownEl.innerHTML = parts.length ? parts.join('') : '<span>All clear</span>';
+    }
+}
+
+function renderStats() {
+    var statsEl = document.getElementById('inbox-stats');
+    if (!statsEl) return;
+
+    var events = getFilteredEvents();
+    var high = 0, medium = 0, low = 0;
+    events.forEach(function(ev) {
+        if (ev.priority === 'high') high++;
+        else if (ev.priority === 'medium') medium++;
+        else low++;
+    });
+
+    statsEl.innerHTML =
+        '<span class="inbox-stat high">&#x25CF; High: ' + high + '</span>' +
+        '<span class="inbox-stat medium">&#x25CF; Medium: ' + medium + '</span>' +
+        '<span class="inbox-stat low">&#x25CF; Low: ' + low + '</span>';
+}
+</script>
+{% endblock %}

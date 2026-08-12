@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Earnings Queue — Augur{% endblock %}
+{% block content %}
+<div class="eq-page">
+  <h1>📅 Earnings Queue</h1>
+  <p class="eq-subtitle">Upcoming earnings events from your watchlist</p>
+  <div id="eq-list"><div class="spinner spinner-center"></div></div>
+</div>
+<style>
+.eq-page { max-width: 900px; margin: 0 auto; padding: 20px; }
+.eq-subtitle { color: var(--text-muted); margin-bottom: 24px; }
+.eq-item { display: flex; align-items: center; gap: 16px; padding: 14px 18px; margin-bottom: 8px; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border); }
+.eq-ticker { font-weight: 700; font-size: 16px; min-width: 70px; }
+.eq-date { font-size: 14px; color: var(--text-muted); min-width: 100px; }
+.eq-period { font-size: 13px; color: var(--text); }
+.eq-confidence { font-size: 12px; padding: 2px 8px; border-radius: 8px; }
+.eq-confidence.confirmed { background: #d1fae5; color: #047857; }
+.eq-confidence.estimated { background: #fef3c7; color: #b45309; }
+.eq-readiness { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.eq-readiness-dot { width: 10px; height: 10px; border-radius: 50%; }
+.eq-readiness-dot.ready { background: #10b981; }
+.eq-readiness-dot.partial { background: #f59e0b; }
+.eq-readiness-dot.insufficient { background: #ef4444; }
+.eq-dossier { margin-top: 12px; padding: 12px; background: var(--bg); border-radius: 8px; display: none; }
+.eq-dossier.open { display: block; }
+</style>
+<script>
+fetch('/api/earnings/queue').then(r=>r.json()).then(function(d){
+  var events = d.events || [];
+  var el = document.getElementById('eq-list');
+  if (!events.length) { el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">No upcoming earnings events</div><div class="empty-state-desc">Add tickers to your watchlist to track earnings.</div></div>'; return; }
+  el.innerHTML = events.map(function(e, i) {
+    var readyClass = e.ready ? 'ready' : e.missing_items && e.missing_items.length < 2 ? 'partial' : 'insufficient';
+    return '<div class="eq-item" onclick="this.querySelector(\'.eq-dossier\').classList.toggle(\'open\')" style="cursor:pointer">'
+      + '<span class="eq-ticker">' + e.ticker + '</span>'
+      + '<span class="eq-date">' + (e.event_date || '') + '</span>'
+      + '<span class="eq-confidence ' + (e.confidence || 'estimated') + '">' + (e.confidence || 'estimated') + '</span>'
+      + '<span class="eq-readiness"><span class="eq-readiness-dot ' + readyClass + '"></span>' + (e.ready ? 'Ready' : 'Check') + '</span>'
+      + '<div class="eq-dossier"><strong>Fiscal Period:</strong> ' + (e.fiscal_period || 'N/A')
+      + (e.missing_items ? '<br><strong>Missing:</strong> ' + e.missing_items.join(', ') : '')
+      + '<br><button class="btn btn-sm" style="margin-top:8px" onclick="event.stopPropagation();generateDossier(\'' + e.ticker + '\',\'' + (e.event_id || '') + '\')">Generate Dossier</button>'
+      + '</div></div>';
+  }).join('');
+});
+function generateDossier(ticker, eventId) { alert('Dossier generation for ' + ticker + ' started. Check Research Inbox for results.'); }
+</script>
+{% endblock %}
