@@ -140,6 +140,10 @@ class ThesisJournal:
         """Return the thesis with *thesis_id*, or ``None``."""
         return self._theses.get(thesis_id)
 
+    def list_all(self) -> List[Thesis]:
+        """Return every thesis in insertion order."""
+        return list(self._theses.values())
+
     def list_by_ticker(self, ticker: str) -> List[Thesis]:
         """Return every thesis whose ticker matches (case-insensitive)."""
         t = ticker.upper()
