@@ -360,8 +360,19 @@ class FactorLab:
                     for t in range(min(sc.shape[0], fwd.shape[0]))
                 ])
             elif sc.ndim == 1 and fwd.ndim == 1:
-                # Time-series: single IC
-                ic_series = np.array([FactorLab._pearson_r(sc, fwd)])
+                # Time-series: chunk into n_periods for per-period IC
+                total_len = min(len(sc), len(fwd))
+                if total_len >= 2 * n_periods:
+                    chunk_size = total_len // n_periods
+                    ic_list = []
+                    for p in range(n_periods):
+                        start = p * chunk_size
+                        end = start + chunk_size
+                        ic_list.append(FactorLab._pearson_r(sc[start:end], fwd[start:end]))
+                    ic_series = np.array(ic_list)
+                else:
+                    # Too few data points for chunking — use single IC
+                    ic_series = np.array([FactorLab._pearson_r(sc, fwd)])
             else:
                 # Mismatched shapes: try to align by taking the shorter dimension
                 min_len = min(len(sc), len(fwd))
