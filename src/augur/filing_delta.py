@@ -8,6 +8,7 @@ and guidance between consecutive 10-K/10-Q/8-K filings.
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
@@ -72,6 +73,119 @@ class FilingDeltaReport:
     material_change_count: int = 0
     overall_assessment: str = ""  # "significant_changes" | "minor_changes" | "no_material_changes"
     run_id: Optional[str] = None
+
+    # ------------------------------------------------------------------
+    # Serialization helpers
+    # ------------------------------------------------------------------
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize the report to a JSON-compatible dict."""
+        return {
+            "ticker": self.ticker,
+            "new_accession": self.new_accession,
+            "previous_accession": self.previous_accession,
+            "new_filing_date": self.new_filing_date,
+            "previous_filing_date": self.previous_filing_date,
+            "filing_type": self.filing_type,
+            "numeric_changes": [
+                {
+                    "metric": nc.metric,
+                    "previous_value": nc.previous_value,
+                    "new_value": nc.new_value,
+                    "unit": nc.unit,
+                    "change_pct": nc.change_pct,
+                    "section": nc.section,
+                    "material": nc.material,
+                }
+                for nc in self.numeric_changes
+            ],
+            "text_changes": [
+                {
+                    "section": tc.section,
+                    "change_type": tc.change_type,
+                    "summary": tc.summary,
+                    "material": tc.material,
+                }
+                for tc in self.text_changes
+            ],
+            "guidance_changes": [
+                {
+                    "metric": gc.metric,
+                    "previous_range": list(gc.previous_range) if gc.previous_range else None,
+                    "new_range": list(gc.new_range) if gc.new_range else None,
+                    "direction": gc.direction,
+                    "language_change": gc.language_change,
+                }
+                for gc in self.guidance_changes
+            ],
+            "material_change_count": self.material_change_count,
+            "overall_assessment": self.overall_assessment,
+            "run_id": self.run_id,
+        }
+
+    def to_json(self, indent: int = 2) -> str:
+        """Serialize the report to a JSON string."""
+        return json.dumps(self.to_dict(), indent=indent, ensure_ascii=False)
+
+    def to_markdown(self) -> str:
+        """Render the report as a Markdown table summary."""
+        lines: List[str] = []
+
+        # Header
+        lines.append(f"# Filing Delta Report: {self.ticker}")
+        lines.append("")
+        lines.append("| Field | Value |")
+        lines.append("|-------|-------|")
+        lines.append(f"| Ticker | {self.ticker} |")
+        lines.append(f"| Filing Type | {self.filing_type} |")
+        lines.append(f"| New Filing Date | {self.new_filing_date} |")
+        lines.append(f"| Previous Filing Date | {self.previous_filing_date} |")
+        lines.append(f"| New Accession | {self.new_accession} |")
+        lines.append(f"| Previous Accession | {self.previous_accession} |")
+        lines.append(f"| Overall Assessment | **{self.overall_assessment}** |")
+        lines.append(f"| Material Change Count | {self.material_change_count} |")
+        lines.append("")
+
+        # Numeric changes table
+        if self.numeric_changes:
+            lines.append("## Numeric Changes")
+            lines.append("")
+            lines.append("| Metric | Previous | New | Change % | Material |")
+            lines.append("|--------|----------|-----|----------|----------|")
+            for nc in self.numeric_changes:
+                material_mark = "⚠️ Yes" if nc.material else "No"
+                lines.append(
+                    f"| {nc.metric} | {nc.previous_value:,.2f} | {nc.new_value:,.2f} | "
+                    f"{nc.change_pct:+.2f}% | {material_mark} |"
+                )
+            lines.append("")
+
+        # Text changes table
+        if self.text_changes:
+            lines.append("## Text Changes")
+            lines.append("")
+            lines.append("| Section | Type | Summary | Material |")
+            lines.append("|---------|------|---------|----------|")
+            for tc in self.text_changes:
+                material_mark = "⚠️ Yes" if tc.material else "No"
+                lines.append(
+                    f"| {tc.section} | {tc.change_type} | {tc.summary} | {material_mark} |"
+                )
+            lines.append("")
+
+        # Guidance changes table
+        if self.guidance_changes:
+            lines.append("## Guidance Changes")
+            lines.append("")
+            lines.append("| Metric | Previous Range | New Range | Direction |")
+            lines.append("|--------|---------------|-----------|-----------|")
+            for gc in self.guidance_changes:
+                prev_str = f"{gc.previous_range[0]:,.0f} – {gc.previous_range[1]:,.0f}" if gc.previous_range else "—"
+                new_str = f"{gc.new_range[0]:,.0f} – {gc.new_range[1]:,.0f}" if gc.new_range else "—"
+                lines.append(f"| {gc.metric} | {prev_str} | {new_str} | {gc.direction} |")
+            lines.append("")
+
+        return "\n".join(lines)
 
 
 # ---------------------------------------------------------------------------

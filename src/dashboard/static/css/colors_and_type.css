@@ -16,6 +16,14 @@
 
 :root {
   /* ---------------------------------------------------------
+     0 · SMOOTH THEME TRANSITION — all themed surfaces animate
+     --------------------------------------------------------- */
+  --theme-transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                      color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                      border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                      box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ---------------------------------------------------------
      1 · TERMINAL CANVAS — near-black trading-desk surfaces
      --------------------------------------------------------- */
   --bg-void:        #0a0a0f;   /* app background, the dark hall   */
@@ -435,9 +443,35 @@ html.dark .theme-toggle-fab .icon-sun  { display: inline; }
 }
 
 /* ============================================================
+   SMOOTH THEME TRANSITIONS — every themed surface animates
+   ============================================================ */
+body, .app, .sb, .sidebar, .main, .app-main,
+.card, .mcard, .sc, .d-panel, .exec,
+table, th, td, tr,
+input, textarea, select, button,
+code, pre, kbd,
+.modal, [role="dialog"], .overlay, .detail,
+.tooltip, .popover, .dropdown-menu,
+.badge, .tag, .chip, .filter-tag,
+.bottom-nav, .bottom-nav-item,
+.toast, .toast-msg,
+.hero, .council-hero,
+.auth-panel,
+.md-table-wrap, .md-table, .md-code, .md-quote, .md-hr,
+.form-group, .form-input, .form-label,
+.btn, .btn-primary, .btn-secondary,
+.progress-bar, .progress-bar-fill,
+.empty-state,
+.ticker-tape-wrap,
+.status-indicator,
+.nav-item, .sb-item, .sb-group {
+  transition: var(--theme-transition);
+}
+
+/* ============================================================
    DARK MODE COMPONENT STYLES
-   Ensures tables, forms, buttons, cards, modals, code blocks
-   are readable in dark mode
+   Ensures tables, forms, buttons, cards, modals, code blocks,
+   markdown, badges, and selects are readable in dark mode
    ============================================================ */
 
 /* --- Tables in dark mode --- */
