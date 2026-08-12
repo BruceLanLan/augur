@@ -1,0 +1,28 @@
+id: debt-covenant-review
+version: 1.0.0
+description: Review debt covenants, liquidity constraints, and compliance status from SEC filings.
+license: Apache-2.0
+compatibility: ">=11,<12"
+inputs_schema:
+  required: [ticker]
+required_capabilities:
+  - sec.filings.read
+  - fundamentals.snapshot
+permissions:
+  resources: [evidence.read, runs.read]
+  network_domains: [sec.gov]
+evidence_policy:
+  information_time_required: true
+  missing: abstain
+  min_claim_coverage: 0.90
+workflow:
+  - id: fetch_filings
+    uses: sec.filings.read
+  - id: covenant_check
+    uses: report.covenant_review
+    needs: [fetch_filings]
+outputs_schema:
+  required: [run_id, covenant_report, evidence_manifest]
+evals:
+  fixtures: [debt-covenant-v1]
+  gates: [citation_validity, no_lookahead]
