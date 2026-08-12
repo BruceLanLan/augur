@@ -1,47 +1,750 @@
 {% extends "base.html" %}
 {% block title %}Earnings Queue — Augur{% endblock %}
-{% block content %}
-<div class="eq-page">
-  <h1>📅 Earnings Queue</h1>
-  <p class="eq-subtitle">Upcoming earnings events from your watchlist</p>
-  <div id="eq-list"><div class="spinner spinner-center"></div></div>
-</div>
+{% block extra_head %}
 <style>
-.eq-page { max-width: 900px; margin: 0 auto; padding: 20px; }
-.eq-subtitle { color: var(--text-muted); margin-bottom: 24px; }
-.eq-item { display: flex; align-items: center; gap: 16px; padding: 14px 18px; margin-bottom: 8px; background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border); }
-.eq-ticker { font-weight: 700; font-size: 16px; min-width: 70px; }
-.eq-date { font-size: 14px; color: var(--text-muted); min-width: 100px; }
-.eq-period { font-size: 13px; color: var(--text); }
-.eq-confidence { font-size: 12px; padding: 2px 8px; border-radius: 8px; }
-.eq-confidence.confirmed { background: #d1fae5; color: #047857; }
-.eq-confidence.estimated { background: #fef3c7; color: #b45309; }
-.eq-readiness { margin-left: auto; display: flex; align-items: center; gap: 6px; }
-.eq-readiness-dot { width: 10px; height: 10px; border-radius: 50%; }
-.eq-readiness-dot.ready { background: #10b981; }
-.eq-readiness-dot.partial { background: #f59e0b; }
-.eq-readiness-dot.insufficient { background: #ef4444; }
-.eq-dossier { margin-top: 12px; padding: 12px; background: var(--bg); border-radius: 8px; display: none; }
-.eq-dossier.open { display: block; }
+/* ── Earnings Queue Page Styles ── */
+.eq-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.eq-header .eq-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.eq-header select {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 0.825rem;
+}
+.eq-summary-strip {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.eq-summary-item {
+  flex: 1;
+  min-width: 130px;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.eq-summary-value {
+  font-size: 1.6rem;
+  font-weight: 700;
+  font-family: var(--font-data);
+}
+.eq-summary-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.eq-summary-item.ready .eq-summary-value { color: #10b981; }
+.eq-summary-item.partial .eq-summary-value { color: #f59e0b; }
+.eq-summary-item.insufficient .eq-summary-value { color: #ef4444; }
+
+/* Event card */
+.eq-event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.eq-event-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.eq-event-card:hover {
+  border-color: var(--accent-orange);
+}
+.eq-event-card.expanded {
+  border-color: var(--accent-orange);
+}
+.eq-event-row {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  gap: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.eq-event-row:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+.eq-ticker-col {
+  font-family: var(--font-data);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+  min-width: 80px;
+}
+.eq-date-col {
+  font-family: var(--font-data);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  min-width: 100px;
+}
+.eq-confidence-col {
+  min-width: 90px;
+}
+.eq-conf-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.eq-conf-badge.confirmed { background: #d1fae5; color: #047857; }
+.eq-conf-badge.estimated { background: #fef3c7; color: #b45309; }
+.eq-conf-badge.unknown { background: #f3f4f6; color: #6b7280; }
+
+.eq-readiness-col {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 100px;
+}
+.eq-readiness-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.eq-readiness-dot.ready { background: #10b981; box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+.eq-readiness-dot.partial { background: #f59e0b; box-shadow: 0 0 6px rgba(245,158,11,0.5); }
+.eq-readiness-dot.insufficient { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+.eq-readiness-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.eq-readiness-label.ready { color: #10b981; }
+.eq-readiness-label.partial { color: #f59e0b; }
+.eq-readiness-label.insufficient { color: #ef4444; }
+
+.eq-action-col {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.eq-expand-icon {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+  min-width: 16px;
+  text-align: center;
+}
+.eq-event-card.expanded .eq-expand-icon {
+  transform: rotate(180deg);
+}
+
+/* Dossier panel */
+.eq-dossier {
+  display: none;
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.15);
+}
+.eq-event-card.expanded .eq-dossier {
+  display: block;
+}
+.eq-dossier-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  padding-top: 12px;
+}
+.eq-dossier-tab {
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.eq-dossier-tab:hover { color: var(--text-primary); }
+.eq-dossier-tab.active {
+  color: var(--accent-orange);
+  border-bottom-color: var(--accent-orange);
+}
+.eq-dossier-panel {
+  display: none;
+}
+.eq-dossier-panel.active {
+  display: block;
+}
+
+/* Dossier sections */
+.eq-section {
+  margin-bottom: 18px;
+}
+.eq-section-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent-orange);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.eq-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+}
+.eq-kpi-item {
+  padding: 10px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+.eq-kpi-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 4px;
+}
+.eq-kpi-value {
+  font-family: var(--font-data);
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+.eq-item-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.eq-item-list li {
+  padding: 6px 0;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+.eq-item-list li::before {
+  content: "·";
+  color: var(--accent-orange);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.eq-divergence-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.eq-divergence-table th {
+  text-align: left;
+  padding: 6px 10px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.eq-divergence-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+.eq-divergence-table .topic-cell {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Scorecard */
+.eq-scorecard-summary {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.eq-sc-stat {
+  flex: 1;
+  min-width: 100px;
+  padding: 12px;
+  background: var(--bg-card);
+  border-radius: 8px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+.eq-sc-stat-value { font-size: 1.4rem; font-weight: 700; }
+.eq-sc-stat-label { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+.eq-sc-stat.confirmed .eq-sc-stat-value { color: #10b981; }
+.eq-sc-stat.refuted .eq-sc-stat-value { color: #ef4444; }
+.eq-sc-stat.partial .eq-sc-stat-value { color: #f59e0b; }
+.eq-sc-stat.unknown .eq-sc-stat-value { color: #6b7280; }
+.eq-sc-item {
+  padding: 10px 14px;
+  margin-bottom: 6px;
+  background: var(--bg-card);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.eq-sc-item-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+.eq-sc-item-body { flex: 1; }
+.eq-sc-item-question { font-weight: 600; font-size: 0.82rem; margin-bottom: 2px; }
+.eq-sc-item-pre { font-size: 0.75rem; color: var(--text-muted); }
+.eq-sc-item-actual { font-size: 0.75rem; }
+.eq-sc-verdict {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 8px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.eq-sc-verdict.confirmed { background: #d1fae5; color: #047857; }
+.eq-sc-verdict.refuted { background: #fee2e2; color: #b91c1c; }
+.eq-sc-verdict.partial { background: #fef3c7; color: #b45309; }
+.eq-sc-verdict.unknown { background: #f3f4f6; color: #6b7280; }
+
+/* Generate dossier button */
+.eq-gen-btn {
+  padding: 4px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid var(--accent-orange);
+  background: transparent;
+  color: var(--accent-orange);
+  transition: background 0.2s, color 0.2s;
+}
+.eq-gen-btn:hover {
+  background: var(--accent-orange);
+  color: #000;
+}
+.eq-gen-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Empty state */
+.eq-empty {
+  text-align: center;
+  padding: 48px 24px;
+}
+.eq-empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
+.eq-empty-title { font-weight: 600; font-size: 1rem; color: var(--text-primary); margin-bottom: 6px; }
+.eq-empty-desc { font-size: 0.82rem; color: var(--text-muted); }
+
+/* Loading */
+.eq-loading {
+  text-align: center;
+  padding: 32px;
+  color: var(--text-muted);
+}
+
+@media (max-width: 768px) {
+  .eq-event-row { flex-wrap: wrap; gap: 8px; }
+  .eq-action-col { margin-left: 0; width: 100%; justify-content: flex-end; }
+  .eq-kpi-grid { grid-template-columns: 1fr 1fr; }
+}
 </style>
+{% endblock %}
+
+{% block content %}
+
+<header class="page-header mb-16">
+  <div class="page-header__text">
+    <h1 class="page-title">📅 Earnings Queue</h1>
+    <p class="page-lead">Watchlist 财报日历 — 临近事件追踪、Pre-event Dossier 生成、Post-event Scorecard 对比</p>
+  </div>
+</header>
+
+<!-- Summary Strip -->
+<div class="eq-summary-strip" id="eq-summary-strip">
+  <div class="eq-summary-item ready">
+    <div class="eq-summary-value" id="eq-count-ready">--</div>
+    <div class="eq-summary-label">Ready</div>
+  </div>
+  <div class="eq-summary-item partial">
+    <div class="eq-summary-value" id="eq-count-partial">--</div>
+    <div class="eq-summary-label">Partial</div>
+  </div>
+  <div class="eq-summary-item insufficient">
+    <div class="eq-summary-value" id="eq-count-insufficient">--</div>
+    <div class="eq-summary-label">Insufficient</div>
+  </div>
+  <div class="eq-summary-item" style="border-color: var(--accent-orange);">
+    <div class="eq-summary-value" style="color: var(--accent-orange);" id="eq-count-total">--</div>
+    <div class="eq-summary-label">Total Events</div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="card mb-20">
+  <div class="eq-header">
+    <div class="eq-controls">
+      <label for="eq-lookahead" style="font-size:0.8rem;color:var(--text-muted);">Lookahead:</label>
+      <select id="eq-lookahead" onchange="loadEarningsQueue()">
+        <option value="30">30 days</option>
+        <option value="60" selected>60 days</option>
+        <option value="90">90 days</option>
+        <option value="180">180 days</option>
+      </select>
+    </div>
+    <button type="button" class="btn btn-sm" onclick="loadEarningsQueue()">🔄 Refresh</button>
+  </div>
+</div>
+
+<!-- Event List -->
+<div class="eq-event-list" id="eq-event-list">
+  <div class="eq-loading" id="eq-loading">
+    <div class="spinner spinner-center"></div>
+    <p style="margin-top:12px;">Loading earnings events...</p>
+  </div>
+</div>
+
+<!-- Empty State -->
+<div class="eq-empty" id="eq-empty" style="display:none;">
+  <div class="eq-empty-icon">📭</div>
+  <div class="eq-empty-title">No upcoming earnings events</div>
+  <div class="eq-empty-desc">
+    Add tickers to your <a href="/watchlist" style="color:var(--accent-orange);">Watchlist</a>
+    and ensure an earnings calendar is available.
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
-fetch('/api/earnings/queue').then(r=>r.json()).then(function(d){
-  var events = d.events || [];
-  var el = document.getElementById('eq-list');
-  if (!events.length) { el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">No upcoming earnings events</div><div class="empty-state-desc">Add tickers to your watchlist to track earnings.</div></div>'; return; }
-  el.innerHTML = events.map(function(e, i) {
-    var readyClass = e.ready ? 'ready' : e.missing_items && e.missing_items.length < 2 ? 'partial' : 'insufficient';
-    return '<div class="eq-item" onclick="this.querySelector(\'.eq-dossier\').classList.toggle(\'open\')" style="cursor:pointer">'
-      + '<span class="eq-ticker">' + e.ticker + '</span>'
-      + '<span class="eq-date">' + (e.event_date || '') + '</span>'
-      + '<span class="eq-confidence ' + (e.confidence || 'estimated') + '">' + (e.confidence || 'estimated') + '</span>'
-      + '<span class="eq-readiness"><span class="eq-readiness-dot ' + readyClass + '"></span>' + (e.ready ? 'Ready' : 'Check') + '</span>'
-      + '<div class="eq-dossier"><strong>Fiscal Period:</strong> ' + (e.fiscal_period || 'N/A')
-      + (e.missing_items ? '<br><strong>Missing:</strong> ' + e.missing_items.join(', ') : '')
-      + '<br><button class="btn btn-sm" style="margin-top:8px" onclick="event.stopPropagation();generateDossier(\'' + e.ticker + '\',\'' + (e.event_id || '') + '\')">Generate Dossier</button>'
-      + '</div></div>';
-  }).join('');
+var _eqEvents = [];
+var _expandedTicker = null;
+
+function loadEarningsQueue() {
+  var lookahead = document.getElementById('eq-lookahead').value;
+  document.getElementById('eq-loading').style.display = 'block';
+  document.getElementById('eq-event-list').querySelectorAll('.eq-event-card').forEach(function(c) { c.remove(); });
+  document.getElementById('eq-empty').style.display = 'none';
+
+  fetch('/api/earnings/events?lookahead_days=' + lookahead)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      document.getElementById('eq-loading').style.display = 'none';
+      _eqEvents = data.events || [];
+      renderEvents();
+    })
+    .catch(function(err) {
+      document.getElementById('eq-loading').style.display = 'none';
+      showToast('Failed to load earnings events: ' + (err.message || err), 'error');
+    });
+}
+
+function renderEvents() {
+  var list = document.getElementById('eq-event-list');
+  var empty = document.getElementById('eq-empty');
+
+  // Remove existing event cards (keep loading/empty)
+  list.querySelectorAll('.eq-event-card').forEach(function(c) { c.remove(); });
+
+  if (!_eqEvents.length) {
+    empty.style.display = 'block';
+    updateSummary(0, 0, 0);
+    return;
+  }
+
+  empty.style.display = 'none';
+
+  var counts = { ready: 0, partial: 0, insufficient: 0 };
+  _eqEvents.forEach(function(ev) {
+    counts[ev.readiness] = (counts[ev.readiness] || 0) + 1;
+  });
+  updateSummary(counts.ready, counts.partial, counts.insufficient);
+
+  _eqEvents.forEach(function(ev, idx) {
+    var card = document.createElement('div');
+    card.className = 'eq-event-card';
+    card.id = 'eq-card-' + idx;
+
+    var readinessLabel = ev.readiness === 'ready' ? 'Ready' : ev.readiness === 'partial' ? 'Partial' : 'Insufficient';
+
+    card.innerHTML =
+      '<div class="eq-event-row" onclick="toggleDossier(' + idx + ')">' +
+        '<span class="eq-ticker-col">' + escapeHtml(ev.ticker) + '</span>' +
+        '<span class="eq-date-col">' + escapeHtml(ev.event_date) + '</span>' +
+        '<span class="eq-confidence-col"><span class="eq-conf-badge ' + escapeHtml(ev.confidence) + '">' + escapeHtml(ev.confidence) + '</span></span>' +
+        '<span class="eq-readiness-col">' +
+          '<span class="eq-readiness-dot ' + escapeHtml(ev.readiness) + '"></span>' +
+          '<span class="eq-readiness-label ' + escapeHtml(ev.readiness) + '">' + readinessLabel + '</span>' +
+        '</span>' +
+        (ev.fiscal_period ? '<span style="font-size:0.75rem;color:var(--text-muted);">' + escapeHtml(ev.fiscal_period) + '</span>' : '') +
+        '<span class="eq-action-col">' +
+          '<button class="eq-gen-btn" onclick="event.stopPropagation();generateDossier(\'' + escapeHtml(ev.ticker) + '\')" title="Generate Pre-event Dossier">📋 Dossier</button>' +
+          '<span class="eq-expand-icon">▼</span>' +
+        '</span>' +
+      '</div>' +
+      '<div class="eq-dossier" id="eq-dossier-' + idx + '">' +
+        '<div class="eq-dossier-tabs">' +
+          '<button class="eq-dossier-tab active" onclick="event.stopPropagation();switchDossierTab(' + idx + ',\'pre\')">Pre-event Dossier</button>' +
+          '<button class="eq-dossier-tab" onclick="event.stopPropagation();switchDossierTab(' + idx + ',\'post\')">Post-event Scorecard</button>' +
+        '</div>' +
+        '<div class="eq-dossier-panel active" id="eq-panel-pre-' + idx + '">' +
+          '<div class="eq-loading">Loading dossier...</div>' +
+        '</div>' +
+        '<div class="eq-dossier-panel" id="eq-panel-post-' + idx + '">' +
+          '<div class="eq-loading">Loading scorecard...</div>' +
+        '</div>' +
+      '</div>';
+
+    list.appendChild(card);
+  });
+}
+
+function updateSummary(ready, partial, insufficient) {
+  document.getElementById('eq-count-ready').textContent = ready;
+  document.getElementById('eq-count-partial').textContent = partial;
+  document.getElementById('eq-count-insufficient').textContent = insufficient;
+  document.getElementById('eq-count-total').textContent = ready + partial + insufficient;
+}
+
+function toggleDossier(idx) {
+  var card = document.getElementById('eq-card-' + idx);
+  if (!card) return;
+  var isExpanded = card.classList.contains('expanded');
+
+  // Close all others
+  document.querySelectorAll('.eq-event-card.expanded').forEach(function(c) {
+    if (c !== card) c.classList.remove('expanded');
+  });
+
+  if (isExpanded) {
+    card.classList.remove('expanded');
+    _expandedTicker = null;
+  } else {
+    card.classList.add('expanded');
+    _expandedTicker = _eqEvents[idx].ticker;
+    // Lazy-load pre-event dossier
+    var prePanel = document.getElementById('eq-panel-pre-' + idx);
+    if (prePanel && prePanel.querySelector('.eq-loading')) {
+      loadDossier(_eqEvents[idx].ticker, idx, 'pre');
+    }
+  }
+}
+
+function switchDossierTab(idx, tab) {
+  var card = document.getElementById('eq-card-' + idx);
+  if (!card) return;
+
+  // Update tab active states
+  card.querySelectorAll('.eq-dossier-tab').forEach(function(t) {
+    t.classList.toggle('active', t.textContent.toLowerCase().indexOf(tab) !== -1);
+  });
+
+  // Show matching panel
+  card.querySelectorAll('.eq-dossier-panel').forEach(function(p) {
+    p.classList.remove('active');
+  });
+
+  var panelId = 'eq-panel-' + tab + '-' + idx;
+  var panel = document.getElementById(panelId);
+  if (panel) {
+    panel.classList.add('active');
+    // Lazy-load if needed
+    if (panel.querySelector('.eq-loading')) {
+      if (tab === 'pre') {
+        loadDossier(_eqEvents[idx].ticker, idx, 'pre');
+      } else {
+        loadScorecard(_eqEvents[idx].ticker, idx, 'post');
+      }
+    }
+  }
+}
+
+function loadDossier(ticker, idx, tab) {
+  var panel = document.getElementById('eq-panel-' + tab + '-' + idx);
+  if (!panel) return;
+
+  panel.innerHTML = '<div class="eq-loading"><div class="spinner spinner-center spinner-sm"></div></div>';
+
+  fetch('/api/earnings/dossier/' + ticker)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status !== 'ok' || !data.dossier) {
+        panel.innerHTML = '<p style="color:var(--text-muted);padding:12px;">No dossier data available.</p>';
+        return;
+      }
+      panel.innerHTML = renderDossierContent(data.dossier);
+    })
+    .catch(function() {
+      panel.innerHTML = '<p style="color:var(--signal-sell);padding:12px;">Failed to load dossier.</p>';
+    });
+}
+
+function renderDossierContent(d) {
+  var s = d.sections;
+  var html = '';
+
+  // Guidance
+  if (s.guidance) {
+    html += '<div class="eq-section"><div class="eq-section-title">📈 ' + escapeHtml(s.guidance.title) + '</div>';
+    html += '<div class="eq-kpi-grid">';
+    (s.guidance.items || []).forEach(function(item) {
+      html += '<div class="eq-kpi-item"><div class="eq-kpi-label">' + escapeHtml(item.label) + '</div><div class="eq-kpi-value">' + escapeHtml(item.value) + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  // KPI
+  if (s.kpi) {
+    html += '<div class="eq-section"><div class="eq-section-title">📊 ' + escapeHtml(s.kpi.title) + '</div>';
+    html += '<div class="eq-kpi-grid">';
+    (s.kpi.items || []).forEach(function(item) {
+      html += '<div class="eq-kpi-item"><div class="eq-kpi-label">' + escapeHtml(item.label) + '</div><div class="eq-kpi-value">' + escapeHtml(item.value) + '</div></div>';
+    });
+    html += '</div></div>';
+  }
+
+  // Risks
+  if (s.risks) {
+    html += '<div class="eq-section"><div class="eq-section-title">⚠️ ' + escapeHtml(s.risks.title) + '</div>';
+    html += '<ul class="eq-item-list">';
+    (s.risks.items || []).forEach(function(r) {
+      html += '<li>' + escapeHtml(r) + '</li>';
+    });
+    html += '</ul></div>';
+  }
+
+  // Persona Divergence
+  if (s.persona_divergence) {
+    html += '<div class="eq-section"><div class="eq-section-title">🎭 ' + escapeHtml(s.persona_divergence.title) + '</div>';
+    html += '<div class="md-table-wrap"><table class="eq-divergence-table"><thead><tr><th>Topic</th><th>🐂 Bulls</th><th>🐻 Bears</th><th>😐 Neutral</th></tr></thead><tbody>';
+    (s.persona_divergence.items || []).forEach(function(row) {
+      html += '<tr>' +
+        '<td class="topic-cell">' + escapeHtml(row.topic) + '</td>' +
+        '<td>' + escapeHtml((row.bulls || []).join(', ')) + '</td>' +
+        '<td>' + escapeHtml((row.bears || []).join(', ')) + '</td>' +
+        '<td>' + escapeHtml((row.neutrals || []).join(', ')) + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
+
+  // Pending Questions
+  if (s.pending_questions) {
+    html += '<div class="eq-section"><div class="eq-section-title">❓ ' + escapeHtml(s.pending_questions.title) + '</div>';
+    html += '<ul class="eq-item-list">';
+    (s.pending_questions.items || []).forEach(function(q) {
+      html += '<li>' + escapeHtml(q) + '</li>';
+    });
+    html += '</ul></div>';
+  }
+
+  return html || '<p style="color:var(--text-muted);padding:12px;">Dossier sections are being populated. Run the earnings-prep Skill to generate content.</p>';
+}
+
+function loadScorecard(ticker, idx, tab) {
+  var panel = document.getElementById('eq-panel-' + tab + '-' + idx);
+  if (!panel) return;
+
+  panel.innerHTML = '<div class="eq-loading"><div class="spinner spinner-center spinner-sm"></div></div>';
+
+  fetch('/api/earnings/scorecard/' + ticker)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.status !== 'ok' || !data.scorecard) {
+        panel.innerHTML = '<p style="color:var(--text-muted);padding:12px;">No scorecard data available.</p>';
+        return;
+      }
+      panel.innerHTML = renderScorecardContent(data.scorecard);
+    })
+    .catch(function() {
+      panel.innerHTML = '<p style="color:var(--signal-sell);padding:12px;">Failed to load scorecard.</p>';
+    });
+}
+
+function renderScorecardContent(sc) {
+  var sum = sc.summary || {};
+  var html = '';
+
+  // Summary
+  html += '<div class="eq-scorecard-summary">' +
+    '<div class="eq-sc-stat confirmed"><div class="eq-sc-stat-value">' + (sum.confirmed || 0) + '</div><div class="eq-sc-stat-label">Confirmed</div></div>' +
+    '<div class="eq-sc-stat refuted"><div class="eq-sc-stat-value">' + (sum.refuted || 0) + '</div><div class="eq-sc-stat-label">Refuted</div></div>' +
+    '<div class="eq-sc-stat partial"><div class="eq-sc-stat-value">' + (sum.partial || 0) + '</div><div class="eq-sc-stat-label">Partial</div></div>' +
+    '<div class="eq-sc-stat unknown"><div class="eq-sc-stat-value">' + (sum.unknown || 0) + '</div><div class="eq-sc-stat-label">Unknown</div></div>' +
+    '</div>';
+
+  // Items
+  (sc.items || []).forEach(function(item) {
+    var icon = item.verdict === 'confirmed' ? '✅' : item.verdict === 'refuted' ? '❌' : item.verdict === 'partially_correct' ? '⚠️' : '❓';
+    var verdictClass = item.verdict === 'partially_correct' ? 'partial' : (item.verdict || 'unknown');
+    html += '<div class="eq-sc-item">' +
+      '<div class="eq-sc-item-icon">' + icon + '</div>' +
+      '<div class="eq-sc-item-body">' +
+        '<div class="eq-sc-item-question">' + escapeHtml(item.question || '') + '</div>' +
+        '<div class="eq-sc-item-pre">Pre: ' + escapeHtml(item.pre_event_answer || '—') + '</div>' +
+        '<div class="eq-sc-item-actual">Actual: ' + escapeHtml(item.actual_outcome || '—') + '</div>' +
+        '<span class="eq-sc-verdict ' + verdictClass + '">' + escapeHtml(item.verdict || 'unknown') + '</span>' +
+      '</div></div>';
+  });
+
+  if (!(sc.items || []).length) {
+    html += '<p style="color:var(--text-muted);padding:12px;">No scorecard items yet. Scorecards are generated after earnings events complete and actual results are available.</p>';
+  }
+
+  return html;
+}
+
+function generateDossier(ticker) {
+  showToast('Generating pre-event dossier for ' + ticker + '...', 'info');
+  // In production this would trigger the earnings-prep Skill asynchronously.
+  // For MVP we reload the dossier panel if already expanded.
+  var idx = -1;
+  for (var i = 0; i < _eqEvents.length; i++) {
+    if (_eqEvents[i].ticker === ticker) { idx = i; break; }
+  }
+  if (idx >= 0) {
+    loadDossier(ticker, idx, 'pre');
+    var panel = document.getElementById('eq-panel-pre-' + idx);
+    if (panel) panel.classList.add('active');
+    var postPanel = document.getElementById('eq-panel-post-' + idx);
+    if (postPanel) postPanel.classList.remove('active');
+    var card = document.getElementById('eq-card-' + idx);
+    if (card) {
+      card.classList.add('expanded');
+      card.querySelectorAll('.eq-dossier-tab').forEach(function(t) {
+        t.classList.toggle('active', t.textContent.toLowerCase().indexOf('pre') !== -1);
+      });
+    }
+  }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+  loadEarningsQueue();
 });
-function generateDossier(ticker, eventId) { alert('Dossier generation for ' + ticker + ' started. Check Research Inbox for results.'); }
 </script>
 {% endblock %}
