@@ -187,6 +187,67 @@ class TestFilingDelta:
 
 
 # ---------------------------------------------------------------------------
+# debt_covenant_review.yaml
+# ---------------------------------------------------------------------------
+
+class TestDebtCovenantReview:
+    @pytest.fixture(scope="class")
+    def spec(self) -> SkillSpec:
+        return load_skill(DEBT_COVENANT)
+
+    def test_loads_without_error(self, spec):
+        assert spec.id == "debt-covenant-review"
+
+    def test_required_capabilities(self, spec):
+        assert spec.required_capabilities == [
+            "sec.filings.read",
+            "fundamentals.snapshot",
+        ]
+
+    def test_workflow(self, spec):
+        steps = {s.id: s for s in spec.workflow}
+        assert set(steps.keys()) == {"fetch_filings", "covenant_check", "report"}
+        assert steps["covenant_check"].uses == "covenant.review"
+        assert steps["covenant_check"].needs == ["fetch_filings"]
+        assert steps["report"].uses == "report.covenant_review"
+        assert steps["report"].needs == ["covenant_check"]
+
+    def test_raw_validator_passes(self):
+        raw = yaml.safe_load(DEBT_COVENANT.read_text(encoding="utf-8"))
+        violations = validate_skill_spec(raw)
+        assert violations == [], f"Unexpected violations: {violations}"
+
+
+# ---------------------------------------------------------------------------
+# insider_cluster_review.yaml
+# ---------------------------------------------------------------------------
+
+class TestInsiderClusterReview:
+    @pytest.fixture(scope="class")
+    def spec(self) -> SkillSpec:
+        return load_skill(INSIDER_CLUSTER)
+
+    def test_loads_without_error(self, spec):
+        assert spec.id == "insider-cluster-review"
+
+    def test_required_capabilities(self, spec):
+        assert spec.required_capabilities == ["sec.filings.read"]
+
+    def test_workflow(self, spec):
+        steps = {s.id: s for s in spec.workflow}
+        assert set(steps.keys()) == {"fetch_form4", "cluster_detect", "report"}
+        assert steps["cluster_detect"].uses == "ownership.cluster_detect"
+        assert steps["cluster_detect"].needs == ["fetch_form4"]
+        assert steps["report"].uses == "report.insider_cluster"
+        assert steps["report"].needs == ["cluster_detect"]
+
+    def test_raw_validator_passes(self):
+        raw = yaml.safe_load(INSIDER_CLUSTER.read_text(encoding="utf-8"))
+        violations = validate_skill_spec(raw)
+        assert violations == [], f"Unexpected violations: {violations}"
+
+
+# ---------------------------------------------------------------------------
 # Validation: module_path rejection
 # ---------------------------------------------------------------------------
 

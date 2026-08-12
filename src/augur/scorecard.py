@@ -464,6 +464,51 @@ class LanguageDiffAnalyzer:
             overall_sentiment_shift=overall,
         )
 
+    # Escalation word pairs: tentative → definitive
+    _ESCALATION_PAIRS = [
+        ("may", "will"),
+        ("could", "will"),
+        ("might", "will"),
+        ("expects", "committed"),
+        ("believes", "confirms"),
+        ("considers", "plans to"),
+        ("evaluating", "implementing"),
+        ("possible", "certain"),
+    ]
+
+    def detect_escalation(self, prev_text: str, new_text: str) -> List[Dict[str, str]]:
+        """Detect wording escalations from tentative to definitive language.
+
+        Args:
+            prev_text: Previous filing section text.
+            new_text: New filing section text.
+
+        Returns:
+            List of escalation dicts: {before_phrase, after_phrase, kind}.
+        """
+        escalations: List[Dict[str, str]] = []
+        if not prev_text or not new_text:
+            return escalations
+
+        prev_lower = prev_text.lower()
+        new_lower = new_text.lower()
+
+        for tentative, definitive in self._ESCALATION_PAIRS:
+            # Find tentative phrases in prev and definitive in new
+            if tentative in prev_lower and definitive in new_lower:
+                # Extract surrounding context (simplified)
+                idx_p = prev_lower.find(tentative)
+                idx_n = new_lower.find(definitive)
+                ctx_p = prev_text[max(0, idx_p - 30):idx_p + len(tentative) + 30]
+                ctx_n = new_text[max(0, idx_n - 30):idx_n + len(definitive) + 30]
+                escalations.append({
+                    "before_phrase": ctx_p.strip(),
+                    "after_phrase": ctx_n.strip(),
+                    "kind": f"{tentative} → {definitive}",
+                })
+
+        return escalations
+
     def detect_sentiment_words(self, text: str) -> Dict[str, int]:
         """Count bullish, bearish, and cautious word stems in *text*.
 
