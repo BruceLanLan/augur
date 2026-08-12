@@ -885,7 +885,6 @@ def create_server():
     @mcp.resource("augur://ledger/{ticker}/{quarter}")
     def get_ledger_resource(ticker: str, quarter: str) -> str:
         """Read-only access to a cross-quarter change ledger."""
-        from augur.change_ledger import ChangeLedger
         from pathlib import Path
         from augur.data_dir import get_data_dir
         ledger_dir = get_data_dir() / "ledgers"
