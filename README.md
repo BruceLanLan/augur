@@ -183,7 +183,11 @@ augur skill run filing-delta --ticker AAPL
 | 多空辩论 | `/debate` | 结构化多轮辩论 |
 | 对比分析 | `/compare` | 五维度雷达图 |
 | 历史记录 | `/history` | 52 周热力图 |
-| **Thesis Journal** | `/thesis` | 🆕 投资论文创建/追踪/回顾 |
+| **Thesis Journal** | `/thesis` | 🆕 投资论文创建/追踪/回顾 + 决策日志 + 问题队列 |
+| **Post-Earnings Scorecard** | `/scorecard` | 🆕 事前预测 vs 实际结果 |
+| **Earnings Queue** | `/earnings` | 🆕 财报事件队列 + readiness |
+| **Research Inbox** | `/inbox` | 🆕 优先级研究收件箱 |
+| **Valuation Lab** | `/valuation` | 🆕 DCF 参数表单 + 敏感度网格 |
 | **证据浏览器** | `/history` | 🆕 Evidence Graph 力导向图 |
 | 持仓管理 | `/portfolio` | Kelly 配置建议 |
 | 自选股 | `/watchlist` | 批量管理 + cron 定时 |
