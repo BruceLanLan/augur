@@ -181,3 +181,67 @@ function createThesis(e) {
 document.addEventListener('DOMContentLoaded', loadTheses);
 </script>
 {% endblock %}
+
+<!-- ============ Open Questions Panel ============ -->
+<div class="tj-section" style="margin-top: 32px;">
+  <h2>❓ Open Questions</h2>
+  <div id="tj-questions-list" class="tj-list">
+    <div class="skeleton skeleton-text"></div>
+    <div class="skeleton skeleton-text short"></div>
+  </div>
+  <button class="btn" onclick="document.getElementById('tj-question-form').classList.toggle('hidden')" style="margin-top: 8px;">+ Add Question</button>
+  <form id="tj-question-form" class="tj-form hidden" onsubmit="addQuestion(event)">
+    <div class="form-group">
+      <label>Question</label>
+      <input id="tj-q-text" type="text" placeholder="e.g. Is services growth sustainable above 15%?" required>
+    </div>
+    <div class="form-group">
+      <label>Context (why this matters)</label>
+      <input id="tj-q-context" type="text" placeholder="Services is now 26% of revenue, up from 20% two years ago">
+    </div>
+    <button type="submit" class="btn btn-accent">Save Question</button>
+  </form>
+</div>
+
+<script>
+function loadQuestions() {
+  var ticker = document.querySelector('.tj-journal').dataset.ticker || '';
+  fetch('/api/questions/list' + (ticker ? '?ticker=' + ticker : ''))
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var el = document.getElementById('tj-questions-list');
+      var questions = data.questions || [];
+      if (questions.length === 0) {
+        el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">💡</div><div class="empty-state-title">No open questions</div></div>';
+        return;
+      }
+      el.innerHTML = questions.map(function(q) {
+        var statusClass = q.status === 'open' ? 'active' : q.status === 'answered' ? 'confirmed' : 'weakened';
+        return '<div class="tj-card"><div class="tj-card-header">'
+          + '<span class="tj-card-statement">' + escapeHtml(q.question) + '</span>'
+          + '<span class="tj-card-status ' + statusClass + '">' + q.status + '</span>'
+          + '</div>'
+          + (q.context ? '<div class="tj-card-details"><span class="tj-label">Context:</span> ' + escapeHtml(q.context) + '</div>' : '')
+          + (q.answer ? '<div class="tj-card-details"><span class="tj-label">Answer:</span> ' + escapeHtml(q.answer) + ' <em>(' + (q.answer_confidence || 'unknown') + ' confidence)</em></div>' : '')
+          + '<div class="tj-card-meta">Created ' + (q.created_at || '').slice(0, 10) + '</div>'
+          + '</div>';
+      }).join('');
+    });
+}
+function addQuestion(e) {
+  e.preventDefault();
+  var data = {
+    ticker: document.querySelector('.tj-journal').dataset.ticker || '',
+    question: document.getElementById('tj-q-text').value,
+    context: document.getElementById('tj-q-context').value,
+  };
+  fetch('/api/questions/add', {
+    method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(data)
+  }).then(function(r) { return r.json(); }).then(function() {
+    document.getElementById('tj-question-form').classList.add('hidden');
+    document.getElementById('tj-question-form').reset();
+    loadQuestions();
+  });
+}
+document.addEventListener('DOMContentLoaded', function() { loadQuestions(); });
+</script>

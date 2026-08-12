@@ -87,6 +87,10 @@ v11 是一次**从 "AI 报告生成器" 到 "Research Memory System" 的全面�
 | `guidance_tracker.py` | Guidance 区间追踪 + 准确率 | "管理层上次说 Q4 营收 92-96B，实际呢？" |
 | `research_inbox.py` | 事件聚合优先队列 | 财报临近 + filing 变化 + thesis 需要 review → 一个 inbox |
 | `risk_review.py` | Risk factor + covenant review | 新增/升级/删除的风险因素 + 债务约束检查 |
+| `scorecard.py` | Post-earnings Scorecard + Language Diff | 事前预测 vs 实际结果 + 管理层措辞变化检测 |
+| `capital_allocation.py` | Capital Allocation + Peer Comparison | 回购/分红/M&A/capex + 同行业对标 |
+| `questions.py` | Open Questions Queue + Templates | 跨事件保留未解决问题 + 可复用研究 SOP 模板 |
+| `debate_engine.py` | Evidence-seeking Debate | 4-stage: claim→challenge→requery→revision |
 | `eval_lab.py` | Walk-forward OOS + persona ablation | 谁真的有增量预测能力？不是靠嘴说 |
 | `export.py` | Markdown / PDF / JSON / Evidence Pack | 一键导出可分发的研究证据包 |
 | `earnings.py` | 财报事件识别 + dossier readiness | watchlist → 发现临近财报 → 检查数据是否就绪 |
