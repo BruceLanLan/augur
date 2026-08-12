@@ -555,6 +555,38 @@ class DecisionLog:
             )
             self._decisions[d.decision_id] = d
 
+def scan_all_falsifications(self, data_dir: Optional[Any] = None) -> List[Dict[str, Any]]:
+    """Scan all active theses against the latest RunBundle for each ticker.
+
+    For each active thesis, load the most recent RunBundle from the runs
+    directory and run check_falsification against its contents. Returns
+    a list of result dicts.
+    """
+    import json
+    from pathlib import Path
+    from augur.data_dir import get_data_dir
+
+    runs_dir = Path(get_data_dir()) / "runs"
+    results: List[Dict[str, Any]] = []
+
+    for th in list(self._theses.values()):
+        if th.status not in ("active", "weakened"):
+            continue
+        # Find latest run for this ticker
+        latest = None
+        for f in sorted(runs_dir.glob(f"run_{th.ticker.upper()}_*.json"), reverse=True):
+            try:
+                latest = json.loads(f.read_text(encoding="utf-8"))
+                break
+            except Exception:
+                continue
+        if latest is None:
+            continue
+        result = self.check_falsification(th.thesis_id, latest)
+        result["ticker"] = th.ticker
+        results.append(result)
+    return results
+
     # -- Auto-falsification check -----------------------------------------
 
     def check_falsification(self, thesis_id: str, new_data: dict) -> dict:
