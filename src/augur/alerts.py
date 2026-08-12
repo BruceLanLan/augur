@@ -74,11 +74,11 @@ class Alert:
             allowed again.  Used by :meth:`AlertEngine.deduplicate`.
     """
 
-    alert_id: str
     ticker: str
     alert_type: str
     title: str
     description: str
+    alert_id: str = ""
     severity: str = "medium"
     created_at: str = ""
     source_run_id: str = ""
