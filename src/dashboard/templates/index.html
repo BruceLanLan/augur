@@ -2043,3 +2043,31 @@ function renderTreasuryRates(data) {
 }
 </script>
 {% endblock %}
+
+<!-- ============ Alerts Panel ============ -->
+<div id="alerts-panel" style="position: fixed; top: 16px; right: 16px; z-index: 9000; width: 360px; max-width: 92vw;">
+</div>
+<script>
+(function() {
+  var panel = document.getElementById('alerts-panel');
+  function loadAlerts() {
+    fetch('/api/alerts/active')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var alerts = data.alerts || [];
+        if (alerts.length === 0) return;
+        panel.innerHTML = alerts.map(function(a) {
+          var sevColor = a.severity === 'critical' ? '#ef4444' : a.severity === 'high' ? '#f59e0b' : a.severity === 'medium' ? '#3b82f6' : '#6b7280';
+          return '<div class="toast" style="background: var(--bg-card); color: var(--text); border-left: 4px solid ' + sevColor + '; margin-bottom: 8px; cursor: pointer; position: relative;" onclick="this.remove()">'
+            + '<div style="font-weight: 600; font-size: 13px;">' + escapeHtml(a.title) + '</div>'
+            + '<div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">' + escapeHtml(a.description) + '</div>'
+            + '<div style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">' + (a.ticker || '') + ' · ' + a.alert_type + '</div>'
+            + '</div>';
+        }).join('');
+      }).catch(function() {});
+  }
+  function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+  loadAlerts();
+  setInterval(loadAlerts, 60000);
+})();
+</script>
