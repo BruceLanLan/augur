@@ -201,12 +201,12 @@ class TestCoverageAnalyzer:
         assert summary["ZZZZ"]["recommendation"] == "no_data"
 
     def test_analyze_stale_threshold_custom(self):
-        """A very short threshold makes every historical field stale."""
+        """A very short threshold catches fields whose last data is *not* today."""
         store = _make_evidence_store()
-        # 1-day threshold: all fields with data > 1 day old are stale
+        # 1-day threshold: only fields whose last_available < (now - 1 day) are stale.
+        # market_cap last period = today → NOT stale; pe_ratio ends ~120 days ago → stale.
         report = CoverageAnalyzer.analyze("AAPL", store, stale_threshold_days=1)
-        # market_cap and pe_ratio both have data older than 1 day
-        assert "market_cap" in report.stale_fields
+        assert "market_cap" not in report.stale_fields  # ends today
         assert "pe_ratio" in report.stale_fields
 
     def test_analyze_very_large_threshold_nothing_stale(self):
