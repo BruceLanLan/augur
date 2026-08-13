@@ -128,7 +128,7 @@ async def ws_committee(websocket: WebSocket):
                     "risks": result.risks[:1],
                     "progress": f"{i}/{total}",
                 })
-            except Exception as e:
+            except Exception:
                 await websocket.send_json({
                     "type": "agent",
                     "agent_id": agent.agent_id,
@@ -242,13 +242,12 @@ async def ws_workflow(websocket: WebSocket):
         ticker = str(raw.get("ticker", "")).upper().strip()
         steps_str = str(raw.get("steps", "")).strip()
         agents_str = str(raw.get("agents", "")).strip()
-        question = str(raw.get("question", "")).strip()
 
         if not ticker or not re.match(r'^[A-Za-z0-9.\-]{1,15}$', ticker):
             await websocket.send_json({"type": "error", "message": "Invalid ticker"})
             return
 
-        from augur.workflow import parse_steps, VALID_STEPS, _record_step_status
+        from augur.workflow import parse_steps, _record_step_status
         from augur.registry import AgentRegistry, DecisionCoordinator
 
         try:

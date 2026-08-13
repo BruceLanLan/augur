@@ -4,7 +4,7 @@ BuffettAgent - Warren Buffett 护城河价值投资
 """
 
 from typing import Dict
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class BuffettAgent(BaseAgent):
@@ -45,7 +45,6 @@ class BuffettAgent(BaseAgent):
 
         # 行业专属权重调整
         sector = context.sector.lower() if context.sector else ""
-        industry = context.industry.lower() if context.industry else ""
         if "tech" in sector or "software" in sector or "semiconductor" in sector:
             growth_multiplier = 1.5
             value_multiplier = 0.7

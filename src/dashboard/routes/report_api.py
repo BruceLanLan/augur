@@ -1,6 +1,6 @@
 """Research Report REST endpoint — aggregated v11 report."""
 from __future__ import annotations
-from typing import Any, Dict, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException
 

@@ -9,7 +9,7 @@
 **Not another AI stock picker. A research memory system that remembers what you knew, when you knew it, what changed, and who disagrees — and why.**
 
 [![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur-next)
-[![350+ Tests](https://img.shields.io/badge/431_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
+[![3422 Tests](https://img.shields.io/badge/3422_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
 [![Evidence-First](https://img.shields.io/badge/Evidence-First_📋-4a90d9?style=for-the-badge)](#-why-augur)
 [![18 Masters](https://img.shields.io/badge/18-Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -87,7 +87,7 @@ v11 is a **foundation rebuild** — from "AI report generator" to "Research Memo
 3. **Immutable RunBundle** — every run snapshotted. Checkpoint resume. Diff between runs.
 4. **Declarative Skills** — pure YAML. No `module_path`, `shell`, or `import`. Runtime permission enforcement.
 5. **UI/UX** — ⌘K Command Palette · Dark Mode · Evidence Graph (force-directed) · Thesis Journal page · Skeleton/Empty-state/Toast · Responsive
-6. **431 tests** — hermetic, zero user-directory pollution. PBKDF2 600k. SQLite WAL + corruption backup.
+6. **3422 tests** — hermetic, zero user-directory pollution. PBKDF2 600k. SQLite WAL + corruption backup.
 
 Full details → [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md)
 
@@ -173,14 +173,14 @@ augur serve · augur watch · augur cron-run · augur telegram
 <details open>
 <summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
 
-Foundation rebuild: 431 tests, 14 new modules, 116 files.
+Foundation rebuild: 3422 tests, 14 new modules, 116 files.
 
 - Schema contracts: EvidenceItem (three-time), Claim, StepResult, RunBundle, SkillSpec v1
 - Research loop: Thesis Journal → Filing Delta → Disagreement Map → Guidance Tracker → Research Inbox
 - Valuation engine: pure Decimal DCF + WACC + Scenario Lab
 - Eval: Chronological Evaluation Lab + Persona Ablation + OOS harness
 - UI: ⌘K palette · dark mode · evidence graph · thesis page · skeleton/empty-state
-- Trust: PBKDF2 600k · SQLite WAL · calibration labels · 431 hermetic tests
+- Trust: PBKDF2 600k · SQLite WAL · calibration labels · 3422 hermetic tests
 </details>
 
 <details>

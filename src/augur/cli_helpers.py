@@ -27,7 +27,7 @@ def _auto_fetch_context(ticker: str):
         click.echo(f"Auto-fetching data for {ticker.upper()} from yfinance...\n")
         ctx = fetch_market_context(ticker)
         click.echo(f"  Price: {ctx.price:.2f} | PE: {ctx.pe:.1f} | ROE: {ctx.roe:.2%} | GM: {ctx.gross_margins:.2%}")
-        click.echo(f"  [数据来源: yfinance 实时]\n")
+        click.echo("  [数据来源: yfinance 实时]\n")
         return ctx
     except Exception as e:
         click.echo(
@@ -50,11 +50,11 @@ def _print_result(result):
     click.echo(f"Confidence: {result.confidence:.0%}")
 
     if result.key_findings:
-        click.echo(f"\nKey Findings:")
+        click.echo("\nKey Findings:")
         for f in result.key_findings:
             click.echo(f"  - {clean_output(f)}")
 
     if result.risks:
-        click.echo(f"\nRisks:")
+        click.echo("\nRisks:")
         for r in result.risks:
             click.echo(f"  - {clean_output(r)}")

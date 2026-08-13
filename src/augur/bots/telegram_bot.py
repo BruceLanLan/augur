@@ -210,7 +210,7 @@ def format_single_agent_message(ticker: str, result) -> str:
         f"\u2b50 \u8bc4\u5206: {result.score:.1f}/10",
         f"\U0001f3af \u7f6e\u4fe1\u5ea6: {result.confidence:.0%}",
         "",
-        f"\U0001f4dd \u63a8\u7406:",
+        "\U0001f4dd \u63a8\u7406:",
         result.reasoning[:500],
     ]
 

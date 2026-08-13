@@ -66,7 +66,7 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
         agent = registry.get(persona)
         if not agent:
             click.echo(f"Error: Persona '{persona}' not found.", err=True)
-            click.echo(f"  Suggestion: Run 'augur list-personas' to see available IDs.", err=True)
+            click.echo("  Suggestion: Run 'augur list-personas' to see available IDs.", err=True)
             click.echo(f"  Available: {', '.join(a.agent_id for a in registry.get_all())}", err=True)
             raise SystemExit(1)
         result = agent.analyze(ctx)
@@ -133,15 +133,15 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
 
             if bullish_agents:
                 names = ", ".join(bullish_agents[:5])
-                suffix = f"..." if len(bullish_agents) > 5 else ""
+                suffix = "..." if len(bullish_agents) > 5 else ""
                 click.echo(f"  BULLISH ({len(bullish_agents)}): {names}{suffix}")
             if neutral_agents:
                 names = ", ".join(neutral_agents[:5])
-                suffix = f"..." if len(neutral_agents) > 5 else ""
+                suffix = "..." if len(neutral_agents) > 5 else ""
                 click.echo(f"  NEUTRAL  ({len(neutral_agents)}): {names}{suffix}")
             if bearish_agents:
                 names = ", ".join(bearish_agents[:5])
-                suffix = f"..." if len(bearish_agents) > 5 else ""
+                suffix = "..." if len(bearish_agents) > 5 else ""
                 click.echo(f"  BEARISH ({len(bearish_agents)}): {names}{suffix}")
 
             click.echo(separator)
@@ -217,7 +217,7 @@ def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio
         click.echo(_json.dumps(payload, ensure_ascii=False, indent=2))
         return
 
-    from augur.cli_format import format_box, format_table, signal_icon, color_text, clean_output
+    from augur.cli_format import format_box, format_table, signal_icon, clean_output
 
     # Summary box
     icon = signal_icon(consensus.signal.value)
@@ -233,12 +233,12 @@ def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio
     click.echo(format_box(box_lines, title=f"{ticker.upper()} Consensus"))
 
     if consensus.key_findings:
-        click.echo(f"\nKey Findings:")
+        click.echo("\nKey Findings:")
         for f in consensus.key_findings:
             click.echo(f"  - {clean_output(f)}")
 
     if consensus.risks:
-        click.echo(f"\nRisks:")
+        click.echo("\nRisks:")
         for r in consensus.risks:
             click.echo(f"  - {clean_output(r)}")
 

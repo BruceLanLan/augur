@@ -7,7 +7,7 @@ Mounts via: app.include_router(workspace_router)
 import asyncio
 import hashlib
 import json
-from typing import Any, Dict, List, Optional, Set
+from typing import List, Optional, Set
 
 from fastapi import APIRouter, HTTPException, Request, WebSocket
 from fastapi.responses import JSONResponse
@@ -73,7 +73,7 @@ async def _broadcast_workspace_change(state: dict) -> None:
             await ws.send_json({"type": "workspace_update", "workspace": state})
         except Exception:
             disconnected.add(ws)
-    _ws_workspace_clients -= disconnected
+    _ws_workspace_clients.difference_update(disconnected)
 
 
 # ---- REST endpoints ----

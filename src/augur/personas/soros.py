@@ -3,7 +3,7 @@
 SorosAgent - George Soros 反身性理论
 """
 
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class SorosAgent(BaseAgent):

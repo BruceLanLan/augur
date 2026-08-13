@@ -606,9 +606,9 @@ class ReadinessEvaluator:
 
         all_desired = set(self._REQUIRED_DATA_FIELDS) | set(self._RECOMMENDED_DATA_FIELDS)
         missing = []
-        for field in sorted(all_desired):
-            if field not in data or data[field] is None:
-                missing.append(f"Missing: {field}")
+        for field_name in sorted(all_desired):
+            if field_name not in data or data[field_name] is None:
+                missing.append(f"Missing: {field_name}")
 
         if not missing:
             missing.append("All expected data fields are present")

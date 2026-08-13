@@ -55,8 +55,6 @@ def run_valuation(ticker: str, fcf: float = 0, growth: float = 0.08, wacc: float
 
 import click
 
-from augur.cli_commands.valuation_cmd import run_valuation
-
 
 @click.command("valuation")
 @click.argument("ticker")

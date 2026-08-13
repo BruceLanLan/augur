@@ -2,7 +2,6 @@
 """Risk manager — veto layer for consensus (pass-through by default)."""
 
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
 
 
 @dataclass

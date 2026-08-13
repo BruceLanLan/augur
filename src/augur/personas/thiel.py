@@ -3,7 +3,7 @@
 ThielAgent - Peter Thiel 从0到1垄断投资框架
 """
 
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class ThielAgent(BaseAgent):
@@ -228,8 +228,6 @@ class ThielAgent(BaseAgent):
 
         factors["long_term_bet"] = min(max(long_score, 0), 10)
 
-        bullish_th = self.thresholds.get("bullish_threshold", 7.0)
-        bearish_th = self.thresholds.get("bearish_threshold", 4.0)
 
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)
         total_score = max(0.0, min(10.0, total_score))

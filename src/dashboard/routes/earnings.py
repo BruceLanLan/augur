@@ -2,12 +2,12 @@
 
 import logging
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from augur.earnings import EarningsEventService, DossierStatus, FilingDelta, get_earnings_service
+from augur.earnings import EarningsEventService, get_earnings_service
 
 logger = logging.getLogger(__name__)
 

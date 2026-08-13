@@ -1,7 +1,7 @@
 ---
 name: augur-duan-yongping
 description: "段永平 AI — 本分·极度集中，消费电子与平台"
-version: 10.15.0
+version: 11.0.0rc1
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

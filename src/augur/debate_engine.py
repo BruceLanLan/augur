@@ -111,7 +111,6 @@ class EvidenceSeekingDebate:
         """
         claims: List[dict] = []
         for pid, output in persona_outputs.items():
-            reasoning = output.get("reasoning", "")
             signal = output.get("signal", "neutral")
             score = output.get("score", 5.0)
 
@@ -252,13 +251,13 @@ class EvidenceSeekingDebate:
             if claim_challenges:
                 if rq and rq.found_contradicting and not rq.found_supporting:
                     verdict = "contradicted"
-                    reason = f"Re-query found contradicting evidence"
+                    reason = "Re-query found contradicting evidence"
                 elif rq and rq.found_supporting and rq.found_contradicting:
                     verdict = "revised"
-                    reason = f"Mixed evidence found; claim needs refinement"
+                    reason = "Mixed evidence found; claim needs refinement"
                 elif rq and rq.found_supporting:
                     verdict = "supported"
-                    reason = f"Re-query confirmed supporting evidence"
+                    reason = "Re-query confirmed supporting evidence"
                 else:
                     verdict = "unknown"
                     reason = f"No new evidence found to resolve {len(claim_challenges)} challenge(s)"

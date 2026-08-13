@@ -9,7 +9,7 @@
 **不是又一个 AI 股票分析工具。是一个帮你记住"你何时知道什么、什么变了、谁在什么事实上分歧"的研究记忆系统。**
 
 [![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur-next)
-[![350+ Tests](https://img.shields.io/badge/431_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
+[![3422 Tests](https://img.shields.io/badge/3422_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
 [![Evidence-First](https://img.shields.io/badge/Evidence-First_📋-4a90d9?style=for-the-badge)](#-为什么-augur-不一样)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -165,7 +165,7 @@ augur skill run filing-delta --ticker AAPL
 
 ### 6. 信任底座
 
-- **431 tests**，AUGUR_DATA_DIR 隔离，零用户目录污染
+- **3422 tests**，AUGUR_DATA_DIR 隔离，零用户目录污染
 - PBKDF2 600k、SQLite WAL + 损坏 rename-to-backup
 - 校准状态标注：`raw` / `experimental` / `validated-calibrated` / `insufficient_data`
 
@@ -279,14 +279,14 @@ augur mcp-server · augur skills · augur telegram
 <details open>
 <summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
 
-**地基重建**：431 tests, 14 new modules, 116 files changed.
+**地基重建**：3422 tests, 14 new modules, 116 files changed.
 
 - **Schema 合约**：EvidenceItem（三类时间）、Claim（evidence 分类引用）、StepResult（typed output）、RunBundle（不可变快照）、SkillSpec v1（声明式安全合约）
 - **研究闭环**：Thesis Journal → Filing Delta → Disagreement Map → Guidance Tracker → Research Inbox → Risk Review
 - **估值引擎**：纯 `decimal.Decimal` DCF + WACC + Scenario Lab + Reverse DCF
 - **评估体系**：Chronological Evaluation Lab + Persona Ablation + Rolling IC OOS harness
 - **UI/UX**：⌘K Command Palette · Dark Mode · Evidence Graph · Thesis Journal 页面 · 骨架屏/空状态/Toast · 响应式
-- **信任底座**：PBKDF2 600k · SQLite WAL + corruption backup · 校准状态标注 · 431 hermetic tests
+- **信任底座**：PBKDF2 600k · SQLite WAL + corruption backup · 校准状态标注 · 3422 hermetic tests
 
 详见 [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md)
 </details>

@@ -15,7 +15,7 @@ F07 — PromotionGate:
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
@@ -160,12 +160,12 @@ class CoverageAnalyzer:
         )
 
     @staticmethod
-    def field_status(ticker: str, field: str, evidence_store: dict) -> FieldCoverage:
+    def field_status(ticker: str, field_name: str, evidence_store: dict) -> FieldCoverage:
         """Return coverage for a single field, or a zero-coverage sentinel.
 
         Args:
             ticker: Symbol.
-            field: Field name.
+            field_name: Field name.
             evidence_store: As described in :class:`CoverageAnalyzer`.
 
         Returns:
@@ -173,11 +173,11 @@ class CoverageAnalyzer:
             object will have ``coverage_pct=0.0`` and ``source="unknown"``.
         """
         ticker_data = evidence_store.get(ticker, {}).get("fields", {})
-        field_data = ticker_data.get(field)
+        field_data = ticker_data.get(field_name)
 
         if field_data is None:
             return FieldCoverage(
-                field=field,
+                field=field_name,
                 coverage_pct=0.0,
                 periods_available=0,
                 first_available="",
@@ -189,7 +189,7 @@ class CoverageAnalyzer:
         source = field_data.get("source", "unknown") if isinstance(field_data, dict) else "unknown"
 
         return CoverageAnalyzer._build_field_coverage(
-            field, periods, source,
+            field_name, periods, source,
             datetime.now(timezone.utc) - timedelta(days=_DEFAULT_STALE_THRESHOLD_DAYS),
         )
 
@@ -226,7 +226,7 @@ class CoverageAnalyzer:
 
     @staticmethod
     def _build_field_coverage(
-        field: str,
+        field_name: str,
         periods: list,
         source: str,
         stale_cutoff: datetime,
@@ -239,7 +239,7 @@ class CoverageAnalyzer:
         """
         if not periods:
             return FieldCoverage(
-                field=field,
+                field=field_name,
                 coverage_pct=0.0,
                 periods_available=0,
                 first_available="",
@@ -270,7 +270,7 @@ class CoverageAnalyzer:
         coverage_pct = round(min(actual / expected, 1.0) * 100.0, 2)
 
         return FieldCoverage(
-            field=field,
+            field=field_name,
             coverage_pct=coverage_pct,
             periods_available=actual,
             first_available=first,

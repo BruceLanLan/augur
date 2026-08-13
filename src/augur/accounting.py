@@ -15,7 +15,7 @@ Altman Z-Score — Altman (1968), "Financial Ratios, Discriminant Analysis
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 
 # ============================================================================

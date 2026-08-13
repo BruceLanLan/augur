@@ -45,8 +45,6 @@ def run_batch_analyze(tickers: List[str], max_workers: int = 5) -> str:
 
 import click
 
-from augur.cli_commands.batch_cmd import run_batch_analyze
-
 
 @click.command("batch")
 @click.argument("tickers", nargs=-1, required=True)

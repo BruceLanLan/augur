@@ -48,7 +48,6 @@ Environment Variables (企业微信):
 import os
 import re
 import json
-from pathlib import Path
 from typing import Optional, Dict, Any
 
 # Signal emoji mapping (WeCom markdown支持)
@@ -231,7 +230,7 @@ def format_single_agent_wechat(ticker: str, result) -> str:
         f"> \u8bc4\u5206: **{result.score:.1f}/10**",
         f"> \u7f6e\u4fe1\u5ea6: **{result.confidence:.0%}**",
         "",
-        f"**\u63a8\u7406:**",
+        "**\u63a8\u7406:**",
         result.reasoning[:300],
     ]
 
@@ -417,7 +416,7 @@ class GeWeChatBot:
         config["gewechat_app_id"] = self.app_id
         config["gewechat_base_url"] = self.base_url
         _save_gewechat_config(config)
-        print(f"   App ID saved to ~/.augur/wechat.yaml")
+        print("   App ID saved to ~/.augur/wechat.yaml")
 
     def handle_message(self, msg_data: Dict[str, Any]) -> Optional[str]:
         """Parse incoming message and route to handler.
@@ -939,8 +938,8 @@ def run_wecom_server(port: int = 8080):
     print("")
     print("Configure callback URL in WeCom admin console:")
     print(f"  URL: http://YOUR_DOMAIN:{port}/")
-    print(f"  Token: (your WECHAT_TOKEN)")
-    print(f"  EncodingAESKey: (your WECHAT_AES_KEY)")
+    print("  Token: (your WECHAT_TOKEN)")
+    print("  EncodingAESKey: (your WECHAT_AES_KEY)")
     print("")
     print("Press Ctrl+C to stop.")
 
@@ -1034,7 +1033,7 @@ def run_personal_wechat(port: int = 8066):
     bot = GeWeChatBot(base_url, token, app_id)
 
     # Login
-    print(f"\U0001f989 Augur Personal WeChat Bot (GeWeChat)")
+    print("\U0001f989 Augur Personal WeChat Bot (GeWeChat)")
     print(f"   API: {base_url}")
     print(f"   Callback port: {port}")
     print("")
@@ -1057,7 +1056,6 @@ def run_personal_wechat(port: int = 8066):
             try:
                 msg_data = json.loads(body)
                 from_wxid = msg_data.get("fromUser", "")
-                to_wxid = msg_data.get("toUser", "")
 
                 reply = bot.handle_message(msg_data)
                 if reply and from_wxid:
@@ -1087,7 +1085,7 @@ def run_personal_wechat(port: int = 8066):
         print(f"   Callback URL set: {callback_url}")
     except Exception as e:
         print(f"   Warning: Could not set callback URL: {e}")
-        print(f"   You may need to configure it manually.")
+        print("   You may need to configure it manually.")
 
     print("")
     print(f"\U0001f7e2 Personal WeChat Bot running on port {port}")

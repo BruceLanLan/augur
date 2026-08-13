@@ -1,9 +1,8 @@
 """Research Inbox + Alerts REST endpoints (H01/B07 UI wiring)."""
 from __future__ import annotations
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter
 
 router = APIRouter()
 
@@ -11,7 +10,7 @@ router = APIRouter()
 @router.get("/api/inbox/list")
 async def inbox_list(ticker: str = "", priority: str = "", limit: int = 20) -> Dict[str, Any]:
     """List inbox items, optionally filtered."""
-    from augur.research_inbox import ResearchInbox, InboxItem
+    from augur.research_inbox import ResearchInbox
     box = ResearchInbox()
     items = box.list(ticker=ticker or None, priority=priority or None, limit=limit)
     return {"items": [

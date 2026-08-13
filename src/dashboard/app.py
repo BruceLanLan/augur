@@ -467,7 +467,7 @@ def main():
     parser.add_argument("--reload", action="store_true")
     args = parser.parse_args()
 
-    print(f"\n🦉 Augur Dashboard")
+    print("\n🦉 Augur Dashboard")
     print(f"   http://localhost:{args.port}")
     print(f"   http://localhost:{args.port}/personas")
     print(f"   http://localhost:{args.port}/api/analyze/AAPL?pe=32&gross_margins=0.46")

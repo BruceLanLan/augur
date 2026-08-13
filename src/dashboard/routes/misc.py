@@ -3,7 +3,7 @@
 import time as _time
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, PlainTextResponse, Response
 
 from dashboard.deps import _APP_START_TIME, get_registry

@@ -3,7 +3,7 @@
 ArpsAgent - Crypto/Gold专属 链上数据+实际利率框架
 """
 
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class ArpsAgent(BaseAgent):
@@ -114,8 +114,6 @@ class ArpsAgent(BaseAgent):
             liq_risk_score -= 1
         factors["liquidity_risk"] = min(max(liq_risk_score, 0), 10)
 
-        bullish_th = self.thresholds.get("bullish_threshold", 6.5)
-        bearish_th = self.thresholds.get("bearish_threshold", 4.0)
 
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)
         total_score = max(0.0, min(10.0, total_score))

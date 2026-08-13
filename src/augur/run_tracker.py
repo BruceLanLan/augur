@@ -91,7 +91,7 @@ class RunTracker:
         ticker: str,
         config_version: str = "1.0",
         model_version: str = "1.0",
-        code_version: str = "10.15.0",
+        code_version: str = "11.0.0rc1",
     ) -> None:
         self.ticker = ticker.upper()
         self.config_version = config_version
@@ -400,7 +400,7 @@ class RunTracker:
             ticker=ticker,
             config_version=raw.get("config_version", "1.0"),
             model_version=raw.get("model_version", "1.0"),
-            code_version=raw.get("code_version", "10.15.0"),
+            code_version=raw.get("code_version", "11.0.0rc1"),
         )
 
         # Restore run-level state

@@ -166,13 +166,12 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
     click.echo(f"  {'─'*54}")
     for aid, r in sorted(responses.items(), key=lambda x: -x[1].score):
         stance = r.signal.value.upper()
-        color = "green" if stance == "BULLISH" else ("red" if stance == "BEARISH" else "yellow")
         line = f"  {r.agent_name:24s} │ {stance:8s} │ {r.score:.1f}/10"
         click.echo(line)
         if r.key_findings:
             click.echo(f"    → {r.key_findings[0]}")
 
-    click.echo(f"\n  Dissents")
+    click.echo("\n  Dissents")
     click.echo(f"  {'─'*54}")
     if bearish:
         for aid, r in bearish:
@@ -182,9 +181,7 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
         click.echo("  No bearish dissents.")
 
     kelly = consensus.metadata.get("position_sizing", {}).get("position_pct", 0)
-    sig_color = "green" if consensus.signal.value == "bullish" else (
-        "red" if consensus.signal.value == "bearish" else "yellow")
-    click.echo(f"\n  Verdict")
+    click.echo("\n  Verdict")
     click.echo(f"  {'─'*54}")
     click.echo(f"  Signal:      {consensus.signal.value.upper()}")
     click.echo(f"  Score:       {consensus.score:.1f}/10")

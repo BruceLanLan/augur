@@ -3,7 +3,7 @@
 CathieWoodAgent - Cathie Wood 破坏式创新
 """
 
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class CathieWoodAgent(BaseAgent):

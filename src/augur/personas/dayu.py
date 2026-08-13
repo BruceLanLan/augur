@@ -18,7 +18,7 @@ DayuAgent (大宇) — 币圈"看准+重仓"投资人格
 """
 
 from typing import Dict
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class DayuAgent(BaseAgent):

@@ -46,7 +46,6 @@ CLI commands:
 import logging
 import os
 import time
-from pathlib import Path
 from typing import Dict, List, Optional, Any
 
 import yaml
@@ -399,7 +398,6 @@ def _send_slack_notifications(
     """Send results to Slack channel."""
     try:
         from slack_sdk import WebClient
-        from slack_sdk.errors import SlackApiError
     except ImportError:
         print("Warning: slack-bolt not installed. Skipping Slack notifications.")
         print("Install with: pip install 'augur-agents[slack]'")
@@ -441,7 +439,7 @@ def _send_wechat_notification(
 ):
     """Send results to WeChat group via webhook."""
     try:
-        from augur.bots.wechat_bot import WebhookBot, format_wechat_message
+        from augur.bots.wechat_bot import WebhookBot
     except ImportError:
         print("Warning: wechat_bot module not available. Skipping WeChat notifications.")
         return
@@ -548,7 +546,7 @@ def start_scheduler() -> None:
         run_watchlist_analysis, trigger, id="augur_watchlist", max_instances=1
     )
 
-    print(f"\U0001f989 Augur Cron Scheduler started!")
+    print("\U0001f989 Augur Cron Scheduler started!")
     print(f"   Schedule: {cron_expr} ({timezone})")
     print(f"   Watchlist: {len(config.get('watchlist', []))} tickers")
     print(f"   Config: {WATCHLIST_PATH}")

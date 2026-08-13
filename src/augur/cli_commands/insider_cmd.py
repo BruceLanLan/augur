@@ -6,7 +6,7 @@ Displays a 90-day insider trading summary with cluster detection.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
 import click
 
@@ -111,7 +111,7 @@ def insider_cmd(ticker: str, days: int) -> None:
 
     click.echo(f"\nInsider Trading Summary: {ticker}")
     click.echo(f"  Period: last {days} days")
-    click.echo(f"  Source: SEC EDGAR Form 4 (open-market P/S only)\n")
+    click.echo("  Source: SEC EDGAR Form 4 (open-market P/S only)\n")
 
     # Fetch trades
     trades = _fetch_insider_trades(ticker)

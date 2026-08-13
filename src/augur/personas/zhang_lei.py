@@ -4,7 +4,7 @@ ZhangLeiAgent - 张磊 长期结构性价值投资
 """
 
 from typing import Dict
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class ZhangLeiAgent(BaseAgent):
@@ -45,7 +45,6 @@ class ZhangLeiAgent(BaseAgent):
         factors = {}
 
         sector = (context.sector or "").lower()
-        industry = (context.industry or "").lower()
 
         # 结构性机会判断（行业加成）
         structural_multiplier = 1.0

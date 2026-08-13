@@ -3,7 +3,7 @@
 MarksAgent - Howard Marks 市场情绪钟摆
 """
 
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class MarksAgent(BaseAgent):
@@ -112,8 +112,6 @@ class MarksAgent(BaseAgent):
             distressed_score -= 2  # 高负债降低质量
         factors["distressed_discount"] = min(max(distressed_score, 0), 10)
 
-        bullish_th = self.thresholds.get("bullish_threshold", 6.5)
-        bearish_th = self.thresholds.get("bearish_threshold", 4.0)
 
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)
         total_score = max(0.0, min(10.0, total_score))

@@ -2,17 +2,15 @@
 
 import re
 from datetime import datetime, timezone
-from typing import Any, List
+from typing import List
 
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from augur.personas.base import MarketContext
-from augur.workspace import get_enabled_personas
 from dashboard.deps import (
     _i18n_context,
-    _save_history_safe,
     consume_endpoint_token,
     get_coordinator,
     get_registry,

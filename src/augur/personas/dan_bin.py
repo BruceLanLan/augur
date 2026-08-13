@@ -4,7 +4,7 @@ DanBinAgent - 但斌 品牌护城河·时代β·消费成长
 """
 
 from typing import Dict
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class DanBinAgent(BaseAgent):
@@ -44,7 +44,6 @@ class DanBinAgent(BaseAgent):
         factors = {}
 
         sector = (context.sector or "").lower()
-        industry = (context.industry or "").lower()
 
         # 行业β加成（但斌偏好消费+互联网）
         brand_multiplier = 1.0
@@ -165,7 +164,7 @@ class DanBinAgent(BaseAgent):
         if factors["brand_moat"] >= 7:
             key_findings.append(f"品牌护城河强：毛利率{context.gross_margins*100:.0f}%，ROE{context.roe*100:.0f}%")
         if factors["pricing_power"] >= 7:
-            key_findings.append(f"定价权强：高毛利+增速组合，消费者愿意付溢价")
+            key_findings.append("定价权强：高毛利+增速组合，消费者愿意付溢价")
         if factors["growth_franchise"] >= 7:
             key_findings.append(f"高质量成长：营收增速{context.revenue_growth*100:.0f}%且FCF正向")
         if context.gross_margins < 0.25:

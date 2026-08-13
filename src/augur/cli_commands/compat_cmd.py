@@ -27,8 +27,6 @@ def build_compatibility_report() -> str:
 
 import click
 
-from augur.cli_commands.compat_cmd import build_compatibility_report
-
 
 @click.command("compat")
 def compat_cmd():

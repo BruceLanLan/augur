@@ -88,11 +88,11 @@ def test_readme_lists_18_investors_and_kelly_sizing():
 def test_pyproject_and_package_versions_agree():
     """pyproject.toml and __init__.py must declare the same version."""
     init_text = (ROOT / "src" / "augur" / "__init__.py").read_text(encoding="utf-8")
-    m_init = re.search(r'__version__\s*=\s*"([\d.]+)"', init_text)
+    m_init = re.search(r'__version__\s*=\s*"([^"]+)"', init_text)
     assert m_init, "src/augur/__init__.py has no __version__"
 
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    m_proj = re.search(r'version\s*=\s*"([\d.]+)"', pyproject)
+    m_proj = re.search(r'version\s*=\s*"([^"]+)"', pyproject)
     assert m_proj, "pyproject.toml has no version"
 
     assert m_init.group(1) == m_proj.group(1), (

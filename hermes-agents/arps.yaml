@@ -8,7 +8,7 @@ display_name: "ARPS"
 description: "Real assets specialist — gold, Bitcoin & macro debasement · augur_workflow MCP"
 persona_id: arps
 language: en
-version: "10.15.0"
+version: "11.0.0rc1"
 
 mcp:
   command: augur-mcp

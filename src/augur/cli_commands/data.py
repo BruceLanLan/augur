@@ -59,7 +59,7 @@ def fetch_cmd(ticker, as_json):
         click.echo(f"{'MACD':<18s} {ctx.macd:.4f}")
         click.echo(f"{'SMA20':<18s} {ctx.sma20:.2f}")
         click.echo(f"{'SMA50':<18s} {ctx.sma50:.2f}")
-        click.echo(f"\n[数据来源: yfinance 实时]")
+        click.echo("\n[数据来源: yfinance 实时]")
 
 
 @click.command("sentiment")

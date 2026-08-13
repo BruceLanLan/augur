@@ -35,7 +35,6 @@ Usage:
     triggered = engine.evaluate({"consensus_score": 8.5, "ticker": "AAPL"})
 """
 
-import os
 import uuid
 from dataclasses import dataclass, field
 from pathlib import Path

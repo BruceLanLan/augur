@@ -10,7 +10,7 @@ SerenityAgent - Serenity (@aleabitoreddit) 供应链卡脖子逆向工程交易
 - 地缘叠加: 半导体供应链物理与地缘政治地图
 """
 
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class SerenityAgent(BaseAgent):
@@ -281,7 +281,7 @@ class SerenityAgent(BaseAgent):
             if factors["risk_sizing"] >= 7:
                 key_findings.append(f"🛡️ 财务健康: 低负债高现金，流动性风险可控（评分:{factors['risk_sizing']}/10）")
         else:
-            key_findings.append(f"⚠️ Serenity框架对该公司适用性低（非AI供应链/半导体行业），评分仅供参考")
+            key_findings.append("⚠️ Serenity框架对该公司适用性低（非AI供应链/半导体行业），评分仅供参考")
 
         # 风险
         if factors["supply_chain_bottleneck"] < 4:

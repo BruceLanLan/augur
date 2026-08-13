@@ -3,7 +3,7 @@
 AschenbrennerAgent - Leopold Aschenbrenner AGI超级乐观 / 算力基础设施重注
 """
 
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class AschenbrennerAgent(BaseAgent):
@@ -197,8 +197,6 @@ class AschenbrennerAgent(BaseAgent):
             vision_score += 1
         factors["management_vision"] = min(max(vision_score, 0), 10)
 
-        bullish_th = self.thresholds.get("bullish_threshold", 7.0)
-        bearish_th = self.thresholds.get("bearish_threshold", 4.0)
 
         total_score = sum(factors[k] * self.scoring_weights.get(k, 0) for k in factors)
         total_score = max(0.0, min(10.0, total_score))
@@ -226,15 +224,15 @@ class AschenbrennerAgent(BaseAgent):
             if factors["ai_exposure"] >= 7:
                 key_findings.append(f"⚡ AI营收高速增长，AGI商业化路径清晰（评分:{factors['ai_exposure']}/10）")
             if factors["vertical_integration"] >= 7:
-                key_findings.append(f"🔗 垂直整合度高，芯片→云→应用全栈控制")
+                key_findings.append("🔗 垂直整合度高，芯片→云→应用全栈控制")
             if factors["tam_expansion"] >= 7:
-                key_findings.append(f"📈 TAM在快速扩张，市场定价了AGI的未来空间")
+                key_findings.append("📈 TAM在快速扩张，市场定价了AGI的未来空间")
             if factors["management_vision"] >= 7:
-                key_findings.append(f"👁️ 管理层高持仓+机构信任，AGI愿景清晰")
+                key_findings.append("👁️ 管理层高持仓+机构信任，AGI愿景清晰")
             if factors["moat_reinforcement"] >= 7:
-                key_findings.append(f"🛡️ AI正在强化护城河，竞争优势在扩大")
+                key_findings.append("🛡️ AI正在强化护城河，竞争优势在扩大")
         else:
-            key_findings.append(f"⚠️ Aschenbrenner框架对该公司适用性低（非AI/算力基础设施行业），评分仅供参考")
+            key_findings.append("⚠️ Aschenbrenner框架对该公司适用性低（非AI/算力基础设施行业），评分仅供参考")
 
         # 风险
         if factors["compute_infrastructure"] < 4:

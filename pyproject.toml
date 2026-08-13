@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "augur-agents"
-version = "10.15.0"
+version = "11.0.0rc1"
 description = "Multi-agent investment analysis system with 18 investor persona agents, consensus mechanism, and multi-platform deployment"
 readme = "README.md"
 license = {text = "MIT"}
@@ -113,3 +113,16 @@ where = ["src"]
 augur = ["py.typed"]
 dashboard = ["templates/*.html", "static/**/*", "i18n/*.json"]
 skills = ["*.md", "**/*.md", "**/*.json"]
+
+[tool.ruff.lint]
+# E402 (module-import-not-at-top-of-file) is intentional here: cli.py registers
+# command modules after defining the `cli` group, and several modules defer
+# optional/heavy imports (fastapi, slack, wechat, edgar) behind availability
+# guards. Moving these to the top would reintroduce import cycles.
+ignore = ["E402"]
+
+[tool.ruff.lint.per-file-ignores]
+# dashboard/app.py is a re-export facade: routes/tests import rate-limit and
+# i18n helpers from it (and patch names via string paths like
+# `patch("dashboard.app.json.loads")`), so its imports look "unused" locally.
+"src/dashboard/app.py" = ["F401"]

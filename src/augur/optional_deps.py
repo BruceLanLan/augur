@@ -96,7 +96,7 @@ def require_optional(
 
     # Build descriptive error message
     if not feature_name:
-        feature_name = f"this feature"
+        feature_name = "this feature"
     if not install_extra:
         install_extra = f"pip install {package_name}"
 

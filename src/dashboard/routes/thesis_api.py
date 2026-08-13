@@ -1,8 +1,8 @@
 """Thesis Journal + Questions + Decisions REST API (E01/E03/E04 UI wiring)."""
 from __future__ import annotations
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 router = APIRouter()

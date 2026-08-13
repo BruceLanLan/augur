@@ -421,9 +421,6 @@ def evaluate_from_backtest_records(
         prob_a_val = _score_to_prob(avg_a)
         prob_b_val = _score_to_prob(avg_b)
 
-        # Binary outcome from forward return
-        actual = getattr(records[0], "actual_return_20d",
-                         records[0].get("actual_return_20d", 0.0)) if hasattr(records[0], "get") else 0.0
         # For consensus-level evaluation we need the per-key actual return.
         # Use the first record's actual_return_20d as the ground truth since
         # all records for the same (ticker, date) share the same forward return.

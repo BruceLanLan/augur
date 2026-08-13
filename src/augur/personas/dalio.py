@@ -3,7 +3,7 @@
 DalioAgent - Ray Dalio 全球宏观/风险平价
 """
 
-from augur.personas.base import BaseAgent, MarketContext, AgentResponse, SignalType
+from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
 class DalioAgent(BaseAgent):

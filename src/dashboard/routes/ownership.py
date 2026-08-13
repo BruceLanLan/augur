@@ -1,6 +1,6 @@
 """Insider activity + ownership REST endpoints (C05/C06 UI surface)."""
 from __future__ import annotations
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
 
@@ -14,7 +14,6 @@ async def get_insider_activity(ticker: str, days: int = 90) -> Dict[str, Any]:
     if not t or len(t) > 15:
         raise HTTPException(status_code=400, detail="invalid ticker")
 
-    from augur.ownership import InsiderAnalyzer
     # Placeholder trades — production reads from EDGAR Form 4 cache
     trades = [
         {"person": "CEO", "role": "Chief Executive Officer", "type": "buy",
@@ -38,12 +37,6 @@ async def get_ownership_delta(ticker: str) -> Dict[str, Any]:
     if not t or len(t) > 15:
         raise HTTPException(status_code=400, detail="invalid ticker")
 
-    from augur.ownership import OwnershipAnalyzer
-    # Placeholder positions
-    prev = [
-        {"institution": "Vanguard", "shares": 1.0e9, "value": 150e9},
-        {"institution": "BlackRock", "shares": 0.8e9, "value": 120e9},
-    ]
     curr = [
         {"institution": "Vanguard", "shares": 1.1e9, "value": 165e9},
         {"institution": "BlackRock", "shares": 0.75e9, "value": 112e9},

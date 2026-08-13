@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Earnings dossier CLI — pre-event research dossier generation (B02)."""
 from __future__ import annotations
-from typing import Optional
 
 def run_earnings_dossier(ticker: str, event_id: str = "", as_of: str = "", output_format: str = "text") -> str:
     """Generate a pre-earnings research dossier for a ticker.
@@ -44,7 +43,6 @@ def run_earnings_dossier(ticker: str, event_id: str = "", as_of: str = "", outpu
 
     # Persona disagreement
     try:
-        from augur.disagreement import DisagreementMapBuilder
         # Placeholder — would use latest RunBundle persona outputs
         sections.append("── Disagreement ──")
         sections.append("  (run analysis for full disagreement map)")
@@ -71,8 +69,6 @@ def run_earnings_dossier(ticker: str, event_id: str = "", as_of: str = "", outpu
 
 
 import click
-
-from augur.cli_commands.dossier_cmd import run_earnings_dossier
 
 
 @click.command("dossier")
