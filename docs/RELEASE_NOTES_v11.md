@@ -3,8 +3,8 @@
 **Status**: Release Candidate 1
 **Date**: 2026-08-12
 **Base commit**: `12ff992`
-**RC commit**: `TBD` (feat/v11-rc-day1)
-**Developed by**: DSH (DeepSeek Harness) multi-agent continuous loop
+**RC commit**: `5d3d9bf` (main)
+**Developed by**: DSH (DeepSeek Harness) multi-agent continuous loop；后续由 owner 接管收尾
 
 ## Overview
 
@@ -82,8 +82,10 @@ the infrastructure for evidence-tracked research workflows.
   is built but the outcome corpus is not yet populated.
 - `earnings-prep` and `filing-delta` Skills have manifest and fixture support
   but end-to-end workflow execution awaits the Skill runner (post-RC).
-- Full 2473-test suite not yet re-run on RC commit; smoke tests (210+) pass.
-- Wheel/sdist CI workflow defined but not yet exercised on GitHub Actions.
+- Full test suite re-run on RC commit: **3422 passed + 1 skipped**.
+- Wheel/sdist build + fresh-venv smoke verified locally (CLI help/version,
+  schema import, list-personas, skills, MCP entry, site-packages origin);
+  GitHub Actions run pending.
 
 ## Migration from v10.x
 
@@ -150,3 +152,12 @@ H (OOS harness), I (provenance).
 ### 测试
 
 249 tests 全部通过（零回归）
+
+### Round 8+ 收尾 (2026-08-13, owner 接管)
+
+- 版本对齐：`__version__` / `pyproject.toml` / skills / hermes-agents 统一为 `11.0.0rc1`
+- ruff 收口：222 → 0 errors（修 `backtest.Any` 未定义、`workspace` UnboundLocalError、
+  4 个 cli_commands 自导入、`field` 变量遮蔽、死变量、无占位符 f-string；`E402` 惰性导入全局忽略、
+  `dashboard/app.py` facade per-file F401 忽略）
+- 重新构建 `augur_agents-11.0.0rc1` wheel + sdist，双格式 fresh-venv smoke 通过
+- 全量测试：**3422 passed + 1 skipped**

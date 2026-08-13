@@ -3,7 +3,7 @@
 **状态**：Active
 **生效日期**：2026-08-11
 **维护仓库**：`BruceLanLan/augur-next`
-**当前基线**：`eade71a` / v10.15.0
+**当前基线**：`5d3d9bf` / v11.0.0-rc1
 **详细审计**：[`docs/reviews/PROJECT_REVIEW_2026-08-11.md`](reviews/PROJECT_REVIEW_2026-08-11.md)
 **后续方向**：[`docs/PRODUCT_DIRECTIONS.md`](PRODUCT_DIRECTIONS.md)
 **生态融合调研**：[`docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md`](research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)
@@ -179,25 +179,29 @@ augur/main
 ## Backlog
 
 | ID | 项目 | 优先级 | 目标日 | 前置 | 当前状态 |
-|---|---|---:|---:|---|---|
-| F0.1 | 统一 `AUGUR_DATA_DIR` 与测试隔离 | P0 | D1-D2 | 无 | Ready |
-| F0.2 | source + wheel/sdist CI | P0 | D2 | F0.1 | Ready |
-| F0.3 | replay schema v2 / missingness | P0 | D3 | F0.1 | Ready |
-| F0.4 | v11 发布门 | P0 | D5-D7 | F0.2 | Ready |
-| F0.5 | 部署安全基线 | P1/P0 | D5 | F0.1 | Ready |
-| C1.1 | rolling IC OOS A/B harness | P0 | D4 | F0.3 | Ready |
-| C1.2 | calibration readiness 与状态标注 | P1 | D4 | F0.3 | Ready |
-| C1.3 | provenance contract | P0 | D5 | F0.3 | Ready |
-| C1.4 | degradation observability | P1 | D5 | C1.3 | Ready |
-| P2.1 | 财报事件研究 MVP | P0 | D6 | C1.3 | Ready |
-| P2.2 | v11 RC / PyPI 发布候选 | P0 | D6-D7 | F0.2/F0.4 | Ready |
-| P2.3 | 设计伙伴验证机制与首轮任务 | P1 | D7 | P2.1/P2.2 | Ready |
-| E1.1 | Evidence/Claim/StepResult/RunBundle v1 | P0 | D1-D3 | F0.1 | Ready |
-| E1.2 | workflow phase wrapper + local checkpoint | P0 | D2-D3 | E1.1 | Ready |
-| E1.3 | 最小 Capability registry + SkillSpec validator | P1 | D4-D6 | E1.1 | Ready |
-| E1.4 | `earnings-prep` + `filing-delta` 内置 Skill | P1 | D4-D7 | E1.2/E1.3/P2.1 | Ready |
-| E1.5 | Evidence/Run MCP resources + typed results | P1 | D5-D7 | E1.1/E1.2 | Ready |
-| E1.6 | Skill 权限、citation、replay fixtures | P0 | D4-D7 | E1.3/E1.4 | Ready |
+|---|---:|---:|---|---|
+| F0.1 | 统一 `AUGUR_DATA_DIR` 与测试隔离 | P0 | D1-D2 | 无 | Done |
+| F0.2 | source + wheel/sdist CI | P0 | D2 | F0.1 | Done |
+| F0.3 | replay schema v2 / missingness | P0 | D3 | F0.1 | Done |
+| F0.4 | v11 发布门 | P0 | D5-D7 | F0.2 | Done（本地验证） |
+| F0.5 | 部署安全基线 | P1/P0 | D5 | F0.1 | Done |
+| C1.1 | rolling IC OOS A/B harness | P0 | D4 | F0.3 | Done |
+| C1.2 | calibration readiness 与状态标注 | P1 | D4 | F0.3 | Done |
+| C1.3 | provenance contract | P0 | D5 | F0.3 | Done |
+| C1.4 | degradation observability | P1 | D5 | C1.3 | Done |
+| P2.1 | 财报事件研究 MVP | P0 | D6 | C1.3 | Done |
+| P2.2 | v11 RC / PyPI 发布候选 | P0 | D6-D7 | F0.2/F0.4 | Done（本地 build/smoke；TestPyPI 待 owner） |
+| P2.3 | 设计伙伴验证机制与首轮任务 | P1 | D7 | P2.1/P2.2 | 待 owner（需真实用户） |
+| E1.1 | Evidence/Claim/StepResult/RunBundle v1 | P0 | D1-D3 | F0.1 | Done |
+| E1.2 | workflow phase wrapper + local checkpoint | P0 | D2-D3 | E1.1 | Done |
+| E1.3 | 最小 Capability registry + SkillSpec validator | P1 | D4-D6 | E1.1 | Done |
+| E1.4 | `earnings-prep` + `filing-delta` 内置 Skill | P1 | D4-D7 | E1.2/E1.3/P2.1 | Done |
+| E1.5 | Evidence/Run MCP resources + typed results | P1 | D5-D7 | E1.1/E1.2 | Done |
+| E1.6 | Skill 权限、citation、replay fixtures | P0 | D4-D7 | E1.3/E1.4 | Done |
+
+> **2026-08-13 状态**：代码层面 backlog 全部完成（3422 tests + 1 skipped 全绿，ruff 全绿）。
+> v11.0.0-rc1 的 wheel/sdist 已在本地 fresh-venv 双格式 smoke 通过。剩余两项依赖外部条件：
+> TestPyPI/fresh-install 演练需 PyPI 凭据，设计伙伴验证需真实用户 —— 均属 owner 决策，不在代码范围内。
 
 ## 功能登记册：已记录、未排期
 

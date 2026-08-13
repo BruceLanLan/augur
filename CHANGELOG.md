@@ -111,6 +111,18 @@ evidence-tracked research workflows.
 - **EDGAR cache health**: freshness check + size report
 - **Full test suite: 3358 passing, zero failures**
 
+### Round 8 Finalization (2026-08-13, owner handover)
+
+- Version aligned to `11.0.0rc1` across `__version__`, `pyproject.toml`,
+  skill manifests, and hermes-agents yaml
+- Ruff cleanup 222 → 0 errors (fixed undefined `Any`, `UnboundLocalError` in
+  workspace broadcast, 4 cli_commands self-imports, `field` shadowing, dead
+  assignments, placeholder-less f-strings; configured E402 lazy-import ignore
+  and `dashboard/app.py` facade per-file F401 ignore)
+- Rebuilt `augur_agents-11.0.0rc1` wheel + sdist; fresh-venv dual-format smoke
+  passed
+- Full test suite: **3422 passed + 1 skipped**
+
 ## [10.15.0] - 2026-07-15
 
 Public release sync -- brings the public `augur` repo (last synced at
