@@ -168,12 +168,41 @@ augur serve · augur watch · augur cron-run · augur telegram
 
 ---
 
+## 🏗️ Project Status & Dev Guide
+
+**Status**: v11.0.0-rc1 code-complete, awaiting owner release decision.
+
+| Status | Item |
+|---|---|
+| ✅ | 3422 tests + 1 skipped green · ruff clean (222 → 0 errors) |
+| ✅ | wheel/sdist build + fresh-venv dual-format smoke verified locally |
+| ✅ | [ROADMAP](docs/ROADMAP.md) backlog (20 items) complete at code level |
+| ⏳ | TestPyPI / fresh-install run — needs PyPI credentials (owner) |
+| ⏳ | Design-partner validation — needs real users (owner) |
+| ⏳ | Public release — `v*` tag triggers `publish.yml` (owner decision) |
+
+### Local dev & test
+
+```bash
+# ⚠️ On this machine `python` is 2.7 — use python3 (3.9+)
+# ⚠️ `import augur` resolves to a stale editable install; add PYTHONPATH=src
+
+PYTHONPATH=src python3 -m pytest tests/ -q        # full suite (~3.5 min)
+python3 -m ruff check src/                         # lint (0 errors)
+make build && make test-wheel && make test-sdist   # build + smoke
+PYTHONPATH=src python3 scripts/deployment_check.py
+```
+
+> Handoff notes: [CHANGELOG.md](CHANGELOG.md) "Round 8 Finalization" & [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md).
+
+---
+
 ## 📝 Changelog
 
 <details open>
 <summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
 
-Foundation rebuild: 3422 tests, 14 new modules, 116 files.
+Foundation rebuild: 3422 tests · 24 new modules.
 
 - Schema contracts: EvidenceItem (three-time), Claim, StepResult, RunBundle, SkillSpec v1
 - Research loop: Thesis Journal → Filing Delta → Disagreement Map → Guidance Tracker → Research Inbox

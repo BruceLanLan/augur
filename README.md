@@ -274,12 +274,45 @@ augur mcp-server · augur skills · augur telegram
 
 ---
 
+## 🏗️ 项目状态与开发指南
+
+**当前状态**：v11.0.0-rc1 代码完成，等待 owner 发布决策。
+
+| 状态 | 事项 |
+|---|---|
+| ✅ | 3422 tests + 1 skipped 全绿 · ruff 全绿（222 → 0 errors） |
+| ✅ | wheel/sdist 构建 + fresh-venv 双格式 smoke 已本地验证 |
+| ✅ | [ROADMAP](docs/ROADMAP.md) backlog 20 项全部完成（代码层面） |
+| ⏳ | TestPyPI / fresh-install 演练 —— 需 PyPI 凭据（owner） |
+| ⏳ | 设计伙伴验证 —— 需真实用户（owner） |
+| ⏳ | 正式发布 —— 推 `v*` tag 触发 `publish.yml`（owner 决策） |
+
+### 本地开发与测试
+
+```bash
+# ⚠️ 环境注意：本机 `python` 指向 2.7，必须用 python3（3.9+）
+# ⚠️ import augur 默认解析到系统 editable install（旧 checkout），
+#    跑测试/脚本必须加 PYTHONPATH=src
+
+PYTHONPATH=src python3 -m pytest tests/ -q        # 全量测试（~3.5 分钟）
+python3 -m ruff check src/                         # lint（应 0 error）
+python3 -m ruff check src/ --fix                   # 自动修复
+
+make build                                         # 构建 wheel + sdist → dist/
+make test-wheel && make test-sdist                 # fresh-venv 安装 smoke
+PYTHONPATH=src python3 scripts/deployment_check.py # 部署就绪检查
+```
+
+> 详细交接记录见 [CHANGELOG.md](CHANGELOG.md)「Round 8 Finalization」与 [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md)。
+
+---
+
 ## 📝 更新日志
 
 <details open>
 <summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
 
-**地基重建**：3422 tests, 14 new modules, 116 files changed.
+**地基重建**：3422 tests · 24 个新模块 · 覆盖研究前/中/后完整闭环。
 
 - **Schema 合约**：EvidenceItem（三类时间）、Claim（evidence 分类引用）、StepResult（typed output）、RunBundle（不可变快照）、SkillSpec v1（声明式安全合约）
 - **研究闭环**：Thesis Journal → Filing Delta → Disagreement Map → Guidance Tracker → Research Inbox → Risk Review
