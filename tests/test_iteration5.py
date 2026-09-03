@@ -132,6 +132,23 @@ class TestSoulSecurity:
             with pytest.raises(ValueError, match="Path traversal detected"):
                 inject_soul("../out-evil/payload", "buffett", format="raw", output_dir=str(out_dir))
 
+    def test_path_traversal_creates_nothing_outside_output_dir(self):
+        """A rejected hermes-format traversal must not mkdir outside output_dir.
+
+        Regression: the hermes branch used to mkdir(profile_path) before the
+        traversal check ran, so the attack was "blocked" only after the
+        directory had already been created on disk.
+        """
+        from augur.soul import inject_soul
+
+        with tempfile.TemporaryDirectory() as base:
+            out_dir = Path(base) / "out"
+            out_dir.mkdir()
+            with pytest.raises(ValueError, match="Path traversal detected"):
+                inject_soul("../escaped/profile", "buffett", format="hermes", output_dir=str(out_dir))
+            assert not (Path(base) / "escaped").exists()
+            assert list(out_dir.iterdir()) == []
+
     def test_path_traversal_blocked_raw_format(self):
         """inject_soul also blocks traversal in raw format."""
         from augur.soul import inject_soul

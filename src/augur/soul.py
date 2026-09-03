@@ -584,10 +584,13 @@ def inject_soul(profile_path: str, persona_id: str, format: str = "hermes", outp
     out_dir.mkdir(parents=True, exist_ok=True)
 
     if format == "hermes":
-        # For Hermes format: write to profile_path/soul.md
-        profile_dir = out_dir / profile_path
-        profile_dir.mkdir(parents=True, exist_ok=True)
-        output_file = profile_dir / "soul.md"
+        # For Hermes format: write to profile_path/soul.md. Do NOT mkdir here:
+        # the traversal check below has not run yet, and creating the
+        # directory first let "../../etc/evil" create directories outside
+        # out_dir (surfaced by CI on Linux as PermissionError on /etc/evil;
+        # macOS tmpdirs live under a writable /var/folders/... so the local
+        # test never noticed). The mkdir happens after the check.
+        output_file = out_dir / profile_path / "soul.md"
     elif format == "claude":
         # For Claude format: write as a system prompt JSON snippet
         output_file = out_dir / f"{profile_path}-claude.json"

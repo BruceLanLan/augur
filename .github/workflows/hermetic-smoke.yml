@@ -77,6 +77,9 @@ jobs:
           WHEEL=$(ls dist/*.whl | head -1)
           echo "Installing ${WHEEL}"
           python3 -m venv /tmp/augur_venv_wheel
+          # The venv bootstraps whatever pip ships with the runner's Python;
+          # pip-audit below audits that pip too, so bring it current first.
+          /tmp/augur_venv_wheel/bin/pip install --upgrade pip
           /tmp/augur_venv_wheel/bin/pip install "${WHEEL}"
 
       - name: CLI --help
@@ -151,6 +154,9 @@ jobs:
           SDIST=$(ls dist/*.tar.gz | head -1)
           echo "Installing ${SDIST}"
           python3 -m venv /tmp/augur_venv_sdist
+          # The venv bootstraps whatever pip ships with the runner's Python;
+          # pip-audit below audits that pip too, so bring it current first.
+          /tmp/augur_venv_sdist/bin/pip install --upgrade pip
           /tmp/augur_venv_sdist/bin/pip install "${SDIST}"
 
       - name: CLI --help

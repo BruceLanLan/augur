@@ -30,6 +30,14 @@ Fable 5.1 review of the v11.0.0-rc1 line. Findings with evidence in
   `test_mcp_new_resources.py::test_thesis_resource_missing` imported a symbol
   that never existed at module level; it now exercises the resource through
   `mcp.read_resource()`.
+- **`inject_soul` created directories before its traversal check** (hermes
+  format). `../../etc/evil` was rejected only after `mkdir` had already run
+  outside `output_dir`; the first real CI run (Linux) surfaced it as a
+  `PermissionError` on `/etc/evil`, while macOS tmpdirs under `/var/folders`
+  had let the local test pass. mkdir now happens after the check; regression
+  test `test_path_traversal_creates_nothing_outside_output_dir`.
+- Hermetic Smoke: upgrade the venv's bootstrapped pip before `pip-audit`
+  (the runner's pip 25.0.1 carried 7 advisories and failed the gate).
 - `jsonschema>=4.0` and `pydantic>=2.0` declared as core dependencies (both
   were imported by product code but only installed transitively or not at all).
 - ruff rule set pinned to `E4,E7,E9,F` in `pyproject.toml`; ruff 0.16's wider

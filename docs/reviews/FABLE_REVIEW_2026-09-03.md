@@ -48,6 +48,13 @@
 
 - 20 个源文件 import pydantic，但只靠 fastapi 传递安装。加入核心依赖 `pydantic>=2.0`。
 
+### F12 · `inject_soul` 在路径穿越检查之前就 mkdir — P1 [日志+实测]（CI 复活后第一轮抓到）
+
+- F1 修完后 CI 第一次真正跑测试（py3.11：3418 通过、1 失败），失败的是 `test_iteration5.py::TestSoulSecurity::test_path_traversal_blocked`：`PermissionError: /tmp/…/../../etc/evil`。
+- **根因**：`soul.py` hermes 分支先 `profile_dir.mkdir(parents=True)` 再做 `is_relative_to` 检查，穿越尝试在被拒绝**之前**已经在输出目录外建了目录。Linux runner 上撞到 `/etc` 才报错；macOS 的 tmpdir 在 `/var/folders/...` 下可写，本地测试一直「通过」。这正是 F1 所说「假绿一个月」的代价：一个安全守卫的顺序错误被 CI 假绿盖住了。
+- **修复**：mkdir 移到检查之后（检查后本来就有一次 mkdir）；新增 `test_path_traversal_creates_nothing_outside_output_dir`，已确认对旧代码失败、对新代码通过。
+- 同一轮 Hermetic Smoke 的 pip-audit 报 runner venv 自带的 pip 25.0.1 有 7 条 advisory，改为审计前先升级 pip。
+
 ---
 
 ## 二、发现但未动手（owner 决策或后续阶段）
