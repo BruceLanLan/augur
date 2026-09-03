@@ -46,7 +46,7 @@ Fable 5.1 review of the v11.0.0-rc1 line. Findings with evidence in
 ### Changed
 
 - README status tables (zh/en) now state what is verified locally vs. in CI.
-- Full local suite after this round: **3425 passed** (python 3.12).
+- Full local suite after this round: **3426 passed** (python 3.12).
 
 ## [11.0.0-rc1] - 2026-08-12
 

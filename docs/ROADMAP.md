@@ -221,7 +221,7 @@ augur/main
 
 | # | 步骤 | 做什么 | 验证点 | 谁 |
 |---|---|---|---|---|
-| 0 | **CI 证据链复活** | 本评审 commit push 后盯三个工作流 | `Tests` 3 个 job 各出现 `3425 passed`（或更多）且耗时分钟级；`Hermetic Smoke` wheel+sdist 双绿；`Assert tests actually ran` 步骤通过。py3.9 若挂：修或在 ROADMAP 记录，**不许静默从矩阵删掉** | Agent |
+| 0 | **CI 证据链复活** | 本评审 commit push 后盯三个工作流 | `Tests` 3 个 job 各出现 `3426 passed`（或更多）且耗时分钟级；`Hermetic Smoke` wheel+sdist 双绿；`Assert tests actually ran` 步骤通过。py3.9 若挂：修或在 ROADMAP 记录，**不许静默从矩阵删掉** | Agent |
 | 1 | **Owner 决策批**（一次性拍板） | ① 公开仓每周烟测是否重新启用（8/10 起 `disabled_manually`）② 下一版是否 v11.0.0 ③ PyPI Trusted Publisher 配置（project `augur-agents`、workflow `publish.yml`、owner `BruceLanLan`）④ R6 门槛口径（见步骤 3）⑤ 参考部署的定时任务是否保留 | Owner |
 | 2 | **v11.0.0 GA** | 步骤 0 绿满 7 天后：版本 `11.0.0`、CHANGELOG 收口、`git tag v11.0.0`、`git push augur <exact-commit>:main`、GitHub Release 附 wheel/sdist digest；PyPI 走 `publish.yml`（需步骤 1③） | Agent 执行 / Owner 批准 push |
 | 3 | **R6 学习权重的真门** | 用 v11 自带 `consensus/oos_harness.py` 定义预注册 gate：≥5 只票、每 agent ≥30 个**不重叠**窗口的 resolved outcome、split-half 权重相关 ≥0.5、对 flat 基线的 Brier 改善 CI 不跨零。达标前 `AUGUR_FORCE_LEARNED` 保持默认关 | Owner 定口径 / Agent 实现 |

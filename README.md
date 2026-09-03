@@ -9,7 +9,7 @@
 **不是又一个 AI 股票分析工具。是一个帮你记住"你何时知道什么、什么变了、谁在什么事实上分歧"的研究记忆系统。**
 
 [![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur-next)
-[![3425 Tests](https://img.shields.io/badge/3425_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
+[![3426 Tests](https://img.shields.io/badge/3426_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
 [![Evidence-First](https://img.shields.io/badge/Evidence-First_📋-4a90d9?style=for-the-badge)](#-为什么-augur-不一样)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -165,7 +165,7 @@ augur skill run filing-delta --ticker AAPL
 
 ### 6. 信任底座
 
-- **3425 tests**，AUGUR_DATA_DIR 隔离，零用户目录污染
+- **3426 tests**，AUGUR_DATA_DIR 隔离，零用户目录污染
 - PBKDF2 600k、SQLite WAL + 损坏 rename-to-backup
 - 校准状态标注：`raw` / `experimental` / `validated-calibrated` / `insufficient_data`
 
@@ -280,7 +280,7 @@ augur mcp-server · augur skills · augur telegram
 
 | 状态 | 事项 |
 |---|---|
-| ✅ | 本地全量测试 3425 passed（2026-09-03，python 3.12，命令见下）· `ruff check src/` 全绿（规则集已显式固定） |
+| ✅ | 本地全量测试 3426 passed（2026-09-03，python 3.12，命令见下）· `ruff check src/` 全绿（规则集已显式固定） |
 | ✅ | wheel/sdist 构建 + fresh-venv 双格式 smoke 已本地验证 |
 | ✅ | [ROADMAP](docs/ROADMAP.md) v11 backlog 20 项全部完成（代码层面） |
 | 🔧 | CI `Tests` 曾自 8/12 起假绿（`\| tail` 吞退出码 + 缺 `jsonschema`），`Hermetic Smoke` 曾全红（裸调 `ruff`）—— 已修，等待下一次 push 出真实 `N passed` |
