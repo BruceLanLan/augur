@@ -3,7 +3,7 @@
 **状态**：Active
 **生效日期**：2026-08-11
 **维护仓库**：`BruceLanLan/augur-next`
-**当前基线**：`5d3d9bf` / v11.0.0-rc1
+**当前基线**：v11.0.0-rc1（2026-09-03 评审 commit 之后）
 **详细审计**：[`docs/reviews/PROJECT_REVIEW_2026-08-11.md`](reviews/PROJECT_REVIEW_2026-08-11.md)
 **后续方向**：[`docs/PRODUCT_DIRECTIONS.md`](PRODUCT_DIRECTIONS.md)
 **生态融合调研**：[`docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md`](research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)
@@ -199,9 +199,42 @@ augur/main
 | E1.5 | Evidence/Run MCP resources + typed results | P1 | D5-D7 | E1.1/E1.2 | Done |
 | E1.6 | Skill 权限、citation、replay fixtures | P0 | D4-D7 | E1.3/E1.4 | Done |
 
-> **2026-08-13 状态**：代码层面 backlog 全部完成（3422 tests + 1 skipped 全绿，ruff 全绿）。
-> v11.0.0-rc1 的 wheel/sdist 已在本地 fresh-venv 双格式 smoke 通过。剩余两项依赖外部条件：
-> TestPyPI/fresh-install 演练需 PyPI 凭据，设计伙伴验证需真实用户 —— 均属 owner 决策，不在代码范围内。
+> **2026-08-13 状态**：代码层面 backlog 全部完成。v11.0.0-rc1 的 wheel/sdist 已在本地 fresh-venv 双格式 smoke 通过。
+>
+> **2026-09-03 修正**（[评审报告](reviews/FABLE_REVIEW_2026-09-03.md)）：上面「全绿」只在本地成立。CI「Tests」自 8/12 起因 `| tail` 吞掉退出码而假绿（实际 0 个测试跑过），「Hermetic Smoke」自创建起全红。两者已修，下一阶段以 CI 真绿为起点。
+
+## 2026-09 阶段：RC 收口 → GA
+
+**生效日期**：2026-09-03
+**依据**：[`docs/reviews/FABLE_REVIEW_2026-09-03.md`](reviews/FABLE_REVIEW_2026-09-03.md)
+**唯一目标**：让 v11 的每一条「已验证」声明都有 CI 或真实运行证据，然后由 owner 决定 GA。
+**范围边界**：不新增模块、不新增 persona、不改共识算法；只做证据、接线、发布、运维。
+
+### 完成定义
+
+- 三个 CI 工作流连续 7 天真绿，且 `Tests` 三个矩阵 job 都能看到真实的 `N passed`。
+- v11.0.0 在公开仓 `augur` 与 PyPI 各有一个可复验的 artifact（或 owner 明确决定延后并写明 blocker）。
+- 参考部署的定时任务连续 10 个工作日成功取到数据，watchlist ≥ 30 只。
+- README 里的每个数字都能指到生成它的命令或 CI run。
+
+### 步骤（按风险排序）
+
+| # | 步骤 | 做什么 | 验证点 | 谁 |
+|---|---|---|---|---|
+| 0 | **CI 证据链复活** | 本评审 commit push 后盯三个工作流 | `Tests` 3 个 job 各出现 `3425 passed`（或更多）且耗时分钟级；`Hermetic Smoke` wheel+sdist 双绿；`Assert tests actually ran` 步骤通过。py3.9 若挂：修或在 ROADMAP 记录，**不许静默从矩阵删掉** | Agent |
+| 1 | **Owner 决策批**（一次性拍板） | ① 公开仓每周烟测是否重新启用（8/10 起 `disabled_manually`）② 下一版是否 v11.0.0 ③ PyPI Trusted Publisher 配置（project `augur-agents`、workflow `publish.yml`、owner `BruceLanLan`）④ R6 门槛口径（见步骤 3）⑤ 参考部署的定时任务是否保留 | Owner |
+| 2 | **v11.0.0 GA** | 步骤 0 绿满 7 天后：版本 `11.0.0`、CHANGELOG 收口、`git tag v11.0.0`、`git push augur <exact-commit>:main`、GitHub Release 附 wheel/sdist digest；PyPI 走 `publish.yml`（需步骤 1③） | Agent 执行 / Owner 批准 push |
+| 3 | **R6 学习权重的真门** | 用 v11 自带 `consensus/oos_harness.py` 定义预注册 gate：≥5 只票、每 agent ≥30 个**不重叠**窗口的 resolved outcome、split-half 权重相关 ≥0.5、对 flat 基线的 Brier 改善 CI 不跨零。达标前 `AUGUR_FORCE_LEARNED` 保持默认关 | Owner 定口径 / Agent 实现 |
+| 4 | **无入口模块处置** | 对 9 个零引用模块（评审 F9）逐个二选一：接到 CLI/Dashboard/MCP 至少一个入口并配一个真实 ticker 示例，或移到 `augur.labs` 命名空间并在 README 标 experimental | Agent 提案 / Owner 选 |
+| 5 | **mcp 2.x 迁移** | `mcp_server.py` 从 `mcp.server.fastmcp.FastMCP` 迁到 `mcp.server.mcpserver.MCPServer`，解除 `<2` 钉版 | Agent |
+| 6 | **定时任务运维** | 定时任务环境不继承交互 shell 的代理设置；设 `AUGUR_EDGAR_CONTACT_EMAIL`；watchlist 扩到 `scripts/_replay_universe.py` 的 37 只；日志加轮转 | Owner（涉及运行机器） |
+| 7 | **数字自动化** | `make verify` 输出测试数/lint/构建 digest；README 徽章改读 CI 而非手写 | Agent |
+
+### 本阶段不做
+
+- 第 25 个模块；新的权重花样；把未过门的学习权重重新打开。
+- 直接 push `augur` remote（只有步骤 2 在 owner 批准后做）。
+- 重新启用公开仓被手动关闭的工作流（步骤 1 owner 决定）。
 
 ## 功能登记册：已记录、未排期
 

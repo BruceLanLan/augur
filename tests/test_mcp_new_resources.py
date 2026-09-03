@@ -6,15 +6,24 @@ import pytest
 
 class TestThesisResource:
     def test_thesis_resource_missing(self):
-        """Unknown thesis returns an error JSON."""
-        from augur.mcp_server import create_server
+        """Unknown thesis returns an error JSON via the registered MCP resource.
+
+        The resource handler is a closure inside ``create_server()``, so it is
+        exercised through the server's resource API rather than imported by
+        name (the previous version of this test imported a symbol that never
+        existed at module level and only went unnoticed because CI's test
+        step could not fail — see docs/reviews/FABLE_REVIEW_2026-09-03.md).
+        """
+        import asyncio
         pytest.importorskip("mcp")
+        from augur.mcp_server import create_server
+
         mcp = create_server()
-        # Call the resource function directly
-        from augur.mcp_server import get_thesis_resource
-        result = get_thesis_resource("th_nonexistent")
-        data = json.loads(result)
-        assert "error" in data or data.get("thesis_id") == "th_nonexistent"
+        contents = asyncio.run(mcp.read_resource("augur://thesis/th_nonexistent"))
+        payload = next(iter(contents)).content
+        data = json.loads(payload)
+        assert data.get("thesis_id") == "th_nonexistent"
+        assert "error" in data
 
 
 class TestLedgerResource:

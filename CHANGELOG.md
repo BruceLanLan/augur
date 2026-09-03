@@ -2,6 +2,44 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [Unreleased] - 2026-09-03 review round
+
+Fable 5.1 review of the v11.0.0-rc1 line. Findings with evidence in
+`docs/reviews/FABLE_REVIEW_2026-09-03.md`; next phase in `docs/ROADMAP.md`.
+
+### Fixed
+
+- **CI `Tests` was a false green since 2026-08-12.** `pytest ... | tail -20`
+  under GitHub's default `bash -e` (no `pipefail`) made the step's exit code
+  `tail`'s; pytest had been aborting at collection (`ModuleNotFoundError:
+  jsonschema`) and running zero tests. Now `set -o pipefail`, no `tail`, plus
+  an "Assert tests actually ran" step that fails on a collection count < 3000.
+- **CI `Hermetic Smoke` was red on every run since creation.** ruff was
+  installed into the wheel/sdist venv but invoked bare (`ruff: command not
+  found`). Now calls the venv binary, pins `ruff>=0.16,<0.17`, treats tool
+  absence as failure, and runs pip-audit as a hard gate (local audit: no
+  known vulnerabilities).
+- **R6 learned weights blended into consensus with no validation gate.**
+  `ConsensusEngine` applied the 60/40 learned blend whenever any agent had
+  ≥3 resolved outcomes; the first production data set was one ticker and 16
+  overlapping windows. The blend is now opt-in via `AUGUR_FORCE_LEARNED=1`,
+  mirroring the existing `AUGUR_FORCE_RIC` gate (ROADMAP principle 2).
+  Tests: `tests/test_learned_weight_gate.py`.
+- **`mcp` 2.x broke `create_server()`** (`mcp.server.fastmcp` removed).
+  Pinned `mcp>=1.0.0,<2`; dropped the unused `fastmcp` extra.
+  `test_mcp_new_resources.py::test_thesis_resource_missing` imported a symbol
+  that never existed at module level; it now exercises the resource through
+  `mcp.read_resource()`.
+- `jsonschema>=4.0` and `pydantic>=2.0` declared as core dependencies (both
+  were imported by product code but only installed transitively or not at all).
+- ruff rule set pinned to `E4,E7,E9,F` in `pyproject.toml`; ruff 0.16's wider
+  defaults reported ~2.5k findings on an otherwise unchanged tree.
+
+### Changed
+
+- README status tables (zh/en) now state what is verified locally vs. in CI.
+- Full local suite after this round: **3425 passed** (python 3.12).
+
 ## [11.0.0-rc1] - 2026-08-12
 
 v11 is a trustworthiness and product-foundation release. It does not add new

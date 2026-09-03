@@ -111,23 +111,16 @@ jobs:
       # --- Quality gates (run inside the wheel venv) ---
 
       - name: Install quality tooling
-        run: |
-          /tmp/augur_venv_wheel/bin/pip install ruff
-          /tmp/augur_venv_wheel/bin/pip install pip-audit 2>/dev/null || echo "pip-audit unavailable, will skip"
+        # Tool absence is a failure (ROADMAP Day 2 gate), so no silent skips.
+        run: /tmp/augur_venv_wheel/bin/pip install "ruff>=0.16,<0.17" pip-audit
 
       - name: ruff check (lint)
-        run: |
-          ruff check src/ || {
-            echo "FAIL: ruff lint found issues"
-            exit 1
-          }
+        # Must call the venv's ruff: the runner has no global ``ruff`` on PATH,
+        # which is why this job failed on every push from 2026-08-12 onward.
+        run: /tmp/augur_venv_wheel/bin/ruff check src/
 
       - name: pip-audit (dependency vulnerability scan)
-        run: |
-          /tmp/augur_venv_wheel/bin/pip-audit --local 2>/dev/null || {
-            echo "FAIL: pip-audit found vulnerabilities or is unavailable"
-            exit 1
-          }
+        run: /tmp/augur_venv_wheel/bin/pip-audit --local --progress-spinner off
 
   # ------------------------------------------------------------------
   # Job 3 — Install from sdist in fresh venv + smoke + quality
@@ -192,20 +185,13 @@ jobs:
       # --- Quality gates (run inside the sdist venv) ---
 
       - name: Install quality tooling
-        run: |
-          /tmp/augur_venv_sdist/bin/pip install ruff
-          /tmp/augur_venv_sdist/bin/pip install pip-audit 2>/dev/null || echo "pip-audit unavailable, will skip"
+        # Tool absence is a failure (ROADMAP Day 2 gate), so no silent skips.
+        run: /tmp/augur_venv_sdist/bin/pip install "ruff>=0.16,<0.17" pip-audit
 
       - name: ruff check (lint)
-        run: |
-          ruff check src/ || {
-            echo "FAIL: ruff lint found issues"
-            exit 1
-          }
+        # Must call the venv's ruff: the runner has no global ``ruff`` on PATH,
+        # which is why this job failed on every push from 2026-08-12 onward.
+        run: /tmp/augur_venv_sdist/bin/ruff check src/
 
       - name: pip-audit (dependency vulnerability scan)
-        run: |
-          /tmp/augur_venv_sdist/bin/pip-audit --local 2>/dev/null || {
-            echo "FAIL: pip-audit found vulnerabilities or is unavailable"
-            exit 1
-          }
+        run: /tmp/augur_venv_sdist/bin/pip-audit --local --progress-spinner off

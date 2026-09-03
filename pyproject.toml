@@ -37,6 +37,8 @@ dependencies = [
     "uvicorn>=0.20.0",
     "jinja2>=3.1.0",
     "httpx>=0.24.0",
+    "pydantic>=2.0",
+    "jsonschema>=4.0",
 ]
 
 [project.optional-dependencies]
@@ -46,8 +48,9 @@ data = [
     "requests>=2.28",
 ]
 mcp = [
-    "mcp>=1.0.0; python_version>='3.10'",
-    "fastmcp>=0.1; python_version>='3.10'",
+    # mcp 2.x renamed mcp.server.fastmcp -> mcp.server.mcpserver and broke
+    # create_server(); pin <2 until mcp_server.py is migrated (see ROADMAP).
+    "mcp>=1.0.0,<2; python_version>='3.10'",
 ]
 llm = [
     "anthropic>=0.20",
@@ -115,6 +118,10 @@ dashboard = ["templates/*.html", "static/**/*", "i18n/*.json"]
 skills = ["*.md", "**/*.md", "**/*.json"]
 
 [tool.ruff.lint]
+# Pin the rule set explicitly: ruff >=0.16 widened its defaults, which turned
+# a clean tree into ~2.5k findings (FA100/UP006/BLE001...) without any code
+# change. E4/E7/E9/F is the historical default this codebase was linted against.
+select = ["E4", "E7", "E9", "F"]
 # E402 (module-import-not-at-top-of-file) is intentional here: cli.py registers
 # command modules after defining the `cli` group, and several modules defer
 # optional/heavy imports (fastapi, slack, wechat, edgar) behind availability

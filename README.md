@@ -9,7 +9,7 @@
 **不是又一个 AI 股票分析工具。是一个帮你记住"你何时知道什么、什么变了、谁在什么事实上分歧"的研究记忆系统。**
 
 [![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur-next)
-[![3422 Tests](https://img.shields.io/badge/3422_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
+[![3425 Tests](https://img.shields.io/badge/3425_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
 [![Evidence-First](https://img.shields.io/badge/Evidence-First_📋-4a90d9?style=for-the-badge)](#-为什么-augur-不一样)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18位投资大师)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -165,7 +165,7 @@ augur skill run filing-delta --ticker AAPL
 
 ### 6. 信任底座
 
-- **3422 tests**，AUGUR_DATA_DIR 隔离，零用户目录污染
+- **3425 tests**，AUGUR_DATA_DIR 隔离，零用户目录污染
 - PBKDF2 600k、SQLite WAL + 损坏 rename-to-backup
 - 校准状态标注：`raw` / `experimental` / `validated-calibrated` / `insufficient_data`
 
@@ -276,14 +276,16 @@ augur mcp-server · augur skills · augur telegram
 
 ## 🏗️ 项目状态与开发指南
 
-**当前状态**：v11.0.0-rc1 代码完成，等待 owner 发布决策。
+**当前状态**：v11.0.0-rc1 代码完成；2026-09-03 评审修复了 CI 证据链，等待 CI 真绿满一周后由 owner 决定 GA。详见 [评审报告](docs/reviews/FABLE_REVIEW_2026-09-03.md) 与 [ROADMAP 2026-09 阶段](docs/ROADMAP.md#2026-09-阶段rc-收口--ga)。
 
 | 状态 | 事项 |
 |---|---|
-| ✅ | 3422 tests + 1 skipped 全绿 · ruff 全绿（222 → 0 errors） |
+| ✅ | 本地全量测试 3425 passed（2026-09-03，python 3.12，命令见下）· `ruff check src/` 全绿（规则集已显式固定） |
 | ✅ | wheel/sdist 构建 + fresh-venv 双格式 smoke 已本地验证 |
-| ✅ | [ROADMAP](docs/ROADMAP.md) backlog 20 项全部完成（代码层面） |
-| ⏳ | TestPyPI / fresh-install 演练 —— 需 PyPI 凭据（owner） |
+| ✅ | [ROADMAP](docs/ROADMAP.md) v11 backlog 20 项全部完成（代码层面） |
+| 🔧 | CI `Tests` 曾自 8/12 起假绿（`\| tail` 吞退出码 + 缺 `jsonschema`），`Hermetic Smoke` 曾全红（裸调 `ruff`）—— 已修，等待下一次 push 出真实 `N passed` |
+| 🔧 | R6 学习权重 60/40 混入共识改为 opt-in（`AUGUR_FORCE_LEARNED=1`），真门槛待 owner 定口径 |
+| ⏳ | TestPyPI / fresh-install 演练 —— 需 PyPI Trusted Publisher（owner） |
 | ⏳ | 设计伙伴验证 —— 需真实用户（owner） |
 | ⏳ | 正式发布 —— 推 `v*` tag 触发 `publish.yml`（owner 决策） |
 

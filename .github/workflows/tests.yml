@@ -55,10 +55,34 @@ jobs:
       # --- Run tests ---
 
       - name: Run tests
+        # NOTE: no ``| tail`` here. GitHub's default shell is ``bash -e`` without
+        # ``pipefail``, so piping pytest into tail made this step's exit code
+        # tail's (always 0). From 2026-08-12 to 2026-09-03 every run was green
+        # while pytest aborted at collection (missing ``jsonschema``) and ran
+        # zero tests. Keep pytest as the last command so its exit code is the
+        # step's.
         run: |
-          python -m pytest tests/ -q --tb=short \
-            --ignore=tests/test_analyze_api_v12.py \
-            2>&1 | tail -20
+          set -o pipefail
+          python -m pytest tests/ -q --tb=short -p no:cacheprovider \
+            --ignore=tests/test_analyze_api_v12.py
+
+      - name: Assert tests actually ran
+        if: always()
+        run: |
+          python - <<'PY'
+          import re, subprocess, sys
+          out = subprocess.run(
+              [sys.executable, "-m", "pytest", "tests/", "--collect-only", "-q",
+               "--ignore=tests/test_analyze_api_v12.py"],
+              capture_output=True, text=True,
+          ).stdout
+          m = re.search(r"(\d+) tests? collected", out)
+          n = int(m.group(1)) if m else 0
+          print(f"collected {n} tests")
+          if n < 3000:
+              print("FAIL: collection count suspiciously low — collection error?")
+              sys.exit(1)
+          PY
 
       # --- CI assertions (post-test) ---
 

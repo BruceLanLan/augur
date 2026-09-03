@@ -99,13 +99,30 @@ class ConsensusEngine:
                 rolling_ic_weights = {}
 
         # v8: Learned weights from LearningEngine (60% base + 40% learned)
+        #
+        # Gate (2026-09-03 review): the R6 engine flips ``has_learned_weights``
+        # after just 3 resolved outcomes per agent, with no check on how many
+        # distinct tickers or independent windows those outcomes span. The
+        # first real production data (one watchlist ticker, 16 overlapping
+        # 30-day windows) produced a 3.6x weight spread between personas that
+        # is indistinguishable from noise. ROADMAP principle 2 says no dynamic
+        # weight ships without a pre-registered OOS gate; rolling-IC already
+        # honours that above, so the learned blend is now opt-in the same way.
+        # Set ``AUGUR_FORCE_LEARNED=1`` to restore the pre-review behaviour.
         learned_weights = {}
         try:
             # Lazy import to avoid circular: registry imports ConsensusEngine; we import back lazily
             from augur.registry import _get_learning_engine
             le = _get_learning_engine()
             if le.has_learned_weights:
-                learned_weights = le.get_weights()
+                import os
+                if os.environ.get("AUGUR_FORCE_LEARNED"):
+                    learned_weights = le.get_weights()
+                else:
+                    logger.info(
+                        "Learned weights available but not validated — "
+                        "skipping 60/40 blend; override with AUGUR_FORCE_LEARNED=1"
+                    )
         except Exception:
             pass
 

@@ -9,7 +9,7 @@
 **Not another AI stock picker. A research memory system that remembers what you knew, when you knew it, what changed, and who disagrees — and why.**
 
 [![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Latest-ff6b35?style=for-the-badge)](https://github.com/BruceLanLan/augur-next)
-[![3422 Tests](https://img.shields.io/badge/3422_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
+[![3422 Tests](https://img.shields.io/badge/3425_Tests-Passing-brightgreen?style=for-the-badge)](https://github.com/BruceLanLan/augur-next/actions)
 [![Evidence-First](https://img.shields.io/badge/Evidence-First_📋-4a90d9?style=for-the-badge)](#-why-augur)
 [![18 Masters](https://img.shields.io/badge/18-Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP Ready](https://img.shields.io/badge/MCP-Claude_%2F_Hermes-orange?style=for-the-badge)](https://modelcontextprotocol.io)
@@ -87,7 +87,7 @@ v11 is a **foundation rebuild** — from "AI report generator" to "Research Memo
 3. **Immutable RunBundle** — every run snapshotted. Checkpoint resume. Diff between runs.
 4. **Declarative Skills** — pure YAML. No `module_path`, `shell`, or `import`. Runtime permission enforcement.
 5. **UI/UX** — ⌘K Command Palette · Dark Mode · Evidence Graph (force-directed) · Thesis Journal page · Skeleton/Empty-state/Toast · Responsive
-6. **3422 tests** — hermetic, zero user-directory pollution. PBKDF2 600k. SQLite WAL + corruption backup.
+6. **3425 tests** — hermetic, zero user-directory pollution. PBKDF2 600k. SQLite WAL + corruption backup.
 
 Full details → [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md)
 
@@ -174,7 +174,9 @@ augur serve · augur watch · augur cron-run · augur telegram
 
 | Status | Item |
 |---|---|
-| ✅ | 3422 tests + 1 skipped green · ruff clean (222 → 0 errors) |
+| ✅ | 3425 passed locally (2026-09-03, python 3.12) · `ruff check src/` clean (rule set now pinned) |
+| 🔧 | CI `Tests` was a false green from 08-12 (`\| tail` swallowed the exit code + missing `jsonschema`), `Hermetic Smoke` was red since creation (bare `ruff`) — both fixed, awaiting the next push for a real `N passed` |
+| 🔧 | R6 learned-weight 60/40 blend is now opt-in (`AUGUR_FORCE_LEARNED=1`) until an owner-approved gate exists |
 | ✅ | wheel/sdist build + fresh-venv dual-format smoke verified locally |
 | ✅ | [ROADMAP](docs/ROADMAP.md) backlog (20 items) complete at code level |
 | ⏳ | TestPyPI / fresh-install run — needs PyPI credentials (owner) |
@@ -202,14 +204,14 @@ PYTHONPATH=src python3 scripts/deployment_check.py
 <details open>
 <summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
 
-Foundation rebuild: 3422 tests · 24 new modules.
+Foundation rebuild: 3425 tests · 24 new modules.
 
 - Schema contracts: EvidenceItem (three-time), Claim, StepResult, RunBundle, SkillSpec v1
 - Research loop: Thesis Journal → Filing Delta → Disagreement Map → Guidance Tracker → Research Inbox
 - Valuation engine: pure Decimal DCF + WACC + Scenario Lab
 - Eval: Chronological Evaluation Lab + Persona Ablation + OOS harness
 - UI: ⌘K palette · dark mode · evidence graph · thesis page · skeleton/empty-state
-- Trust: PBKDF2 600k · SQLite WAL · calibration labels · 3422 hermetic tests
+- Trust: PBKDF2 600k · SQLite WAL · calibration labels · 3425 hermetic tests
 </details>
 
 <details>
