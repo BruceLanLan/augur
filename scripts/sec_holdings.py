@@ -15,6 +15,7 @@ Known CIK mappings:
 """
 
 import json
+import os
 import time
 import sys
 from pathlib import Path
@@ -56,8 +57,21 @@ INVESTOR_CIKS = {
     },
 }
 
+# SEC's fair-use policy requires a real, reachable contact in the User-Agent.
+# Same convention as src/augur/consensus/edgar_fundamentals.py: set
+# AUGUR_EDGAR_CONTACT_EMAIL; a placeholder is used otherwise.
+_DEFAULT_CONTACT_EMAIL = "augur-agents-user@example.com"
+_CONTACT_EMAIL = os.environ.get("AUGUR_EDGAR_CONTACT_EMAIL", "").strip()
+if not _CONTACT_EMAIL:
+    print(
+        "AUGUR_EDGAR_CONTACT_EMAIL is not set — using a placeholder contact in the "
+        "SEC User-Agent. Set it to a reachable address before sustained use.",
+        file=sys.stderr,
+    )
+    _CONTACT_EMAIL = _DEFAULT_CONTACT_EMAIL
+
 HEADERS = {
-    "User-Agent": "Augur Investment Research https://x.com/BruceBlue",
+    "User-Agent": f"Augur Investment Research {_CONTACT_EMAIL}",
     "Accept": "application/json",
 }
 
