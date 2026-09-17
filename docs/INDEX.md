@@ -4,8 +4,8 @@
 
 | 文档 | 内容 |
 |---|---|
-| [ROADMAP.md](ROADMAP.md) | v11 RC 冲刺记录 + **2026-09 阶段（RC 收口 → GA）**（唯一权威执行入口） |
-| [reviews/FABLE_REVIEW_2026-09-03.md](reviews/FABLE_REVIEW_2026-09-03.md) | 2026-09-03 评审：CI 假绿/全红、R6 权重无门槛、mcp 2.x 破坏等 11 项 finding 与修复 |
+| [ROADMAP.md](ROADMAP.md) | v11 RC 冲刺记录 + **2026-09 阶段（RC 收口 → GA）与公开合并轮后续步骤**（唯一权威执行入口） |
+| [reviews/FABLE_REVIEW_2026-09-03.md](reviews/FABLE_REVIEW_2026-09-03.md) | 2026-09-03 评审：CI 假绿/全红、R6 权重无门槛、mcp 2.x 破坏等 finding 与修复 |
 | [PRODUCT_DIRECTIONS.md](PRODUCT_DIRECTIONS.md) | 产品方向 + 功能机会地图（A-H 八类） |
 | [DIFFERENTIATION_STRATEGY.md](DIFFERENTIATION_STRATEGY.md) | 竞品差异化策略 + 定位 |
 | [RELEASE_NOTES_v11.md](RELEASE_NOTES_v11.md) | v11 完整发布说明 + 迁移指南 |
@@ -13,7 +13,7 @@
 | [skills-guide.md](skills-guide.md) | Skill 使用教程 + 安全模型 + 自定义 Skill |
 | [api-reference-v11.md](api-reference-v11.md) | Python API + REST + MCP 完整参考 |
 | [examples.md](examples.md) | 10+ 实战示例 |
-| [self-hosted-guide.md](self-hosted-guide.md) | 自托管部署（Docker/systemd/nginx/备份） |
+| [self-hosted-guide.md](self-hosted-guide.md) | 自托管部署（Docker/systemd/nginx/备份/鉴权） |
 
 ## 调研文档
 

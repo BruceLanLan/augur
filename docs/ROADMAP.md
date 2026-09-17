@@ -1,9 +1,9 @@
 # Augur 开发路线图
 
 **状态**：Active
-**生效日期**：2026-08-11
-**维护仓库**：`BruceLanLan/augur-next`
-**当前基线**：v11.0.0-rc1（2026-09-03 评审 commit 之后）
+**生效日期**：2026-08-11（2026-09-17 更新：私有开发仓合并进公开仓）
+**维护仓库**：`BruceLanLan/augur`（公开，唯一主仓）
+**当前基线**：v11.0.0-rc1（2026-09-17 公开合并轮之后）
 **详细审计**：[`docs/reviews/PROJECT_REVIEW_2026-08-11.md`](reviews/PROJECT_REVIEW_2026-08-11.md)
 **后续方向**：[`docs/PRODUCT_DIRECTIONS.md`](PRODUCT_DIRECTIONS.md)
 **生态融合调研**：[`docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md`](research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)
@@ -26,30 +26,27 @@
 1. 正确性和可复现性先于新增功能。
 2. 任何动态权重、概率或校准声明必须经过预注册 OOS gate。
 3. 缺失数据必须显式传播，不能静默补零。
-4. 私有 `augur-next/main` 是开发上游；公开 `augur/main` 只同步验证过的精确 commit。
+4. 公开仓 `augur/main` 是唯一主干。2026-09-17 起，原私有开发仓 `augur-next` 的全部历史已快进合并进 `augur`，不再作为开发上游；新工作一律走短分支 + PR。
 5. 短分支、短 PR、一个 owner；不恢复长期 `feature/v9-dev`。
 6. 负结论可以关闭功能；不得因为已经投入开发就降低验收门槛。
 
 ## 目标架构
 
 ```text
-augur-next/main
-  ├── short-lived feature/fix branches
-  ├── canonical roadmap + private release candidate
-  └── verified release commit
-          │ exact commit promotion
+augur/main  (public, single source of truth)
+  ├── short-lived feature/fix branches → PR → CI (Tests + Hermetic Smoke) → merge
+  └── release commit
+          │ tag vX.Y.Z
           ▼
-augur/main
-  └── tag → build once → artifact tests → owner approval → PyPI/GitHub Release
+      build once → artifact tests → owner approval → GitHub Release / PyPI
 ```
 
-公开仓不得出现私有仓没有的独立 commit。同步前必须记录：
+每次发布前必须记录：
 
-- source commit；
-- version 与 tag；
-- test/build/smoke 证据；
-- wheel/sdist digest；
-- migration 与 known limitations。
+- release commit 与 tag；
+- 测试 / 构建 / 冒烟证据（`make verify` 输出或 CI run 链接）；
+- wheel / sdist 的 sha256；
+- 迁移说明与已知限制。
 
 ## 一周冲刺：交付 v11 Release Candidate
 
@@ -217,24 +214,36 @@ augur/main
 - 参考部署的定时任务连续 10 个工作日成功取到数据，watchlist ≥ 30 只。
 - README 里的每个数字都能指到生成它的命令或 CI run。
 
-### 步骤（按风险排序）
+### 步骤（按风险排序）与 2026-09-17 进展
 
-| # | 步骤 | 做什么 | 验证点 | 谁 |
-|---|---|---|---|---|
-| 0 | **CI 证据链复活** | 本评审 commit push 后盯三个工作流 | `Tests` 3 个 job 各出现 `3426 passed`（或更多）且耗时分钟级；`Hermetic Smoke` wheel+sdist 双绿；`Assert tests actually ran` 步骤通过。py3.9 若挂：修或在 ROADMAP 记录，**不许静默从矩阵删掉** | Agent |
-| 1 | **Owner 决策批**（一次性拍板） | ① 公开仓每周烟测是否重新启用（8/10 起 `disabled_manually`）② 下一版是否 v11.0.0 ③ PyPI Trusted Publisher 配置（project `augur-agents`、workflow `publish.yml`、owner `BruceLanLan`）④ R6 门槛口径（见步骤 3）⑤ 参考部署的定时任务是否保留 | Owner |
-| 2 | **v11.0.0 GA** | 步骤 0 绿满 7 天后：版本 `11.0.0`、CHANGELOG 收口、`git tag v11.0.0`、`git push augur <exact-commit>:main`、GitHub Release 附 wheel/sdist digest；PyPI 走 `publish.yml`（需步骤 1③） | Agent 执行 / Owner 批准 push |
-| 3 | **R6 学习权重的真门** | 用 v11 自带 `consensus/oos_harness.py` 定义预注册 gate：≥5 只票、每 agent ≥30 个**不重叠**窗口的 resolved outcome、split-half 权重相关 ≥0.5、对 flat 基线的 Brier 改善 CI 不跨零。达标前 `AUGUR_FORCE_LEARNED` 保持默认关 | Owner 定口径 / Agent 实现 |
-| 4 | **无入口模块处置** | 对 9 个零引用模块（评审 F9）逐个二选一：接到 CLI/Dashboard/MCP 至少一个入口并配一个真实 ticker 示例，或移到 `augur.labs` 命名空间并在 README 标 experimental | Agent 提案 / Owner 选 |
-| 5 | **mcp 2.x 迁移** | `mcp_server.py` 从 `mcp.server.fastmcp.FastMCP` 迁到 `mcp.server.mcpserver.MCPServer`，解除 `<2` 钉版 | Agent |
-| 6 | **定时任务运维** | 定时任务环境不继承交互 shell 的代理设置；设 `AUGUR_EDGAR_CONTACT_EMAIL`；watchlist 扩到 `scripts/_replay_universe.py` 的 37 只；日志加轮转 | Owner（涉及运行机器） |
-| 7 | **数字自动化** | `make verify` 输出测试数/lint/构建 digest；README 徽章改读 CI 而非手写 | Agent |
+| # | 步骤 | 做什么 | 验证点 | 谁 | 2026-09-17 状态 |
+|---|---|---|---|---|---|
+| 0 | **CI 证据链复活** | 修复后盯三个工作流 | `Tests` 三个矩阵 job 各有真实 `N passed`；`Hermetic Smoke` wheel+sdist 双绿 | Agent | ✅ 9/03、9/12 私有仓 CI 真绿；合并进公开仓后需在 `augur` 上再确认一次 |
+| 1 | **Owner 决策批** | ① 公开仓每周数据源烟测是否重新启用（8/10 起 `disabled_manually`）② 下一版是否 v11.0.0 ③ PyPI Trusted Publisher ④ R6 门槛口径 ⑤ 参考部署的定时任务是否保留 | — | Owner | 部分完成：已批准合并进公开仓并做隐私清理；①–⑤ 仍待定 |
+| 2 | **v11.0.0 GA** | 版本 `11.0.0`、CHANGELOG 收口、`git tag v11.0.0`、GitHub Release 附 sha256；PyPI 走 `publish.yml` | tag 触发的发布流程成功，fresh install 可用 | Agent 执行 / Owner 批准 | 公开同步已完成（仍标 rc1）；tag / Release / PyPI 未做 |
+| 3 | **R6 学习权重的真门** | 用 `consensus/oos_harness.py` 定义预注册 gate：≥5 只票、每 agent ≥30 个不重叠窗口、split-half 权重相关 ≥0.5、对 flat 基线 Brier 改善 CI 不跨零 | 门槛通过前 `AUGUR_FORCE_LEARNED` 默认关 | Owner 定口径 / Agent 实现 | 未开始（opt-in 开关已就位） |
+| 4 | **无入口模块处置** | 9 个零引用模块逐个二选一：接入 CLI/Dashboard/MCP，或明确标 experimental | README 功能成熟度表与代码一致 | Agent 提案 / Owner 选 | 部分完成：`research-report`、`dossier` 已接上真实运行记录；9 个模块在 README 标为"仅库代码" |
+| 5 | **mcp 2.x 迁移** | 同时支持 `MCPServer` 与 `FastMCP`，解除 `<2` 钉版 | 两个大版本下真实 stdio 会话一致 | Agent | ✅ mcp 1.30 / 2.2 均验证 |
+| 6 | **定时任务运维** | 定时任务环境不继承交互 shell 的代理设置；设 `AUGUR_EDGAR_CONTACT_EMAIL`；watchlist 扩到 37 只；日志轮转 | 连续 10 个工作日取数成功 | Owner（涉及运行机器） | 未开始 |
+| 7 | **数字自动化** | `make verify` 输出测试数 / lint / sha256；README 测试徽章读 CI | README 不再手写测试数 | Agent | ✅ |
+
+### 2026-09-17 公开合并轮的新发现与后续步骤
+
+公开合并前，按 README 在全新安装上逐条实跑命令，发现并修复了一批单元测试没覆盖到的问题（详见 CHANGELOG）：`workflow` 保存断点崩溃、证据时间戳时区错误、`export` 缺必填参数、`committee` 引用已删除模块直接崩溃、SEC EDGAR 市值单位错 10⁹ 倍、估值命令编造输入、`research-report` 永远只输出标题、服务默认对局域网开放。由此产生的后续步骤（按风险排序）：
+
+| # | 步骤 | 为什么 | 验证点 |
+|---|---|---|---|
+| 8 | **README 快速上手进 CI** | 这轮的 8 个问题全是"单测绿、真跑挂"。把 README 里的命令做成离线冒烟脚本（mock 数据源 + `AUGUR_SKIP_MACRO_FETCH`），在 wheel 安装后执行 | 任意 README 命令回归会让 `Hermetic Smoke` 变红 |
+| 9 | **测试不再尝试联网** | 2026-09-17 在屏蔽全部 TCP 连接的环境下跑全量测试：3441 通过、9 跳过、0 失败，说明结果不依赖网络；但仍有测试会先尝试真实请求再回退，遇到挂起的本地代理时明显变慢 | 在 `conftest.py` 默认禁用外部网络（显式标记的集成测试除外），全量耗时不受网络环境影响 |
+| 10 | **重新生成回放产物** | EDGAR 市值单位修正前生成的 `feedback/rolling_ic.json`、因子归因与 regime 结论都含单位误差（它们默认不参与共识） | 重跑后在 `docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md` 标注新旧结论差异 |
+| 11 | **分歧图从模板变为证据推导** | 当前冲突点是按信号分布套模板的通用表述 | 每个冲突点引用至少一条 EvidenceItem |
+| 12 | **Skill 执行器去留** | 清单与权限已实现，执行器没有；文档已如实说明 | Owner 决定实现或从产品叙事里移除 |
 
 ### 本阶段不做
 
 - 第 25 个模块；新的权重花样；把未过门的学习权重重新打开。
-- 直接 push `augur` remote（只有步骤 2 在 owner 批准后做）。
 - 重新启用公开仓被手动关闭的工作流（步骤 1 owner 决定）。
+- 在 owner 批准前打 `v*` tag（会触发 PyPI 发布流程）。
 
 ## 功能登记册：已记录、未排期
 
@@ -275,8 +284,7 @@ augur/main
 
 以下决策不应由实现者暗自替 owner 决定：
 
-- 是否正式确认 `augur-next` 为私有开发上游、`augur` 为公开稳定镜像。
-- 是否记录 tip 后删除/归档两个过期私有分支。
+- 原私有仓 `augur-next` 在合并后是归档（archive）还是删除；其上的过期分支如何处理。
 - 下一正式版本是否采用 v11.0.0。
 - PyPI project/name、Trusted Publisher、environment approver。
 - Python/OS 支持矩阵。

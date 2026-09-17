@@ -50,7 +50,7 @@ skills-list:       ## List available agent skills
 test:              ## Run full test suite
 	pytest tests/ -v
 
-test-fast:         ## Run tests quietly (isolated AUGUR_DATA_DIR; see README for network notes)
+test-fast:         ## Run tests quietly (isolated AUGUR_DATA_DIR; passes with the network blocked)
 	pytest tests/ -q
 
 verify:            ## One-shot evidence for README numbers: tests, lint, build digests

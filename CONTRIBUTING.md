@@ -47,19 +47,16 @@ factors:
 ### 2. 修复 Bug
 
 1. 先确认 Bug 可复现（提供最小复现步骤）
-2. 修改代码，运行全量测试：
+2. 先写一个能复现问题的测试，再修改代码，然后运行检查：
    ```bash
-   cd augur
-   python3 -c "
-   import sys; sys.path.insert(0,'src')
-   from augur.coordinator import DecisionCoordinator
-   from augur.personas.base import MarketContext
-   coord = DecisionCoordinator()
-   ctx = MarketContext(ticker='TEST', pe=25, gross_margins=0.45, roe=0.20)
-   results = coord.analyze_with_all(ctx)
-   print(f'{len(results)} personas passed')
-   "
+   python3 -m venv .venv && source .venv/bin/activate
+   pip install -e ".[dev,data,mcp]" "ruff>=0.16,<0.17" build
+
+   python -m pytest tests/ -q      # 全量测试（使用临时 AUGUR_DATA_DIR，不会动你的 ~/.augur）
+   make lint                       # ruff，规则集固定在 pyproject.toml
+   make verify                     # 可选：测试 + lint + 构建 wheel/sdist 并输出 sha256
    ```
+   如果改动涉及 CLI，请在全新虚拟环境里真实跑一遍对应命令（`make test-wheel` 可以帮你装好构建产物）。
 3. 提交 PR，描述中说明：问题原因、修复方案、影响范围
 
 ### 3. 改进 Dashboard
@@ -89,7 +86,7 @@ factors:
 
 ## 代码风格
 
-- Python：无格式化工具强制要求，但保持与现有代码一致
+- Python：`ruff check src/` 必须通过（CI 会检查）；格式保持与周围代码一致
 - 变量名：snake_case
 - 注释：代码逻辑清晰时不写注释，只在"为什么"不明显时才写
 - 不要引入新的必须依赖（可放入 optional extras）
@@ -99,7 +96,7 @@ factors:
 ## PR 流程
 
 1. Fork → 创建分支（`fix/xxx` 或 `feat/xxx`）
-2. 修改代码 + 通过全量测试
+2. 修改代码 + 通过全量测试与 ruff（CI 的 `Tests` 与 `Hermetic Smoke` 都需要为绿）
 3. 提交 PR，标题格式：`fix: ...` / `feat: ...` / `docs: ...`
 4. PR 描述中包含：问题背景、改动说明、测试方法
 

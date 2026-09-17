@@ -2,6 +2,65 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [Unreleased] - 2026-09-17 public merge round
+
+The private development line (`augur-next`, v11.0.0-rc1) is merged into the
+public `BruceLanLan/augur` repository. Before publishing, every README command
+was run from a freshly built wheel in a clean virtualenv; the problems that
+surfaced are fixed below with regression tests. The version stays at
+`11.0.0rc1`; tagging v11.0.0 is an owner decision tracked in `docs/ROADMAP.md`.
+
+### Fixed
+
+- **`augur workflow` crashed on live data** ("Object of type datetime is not
+  JSON serializable"): checkpoints stored `asdict(ctx)` whose evidence items
+  carry datetimes. Checkpoints now serialise them; resume is tested.
+- **Evidence timestamps mixed naive local time and UTC**, so in UTC+N zones
+  `available_at` came after `retrieved_at`. Both are UTC-aware.
+- **SEC EDGAR market cap was 10⁹× too large.** `edgar_fundamentals` returned
+  raw USD while `MarketContext.market_cap` (and every persona threshold) uses
+  billions; the live overlay and historical replay both used the wrong value.
+  Replay-derived artifacts generated earlier carry this error.
+- **`augur valuation TICKER` printed a $0.00 fair value**: it read FCF in
+  billions as dollars, invented 1e9 shares and used revenue × 15% for missing
+  FCF. It now converts units, derives shares from market cap / price, fills net
+  debt, reports what was auto-filled and exits 1 when inputs are missing.
+- **`augur committee` crashed** importing modules removed in v10.15; rewritten
+  on `augur.registry` + `fetch_market_context`. Kelly size printed 100× too
+  large there.
+- **`augur export TICKER` required `--run-id`** although the README omitted it;
+  it now defaults to the newest run, and `augur workflow` prints the run id.
+  `--format evidence-pack -o PATH` now honours `PATH`.
+- **`augur research-report` always printed only a title** (the builder was
+  called with no data). It now reports consensus, vote split, disagreement map
+  and provenance from the newest run; `augur dossier` shows the same
+  disagreement summary instead of a placeholder.
+- **`augur serve` / `augur api` listened on 0.0.0.0 by default** while auth is
+  opt-in (and absent from the REST API). Both default to 127.0.0.1 and warn
+  when exposed without auth.
+- `tests/test_analyze_api_v12.py` hit live yfinance and was excluded from CI
+  since June; it is hermetic now and runs in CI.
+
+### Added
+
+- MCP server supports `mcp` 2.x (`MCPServer`) as well as 1.x; the `<2` pin is
+  lifted. Verified with real stdio client sessions on 1.30.0 and 2.2.0.
+- `make verify`: full tests, ruff and wheel/sdist build with sha256 digests.
+- `latest_run_id()` / `load_run_bundle_dict()` in `augur.run_tracker`.
+
+### Changed
+
+- README (zh/en) rewritten for the public repository: verified quickstart,
+  upgrade table from v10, feature-maturity table, data and privacy section,
+  CI-driven test badge. `docs/skills-guide.md` and `docs/examples.md` no longer
+  document the non-existent `augur skill run` command.
+- All functional links (install script, Dockerfile, package metadata, dashboard
+  Hermes setup page, deployment guides) point to `BruceLanLan/augur`.
+- Package metadata: SPDX `license = "MIT"`, `requires-python >= 3.9`,
+  setuptools >= 77.
+- Verification for this round: full suite 3441 passed / 9 skipped with every
+  TCP connection blocked; ruff clean; README commands re-run from a fresh wheel.
+
 ## [Unreleased] - 2026-09-03 review round
 
 Fable 5.1 review of the v11.0.0-rc1 line. Findings with evidence in

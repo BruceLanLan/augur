@@ -78,16 +78,46 @@ the infrastructure for evidence-tracked research workflows.
 
 ## Known Limitations
 
-- Rolling IC OOS evaluation requires resolved real-world outcomes; the harness
-  is built but the outcome corpus is not yet populated.
-- `earnings-prep` and `filing-delta` Skills have manifest and fixture support
-  but end-to-end workflow execution awaits the Skill runner (post-RC).
-- Full test suite re-run on RC commit: **3422 passed + 1 skipped**.
-- Wheel/sdist build + fresh-venv smoke verified locally (CLI help/version,
-  schema import, list-personas, skills, MCP entry, site-packages origin);
-  GitHub Actions run pending.
+Updated 2026-09-17 for the public release of the v11 line on `BruceLanLan/augur`.
+
+- **Skill runner not implemented.** Skill manifests, validation and runtime
+  permission checks exist, but there is no `augur skill run` command and no
+  generic execute-skill MCP tool. `docs/skills-guide.md` lists the working CLI
+  commands and MCP prompts for each built-in skill.
+- **Dynamic weights are off by default.** Rolling-IC weights (`AUGUR_FORCE_RIC=1`)
+  and learned weights (`AUGUR_FORCE_LEARNED=1`) have not passed a pre-registered
+  out-of-sample gate; the resolved-outcome corpus is still too small.
+- **Disagreement-map conflict points are templates** chosen from the bull/bear
+  split, not claims derived from individual evidence items.
+- **Replay-derived artifacts predate the EDGAR market-cap unit fix.**
+  `feedback/rolling_ic.json` and the factor-attribution / regime findings were
+  generated while SEC EDGAR market cap was reported in raw USD instead of
+  billions. They do not affect default consensus, but should be regenerated
+  before being relied on.
+- **Nine modules are library code without a user entry point**:
+  `citation_queue`, `cost_budget`, `eval_lab`, `outcome_tracker`, `pack_digest`,
+  `prompt_eval`, `review_comment`, `risk_review`, `team_audit`.
+- `augur guidance` requires `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` and calls a paid
+  LLM; PDF export requires the `[export]` extra.
+- Test and build evidence: run `make verify`; CI runs the full suite on Python
+  3.9 / 3.11 / 3.12 and wheel + sdist fresh-install smoke on 3.12.
 
 ## Migration from v10.x
+
+Behaviour changes added during the 2026-09 public-release rounds:
+
+- `augur serve` and `augur api` bind to `127.0.0.1` by default. Set
+  `AUGUR_API_TOKEN` before passing `--host 0.0.0.0` (`augur api` has no auth).
+- Learned (R6) weights are no longer blended into consensus unless
+  `AUGUR_FORCE_LEARNED=1`.
+- SEC EDGAR `market_cap` is reported in billions of USD, matching yfinance and
+  every persona threshold (it was raw USD).
+- `augur export` and the new `augur research-report` default to the newest run
+  for the ticker; `--run-id` selects a specific one.
+- Minimum Python is 3.9; the MCP server supports `mcp` 1.x and 2.x.
+
+Original v11 migration notes:
+
 
 1. Set `AUGUR_DATA_DIR` to your existing `~/.augur` for backward compatibility
    (the default behaviour is unchanged).
