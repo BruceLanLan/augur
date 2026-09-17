@@ -73,6 +73,7 @@ jobs:
           path: dist/
 
       - name: Create fresh venv and install from wheel
+        id: install
         run: |
           WHEEL=$(ls dist/*.whl | head -1)
           echo "Installing ${WHEEL}"
@@ -125,6 +126,20 @@ jobs:
       - name: pip-audit (dependency vulnerability scan)
         run: /tmp/augur_venv_wheel/bin/pip-audit --local --progress-spinner off
 
+      # --- README commands against the installed package ---
+
+      - name: README quickstart smoke (offline)
+        # Runs every README quickstart / CLI cheat-sheet command through the
+        # installed console script with faked data providers and sockets
+        # blocked. Placed after pip-audit so the audit still covers only the
+        # core install ([data] is needed for the auto-fetch code paths), and
+        # runs even when an earlier gate failed so both signals are reported.
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          WHEEL=$(ls dist/*.whl | head -1)
+          /tmp/augur_venv_wheel/bin/pip install "${WHEEL}[data]"
+          python3 scripts/readme_smoke.py /tmp/augur_venv_wheel/bin/augur
+
   # ------------------------------------------------------------------
   # Job 3 — Install from sdist in fresh venv + smoke + quality
   # ------------------------------------------------------------------
@@ -150,6 +165,7 @@ jobs:
           path: dist/
 
       - name: Create fresh venv and install from sdist
+        id: install
         run: |
           SDIST=$(ls dist/*.tar.gz | head -1)
           echo "Installing ${SDIST}"
@@ -201,3 +217,17 @@ jobs:
 
       - name: pip-audit (dependency vulnerability scan)
         run: /tmp/augur_venv_sdist/bin/pip-audit --local --progress-spinner off
+
+      # --- README commands against the installed package ---
+
+      - name: README quickstart smoke (offline)
+        # Runs every README quickstart / CLI cheat-sheet command through the
+        # installed console script with faked data providers and sockets
+        # blocked. Placed after pip-audit so the audit still covers only the
+        # core install ([data] is needed for the auto-fetch code paths), and
+        # runs even when an earlier gate failed so both signals are reported.
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: |
+          SDIST=$(ls dist/*.tar.gz | head -1)
+          /tmp/augur_venv_sdist/bin/pip install "${SDIST}[data]"
+          python3 scripts/readme_smoke.py /tmp/augur_venv_sdist/bin/augur
