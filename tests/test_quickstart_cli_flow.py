@@ -26,6 +26,10 @@ def offline_provider(monkeypatch, tmp_path):
     # ticker" needs a root this test owns.
     monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path / "augur_data"))
 
+    # fetch_market_context caches contexts for 3 minutes across tests
+
+    data_module.clear_cache()
+
     monkeypatch.setattr(data_module, "_get_providers", lambda: [_Provider()])
     # Consensus otherwise pulls live VIX/SPY history for regime detection.
     monkeypatch.setenv("AUGUR_SKIP_MACRO_FETCH", "1")

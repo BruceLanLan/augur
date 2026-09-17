@@ -43,6 +43,10 @@ class _LiveShapedProvider(DataProvider):
 def live_provider(monkeypatch):
     import augur.data as data_module
 
+    # fetch_market_context caches contexts for 3 minutes across tests
+
+    data_module.clear_cache()
+
     monkeypatch.setattr(data_module, "_get_providers", lambda: [_LiveShapedProvider()])
     # Consensus otherwise pulls live VIX/SPY history for regime detection.
     monkeypatch.setenv("AUGUR_SKIP_MACRO_FETCH", "1")

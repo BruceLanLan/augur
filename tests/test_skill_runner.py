@@ -47,6 +47,8 @@ def offline(monkeypatch, tmp_path):
 
     monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("AUGUR_SKIP_MACRO_FETCH", "1")
+    # fetch_market_context caches contexts for 3 minutes across tests
+    data_module.clear_cache()
     monkeypatch.setattr(data_module, "_get_providers", lambda: [_Provider()])
     monkeypatch.setattr(ef, "fetch_annual_financials", lambda ticker, years=2: [dict(p) for p in ANNUAL[:years]])
     monkeypatch.setattr(ef, "_get_client", lambda: _FakeClient())

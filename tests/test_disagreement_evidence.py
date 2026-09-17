@@ -104,6 +104,8 @@ def test_workflow_run_feeds_real_evidence_into_the_map(monkeypatch, tmp_path):
 
     monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path / "data"))
     monkeypatch.setenv("AUGUR_SKIP_MACRO_FETCH", "1")
+    # fetch_market_context caches contexts for 3 minutes across tests
+    data_module.clear_cache()
     monkeypatch.setattr(data_module, "_get_providers", lambda: [_Provider()])
 
     run = run_workflow("AAPL", steps="fetch,analyze,consensus")
