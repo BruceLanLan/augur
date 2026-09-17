@@ -19,6 +19,8 @@ import uuid
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+import math
+
 import numpy as np
 
 logger = logging.getLogger(__name__)
@@ -395,6 +397,12 @@ class FactorLab:
                 t_stat = ic_mean / (ic_std / np.sqrt(n))
                 p_val = FactorLab._t_test_pvalue(t_stat, n - 1)
                 significant = bool(p_val < 0.05)
+            elif n > 1 and abs(ic_mean) > 1e-9:
+                # Identical non-zero IC in every period: no variance to test
+                # against, and certainly not "no effect" (t used to be 0, p 1).
+                t_stat = math.copysign(math.inf, ic_mean)
+                p_val = 0.0
+                significant = True
             else:
                 t_stat = 0.0
                 p_val = 1.0
@@ -518,21 +526,47 @@ class FactorLab:
     def _t_test_pvalue(t_stat: float, df: int) -> float:
         """Two-sided p-value from t-statistic and degrees of freedom.
 
-        Uses scipy.stats if available, otherwise falls back to a
-        Normal approximation (valid for df > 30).
+        Uses scipy.stats if available, otherwise the exact Student-t tail via
+        the regularized incomplete beta function. (The previous fallback was a
+        normal approximation, which at df=4, t=2.0 returned p=0.045 instead of
+        0.116 and marked noise factors as significant.)
         """
+        if df <= 0:
+            return 1.0
         if _HAS_SCIPY:
             from scipy import stats as _st
             return float(2.0 * _st.t.sf(abs(t_stat), df))
+        if not math.isfinite(t_stat):
+            return 0.0
+        x = df / (df + t_stat * t_stat)
+        return max(min(_regularized_incomplete_beta(df / 2.0, 0.5, x), 1.0), 0.0)
 
-        # Normal approximation (reasonable for df > 30)
-        # Using the asymptotic equivalence: t(df) → N(0, 1) as df → ∞
-        # For smaller df, this is a rough estimate.
-        z = abs(t_stat)
-        # Abramowitz and Stegun approximation for standard normal CDF
-        # Phi(z) ≈ 1 - 0.5 * (1 + c1*z + c2*z^2 + c3*z^3 + c4*z^4)^(-4)
-        c1, c2, c3, c4 = 0.196854, 0.115194, 0.000344, 0.019527
-        t = 1.0 / (1.0 + c1 * z + c2 * z * z + c3 * z * z * z + c4 * z * z * z * z)
-        phi = 1.0 - 0.5 * (t ** 4)
-        p_val = 2.0 * (1.0 - phi)
-        return max(min(p_val, 1.0), 0.0)
+def _regularized_incomplete_beta(a: float, b: float, x: float) -> float:
+    """I_x(a, b) by Lentz's continued fraction (Numerical Recipes 6.4)."""
+    if x <= 0.0:
+        return 0.0
+    if x >= 1.0:
+        return 1.0
+    ln_front = math.lgamma(a + b) - math.lgamma(a) - math.lgamma(b) + a * math.log(x) + b * math.log1p(-x)
+    if x > (a + 1.0) / (a + b + 2.0):
+        return 1.0 - _regularized_incomplete_beta(b, a, 1.0 - x)
+    tiny, eps = 1e-300, 1e-14
+    c, d = 1.0, 1.0 - (a + b) * x / (a + 1.0)
+    d = 1.0 / (d if abs(d) > tiny else tiny)
+    h = d
+    for m in range(1, 300):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((a + m2 - 1.0) * (a + m2))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c if abs(1.0 + aa / c) > tiny else tiny
+        h *= d * c
+        aa = -(a + m) * (a + b + m) * x / ((a + m2) * (a + m2 + 1.0))
+        d = 1.0 + aa * d
+        d = 1.0 / (d if abs(d) > tiny else tiny)
+        c = 1.0 + aa / c if abs(1.0 + aa / c) > tiny else tiny
+        delta = d * c
+        h *= delta
+        if abs(delta - 1.0) < eps:
+            break
+    return math.exp(ln_front) * h / a
