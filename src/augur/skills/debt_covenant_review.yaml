@@ -1,15 +1,16 @@
 id: debt-covenant-review
-version: 1.0.0
-description: Review debt covenants, liquidity constraints, and compliance status from SEC filings.
+version: 1.1.0
+description: Check leverage and interest coverage from the latest 10-K against reference or supplied covenant thresholds.
 license: Apache-2.0
 compatibility: ">=11,<12"
 inputs_schema:
   required: [ticker]
+  optional: [debt_ebitda_max, interest_coverage_min]
 required_capabilities:
-  - sec.filings.read
-  - fundamentals.snapshot
+  - sec.financials.annual
+  - covenant.review
 permissions:
-  resources: [evidence.read, runs.read]
+  resources: [evidence.read]
   network_domains: [sec.gov]
 evidence_policy:
   information_time_required: true
@@ -17,13 +18,10 @@ evidence_policy:
   min_claim_coverage: 0.90
 workflow:
   - id: fetch_filings
-    uses: sec.filings.read
+    uses: sec.financials.annual
   - id: covenant_check
     uses: covenant.review
     needs: [fetch_filings]
-  - id: report
-    uses: report.covenant_review
-    needs: [covenant_check]
 outputs_schema:
   required: [run_id, covenant_report, evidence_manifest]
 evals:

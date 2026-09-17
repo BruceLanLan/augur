@@ -164,3 +164,18 @@ class TestDashboardAssetsShipInTheWheel:
         missing = [a.agent_id for a in AgentRegistry().get_all()
                    if not (avatars / f"{a.agent_id}.png").exists()]
         assert missing == []
+
+
+def test_builtin_skill_manifests_are_package_data():
+    """src/augur/skills/*.yaml were not in the wheel, so pip installs had no skills."""
+    import fnmatch
+
+    root = Path(__file__).resolve().parents[1]
+    pyproject = (root / "pyproject.toml").read_text(encoding="utf-8")
+    line = next(ln for ln in pyproject.splitlines() if ln.startswith("augur = ["))
+    patterns = re.findall(r'"([^"]+)"', line)
+    manifests = sorted((root / "src" / "augur" / "skills").glob("*.yaml"))
+    assert manifests, "expected built-in skill manifests"
+    for manifest in manifests:
+        rel = manifest.relative_to(root / "src" / "augur").as_posix()
+        assert any(fnmatch.fnmatch(rel, pat) for pat in patterns), f"{rel} is not package data"

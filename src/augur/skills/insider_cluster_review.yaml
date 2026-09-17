@@ -1,12 +1,13 @@
 id: insider-cluster-review
-version: 1.0.0
-description: Detect insider trading clusters — consecutive buys/sells by executives and directors.
+version: 1.1.0
+description: Detect insider trading clusters — consecutive open-market buys/sells by executives and directors.
 license: Apache-2.0
 compatibility: ">=11,<12"
 inputs_schema:
   required: [ticker]
 required_capabilities:
-  - sec.filings.read
+  - sec.form4.read
+  - ownership.cluster_detect
 permissions:
   resources: [evidence.read]
   network_domains: [sec.gov]
@@ -16,13 +17,10 @@ evidence_policy:
   min_claim_coverage: 0.90
 workflow:
   - id: fetch_form4
-    uses: sec.filings.read
+    uses: sec.form4.read
   - id: cluster_detect
     uses: ownership.cluster_detect
     needs: [fetch_form4]
-  - id: report
-    uses: report.insider_cluster
-    needs: [cluster_detect]
 outputs_schema:
   required: [run_id, cluster_report, evidence_manifest]
 evals:

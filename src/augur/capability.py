@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 import threading
-from typing import Any, Callable, Dict, List
+from typing import Callable, Dict, List, Optional
 
 import jsonschema
 
@@ -35,14 +35,18 @@ class Capability:
         description: Human-readable one-liner.
         input_schema: JSON Schema dict for input parameters.
         output_schema: JSON Schema dict for the return value.
-        handler: Callable that implements the capability (may be a stub).
+        handler: Callable that implements the capability.
         budget_ms: Soft budget — the expected maximum execution time.
         timeout_ms: Hard timeout — execution is aborted after this.
+        network_domains: Domains the handler contacts; checked against a
+            skill's ``permissions.network_domains`` before execution.
+        resources: Local resources the handler reads (e.g. ``runs.read``);
+            checked against ``permissions.resources``.
     """
 
     __slots__ = (
         "name", "description", "input_schema", "output_schema",
-        "handler", "budget_ms", "timeout_ms",
+        "handler", "budget_ms", "timeout_ms", "network_domains", "resources",
     )
 
     def __init__(
@@ -54,6 +58,8 @@ class Capability:
         handler: Callable,
         budget_ms: int = 10_000,
         timeout_ms: int = 30_000,
+        network_domains: Optional[List[str]] = None,
+        resources: Optional[List[str]] = None,
     ) -> None:
         if not _CAP_NAME_RE.match(name):
             raise ValueError(
@@ -67,6 +73,8 @@ class Capability:
         self.handler = handler
         self.budget_ms = budget_ms
         self.timeout_ms = timeout_ms
+        self.network_domains = list(network_domains or [])
+        self.resources = list(resources or [])
 
     def __repr__(self) -> str:
         return f"Capability({self.name!r})"
@@ -155,151 +163,27 @@ def reset_capability_registry() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Built-in capabilities (stub handlers)
+# Built-in capabilities
 # ---------------------------------------------------------------------------
 
-def _stub_handler(**kwargs: Any) -> dict:
-    """Placeholder handler — not invoked in tests of the registry itself."""
-    return {"stub": True}
-
-
 def _register_builtin_capabilities(reg: CapabilityRegistry) -> None:
-    """Register the initial set of built-in capabilities."""
+    """Register every capability the built-in skills use.
 
-    builtins: list[dict] = [
-        {
-            "name": "sec.filings.read",
-            "description": "Read an SEC filing by ticker and accession number.",
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "ticker": {"type": "string"},
-                    "accession": {"type": "string"},
-                },
-                "required": ["ticker", "accession"],
-            },
-            "output_schema": {
-                "type": "object",
-                "properties": {
-                    "filing_text": {"type": "string"},
-                    "filing_date": {"type": "string"},
-                },
-                "required": ["filing_text", "filing_date"],
-            },
-        },
-        {
-            "name": "fundamentals.snapshot",
-            "description": "Get a point-in-time fundamentals snapshot for a ticker.",
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "ticker": {"type": "string"},
-                    "as_of": {"type": "string", "format": "date"},
-                },
-                "required": ["ticker"],
-            },
-            "output_schema": {
-                "type": "object",
-                "properties": {
-                    "market_cap": {"type": "number"},
-                    "pe_ratio": {"type": "number"},
-                    "revenue_growth": {"type": "number"},
-                },
-            },
-        },
-        {
-            "name": "market.price_history",
-            "description": "Fetch historical price data for a ticker.",
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "ticker": {"type": "string"},
-                    "start_date": {"type": "string", "format": "date"},
-                    "end_date": {"type": "string", "format": "date"},
-                },
-                "required": ["ticker", "start_date", "end_date"],
-            },
-            "output_schema": {
-                "type": "object",
-                "properties": {
-                    "prices": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "properties": {
-                                "date": {"type": "string"},
-                                "close": {"type": "number"},
-                            },
-                        },
-                    },
-                },
-            },
-        },
-        {
-            "name": "runs.compare",
-            "description": "Compare two RunBundles and surface diffs.",
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "run_a": {"type": "string", "description": "Run ID A"},
-                    "run_b": {"type": "string", "description": "Run ID B"},
-                },
-                "required": ["run_a", "run_b"],
-            },
-            "output_schema": {
-                "type": "object",
-                "properties": {
-                    "diffs": {"type": "array", "items": {"type": "object"}},
-                },
-            },
-        },
-        {
-            "name": "earnings.collect_evidence",
-            "description": "Collect earnings evidence (maps to workflow fetch phase).",
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "ticker": {"type": "string"},
-                    "event_id": {"type": "string"},
-                    "as_of": {"type": "string", "format": "date"},
-                },
-                "required": ["ticker", "event_id", "as_of"],
-            },
-            "output_schema": {
-                "type": "object",
-                "properties": {
-                    "evidence_items": {"type": "array", "items": {"type": "object"}},
-                },
-            },
-        },
-        {
-            "name": "report.earnings_dossier",
-            "description": "Generate an earnings research dossier (maps to analyze+consensus phases).",
-            "input_schema": {
-                "type": "object",
-                "properties": {
-                    "ticker": {"type": "string"},
-                    "evidence": {"type": "array", "items": {"type": "object"}},
-                },
-                "required": ["ticker", "evidence"],
-            },
-            "output_schema": {
-                "type": "object",
-                "properties": {
-                    "run_id": {"type": "string"},
-                    "dossier": {"type": "object"},
-                    "evidence_manifest": {"type": "array", "items": {"type": "object"}},
-                },
-                "required": ["run_id", "dossier", "evidence_manifest"],
-            },
-        },
-    ]
+    Implementations live in :mod:`augur.skills.handlers`; each wraps an
+    existing Augur function. (Until 2026-09-17 this registered six schemas
+    whose handlers all returned ``{"stub": True}``.)
+    """
+    from augur.skills.handlers import CAPABILITIES
 
-    for spec in builtins:
+    for name, spec in sorted(CAPABILITIES.items()):
         reg.register(Capability(
-            name=spec["name"],
+            name=name,
             description=spec["description"],
             input_schema=spec["input_schema"],
-            output_schema=spec["output_schema"],
-            handler=_stub_handler,
+            output_schema=spec.get("output_schema", {"type": "object"}),
+            handler=spec["handler"],
+            budget_ms=spec.get("timeout_ms", 30_000) // 2,
+            timeout_ms=spec.get("timeout_ms", 30_000),
+            network_domains=spec.get("network_domains"),
+            resources=spec.get("resources"),
         ))

@@ -87,7 +87,7 @@ import urllib.error
 import urllib.request
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +120,19 @@ _CONCEPT_TAGS: Dict[str, List[str]] = {
     "operating_income": ["OperatingIncomeLoss"],
     "diluted_eps": ["EarningsPerShareDiluted"],
     "shares_outstanding": ["CommonStockSharesOutstanding", "CommonStockSharesIssued"],
+}
+
+# Additional concepts used only by fetch_annual_financials (skills: filing
+# delta and covenant review). Kept separate so the point-in-time fundamentals
+# above are unaffected.
+_STATEMENT_TAGS: Dict[str, List[str]] = {
+    "interest_expense": ["InterestExpense", "InterestExpenseNonoperating", "InterestExpenseDebt"],
+    "depreciation_amortization": ["DepreciationDepletionAndAmortization", "DepreciationAndAmortization",
+                                  "DepreciationAmortizationAndAccretionNet"],
+    "long_term_debt": ["LongTermDebt", "LongTermDebtNoncurrent"],
+    "current_debt": ["LongTermDebtCurrent", "ShortTermBorrowings"],
+    "operating_cash_flow": ["NetCashProvidedByUsedInOperatingActivities"],
+    "capex": ["PaymentsToAcquirePropertyPlantAndEquipment"],
 }
 
 
@@ -678,3 +691,66 @@ def _fetch_price_near(ticker: str, as_of_date: str) -> Optional[float]:
         return float(candidates[-1]["close"])
     except Exception:
         return None
+
+
+def fetch_annual_financials(ticker: str, years: int = 2) -> List[Dict[str, Any]]:
+    """Annual statement figures for the most recent ``years`` fiscal years.
+
+    Returns newest first: ``[{"fiscal_year_end", "accession", "filed",
+    "metrics": {...}}]`` where ``metrics`` holds whichever of revenue,
+    net_income, gross_profit, operating_income, eps_diluted, total_assets,
+    total_liabilities, total_equity, shares_outstanding, interest_expense,
+    depreciation_amortization, long_term_debt, current_debt,
+    operating_cash_flow, free_cash_flow, gross_margin, operating_margin,
+    net_margin, roe, debt_to_equity, total_debt and ebitda could be derived.
+    Values are in reported units (USD, shares). ``accession``/``filed`` come
+    from the 10-K that first reported the period. Empty list when the ticker
+    has no SEC CIK or no annual data.
+    """
+    client = _get_client()
+    facts = client.get_company_facts(ticker)
+    if not facts or "facts" not in facts:
+        return []
+    fact_data = facts["facts"]
+    tags = {**_CONCEPT_TAGS, **_STATEMENT_TAGS}
+    records = {name: _annual_records(fact_data, family) for name, family in tags.items()}
+    if not records["net_income"] and not records["revenue"]:
+        return []
+
+    first_filing: Dict[str, Tuple[str, str]] = {}
+    for r in records["net_income"] or records["revenue"]:
+        end, filed, accn = r["end"], r["filed"], r.get("accn", "")
+        if end not in first_filing or filed < first_filing[end][0]:
+            first_filing[end] = (filed, accn)
+    periods = sorted(first_filing, reverse=True)[:years]
+
+    out: List[Dict[str, Any]] = []
+    for end in periods:
+        raw = {name: _value_at(recs, end) for name, recs in records.items()}
+        m: Dict[str, float] = {}
+        rename = {"diluted_eps": "eps_diluted", "assets": "total_assets",
+                  "liabilities": "total_liabilities", "stockholders_equity": "total_equity"}
+        for name, value in raw.items():
+            if value is not None:
+                m[rename.get(name, name)] = value
+        revenue = m.get("revenue")
+        if revenue:
+            for num, key in (("gross_profit", "gross_margin"), ("operating_income", "operating_margin"),
+                             ("net_income", "net_margin")):
+                if num in m:
+                    m[key] = m[num] / revenue
+        if m.get("total_equity"):
+            if "net_income" in m:
+                m["roe"] = m["net_income"] / m["total_equity"]
+        debt = sum(m.get(k, 0.0) for k in ("long_term_debt", "current_debt"))
+        if debt:
+            m["total_debt"] = debt
+            if m.get("total_equity"):
+                m["debt_to_equity"] = debt / m["total_equity"]
+        if "operating_income" in m and "depreciation_amortization" in m:
+            m["ebitda"] = m["operating_income"] + m["depreciation_amortization"]
+        if "operating_cash_flow" in m and "capex" in m:
+            m["free_cash_flow"] = m["operating_cash_flow"] - m["capex"]
+        filed, accn = first_filing[end]
+        out.append({"fiscal_year_end": end, "accession": accn, "filed": filed, "metrics": m})
+    return out

@@ -27,7 +27,7 @@ import hashlib
 import json
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from augur.data_dir import get_data_dir
 from augur.schemas.run_bundle import (
@@ -505,16 +505,12 @@ class RunTracker:
         return list(self._step_results)
 
 
-def latest_run_id(ticker: str) -> Optional[str]:
-    """Return the newest persisted RunBundle id for ``ticker``, if any.
-
-    Bundles live in ``get_data_dir() / "runs"``; the newest is chosen by the
-    bundle's own ``created_at`` (ties broken by run id).
-    """
+def list_run_ids(ticker: str) -> List[str]:
+    """Persisted RunBundle ids for ``ticker``, newest first (by ``created_at``, then id)."""
     runs_dir = get_data_dir() / "runs"
     if not runs_dir.is_dir():
-        return None
-    best: Optional[tuple] = None
+        return []
+    keyed = []
     for path in runs_dir.glob("*.json"):
         try:
             bundle = json.loads(path.read_text(encoding="utf-8"))
@@ -522,10 +518,55 @@ def latest_run_id(ticker: str) -> Optional[str]:
             continue
         if str(bundle.get("metadata", {}).get("ticker", "")).upper() != ticker.upper():
             continue
-        key = (str(bundle.get("created_at", "")), str(bundle.get("run_id", path.stem)))
-        if best is None or key > best:
-            best = key
-    return best[1] if best else None
+        keyed.append((str(bundle.get("created_at", "")), str(bundle.get("run_id", path.stem)), bundle))
+    keyed.sort(reverse=True)
+    return [run_id for _created, run_id, _bundle in keyed]
+
+
+def extract_persona_results(bundle: Dict[str, Any]) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Any]]:
+    """(persona outputs, consensus) from a workflow or skill RunBundle dict.
+
+    Workflow runs keep them in the ``analyze`` / ``consensus`` steps; skill
+    runs (``personas.analyze``) nest them under ``personas`` / ``consensus``.
+    """
+    personas: Dict[str, Dict[str, Any]] = {}
+    consensus: Dict[str, Any] = {}
+    for step in bundle.get("step_results", []):
+        result = step.get("result") if isinstance(step, dict) else None
+        if not isinstance(result, dict):
+            continue
+        if isinstance(result.get("personas"), dict):
+            personas = {k: v for k, v in result["personas"].items() if isinstance(v, dict)}
+        elif step.get("step_name") == "analyze":
+            personas = {k: v for k, v in result.items() if isinstance(v, dict)}
+        if isinstance(result.get("consensus"), dict):
+            consensus = dict(result["consensus"])
+        elif step.get("step_name") == "consensus":
+            consensus = dict(result)
+    return personas, consensus
+
+
+def bundle_has_persona_analysis(bundle: Dict[str, Any]) -> bool:
+    """True when a bundle holds per-persona results (workflow or skill run)."""
+    personas, _consensus = extract_persona_results(bundle)
+    return any("signal" in p for p in personas.values())
+
+
+def latest_run_id(ticker: str, require_persona_analysis: bool = False) -> Optional[str]:
+    """Return the newest persisted RunBundle id for ``ticker``, if any.
+
+    With ``require_persona_analysis`` skip runs without persona results, such
+    as filing-delta or insider-cluster skill runs.
+    """
+    for run_id in list_run_ids(ticker):
+        if not require_persona_analysis:
+            return run_id
+        try:
+            if bundle_has_persona_analysis(load_run_bundle_dict(run_id)):
+                return run_id
+        except (OSError, ValueError):
+            continue
+    return None
 
 
 def load_run_bundle_dict(run_id: str) -> Dict[str, Any]:

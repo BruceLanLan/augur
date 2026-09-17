@@ -144,14 +144,28 @@ class TestSingleton:
         reg = get_capability_registry()
         names = reg.list_all()
         expected = [
+            "covenant.review",
             "earnings.collect_evidence",
-            "fundamentals.snapshot",
-            "market.price_history",
+            "filings.compare",
+            "ownership.cluster_detect",
+            "personas.analyze",
             "report.earnings_dossier",
             "runs.compare",
-            "sec.filings.read",
+            "sec.financials.annual",
+            "sec.form4.read",
         ]
         assert names == expected
+
+    def test_every_builtin_skill_step_has_an_implemented_capability(self):
+        """No stub handlers: every `uses:` in a built-in skill is registered."""
+        from augur.skills.loader import load_builtin_skills
+
+        reg = get_capability_registry()
+        for spec in load_builtin_skills():
+            for step in spec.workflow:
+                cap = reg.get(step.uses)
+                assert callable(cap.handler), (spec.id, step.uses)
+                assert step.uses in spec.required_capabilities, (spec.id, step.uses)
 
 
 # ---------------------------------------------------------------------------

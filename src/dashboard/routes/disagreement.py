@@ -23,7 +23,7 @@ async def get_disagreement(ticker: str = "", run_id: str = "") -> Dict[str, Any]
     if not t:
         raise HTTPException(status_code=400, detail="ticker required")
 
-    rid = run_id or latest_run_id(t)
+    rid = run_id or latest_run_id(t, require_persona_analysis=True)
     if rid:
         try:
             bundle = load_run_bundle_dict(rid)

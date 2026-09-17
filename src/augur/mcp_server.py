@@ -295,6 +295,23 @@ def _build_context(ticker: str, pe: float = 0, pb: float = 0, roe: float = 0,
     )
 
 
+def _run_skill_tool(skill_id: str, ticker: str, inputs_json: str = "") -> str:
+    """Execute augur_run_skill MCP tool logic (testable without an MCP runtime)."""
+    import dataclasses
+
+    from augur.skills.permissions import SkillPermissionError
+    from augur.skills.runner import SkillNotRunnable, run_skill
+
+    try:
+        extra = json.loads(inputs_json) if inputs_json.strip() else {}
+        if not isinstance(extra, dict):
+            raise ValueError("inputs_json must be a JSON object")
+        result = run_skill(skill_id, {**extra, "ticker": ticker})
+    except (SkillNotRunnable, SkillPermissionError, ValueError) as e:
+        return json.dumps({"error": str(e)})
+    return json.dumps(dataclasses.asdict(result), ensure_ascii=False, default=str)
+
+
 def create_server():
     """Create and configure the MCP server."""
     try:
@@ -837,6 +854,21 @@ def create_server():
             copy_from: For action=create, an existing profile to copy settings from.
         """
         return _run_workspace_profiles_tool(action=action, name=name, copy_from=copy_from)
+
+    @mcp.tool()
+    def augur_run_skill(skill_id: str, ticker: str, inputs_json: str = "") -> str:
+        """Run a built-in research skill and return its outputs as JSON.
+
+        Skills: earnings-prep, filing-delta, debt-covenant-review,
+        insider-cluster-review. Permissions are checked before any step runs;
+        the RunBundle is saved and readable via augur://runs/{run_id}.
+
+        Args:
+            skill_id: Built-in skill id.
+            ticker: Stock ticker.
+            inputs_json: Optional JSON object of extra inputs, e.g. {"debt_ebitda_max": 3.0}.
+        """
+        return _run_skill_tool(skill_id=skill_id, ticker=ticker, inputs_json=inputs_json)
 
     # ---- MCP Resources: Evidence & RunBundle (E1.5) ----
 

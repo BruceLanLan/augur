@@ -57,7 +57,7 @@ class TestEarningsPrep:
         assert spec.id == "earnings-prep"
 
     def test_basic_fields(self, spec):
-        assert spec.version == "1.0.0"
+        assert spec.version == "1.1.0"
         assert spec.description.startswith("Build a point-in-time")
         assert spec.license == "Apache-2.0"
 
@@ -65,19 +65,21 @@ class TestEarningsPrep:
         assert spec.compatibility == ">=11,<12"
 
     def test_inputs_schema(self, spec):
-        assert spec.inputs_schema["required"] == ["ticker", "event_id", "as_of"]
+        assert spec.inputs_schema["required"] == ["ticker"]
+        assert spec.inputs_schema["optional"] == ["event_id", "as_of"]
 
     def test_required_capabilities(self, spec):
+        # Every capability the workflow uses is declared (the runner enforces this).
         assert spec.required_capabilities == [
-            "sec.filings.read",
-            "fundamentals.snapshot",
-            "market.price_history",
+            "earnings.collect_evidence",
+            "personas.analyze",
             "runs.compare",
+            "report.earnings_dossier",
         ]
 
     def test_permissions(self, spec):
         assert spec.permissions.resources == ["evidence.read", "runs.read"]
-        assert spec.permissions.network_domains == ["sec.gov"]
+        assert spec.permissions.network_domains == ["sec.gov", "finance.yahoo.com"]
 
     def test_evidence_policy(self, spec):
         ep = spec.evidence_policy
@@ -87,13 +89,15 @@ class TestEarningsPrep:
 
     def test_workflow(self, spec):
         steps = {s.id: s for s in spec.workflow}
-        assert set(steps.keys()) == {"collect", "compare", "synthesize"}
+        assert set(steps.keys()) == {"collect", "analyze", "compare", "synthesize"}
         assert steps["collect"].uses == "earnings.collect_evidence"
         assert steps["collect"].needs == []
+        assert steps["analyze"].uses == "personas.analyze"
+        assert steps["analyze"].needs == ["collect"]
         assert steps["compare"].uses == "runs.compare"
-        assert steps["compare"].needs == ["collect"]
+        assert steps["compare"].needs == ["analyze"]
         assert steps["synthesize"].uses == "report.earnings_dossier"
-        assert steps["synthesize"].needs == ["collect", "compare"]
+        assert steps["synthesize"].needs == ["collect", "analyze", "compare"]
 
     def test_outputs_schema(self, spec):
         assert spec.outputs_schema["required"] == [
@@ -134,19 +138,15 @@ class TestFilingDelta:
         assert spec.id == "filing-delta"
 
     def test_basic_fields(self, spec):
-        assert spec.version == "1.0.0"
-        assert "Compare the latest SEC filing" in spec.description
+        assert spec.version == "1.1.0"
+        assert "Compare the latest annual SEC filing" in spec.description
         assert spec.license == "Apache-2.0"
 
     def test_required_capabilities(self, spec):
-        assert spec.required_capabilities == [
-            "sec.filings.read",
-            "fundamentals.snapshot",
-            "runs.compare",
-        ]
+        assert spec.required_capabilities == ["sec.financials.annual", "filings.compare"]
 
     def test_permissions(self, spec):
-        assert spec.permissions.resources == ["evidence.read", "runs.read"]
+        assert spec.permissions.resources == ["evidence.read"]
         assert spec.permissions.network_domains == ["sec.gov"]
 
     def test_evidence_policy(self, spec):
@@ -156,11 +156,10 @@ class TestFilingDelta:
 
     def test_workflow(self, spec):
         steps = {s.id: s for s in spec.workflow}
-        assert set(steps.keys()) == {"fetch_new", "fetch_old", "compare", "delta_report"}
-        assert steps["fetch_new"].uses == "sec.filings.read"
-        assert steps["fetch_old"].uses == "sec.filings.read"
-        assert steps["compare"].needs == ["fetch_new", "fetch_old"]
-        assert steps["delta_report"].needs == ["compare"]
+        assert set(steps.keys()) == {"fetch_filings", "delta_report"}
+        assert steps["fetch_filings"].uses == "sec.financials.annual"
+        assert steps["delta_report"].uses == "filings.compare"
+        assert steps["delta_report"].needs == ["fetch_filings"]
 
     def test_outputs_schema(self, spec):
         assert spec.outputs_schema["required"] == [
@@ -199,18 +198,14 @@ class TestDebtCovenantReview:
         assert spec.id == "debt-covenant-review"
 
     def test_required_capabilities(self, spec):
-        assert spec.required_capabilities == [
-            "sec.filings.read",
-            "fundamentals.snapshot",
-        ]
+        assert spec.required_capabilities == ["sec.financials.annual", "covenant.review"]
 
     def test_workflow(self, spec):
         steps = {s.id: s for s in spec.workflow}
-        assert set(steps.keys()) == {"fetch_filings", "covenant_check", "report"}
+        assert set(steps.keys()) == {"fetch_filings", "covenant_check"}
+        assert steps["fetch_filings"].uses == "sec.financials.annual"
         assert steps["covenant_check"].uses == "covenant.review"
         assert steps["covenant_check"].needs == ["fetch_filings"]
-        assert steps["report"].uses == "report.covenant_review"
-        assert steps["report"].needs == ["covenant_check"]
 
     def test_raw_validator_passes(self):
         raw = yaml.safe_load(DEBT_COVENANT.read_text(encoding="utf-8"))
@@ -231,15 +226,14 @@ class TestInsiderClusterReview:
         assert spec.id == "insider-cluster-review"
 
     def test_required_capabilities(self, spec):
-        assert spec.required_capabilities == ["sec.filings.read"]
+        assert spec.required_capabilities == ["sec.form4.read", "ownership.cluster_detect"]
 
     def test_workflow(self, spec):
         steps = {s.id: s for s in spec.workflow}
-        assert set(steps.keys()) == {"fetch_form4", "cluster_detect", "report"}
+        assert set(steps.keys()) == {"fetch_form4", "cluster_detect"}
+        assert steps["fetch_form4"].uses == "sec.form4.read"
         assert steps["cluster_detect"].uses == "ownership.cluster_detect"
         assert steps["cluster_detect"].needs == ["fetch_form4"]
-        assert steps["report"].uses == "report.insider_cluster"
-        assert steps["report"].needs == ["cluster_detect"]
 
     def test_raw_validator_passes(self):
         raw = yaml.safe_load(INSIDER_CLUSTER.read_text(encoding="utf-8"))

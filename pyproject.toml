@@ -114,7 +114,7 @@ augur-agents = "augur.mcp_server:create_server"
 where = ["src"]
 
 [tool.setuptools.package-data]
-augur = ["py.typed"]
+augur = ["py.typed", "skills/*.yaml"]
 dashboard = ["templates/*.html", "static/**/*", "i18n/*.json"]
 skills = ["*.md", "**/*.md", "**/*.json"]
 

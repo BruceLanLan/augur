@@ -23,10 +23,10 @@ def research_report_cmd(ticker, run_id, fmt):
       augur research-report AAPL --format json
     """
     from augur.disagreement import build_disagreement_from_bundle
-    from augur.run_tracker import latest_run_id, load_run_bundle_dict
+    from augur.run_tracker import extract_persona_results, latest_run_id, load_run_bundle_dict
 
     ticker = ticker.upper()
-    run_id = run_id or latest_run_id(ticker)
+    run_id = run_id or latest_run_id(ticker, require_persona_analysis=True)
     if not run_id:
         click.echo(f"Error: no saved runs for {ticker}. Run `augur workflow {ticker}` first.", err=True)
         raise SystemExit(1)
@@ -36,10 +36,8 @@ def research_report_cmd(ticker, run_id, fmt):
         click.echo(f"Error: run {run_id} not found.", err=True)
         raise SystemExit(1)
 
+    persona_outputs, consensus = extract_persona_results(bundle)
     steps = {sr.get("step_name"): sr for sr in bundle.get("step_results", [])}
-    persona_outputs = (steps.get("analyze") or {}).get("result") or {}
-
-    consensus = dict((steps.get("consensus") or {}).get("result") or {})
     if isinstance(consensus.get("score"), (int, float)):
         consensus["score"] = f"{consensus['score']:.2f} / 10"
     if isinstance(consensus.get("confidence"), (int, float)):

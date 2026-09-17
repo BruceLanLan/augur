@@ -47,7 +47,7 @@ def run_earnings_dossier(ticker: str, event_id: str = "", as_of: str = "", outpu
         from augur.disagreement import build_disagreement_from_bundle
         from augur.run_tracker import latest_run_id, load_run_bundle_dict
 
-        run_id = latest_run_id(ticker)
+        run_id = latest_run_id(ticker, require_persona_analysis=True)
         dm = build_disagreement_from_bundle(load_run_bundle_dict(run_id), ticker, run_id) if run_id else None
         if dm is not None:
             sections.append(f"  From run {run_id}: consensus strength {dm.consensus_strength} ({dm.derivation})")

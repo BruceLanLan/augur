@@ -1,18 +1,19 @@
 id: earnings-prep
-version: 1.0.0
+version: 1.1.0
 description: Build a point-in-time pre-earnings research dossier.
 license: Apache-2.0
 compatibility: ">=11,<12"
 inputs_schema:
-  required: [ticker, event_id, as_of]
+  required: [ticker]
+  optional: [event_id, as_of]
 required_capabilities:
-  - sec.filings.read
-  - fundamentals.snapshot
-  - market.price_history
+  - earnings.collect_evidence
+  - personas.analyze
   - runs.compare
+  - report.earnings_dossier
 permissions:
   resources: [evidence.read, runs.read]
-  network_domains: [sec.gov]
+  network_domains: [sec.gov, finance.yahoo.com]
 evidence_policy:
   information_time_required: true
   missing: abstain
@@ -20,12 +21,15 @@ evidence_policy:
 workflow:
   - id: collect
     uses: earnings.collect_evidence
+  - id: analyze
+    uses: personas.analyze
+    needs: [collect]
   - id: compare
     uses: runs.compare
-    needs: [collect]
+    needs: [analyze]
   - id: synthesize
     uses: report.earnings_dossier
-    needs: [collect, compare]
+    needs: [collect, analyze, compare]
 outputs_schema:
   required: [run_id, dossier, evidence_manifest]
 evals:

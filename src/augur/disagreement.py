@@ -421,11 +421,12 @@ class DisagreementMapBuilder:
 
 def build_disagreement_from_bundle(bundle: Dict[str, Any], ticker: str, run_id: str) -> DisagreementMap:
     """Build the map from a persisted RunBundle dict (analyze + fetch steps)."""
-    steps = {sr.get("step_name"): sr for sr in bundle.get("step_results", []) if isinstance(sr, dict)}
-    persona_outputs = {
-        pid: pdata for pid, pdata in ((steps.get("analyze") or {}).get("result") or {}).items()
-        if isinstance(pdata, dict)
-    }
-    fetch_result = (steps.get("fetch") or {}).get("result") or {}
-    evidence = fetch_result.get("evidence_items") if isinstance(fetch_result, dict) else None
-    return DisagreementMapBuilder(ticker, run_id).build(persona_outputs, evidence or [])
+    from augur.run_tracker import extract_persona_results
+
+    persona_outputs, _consensus = extract_persona_results(bundle)
+    evidence: List[Dict[str, Any]] = []
+    for step in bundle.get("step_results", []):
+        result = step.get("result") if isinstance(step, dict) else None
+        if isinstance(result, dict):
+            evidence.extend(e for e in result.get("evidence_items") or [] if isinstance(e, dict))
+    return DisagreementMapBuilder(ticker, run_id).build(persona_outputs, evidence)
