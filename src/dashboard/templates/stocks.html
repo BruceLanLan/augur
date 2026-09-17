@@ -663,7 +663,7 @@ function showAgentDetail(agent) {
     if (!overlay) return;
     var sigColor = signalColor(agent.signal);
     var sigLbl = signalLabel(agent.signal);
-    document.getElementById('agd-avatar').src = '/docs/images/avatars/' + agent.agent_id + '.png';
+    document.getElementById('agd-avatar').src = '/static/images/avatars/' + agent.agent_id + '.png';
     document.getElementById('agd-name').textContent = agent.agent_name || agent.agent_id;
     document.getElementById('agd-meta').innerHTML =
         '<span style="color:' + sigColor + ';font-weight:700;">' + sigLbl + '</span>' +
@@ -900,7 +900,7 @@ function renderResults(data) {
         d.style.cursor = 'pointer';
         d.setAttribute('title', m.agent_name + ' — 点击查看详情');
         d.setAttribute('data-agent-id', m.agent_id);
-        d.innerHTML = '<img src="/docs/images/avatars/' + m.agent_id + '.png" class="avatar" width="34" height="34" alt="" onerror="this.src=\'/static/images/augur-owl-64.png\'"/>' +
+        d.innerHTML = '<img src="/static/images/avatars/' + m.agent_id + '.png" class="avatar" width="34" height="34" alt="" onerror="this.src=\'/static/images/augur-owl-64.png\'"/>' +
             '<div class="sc-nm">' + escapeHtml(m.agent_name) + '</div>' +
             '<div class="sc-score ' + cls + '" style="font-size:' + scoreSz + '">' + s.toFixed(1) + '</div>' +
             '<span class="signal-badge ' + sigCls + '" style="font-size:0.56rem;padding:1px 7px">' + sigLbl + '</span>';

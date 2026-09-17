@@ -135,3 +135,32 @@ class TestDashboardImagesMountResolvesToRepoRoot:
         assert images_dir == REPO_ROOT / "docs" / "images"
         assert images_dir.exists()
         assert (images_dir / "avatars" / "buffett.png").exists()
+
+
+class TestDashboardAssetsShipInTheWheel:
+    """Dashboard pages must only reference images that are package data.
+
+    docs/images is not shipped in the wheel, so a pip-installed dashboard
+    404'd every persona avatar on /, /stocks and /personas (found 2026-09-17
+    by booting the dashboard from a freshly installed wheel). The identical
+    avatars already ship under dashboard/static/images/avatars.
+    """
+
+    DASHBOARD = Path(__file__).resolve().parents[1] / "src" / "dashboard"
+
+    def test_templates_and_static_do_not_reference_docs_images(self):
+        offenders = []
+        for path in list((self.DASHBOARD / "templates").rglob("*.html")) + list(
+            (self.DASHBOARD / "static").rglob("*.js")
+        ):
+            if "/docs/images/" in path.read_text(encoding="utf-8", errors="ignore"):
+                offenders.append(str(path.relative_to(self.DASHBOARD)))
+        assert offenders == [], f"reference /docs/images (not in the wheel): {offenders}"
+
+    def test_every_persona_has_a_packaged_avatar(self):
+        from augur.registry import AgentRegistry
+
+        avatars = self.DASHBOARD / "static" / "images" / "avatars"
+        missing = [a.agent_id for a in AgentRegistry().get_all()
+                   if not (avatars / f"{a.agent_id}.png").exists()]
+        assert missing == []

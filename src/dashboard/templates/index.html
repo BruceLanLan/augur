@@ -800,7 +800,7 @@
                     {% for p in featured %}
                     {% if loop.index <= 3 %}
                     <div class="m-row" role="link" tabindex="0" data-i18n-aria="a11y-featured-persona" data-aria-name="{{ p.name }}" aria-label="Analyze with {{ p.name }}" onclick="window.location.href='/stocks?persona={{ p.id }}&ticker=AAPL'" onkeydown="if(event.key==='Enter'){event.preventDefault();window.location.href='/stocks?persona={{ p.id }}&ticker=AAPL'}">
-                        <img src="/docs/images/avatars/{{ p.id }}.png" class="avatar" width="40" height="40" alt="{{ p.name }}" onerror="this.src='/static/images/augur-owl-64.png'">
+                        <img src="/static/images/avatars/{{ p.id }}.png" class="avatar" width="40" height="40" alt="{{ p.name }}" onerror="this.src='/static/images/augur-owl-64.png'">
                         <div style="min-width:0;">
                             <div style="font:600 0.85rem/1.2 var(--font-sans);color:var(--fg-1);">{{ p.name }}</div>
                             <div style="font:600 0.58rem/1.3 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;" data-i18n="persona-style-{{ p.id }}">{{ p.style }}</div>

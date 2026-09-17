@@ -315,7 +315,7 @@
         <div class="mcard persona-card" role="button" tabindex="0" aria-label="查看 {{ persona.cn_name }} ({{ persona.en_name }}) 详情" data-school="{{ persona.school }}" data-name="{{ persona.cn_name|lower }}{{ persona.en_name|lower }}{{ persona.id }}" onclick="openMasterDetail('{{ persona.id }}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMasterDetail('{{ persona.id }}');}">
             <div class="medallion">
                 <div class="disc">
-                    <img src="/docs/images/avatars/{{ persona.id }}.png" alt="{{ persona.cn_name }}" onerror="this.src='/static/images/augur-owl-64.png'">
+                    <img src="/static/images/avatars/{{ persona.id }}.png" alt="{{ persona.cn_name }}" onerror="this.src='/static/images/augur-owl-64.png'">
                 </div>
                 <div class="crest" style="color:{{ scolor }}; font-weight:bold;">{{ glyph }}</div>
             </div>
@@ -330,7 +330,7 @@
         <!-- Hidden data for modal injection -->
         <template id="tpl-{{ persona.id }}">
             <div class="detail-medallion">
-                <div class="disc"><img src="/docs/images/avatars/{{ persona.id }}.png" alt="{{ persona.cn_name }}" onerror="this.src='/static/images/augur-owl-64.png'"></div>
+                <div class="disc"><img src="/static/images/avatars/{{ persona.id }}.png" alt="{{ persona.cn_name }}" onerror="this.src='/static/images/augur-owl-64.png'"></div>
                 <div class="crest" style="color:{{ scolor }};">{{ glyph }}</div>
             </div>
             <div>
@@ -340,7 +340,7 @@
             </div>
             <div class="dialogue" style="margin-top:18px;">
                 <div class="speaker">
-                    <img src="/docs/images/avatars/{{ persona.id }}.png" class="avatar" width="20" height="20" onerror="this.src='/static/images/augur-owl-64.png'"> {{ persona.cn_name }}
+                    <img src="/static/images/avatars/{{ persona.id }}.png" class="avatar" width="20" height="20" onerror="this.src='/static/images/augur-owl-64.png'"> {{ persona.cn_name }}
                 </div>
                 <div>&ldquo;{{ persona.description }}&rdquo;</div>
                 <span class="chevron">▼</span>

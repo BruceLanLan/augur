@@ -2409,7 +2409,7 @@ window.I18N = {
     var _LANG_NEXT_LABEL = { zh: 'EN', en: '\u65E5', ja: '\uD55C', ko: '\u4E2D' };
     var _LANG_HTML_ATTR = { zh: 'zh-CN', en: 'en', ja: 'ja', ko: 'ko' };
     // Banner: en uses EN banner, others use zh banner
-    var _LANG_BANNER = { en: '/docs/images/hero-banner-en.svg' };
+    var _LANG_BANNER = { en: '/static/images/hero-banner-en.svg' };
 
     function initI18n() {
         var saved = localStorage.getItem('augur-lang');
@@ -2473,7 +2473,7 @@ window.I18N = {
         });
         var ogImg = document.querySelector('meta[property="og:image"][data-i18n-lang-img]');
         var twImg = document.querySelector('meta[name="twitter:image"][data-i18n-lang-img]');
-        var bannerImg = _LANG_BANNER[lang] || '/docs/images/hero-banner-baoyu.svg';
+        var bannerImg = _LANG_BANNER[lang] || '/static/images/hero-banner-baoyu.svg';
         if (ogImg) ogImg.setAttribute('content', bannerImg);
         if (twImg) twImg.setAttribute('content', bannerImg);
         // Update lang toggle button label (shows next language in cycle)
