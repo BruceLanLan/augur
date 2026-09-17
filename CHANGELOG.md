@@ -2,6 +2,43 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [Unreleased] - 2026-09-17 docs and hardening round
+
+Found by running every new command on live data and screenshotting the
+dashboard for the README.
+
+### Added
+
+- README (zh/en): table of contents and a v11 feature tour with screenshots
+  of real AAPL runs (`docs/images/screenshots/v11/`).
+- CI: `scripts/readme_smoke.py` runs 21 README commands offline against the
+  installed wheel and sdist in `Hermetic Smoke`.
+- Tests block real network access by default (sockets, DNS, curl_cffi);
+  `@pytest.mark.network` or `AUGUR_TEST_ALLOW_NETWORK=1` opts back in. Full
+  suite 289s → 107s.
+
+### Fixed
+
+- Consensus included mock sentiment when no real sentiment source answered;
+  it now weights only real sources and contributes 0 when there are none.
+- CLI headers always said "yfinance 实时" whatever provider served the data.
+- The Thesis Journal page never worked (script syntax error, wrong selector,
+  questions/decisions panels rendered outside the page); dashboard-created
+  theses and decisions had no ids and were dropped.
+- Questions and decisions lists were empty unless a ticker was given.
+- The mobile bottom tab bar showed with giant icons on desktop pages.
+- Valuation Lab printed enterprise value as thirteen-digit raw dollars.
+- `augur risk-review` cut risk titles mid-word.
+- FactorLab reported float-noise IC spread as a real t-test on Linux.
+- Two tests passed only because another test had cached live yfinance data;
+  test isolation now resets the market-data cache and issued run ids.
+- `augur ledger` summaries read "between Q3_2026 and Q3_2026" for runs in the
+  same quarter; they now name the run dates.
+
+### Changed
+
+- Insider-trade fetching moved from the CLI module to `augur.ownership`.
+
 ## [Unreleased] - 2026-09-17 research capabilities round
 
 Closes the three gaps the README's feature-maturity table listed after the

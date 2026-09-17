@@ -233,13 +233,17 @@ augur/main  (public, single source of truth)
 
 | # | 步骤 | 为什么 | 验证点 | 状态 |
 |---|---|---|---|---|
-| 8 | **README 快速上手进 CI** | 这轮的 8 个问题全是"单测绿、真跑挂"。把 README 里的命令做成离线冒烟脚本（mock 数据源 + `AUGUR_SKIP_MACRO_FETCH`），在 wheel 安装后执行 | 任意 README 命令回归会让 `Hermetic Smoke` 变红 | — |
-| 9 | **测试不再尝试联网** | 2026-09-17 在屏蔽全部 TCP 连接的环境下跑全量测试：3441 通过、9 跳过、0 失败，说明结果不依赖网络；但仍有测试会先尝试真实请求再回退，遇到挂起的本地代理时明显变慢 | 在 `conftest.py` 默认禁用外部网络（显式标记的集成测试除外），全量耗时不受网络环境影响 | — |
+| 8 | **README 快速上手进 CI** | 这轮的 8 个问题全是"单测绿、真跑挂"。把 README 里的命令做成离线冒烟脚本（mock 数据源 + `AUGUR_SKIP_MACRO_FETCH`），在 wheel 安装后执行 | 任意 README 命令回归会让 `Hermetic Smoke` 变红 | ✅ 2026-09-17：`scripts/readme_smoke.py` 在 wheel 与 sdist 安装后离线执行 21 条 README 命令 |
+| 9 | **测试不再尝试联网** | 2026-09-17 在屏蔽全部 TCP 连接的环境下跑全量测试：3441 通过、9 跳过、0 失败；但后来发现 `test_disagreement_evidence` / `test_skill_runner` 曾读到别的测试从真实 yfinance 缓存下来的行情，通过与否其实依赖网络 | 在 `conftest.py` 默认禁用外部网络（显式标记的集成测试除外），全量耗时不受网络环境影响 | ✅ 2026-09-17：socket/DNS/curl_cffi 全部拦截，每个测试清空行情缓存和 run-id 登记；全量 3519 通过，耗时 289s → 107s |
 | 10 | **重新生成回放产物** | EDGAR 市值单位修正前生成的 `feedback/rolling_ic.json`、因子归因与 regime 结论都含单位误差（它们默认不参与共识） | 重跑后在 `docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md` 标注新旧结论差异 | — |
 | 11 | **分歧图从模板变为证据推导** | 当前冲突点是按信号分布套模板的通用表述 | 每个冲突点引用至少一条 EvidenceItem | ✅ 2026-09-17：按大师分维度评分推导，冲突点引用该维度指标的证据 ID；无证据的分歧记为证据缺口 |
 | 12 | **Skill 执行器** | 清单与权限已实现，执行器没有 | 4 个内置 Skill 端到端可运行，越权在执行前被拒绝 | ✅ 2026-09-17：`augur skill run` + MCP `augur_run_skill`，9 个能力均为真实实现 |
 | 13 | **Skill 数据缺口** | 财报日期来自手工维护的本地日历；债务约束只有参考阈值；部分公司不在 XBRL 披露利息支出；filing-delta 只比较年度数字 | 财报日历有自动数据源；10-Q 支持；信贷协议条款来源评估 | — |
 | 14 | **评估方法升级** | `augur eval` 是单票时间序列 IC，远期收益重叠 | 多票横截面 IC、非重叠窗口或 HAC 标准误 | — |
+| 15 | **研究问题队列不持久化** | `QuestionQueue` 只存在内存里，服务重启后 Dashboard 上的问题全部丢失（thesis 与决策日志已落盘） | 问题写入数据目录，重启后仍可列出 | — |
+| 16 | **测试仍在调用真实数据源代码** | 网络已被拦截，但约 50 个测试每轮仍有约 310 次请求走到拦截层后回退（stooq、yfinance、StockTwits） | 在数据源层 mock，`AUGUR_TEST_NETWORK_REPORT=1` 报告为 0 | — |
+| 17 | **Kelly 属性测试慢** | `test_iteration11` 的两个 Kelly 测试占全量 107s 中约 79s：`record_prediction` 每次都整份重写权重 JSON，耗时随预测数平方增长 | 批量写入或延迟落盘，两个测试降到秒级 | — |
+| 18 | **同一秒多次运行的排序** | `RunTracker.start_run` 为避免 run-id 冲突会把 `created_at` 往后推，同一秒内启动多次运行时"最新运行"的判断可能错位 | 用单调计数或纳秒时间戳区分，不改写 `created_at` | — |
 
 ### 本阶段不做
 
