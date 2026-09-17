@@ -19,6 +19,8 @@
 
 > ⚠️ **For research and education only. Not investment advice.** The masters are rule-based simulations of publicly known investment philosophies, not the views of those people. Every score, Kelly size and valuation depends on data quality and model assumptions.
 
+**Contents**: [Why Augur](#-why-augur) · [What's new in v11 (screenshots)](#-whats-new-in-v11) · [Quick Start](#-quick-start-5-minutes) · [Upgrading from v10](#-upgrading-from-v10) · [18 Masters](#-18-investment-masters) · [Dashboard](#-dashboard) · [Claude / Agent](#-claude--agent-integration) · [CLI](#-cli-cheat-sheet) · [Feature Maturity](#-feature-maturity) · [Data & Privacy](#-data--privacy) · [Development](#-development) · [Docs & Roadmap](#-docs--roadmap)
+
 ---
 
 ## 🤔 Why Augur
@@ -32,6 +34,52 @@ Most AI finance tools give you an answer. Augur gives you **research artifacts y
 | Missing data | Silently zero | Marked `missing`; personas that need the field `abstain` and say why |
 | Three months later | No memory | Each run is an immutable RunBundle you can export, compare and audit |
 | Where your data lives | Someone's cloud | Locally in `~/.augur` (override with `AUGUR_DATA_DIR`), no telemetry |
+
+---
+
+## ✨ What's new in v11
+
+Every screenshot below is a real AAPL run from 2026-09-17 (live market data + SEC EDGAR), not staged data. Terminal shots show the main part of the output.
+
+### 1. Executable research skills: `augur skill run`
+
+One command runs a whole research workflow. Before any step starts, the runner checks that every capability, network domain and local resource the workflow touches is declared in the manifest; if anything fails, nothing runs. Each run is saved as a RunBundle you can export and audit.
+
+<img src="docs/images/screenshots/v11/skill-earnings-prep.png" alt="augur skill run earnings-prep AAPL" width="100%">
+
+`earnings-prep`: the 18-persona consensus, **disagreements that cite evidence IDs one by one**, splits with no supporting evidence flagged as an "evidence gap", and a diff against the previous run. If the earnings calendar has no date, it says so instead of guessing.
+
+<img src="docs/images/screenshots/v11/skill-filing-delta.png" alt="augur skill run filing-delta AAPL" width="100%">
+
+`filing-delta`: pulls XBRL data for the two latest 10-Ks and lists material changes (≥5%), no accession numbers needed. Also built in: `debt-covenant-review` (leverage and interest coverage) and `insider-cluster-review` (Form 4 insider clusters). See the [Skill guide](docs/skills-guide.md) (Chinese).
+
+### 2. Research report: consensus + evidence-backed disagreement map + provenance
+
+<img src="docs/images/screenshots/v11/research-report.png" alt="augur research-report AAPL" width="100%">
+
+`augur research-report AAPL` builds a report from the latest run: the vote split, the dimensions personas disagree on (each citing evidence IDs and saying what fact would settle it), where they agree, splits with no evidence, and the run ID, code version, step status and evidence coverage.
+
+### 3. 10-K risk factor diff: `augur risk-review`
+
+<img src="docs/images/screenshots/v11/risk-review.png" alt="augur risk-review AAPL" width="100%">
+
+Compares the risk factor sections of the two latest 10-Ks and lists new, removed and critical risks. It is rule-based, so a small wording change can show up as both "new" and "removed".
+
+### 4. Persona evaluation: `augur eval personas`
+
+<img src="docs/images/screenshots/v11/eval-personas.png" alt="augur eval personas AAPL" width="100%">
+
+Using the records written by `augur backtest`, it removes one persona at a time and shows whether the consensus IC gets better or worse; personas with a constant score (no information) are listed separately. Forward returns overlap day to day, so intervals are optimistic: treat it as a screen, not a validated weight. `augur eval factors` gives per-factor IC and t-tests.
+
+### 5. Dashboard: Thesis Journal and Valuation Lab
+
+<img src="docs/images/screenshots/v11/dashboard-thesis-journal.png" alt="Thesis Journal page" width="100%">
+
+`/thesis`: record a thesis with catalysts, risks and falsification conditions, next to open questions and a decision log.
+
+<img src="docs/images/screenshots/v11/dashboard-valuation-lab.png" alt="Valuation Lab page" width="100%">
+
+`/valuation`: a two-stage DCF that recomputes as you type, with bull / base / bear scenarios and a probability-weighted fair value, plus a WACC × terminal-growth sensitivity grid further down the page. The inputs in the screenshot are hand-entered examples (AAPL free cash flow, an 8% growth assumption), not a valuation call.
 
 ---
 
@@ -225,7 +273,7 @@ Key environment variables:
 
 ---
 
-## 🏗️ Development
+## 🔧 Development
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
@@ -242,7 +290,7 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 
 ---
 
-## 🗺️ Docs & Roadmap
+## 📚 Docs & Roadmap
 
 | Document | Contents |
 |---|---|

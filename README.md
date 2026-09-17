@@ -19,6 +19,8 @@
 
 > ⚠️ **仅供学习研究，不构成投资建议。** 大师观点是基于公开投资理念的规则化模拟，不代表本人立场；所有分数、Kelly 仓位与估值都依赖数据质量和模型假设。
 
+**目录**：[为什么不一样](#-为什么-augur-不一样) · [v11 新功能截图](#-v11-新功能一览) · [5 分钟上手](#-5-分钟上手) · [从 v10 升级](#-从-v10-升级) · [18 位大师](#-18-位投资大师) · [Dashboard](#-dashboard) · [接入 Claude / Agent](#-接入-claude--agent) · [CLI 速查](#-cli-速查) · [功能成熟度](#-功能成熟度) · [数据与隐私](#-数据与隐私) · [开发](#-开发) · [文档与路线图](#-文档与路线图)
+
 ---
 
 ## 🤔 为什么 Augur 不一样
@@ -32,6 +34,52 @@
 | 缺失数据 | 静默填 0 | 显式标注 `missing`，依赖该字段的大师 `abstain` 并说明原因 |
 | 三个月后回头看 | 不记得上次说了什么 | 每次运行存为不可变的 RunBundle，可以导出、比较、复查 |
 | 数据在哪 | 云端 | 本地 `~/.augur`（可用 `AUGUR_DATA_DIR` 改），无遥测 |
+
+---
+
+## ✨ v11 新功能一览
+
+下面的截图都是 2026-09-17 对 AAPL 的真实运行（实时行情 + SEC EDGAR），没有摆拍数据。终端截图只截取了输出的主要部分。
+
+### 1. 可执行的研究 Skill：`augur skill run`
+
+一条命令跑完整个研究流程。执行前先检查每一步要用的能力、网络域名和本地资源是否都在清单里声明过，任何一项不通过都不会开始执行；每次执行存为 RunBundle，可以导出和复查。
+
+<img src="docs/images/screenshots/v11/skill-earnings-prep.png" alt="augur skill run earnings-prep AAPL" width="100%">
+
+`earnings-prep`：18 位大师共识，**分歧点逐条引用证据 ID**，没有证据支撑的分歧单独标成"evidence gap"，并和上一次运行做对比。财报日历里没有日期时直接写"无记录"，不猜。
+
+<img src="docs/images/screenshots/v11/skill-filing-delta.png" alt="augur skill run filing-delta AAPL" width="100%">
+
+`filing-delta`：自动取最近两份 10-K 的 XBRL 数据，列出变化 ≥5% 的实质性项目，不需要手填 accession 号。另外还有 `debt-covenant-review`（杠杆与利息覆盖率）和 `insider-cluster-review`（Form 4 内部人集群）。详见 [Skill 使用指南](docs/skills-guide.md)。
+
+### 2. 研究报告：共识 + 证据化分歧图 + 来源
+
+<img src="docs/images/screenshots/v11/research-report.png" alt="augur research-report AAPL" width="100%">
+
+`augur research-report AAPL` 基于最近一次运行生成报告：多空投票、在哪个维度分歧（每条引用证据 ID 并写出什么事实能消除分歧）、大师一致的地方、缺证据的分歧，以及运行 ID、代码版本、步骤状态和证据覆盖率。
+
+### 3. 10-K 风险因素对比：`augur risk-review`
+
+<img src="docs/images/screenshots/v11/risk-review.png" alt="augur risk-review AAPL" width="100%">
+
+对比最近两份 10-K 的风险因素章节，列出新增、删除和关键风险。基于规则匹配，措辞小改可能同时显示为"新增"和"删除"。
+
+### 4. 大师评估：`augur eval personas`
+
+<img src="docs/images/screenshots/v11/eval-personas.png" alt="augur eval personas AAPL" width="100%">
+
+用 `augur backtest` 生成的历史记录，逐个去掉某位大师，看共识 IC 变好还是变差；分数恒定、没有信息量的大师单独列出。远期收益逐日重叠，置信区间偏乐观，只能当筛查，不能直接当权重。`augur eval factors` 给出各因子的 IC 与 t 检验。
+
+### 5. Dashboard：Thesis Journal 与估值实验室
+
+<img src="docs/images/screenshots/v11/dashboard-thesis-journal.png" alt="Thesis Journal 页面" width="100%">
+
+`/thesis`：记录投资论文的催化剂、风险和证伪条件，旁边是待回答的问题和决策日志。
+
+<img src="docs/images/screenshots/v11/dashboard-valuation-lab.png" alt="估值实验室页面" width="100%">
+
+`/valuation`：两阶段 DCF，输入改动即时重算，给出牛 / 基准 / 熊三情景和概率加权公允价值，页面下方还有 WACC × 永续增长率敏感度网格。截图中的参数为手工输入的示例（AAPL 自由现金流、8% 增长假设），不是估值结论。
 
 ---
 
@@ -227,7 +275,7 @@ augur serve [--port 8000] · augur mcp-server · augur skills
 
 ---
 
-## 🏗️ 开发
+## 🔧 开发
 
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
@@ -244,7 +292,7 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 
 ---
 
-## 🗺️ 文档与路线图
+## 📚 文档与路线图
 
 | 文档 | 内容 |
 |---|---|

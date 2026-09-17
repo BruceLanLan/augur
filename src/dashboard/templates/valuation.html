@@ -544,6 +544,14 @@ function fmtMoney(v) {
     if (v === null || v === undefined || !isFinite(v)) return 'N/A';
     return '$' + v.toFixed(2);
 }
+function fmtBigMoney(v) {
+    if (v === null || v === undefined || !isFinite(v)) return 'N/A';
+    var a = Math.abs(v), sign = v < 0 ? '-' : '';
+    if (a >= 1e12) return sign + '$' + (a / 1e12).toFixed(2) + 'T';
+    if (a >= 1e9) return sign + '$' + (a / 1e9).toFixed(2) + 'B';
+    if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(2) + 'M';
+    return fmtMoney(v);
+}
 function fmtPct(v) {
     return (v * 100).toFixed(1) + '%';
 }
@@ -554,11 +562,11 @@ function renderSummary(base) {
     fvEl.style.color = base.fv >= 0 ? 'var(--signal-buy)' : 'var(--signal-sell)';
 
     var tiles = [
-        { label: 'Enterprise Value', value: fmtMoney(base.ev) },
-        { label: 'Equity Value', value: fmtMoney(base.equity) },
-        { label: 'Stage 1 PV', value: fmtMoney(base.stage1Pv) },
-        { label: 'Terminal PV', value: fmtMoney(base.terminalPv) },
-        { label: 'Net Debt', value: fmtMoney(_params.net_debt) }
+        { label: 'Enterprise Value', value: fmtBigMoney(base.ev) },
+        { label: 'Equity Value', value: fmtBigMoney(base.equity) },
+        { label: 'Stage 1 PV', value: fmtBigMoney(base.stage1Pv) },
+        { label: 'Terminal PV', value: fmtBigMoney(base.terminalPv) },
+        { label: 'Net Debt', value: fmtBigMoney(_params.net_debt) }
     ];
 
     var html = '';
