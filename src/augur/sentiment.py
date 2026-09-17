@@ -33,7 +33,7 @@ import os
 import threading
 import time
 from dataclasses import dataclass, field
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
 
 
 @dataclass
@@ -44,6 +44,8 @@ class SentimentResult:
     volume: int = 0
     trending: bool = False
     data_source: str = "mock"     # "live" | "partial" | "mock"
+    # Keys of ``sources`` that came from a real fetch (the rest are hash mocks).
+    real_sources: List[str] = field(default_factory=list)
 
 
 # ── StockTwits ────────────────────────────────────────────────────────────────
@@ -207,14 +209,17 @@ class SentimentAnalyzer:
         live_sources = {}
         data_source = "mock"
 
+        real: List[str] = []
         if st_score is not None:
             live_sources["stocktwits_score"] = st_score
+            real.append("stocktwits_score")
             data_source = "partial"
         else:
             live_sources["stocktwits_score"] = _mock_score(ticker, "stocktwits")
 
         if reddit_score is not None:
             live_sources["reddit_score"] = reddit_score
+            real.append("reddit_score")
             if data_source == "partial":
                 data_source = "live"
         else:
@@ -246,6 +251,7 @@ class SentimentAnalyzer:
             volume=volume,
             trending=trending,
             data_source=data_source,
+            real_sources=real,
         )
 
         with self._lock:
@@ -255,9 +261,22 @@ class SentimentAnalyzer:
         return result
 
     def get_sentiment_factor(self, ticker: str) -> float:
-        """Return a score adjustment in [-0.5, +0.5] for use in consensus."""
-        factor = self.get_sentiment(ticker).overall_score * 0.5
-        return round(max(-0.5, min(0.5, factor)), 4)
+        """Return a score adjustment in [-0.5, +0.5] for use in consensus.
+
+        Only sources that were actually fetched count, re-weighted among
+        themselves; with none the adjustment is 0. The hash-based mock scores
+        used for display must never move a consensus score (they used to:
+        with Reddit unconfigured, 37.5% of every adjustment was made up, and
+        offline all of it was).
+        """
+        result = self.get_sentiment(ticker)
+        weights = {"stocktwits_score": 0.625, "reddit_score": 0.375}
+        real = [k for k in result.real_sources if k in weights]
+        if not real:
+            return 0.0
+        total = sum(weights[k] for k in real)
+        score = sum(result.sources[k] * weights[k] for k in real) / total
+        return round(max(-0.5, min(0.5, score * 0.5)), 4)
 
     def clear_cache(self) -> None:
         with self._lock:

@@ -24,10 +24,10 @@ def _auto_fetch_context(ticker: str):
 
     try:
         from augur.data import fetch_market_context
-        click.echo(f"Auto-fetching data for {ticker.upper()} from yfinance...\n")
+        click.echo(f"Auto-fetching live data for {ticker.upper()}...\n")
         ctx = fetch_market_context(ticker)
         click.echo(f"  Price: {ctx.price:.2f} | PE: {ctx.pe:.1f} | ROE: {ctx.roe:.2%} | GM: {ctx.gross_margins:.2%}")
-        click.echo("  [数据来源: yfinance 实时]\n")
+        click.echo(f"  [{describe_data_source(ctx)}]\n")
         return ctx
     except Exception as e:
         click.echo(
@@ -58,3 +58,16 @@ def _print_result(result):
         click.echo("\nRisks:")
         for r in result.risks:
             click.echo(f"  - {clean_output(r)}")
+
+
+def describe_data_source(ctx) -> str:
+    """Human-readable data source line for a fetched MarketContext.
+
+    The CLI used to print "数据来源: yfinance 实时" whatever provider (or none)
+    actually served the data.
+    """
+    source = getattr(ctx, "data_source", None) or "unknown"
+    label = {"none": "无可用数据源（指标为空）", "error": "获取失败"}.get(source, f"{source} 实时")
+    if getattr(ctx, "fundamentals_source", None) == "edgar":
+        label += " + SEC EDGAR 基本面"
+    return f"数据来源: {label}"

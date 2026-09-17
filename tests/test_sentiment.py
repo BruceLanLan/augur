@@ -393,3 +393,22 @@ class TestErrorHandling:
             analyzer.clear_cache()
             factor = analyzer.get_sentiment_factor("CLAMP")
         assert factor == 0.5
+
+
+def test_consensus_factor_ignores_mock_sources(monkeypatch):
+    """Hash-mock sentiment must not move consensus: offline or with Reddit
+    unconfigured, the factor used to include made-up scores."""
+    import augur.sentiment as sentiment_mod
+    from augur.sentiment import SentimentAnalyzer
+
+    monkeypatch.setattr(sentiment_mod, "_fetch_stocktwits", lambda t: (None, 0))
+    monkeypatch.setattr(sentiment_mod, "_fetch_reddit", lambda t: None)
+    offline = SentimentAnalyzer()
+    assert offline.get_sentiment("MOCKZ").data_source == "mock"
+    assert offline.get_sentiment_factor("MOCKZ") == 0.0
+
+    monkeypatch.setattr(sentiment_mod, "_fetch_stocktwits", lambda t: (0.6, 500))
+    partial = SentimentAnalyzer()
+    result = partial.get_sentiment("MOCKZ")
+    assert result.real_sources == ["stocktwits_score"]
+    assert partial.get_sentiment_factor("MOCKZ") == 0.3  # only StockTwits, re-weighted to 100%

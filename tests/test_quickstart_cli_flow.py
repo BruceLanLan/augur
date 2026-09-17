@@ -157,3 +157,11 @@ def test_run_bundle_records_step_latency_budget(offline_provider):
 
     report = CliRunner().invoke(_cli(), ["research-report", "AAPL"])
     assert "latency_ms:" in report.output
+
+
+def test_cli_reports_the_provider_that_served_the_data(offline_provider):
+    """The CLI printed "数据来源: yfinance 实时" whatever provider served the data."""
+    result = CliRunner().invoke(_cli(), ["analyze", "AAPL"])
+    assert result.exit_code == 0, result.output
+    assert "数据来源: mock_quickstart 实时" in result.output
+    assert "yfinance" not in result.output
