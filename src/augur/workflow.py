@@ -560,6 +560,19 @@ def run_workflow(
         output["step_timings_ms"] = {
             k: round(v * 1000, 1) for k, v in step_timings.items()
         }
+        # Latency budget per step (augur.cost_budget). Token usage is not
+        # instrumented in the workflow path (no LLM calls by default), so
+        # cost stays 0 and the record says so instead of implying precision.
+        from dataclasses import asdict as _asdict
+
+        from augur.cost_budget import CostTracker
+
+        cost_tracker = CostTracker()
+        for step_name, seconds in step_timings.items():
+            cost_tracker.track_step(step_name, latency_ms=round(seconds * 1000, 1))
+        output["cost"] = {**_asdict(cost_tracker.get_run_cost()), "tokens_instrumented": False}
+        if tracker is not None:
+            tracker.set_run_metadata("cost", output["cost"])
 
     _record_step_status(output, step_list)
 

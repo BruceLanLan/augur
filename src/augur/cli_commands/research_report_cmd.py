@@ -64,6 +64,11 @@ def research_report_cmd(ticker, run_id, fmt):
         "steps": ", ".join(f"{name}={sr.get('status')}" for name, sr in steps.items()),
         "evidence_coverage": coverage.get("coverage_ratio", "n/a"),
     }
+    cost = (bundle.get("metadata") or {}).get("cost")
+    if cost:
+        provenance["latency_ms"] = f"{cost.get('total_latency', 0):.0f} total (" + ", ".join(
+            f"{sc['step_name']} {sc['latency_ms']:.0f}" for sc in cost.get("step_costs", [])
+        ) + ")"
 
     report = ResearchReportBuilder().build(
         ticker, run_id=run_id, consensus=consensus,

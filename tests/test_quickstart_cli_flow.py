@@ -134,3 +134,22 @@ def test_evidence_pack_verifies_and_detects_tampering(offline_provider, tmp_path
     bad = CliRunner().invoke(_cli(), ["verify-pack", str(tampered)])
     assert bad.exit_code == 1
     assert "digest mismatch: run_bundle.json" in bad.output
+
+
+def test_run_bundle_records_step_latency_budget(offline_provider):
+    """cost_budget had no entry point: workflow runs now store per-step latency
+    in RunBundle metadata and research-report shows it."""
+    import json
+
+    from augur.data_dir import get_data_dir
+    from augur.workflow import run_workflow
+
+    result = run_workflow("AAPL", steps="fetch,analyze,consensus")
+    bundle = json.loads((get_data_dir() / "runs" / f"{result['run_id']}.json").read_text(encoding="utf-8"))
+    cost = bundle["metadata"]["cost"]
+    assert [s["step_name"] for s in cost["step_costs"]] == ["fetch", "analyze", "consensus"]
+    assert cost["tokens_instrumented"] is False
+    assert cost["total_latency"] >= 0
+
+    report = CliRunner().invoke(_cli(), ["research-report", "AAPL"])
+    assert "latency_ms:" in report.output

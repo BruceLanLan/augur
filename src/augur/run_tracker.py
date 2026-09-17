@@ -127,6 +127,7 @@ class RunTracker:
         # responses, consensus_result so that skipped steps can still
         # provide their outputs to downstream steps.
         self._checkpoint_state: Dict[str, Any] = {}
+        self._run_metadata: Dict[str, Any] = {}
 
     # ------------------------------------------------------------------
     # Run lifecycle
@@ -294,6 +295,7 @@ class RunTracker:
             step_results=list(self._step_results),
             coverage=coverage,
             metadata={
+                **self._run_metadata,
                 "ticker": self.ticker,
                 "code_version": self.code_version,
             },
@@ -459,6 +461,10 @@ class RunTracker:
     def get_checkpoint_state(self, key: str, default: Any = None) -> Any:
         """Retrieve a value from the intermediate checkpoint state."""
         return self._checkpoint_state.get(key, default)
+
+    def set_run_metadata(self, key: str, value: Any) -> None:
+        """Attach JSON-serialisable run-level metadata to the final RunBundle."""
+        self._run_metadata[key] = value
 
     def set_checkpoint_state(self, key: str, value: Any) -> None:
         """Store a serializable value in the intermediate checkpoint state."""
