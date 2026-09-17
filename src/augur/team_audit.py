@@ -163,3 +163,17 @@ class AuditLog:
             self._entries = []
             return
         self._entries = [AuditEntry.from_dict(item) for item in raw if isinstance(item, dict)]
+
+
+def record_action(action: str, details: Optional[Dict[str, Any]] = None, user: str = "") -> None:
+    """Best-effort audit hook for CLI commands and API handlers.
+
+    Never raises: an unwritable audit log must not break the action being
+    audited. The user defaults to ``$AUGUR_AUDIT_USER`` or ``"local"``.
+    """
+    import os
+
+    try:
+        AuditLog().log(action, user=user or os.environ.get("AUGUR_AUDIT_USER", "local"), details=details)
+    except Exception:  # pragma: no cover - defensive
+        pass

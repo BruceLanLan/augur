@@ -13,10 +13,15 @@ Provenance: standard code-review / document-annotation patterns
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, List, Optional
 from uuid import uuid4
+
+#: Kinds of research artifact a comment can be attached to.
+TARGET_TYPES = ("claim", "evidence", "run", "thesis", "decision")
 
 
 # ============================================================================
@@ -33,7 +38,7 @@ class Comment:
     comment_id : str
         Unique identifier (UUID4 hex by default).
     target_type : str
-        ``"claim"`` or ``"evidence"`` — the kind of item being commented on.
+        One of :data:`TARGET_TYPES` — the kind of item being commented on.
     target_id : str
         The identifier of the claim or evidence item.
     author : str
@@ -79,8 +84,49 @@ class ReviewSystem:
         unresolved = rs.list_by_target("claim", "c_abc123", resolved=False)
     """
 
-    def __init__(self) -> None:
+    def __init__(self, storage_path: Optional[Path] = None) -> None:
+        """Create a review system.
+
+        With ``storage_path`` every change is written to that JSON file and
+        existing comments are loaded from it; without it comments live only
+        in memory (the original behaviour, used by tests and ad-hoc callers).
+        Use :meth:`persistent` for the data-dir backed store the CLI uses.
+        """
         self._comments: Dict[str, Comment] = {}
+        self._path = Path(storage_path) if storage_path is not None else None
+        self._load()
+
+    @classmethod
+    def persistent(cls) -> "ReviewSystem":
+        """Return a store backed by ``get_data_dir() / "review_comments.json"``."""
+        from augur.data_dir import get_data_dir
+
+        return cls(storage_path=get_data_dir() / "review_comments.json")
+
+    def _load(self) -> None:
+        if self._path is None or not self._path.exists():
+            return
+        try:
+            raw = json.loads(self._path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        for item in raw:
+            try:
+                comment = Comment(**item)
+            except TypeError:
+                continue
+            self._comments[comment.comment_id] = comment
+
+    def _save(self) -> None:
+        if self._path is None:
+            return
+        self._path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = self._path.with_suffix(".tmp")
+        tmp.write_text(
+            json.dumps([asdict(c) for c in self._comments.values()], ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+        tmp.replace(self._path)
 
     # ------------------------------------------------------------------
     # Public API
@@ -100,7 +146,7 @@ class ReviewSystem:
         Parameters
         ----------
         target_type : str
-            ``"claim"`` or ``"evidence"``.
+            One of :data:`TARGET_TYPES`.
         target_id : str
             The item being commented on.
         author : str
@@ -113,12 +159,12 @@ class ReviewSystem:
         Raises
         ------
         ValueError
-            If *target_type* is not ``"claim"`` or ``"evidence"``, or
+            If *target_type* is not in :data:`TARGET_TYPES`, or
             if the explicit *comment_id* is already in use.
         """
-        if target_type not in ("claim", "evidence"):
+        if target_type not in TARGET_TYPES:
             raise ValueError(
-                f"target_type must be 'claim' or 'evidence', got {target_type!r}"
+                f"target_type must be one of {', '.join(TARGET_TYPES)}, got {target_type!r}"
             )
 
         cid = comment_id or uuid4().hex
@@ -137,6 +183,7 @@ class ReviewSystem:
             resolved_at=None,
         )
         self._comments[cid] = comment
+        self._save()
         return comment
 
     def resolve(self, comment_id: str) -> bool:
@@ -150,6 +197,7 @@ class ReviewSystem:
             return False
         comment.resolved = True
         comment.resolved_at = datetime.now(timezone.utc).isoformat()
+        self._save()
         return True
 
     def reopen(self, comment_id: str) -> bool:
@@ -163,6 +211,7 @@ class ReviewSystem:
             return False
         comment.resolved = False
         comment.resolved_at = None
+        self._save()
         return True
 
     def list_by_target(
@@ -177,7 +226,7 @@ class ReviewSystem:
         Parameters
         ----------
         target_type : str
-            ``"claim"`` or ``"evidence"``.
+            One of :data:`TARGET_TYPES`.
         target_id : str
             The item id.
         resolved : Optional[bool]
@@ -215,6 +264,7 @@ class ReviewSystem:
         """
         if comment_id in self._comments:
             del self._comments[comment_id]
+            self._save()
             return True
         return False
 

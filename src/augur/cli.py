@@ -96,6 +96,7 @@ from augur.cli_commands.dossier_cmd import dossier_cmd
 from augur.cli_commands.ledger_cmd import ledger_cmd
 from augur.cli_commands.research_report_cmd import research_report_cmd
 from augur.cli_commands.earnings_cmd import earnings_cmd
+from augur.cli_commands.records_cmd import citations_cmd, comments_cmd, audit_cmd, decisions_cmd
 
 for _cmd in (
     analyze_cmd, consensus_cmd, report_cmd, list_personas_cmd,
@@ -109,6 +110,7 @@ for _cmd in (
     skills_cmd, update_cmd, doctor_cmd,
     filing_delta_cmd, insider_cmd,
     batch_cmd, valuation_cmd, compat_cmd, dossier_cmd, ledger_cmd, research_report_cmd, earnings_cmd,
+    citations_cmd, comments_cmd, audit_cmd, decisions_cmd,
 ):
     main.add_command(_cmd)
 del _cmd

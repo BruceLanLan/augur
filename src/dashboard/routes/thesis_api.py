@@ -85,6 +85,8 @@ async def thesis_create(body: ThesisCreate) -> Dict[str, Any]:
         created_at="", status="active", run_id="",
     )
     tid = journal.create(thesis)
+    from augur.team_audit import record_action
+    record_action("thesis_create", {"thesis_id": tid, "ticker": body.ticker.upper()})
     return {"thesis_id": tid, "status": "created"}
 
 
@@ -111,6 +113,8 @@ async def questions_add(body: QuestionAdd) -> Dict[str, Any]:
         context=body.context, created_at="", status="open",
     )
     qid = q.add(rq)
+    from augur.team_audit import record_action
+    record_action("question_add", {"question_id": qid})
     return {"question_id": qid, "status": "added"}
 
 
@@ -137,4 +141,6 @@ async def decisions_record(body: DecisionRecord) -> Dict[str, Any]:
         created_at="", outcome=None,
     )
     did = log.record(decision)
+    from augur.team_audit import record_action
+    record_action("decision_record", {"decision_id": did, "ticker": body.ticker.upper(), "action": body.action})
     return {"decision_id": did, "status": "recorded"}

@@ -472,8 +472,11 @@ class Decision:
         evidence_run_ids: RunBundle ids that informed this decision.
         thesis_ids: Thesis ids that informed this decision.
         created_at: ISO-8601 creation timestamp (UTC).
-        outcome: Optional post-hoc evaluation (e.g. ``"correct"``,
-            ``"incorrect"``).
+        outcome: Optional post-hoc evaluation: ``"correct"``,
+            ``"incorrect"`` or ``"neutral"``; ``None`` while pending.
+        pnl_pct: Optional realised return attributed to the decision, in
+            percent.
+        resolved_at: ISO-8601 timestamp when the outcome was recorded.
     """
 
     decision_id: str
@@ -484,6 +487,8 @@ class Decision:
     thesis_ids: List[str]
     created_at: str
     outcome: Optional[str] = None
+    pnl_pct: Optional[float] = None
+    resolved_at: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------
@@ -513,7 +518,22 @@ class DecisionLog:
     # -- CRUD ---------------------------------------------------------------
 
     def record(self, decision: Decision) -> str:
-        """Persist a new decision and return its ``decision_id``."""
+        """Persist a new decision and return its ``decision_id``.
+
+        A blank ``decision_id`` / ``created_at`` is filled in. The dashboard
+        API passes blanks, and storing them verbatim made every decision
+        recorded there overwrite the previous one under the key ``""``.
+        """
+        now = datetime.now(timezone.utc)
+        if not decision.created_at:
+            decision.created_at = now.isoformat()
+        if not decision.decision_id:
+            base = f"dec_{decision.ticker.upper()}_{decision.action}_{now.strftime('%Y%m%dT%H%M%S%f')}"
+            decision_id, n = base, 1
+            while decision_id in self._decisions:
+                n += 1
+                decision_id = f"{base}_{n}"
+            decision.decision_id = decision_id
         self._decisions[decision.decision_id] = decision
         self.save()
         return decision.decision_id
@@ -526,6 +546,25 @@ class DecisionLog:
         """Return every decision whose ticker matches (case-insensitive)."""
         t = ticker.upper()
         return [d for d in self._decisions.values() if d.ticker.upper() == t]
+
+    def list_all(self) -> List[Decision]:
+        """Return every decision, oldest first."""
+        return sorted(self._decisions.values(), key=lambda d: d.created_at)
+
+    def resolve(
+        self, decision_id: str, outcome: str, pnl_pct: Optional[float] = None
+    ) -> Optional[Decision]:
+        """Record the outcome of a decision; returns it, or ``None`` if unknown."""
+        if outcome not in ("correct", "incorrect", "neutral"):
+            raise ValueError("outcome must be 'correct', 'incorrect' or 'neutral'")
+        decision = self._decisions.get(decision_id)
+        if decision is None:
+            return None
+        decision.outcome = outcome
+        decision.pnl_pct = pnl_pct
+        decision.resolved_at = datetime.now(timezone.utc).isoformat()
+        self.save()
+        return decision
 
     # -- Persistence --------------------------------------------------------
 
@@ -556,6 +595,8 @@ class DecisionLog:
                 thesis_ids=item.get("thesis_ids", []),
                 created_at=item.get("created_at", ""),
                 outcome=item.get("outcome"),
+                pnl_pct=item.get("pnl_pct"),
+                resolved_at=item.get("resolved_at"),
             )
             self._decisions[d.decision_id] = d
 
