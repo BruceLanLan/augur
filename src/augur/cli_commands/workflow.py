@@ -92,8 +92,8 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
       augur committee 0700.HK --preset china
       augur committee TSLA --preset growth -q "Is this a 10x from here?"
     """
-    from augur.agents import AgentRegistry, DecisionCoordinator
-    from augur.scanner.fetch import fetch_market_data
+    from augur.data import fetch_market_context
+    from augur.registry import AgentRegistry, DecisionCoordinator
 
     PRESETS = {
         "value":  ["buffett", "graham", "munger", "fisher"],
@@ -118,30 +118,21 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
     else:
         click.echo("🏛️  Full committee: all 18 masters")
 
-    # Auto-fetch market data
+    # Live context first; explicit flags override individual fields.
     click.echo(f"   Fetching data for {ticker}…")
-    try:
-        data = fetch_market_data(ticker)
-        pe = pe or data.get("pe_ratio") or 0
-        roe = roe or data.get("roe") or 0
-        debt_ratio = debt_ratio or data.get("debt_ratio") or 0
-        market_cap = market_cap or data.get("market_cap") or 0
-        price = data.get("price") or 0
-        sector = sector or data.get("sector") or ""
-        if price:
-            click.echo(f"   {ticker}: ${price:.2f} | PE={pe:.1f} | ROE={roe:.0%} | Sector={sector}")
-    except Exception:
-        price = 0
-
-    # Build context
-    from augur.scanner.context import MarketContext
-    ctx = MarketContext(
-        ticker=ticker, price=price or 0,
-        pe_ratio=pe or 0, pb_ratio=0, roe=roe or 0,
-        gross_margins=0, revenue_growth=0,
-        debt_ratio=debt_ratio or 0, fcf=0,
-        market_cap=market_cap or 0, sector=sector,
-    )
+    ctx = fetch_market_context(ticker)
+    overrides = {"pe": pe, "roe": roe, "debt_ratio": debt_ratio,
+                 "market_cap": market_cap, "sector": sector or None}
+    for field_name, value in overrides.items():
+        if value is not None:
+            setattr(ctx, field_name, value)
+    if ctx.price:
+        click.echo(
+            f"   {ticker}: ${ctx.price:.2f} | PE={ctx.pe:.1f} | ROE={ctx.roe:.0%} | "
+            f"Sector={ctx.sector or 'n/a'} | source={getattr(ctx, 'data_source', 'unknown')}"
+        )
+    else:
+        click.echo("   ⚠  No live market data; opinions rely on the flags you passed.")
 
     registry = AgentRegistry()
     coordinator = DecisionCoordinator(registry)
@@ -191,6 +182,7 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
     click.echo(f"  Score:       {consensus.score:.1f}/10")
     click.echo(f"  Confidence:  {consensus.confidence:.0%}")
     if kelly:
-        click.echo(f"  Kelly Size:  {kelly:.0%}")
+        # position_pct is already a percentage (same as `augur analyze`).
+        click.echo(f"  Kelly Size:  {kelly:.1f}%")
     click.echo(f"  Vote:        Bullish {len(bullish)} / Neutral {len(neutral)} / Bearish {len(bearish)}")
     click.echo(f"{'═'*58}\n")
