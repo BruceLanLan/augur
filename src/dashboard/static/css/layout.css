@@ -236,6 +236,13 @@ html.light .council-hero {
   display: flex; align-items: center; justify-content: center; font-size: 1rem; background: var(--bg-void); border: 2px solid var(--gilt); box-shadow: 0 2px 6px rgba(0,0,0,.6); }
 
 /* responsive */
+/* Mobile bottom tab bar: hidden unless the (max-width: 768px) block below
+   turns it on. Without this default it rendered on desktop with unsized
+   SVG icons, each as wide as the page. */
+.bottom-nav {
+  display: none;
+}
+
 @media (max-width: 1100px) {
   .mboard { grid-template-columns: repeat(2, 1fr); }
   .sc-grid { grid-template-columns: repeat(5, 1fr); }

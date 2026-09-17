@@ -117,7 +117,7 @@
 <script>
 async function loadTheses() {
   try {
-    var resp = await fetch('/api/thesis/list' + (document.querySelector('.tj-journal').dataset.ticker ? '?ticker=' + document.querySelector('.tj-journal').dataset.ticker : ''));
+    var resp = await fetch('/api/thesis/list' + (document.querySelector('.thesis-journal').dataset.ticker ? '?ticker=' + document.querySelector('.thesis-journal').dataset.ticker : ''));
     var data = await resp.json();
     renderTheses(data.theses || []);
   } catch(e) {
@@ -164,7 +164,7 @@ function renderEvidenceLinks(refs) {
   if (!refs || !refs.length) return '';
   return '<div class="tj-card-details"><span class="tj-label">Evidence:</span> '
     + refs.map(function(r) {
-      return '<a href="#" onclick="openEvidence('' + r + '');return false;" style="font-size:12px;color:var(--accent,#ff6b35);margin-right:6px;">📋 ' + r.slice(0, 20) + '</a>';
+      return '<a href="#" data-evidence-id="' + escapeHtml(r) + '" onclick="openEvidence(this.dataset.evidenceId);return false;" style="font-size:12px;color:var(--accent,#ff6b35);margin-right:6px;">📋 ' + escapeHtml(r.slice(0, 20)) + '</a>';
     }).join('') + '</div>';
 }
 
@@ -194,7 +194,7 @@ function createThesis(e) {
 
 document.addEventListener('DOMContentLoaded', loadTheses);
 </script>
-{% endblock %}
+
 
 <!-- ============ Open Questions Panel ============ -->
 <div class="tj-section" style="margin-top: 32px;">
@@ -219,7 +219,7 @@ document.addEventListener('DOMContentLoaded', loadTheses);
 
 <script>
 function loadQuestions() {
-  var ticker = document.querySelector('.tj-journal').dataset.ticker || '';
+  var ticker = document.querySelector('.thesis-journal').dataset.ticker || '';
   fetch('/api/questions/list' + (ticker ? '?ticker=' + ticker : ''))
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -245,7 +245,7 @@ function loadQuestions() {
 function addQuestion(e) {
   e.preventDefault();
   var data = {
-    ticker: document.querySelector('.tj-journal').dataset.ticker || '',
+    ticker: document.querySelector('.thesis-journal').dataset.ticker || '',
     question: document.getElementById('tj-q-text').value,
     context: document.getElementById('tj-q-context').value,
   };
@@ -282,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function() { loadQuestions(); });
 
 <script>
 function loadDecisions() {
-  var ticker = document.querySelector('.tj-journal').dataset.ticker || '';
+  var ticker = document.querySelector('.thesis-journal').dataset.ticker || '';
   fetch('/api/decisions/list' + (ticker ? '?ticker=' + ticker : ''))
     .then(function(r) { return r.json(); })
     .then(function(data) {
@@ -304,7 +304,7 @@ function loadDecisions() {
 function recordDecision(e) {
   e.preventDefault();
   var data = {
-    ticker: document.querySelector('.tj-journal').dataset.ticker || '',
+    ticker: document.querySelector('.thesis-journal').dataset.ticker || '',
     action: document.getElementById('tj-d-action').value,
     reasoning: document.getElementById('tj-d-reasoning').value,
   };
@@ -325,3 +325,4 @@ setInterval(function() {
   loadDecisions();
 }, 60000);
 </script>
+{% endblock %}

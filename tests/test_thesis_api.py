@@ -61,3 +61,29 @@ class TestDecisionsAPI:
         assert resp2.status_code == 200
         decisions = resp2.json()["decisions"]
         assert any(d["action"] == "buy" for d in decisions)
+
+
+def test_thesis_page_renders_all_panels_and_valid_script():
+    """The Thesis Journal page never worked: a quoting error broke its script,
+    the script looked up a class that does not exist (.tj-journal), and the
+    questions / decisions panels sat after {% endblock %} so Jinja dropped them."""
+    from fastapi.testclient import TestClient
+
+    from dashboard.app import app
+
+    html = TestClient(app).get("/thesis").text
+    assert 'class="thesis-journal"' in html
+    assert "querySelector('.tj-journal')" not in html
+    assert "openEvidence('' + r + '')" not in html
+    for panel in ("tj-active-list", "tj-history-list", "tj-questions-list", "tj-decisions-list"):
+        assert f'id="{panel}"' in html, panel
+
+
+def test_decisions_list_without_ticker_returns_all():
+    from fastapi.testclient import TestClient
+
+    from dashboard.app import app
+
+    client = TestClient(app)
+    did = client.post("/api/decisions/record", json={"ticker": "LSTALL", "action": "buy", "reasoning": "r"}).json()["decision_id"]
+    assert did in {d["decision_id"] for d in client.get("/api/decisions/list").json()["decisions"]}

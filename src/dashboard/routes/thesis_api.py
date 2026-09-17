@@ -122,10 +122,13 @@ async def questions_add(body: QuestionAdd) -> Dict[str, Any]:
 async def decisions_list(ticker: str = "") -> Dict[str, Any]:
     """List decisions."""
     log = _decisions()
-    decisions = log.list_by_ticker(ticker) if ticker else []
+    # Without a ticker the journal page (which requests /api/decisions/list)
+    # used to get an empty list back, so recorded decisions never showed.
+    decisions = log.list_by_ticker(ticker) if ticker else log.list_all()
     return {"decisions": [
         {"decision_id": d.decision_id, "ticker": d.ticker, "action": d.action,
-         "reasoning": d.reasoning, "created_at": d.created_at, "outcome": d.outcome}
+         "reasoning": d.reasoning, "created_at": d.created_at, "outcome": d.outcome,
+         "pnl_pct": d.pnl_pct, "resolved_at": d.resolved_at}
         for d in decisions
     ]}
 
