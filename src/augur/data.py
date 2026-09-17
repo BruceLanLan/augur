@@ -263,7 +263,7 @@ def _build_context_from_providers(ticker: str) -> MarketContext:
       数据源返回空、未知 ticker 等场景），避免调用方只能靠 ``data_source=="none"`` 推断。
     - F0.3: 为每个有值的字段生成最小 EvidenceItem，标记缺失字段的 coverage。
     """
-    from datetime import datetime as dt_module
+    from datetime import datetime as dt_module, timezone
 
     valid_fields = _market_context_field_names()
     upper = ticker.upper()
@@ -314,7 +314,7 @@ def _build_context_from_providers(ticker: str) -> MarketContext:
                 availability[field_name] = "live"
                 if to_ev is not None:
                     ev = to_ev(field_name, val, upper,
-                               available_at=dt_module.now())
+                               available_at=dt_module.now(timezone.utc))
                     if ev is not None:
                         evidence_items.append(ev)
             elif is_ownership:
@@ -326,7 +326,7 @@ def _build_context_from_providers(ticker: str) -> MarketContext:
                     # create a minimal missing marker manually
                     import hashlib
                     from augur.schemas.evidence import generate_evidence_id
-                    retrieved_at = dt_module.now()
+                    retrieved_at = dt_module.now(timezone.utc)
                     content_str = f"{name}:{upper}:{field_name}:missing"
                     content_hash = hashlib.sha256(content_str.encode()).hexdigest()
                     evidence_items.append({
@@ -357,7 +357,7 @@ def _build_context_from_providers(ticker: str) -> MarketContext:
                 availability[field_name] = "live"  # default-zero is a real value for most fields
                 if val is not None and val != 0 and to_ev is not None:
                     ev = to_ev(field_name, val, upper,
-                               available_at=dt_module.now())
+                               available_at=dt_module.now(timezone.utc))
                     if ev is not None:
                         evidence_items.append(ev)
 

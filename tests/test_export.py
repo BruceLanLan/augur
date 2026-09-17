@@ -474,10 +474,15 @@ class TestCLIExport:
         assert "--run-id" in result.output
         assert "--format" in result.output
 
-    def test_export_missing_run_id(self, runner):
-        """export without --run-id should fail."""
+    def test_export_missing_run_id(self, runner, monkeypatch, tmp_path):
+        """export without --run-id and without any saved run should fail.
+
+        ``--run-id`` became optional (defaults to the latest run for the
+        ticker); see tests/test_quickstart_cli_flow.py for the happy path.
+        """
+        monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path / "empty_root"))
         result = runner.invoke(main, ["export", "AAPL"])
-        assert result.exit_code != 0  # click requires --run-id
+        assert result.exit_code != 0
 
     def test_export_invalid_format(self, runner):
         """export with invalid format should show error."""

@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
@@ -65,6 +65,17 @@ def _compute_input_snapshot_hash(
 # ---------------------------------------------------------------------------
 # RunTracker
 # ---------------------------------------------------------------------------
+
+
+def _json_default(obj: Any) -> Any:
+    """Serialise values that live market contexts carry into checkpoints.
+
+    ``MarketContext.evidence_items`` holds provider evidence with ``datetime``
+    fields; the checkpoint stores ``dataclasses.asdict(ctx)`` verbatim.
+    """
+    if isinstance(obj, (datetime, date)):
+        return obj.isoformat()
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
 
 class RunTracker:
@@ -339,7 +350,10 @@ class RunTracker:
             "_checkpoint_state": self._checkpoint_state,
         }
         file_path.write_text(
-            json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8"
+            json.dumps(
+                payload, indent=2, ensure_ascii=False, default=_json_default
+            ),
+            encoding="utf-8",
         )
         return file_path
 

@@ -12,8 +12,11 @@ import click
 @click.argument("ticker")
 @click.option(
     "--run-id", "-r",
-    required=True,
-    help="Run ID to export (e.g. run_AAPL_20250101T120000_abc12345).",
+    default=None,
+    help=(
+        "Run ID to export (e.g. run_AAPL_20250101T120000_abc12345). "
+        "Defaults to the most recent run for TICKER."
+    ),
 )
 @click.option(
     "--format", "-f",
@@ -37,7 +40,7 @@ import click
 )
 def export_cmd(
     ticker: str,
-    run_id: str,
+    run_id: str | None,
     fmt: str,
     output: str | None,
     template: str,
@@ -46,11 +49,22 @@ def export_cmd(
 
     \b
     Examples:
+      augur export AAPL                      # latest run, Markdown
       augur export AAPL --run-id run_AAPL_xxx --format md
       augur export AAPL --run-id run_AAPL_xxx --format pdf -o report.pdf
       augur export AAPL --run-id run_AAPL_xxx --format evidence-pack
     """
     from augur.export import ReportExporter
+
+    if run_id is None:
+        run_id = _latest_run_id(ticker)
+        if run_id is None:
+            click.echo(
+                f"Error: no saved runs for {ticker.upper()}. "
+                f"Run `augur workflow {ticker.upper()}` first.",
+                err=True,
+            )
+            raise SystemExit(1)
 
     # Determine output path
     ext_map = {
@@ -85,3 +99,26 @@ def export_cmd(
     click.echo(f"✓ Exported {fmt} to {result_path}")
     click.echo(f"  Ticker: {ticker.upper()}")
     click.echo(f"  Run ID: {run_id}")
+
+
+def _latest_run_id(ticker: str) -> str | None:
+    """Return the newest RunBundle id recorded for ``ticker``, if any."""
+    import json
+
+    from augur.data_dir import get_data_dir
+
+    runs_dir = get_data_dir() / "runs"
+    if not runs_dir.is_dir():
+        return None
+    best: tuple[str, str] | None = None
+    for path in runs_dir.glob("*.json"):
+        try:
+            bundle = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if str(bundle.get("metadata", {}).get("ticker", "")).upper() != ticker.upper():
+            continue
+        key = (str(bundle.get("created_at", "")), str(bundle.get("run_id", path.stem)))
+        if best is None or key > best:
+            best = key
+    return best[1] if best else None

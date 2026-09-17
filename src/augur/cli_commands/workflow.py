@@ -51,6 +51,10 @@ def workflow_cmd(ticker, steps, agents, question, as_json):
         return
 
     click.echo(result.get("summary", ""))
+    run_id = result.get("run_id")
+    if run_id:
+        click.echo(f"\nRun ID: {run_id}")
+        click.echo(f"Export: augur export {ticker.upper()} --format md")
 
 
 @click.command("chat")
