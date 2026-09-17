@@ -164,6 +164,7 @@ augur verify-pack pack.zip                      # 校验证据包每个文件的
 augur dossier AAPL                              # 财报前 dossier
 augur valuation AAPL [--fcf 100e9 --shares 15e9 --growth 0.08 --wacc 0.10]
 augur risk-review AAPL                          # 最近两份 10-K 的风险因素新增/删除/措辞升级
+augur ledger AAPL                               # 最近两次分析运行之间变了什么
 augur filing-delta AAPL --new q3.json --prev q2.json
 
 # 内置研究 Skill（执行前检查权限，结果存为 RunBundle）
@@ -202,7 +203,7 @@ augur serve [--port 8000] · augur mcp-server · augur skills
 | **稳定** | 18 位大师分析与共识、CLI 研究闭环（上面实测过的命令）、Dashboard 主要页面、MCP server、RunBundle 与导出、数据源链（yfinance → SEC EDGAR 覆盖） |
 | **可用，有明确边界** | 4 个内置 Skill（只运行内置清单；债务约束默认用参考阈值而非信贷协议条款；财报日期来自本地日历文件）；分歧图（按大师的分维度评分推导并引用证据，维度到指标的映射是固定表）；`augur risk-review`（规则匹配，措辞小改可能同时显示为"新增"和"删除"）；`augur eval`（单只股票的时间序列 IC，远期收益重叠，显著性偏乐观，只作筛查）；`augur guidance`（需 `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1`，会调用付费 LLM）；PDF 导出（需 `[export]`） |
 | **实验（默认关闭）** | rolling-IC 动态权重（`AUGUR_FORCE_RIC=1`）、学习权重（`AUGUR_FORCE_LEARNED=1`）——都还没有通过预注册的样本外验证 |
-| **尚未实现** | `augur ledger` 仍是占位输出；运行记录中的 token 用量未计量（只记录耗时） |
+| **尚未计量** | 运行记录中的 token 用量（目前只记录耗时） |
 
 ---
 
@@ -266,6 +267,7 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 - **研究底座**：EvidenceItem 三类时间语义、Claim、StepResult、不可变 RunBundle、声明式 SkillSpec v1
 - **研究闭环**：Thesis Journal、Filing Delta、分歧图、Guidance Tracker、研究收件箱、DCF 估值实验室
 - **可信度**：缺失数据显式传播、校准状态标注、未验证的动态权重默认关闭
+- **研究能力补全（2026-09-17）**：内置 Skill 执行器（`augur skill run`，执行前检查权限）、分歧图改为按大师分维度评分推导并引用证据、`augur eval` 基于回测记录评估大师、`augur risk-review` 对比两份 10-K 的风险因素、`augur ledger` 对比两次运行、研究记录命令（决策结果 / 评论 / 引用纠错 / 审计日志）、证据包摘要校验
 - **公开发布前的实测修复**：`workflow` 断点保存崩溃、证据时间戳时区错误、`export` / `research-report` / `dossier` 接上真实运行记录、`committee` 命令崩溃、SEC EDGAR 市值单位错 10⁹ 倍、估值命令编造输入、服务默认暴露到局域网、wheel 安装下头像 404、MCP 支持 `mcp` 2.x、CI 假绿修复
 
 详见 [CHANGELOG.md](CHANGELOG.md)。

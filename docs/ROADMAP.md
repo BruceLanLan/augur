@@ -222,7 +222,7 @@ augur/main  (public, single source of truth)
 | 1 | **Owner 决策批** | ① 公开仓每周数据源烟测是否重新启用（8/10 起 `disabled_manually`）② 下一版是否 v11.0.0 ③ PyPI Trusted Publisher ④ R6 门槛口径 ⑤ 参考部署的定时任务是否保留 | — | Owner | 部分完成：已批准合并进公开仓并做隐私清理；①–⑤ 仍待定 |
 | 2 | **v11.0.0 GA** | 版本 `11.0.0`、CHANGELOG 收口、`git tag v11.0.0`、GitHub Release 附 sha256；PyPI 走 `publish.yml` | tag 触发的发布流程成功，fresh install 可用 | Agent 执行 / Owner 批准 | 公开同步已完成（仍标 rc1）；tag / Release / PyPI 未做 |
 | 3 | **R6 学习权重的真门** | 用 `consensus/oos_harness.py` 定义预注册 gate：≥5 只票、每 agent ≥30 个不重叠窗口、split-half 权重相关 ≥0.5、对 flat 基线 Brier 改善 CI 不跨零 | 门槛通过前 `AUGUR_FORCE_LEARNED` 默认关 | Owner 定口径 / Agent 实现 | 未开始（opt-in 开关已就位） |
-| 4 | **无入口模块处置** | 9 个零引用模块逐个二选一：接入 CLI/Dashboard/MCP，或明确标 experimental | README 功能成熟度表与代码一致 | Agent 提案 / Owner 选 | 部分完成：`research-report`、`dossier` 已接上真实运行记录；9 个模块在 README 标为"仅库代码" |
+| 4 | **无入口模块处置** | 9 个零引用模块逐个二选一：接入 CLI/Dashboard/MCP，或明确标 experimental | README 功能成熟度表与代码一致 | Agent 提案 / Owner 选 | ✅ 9 个全部接入真实数据入口：`citations` / `comments` / `audit` / `decisions`（研究记录）、`verify-pack`（证据包摘要）、运行记录耗时（cost_budget）、`risk-review`（10-K Item 1A）、`eval personas` / `eval factors`（回测记录）；另把占位的 `ledger` 接上真实运行 |
 | 5 | **mcp 2.x 迁移** | 同时支持 `MCPServer` 与 `FastMCP`，解除 `<2` 钉版 | 两个大版本下真实 stdio 会话一致 | Agent | ✅ mcp 1.30 / 2.2 均验证 |
 | 6 | **定时任务运维** | 定时任务环境不继承交互 shell 的代理设置；设 `AUGUR_EDGAR_CONTACT_EMAIL`；watchlist 扩到 37 只；日志轮转 | 连续 10 个工作日取数成功 | Owner（涉及运行机器） | 未开始 |
 | 7 | **数字自动化** | `make verify` 输出测试数 / lint / sha256；README 测试徽章读 CI | README 不再手写测试数 | Agent | ✅ |
@@ -231,13 +231,15 @@ augur/main  (public, single source of truth)
 
 公开合并前，按 README 在全新安装上逐条实跑命令，发现并修复了一批单元测试没覆盖到的问题（详见 CHANGELOG）：`workflow` 保存断点崩溃、证据时间戳时区错误、`export` 缺必填参数、`committee` 引用已删除模块直接崩溃、SEC EDGAR 市值单位错 10⁹ 倍、估值命令编造输入、`research-report` 永远只输出标题、服务默认对局域网开放。由此产生的后续步骤（按风险排序）：
 
-| # | 步骤 | 为什么 | 验证点 |
-|---|---|---|---|
-| 8 | **README 快速上手进 CI** | 这轮的 8 个问题全是"单测绿、真跑挂"。把 README 里的命令做成离线冒烟脚本（mock 数据源 + `AUGUR_SKIP_MACRO_FETCH`），在 wheel 安装后执行 | 任意 README 命令回归会让 `Hermetic Smoke` 变红 |
-| 9 | **测试不再尝试联网** | 2026-09-17 在屏蔽全部 TCP 连接的环境下跑全量测试：3441 通过、9 跳过、0 失败，说明结果不依赖网络；但仍有测试会先尝试真实请求再回退，遇到挂起的本地代理时明显变慢 | 在 `conftest.py` 默认禁用外部网络（显式标记的集成测试除外），全量耗时不受网络环境影响 |
-| 10 | **重新生成回放产物** | EDGAR 市值单位修正前生成的 `feedback/rolling_ic.json`、因子归因与 regime 结论都含单位误差（它们默认不参与共识） | 重跑后在 `docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md` 标注新旧结论差异 |
-| 11 | **分歧图从模板变为证据推导** | 当前冲突点是按信号分布套模板的通用表述 | 每个冲突点引用至少一条 EvidenceItem |
-| 12 | **Skill 执行器去留** | 清单与权限已实现，执行器没有；文档已如实说明 | Owner 决定实现或从产品叙事里移除 |
+| # | 步骤 | 为什么 | 验证点 | 状态 |
+|---|---|---|---|---|
+| 8 | **README 快速上手进 CI** | 这轮的 8 个问题全是"单测绿、真跑挂"。把 README 里的命令做成离线冒烟脚本（mock 数据源 + `AUGUR_SKIP_MACRO_FETCH`），在 wheel 安装后执行 | 任意 README 命令回归会让 `Hermetic Smoke` 变红 | — |
+| 9 | **测试不再尝试联网** | 2026-09-17 在屏蔽全部 TCP 连接的环境下跑全量测试：3441 通过、9 跳过、0 失败，说明结果不依赖网络；但仍有测试会先尝试真实请求再回退，遇到挂起的本地代理时明显变慢 | 在 `conftest.py` 默认禁用外部网络（显式标记的集成测试除外），全量耗时不受网络环境影响 | — |
+| 10 | **重新生成回放产物** | EDGAR 市值单位修正前生成的 `feedback/rolling_ic.json`、因子归因与 regime 结论都含单位误差（它们默认不参与共识） | 重跑后在 `docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md` 标注新旧结论差异 | — |
+| 11 | **分歧图从模板变为证据推导** | 当前冲突点是按信号分布套模板的通用表述 | 每个冲突点引用至少一条 EvidenceItem | ✅ 2026-09-17：按大师分维度评分推导，冲突点引用该维度指标的证据 ID；无证据的分歧记为证据缺口 |
+| 12 | **Skill 执行器** | 清单与权限已实现，执行器没有 | 4 个内置 Skill 端到端可运行，越权在执行前被拒绝 | ✅ 2026-09-17：`augur skill run` + MCP `augur_run_skill`，9 个能力均为真实实现 |
+| 13 | **Skill 数据缺口** | 财报日期来自手工维护的本地日历；债务约束只有参考阈值；部分公司不在 XBRL 披露利息支出；filing-delta 只比较年度数字 | 财报日历有自动数据源；10-Q 支持；信贷协议条款来源评估 | — |
+| 14 | **评估方法升级** | `augur eval` 是单票时间序列 IC，远期收益重叠 | 多票横截面 IC、非重叠窗口或 HAC 标准误 | — |
 
 ### 本阶段不做
 

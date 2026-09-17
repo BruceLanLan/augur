@@ -80,23 +80,25 @@ the infrastructure for evidence-tracked research workflows.
 
 Updated 2026-09-17 for the public release of the v11 line on `BruceLanLan/augur`.
 
-- **Skill runner not implemented.** Skill manifests, validation and runtime
-  permission checks exist, but there is no `augur skill run` command and no
-  generic execute-skill MCP tool. `docs/skills-guide.md` lists the working CLI
-  commands and MCP prompts for each built-in skill.
+- **Skills run built-in manifests only.** `augur skill run` / MCP
+  `augur_run_skill` execute the four built-in skills; third-party manifests are
+  validated but never executed. Covenant review uses reference thresholds
+  unless you pass your own; earnings dates come from a local calendar file.
 - **Dynamic weights are off by default.** Rolling-IC weights (`AUGUR_FORCE_RIC=1`)
   and learned weights (`AUGUR_FORCE_LEARNED=1`) have not passed a pre-registered
   out-of-sample gate; the resolved-outcome corpus is still too small.
-- **Disagreement-map conflict points are templates** chosen from the bull/bear
-  split, not claims derived from individual evidence items.
+- **Disagreement map uses a fixed dimension table.** Conflicts are derived from
+  per-dimension persona scores and cite the evidence for that dimension's
+  metrics; runs saved before 2026-09-17 have no factor scores and yield no
+  conflict points.
 - **Replay-derived artifacts predate the EDGAR market-cap unit fix.**
   `feedback/rolling_ic.json` and the factor-attribution / regime findings were
   generated while SEC EDGAR market cap was reported in raw USD instead of
   billions. They do not affect default consensus, but should be regenerated
   before being relied on.
-- **Nine modules are library code without a user entry point**:
-  `citation_queue`, `cost_budget`, `eval_lab`, `outcome_tracker`, `pack_digest`,
-  `prompt_eval`, `review_comment`, `risk_review`, `team_audit`.
+- **Evaluation is a screen, not validation.** `augur eval` computes
+  single-ticker time-series IC with overlapping forward returns, so
+  significance is optimistic. `augur risk-review` is rule-based.
 - `augur guidance` requires `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` and calls a paid
   LLM; PDF export requires the `[export]` extra.
 - Test and build evidence: run `make verify`; CI runs the full suite on Python

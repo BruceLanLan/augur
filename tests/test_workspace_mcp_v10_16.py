@@ -171,7 +171,7 @@ class TestMcpManifestSync:
         import json
 
         names, src_path = self._registered_tool_names()
-        assert len(names) == 13
+        assert len(names) == 14  # + augur_run_skill (2026-09-17)
 
         repo_root = None
         for p in [src_path] + list(src_path.parents):

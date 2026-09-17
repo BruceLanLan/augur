@@ -16,7 +16,8 @@
         "augur_workflow",
         "augur_workspace_get",
         "augur_workspace_set",
-        "augur_workspace_profiles"
+        "augur_workspace_profiles",
+        "augur_run_skill"
       ],
       "skills": [
         "augur-buffett",

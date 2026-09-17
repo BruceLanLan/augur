@@ -24,10 +24,15 @@ class TestBuiltinSkillsCompleteness:
             assert len(spec.required_capabilities) >= 1, spec.id
 
     def test_each_skill_has_network_restrictions(self):
+        # Built-in skills may only reach Augur's data providers. earnings-prep
+        # needs live market data (Yahoo Finance) in addition to SEC EDGAR; the
+        # runner additionally refuses any capability whose domains are not
+        # declared (tests/test_skill_runner.py).
+        allowed = {"sec.gov", "finance.yahoo.com"}
         for spec in load_builtin_skills():
-            # All built-in skills must restrict to sec.gov only
             domains = spec.permissions.network_domains
-            assert all("sec.gov" in d for d in domains), spec.id
+            assert domains, spec.id
+            assert set(domains) <= allowed, (spec.id, domains)
 
     def test_each_skill_has_evidence_policy(self):
         for spec in load_builtin_skills():

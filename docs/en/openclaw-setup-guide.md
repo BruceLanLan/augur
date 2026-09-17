@@ -26,7 +26,7 @@ augur mcp-server   # No error = OK (Ctrl+C to exit)
 
 ## Option 1: MCP Server (Recommended)
 
-OpenClaw calls `augur mcp-server` via stdio and auto-registers all 13 tools.
+OpenClaw calls `augur mcp-server` via stdio and auto-registers all 14 tools.
 
 ### Step 1 — Edit OpenClaw Config
 
@@ -205,7 +205,7 @@ for t in tools: print(f'  - {t[\"name\"]}')
 
 Expected output:
 ```
-✅ 13 tools registered:
+✅ 14 tools registered:
   - mcp_augur_analyze
   - mcp_augur_consensus
   - mcp_augur_committee

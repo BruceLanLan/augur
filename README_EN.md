@@ -65,6 +65,7 @@ augur research-report AAPL         # from the latest run: consensus, disagreemen
 augur export AAPL --format md      # export the latest run (md / json / evidence-pack / pdf)
 augur committee AAPL --preset value -q "Is the moat widening or narrowing?"
 augur valuation AAPL               # two-stage DCF, auto-fills FCF/shares/net debt and says so
+augur skill run earnings-prep AAPL # built-in research skill: pre-earnings dossier (3 more skills)
 ```
 
 Offline? `augur analyze NVDA --pe 60 --roe 0.45` takes manual metrics; `augur backtest AAPL --demo` uses synthetic data.
@@ -125,7 +126,7 @@ Run `augur serve`, then open http://localhost:8000.
 
 ## 🔌 Claude / Agent Integration
 
-The MCP server exposes 13 tools, 7 research prompts and 5 read-only resource types (`augur://evidence/{id}`, `augur://runs/{id}`, `augur://thesis/{id}`, `augur://decisions/{id}`, `augur://ledger/{ticker}/{quarter}`). It was verified with real stdio client sessions on both `mcp` 1.x and 2.x.
+The MCP server exposes 14 tools (including `augur_run_skill` for the built-in skills), 7 research prompts and 5 read-only resource types (`augur://evidence/{id}`, `augur://runs/{id}`, `augur://thesis/{id}`, `augur://decisions/{id}`, `augur://ledger/{ticker}/{quarter}`). It was verified with real stdio client sessions on both `mcp` 1.x and 2.x.
 
 ```bash
 pip install -e ".[data,mcp]"
@@ -155,22 +156,39 @@ augur committee NVDA --agents buffett,munger,dalio
 augur batch AAPL MSFT NVDA
 
 # Research artifacts
-augur research-report AAPL [--format json]
+augur research-report AAPL [--format json]      # consensus + evidence-derived disagreement + provenance and latency
 augur export AAPL --format md|json|evidence-pack|pdf [-o PATH] [--run-id ...]
-augur dossier AAPL                  # pre-earnings dossier
+augur verify-pack pack.zip                      # check every file's SHA-256 in an evidence pack
+augur dossier AAPL                              # pre-earnings dossier
 augur valuation AAPL [--fcf 100e9 --shares 15e9 --growth 0.08 --wacc 0.10]
+augur risk-review AAPL                          # new / removed / escalated risk factors across the last two 10-Ks
+augur ledger AAPL                               # what changed between the two latest analysed runs
 augur filing-delta AAPL --new q3.json --prev q2.json
 
+# Built-in research skills (permission-checked, saved as RunBundles)
+augur skill list · augur skill show filing-delta
+augur skill run earnings-prep|filing-delta|debt-covenant-review|insider-cluster-review AAPL
+
+# Evaluation (on records written by augur backtest)
+augur backtest AAPL --days 120 [--demo] · augur ic-report
+augur eval personas AAPL [--horizon 20]         # consensus IC, hit rate, leave-one-out contribution per persona
+augur eval factors AAPL                         # each persona's score as a factor: IC, t, p
+
+# Research records
+augur decisions list|resolve|report             # decision outcomes and win rate
+augur comments add|list|resolve                 # comments on runs / theses / decisions / evidence
+augur citations report|list|accept|reject|fixed # citation-correction queue
+augur audit [--action ...]                      # audit log
+
 # Data
-augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30
-augur backtest AAPL --days 60 [--demo] · augur ic-report · augur doctor
+augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30 · augur doctor
 
 # Monitoring & servers
 augur watch AAPL NVDA --interval 60 · augur watchlist-add AAPL · augur cron-run
 augur serve [--port 8000] · augur mcp-server · augur skills
 ```
 
-`augur --help` lists all 39 subcommands.
+`augur --help` lists all 47 subcommands.
 
 ---
 
@@ -181,9 +199,9 @@ Stated plainly, so "there is code for it" is not mistaken for "it works".
 | Status | Scope |
 |---|---|
 | **Stable** | 18-persona analysis and consensus, the CLI research loop above, main dashboard pages, MCP server, RunBundles and export, the data-source chain (yfinance → SEC EDGAR overlay) |
-| **Works, with limits** | Disagreement-map "conflict points" are template statements chosen from the signal split, not derived claim-by-claim from evidence; `augur guidance` needs `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` and calls a paid LLM; PDF export needs the `[export]` extra |
+| **Works, with stated limits** | The four built-in skills (only built-in manifests run; covenant review defaults to reference thresholds, not the company's credit agreements; earnings dates come from a local calendar file); the disagreement map (derived from per-dimension persona scores and cites evidence, with a fixed dimension-to-metric table); `augur risk-review` (rule-based: a reworded risk factor can show as one new plus one removed item); `augur eval` (single-ticker time-series IC with overlapping forward returns — optimistic significance, a screen only); `augur guidance` (needs `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` and calls a paid LLM); PDF export (needs the `[export]` extra) |
 | **Experimental (off by default)** | Rolling-IC dynamic weights (`AUGUR_FORCE_RIC=1`), learned weights (`AUGUR_FORCE_LEARNED=1`) — neither has passed a pre-registered out-of-sample test |
-| **Library code with no user entry point yet** | `citation_queue`, `cost_budget`, `eval_lab`, `outcome_tracker`, `pack_digest`, `prompt_eval`, `review_comment`, `risk_review`, `team_audit`; the skill runner (manifests and permission checks exist, but there is no `augur skill run`; see [docs/skills-guide.md](docs/skills-guide.md)) |
+| **Not instrumented yet** | Token usage in run records (only latency is recorded) |
 
 ---
 
@@ -247,6 +265,7 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 - **Research foundation**: EvidenceItem with three time semantics, Claim, StepResult, immutable RunBundle, declarative SkillSpec v1
 - **Research loop**: Thesis Journal, Filing Delta, disagreement map, Guidance Tracker, research inbox, DCF valuation lab
 - **Trust**: missing data propagated explicitly, calibration status labels, unvalidated dynamic weights off by default
+- **Research capabilities completed (2026-09-17)**: built-in skill runner (`augur skill run`, permission-checked before any step), disagreement map derived from per-dimension persona scores with cited evidence, `augur eval` over backtest records, `augur risk-review` across two 10-Ks, `augur ledger` between two runs, research-record commands (decision outcomes / comments / citation corrections / audit log), evidence-pack digest verification
 - **Fixes found by running everything from a fresh install before the public release**: `workflow` checkpoint crash, evidence timestamp timezone bug, `export` / `research-report` / `dossier` wired to real runs, `committee` crash, SEC EDGAR market cap off by 10⁹, valuation inventing inputs, servers exposed on the LAN by default, avatars 404 in pip installs, MCP support for `mcp` 2.x, CI false-green fixed
 
 See [CHANGELOG.md](CHANGELOG.md).

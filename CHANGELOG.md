@@ -2,6 +2,60 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [Unreleased] - 2026-09-17 research capabilities round
+
+Closes the three gaps the README's feature-maturity table listed after the
+public merge: no skill runner, a template disagreement map, and nine modules
+with no user entry point. Each was wired to real data and run on live AAPL
+data before commit; problems found that way are listed under Fixed.
+
+### Added
+
+- **Skill runner** — `augur skill list|show|run` and MCP `augur_run_skill`.
+  Built-in skills only; steps run in dependency order; before any step runs,
+  every capability must be declared, registered and implemented and every
+  network domain / resource it touches must be permitted. Audit trail and
+  skill metadata are stored in the RunBundle. Nine real capabilities replace
+  six stubs; manifests v1.1.0 are executable (filing-delta no longer needs
+  accession numbers). New `edgar_fundamentals.fetch_annual_financials`.
+- **Evidence-derived disagreement map** — conflicts come from per-dimension
+  persona factor scores (≥6.5 vs ≤3.5) and cite the evidence ids of that
+  dimension's metrics; splits without evidence are reported as gaps;
+  unanimous dimensions become agreement points; `derivation` says how the map
+  was built. Shared by `research-report`, `dossier` and `/api/disagreement`
+  (which now honours `run_id`).
+- **Entry points for the nine library-only modules**: `augur citations`,
+  `augur comments` (ReviewSystem gains JSON persistence), `augur audit` (CLI
+  record commands, skill runs and dashboard thesis/decision/question writes
+  are logged), `augur decisions` (OutcomeTracker over the decision log),
+  `augur verify-pack` (per-file SHA-256 in evidence packs), per-step latency
+  in RunBundle metadata (cost_budget), `augur risk-review` (Item 1A across the
+  two latest 10-Ks), `augur eval personas|factors` (eval_lab and FactorLab
+  over backtest records).
+- `augur ledger` compares two saved analysed runs (was a placeholder).
+
+### Fixed
+
+- RunBundles stored no evidence: the fetch step now keeps evidence items and
+  lists their ids in `output_refs`; coverage stats count evidence items
+  instead of workflow steps; exports no longer fall back to placeholders.
+- Resuming from a checkpoint minted a new run id; two identical runs in the
+  same second overwrote each other's bundle.
+- `POST /api/decisions/record` stored every decision under an empty id, so
+  each new decision overwrote the previous one.
+- FactorLab without scipy used a normal approximation for t-test p-values
+  (df=4, t=2.0 gave 0.045 instead of 0.116); a zero-variance non-zero IC was
+  reported as insignificant.
+- Skill manifests were not package data, so pip installs had no skills.
+- Reports and comparisons picked the newest run even when it had no persona
+  results (e.g. a filing-delta run), blanking consensus and comparisons.
+- `augur eval` no longer ranks personas whose score is constant in the window
+  (bootstrap float noise had marked them significant).
+
+### Changed
+
+- `augur` now has 47 subcommands and the MCP server 14 tools.
+
 ## [Unreleased] - 2026-09-17 public merge round
 
 The private development line (`augur-next`, v11.0.0-rc1) is merged into the
