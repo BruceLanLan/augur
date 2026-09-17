@@ -1,7 +1,6 @@
 # Augur 项目全面 Review 与发展规划
 
 **日期**：2026-07-06
-**评审模型**：Fable 5（规划）→ 交接给 Sonnet 5（开发）
 **当前版本**：v10.2.0，测试基线 2219 passed
 **已定战略主线（不重开）**：数据 → 可信度 → 发布
 
@@ -169,7 +168,7 @@ EDGAR 四阶段的完整设计见 `docs/superpowers/specs/2026-07-03-edgar-funda
 ### 通用约定（每张单都适用，不再重复）
 
 - **测试基线**：开工前 `python3 -m pytest -q --tb=no 2>&1 | tail -3` 确认 2219 passed（预存基线，若有出入先报告再动手）。完工后同样跑，只增不减。
-- **commit**：完成一张单 commit 一次，英文 message，结尾 `Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>`。不 push（push 需用户单独授权，且只推 origin/augur-next，绝不碰 augur remote）。
+- **commit**：完成一张单 commit 一次，英文 message。不 push（push 需用户单独授权，且只推 origin/augur-next，绝不碰 augur remote）。
 - **语言**：代码/注释/commit 英文，文档中文。
 - **版本号**：Phase A 三张单全部完成后统一升一次 minor（三处同步：`pyproject.toml`、`src/augur/__init__.py`、`hermes-agents/*.yaml` + skills manifests 用 `scripts/generate_skills.py` 再生成），并补 CHANGELOG。
 - **没验证的不说完成**：每张单的验证点必须真实跑过，输出贴进完成报告。

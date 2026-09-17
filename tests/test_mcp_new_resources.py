@@ -12,7 +12,7 @@ class TestThesisResource:
         exercised through the server's resource API rather than imported by
         name (the previous version of this test imported a symbol that never
         existed at module level and only went unnoticed because CI's test
-        step could not fail — see docs/reviews/FABLE_REVIEW_2026-09-03.md).
+        step could not fail — see docs/reviews/PROJECT_REVIEW_2026-09-03.md).
         """
         import asyncio
         pytest.importorskip("mcp")

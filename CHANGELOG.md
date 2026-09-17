@@ -120,8 +120,8 @@ surfaced are fixed below with regression tests. The version stays at
 
 ## [Unreleased] - 2026-09-03 review round
 
-Fable 5.1 review of the v11.0.0-rc1 line. Findings with evidence in
-`docs/reviews/FABLE_REVIEW_2026-09-03.md`; next phase in `docs/ROADMAP.md`.
+Review of the v11.0.0-rc1 line. Findings with evidence in
+`docs/reviews/PROJECT_REVIEW_2026-09-03.md`; next phase in `docs/ROADMAP.md`.
 
 ### Fixed
 
@@ -209,7 +209,7 @@ evidence-tracked research workflows.
 - CORS env var unified: API now reads `AUGUR_CORS_ORIGINS` (same as Dashboard)
 - SQLite `_init_db` no longer deletes user database on transient errors
 
-### Stress Test Additions (2026-08-12, DSH continuous loop)
+### Stress Test Additions (2026-08-12)
 
 - **Thesis Journal** (`src/augur/thesis.py`): create, track, and update investment
   theses with falsification conditions. ThesisDelta compares two RunBundles and

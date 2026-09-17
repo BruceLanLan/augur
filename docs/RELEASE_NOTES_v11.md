@@ -4,7 +4,7 @@
 **Date**: 2026-08-12
 **Base commit**: `12ff992`
 **RC commit**: `5d3d9bf` (main)
-**Developed by**: DSH (DeepSeek Harness) multi-agent continuous loop；后续由 owner 接管收尾
+**Author**: BruceLanLan
 
 ## Overview
 
@@ -148,10 +148,7 @@ AUGUR_DATA_DIR=$(mktemp -d) PYTHONPATH=src pytest \
 
 ## Credits
 
-Developed by DeepSeek Harness (DSH) multi-agent continuous integration loop
-across 11 commits, 77 files, 8,830 lines. Agents: A (data root), B (schemas),
-C (CI), D (wheel build), E (run tracker), F (missingness), G (capabilities),
-H (OOS harness), I (provenance).
+Author: BruceLanLan.
 
 ---
 

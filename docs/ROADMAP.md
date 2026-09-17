@@ -198,12 +198,12 @@ augur/main  (public, single source of truth)
 
 > **2026-08-13 状态**：代码层面 backlog 全部完成。v11.0.0-rc1 的 wheel/sdist 已在本地 fresh-venv 双格式 smoke 通过。
 >
-> **2026-09-03 修正**（[评审报告](reviews/FABLE_REVIEW_2026-09-03.md)）：上面「全绿」只在本地成立。CI「Tests」自 8/12 起因 `| tail` 吞掉退出码而假绿（实际 0 个测试跑过），「Hermetic Smoke」自创建起全红。两者已修，下一阶段以 CI 真绿为起点。
+> **2026-09-03 修正**（[评审报告](reviews/PROJECT_REVIEW_2026-09-03.md)）：上面「全绿」只在本地成立。CI「Tests」自 8/12 起因 `| tail` 吞掉退出码而假绿（实际 0 个测试跑过），「Hermetic Smoke」自创建起全红。两者已修，下一阶段以 CI 真绿为起点。
 
 ## 2026-09 阶段：RC 收口 → GA
 
 **生效日期**：2026-09-03
-**依据**：[`docs/reviews/FABLE_REVIEW_2026-09-03.md`](reviews/FABLE_REVIEW_2026-09-03.md)
+**依据**：[`docs/reviews/PROJECT_REVIEW_2026-09-03.md`](reviews/PROJECT_REVIEW_2026-09-03.md)
 **唯一目标**：让 v11 的每一条「已验证」声明都有 CI 或真实运行证据，然后由 owner 决定 GA。
 **范围边界**：不新增模块、不新增 persona、不改共识算法；只做证据、接线、发布、运维。
 

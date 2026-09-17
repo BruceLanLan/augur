@@ -2,7 +2,7 @@
 
 - **状态**：Research / Product Input
 - **调研日期**：2026-08-12
-- **调研者**：DeepSeek Harness (DSH) + web_search
+- **调研者**：BruceLanLan
 - **前置文档**：[`FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md`](FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)
 - **适用**：v11 RC 产品决策、差异化策略、post-v11 方向
 
