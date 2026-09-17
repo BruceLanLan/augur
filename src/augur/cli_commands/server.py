@@ -3,6 +3,28 @@
 
 import click
 
+_LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+
+
+def _exposure_warning(host: str, auth_supported: bool) -> str:
+    """Return a warning when binding beyond loopback without authentication."""
+    if host in _LOOPBACK_HOSTS:
+        return ""
+    if auth_supported:
+        from augur.auth import auth_required
+
+        if auth_required():
+            return ""
+        return (
+            f"WARNING: listening on {host} with authentication disabled. Anyone who can "
+            "reach this machine can use every /api endpoint, including config and data "
+            "changes. Set AUGUR_API_TOKEN (or AUGUR_MULTI_USER=1) before exposing it."
+        )
+    return (
+        f"WARNING: listening on {host}. The REST API server has no authentication; "
+        "keep it on 127.0.0.1 or put an authenticating reverse proxy in front of it."
+    )
+
 
 @click.command("mcp-server")
 def mcp_server_cmd():
@@ -13,13 +35,17 @@ def mcp_server_cmd():
 
 @click.command("api")
 @click.option("--port", type=int, default=8900, help="Port to run on")
-@click.option("--host", default="0.0.0.0", help="Host to bind to")
+@click.option("--host", default="127.0.0.1", show_default=True,
+              help="Host to bind to (use 0.0.0.0 to expose; the API has no auth)")
 def api_cmd(port, host):
     """Start the REST API server"""
     try:
         import uvicorn
         from augur.api import app
         click.echo(f"Starting Augur API on {host}:{port}")
+        warning = _exposure_warning(host, auth_supported=False)
+        if warning:
+            click.echo(warning, err=True)
         uvicorn.run(app, host=host, port=port)
     except ImportError:
         click.echo(
@@ -33,7 +59,8 @@ def api_cmd(port, host):
 
 @click.command("serve")
 @click.option("--port", default=8000, show_default=True, help="Dashboard port")
-@click.option("--host", default="0.0.0.0", show_default=True, help="Bind host")
+@click.option("--host", default="127.0.0.1", show_default=True,
+              help="Bind host (use 0.0.0.0 to expose; set AUGUR_API_TOKEN first)")
 @click.option("--open", "open_browser", is_flag=True, default=False, help="Open browser on start")
 def serve_cmd(port, host, open_browser):
     """Start the Augur web dashboard.
@@ -80,6 +107,9 @@ def serve_cmd(port, host, open_browser):
         raise SystemExit(1)
 
     click.echo(f"\U0001f989 Augur Dashboard starting at http://localhost:{port}")
+    warning = _exposure_warning(host, auth_supported=True)
+    if warning:
+        click.echo(warning, err=True)
 
     if open_browser:
         import threading

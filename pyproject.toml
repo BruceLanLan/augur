@@ -94,11 +94,11 @@ augur = "augur.cli:main"
 augur-mcp = "augur.mcp_server:run_server"
 
 [project.urls]
-Homepage = "https://github.com/BruceLanLan/augur-next"
-Repository = "https://github.com/BruceLanLan/augur-next"
-Documentation = "https://github.com/BruceLanLan/augur-next#readme"
-Issues = "https://github.com/BruceLanLan/augur-next/issues"
-Changelog = "https://github.com/BruceLanLan/augur-next/blob/main/README.md#-changelog"
+Homepage = "https://github.com/BruceLanLan/augur"
+Repository = "https://github.com/BruceLanLan/augur"
+Documentation = "https://github.com/BruceLanLan/augur#readme"
+Issues = "https://github.com/BruceLanLan/augur/issues"
+Changelog = "https://github.com/BruceLanLan/augur/blob/main/CHANGELOG.md"
 
 [project.entry-points."mcp.server"]
 augur-agents = "augur.mcp_server:create_server"

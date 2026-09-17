@@ -16,7 +16,7 @@ FROM python:3.11-slim
 
 LABEL org.opencontainers.image.title="Augur Next"
 LABEL org.opencontainers.image.description="Professional Bloomberg AI Agent — 18 investment masters, committee mode, MCP"
-LABEL org.opencontainers.image.source="https://github.com/BruceLanLan/augur-next"
+LABEL org.opencontainers.image.source="https://github.com/BruceLanLan/augur"
 LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app

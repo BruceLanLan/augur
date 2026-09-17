@@ -14,7 +14,7 @@
 - Augur installed
 
 ```bash
-git clone https://github.com/BruceLanLan/augur-next.git augur
+git clone https://github.com/BruceLanLan/augur.git
 cd augur
 pip install -e ".[data]"
 

@@ -6,16 +6,26 @@ Augur in self-hosted environments for individual or small-team use.
 ## Quick Deploy
 
 ```bash
-git clone https://github.com/BruceLanLan/augur-next.git
-cd augur-next
+git clone https://github.com/BruceLanLan/augur.git
+cd augur
 pip install -e ".[data]"
 
 # Set data directory (recommended)
 export AUGUR_DATA_DIR=/var/lib/augur
 
-# Start Dashboard
+# Local only (default since v11.0.0-rc1: binds 127.0.0.1)
+augur serve --port 8000
+
+# Reachable from other machines: turn authentication on first
+export AUGUR_API_TOKEN="$(python3 -c 'import secrets; print(secrets.token_urlsafe(32))')"
 augur serve --host 0.0.0.0 --port 8000
 ```
+
+> Without `AUGUR_API_TOKEN` (or `AUGUR_MULTI_USER=1`) every `/api/*` endpoint,
+> including config and data changes, is open to anyone who can reach the port.
+> `augur serve` prints a warning when you bind beyond loopback without auth.
+> `augur api` (the separate REST server) has no authentication at all; keep it
+> on 127.0.0.1 or behind an authenticating reverse proxy.
 
 ## Docker Deploy
 
@@ -36,9 +46,11 @@ After=network.target
 [Service]
 Type=simple
 User=augur
-WorkingDirectory=/opt/augur-next
+WorkingDirectory=/opt/augur
 Environment=AUGUR_DATA_DIR=/var/lib/augur
-ExecStart=/opt/augur-next/.venv/bin/augur serve --host 0.0.0.0 --port 8000
+# Required when binding 0.0.0.0; generate one and keep it out of version control
+EnvironmentFile=/etc/augur/augur.env
+ExecStart=/opt/augur/.venv/bin/augur serve --host 0.0.0.0 --port 8000
 Restart=on-failure
 
 [Install]
@@ -92,7 +104,7 @@ find /backup/ -name 'augur-*.tar.gz' -mtime +30 -delete
 ## Upgrading
 
 ```bash
-cd /opt/augur-next
+cd /opt/augur
 git pull origin main
 pip install -e ".[data]"
 systemctl restart augur

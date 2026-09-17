@@ -1,6 +1,8 @@
 # Augur Skill 使用指南 (v11)
 
-Skill 是声明式的研究 SOP（标准操作流程）。Skill 本身不包含可执行代码——它声明了需要哪些 Capability、允许访问哪些资源、以及工作流步骤。实际执行由 Augur 的 Capability Registry 和 Skill Runner 负责。
+Skill 是声明式的研究 SOP（标准操作流程）。Skill 本身不包含可执行代码——它声明了需要哪些 Capability、允许访问哪些资源、以及工作流步骤。
+
+> **当前实现状态（v11.0.0-rc1）**：Skill 清单、Pydantic 校验和运行时权限检查（`SkillPermissionEnforcer`、`CitationValidator`）已经实现并有测试；**Skill 执行器尚未实现**，所以不存在 `augur skill run` 命令，也没有通用的 "execute skill" MCP 工具。下面每个 Skill 都给出了今天就能用的等价入口：CLI 命令，或同名的 MCP prompt（在 Claude Desktop 等 MCP 客户端里选用）。
 
 ## 内置 Skills
 
@@ -22,11 +24,12 @@ v11 RC 包含两个内置 Skill：
 **使用方式**：
 
 ```bash
-# CLI
-augur skill run earnings-prep --ticker AAPL --event-id Q4_2025
+# 今天可用的等价入口
+augur workflow AAPL      # 生成 RunBundle（18 位大师 + 共识）
+augur dossier AAPL       # 财报前 dossier：guidance、分歧、待验证问题
+augur earnings --days 30 # watchlist 中临近的财报事件
 
-# MCP (via external agent)
-mcp_augur_execute_skill(skill="earnings-prep", params={"ticker": "AAPL", "event_id": "Q4_2025"})
+# MCP：在客户端中选用 prompt `earnings_prep_prompt(ticker="AAPL")`
 ```
 
 **权限**：只读 `evidence.read`、`runs.read`；网络仅 `sec.gov`
@@ -48,9 +51,10 @@ mcp_augur_execute_skill(skill="earnings-prep", params={"ticker": "AAPL", "event_
 **使用方式**：
 
 ```bash
-augur skill run filing-delta --ticker AAPL \
-  --new-accession 0000320193-25-000123 \
-  --previous-accession 0000320193-24-000089
+# 今天可用的等价入口：比较两份 JSON 证据快照（例如两次 `augur export --format json` 的产物）
+augur filing-delta AAPL --new q3.json --prev q2.json
+
+# MCP：prompt `filing_delta_prompt(ticker="AAPL", new_accession="…", previous_accession="…")`
 ```
 
 **权限**：只读 `evidence.read`、`runs.read`；网络仅 `sec.gov`
@@ -169,7 +173,7 @@ print(spec.id, spec.version)
 检查 debt/EBITDA、利息覆盖率、流动性约束和 covenant 合规性。
 
 ```bash
-augur skill run debt-covenant-review --ticker AAPL
+# 暂无 CLI 入口；MCP：prompt `debt_covenant_review_prompt(ticker="AAPL")`
 ```
 
 **权限**：只读 `evidence.read`、`runs.read`；网络仅 `sec.gov`
@@ -179,7 +183,9 @@ augur skill run debt-covenant-review --ticker AAPL
 识别高管/董事连续或集群买卖行为。
 
 ```bash
-augur skill run insider-cluster-review --ticker AAPL
+augur insider AAPL   # 近 90 天 Form 4 公开市场交易 + 集群检测
+
+# MCP：prompt `insider_cluster_review_prompt(ticker="AAPL")`
 ```
 
 **权限**：只读 `evidence.read`；网络仅 `sec.gov`

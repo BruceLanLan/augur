@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Augur Next — One-line installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/BruceLanLan/augur-next/main/install.sh | bash
+# Augur — one-line installer
+# Usage: curl -fsSL https://raw.githubusercontent.com/BruceLanLan/augur/main/install.sh | bash
 
 set -e
 
-REPO="https://github.com/BruceLanLan/augur-next.git"
-INSTALL_DIR="${AUGUR_DIR:-$HOME/augur-next}"
+REPO="https://github.com/BruceLanLan/augur.git"
+INSTALL_DIR="${AUGUR_DIR:-$HOME/augur}"
 PYTHON="${PYTHON:-python3}"
-MIN_PYTHON="3.8"
+MIN_PYTHON="3.9"
 
 # ── Colors ──────────────────────────────────────────────────────────────────
 RED='\033[0;31m'; GREEN='\033[0;32m'; YELLOW='\033[1;33m'
@@ -68,7 +68,7 @@ fi
 
 # ── Done ─────────────────────────────────────────────────────────────────────
 echo ""
-echo -e "${BOLD}${GREEN}🦉 Augur Next installed at: $INSTALL_DIR${NC}"
+echo -e "${BOLD}${GREEN}🦉 Augur installed at: $INSTALL_DIR${NC}"
 echo ""
 echo "  ${BOLD}Quick start:${NC}"
 echo "    augur analyze AAPL                 # 18-master consensus"
@@ -79,5 +79,5 @@ echo ""
 echo "  ${BOLD}Connect to Hermes Studio:${NC}"
 echo "    echo 'mcp_servers:\\n  augur:\\n    command: augur-mcp' >> ~/.hermes/config.yaml"
 echo ""
-echo "  ${BOLD}Docs:${NC} https://github.com/BruceLanLan/augur-next"
+echo "  ${BOLD}Docs:${NC} https://github.com/BruceLanLan/augur"
 echo ""

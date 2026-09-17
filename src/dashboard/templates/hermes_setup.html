@@ -126,7 +126,7 @@
         <div class="code-block">
             <button class="copy-btn-code" onclick="copyCode(this)">复制</button>
 <span class="comment"># 克隆仓库（或用你已有的本地目录）</span>
-git clone https://github.com/BruceLanLan/augur-next.git && cd augur-next
+git clone https://github.com/BruceLanLan/augur.git && cd augur
 
 <span class="comment"># 安装含 MCP 支持的完整版</span>
 pip install -e ".[data,mcp]"
@@ -258,8 +258,8 @@ mcp_augur_list_personas, mcp_augur_configure
     <details>
         <summary style="cursor:pointer; font:600 0.82rem/1.5 var(--font-sans); color:var(--fg-1);">/skill augur-buffett 没有反应</summary>
         <div style="padding:10px 0 0 16px; font-size:0.8rem; color:var(--fg-2);">
-            确认 Hermes 的 <code>skills.external_dirs</code> 指向 augur-next 的 <code>skills/</code> 目录：<br>
-            <code>skills:<br>&nbsp;&nbsp;external_dirs:<br>&nbsp;&nbsp;&nbsp;&nbsp;- /path/to/augur-next/skills</code>
+            确认 Hermes 的 <code>skills.external_dirs</code> 指向 augur 仓库的 <code>src/skills/</code> 目录：<br>
+            <code>skills:<br>&nbsp;&nbsp;external_dirs:<br>&nbsp;&nbsp;&nbsp;&nbsp;- /path/to/augur/src/skills</code>
         </div>
     </details>
 </div>

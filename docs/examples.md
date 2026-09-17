@@ -165,14 +165,15 @@ augur workflow AAPL --steps fetch,analyze,consensus,committee
 # Export report
 augur export AAPL --format md
 
-# Run a skill
-augur skill run earnings-prep --ticker AAPL
+# Pre-earnings dossier (what the earnings-prep skill describes; a generic
+# skill runner is not implemented yet)
+augur dossier AAPL
 
 # Valuation
 augur valuation AAPL
 
 # Filing delta
-augur filing-delta AAPL --new 0000320193-25-000123 --prev 0000320193-24-000089
+augur filing-delta AAPL --new q3.json --prev q2.json   # two JSON evidence snapshots
 
 # Insider activity
 augur insider AAPL
