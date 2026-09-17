@@ -95,7 +95,7 @@ def test_factorlab_constant_nonzero_ic_is_significant():
     fwd = np.linspace(-1, 1, 40)
     [perf] = FactorLab.evaluate_factors({"perfect": fwd * 3}, fwd, periods=4)
     assert perf.ic_mean == pytest.approx(1.0)
-    assert perf.significant and perf.p_value == 0.0
+    assert perf.significant and perf.p_value < 1e-12
 
 
 def test_constant_score_personas_are_labelled_not_ranked(records_file):

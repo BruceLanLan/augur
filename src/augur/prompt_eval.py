@@ -393,7 +393,8 @@ class FactorLab:
             ic_std = float(np.std(ic_series, ddof=1)) if n > 1 else 0.0
 
             # t-test for IC ≠ 0
-            if ic_std > 0 and n > 1:
+            # Treat float-noise spread (e.g. identical per-period ICs of 1.0) as zero variance.
+            if ic_std > 1e-12 and n > 1:
                 t_stat = ic_mean / (ic_std / np.sqrt(n))
                 p_val = FactorLab._t_test_pvalue(t_stat, n - 1)
                 significant = bool(p_val < 0.05)

@@ -20,3 +20,9 @@ build/
 
 # Nested git clone ignore
 /augur/
+
+# augur export output written into the working directory
+run_*_report.md
+run_*_report.json
+run_*_report.pdf
+evidence_pack_run_*.zip
