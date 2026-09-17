@@ -298,14 +298,20 @@ def _build_context(ticker: str, pe: float = 0, pb: float = 0, roe: float = 0,
 def create_server():
     """Create and configure the MCP server."""
     try:
-        from mcp.server.fastmcp import FastMCP
+        # mcp 2.x renamed FastMCP -> MCPServer. Everything this module uses
+        # (keyword ``instructions``, tool/resource/prompt decorators, stdio
+        # ``run``) is source-compatible across both majors.
+        from mcp.server.mcpserver import MCPServer as _Server
     except ImportError:
-        raise ImportError(
-            "The 'mcp' package is required for the MCP server. "
-            "Install it with: pip install 'mcp>=1.0.0' (requires Python 3.10+)"
-        )
+        try:
+            from mcp.server.fastmcp import FastMCP as _Server
+        except ImportError:
+            raise ImportError(
+                "The 'mcp' package is required for the MCP server. "
+                "Install it with: pip install 'augur-agents[mcp]' (requires Python 3.10+)"
+            )
 
-    mcp = FastMCP(
+    mcp = _Server(
         "augur",
         instructions=(
             "Multi-agent investment analysis with 18 investor personas. "
