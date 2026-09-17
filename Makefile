@@ -53,16 +53,16 @@ test:              ## Run full test suite
 test-fast:         ## Run tests quietly (isolated AUGUR_DATA_DIR; passes with the network blocked)
 	pytest tests/ -q
 
-verify:            ## One-shot evidence for README numbers: tests, lint, build digests
-	@set -o pipefail; \
+verify:            ## One-shot evidence for README numbers: tests, lint, build digests (fails on any failure)
+	@set -eo pipefail; \
 	echo "== augur $(VERSION) @ $$(git rev-parse --short HEAD 2>/dev/null || echo no-git)"; \
 	echo "== python: $$($(PYTHON) --version 2>&1)"; \
 	echo "== tests"; \
-	$(PYTHON) -m pytest tests/ -q --tb=short -p no:cacheprovider 2>&1 | tail -1; \
+	$(PYTHON) -m pytest tests/ -q --tb=line -p no:cacheprovider 2>&1 | grep -E "^(FAILED|ERROR)|passed|failed|error" ; \
 	echo "== lint"; \
 	$(PYTHON) -m ruff check src/; \
 	echo "== build"; \
-	rm -rf dist/ && $(PYTHON) -m build --outdir dist/ >/dev/null && \
+	rm -rf dist/ && ( $(PYTHON) -m build --outdir dist/ >/dev/null 2>&1 || $(PYTHON) -m build --no-isolation --outdir dist/ >/dev/null ) && \
 	( command -v sha256sum >/dev/null && sha256sum dist/* || shasum -a 256 dist/* )
 
 ## ── Hermetic Build & Quality ─────────────────────────────────────────────────

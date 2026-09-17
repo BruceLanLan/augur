@@ -13,7 +13,7 @@ required_capabilities:
   - report.earnings_dossier
 permissions:
   resources: [evidence.read, runs.read]
-  network_domains: [sec.gov, finance.yahoo.com]
+  network_domains: [sec.gov, finance.yahoo.com, stooq.com]
 evidence_policy:
   information_time_required: true
   missing: abstain

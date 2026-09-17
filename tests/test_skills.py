@@ -79,7 +79,7 @@ class TestEarningsPrep:
 
     def test_permissions(self, spec):
         assert spec.permissions.resources == ["evidence.read", "runs.read"]
-        assert spec.permissions.network_domains == ["sec.gov", "finance.yahoo.com"]
+        assert spec.permissions.network_domains == ["sec.gov", "finance.yahoo.com", "stooq.com"]
 
     def test_evidence_policy(self, spec):
         ep = spec.evidence_policy

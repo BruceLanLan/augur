@@ -320,12 +320,14 @@ _TICKER_INPUT = {"type": "object", "properties": {"ticker": {"type": "string", "
 CAPABILITIES: Dict[str, Dict[str, Any]] = {
     "earnings.collect_evidence": {
         "description": "Live market context and evidence items (yfinance, SEC EDGAR) plus the next calendar event.",
-        "handler": collect_earnings_evidence, "network_domains": ["finance.yahoo.com", "sec.gov"],
+        # Default provider chain: yfinance, then stooq as fallback; SEC EDGAR overlay.
+        "handler": collect_earnings_evidence, "network_domains": ["finance.yahoo.com", "stooq.com", "sec.gov"],
         "resources": ["evidence.read"], "timeout_ms": 120_000,
     },
     "personas.analyze": {
         "description": "Run every persona on the collected context and compute the weighted consensus.",
-        "handler": analyze_personas, "network_domains": [], "resources": [], "timeout_ms": 60_000,
+        # Consensus pulls VIX/SPY history for regime detection unless AUGUR_SKIP_MACRO_FETCH=1.
+        "handler": analyze_personas, "network_domains": ["finance.yahoo.com"], "resources": [], "timeout_ms": 60_000,
     },
     "runs.compare": {
         "description": "Compare consensus and persona signals with the newest saved run for the ticker.",

@@ -38,7 +38,7 @@ augur verify-pack pack.zip
 
 - **输入**：`ticker`（必填）；`as_of`（默认今天）、`event_id`（默认 `<TICKER>_next`）。
 - **步骤**：`collect`（实时数据与证据 + 本地财报日历）→ `analyze`（全部大师 + 共识）→ `compare`（与最近一次含大师分析的运行比较）→ `synthesize`（生成 dossier）。
-- **权限**：资源 `evidence.read`、`runs.read`；网络 `sec.gov`、`finance.yahoo.com`。
+- **权限**：资源 `evidence.read`、`runs.read`；网络 `sec.gov`、`finance.yahoo.com`、`stooq.com`（行情备用源）。
 - **限制**：下一次财报日期读取本地文件 `<数据目录>/earnings_calendar.json`，没有条目时 dossier 会明确写出"日历中无记录"，不会猜测日期。
 
 ### `filing-delta`
@@ -77,6 +77,8 @@ augur verify-pack pack.zip
 3. 该能力会访问的每个网络域名必须在 `permissions.network_domains` 中；
 4. 该能力会读取的每类本地资源必须在 `permissions.resources` 中。
 
+> 预检依据的是每个能力**声明**会访问的域名和资源（见下表，与代码中的数据源链保持一致并有测试约束），它是执行前的权限关卡，不是运行时网络沙箱：能力内部调用的库本身不受拦截。
+
 允许和拒绝的检查都会写入审计记录，保存在 RunBundle 的 `metadata.skill.audit_log` 中；执行结果同时写入 `augur audit` 可查看的审计日志。
 
 ```python
@@ -94,8 +96,8 @@ print(result.audit_log[:3])   # ["ALLOWED capability 'sec.financials.annual' for
 
 | 能力 | 实现 | 网络 |
 |---|---|---|
-| `earnings.collect_evidence` | `fetch_market_context` + 本地财报日历 | finance.yahoo.com、sec.gov |
-| `personas.analyze` | 全部大师分析 + 加权共识 | — |
+| `earnings.collect_evidence` | `fetch_market_context` + 本地财报日历 | finance.yahoo.com、stooq.com、sec.gov |
+| `personas.analyze` | 全部大师分析 + 加权共识 | finance.yahoo.com（VIX/SPY 宏观数据，`AUGUR_SKIP_MACRO_FETCH=1` 可关闭） |
 | `runs.compare` | 与最近一次含大师分析的 RunBundle 比较 | — |
 | `report.earnings_dossier` | dossier + 证据化分歧图 | — |
 | `sec.financials.annual` | `edgar_fundamentals.fetch_annual_financials` | sec.gov |

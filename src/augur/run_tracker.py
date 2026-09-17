@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -80,6 +81,7 @@ def _json_default(obj: Any) -> Any:
 
 #: run_ids handed out in this process (a run is only on disk once finished).
 _ISSUED_RUN_IDS: Set[str] = set()
+_ISSUED_RUN_IDS_LOCK = threading.Lock()
 
 
 class RunTracker:
@@ -180,10 +182,11 @@ class RunTracker:
         # first, so step the timestamp until the id is unused.
         run_id = generate_run_id(self.ticker, self.created_at, manifest_hash)
         data_dir = get_data_dir()
-        while (data_dir / "runs" / f"{run_id}.json").exists() or run_id in _ISSUED_RUN_IDS:
-            self.created_at += timedelta(seconds=1)
-            run_id = generate_run_id(self.ticker, self.created_at, manifest_hash)
-        _ISSUED_RUN_IDS.add(run_id)
+        with _ISSUED_RUN_IDS_LOCK:  # dashboard requests can start runs concurrently
+            while (data_dir / "runs" / f"{run_id}.json").exists() or run_id in _ISSUED_RUN_IDS:
+                self.created_at += timedelta(seconds=1)
+                run_id = generate_run_id(self.ticker, self.created_at, manifest_hash)
+            _ISSUED_RUN_IDS.add(run_id)
         self.run_id = run_id
         return self.run_id
 
