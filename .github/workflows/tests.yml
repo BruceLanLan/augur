@@ -63,8 +63,7 @@ jobs:
         # step's.
         run: |
           set -o pipefail
-          python -m pytest tests/ -q --tb=short -p no:cacheprovider \
-            --ignore=tests/test_analyze_api_v12.py
+          python -m pytest tests/ -q --tb=short -p no:cacheprovider
 
       - name: Assert tests actually ran
         if: always()
@@ -72,8 +71,7 @@ jobs:
           python - <<'PY'
           import re, subprocess, sys
           out = subprocess.run(
-              [sys.executable, "-m", "pytest", "tests/", "--collect-only", "-q",
-               "--ignore=tests/test_analyze_api_v12.py"],
+              [sys.executable, "-m", "pytest", "tests/", "--collect-only", "-q"],
               capture_output=True, text=True,
           ).stdout
           m = re.search(r"(\d+) tests? collected", out)

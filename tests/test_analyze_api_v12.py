@@ -21,8 +21,23 @@ client = TestClient(app, raise_server_exceptions=False)
 
 
 class TestAnalyzeEndpoint:
-    def test_analyze_valid_ticker_returns_full_payload(self):
-        """GET /api/analyze/AAPL returns 200 and a well-formed payload."""
+    def test_analyze_valid_ticker_returns_full_payload(self, monkeypatch):
+        """GET /api/analyze/AAPL returns 200 and a well-formed payload.
+
+        Uses an in-process provider so the test is hermetic; it used to hit
+        live yfinance, which is why CI ran with --ignore on this whole file.
+        """
+        import augur.data as augur_data_mod
+        from augur.datasources.base import DataProvider
+
+        class _Provider(DataProvider):
+            name = "mock_api"
+
+            def fetch(self, ticker):
+                return {"data_source": "mock_api", "price": 210.0, "pe": 32.0, "roe": 1.5}
+
+        monkeypatch.setattr(augur_data_mod, "_get_providers", lambda: [_Provider()])
+        monkeypatch.setenv("AUGUR_SKIP_MACRO_FETCH", "1")
         resp = client.get("/api/analyze/AAPL")
         assert resp.status_code == 200
         data = resp.json()
