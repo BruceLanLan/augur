@@ -38,6 +38,9 @@ surfaced are fixed below with regression tests. The version stays at
 - **`augur serve` / `augur api` listened on 0.0.0.0 by default** while auth is
   opt-in (and absent from the REST API). Both default to 127.0.0.1 and warn
   when exposed without auth.
+- **Persona avatars 404'd in pip installs**: templates referenced
+  `/docs/images/avatars/`, which is not in the wheel; they now use the
+  identical avatars shipped in `dashboard/static/images/avatars/`.
 - `tests/test_analyze_api_v12.py` hit live yfinance and was excluded from CI
   since June; it is hermetic now and runs in CI.
 

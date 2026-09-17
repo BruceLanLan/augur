@@ -247,7 +247,7 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 - **Research foundation**: EvidenceItem with three time semantics, Claim, StepResult, immutable RunBundle, declarative SkillSpec v1
 - **Research loop**: Thesis Journal, Filing Delta, disagreement map, Guidance Tracker, research inbox, DCF valuation lab
 - **Trust**: missing data propagated explicitly, calibration status labels, unvalidated dynamic weights off by default
-- **Fixes found by running everything from a fresh install before the public release**: `workflow` checkpoint crash, evidence timestamp timezone bug, `export` / `research-report` / `dossier` wired to real runs, `committee` crash, SEC EDGAR market cap off by 10⁹, valuation inventing inputs, servers exposed on the LAN by default, MCP support for `mcp` 2.x, CI false-green fixed
+- **Fixes found by running everything from a fresh install before the public release**: `workflow` checkpoint crash, evidence timestamp timezone bug, `export` / `research-report` / `dossier` wired to real runs, `committee` crash, SEC EDGAR market cap off by 10⁹, valuation inventing inputs, servers exposed on the LAN by default, avatars 404 in pip installs, MCP support for `mcp` 2.x, CI false-green fixed
 
 See [CHANGELOG.md](CHANGELOG.md).
 </details>

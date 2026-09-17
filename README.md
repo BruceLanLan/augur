@@ -249,7 +249,7 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 - **研究底座**：EvidenceItem 三类时间语义、Claim、StepResult、不可变 RunBundle、声明式 SkillSpec v1
 - **研究闭环**：Thesis Journal、Filing Delta、分歧图、Guidance Tracker、研究收件箱、DCF 估值实验室
 - **可信度**：缺失数据显式传播、校准状态标注、未验证的动态权重默认关闭
-- **公开发布前的实测修复**：`workflow` 断点保存崩溃、证据时间戳时区错误、`export` / `research-report` / `dossier` 接上真实运行记录、`committee` 命令崩溃、SEC EDGAR 市值单位错 10⁹ 倍、估值命令编造输入、服务默认暴露到局域网、MCP 支持 `mcp` 2.x、CI 假绿修复
+- **公开发布前的实测修复**：`workflow` 断点保存崩溃、证据时间戳时区错误、`export` / `research-report` / `dossier` 接上真实运行记录、`committee` 命令崩溃、SEC EDGAR 市值单位错 10⁹ 倍、估值命令编造输入、服务默认暴露到局域网、wheel 安装下头像 404、MCP 支持 `mcp` 2.x、CI 假绿修复
 
 详见 [CHANGELOG.md](CHANGELOG.md)。
 </details>
