@@ -76,7 +76,7 @@ def main(ctx, no_color):
 from augur.cli_commands.analysis import analyze_cmd, consensus_cmd, report_cmd, list_personas_cmd
 from augur.cli_commands.data import fetch_cmd, sentiment_cmd, guidance_cmd
 from augur.cli_commands.workflow import workflow_cmd, chat_cmd, committee_cmd
-from augur.cli_commands.export_cmd import export_cmd
+from augur.cli_commands.export_cmd import export_cmd, verify_pack_cmd
 from augur.cli_commands.backtest import backtest_cmd, ic_report_cmd
 from augur.cli_commands.watchlist import (
     watchlist_add_cmd, watchlist_show_cmd, cron_run_cmd, cron_start_cmd,
@@ -110,7 +110,7 @@ for _cmd in (
     skills_cmd, update_cmd, doctor_cmd,
     filing_delta_cmd, insider_cmd,
     batch_cmd, valuation_cmd, compat_cmd, dossier_cmd, ledger_cmd, research_report_cmd, earnings_cmd,
-    citations_cmd, comments_cmd, audit_cmd, decisions_cmd,
+    citations_cmd, comments_cmd, audit_cmd, decisions_cmd, verify_pack_cmd,
 ):
     main.add_command(_cmd)
 del _cmd

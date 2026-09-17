@@ -579,26 +579,24 @@ pre {{ background: #f4f4f8; padding: 16px; border-radius: 6px; overflow-x: auto;
         zip_name = f"evidence_pack_{run_bundle.run_id}"
         zip_path = output_dir / f"{zip_name}.zip"
 
+        # Build every payload first so the manifest can carry a SHA-256 per
+        # file; `augur verify-pack` recomputes them (augur.pack_digest).
+        payloads = {"run_bundle.json": run_bundle.model_dump_json(indent=2)}
+        for ev_id, ev in sorted(evidence_by_id.items()):
+            safe_name = ev_id.replace("/", "_").replace("\\", "_")
+            payloads["evidence/" + safe_name + ".json"] = ev.model_dump_json(indent=2)
+        manifest["files"] = {
+            name: hashlib.sha256(body.encode("utf-8")).hexdigest()
+            for name, body in payloads.items()
+        }
+
         with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
-            # manifest.json
             zf.writestr(
                 "manifest.json",
                 json.dumps(manifest, indent=2, ensure_ascii=False),
             )
-
-            # run_bundle.json
-            zf.writestr(
-                "run_bundle.json",
-                run_bundle.model_dump_json(indent=2),
-            )
-
-            # evidence/
-            for ev_id, ev in sorted(evidence_by_id.items()):
-                safe_name = ev_id.replace("/", "_").replace("\\", "_")
-                zf.writestr(
-                    "evidence/" + safe_name + ".json",
-                    ev.model_dump_json(indent=2),
-                )
+            for name, body in payloads.items():
+                zf.writestr(name, body)
 
         # Validate: every evidence_id referenced by claims must be in the archive
         self._validate_evidence_pack(zip_path, referenced_ids)
@@ -683,3 +681,47 @@ pre {{ background: #f4f4f8; padding: 16px; border-radius: 6px; overflow-x: auto;
                 f"Unknown export format: {fmt!r}. "
                 f"Valid: md, json, pdf, evidence-pack"
             )
+
+
+def verify_evidence_pack(zip_path: Path) -> Dict[str, Any]:
+    """Verify an evidence pack produced by :meth:`ReportExporter.export_evidence_pack`.
+
+    Extracts the archive to a temporary directory, recomputes each file's
+    SHA-256 with :func:`augur.pack_digest.verify_pack_integrity` and checks
+    that every evidence id listed in the manifest has a file.
+
+    Returns ``{"ok", "run_id", "checked", "mismatched", "missing_evidence",
+    "has_digests"}``.
+    """
+    import tempfile
+
+    from augur.pack_digest import compute_manifest_digest, verify_pack_integrity
+
+    zip_path = Path(zip_path)
+    with tempfile.TemporaryDirectory() as tmp:
+        tmp_dir = Path(tmp)
+        with zipfile.ZipFile(zip_path) as zf:
+            for member in zf.namelist():
+                target = (tmp_dir / member).resolve()
+                if not target.is_relative_to(tmp_dir.resolve()):
+                    raise ValueError(f"unsafe path in archive: {member}")
+            zf.extractall(tmp_dir)
+        manifest_path = tmp_dir / "manifest.json"
+        if not manifest_path.exists():
+            raise ValueError("not an evidence pack: manifest.json missing")
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        results = verify_pack_integrity(tmp_dir, manifest)
+        present = compute_manifest_digest(tmp_dir)
+        missing_evidence = [
+            ev_id for ev_id in manifest.get("evidence_ids", [])
+            if "evidence/" + ev_id.replace("/", "_").replace("\\", "_") + ".json" not in present
+        ]
+    mismatched = sorted(name for name, ok in results.items() if not ok)
+    return {
+        "ok": bool(results) and not mismatched and not missing_evidence,
+        "run_id": manifest.get("run_id", ""),
+        "checked": len(results),
+        "mismatched": mismatched,
+        "missing_evidence": missing_evidence,
+        "has_digests": "files" in manifest,
+    }

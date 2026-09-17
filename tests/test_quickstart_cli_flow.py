@@ -107,3 +107,30 @@ def test_dossier_shows_disagreement_from_latest_run(offline_provider):
 
     assert result.exit_code == 0, result.output
     assert f"From run {latest['run_id']}" in result.output
+
+
+def test_evidence_pack_verifies_and_detects_tampering(offline_provider, tmp_path):
+    """pack_digest had no entry point: packs now carry per-file SHA-256 digests
+    and `augur verify-pack` recomputes them."""
+    import zipfile
+
+    from augur.workflow import run_workflow
+
+    run_workflow("AAPL", steps="fetch,analyze,consensus")
+    pack = tmp_path / "pack.zip"
+    assert CliRunner().invoke(_cli(), ["export", "AAPL", "--format", "evidence-pack", "-o", str(pack)]).exit_code == 0
+
+    ok = CliRunner().invoke(_cli(), ["verify-pack", str(pack)])
+    assert ok.exit_code == 0, ok.output
+    assert "OK: every file matches" in ok.output
+
+    tampered = tmp_path / "tampered.zip"
+    with zipfile.ZipFile(pack) as src, zipfile.ZipFile(tampered, "w") as dst:
+        for item in src.infolist():
+            data = src.read(item.filename)
+            if item.filename == "run_bundle.json":
+                data = data.replace(b'"AAPL"', b'"MSFT"')
+            dst.writestr(item, data)
+    bad = CliRunner().invoke(_cli(), ["verify-pack", str(tampered)])
+    assert bad.exit_code == 1
+    assert "digest mismatch: run_bundle.json" in bad.output

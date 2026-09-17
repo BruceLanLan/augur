@@ -102,3 +102,38 @@ def export_cmd(
     click.echo(f"  Ticker: {ticker.upper()}")
     click.echo(f"  Run ID: {run_id}")
 
+
+
+@click.command("verify-pack")
+@click.argument("pack", type=click.Path(exists=True, dir_okay=False))
+def verify_pack_cmd(pack: str) -> None:
+    """Verify an evidence pack's file digests and evidence coverage.
+
+    \b
+    Example:
+      augur export AAPL --format evidence-pack -o aapl.zip
+      augur verify-pack aapl.zip
+    """
+    import zipfile
+
+    from augur.export import verify_evidence_pack
+
+    try:
+        result = verify_evidence_pack(Path(pack))
+    except (ValueError, zipfile.BadZipFile) as e:
+        click.echo(f"Error: {e}", err=True)
+        raise SystemExit(1)
+
+    if not result["has_digests"]:
+        click.echo("Error: this pack predates per-file digests; re-export it to verify.", err=True)
+        raise SystemExit(1)
+    click.echo(f"Run ID: {result['run_id']}")
+    click.echo(f"Files checked: {result['checked']}")
+    for name in result["mismatched"]:
+        click.echo(f"  ✗ digest mismatch: {name}")
+    for ev_id in result["missing_evidence"]:
+        click.echo(f"  ✗ evidence file missing: {ev_id}")
+    if not result["ok"]:
+        click.echo("FAILED: pack contents do not match its manifest.")
+        raise SystemExit(1)
+    click.echo("OK: every file matches the manifest digest.")
