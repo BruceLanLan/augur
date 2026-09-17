@@ -126,17 +126,19 @@ class QuestionQueue:
         """List questions filtered by *ticker* and *status*.
 
         Args:
-            ticker: Instrument ticker (case-insensitive).
+            ticker: Instrument ticker (case-insensitive); empty for all tickers.
             status: Filter by status (default ``"open"``).
 
         Returns:
             Matching questions in insertion order.
         """
-        t = ticker.upper()
+        # An empty ticker means "all tickers": the Thesis Journal page calls
+        # /api/questions/list without one and used to get nothing back.
+        t = (ticker or "").upper()
         return [
             q
             for q in self._questions
-            if q.ticker.upper() == t and q.status == status
+            if (not t or q.ticker.upper() == t) and q.status == status
         ]
 
     def answer(

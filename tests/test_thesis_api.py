@@ -87,3 +87,13 @@ def test_decisions_list_without_ticker_returns_all():
     client = TestClient(app)
     did = client.post("/api/decisions/record", json={"ticker": "LSTALL", "action": "buy", "reasoning": "r"}).json()["decision_id"]
     assert did in {d["decision_id"] for d in client.get("/api/decisions/list").json()["decisions"]}
+
+
+def test_questions_list_without_ticker_returns_all():
+    from fastapi.testclient import TestClient
+
+    from dashboard.app import app
+
+    client = TestClient(app)
+    qid = client.post("/api/questions/add", json={"ticker": "QALL", "question": "Is growth durable?"}).json()["question_id"]
+    assert qid in {q["question_id"] for q in client.get("/api/questions/list").json()["questions"]}
