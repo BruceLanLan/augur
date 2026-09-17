@@ -131,7 +131,24 @@ class ThesisJournal:
     # -- CRUD ---------------------------------------------------------------
 
     def create(self, thesis: Thesis) -> str:
-        """Persist a new thesis and return its ``thesis_id``."""
+        """Persist a new thesis and return its ``thesis_id``.
+
+        A blank ``thesis_id`` / ``created_at`` is filled in. The dashboard API
+        passes blanks; storing them verbatim put every thesis under the key
+        ``""``, so each new thesis replaced the previous one.
+        """
+        now = datetime.now(timezone.utc)
+        if not thesis.created_at:
+            thesis.created_at = now.isoformat()
+        if not thesis.thesis_id:
+            digest = hashlib.sha256(
+                f"{thesis.ticker}|{thesis.statement}|{thesis.created_at}".encode("utf-8")
+            ).hexdigest()
+            thesis_id, n = f"th_{thesis.ticker.upper()}_{digest[:8]}", 1
+            while thesis_id in self._theses:
+                n += 1
+                thesis_id = f"th_{thesis.ticker.upper()}_{digest[:8]}_{n}"
+            thesis.thesis_id = thesis_id
         self._theses[thesis.thesis_id] = thesis
         self.save()
         return thesis.thesis_id

@@ -76,3 +76,20 @@ def test_dashboard_decision_api_no_longer_overwrites_previous_decision():
         for a in ("buy", "hold")
     }
     assert "" not in ids and len(ids) == 2
+
+
+def test_dashboard_thesis_api_generates_ids_and_keeps_every_thesis():
+    """POST /api/thesis/create passed a blank thesis_id, so every thesis was
+    stored under "" and replaced the previous one (found while taking README
+    screenshots: the Thesis Journal page stayed empty after creating one)."""
+    from fastapi.testclient import TestClient
+
+    from dashboard.app import app
+
+    client = TestClient(app)
+    body = {"ticker": "THAPI", "statement": "s", "catalysts": [], "risks": [], "falsification_conditions": []}
+    first = client.post("/api/thesis/create", json={**body, "statement": "first"}).json()["thesis_id"]
+    second = client.post("/api/thesis/create", json={**body, "statement": "second"}).json()["thesis_id"]
+    assert first.startswith("th_THAPI_") and second.startswith("th_THAPI_") and first != second
+    listed = {t["thesis_id"] for t in client.get("/api/thesis/list", params={"ticker": "THAPI"}).json()["theses"]}
+    assert {first, second} <= listed

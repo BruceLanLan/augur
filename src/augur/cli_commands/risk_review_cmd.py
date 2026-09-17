@@ -49,4 +49,13 @@ def risk_review_cmd(ticker, limit, as_json):
             continue
         click.echo(f"\n── {title} ({len(items)}) ──")
         for item in items[:limit]:
-            click.echo(f"  [{item.severity}/{item.category}] {item.description[:160]}")
+            click.echo(f"  [{item.severity}/{item.category}] {_shorten(item.description, 160)}")
+
+
+def _shorten(text: str, limit: int) -> str:
+    """Collapse whitespace and cut at a word boundary with an ellipsis."""
+    flat = " ".join(text.split())
+    if len(flat) <= limit:
+        return flat
+    cut = flat[:limit].rsplit(" ", 1)[0].rstrip(",;:")
+    return cut + "…"
