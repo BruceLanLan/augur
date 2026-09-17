@@ -42,9 +42,26 @@ class ResearchReport:
             lines.append("## Disagreement Map")
             lines.append("")
             dm = self.disagreement
-            lines.append(f"Strength: {dm.get('consensus_strength', 'unknown')}")
+            lines.append(f"Strength: {dm.get('consensus_strength', 'unknown')} · derivation: {dm.get('derivation', 'n/a')}")
+            if dm.get("summary"):
+                lines.append("")
+                lines.append(dm["summary"])
+            lines.append("")
             for cp in dm.get("conflict_points", [])[:5]:
-                lines.append(f"- {cp.get('claim', '')} (impact: {cp.get('impact', '')})")
+                lines.append(f"- **{cp.get('claim', '')}** (impact: {cp.get('impact', '')})")
+                scores = cp.get("persona_scores") or {}
+                if cp.get("bullish_personas"):
+                    lines.append("  - high: " + ", ".join(f"{p} {scores.get(p, '')}".strip() for p in cp["bullish_personas"]))
+                if cp.get("bearish_personas"):
+                    lines.append("  - low: " + ", ".join(f"{p} {scores.get(p, '')}".strip() for p in cp["bearish_personas"]))
+                if cp.get("evidence_supporting"):
+                    lines.append("  - evidence: " + ", ".join(f"`{e}`" for e in cp["evidence_supporting"]))
+                if cp.get("information_that_would_resolve"):
+                    lines.append(f"  - would resolve: {cp['information_that_would_resolve']}")
+            for point in dm.get("agreement_points", []):
+                lines.append(f"- agreement: {point}")
+            for gap in dm.get("evidence_gaps", []):
+                lines.append(f"- evidence gap: {gap}")
             lines.append("")
 
         if self.change_ledger and self.change_ledger.get("entries"):

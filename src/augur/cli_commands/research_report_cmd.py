@@ -22,7 +22,7 @@ def research_report_cmd(ticker, run_id, fmt):
       augur workflow AAPL && augur research-report AAPL
       augur research-report AAPL --format json
     """
-    from augur.disagreement import DisagreementMapBuilder
+    from augur.disagreement import build_disagreement_from_bundle
     from augur.run_tracker import latest_run_id, load_run_bundle_dict
 
     ticker = ticker.upper()
@@ -53,8 +53,7 @@ def research_report_cmd(ticker, run_id, fmt):
 
     disagreement = {}
     if persona_outputs:
-        dm = DisagreementMapBuilder(ticker, run_id).build(persona_outputs)
-        disagreement = dataclasses.asdict(dm)
+        disagreement = dataclasses.asdict(build_disagreement_from_bundle(bundle, ticker, run_id))
 
     coverage = bundle.get("coverage") or {}
     provenance = {

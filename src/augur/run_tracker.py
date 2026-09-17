@@ -128,6 +128,7 @@ class RunTracker:
         # provide their outputs to downstream steps.
         self._checkpoint_state: Dict[str, Any] = {}
         self._run_metadata: Dict[str, Any] = {}
+        self._evidence_coverage: Optional[CoverageStats] = None
 
     # ------------------------------------------------------------------
     # Run lifecycle
@@ -205,6 +206,7 @@ class RunTracker:
         result: Any = None,
         diagnostics: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
+        output_refs: Optional[List[str]] = None,
     ) -> StepResult:
         """Finalise a previously started step.
 
@@ -214,6 +216,7 @@ class RunTracker:
             result: Typed step output (dict, list, number, or bool).
             diagnostics: Error messages or warnings.
             metadata: Arbitrary extra key-value pairs for the step.
+            output_refs: Ids of artifacts the step produced (e.g. evidence ids).
 
         Returns:
             The updated :class:`StepResult`.
@@ -235,6 +238,8 @@ class RunTracker:
                     sr.diagnostics = diagnostics
                 if metadata:
                     sr.metadata.update(metadata)
+                if output_refs is not None:
+                    sr.output_refs = list(output_refs)
                 # Compute content_hash from the result
                 if result is not None:
                     sr.content_hash = hashlib.sha256(
@@ -271,22 +276,27 @@ class RunTracker:
                 "start_run() must be called before finish_run()"
             )
 
-        total = len(self._step_results)
-        covered = sum(
-            1 for sr in self._step_results if sr.status == StepStatus.SUCCESS
-        )
-        degraded = sum(
-            1 for sr in self._step_results if sr.status == StepStatus.DEGRADED
-        )
-        missing = total - covered - degraded
+        if self._evidence_coverage is not None:
+            coverage = self._evidence_coverage
+        else:
+            # No evidence recorded (e.g. a run without a fetch step): fall
+            # back to counting step outcomes, as before.
+            total = len(self._step_results)
+            covered = sum(
+                1 for sr in self._step_results if sr.status == StepStatus.SUCCESS
+            )
+            degraded = sum(
+                1 for sr in self._step_results if sr.status == StepStatus.DEGRADED
+            )
+            missing = total - covered - degraded
 
-        coverage = CoverageStats(
-            total_evidence=total,
-            covered_evidence=covered,
-            missing_evidence=missing,
-            degraded_evidence=degraded,
-            coverage_ratio=(covered / total) if total > 0 else 0.0,
-        )
+            coverage = CoverageStats(
+                total_evidence=total,
+                covered_evidence=covered,
+                missing_evidence=missing,
+                degraded_evidence=degraded,
+                coverage_ratio=(covered / total) if total > 0 else 0.0,
+            )
 
         bundle = RunBundle(
             run_id=self.run_id,
@@ -461,6 +471,25 @@ class RunTracker:
     def get_checkpoint_state(self, key: str, default: Any = None) -> Any:
         """Retrieve a value from the intermediate checkpoint state."""
         return self._checkpoint_state.get(key, default)
+
+    def record_evidence_coverage(self, evidence_items: List[Dict[str, Any]]) -> None:
+        """Compute the bundle's CoverageStats from real evidence items.
+
+        ``missing`` / ``degraded`` flags on each item decide the buckets.
+        Without this the stats counted workflow *steps*, so a run with three
+        successful steps reported "3 evidence items, 100% covered".
+        """
+        total = len(evidence_items)
+        missing = sum(1 for e in evidence_items if e.get("missing"))
+        degraded = sum(1 for e in evidence_items if e.get("degraded") and not e.get("missing"))
+        covered = total - missing - degraded
+        self._evidence_coverage = CoverageStats(
+            total_evidence=total,
+            covered_evidence=covered,
+            missing_evidence=missing,
+            degraded_evidence=degraded,
+            coverage_ratio=(covered / total) if total else 0.0,
+        )
 
     def set_run_metadata(self, key: str, value: Any) -> None:
         """Attach JSON-serialisable run-level metadata to the final RunBundle."""

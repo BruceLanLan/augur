@@ -161,9 +161,24 @@ def run_workflow(
                 if "fetch" in step_list:
                     output["results"]["fetch"] = fetch_result
                 if tracker and sid:
+                    # The bundle keeps the evidence itself (not just the CLI
+                    # summary) so exports, evidence packs and the
+                    # disagreement map can cite real evidence ids.
+                    evidence_items = [
+                        e for e in (getattr(ctx, "evidence_items", None) or [])
+                        if isinstance(e, dict) and e.get("evidence_id")
+                    ]
                     tracker.finish_step(
-                        sid, StepStatus.SUCCESS, result=fetch_result
+                        sid, StepStatus.SUCCESS,
+                        result={
+                            **fetch_result,
+                            "evidence_items": evidence_items,
+                            "field_availability": dict(getattr(ctx, "field_availability", None) or {}),
+                        },
+                        output_refs=[e["evidence_id"] for e in evidence_items],
                     )
+                    if evidence_items:
+                        tracker.record_evidence_coverage(evidence_items)
                     # Persist intermediate state for downstream resume
                     tracker.set_checkpoint_state(
                         "ctx", dataclasses.asdict(ctx)
@@ -271,6 +286,11 @@ def run_workflow(
                             "signal": r.signal.value,
                             "score": r.score,
                             "confidence": r.confidence,
+                            # Per-dimension scores drive the evidence-derived
+                            # disagreement map (augur.disagreement).
+                            "factors": dict((r.metadata or {}).get("factors") or {}),
+                            "key_findings": list(r.key_findings[:3]),
+                            "risks": list(r.risks[:3]),
                         }
                         for aid, r in responses.items()
                     }

@@ -10,70 +10,28 @@ router = APIRouter()
 
 @router.get("/api/disagreement")
 async def get_disagreement(ticker: str = "", run_id: str = "") -> Dict[str, Any]:
-    """Return a DisagreementMap for a ticker.
+    """Return the evidence-derived DisagreementMap for a ticker's run.
 
-    Currently derives from a placeholder persona output set; in production
-    this reads the latest RunBundle for the ticker.
+    Uses ``run_id`` when given, otherwise the newest RunBundle for the ticker.
     """
+    import dataclasses
+
+    from augur.disagreement import build_disagreement_from_bundle
+    from augur.run_tracker import latest_run_id, load_run_bundle_dict
+
     t = ticker.upper()
     if not t:
         raise HTTPException(status_code=400, detail="ticker required")
 
-    # Placeholder: derive from latest run if available
-    from augur.data_dir import get_data_dir
-    import json
-    from pathlib import Path
-
-    runs_dir = get_data_dir() / "runs"
-    latest = None
-    for f in sorted(Path(runs_dir).glob(f"run_{t}_*.json"), reverse=True):
+    rid = run_id or latest_run_id(t)
+    if rid:
         try:
-            latest = json.loads(f.read_text(encoding="utf-8"))
-            break
-        except Exception:
-            continue
+            bundle = load_run_bundle_dict(rid)
+        except (FileNotFoundError, ValueError):
+            raise HTTPException(status_code=404, detail=f"run {rid} not found")
+        return dataclasses.asdict(build_disagreement_from_bundle(bundle, t, rid))
 
-    builder = DisagreementMapBuilder(t, run_id or "latest")
-    if latest:
-        # Extract persona outputs from step results
-        persona_outputs: Dict[str, Dict] = {}
-        for step in latest.get("step_results", []):
-            if step.get("step_name") == "analyze" and isinstance(step.get("result"), dict):
-                for pid, pdata in step["result"].items():
-                    if isinstance(pdata, dict):
-                        persona_outputs[pid] = pdata
-        result = builder.build(persona_outputs)
-        return {
-            "ticker": result.ticker,
-            "run_id": result.run_id,
-            "consensus_strength": result.consensus_strength,
-            "agreement_points": result.agreement_points,
-            "conflict_points": [
-                {
-                    "claim": c.claim,
-                    "bullish_personas": c.bullish_personas,
-                    "bearish_personas": c.bearish_personas,
-                    "abstaining_personas": c.abstaining_personas,
-                    "information_that_would_resolve": c.information_that_would_resolve,
-                    "impact": c.impact,
-                }
-                for c in result.conflict_points
-            ],
-            "silent_personas": result.silent_personas,
-            "summary": result.summary,
-        }
-
-    # Fallback: empty map
-    result = builder.build({})
-    return {
-        "ticker": result.ticker,
-        "run_id": result.run_id,
-        "consensus_strength": result.consensus_strength,
-        "agreement_points": [],
-        "conflict_points": [],
-        "silent_personas": [],
-        "summary": result.summary,
-    }
+    return dataclasses.asdict(DisagreementMapBuilder(t, "").build({}))
 
 
 @router.get("/api/evidence/{evidence_id}")
