@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=68.0", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,15 +7,15 @@ name = "augur-agents"
 version = "11.0.0rc1"
 description = "Multi-agent investment analysis system with 18 investor persona agents, consensus mechanism, and multi-platform deployment"
 readme = "README.md"
-license = {text = "MIT"}
-requires-python = ">=3.8"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.9"
 keywords = ["investment", "multi-agent", "stock-analysis", "ai", "personas", "consensus"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Financial and Insurance Industry",
     "Intended Audience :: Developers",
     "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Natural Language :: Chinese (Simplified)",
     "Operating System :: OS Independent",
@@ -83,7 +83,7 @@ dev = [
     "pytest-asyncio>=0.21",
     "httpx>=0.24",
     "beautifulsoup4>=4.11",
-    "setuptools>=68.0",
+    "setuptools>=77.0",
 ]
 all = [
     "augur-agents[data,mcp,llm,telegram,slack,lark,wechat,cron]",

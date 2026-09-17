@@ -196,7 +196,20 @@ class TestFundamentalsArithmetic:
         assert result["gross_margins"] == pytest.approx(0.5)       # 500/1000
         assert result["operating_margins"] == pytest.approx(0.2)   # 200/1000
         assert result["debt_ratio"] == pytest.approx(0.4375)       # 350/800 (Liabilities/Assets)
-        assert result["market_cap"] == pytest.approx(1000.0)       # 20 * 50
+        # price * shares = 1000 USD; MarketContext.market_cap is in billions.
+        assert result["market_cap"] == pytest.approx(1000.0 / 1e9)
+
+    def test_market_cap_is_reported_in_billions_of_usd(self):
+        """Regression: EDGAR used to return raw USD (price * shares), so the
+        live overlay replaced yfinance's billions with a value 1e9x too large
+        and every persona threshold on market_cap / fcf_yield misfired."""
+        facts = self._two_period_facts()
+        for record in facts["facts"]["us-gaap"]["CommonStockSharesOutstanding"]["units"]["USD"]:
+            record["val"] = 15e9
+        with _patch_client_facts(facts):
+            result = ef.fetch_edgar_fundamentals("TEST", "2023-04-01", price=200.0)
+
+        assert result["market_cap"] == pytest.approx(3000.0)  # $3,000B
 
     def test_yoy_growth_uses_two_as_of_available_periods_only(self):
         facts = self._two_period_facts()

@@ -1,4 +1,5 @@
-.PHONY: install install-full install-mcp dev test test-fast run serve mcp api skills-gen skills-list docker-build docker-up docker-down docker-full docker-mcp clean lint format release-check help watch build test-wheel test-sdist quality hermetic-test
+.PHONY: install install-full install-mcp dev test test-fast run serve mcp api skills-gen skills-list docker-build docker-up docker-down docker-full docker-mcp clean lint format release-check help watch build test-wheel test-sdist quality hermetic-test verify
+SHELL := /bin/bash
 
 PYTHON  ?= python3
 PORT    ?= 8000
@@ -49,8 +50,20 @@ skills-list:       ## List available agent skills
 test:              ## Run full test suite
 	pytest tests/ -v
 
-test-fast:         ## Run tests (skip slow network tests)
-	pytest tests/ -q --ignore=tests/test_analyze_api_v12.py
+test-fast:         ## Run tests quietly (the suite is hermetic; no network needed)
+	pytest tests/ -q
+
+verify:            ## One-shot evidence for README numbers: tests, lint, build digests
+	@set -o pipefail; \
+	echo "== augur $(VERSION) @ $$(git rev-parse --short HEAD 2>/dev/null || echo no-git)"; \
+	echo "== python: $$($(PYTHON) --version 2>&1)"; \
+	echo "== tests"; \
+	$(PYTHON) -m pytest tests/ -q --tb=short -p no:cacheprovider 2>&1 | tail -1; \
+	echo "== lint"; \
+	$(PYTHON) -m ruff check src/; \
+	echo "== build"; \
+	rm -rf dist/ && $(PYTHON) -m build --outdir dist/ >/dev/null && \
+	( command -v sha256sum >/dev/null && sha256sum dist/* || shasum -a 256 dist/* )
 
 ## ── Hermetic Build & Quality ─────────────────────────────────────────────────
 
@@ -156,8 +169,8 @@ docker-mcp:        ## Run MCP server in Docker (stdio passthrough)
 
 release-check:     ## Pre-release checklist
 	@echo "Version: $(VERSION)"
-	@$(PYTHON) -m pytest tests/ -q --ignore=tests/test_analyze_api_v12.py --tb=no 2>&1 | tail -3
-	@echo "Skills: $$(ls skills/ | wc -l | tr -d ' ') skill directories"
+	@$(PYTHON) -m pytest tests/ -q --tb=no 2>&1 | tail -3
+	@echo "Skills: $$(ls src/skills/ | wc -l | tr -d ' ') skill directories"
 	@echo "Personas: $$(ls src/augur/personas/*.py | grep -v __init__ | wc -l | tr -d ' ') persona files"
 
 ## ── Cleanup ──────────────────────────────────────────────────────────────────
@@ -174,8 +187,8 @@ clean:
 	find . -type f \( -name '*.pyc' -o -name '*.pyo' -o -name '.coverage' \) -delete 2>/dev/null || true
 	@echo "Clean ✓"
 
-lint:              ## Run ruff linter (install with: pip install ruff)
-	@command -v ruff &>/dev/null && ruff check src/ || echo "Install ruff: pip install ruff"
+lint:              ## Run ruff linter (pip install "ruff>=0.16,<0.17"); fails if ruff is missing
+	$(PYTHON) -m ruff check src/
 
 format:            ## Run ruff formatter
 	@command -v ruff &>/dev/null && ruff format src/ || echo "Install ruff: pip install ruff"

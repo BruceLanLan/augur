@@ -648,9 +648,14 @@ def fetch_edgar_fundamentals(
             else 0.0
         )
 
-        # --- Market cap ---
+        # --- Market cap, in billions of USD (MarketContext's unit, the same
+        # one YFinanceProvider produces and every persona threshold assumes).
+        # This used to be raw USD, which made the live overlay and historical
+        # replay report a market cap 1e9x too large. ---
         result["market_cap"] = (
-            price * shares_outstanding if shares_outstanding and shares_outstanding > 0 else 0.0
+            price * shares_outstanding / 1e9
+            if shares_outstanding and shares_outstanding > 0
+            else 0.0
         )
 
         return result

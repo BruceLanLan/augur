@@ -36,14 +36,14 @@ class TestOverlayAppliesEdgarFields:
         edgar_result = {
             "pe": 25.5, "pb": 38.0, "roe": 1.5, "gross_margins": 0.47,
             "operating_margins": 0.32, "revenue_growth": 0.06,
-            "earnings_growth": 0.19, "debt_ratio": 0.79, "market_cap": 2800000.0,
+            "earnings_growth": 0.19, "debt_ratio": 0.79, "market_cap": 2800.0,
         }
         with patch.object(edgar_fundamentals, "fetch_edgar_fundamentals", return_value=edgar_result):
             data._overlay_edgar_fundamentals(ctx)
 
         assert ctx.pe == pytest.approx(25.5)
         assert ctx.roe == pytest.approx(1.5)
-        assert ctx.market_cap == pytest.approx(2800000.0)
+        assert ctx.market_cap == pytest.approx(2800.0)
         assert getattr(ctx, "fundamentals_source", None) == "edgar"
 
     def test_zero_edgar_fields_leave_yfinance_value_untouched(self):
