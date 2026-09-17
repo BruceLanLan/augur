@@ -7,6 +7,7 @@ name = "augur-agents"
 version = "11.0.0rc1"
 description = "Multi-agent investment analysis system with 18 investor persona agents, consensus mechanism, and multi-platform deployment"
 readme = "README.md"
+authors = [{ name = "BruceLanLan" }]
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.9"

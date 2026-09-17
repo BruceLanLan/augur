@@ -270,7 +270,7 @@ v10：Bloomberg 风格终端 + 工作流 + MCP 工具 · v9：Hermes Agent + 委
 
 <div align="center">
 
-MIT License · 维护者 [@BruceBlue](https://x.com/BruceBlue)
+MIT License · 作者 [BruceLanLan](https://github.com/BruceLanLan)（X：[@BruceBlue](https://x.com/BruceBlue)）
 
 *仅供学习研究，不构成投资建议*
 

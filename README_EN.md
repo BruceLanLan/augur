@@ -268,7 +268,7 @@ v10: Bloomberg-style terminal + workflows + MCP tools · v9: Hermes Agent + comm
 
 <div align="center">
 
-MIT License · Maintained by [@BruceBlue](https://x.com/BruceBlue)
+MIT License · Created by [BruceLanLan](https://github.com/BruceLanLan) (X: [@BruceBlue](https://x.com/BruceBlue))
 
 *For research and education only. Not investment advice.*
 
