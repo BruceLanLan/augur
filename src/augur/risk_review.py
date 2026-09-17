@@ -766,3 +766,123 @@ class CovenantReviewer:
                     return "deteriorating"
 
         return "stable"
+
+
+# ---------------------------------------------------------------------------
+# SEC EDGAR source: the two most recent 10-K risk-factor sections
+# ---------------------------------------------------------------------------
+
+_RISK_SECTION_START = r"Item\s+1A\.?"
+_RISK_SECTION_ENDS = (r"Item\s+1B\.?", r"Item\s+1C\.?", r"Item\s+2\.?")
+
+
+def _filing_html_to_text(html: str) -> str:
+    """Convert filing HTML to text with one blank line between blocks.
+
+    Inline markup (``<span>``, ``<sup>®</sup>``…) must not break lines, and
+    block elements must: RiskReviewer splits risks on blank lines.
+    """
+    import html as _html
+
+    text = re.sub(r"(?is)<(script|style)\b.*?</\1>", " ", html)
+    text = re.sub(r"(?i)<br\s*/?>", "\n", text)
+    text = re.sub(r"(?i)</(p|div|li|tr|table|h[1-6])\s*>", "\n\n", text)
+    text = re.sub(r"(?s)<[^>]+>", "", text)
+    text = _html.unescape(text).replace("\xa0", " ")
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r" *\n *", "\n", text)
+    return re.sub(r"\n{3,}", "\n\n", text).strip()
+
+
+def extract_risk_factor_section(text: str) -> str:
+    """Return the body of Item 1A.
+
+    Filings mention "Item 1A." in the table of contents and in
+    cross-references as well as at the real heading. For each "Item 1B/1C/2"
+    boundary take the *closest* preceding "Item 1A" (so a cross-reference in
+    Item 1 cannot swallow the whole business section), then keep the longest
+    such span — table-of-contents pairs are only a line apart.
+    """
+    starts = [m.start() for m in re.finditer(_RISK_SECTION_START, text, re.IGNORECASE)]
+    ends = sorted(m.start() for pat in _RISK_SECTION_ENDS for m in re.finditer(pat, text, re.IGNORECASE))
+    best = (0, 0)
+    for end in ends:
+        start = max((s_ for s_ in starts if s_ < end), default=None)
+        if start is not None and end - start > best[1] - best[0]:
+            best = (start, end)
+    return text[best[0]:best[1]].strip()
+
+
+def group_risk_paragraphs(section: str) -> str:
+    """Merge each risk heading with the body paragraphs that follow it.
+
+    10-K risk factors are a short heading sentence (no terminal period, or a
+    one-line summary) followed by one or more body paragraphs. Returns the
+    section with exactly one blank line between complete risk factors.
+    """
+    # Running page headers/footers ("Apple Inc. | 2025 Form 10-K | 6") and
+    # bare page numbers leak into the text between blocks; left in, they
+    # differ by year and show up as spurious new/removed risks.
+    footer = re.compile(r"(?i)^[^\n]{0,80}\|\s*(19|20)\d\d\s+form\s+10-k\s*\|\s*\d+\s*|^\d{1,3}$")
+    paragraphs = []
+    for p in section.split("\n\n"):
+        lines = [ln for ln in p.split("\n") if ln.strip() and not footer.match(ln.strip())]
+        p = footer.sub("", " ".join(lines)).strip()
+        if p:
+            paragraphs.append(p)
+    if not paragraphs:
+        return ""
+    if re.match(r"(?i)item\s+1a", paragraphs[0]):
+        paragraphs = paragraphs[1:]
+    flat = [" ".join(p.split()) for p in paragraphs]
+    groups: List[List[str]] = []
+    for i, para in enumerate(flat):
+        nxt = flat[i + 1] if i + 1 < len(flat) else ""
+        sentences = len(re.findall(r"[.!?](\s|$)", para))
+        # A heading is one short statement introducing a longer body.
+        is_heading = bool(nxt) and len(para) <= 350 and sentences <= 2 and len(para) < len(nxt)
+        if is_heading or not groups:
+            groups.append([para])
+        else:
+            groups[-1].append(para)
+    # A heading with no body is a sub-section title ("Macroeconomic and
+    # Industry Risks"), not a risk factor.
+    return "\n\n".join(" ".join(g) for g in groups if len(g) > 1 or len(g[0]) > 400)
+
+
+def fetch_10k_risk_sections(ticker: str, client=None) -> Dict[str, str]:
+    """Fetch Item 1A from the two most recent 10-K filings on SEC EDGAR.
+
+    Returns ``{"new_text", "prev_text", "new_accession", "new_filed",
+    "prev_accession", "prev_filed"}``; ``prev_*`` are empty when only one
+    10-K exists. Raises ``LookupError`` when nothing usable is found.
+    """
+    if client is None:
+        from augur.consensus.edgar_fundamentals import _get_client
+
+        client = _get_client()
+    cik = client.get_cik(ticker)
+    if cik is None:
+        raise LookupError(f"{ticker.upper()} has no SEC CIK (non-US listing or not an XBRL filer)")
+    submissions = client.get_submissions(cik) or {}
+    try:
+        recent = submissions["filings"]["recent"]
+        rows = list(zip(recent["form"], recent["accessionNumber"], recent["primaryDocument"], recent["filingDate"]))
+    except (KeyError, TypeError):
+        raise LookupError(f"could not read SEC submissions for {ticker.upper()}")
+    tenks = [r for r in rows if r[0] == "10-K"][:2]
+    if not tenks:
+        raise LookupError(f"no 10-K filings found for {ticker.upper()}")
+
+    sections = []
+    for _form, accession, document, filed in tenks:
+        html = client.get_filing_document(cik, accession, document)
+        section = group_risk_paragraphs(extract_risk_factor_section(_filing_html_to_text(html))) if html else ""
+        sections.append((section, accession, filed))
+    if not sections[0][0]:
+        raise LookupError(f"could not locate Item 1A in {ticker.upper()} 10-K {tenks[0][1]}")
+    prev = sections[1] if len(sections) > 1 else ("", "", "")
+    return {
+        "new_text": sections[0][0], "new_accession": sections[0][1], "new_filed": sections[0][2],
+        "prev_text": prev[0], "prev_accession": prev[1], "prev_filed": prev[2],
+    }
