@@ -56,11 +56,51 @@ class TestDossierCmd:
 
 
 class TestLedgerCmd:
-    def test_ledger(self, runner):
+    """ledger compares two saved runs (it used to print a placeholder for any input)."""
+
+    @pytest.fixture
+    def two_runs(self, monkeypatch, tmp_path):
+        import augur.data as data_module
+        from augur.datasources.base import DataProvider
+        from augur.workflow import run_workflow
+
+        values = {"pe": 20.0}
+
+        class _Provider(DataProvider):
+            name = "mock_ledger"
+
+            def fetch(self, ticker):
+                return {"data_source": "mock_ledger", "price": 100.0, "pe": values["pe"], "roe": 0.2,
+                        "gross_margins": 0.4, "debt_ratio": 0.3}
+
+        monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path / "augur_data"))
+        monkeypatch.setenv("AUGUR_SKIP_MACRO_FETCH", "1")
+        monkeypatch.setattr(data_module, "_get_providers", lambda: [_Provider()])
+        data_module.clear_cache()
+        first = run_workflow("TEST", steps="fetch,analyze,consensus")
+        values["pe"] = 40.0
+        data_module.clear_cache()  # fetch_market_context caches contexts for 3 minutes
+        second = run_workflow("TEST", steps="fetch,analyze,consensus")
+        return first["run_id"], second["run_id"]
+
+    def test_ledger_defaults_to_two_latest_runs(self, runner, two_runs):
         from augur.cli_commands.ledger_cmd import ledger_cmd
+        result = runner.invoke(ledger_cmd, ["TEST"])
+        assert result.exit_code == 0, result.output
+        assert f"{two_runs[0]}" in result.output and f"{two_runs[1]}" in result.output
+        assert "pe: 20" in result.output and "40" in result.output
+
+    def test_ledger_explicit_runs(self, runner, two_runs):
+        from augur.cli_commands.ledger_cmd import ledger_cmd
+        result = runner.invoke(ledger_cmd, ["TEST", two_runs[0], two_runs[1]])
+        assert result.exit_code == 0, result.output
+
+    def test_ledger_without_runs_explains(self, runner, monkeypatch, tmp_path):
+        from augur.cli_commands.ledger_cmd import ledger_cmd
+        monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path / "empty"))
         result = runner.invoke(ledger_cmd, ["TEST", "Q3_2025", "Q4_2025"])
-        assert result.exit_code == 0
-        assert "Change Ledger" in result.output
+        assert result.exit_code == 1
+        assert "no saved analysed run" in result.output
 
 
 class TestEarningsCmd:

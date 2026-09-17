@@ -506,3 +506,18 @@ def test_run_bundle_full_round_trip():
     # Verify the run_id matches the expected pattern
     import re
     assert re.match(r"^run_[A-Z0-9_.-]+_\d{8}T\d{6}_[a-f0-9]{8}$", run_id)
+
+
+def test_identical_runs_in_the_same_second_get_distinct_ids(tmp_path, monkeypatch):
+    """run_ids have one-second resolution; the second of two identical runs used to overwrite the first."""
+    monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path / "data"))
+    ids = set()
+    for _ in range(3):
+        t = RunTracker(ticker="DUP")
+        t.start_run(input_snapshot_hash="a" * 64)
+        sid = t.start_step("noop")
+        t.finish_step(sid, StepStatus.SUCCESS, result={"ok": True})
+        t.finish_run()
+        ids.add(t.run_id)
+    assert len(ids) == 3
+    assert len(list((tmp_path / "data" / "runs").glob("run_DUP_*.json"))) == 3

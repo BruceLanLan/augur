@@ -82,8 +82,11 @@ def test_workflow_resumes_from_checkpoint_with_live_evidence(live_provider, monk
     from augur.data_dir import get_data_dir
     from augur.workflow import run_workflow
 
+    import time
+
     first = run_workflow("AAPL", steps="fetch,analyze,consensus")
     ckpt = Path(get_data_dir()) / "checkpoints" / f"{first['run_id']}.checkpoint.json"
+    time.sleep(1.1)  # run ids have one-second resolution; resuming must not mint a new one
 
     # A resumed run must not refetch: make any provider call fail loudly.
     def _no_network():

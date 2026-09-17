@@ -165,9 +165,8 @@ augur workflow AAPL --steps fetch,analyze,consensus,committee
 # Export report
 augur export AAPL --format md
 
-# Pre-earnings dossier (what the earnings-prep skill describes; a generic
-# skill runner is not implemented yet)
-augur dossier AAPL
+# Run a built-in skill (pre-earnings dossier with evidence-derived disagreement)
+augur skill run earnings-prep AAPL
 
 # Valuation
 augur valuation AAPL

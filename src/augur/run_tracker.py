@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -76,6 +76,10 @@ def _json_default(obj: Any) -> Any:
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
+
+#: run_ids handed out in this process (a run is only on disk once finished).
+_ISSUED_RUN_IDS: Set[str] = set()
 
 
 class RunTracker:
@@ -148,7 +152,9 @@ class RunTracker:
         Returns:
             The generated ``run_id``.
         """
-        self.created_at = datetime.now(timezone.utc)
+        resumed = self.run_id is not None and self.created_at is not None
+        if not resumed:
+            self.created_at = datetime.now(timezone.utc)
         self.input_snapshot_hash = input_snapshot_hash or hashlib.sha256(
             b""
         ).hexdigest()
@@ -164,9 +170,21 @@ class RunTracker:
         manifest_hash = hashlib.sha256(
             self.manifest.model_dump_json(exclude_none=True).encode("utf-8")
         ).hexdigest()
-        self.run_id = generate_run_id(
-            self.ticker, self.created_at, manifest_hash
-        )
+        if resumed:
+            # A tracker restored from a checkpoint keeps its run_id and
+            # created_at; regenerating them split one run into two bundles.
+            return self.run_id
+
+        # run_ids have one-second resolution. Two identical runs in the same
+        # second produced the same id and the second bundle overwrote the
+        # first, so step the timestamp until the id is unused.
+        run_id = generate_run_id(self.ticker, self.created_at, manifest_hash)
+        data_dir = get_data_dir()
+        while (data_dir / "runs" / f"{run_id}.json").exists() or run_id in _ISSUED_RUN_IDS:
+            self.created_at += timedelta(seconds=1)
+            run_id = generate_run_id(self.ticker, self.created_at, manifest_hash)
+        _ISSUED_RUN_IDS.add(run_id)
+        self.run_id = run_id
         return self.run_id
 
     # ------------------------------------------------------------------

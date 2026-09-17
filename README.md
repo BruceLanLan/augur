@@ -65,6 +65,7 @@ augur research-report AAPL         # 基于最近一次运行：共识、分歧�
 augur export AAPL --format md      # 导出最近一次运行（md / json / evidence-pack / pdf）
 augur committee AAPL --preset value -q "护城河是在变宽还是变窄？"
 augur valuation AAPL               # 两阶段 DCF，自动取 FCF/股本/净负债并注明来源
+augur skill run earnings-prep AAPL # 内置研究 Skill：财报前 dossier（另有 filing-delta 等 3 个）
 ```
 
 没有网络？`augur analyze NVDA --pe 60 --roe 0.45` 可以手动传指标；`augur backtest AAPL --demo` 使用离线合成数据。
@@ -127,7 +128,7 @@ augur valuation AAPL               # 两阶段 DCF，自动取 FCF/股本/净负
 
 ## 🔌 接入 Claude / Agent
 
-MCP server 提供 13 个工具、7 个研究 prompt、5 类只读资源（`augur://evidence/{id}`、`augur://runs/{id}`、`augur://thesis/{id}`、`augur://decisions/{id}`、`augur://ledger/{ticker}/{quarter}`），在 `mcp` 1.x 与 2.x 下都经过真实 stdio 会话验证。
+MCP server 提供 14 个工具（含 `augur_run_skill` 执行内置 Skill）、7 个研究 prompt、5 类只读资源（`augur://evidence/{id}`、`augur://runs/{id}`、`augur://thesis/{id}`、`augur://decisions/{id}`、`augur://ledger/{ticker}/{quarter}`），在 `mcp` 1.x 与 2.x 下都经过真实 stdio 会话验证。
 
 ```bash
 pip install -e ".[data,mcp]"
@@ -157,22 +158,38 @@ augur committee NVDA --agents buffett,munger,dalio
 augur batch AAPL MSFT NVDA
 
 # 研究产物
-augur research-report AAPL [--format json]
+augur research-report AAPL [--format json]      # 共识 + 证据化分歧图 + 来源与耗时
 augur export AAPL --format md|json|evidence-pack|pdf [-o 路径] [--run-id ...]
-augur dossier AAPL                  # 财报前 dossier
+augur verify-pack pack.zip                      # 校验证据包每个文件的 SHA-256
+augur dossier AAPL                              # 财报前 dossier
 augur valuation AAPL [--fcf 100e9 --shares 15e9 --growth 0.08 --wacc 0.10]
+augur risk-review AAPL                          # 最近两份 10-K 的风险因素新增/删除/措辞升级
 augur filing-delta AAPL --new q3.json --prev q2.json
 
+# 内置研究 Skill（执行前检查权限，结果存为 RunBundle）
+augur skill list · augur skill show filing-delta
+augur skill run earnings-prep|filing-delta|debt-covenant-review|insider-cluster-review AAPL
+
+# 评估（基于 augur backtest 生成的回测记录）
+augur backtest AAPL --days 120 [--demo] · augur ic-report
+augur eval personas AAPL [--horizon 20]         # 共识 IC、命中率、逐个剔除大师的边际贡献
+augur eval factors AAPL                         # 每位大师分数作为因子的 IC、t 值、p 值
+
+# 研究记录
+augur decisions list|resolve|report             # 决策结果与胜率
+augur comments add|list|resolve                 # 对运行 / 论点 / 决策 / 证据的评论
+augur citations report|list|accept|reject|fixed # 引用纠错队列
+augur audit [--action ...]                      # 审计日志
+
 # 数据
-augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30
-augur backtest AAPL --days 60 [--demo] · augur ic-report · augur doctor
+augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30 · augur doctor
 
 # 监控与服务
 augur watch AAPL NVDA --interval 60 · augur watchlist-add AAPL · augur cron-run
 augur serve [--port 8000] · augur mcp-server · augur skills
 ```
 
-`augur --help` 列出全部 39 个子命令。
+`augur --help` 列出全部 47 个子命令。
 
 ---
 
@@ -183,9 +200,9 @@ augur serve [--port 8000] · augur mcp-server · augur skills
 | 状态 | 范围 |
 |---|---|
 | **稳定** | 18 位大师分析与共识、CLI 研究闭环（上面实测过的命令）、Dashboard 主要页面、MCP server、RunBundle 与导出、数据源链（yfinance → SEC EDGAR 覆盖） |
-| **可用但有限制** | 分歧图的"冲突点"是按信号分布套用模板生成的通用表述，不是逐条证据推导；`augur guidance` 需要设 `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` 且会调用付费 LLM；PDF 导出需要 `[export]` 额外依赖 |
+| **可用，有明确边界** | 4 个内置 Skill（只运行内置清单；债务约束默认用参考阈值而非信贷协议条款；财报日期来自本地日历文件）；分歧图（按大师的分维度评分推导并引用证据，维度到指标的映射是固定表）；`augur risk-review`（规则匹配，措辞小改可能同时显示为"新增"和"删除"）；`augur eval`（单只股票的时间序列 IC，远期收益重叠，显著性偏乐观，只作筛查）；`augur guidance`（需 `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1`，会调用付费 LLM）；PDF 导出（需 `[export]`） |
 | **实验（默认关闭）** | rolling-IC 动态权重（`AUGUR_FORCE_RIC=1`）、学习权重（`AUGUR_FORCE_LEARNED=1`）——都还没有通过预注册的样本外验证 |
-| **仅库代码，尚无用户入口** | `citation_queue`、`cost_budget`、`eval_lab`、`outcome_tracker`、`pack_digest`、`prompt_eval`、`review_comment`、`risk_review`、`team_audit`；Skill 执行器（Skill 清单与权限校验已实现，但没有 `augur skill run`，见 [docs/skills-guide.md](docs/skills-guide.md)） |
+| **尚未实现** | `augur ledger` 仍是占位输出；运行记录中的 token 用量未计量（只记录耗时） |
 
 ---
 
