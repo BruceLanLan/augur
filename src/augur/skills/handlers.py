@@ -270,11 +270,11 @@ def review_covenants(inputs: Dict[str, Any], upstream: Dict[str, Dict[str, Any]]
 
 def read_form4(inputs: Dict[str, Any], upstream: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
     """Open-market Form 4 transactions for the trailing 90 days."""
-    from augur.cli_commands.insider_cmd import _fetch_insider_trades
+    from augur.ownership import fetch_insider_trades
     from augur.schemas.evidence import generate_evidence_id
 
     ticker = inputs["ticker"].upper()
-    trades = _fetch_insider_trades(ticker)
+    trades = fetch_insider_trades(ticker)
     now = datetime.now(timezone.utc).isoformat()
     evidence = []
     for t in trades:

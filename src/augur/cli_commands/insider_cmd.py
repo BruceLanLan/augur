@@ -6,46 +6,16 @@ Displays a 90-day insider trading summary with cluster detection.
 
 from __future__ import annotations
 
-from datetime import datetime
-
 import click
 
+from augur import ownership
 from augur.cli_format import format_table
 from augur.ownership import InsiderAnalyzer, InsiderCluster, InsiderTrade
 
 
 def _fetch_insider_trades(ticker: str) -> list[InsiderTrade]:
-    """Fetch open-market insider trades for *ticker* from EDGAR (trailing 90 days).
-
-    Returns an empty list on any fetch/parse failure — the CLI prints a
-    notice rather than crashing.
-    """
-    try:
-        from augur.consensus.edgar_insider import _fetch_form4_transactions
-    except ImportError:
-        return []
-
-    # Use today as the as-of date for the CLI
-    as_of_date = datetime.now().strftime("%Y-%m-%d")
-    raw_trades = _fetch_form4_transactions(ticker.upper(), as_of_date)
-
-    trades: list[InsiderTrade] = []
-    for t in raw_trades:
-        shares = t.get("shares", 0) or 0
-        price = t.get("price", 0) or 0
-        code = t.get("code", "")
-        trade_type = "buy" if code == "P" else "sell"
-        trades.append(InsiderTrade(
-            ticker=ticker.upper(),
-            person=t.get("reporting_owner_cik", "Unknown"),
-            role="",
-            transaction_date=t.get("transaction_date", ""),
-            type=trade_type,
-            shares=float(shares),
-            price=float(price),
-            value=float(shares) * float(price),
-        ))
-    return trades
+    """Backward-compatible alias for :func:`augur.ownership.fetch_insider_trades`."""
+    return ownership.fetch_insider_trades(ticker)
 
 
 def _format_trades_table(trades: list[InsiderTrade]) -> str:

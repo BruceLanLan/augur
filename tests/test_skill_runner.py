@@ -108,11 +108,11 @@ def test_covenant_review_labels_reference_thresholds_and_missing_inputs(offline)
 
 
 def test_insider_cluster_review(offline, monkeypatch):
-    import augur.cli_commands.insider_cmd as insider_cmd
+    import augur.ownership as ownership
     from augur.ownership import InsiderTrade
 
     trades = [InsiderTrade("AAPL", f"cik{i}", "", "2026-09-01", "sell", 1000.0, 200.0, 200000.0) for i in range(3)]
-    monkeypatch.setattr(insider_cmd, "_fetch_insider_trades", lambda ticker: trades)
+    monkeypatch.setattr(ownership, "fetch_insider_trades", lambda ticker, as_of_date=None: trades)
 
     result = run_skill("insider-cluster-review", {"ticker": "AAPL"})
     assert result.status == "success", result.error

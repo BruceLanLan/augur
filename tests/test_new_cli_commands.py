@@ -95,12 +95,36 @@ class TestLedgerCmd:
         result = runner.invoke(ledger_cmd, ["TEST", two_runs[0], two_runs[1]])
         assert result.exit_code == 0, result.output
 
+    def test_ledger_same_quarter_summary_names_run_dates(self, runner, two_runs):
+        import re
+
+        from augur.cli_commands.ledger_cmd import ledger_cmd
+        result = runner.invoke(ledger_cmd, ["TEST"])
+        assert result.exit_code == 0, result.output
+        header = re.search(r"\((\d{4}-\d{2}-\d{2})\) → \S+ \((\d{4}-\d{2}-\d{2})\)", result.output)
+        assert header, result.output
+        assert re.search(rf"between runs on {header.group(1)} and {header.group(2)} \(both Q[1-4]_\d{{4}}\)",
+                         result.output), result.output
+
     def test_ledger_without_runs_explains(self, runner, monkeypatch, tmp_path):
         from augur.cli_commands.ledger_cmd import ledger_cmd
         monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path / "empty"))
         result = runner.invoke(ledger_cmd, ["TEST", "Q3_2025", "Q4_2025"])
         assert result.exit_code == 1
         assert "no saved analysed run" in result.output
+
+
+class TestInsiderCmd:
+    def test_uses_library_fetch(self, runner, monkeypatch):
+        import augur.ownership as ownership
+        from augur.cli_commands.insider_cmd import insider_cmd
+        from augur.ownership import InsiderTrade
+
+        trades = [InsiderTrade("TEST", f"cik{i}", "", "2026-09-01", "buy", 100.0, 10.0, 1000.0) for i in range(3)]
+        monkeypatch.setattr(ownership, "fetch_insider_trades", lambda ticker, as_of_date=None: trades)
+        result = runner.invoke(insider_cmd, ["TEST"])
+        assert result.exit_code == 0, result.output
+        assert "cik2" in result.output
 
 
 class TestEarningsCmd:

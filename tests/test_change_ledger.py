@@ -304,6 +304,21 @@ class TestChangeLedgerBuilderBuild:
 
         assert "changes" in ledger.summary
 
+    def test_build_same_quarter_summary_uses_run_dates(self):
+        prev = {"date": "2026-09-10", "metrics": {"revenue": 100.0}}
+        new = {"date": "2026-09-17", "metrics": {"revenue": 120.0}}
+        ledger = ChangeLedgerBuilder.build(prev, new, "TEST")
+        assert ledger.from_quarter == ledger.to_quarter == "Q3_2026"
+        assert "between runs on 2026-09-10 and 2026-09-17 (both Q3_2026):" in ledger.summary
+
+        empty = ChangeLedgerBuilder.build(prev, dict(prev, date="2026-09-17"), "TEST")
+        assert empty.summary == "No changes detected for TEST between runs on 2026-09-10 and 2026-09-17 (both Q3_2026)."
+
+    def test_build_different_quarters_summary_uses_quarters(self):
+        prev = {"date": "2026-06-10", "metrics": {"revenue": 100.0}}
+        new = {"date": "2026-09-17", "metrics": {"revenue": 120.0}}
+        assert "between Q2_2026 and Q3_2026:" in ChangeLedgerBuilder.build(prev, new, "TEST").summary
+
     def test_build_quarter_inferred_from_filing_date(self):
         prev = {"filing_date": "2025-08-01", "metrics": {"revenue": 100.0}}
         new = {"filing_date": "2025-11-01", "metrics": {"revenue": 120.0}}

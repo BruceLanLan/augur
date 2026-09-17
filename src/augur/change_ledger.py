@@ -208,7 +208,8 @@ class ChangeLedgerBuilder:
             entry.entry_id = f"{ticker}_{to_quarter}_{entry.category}_{i + 1:03d}"
 
         summary = ChangeLedgerBuilder._summarize(
-            ticker, from_quarter, to_quarter, entries
+            ticker, from_quarter, to_quarter, entries,
+            span=ChangeLedgerBuilder._same_quarter_span(prev_run, new_run, from_quarter, to_quarter),
         )
         return ChangeLedger(
             ticker=ticker,
@@ -429,21 +430,28 @@ class ChangeLedgerBuilder:
         from_quarter: str,
         to_quarter: str,
         entries: List[LedgerEntry],
+        span: str = "",
     ) -> str:
+        kind = "" if span else "cross-quarter "
+        span = span or f"{from_quarter or '—'} and {to_quarter or '—'}"
         if not entries:
-            return (
-                f"No cross-quarter changes detected for {ticker} "
-                f"between {from_quarter or '—'} and {to_quarter or '—'}."
-            )
+            return f"No {kind}changes detected for {ticker} between {span}."
         material_count = sum(1 for e in entries if e.material)
         counts = Counter(e.category for e in entries)
         parts = ", ".join(
             f"{n} {cat}" for cat, n in sorted(counts.items())
         )
-        return (
-            f"{len(entries)} changes ({material_count} material) between "
-            f"{from_quarter or '—'} and {to_quarter or '—'}: {parts}."
-        )
+        return f"{len(entries)} changes ({material_count} material) between {span}: {parts}."
+
+    @staticmethod
+    def _same_quarter_span(prev_run: dict, new_run: dict, from_quarter: str, to_quarter: str) -> str:
+        """Date-based span for two runs in the same quarter; empty otherwise."""
+        if not from_quarter or from_quarter != to_quarter:
+            return ""
+        dates = [str(r.get("filing_date") or r.get("date") or "")[:10] for r in (prev_run, new_run)]
+        if not all(dates):
+            return ""
+        return f"runs on {dates[0]} and {dates[1]} (both {from_quarter})"
 
     @staticmethod
     def _extract_quarter(run: dict) -> str:

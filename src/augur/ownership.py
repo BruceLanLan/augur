@@ -16,7 +16,8 @@ C06: Institutional Ownership Delta
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List
+from datetime import datetime
+from typing import Dict, List, Optional
 
 
 # ============================================================================
@@ -148,6 +149,36 @@ class InsiderAnalyzer:
         net = buy_value - sell_value
         sentiment = net / total_value
         return round(max(-1.0, min(1.0, sentiment)), 4)
+
+
+def fetch_insider_trades(ticker: str, as_of_date: Optional[str] = None) -> List[InsiderTrade]:
+    """Fetch open-market (P/S) Form 4 trades for *ticker* from EDGAR.
+
+    Covers the trailing 90 days ending at *as_of_date* (``YYYY-MM-DD``,
+    default today). Returns an empty list on any fetch/parse failure.
+    """
+    try:
+        from augur.consensus.edgar_insider import _fetch_form4_transactions
+    except ImportError:
+        return []
+
+    ticker = ticker.upper()
+    as_of_date = as_of_date or datetime.now().strftime("%Y-%m-%d")
+    trades: List[InsiderTrade] = []
+    for t in _fetch_form4_transactions(ticker, as_of_date):
+        shares = float(t.get("shares", 0) or 0)
+        price = float(t.get("price", 0) or 0)
+        trades.append(InsiderTrade(
+            ticker=ticker,
+            person=t.get("reporting_owner_cik", "Unknown"),
+            role="",
+            transaction_date=t.get("transaction_date", ""),
+            type="buy" if t.get("code", "") == "P" else "sell",
+            shares=shares,
+            price=price,
+            value=shares * price,
+        ))
+    return trades
 
 
 # ============================================================================

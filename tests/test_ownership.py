@@ -456,3 +456,26 @@ class TestOwnershipAnalyzerTopHolders:
         analyzer = OwnershipAnalyzer()
         top = analyzer.top_holders(prev_positions, limit=50)
         assert len(top) == len(prev_positions)  # all returned
+
+
+class TestFetchInsiderTrades:
+    def test_maps_form4_rows_and_passes_as_of_date(self, monkeypatch):
+        import augur.consensus.edgar_insider as edgar_insider
+        from augur.ownership import fetch_insider_trades
+
+        calls = []
+
+        def fake(ticker, as_of_date):
+            calls.append((ticker, as_of_date))
+            return [
+                {"reporting_owner_cik": "0001", "transaction_date": "2026-09-01", "code": "P", "shares": 10, "price": 5.0},
+                {"reporting_owner_cik": "0002", "transaction_date": "2026-09-02", "code": "S", "shares": None, "price": 7.0},
+            ]
+
+        monkeypatch.setattr(edgar_insider, "_fetch_form4_transactions", fake)
+        trades = fetch_insider_trades("aapl", "2026-09-10")
+        assert calls == [("AAPL", "2026-09-10")]
+        assert [(t.ticker, t.person, t.type, t.value) for t in trades] == [
+            ("AAPL", "0001", "buy", 50.0),
+            ("AAPL", "0002", "sell", 0.0),
+        ]
