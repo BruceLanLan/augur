@@ -670,7 +670,14 @@ pre {{ background: #f4f4f8; padding: 16px; border-radius: 6px; overflow-x: auto;
         elif fmt_lower == "pdf":
             return self.to_pdf(bundle, output_path)
         elif fmt_lower in ("evidence-pack", "evidence_pack", "evidencepack"):
-            return self.export_evidence_pack(bundle, output_path.parent)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            pack = self.export_evidence_pack(bundle, output_path.parent)
+            # Honour the caller's file name (`augur export -o pack.zip`); the
+            # pack itself is named after the run id.
+            target = output_path.with_suffix(".zip")
+            if pack.resolve() != target.resolve():
+                pack.replace(target)
+            return target
         else:
             raise ValueError(
                 f"Unknown export format: {fmt!r}. "

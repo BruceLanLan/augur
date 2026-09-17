@@ -71,14 +71,35 @@ class TestEarningsCmd:
 
 
 class TestResearchReportCmd:
-    def test_research_report(self, runner):
+    """research-report reads a saved run (it used to print an empty shell)."""
+
+    @pytest.fixture
+    def seeded_run(self, monkeypatch, tmp_path):
+        import augur.data as data_module
+        from augur.datasources.base import DataProvider
+        from augur.workflow import run_workflow
+
+        class _Provider(DataProvider):
+            name = "mock_report"
+
+            def fetch(self, ticker):
+                return {"data_source": "mock_report", "price": 100.0, "pe": 18.0, "roe": 0.2}
+
+        monkeypatch.setenv("AUGUR_DATA_DIR", str(tmp_path / "augur_data"))
+        monkeypatch.setenv("AUGUR_SKIP_MACRO_FETCH", "1")
+        monkeypatch.setattr(data_module, "_get_providers", lambda: [_Provider()])
+        return run_workflow("TEST", steps="fetch,analyze,consensus")
+
+    def test_research_report(self, runner, seeded_run):
         from augur.cli_commands.research_report_cmd import research_report_cmd
         result = runner.invoke(research_report_cmd, ["TEST"])
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert "Research Report" in result.output
+        assert seeded_run["run_id"] in result.output
 
-    def test_research_report_json(self, runner):
+    def test_research_report_json(self, runner, seeded_run):
         from augur.cli_commands.research_report_cmd import research_report_cmd
         result = runner.invoke(research_report_cmd, ["TEST", "--format", "json"])
-        assert result.exit_code == 0
+        assert result.exit_code == 0, result.output
         assert '"ticker"' in result.output
+        assert seeded_run["run_id"] in result.output

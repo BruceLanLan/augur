@@ -42,12 +42,27 @@ def run_earnings_dossier(ticker: str, event_id: str = "", as_of: str = "", outpu
         pass
 
     # Persona disagreement
+    sections.append("── Disagreement ──")
     try:
-        # Placeholder — would use latest RunBundle persona outputs
-        sections.append("── Disagreement ──")
-        sections.append("  (run analysis for full disagreement map)")
-    except Exception:
-        pass
+        from augur.disagreement import DisagreementMapBuilder
+        from augur.run_tracker import latest_run_id, load_run_bundle_dict
+
+        run_id = latest_run_id(ticker)
+        persona_outputs = {}
+        if run_id:
+            steps = {sr.get("step_name"): sr for sr in load_run_bundle_dict(run_id).get("step_results", [])}
+            persona_outputs = (steps.get("analyze") or {}).get("result") or {}
+        if persona_outputs:
+            dm = DisagreementMapBuilder(ticker, run_id).build(persona_outputs)
+            sections.append(f"  From run {run_id}: consensus strength {dm.consensus_strength}")
+            for cp in dm.conflict_points[:3]:
+                sections.append(
+                    f"  • {cp.claim} — bulls: {len(cp.bullish_personas)}, bears: {len(cp.bearish_personas)}"
+                )
+        else:
+            sections.append(f"  No saved run yet — run `augur workflow {ticker.upper()}` first.")
+    except Exception as e:  # keep the dossier usable even if a run is unreadable
+        sections.append(f"  (disagreement unavailable: {e})")
 
     # Open questions
     try:

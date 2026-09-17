@@ -64,3 +64,46 @@ def test_export_without_any_run_explains_next_step(offline_provider):
 
     assert result.exit_code == 1
     assert "augur workflow NVDA" in result.output
+
+
+def test_research_report_uses_latest_run(offline_provider):
+    """`augur research-report` used to call ResearchReportBuilder().build(ticker)
+    with no inputs, so it always printed only a title."""
+    from augur.workflow import run_workflow
+
+    latest = run_workflow("AAPL", steps="fetch,analyze,consensus")
+    result = CliRunner().invoke(_cli(), ["research-report", "AAPL"])
+
+    assert result.exit_code == 0, result.output
+    assert "## Consensus" in result.output
+    assert "## Disagreement Map" in result.output
+    assert "## Provenance" in result.output
+    assert latest["run_id"] in result.output
+
+
+def test_research_report_without_any_run_explains_next_step(offline_provider):
+    result = CliRunner().invoke(_cli(), ["research-report", "NVDA"])
+
+    assert result.exit_code == 1
+    assert "augur workflow NVDA" in result.output
+
+
+def test_evidence_pack_honours_output_path(offline_provider, tmp_path):
+    from augur.workflow import run_workflow
+
+    run_workflow("AAPL", steps="fetch,analyze,consensus")
+    target = tmp_path / "out" / "pack.zip"
+    result = CliRunner().invoke(_cli(), ["export", "AAPL", "--format", "evidence-pack", "-o", str(target)])
+
+    assert result.exit_code == 0, result.output
+    assert target.exists()
+
+
+def test_dossier_shows_disagreement_from_latest_run(offline_provider):
+    from augur.workflow import run_workflow
+
+    latest = run_workflow("AAPL", steps="fetch,analyze,consensus")
+    result = CliRunner().invoke(_cli(), ["dossier", "AAPL"])
+
+    assert result.exit_code == 0, result.output
+    assert f"From run {latest['run_id']}" in result.output

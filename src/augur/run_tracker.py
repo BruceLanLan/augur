@@ -468,3 +468,32 @@ class RunTracker:
     def step_results(self) -> List[StepResult]:
         """Read-only view of accumulated step results."""
         return list(self._step_results)
+
+
+def latest_run_id(ticker: str) -> Optional[str]:
+    """Return the newest persisted RunBundle id for ``ticker``, if any.
+
+    Bundles live in ``get_data_dir() / "runs"``; the newest is chosen by the
+    bundle's own ``created_at`` (ties broken by run id).
+    """
+    runs_dir = get_data_dir() / "runs"
+    if not runs_dir.is_dir():
+        return None
+    best: Optional[tuple] = None
+    for path in runs_dir.glob("*.json"):
+        try:
+            bundle = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        if str(bundle.get("metadata", {}).get("ticker", "")).upper() != ticker.upper():
+            continue
+        key = (str(bundle.get("created_at", "")), str(bundle.get("run_id", path.stem)))
+        if best is None or key > best:
+            best = key
+    return best[1] if best else None
+
+
+def load_run_bundle_dict(run_id: str) -> Dict[str, Any]:
+    """Load a persisted RunBundle as a plain dict (raises FileNotFoundError)."""
+    path = get_data_dir() / "runs" / f"{run_id}.json"
+    return json.loads(path.read_text(encoding="utf-8"))

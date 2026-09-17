@@ -57,7 +57,9 @@ def export_cmd(
     from augur.export import ReportExporter
 
     if run_id is None:
-        run_id = _latest_run_id(ticker)
+        from augur.run_tracker import latest_run_id
+
+        run_id = latest_run_id(ticker)
         if run_id is None:
             click.echo(
                 f"Error: no saved runs for {ticker.upper()}. "
@@ -100,25 +102,3 @@ def export_cmd(
     click.echo(f"  Ticker: {ticker.upper()}")
     click.echo(f"  Run ID: {run_id}")
 
-
-def _latest_run_id(ticker: str) -> str | None:
-    """Return the newest RunBundle id recorded for ``ticker``, if any."""
-    import json
-
-    from augur.data_dir import get_data_dir
-
-    runs_dir = get_data_dir() / "runs"
-    if not runs_dir.is_dir():
-        return None
-    best: tuple[str, str] | None = None
-    for path in runs_dir.glob("*.json"):
-        try:
-            bundle = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            continue
-        if str(bundle.get("metadata", {}).get("ticker", "")).upper() != ticker.upper():
-            continue
-        key = (str(bundle.get("created_at", "")), str(bundle.get("run_id", path.stem)))
-        if best is None or key > best:
-            best = key
-    return best[1] if best else None
