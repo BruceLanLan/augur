@@ -626,8 +626,9 @@ function loadDossier(ticker, idx, tab) {
   fetch('/api/earnings/dossier/' + ticker)
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.status !== 'ok' || !data.dossier) {
-        panel.innerHTML = '<p style="color:var(--text-muted);padding:12px;">No dossier data available.</p>';
+      if (!data || data.status !== 'ok' || !data.dossier) {
+        panel.innerHTML = '<p style="color:var(--text-muted);padding:12px;">No dossier data available.' +
+          ((data && data.reason) ? ' ' + escapeHtml(String(data.reason)) : '') + '</p>';
         return;
       }
       panel.innerHTML = renderDossierContent(data.dossier);
@@ -638,65 +639,21 @@ function loadDossier(ticker, idx, tab) {
 }
 
 function renderDossierContent(d) {
-  var s = d.sections;
+  // Sections come from the CLI dossier builder: [{title, lines: [..]}]
+  var sections = Array.isArray(d.sections) ? d.sections : [];
   var html = '';
-
-  // Guidance
-  if (s.guidance) {
-    html += '<div class="eq-section"><div class="eq-section-title">📈 ' + escapeHtml(s.guidance.title) + '</div>';
-    html += '<div class="eq-kpi-grid">';
-    (s.guidance.items || []).forEach(function(item) {
-      html += '<div class="eq-kpi-item"><div class="eq-kpi-label">' + escapeHtml(item.label) + '</div><div class="eq-kpi-value">' + escapeHtml(item.value) + '</div></div>';
-    });
-    html += '</div></div>';
-  }
-
-  // KPI
-  if (s.kpi) {
-    html += '<div class="eq-section"><div class="eq-section-title">📊 ' + escapeHtml(s.kpi.title) + '</div>';
-    html += '<div class="eq-kpi-grid">';
-    (s.kpi.items || []).forEach(function(item) {
-      html += '<div class="eq-kpi-item"><div class="eq-kpi-label">' + escapeHtml(item.label) + '</div><div class="eq-kpi-value">' + escapeHtml(item.value) + '</div></div>';
-    });
-    html += '</div></div>';
-  }
-
-  // Risks
-  if (s.risks) {
-    html += '<div class="eq-section"><div class="eq-section-title">⚠️ ' + escapeHtml(s.risks.title) + '</div>';
+  sections.forEach(function(sec) {
+    html += '<div class="eq-section"><div class="eq-section-title">' + escapeHtml(sec.title || '') + '</div>';
     html += '<ul class="eq-item-list">';
-    (s.risks.items || []).forEach(function(r) {
-      html += '<li>' + escapeHtml(r) + '</li>';
+    (sec.lines || []).forEach(function(line) {
+      html += '<li>' + escapeHtml(String(line)) + '</li>';
     });
     html += '</ul></div>';
+  });
+  if (d.run_id) {
+    html += '<p style="color:var(--text-muted);padding:0 12px 12px;font-size:12px;">Run: ' + escapeHtml(String(d.run_id)) + '</p>';
   }
-
-  // Persona Divergence
-  if (s.persona_divergence) {
-    html += '<div class="eq-section"><div class="eq-section-title">🎭 ' + escapeHtml(s.persona_divergence.title) + '</div>';
-    html += '<div class="md-table-wrap"><table class="eq-divergence-table"><thead><tr><th>Topic</th><th>🐂 Bulls</th><th>🐻 Bears</th><th>😐 Neutral</th></tr></thead><tbody>';
-    (s.persona_divergence.items || []).forEach(function(row) {
-      html += '<tr>' +
-        '<td class="topic-cell">' + escapeHtml(row.topic) + '</td>' +
-        '<td>' + escapeHtml((row.bulls || []).join(', ')) + '</td>' +
-        '<td>' + escapeHtml((row.bears || []).join(', ')) + '</td>' +
-        '<td>' + escapeHtml((row.neutrals || []).join(', ')) + '</td>' +
-        '</tr>';
-    });
-    html += '</tbody></table></div></div>';
-  }
-
-  // Pending Questions
-  if (s.pending_questions) {
-    html += '<div class="eq-section"><div class="eq-section-title">❓ ' + escapeHtml(s.pending_questions.title) + '</div>';
-    html += '<ul class="eq-item-list">';
-    (s.pending_questions.items || []).forEach(function(q) {
-      html += '<li>' + escapeHtml(q) + '</li>';
-    });
-    html += '</ul></div>';
-  }
-
-  return html || '<p style="color:var(--text-muted);padding:12px;">Dossier sections are being populated. Run the earnings-prep Skill to generate content.</p>';
+  return html || '<p style="color:var(--text-muted);padding:12px;">No dossier data available.</p>';
 }
 
 function loadScorecard(ticker, idx, tab) {
@@ -708,8 +665,9 @@ function loadScorecard(ticker, idx, tab) {
   fetch('/api/earnings/scorecard/' + ticker)
     .then(function(r) { return r.json(); })
     .then(function(data) {
-      if (data.status !== 'ok' || !data.scorecard) {
-        panel.innerHTML = '<p style="color:var(--text-muted);padding:12px;">No scorecard data available.</p>';
+      if (!data || data.status !== 'ok' || !data.scorecard) {
+        panel.innerHTML = '<p style="color:var(--text-muted);padding:12px;">No scorecard data available.' +
+          ((data && data.reason) ? ' ' + escapeHtml(String(data.reason)) : '') + '</p>';
         return;
       }
       panel.innerHTML = renderScorecardContent(data.scorecard);

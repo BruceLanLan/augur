@@ -69,7 +69,7 @@ function loadScorecard() {
   var ticker = document.getElementById('sc-ticker').value.toUpperCase();
   if (!ticker) return;
   document.getElementById('sc-result').innerHTML = '<div class="spinner spinner-center spinner-lg"></div>';
-  fetch('/api/scorecard?ticker=' + ticker)
+  fetch('/api/scorecard?ticker=' + encodeURIComponent(ticker))
     .then(r => r.json())
     .then(renderScorecard)
     .catch(function() {
@@ -78,8 +78,9 @@ function loadScorecard() {
 }
 
 function renderScorecard(data) {
-  if (!data || !data.items || data.items.length === 0) {
-    document.getElementById('sc-result').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">No scorecard data available</div><div class="empty-state-desc">Run a pre-event analysis first, then come back after earnings.</div></div>';
+  if (!data || data.status !== 'ok' || !data.items || data.items.length === 0) {
+    var desc = (data && data.reason) ? String(data.reason) : 'Run a pre-event analysis first, then come back after earnings.';
+    document.getElementById('sc-result').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">No scorecard data available</div><div class="empty-state-desc">' + escapeHtml(desc) + '</div></div>';
     return;
   }
   var html = '<div class="sc-summary">'
