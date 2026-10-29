@@ -4,6 +4,8 @@
 
 本文档介绍如何为投资分析Skill集成实时数据API，覆盖股票行情、财务数据、期权数据、13F持仓等。
 
+> **注意**：第一至六节是早期设计阶段的独立示例代码（未必与 `src/augur/` 的实际实现一致）；**当前实际的 provider 链、环境变量、缓存与 EDGAR 行为见第七、八、九节**。
+
 ---
 
 ## 一、推荐API方案
@@ -77,7 +79,7 @@ def get_overview(symbol):
 ```python
 import requests
 
-# 获取公司13F持仓（机构持仓）
+# 获取公司 XBRL 财务事实（companyfacts，注意：这不是13F持仓，13F需解析 type=13F 的 filing）
 def get_13f_filings(cik):
     url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
     headers = {"User-Agent": "Your Name your@email.com"}
@@ -85,7 +87,7 @@ def get_13f_filings(cik):
 
 # 获取最新13F
 def get_latest_13f(cik):
-    url = f"https://data.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=13F&owner=include&count=1"
+    url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=13F&owner=include&count=1"
     return requests.get(url, headers={"User-Agent": "Your Name your@email.com"}).text
 
 # 搜索公司CIK
@@ -135,8 +137,7 @@ def get_earnings_calendar(from_date, to_date):
 # Crunchbase API (需要付费，但有免费tier)
 # https://data.crunchbase.com/docs
 
-# 替代：使用公开的VC数据API
-# Airbnb API: https://api.airbnb.com (需要申请)
+# 替代：使用其他公开的VC数据API（本项目未接入）
 ```
 
 ---
@@ -289,7 +290,7 @@ def get_13f_holdings(company_name_or_cik):
         cik = company_name_or_cik
 
     # 获取最新的13F filing
-    filings_url = f"https://data.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=13F&count=1"
+    filings_url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=13F&count=1"
     headers = {"User-Agent": "Your Name your@email.com", "Accept-Encoding": "gzip, deflate"}
     response = requests.get(filings_url, headers=headers)
 
@@ -545,13 +546,13 @@ python investment_analysis_tool.py
 
 ## 七、2026-07-11 现状更新：实际实现 vs 本文档设计
 
-本文档写于早期设计阶段，示例代码是独立函数风格；实际落地在 `src/augur/datasources/` 里演化成了统一的 `DataProvider` 抽象基类 + provider 链模式（`default_providers()` 按 yfinance → finnhub(需key) → alphavantage(需key) → stooq 顺序尝试，任一源失败自动降级到下一个）。这是调研过 OpenBB 等开源金融数据项目后确认的行业标准做法（fallback chain + 按已配置 key 动态组装），不是本项目自创，说明当前架构方向是对的。
+本文档写于早期设计阶段，示例代码是独立函数风格；实际落地在 `src/augur/datasources/` 里演化成了统一的 `DataProvider` 抽象基类 + provider 链模式（`default_providers()` 按 yfinance → finnhub(需key) → alphavantage(需key) → stooq 顺序尝试；`data.py` 的 `_build_context_from_providers` 取**第一个成功返回非空数据的 provider**，抛异常或返回空则降级到下一个，不做多源合并；全部失败返回 `data_source="none"` 的空 MarketContext 并附 `data_error`）。这是调研过 OpenBB 等开源金融数据项目后确认的行业标准做法（fallback chain + 按已配置 key 动态组装），不是本项目自创，说明当前架构方向是对的。
 
 **已确认的现状变化（2026-07-11 实测，非猜测）**：
 
 - **Stooq 已失效**：`/q/l/` 报价端点对任意 symbol 返回 404，`/q/d/l/` 历史端点返回反爬虫 JS 挑战页。二者都是 stooq 一侧的变更（详见 `stooq_provider.py` 里的记录），保留它在链尾成本为零但目前不起作用。
 - **本地开发环境的 yfinance TLS 问题已定位并修复**：`.venv` 此前用 macOS CommandLineTools 自带的 python3.9（链接 Apple LibreSSL 2.8.3），导致 yfinance 底层的 `curl_cffi`（用于 TLS 指纹伪装绕过反爬）报 `SSLError: invalid library`。这不是 augur 的代码 bug，是本机开发环境的 Python 构建链问题——之前几次 CHANGELOG 里"working around this environment's unrelated broken yfinance/curl_cffi TLS issue"说的就是这个。用 homebrew 的 python3.12（链接真 OpenSSL 3.6.3）重建 `.venv` 后，真实 `yfinance.Ticker("AAPL").info` 调用恢复正常（验证返回 `currentPrice=315.32`）。旧 venv 备份在 `.venv.old-libressl-backup/`（未纳入 git，本机专属，未来确认无需回退可删）。
-- **代码层面无需改动即可接入 Finnhub/Alpha Vantage**：`src/augur/datasources/__init__.py` 的 `default_providers()` 已经是"配了 key 就自动加入链"的设计，用户只需在 `.env` 或 Settings 页填 `FINNHUB_API_KEY`（免费 tier 60 req/min，覆盖面最广）/`ALPHAVANTAGE_API_KEY`（免费 tier 仅 25 req/day，做兜底备选）即可生效，不需要额外开发。
+- **代码层面无需改动即可接入 Finnhub/Alpha Vantage**：`src/augur/datasources/__init__.py` 的 `default_providers()` 已经是"配了 key 就自动加入链"的设计，用户只需设置环境变量 `FINNHUB_API_KEY`（免费 tier 60 req/min，覆盖面最广）/`ALPHAVANTAGE_API_KEY`（免费 tier 仅 25 req/day，做兜底备选）即可生效，不需要额外开发。注意：provider 链只读进程环境变量（`is_configured()` 检查 `os.environ`），`src/` 内没有 `.env` 加载逻辑，需自行 `export` 或由进程管理器注入；Dashboard Settings 页保存的 `datasource_keys` 目前只用于「测试连接」，不会让 key 进入 provider 链。
 
 **调研到的、当前未接入的候选数据源**（供未来评估，均未验证，只是列出选项）：
 
@@ -564,3 +565,38 @@ python investment_analysis_tool.py
 IEX Cloud 已于 2024 年 8 月停止服务，网上仍有旧推荐信息，不要采信。
 
 *本节为本机开发环境排障 + 数据源现状核对记录，不改变本文档第一至六节的原始设计方案。*
+
+---
+
+## 八、环境变量与缓存（2026-10 核对 `src/`）
+
+| 变量 | 作用 | 默认 |
+|------|------|------|
+| `FINNHUB_API_KEY` | 非空即把 Finnhub 加入 provider 链 | 未设置 = 不加入 |
+| `ALPHAVANTAGE_API_KEY` | 非空即把 Alpha Vantage 加入 provider 链 | 未设置 = 不加入 |
+| `AUGUR_EDGAR_CONTACT_EMAIL` | SEC EDGAR `User-Agent`（`augur-agents (<email>)`）中的联系邮箱 | 未设置时用占位邮箱 `augur-agents-user@example.com` 并告警一次；长期用占位邮箱有被 SEC 限流/封 IP 的风险 |
+| `AUGUR_DATA_DIR` | 数据根目录，EDGAR 缓存、`earnings_calendar.json` 都在其下 | `~/.augur` |
+| `AUGUR_EDGAR_GUIDANCE_EXTRACTION` | 设为 `1`/`true`/`yes` 开启 EDGAR 指引文本抽取 | 关闭 |
+| `AUGUR_WATCHLIST_FETCH_DELAY` | 定时任务逐个抓取 watchlist 的间隔（秒） | `3.0` |
+
+**缓存**：
+
+- 行情/基本面：`data.py` 进程内内存缓存，TTL **180 秒**，上限 100 条（超出后按时间戳淘汰到 80 条）；`clear_cache()` 清空，`reset_providers_cache()` 重建 provider 链。
+- EDGAR（落盘，目录 `<data dir>/edgar_cache/`，默认 `~/.augur/edgar_cache/`）：`company_tickers.json`（ticker→CIK 映射）TTL **7 天**；每个 CIK 的 companyfacts 与 `submissions_<cik>.json` TTL **24 小时**；若重新抓取失败，`get_submissions` 会退回旧缓存文件。
+
+**EDGAR 行为**（`src/augur/consensus/edgar_fundamentals.py`）：令牌桶限速 **10 req/s**（SEC 公开上限）；HTTP 超时 15 秒；瞬时网络错误重试 1 次，HTTP 4xx 不重试；CIK 映射来自 `https://www.sec.gov/files/company_tickers.json`，companyfacts / submissions 来自 `data.sec.gov`。
+
+## 九、SEC 8-K Item 2.02 财报日回填
+
+`src/augur/earnings_calendar.py` 用来填充 `<data dir>/earnings_calendar.json`（`augur earnings` 与 watchlist 财报队列读取的日历）。
+
+- **读取什么**：通过上面的 EDGAR 客户端（CIK 查询、User-Agent、限速、磁盘缓存全部复用）取每个 ticker 的 submissions，筛选 form 为 `8-K` / `8-K/A` 且 `items` 含 `2.02`（"Results of Operations and Financial Condition"）、申报日不晚于今天的记录，作为**历史财报日**（`confidence: "historical"`，`source: "sec_8k_2.02"`，带 `accession`）。
+- **估计日期**：至少 2 个历史事件时，取最近至多 4 个申报间隔的中位数天数，加到最近一次申报日上，生成**至多一个**下次财报日，标记 `confidence: "estimated"`、`source: "estimated_from_8k_cadence"`。它来自申报节奏，不是公司公告，永远不会标为 `confirmed`。
+- **合并规则**：同 ticker 同日期已存在的条目优先，只补缺失日期，不覆盖用户手写内容；仅在确有新增时才原子写文件。日历文件无法解析时中止回填（拒绝覆盖）。单个 ticker 的抓取失败只记录在报告里，不中断其他 ticker。
+- **命令**：`augur earnings --backfill`（不带 `-t` 时对 watchlist 全部 ticker；可用 `-t AAPL -t MSFT` 指定）。输出每个 ticker 新增条数及其中估计条数。
+
+```bash
+export AUGUR_EDGAR_CONTACT_EMAIL=you@example.com
+augur earnings --backfill -t AAPL -t MSFT
+augur earnings --days 30
+```

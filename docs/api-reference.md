@@ -24,31 +24,43 @@ Run a full multi-agent analysis for a given ticker. All 18 persona agents evalua
 | Name | Type | Location | Description |
 |------|------|----------|-------------|
 | ticker | string | path | Stock ticker symbol (e.g., AAPL, NVDA, 0700.HK) |
+| auto_fetch | bool | query | Default `true`: fetch live market data via the provider chain; the query parameters below override/supply fields manually |
+| price, pe, pb, revenue_growth, gross_margins, operating_margins, roe, debt_ratio, fcf, market_cap, institutional_ownership, insider_ownership, current_ratio, earnings_growth | float | query | Optional manual metrics (default `0`) |
+| sector, industry | string | query | Optional (default `""`) |
 
 **Response / 响应:**
 ```json
 {
+  "status": "ok",
   "ticker": "AAPL",
-  "signal": "BUY",
-  "score": 7.2,
-  "kelly_position": 0.15,
-  "confidence": 0.82,
+  "timestamp": "2026-07-19T09:30:00Z",
+  "data_source": "yfinance",
+  "market_data": {
+    "price": 210.0, "pe": 32.0, "pb": 45.0, "roe": 1.5,
+    "gross_margins": 0.46, "sector": "Technology", "industry": "Consumer Electronics",
+    "business_summary": "...", "market_cap": 3200000000000, "fcf": 99000000000,
+    "revenue_growth": 0.05, "debt_ratio": 1.2
+  },
+  "consensus": {
+    "agent_id": "...", "agent_name": "...", "signal": "bullish", "confidence": 0.82,
+    "score": 7.2, "reasoning": "...", "key_findings": [], "risks": [],
+    "timestamp": "2026-07-19 09:30", "metadata": {}, "risk_adjusted_score": 0,
+    "alpha": 0, "beta": 1.0, "coverage_confidence": 1.0
+  },
+  "divergence": null,
   "agents": [
     {
-      "id": "buffett",
-      "name": "Warren Buffett",
-      "signal": "BUY",
-      "score": 8,
-      "reasoning": "..."
+      "agent_id": "buffett", "agent_name": "Warren Buffett",
+      "signal": "bullish", "confidence": 0.8, "score": 8.0, "reasoning": "...",
+      "key_findings": [], "risks": [], "timestamp": "2026-07-19 09:30", "metadata": {},
+      "risk_adjusted_score": 0, "alpha": 0, "beta": 1.0, "coverage_confidence": 1.0
     }
   ],
-  "consensus": {
-    "buy_count": 12,
-    "sell_count": 3,
-    "hold_count": 3
-  }
+  "agent_count": 18
 }
 ```
+
+`signal` is one of `bullish` / `neutral` / `bearish` / `error` (lowercase). `score` is 0-10, `confidence` 0-1. The `consensus` object uses the same shape as an agent entry (it is an `AgentResponse`). On fetch failure `data_error` is added (or `data_note` when falling back to the supplied parameters); `provenance` is added when available.
 
 ---
 
@@ -1124,8 +1136,10 @@ Basic health check endpoint.
 
 **Response / 响应:**
 ```json
-{"status": "ok"}
+{"status": "ok", "agents": 18}
 ```
+
+`agents` 为已注册 persona 数量 / number of registered personas.
 
 ---
 
@@ -1141,10 +1155,13 @@ Extended health check with system details including datasource reachability, cac
 {
   "status": "ok",
   "agents": 18,
-  "datasources": {"yfinance": "available", "finnhub": "configured"},
-  "cache": {"entries": 42, "hit_rate": 0.85},
+  "datasources": [
+    {"name": "yfinance", "reachable": true},
+    {"name": "stooq", "reachable": true}
+  ],
+  "cache": {"size": 42, "ttl_seconds": 180, "expired_count": 3, "active_count": 39},
   "uptime_seconds": 3600.5,
-  "version": "7.5.0"
+  "version": "7.8.3"
 }
 ```
 
@@ -1160,11 +1177,14 @@ List available and configured data sources.
 **Response / 响应:**
 ```json
 {
-  "datasources": [
-    {"name": "yfinance", "status": "active", "description": "Yahoo Finance (free)"},
-    {"name": "finnhub", "status": "configured", "description": "Finnhub API (requires key)"},
-    {"name": "alpha_vantage", "status": "not_configured", "description": "Alpha Vantage (requires key)"}
-  ]
+  "status": "ok",
+  "active_chain": ["yfinance", "finnhub", "stooq"],
+  "catalog": {
+    "yfinance": {"label": "Yahoo Finance", "needs_key": false, "coverage": "行情+基本面+技术指标", "active": true},
+    "finnhub": {"label": "Finnhub", "needs_key": true, "coverage": "基本面+分析师评级", "active": true, "env": "FINNHUB_API_KEY"},
+    "alphavantage": {"label": "Alpha Vantage", "needs_key": true, "coverage": "基本面 OVERVIEW", "active": false, "env": "ALPHAVANTAGE_API_KEY"},
+    "stooq": {"label": "Stooq", "needs_key": false, "coverage": "行情兜底 (CSV)", "active": true}
+  }
 }
 ```
 
@@ -1194,11 +1214,8 @@ Get cache statistics and status.
 **Response / 响应:**
 ```json
 {
-  "entries": 42,
-  "total_size_kb": 256,
-  "hit_rate": 0.85,
-  "oldest_entry_age_seconds": 1800,
-  "ttl_seconds": 3600
+  "status": "ok",
+  "cache": {"size": 42, "ttl_seconds": 180}
 }
 ```
 
@@ -1334,6 +1351,8 @@ CORS is enabled by default (allow all origins). Configure allowed origins via en
 export AUGUR_CORS_ORIGINS="https://myapp.com,https://dashboard.myapp.com"
 ```
 
+The standalone `augur.api` app also accepts the deprecated `AUGUR_CORS_ALLOW_ORIGINS` as a fallback when `AUGUR_CORS_ORIGINS` is unset.
+
 ---
 
 ## Error Format / 错误格式
@@ -1344,10 +1363,16 @@ All error responses follow a consistent format:
 
 ```json
 {
+  "status": "error",
   "detail": "Error message describing what went wrong",
-  "status_code": 404
+  "suggestion": "Actionable hint",
+  "code": "NOT_FOUND",
+  "timestamp": "2026-07-19T09:30:00Z",
+  "path": "/api/fetch/XXXX"
 }
 ```
+
+`code` is a stable machine-readable code (e.g. `INVALID_REQUEST`, `AUTH_REQUIRED`, `FORBIDDEN`, `NOT_FOUND`, `RATE_LIMITED`, `INTERNAL_ERROR`; unmapped statuses use `HTTP_<status>`). Browser page requests receive an HTML error page instead.
 
 Common status codes / 常见状态码:
 - `400` - Bad Request (invalid ticker format, missing parameters)

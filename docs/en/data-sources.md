@@ -4,6 +4,8 @@ English | [中文](data-sources.md)
 
 This document describes how to integrate real-time data APIs for investment analysis Skills, covering stock quotes, financial data, options data, 13F holdings, and more.
 
+> **Note**: Sections 1-6 are early-stage design examples (standalone code that does not necessarily match `src/augur/`). **The actual provider chain, environment variables, caches and EDGAR behavior are in Sections 7-9.**
+
 ---
 
 ## 1. Recommended API Options
@@ -77,7 +79,7 @@ def get_overview(symbol):
 ```python
 import requests
 
-# Get 13F holdings (institutional positions)
+# Get XBRL company facts (companyfacts; NOTE: this is not 13F holdings -- 13F requires parsing type=13F filings)
 def get_13f_filings(cik):
     url = f"https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
     headers = {"User-Agent": "Your Name your@email.com"}
@@ -85,7 +87,7 @@ def get_13f_filings(cik):
 
 # Get latest 13F
 def get_latest_13f(cik):
-    url = f"https://data.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=13F&owner=include&count=1"
+    url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=13F&owner=include&count=1"
     return requests.get(url, headers={"User-Agent": "Your Name your@email.com"}).text
 
 # Search company CIK
@@ -135,8 +137,7 @@ def get_earnings_calendar(from_date, to_date):
 # Crunchbase API (paid, but has a free tier)
 # https://data.crunchbase.com/docs
 
-# Alternative: Use public VC data APIs
-# Airbnb API: https://api.airbnb.com (requires application)
+# Alternative: other public VC data APIs (not integrated in this project)
 ```
 
 ---
@@ -290,7 +291,7 @@ def get_13f_holdings(company_name_or_cik):
         cik = company_name_or_cik
 
     # Get latest 13F filing
-    filings_url = f"https://data.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=13F&count=1"
+    filings_url = f"https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK={cik}&type=13F&count=1"
     headers = {"User-Agent": "Your Name your@email.com", "Accept-Encoding": "gzip, deflate"}
     response = requests.get(filings_url, headers=headers)
 
@@ -541,6 +542,51 @@ python investment_analysis_tool.py
 | Finnhub | Yes | Yes | Yes | Yes | No | Free tier |
 | Bloomberg | Yes | Yes | Yes | Yes | Yes | Paid |
 | Wind | Yes | Yes | Yes | Yes | Yes | Paid |
+
+---
+
+## 7. Current State: Actual Implementation vs This Document's Design
+
+Sections 1-6 were written during early design. The implementation in `src/augur/datasources/` evolved into a `DataProvider` abstract base class plus a provider chain. `default_providers()` builds the chain in this order: yfinance, then finnhub (only if `FINNHUB_API_KEY` is set), then alphavantage (only if `ALPHAVANTAGE_API_KEY` is set), then stooq. `_build_context_from_providers` in `data.py` uses the **first provider that returns non-empty data**; a provider that raises or returns empty is skipped and the next one is tried. Results are not merged across providers. If all fail, an empty `MarketContext` with `data_source="none"` and a `data_error` message is returned.
+
+- **Stooq is currently broken**: the `/q/l/` quote endpoint returns HTTP 404 for any symbol and the `/q/d/l/` history endpoint serves an anti-bot JS challenge (see `stooq_provider.py`). It stays at the end of the chain at no cost, but does not currently return data.
+- **Local dev environment (yfinance TLS)**: a `.venv` built on the macOS CommandLineTools python3.9 (Apple LibreSSL 2.8.3) makes yfinance's `curl_cffi` fail with `SSLError: invalid library`. This is a local toolchain issue, not an augur bug; rebuilding the venv on a Python linked against real OpenSSL fixes it.
+- **Enabling Finnhub / Alpha Vantage needs no code change**: set the `FINNHUB_API_KEY` (free tier 60 req/min) and/or `ALPHAVANTAGE_API_KEY` (free tier 25 req/day, best as a fallback) environment variable. The provider chain reads only the process environment (`is_configured()` checks `os.environ`); there is no `.env` loader in `src/`, so `export` the variable or inject it from your process manager. The Dashboard Settings page stores `datasource_keys` but currently uses them only for the "test connection" button; they do not feed the provider chain.
+
+**Candidate sources not integrated** (unverified, listed for future evaluation): Twelve Data (free tier, WebSocket; augur polls so the WebSocket advantage is unused), EODHD (narrow free tier, strong historical EOD), Financial Modeling Prep (free tier, financials/valuation coverage similar to Finnhub). IEX Cloud shut down in August 2024; ignore older recommendations for it.
+
+## 8. Environment Variables and Caches (checked against `src/`, 2026-10)
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| `FINNHUB_API_KEY` | Non-empty adds Finnhub to the provider chain | unset = not in chain |
+| `ALPHAVANTAGE_API_KEY` | Non-empty adds Alpha Vantage to the provider chain | unset = not in chain |
+| `AUGUR_EDGAR_CONTACT_EMAIL` | Contact email in the SEC EDGAR `User-Agent` (`augur-agents (<email>)`) | unset: placeholder `augur-agents-user@example.com` plus a one-time warning; sustained placeholder use risks SEC rate limiting or an IP block |
+| `AUGUR_DATA_DIR` | Data root; the EDGAR cache and `earnings_calendar.json` live under it | `~/.augur` |
+| `AUGUR_EDGAR_GUIDANCE_EXTRACTION` | `1`/`true`/`yes` enables EDGAR guidance-text extraction | off |
+| `AUGUR_WATCHLIST_FETCH_DELAY` | Seconds between per-ticker fetches in the scheduled watchlist job | `3.0` |
+
+**Caches**:
+
+- Quotes / fundamentals: in-process memory cache in `data.py`, TTL **180 seconds**, max 100 entries (evicts oldest by timestamp down to 80). `clear_cache()` clears it; `reset_providers_cache()` rebuilds the provider chain.
+- EDGAR (on disk, `<data dir>/edgar_cache/`, default `~/.augur/edgar_cache/`): `company_tickers.json` (ticker-to-CIK map) TTL **7 days**; each CIK's companyfacts and `submissions_<cik>.json` TTL **24 hours**. If a refetch fails, `get_submissions` falls back to the stale cache file.
+
+**EDGAR behavior** (`src/augur/consensus/edgar_fundamentals.py`): token-bucket rate limit of **10 req/s** (SEC's documented cap); 15-second HTTP timeout; one retry on transient network errors, no retry on HTTP 4xx. The CIK map comes from `https://www.sec.gov/files/company_tickers.json`; companyfacts and submissions come from `data.sec.gov`.
+
+## 9. SEC 8-K Item 2.02 Earnings-Date Backfill
+
+`src/augur/earnings_calendar.py` fills `<data dir>/earnings_calendar.json`, the calendar read by `augur earnings` and the watchlist earnings queue.
+
+- **What it reads**: each ticker's EDGAR submissions, via the same EDGAR client (CIK lookup, User-Agent, rate limit and disk cache are all reused). Filings with form `8-K` or `8-K/A`, an `items` field containing `2.02` ("Results of Operations and Financial Condition") and a filing date on or before today become **historical earnings dates** (`confidence: "historical"`, `source: "sec_8k_2.02"`, with the `accession` number).
+- **Estimated dates**: with at least 2 historical events, the median of the last (up to) 4 gaps between filings is added to the latest filing date to produce **at most one** next date, tagged `confidence: "estimated"`, `source: "estimated_from_8k_cadence"`. It is derived from filing cadence, not a company announcement, and is never marked `confirmed`.
+- **Merging**: an existing entry for the same ticker and date wins; only missing dates are added, so hand-written entries are never overwritten. The file is written atomically and only when something was added. An unparsable calendar file aborts the backfill (it refuses to overwrite). A fetch failure for one ticker is recorded in the report and does not stop the others.
+- **Command**: `augur earnings --backfill` (all watchlist tickers by default, or `-t AAPL -t MSFT`). It prints the number added per ticker and how many were estimated.
+
+```bash
+export AUGUR_EDGAR_CONTACT_EMAIL=you@example.com
+augur earnings --backfill -t AAPL -t MSFT
+augur earnings --days 30
+```
 
 ---
 
