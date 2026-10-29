@@ -48,7 +48,7 @@ class TestAugurImports:
         assert SoulInjector is not None
 
     def test_import_coordinator(self):
-        from augur.coordinator import DecisionCoordinator, DebateProtocol
+        from augur.registry import DecisionCoordinator, DebateProtocol
         assert DecisionCoordinator is not None
 
     def test_import_all_agents(self):

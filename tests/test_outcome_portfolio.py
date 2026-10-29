@@ -2,7 +2,7 @@
 """Tests for Outcome Tracker + Portfolio Risk modules."""
 import pytest
 from augur.outcome_tracker import OutcomeTracker, DecisionScore, OutcomeReport
-from augur.portfolio_risk import PortfolioRiskAnalyzer, PortfolioRiskReport, PositionRisk
+from augur.experimental.portfolio_risk import PortfolioRiskAnalyzer, PortfolioRiskReport, PositionRisk
 
 
 class TestOutcomeTracker:

@@ -35,9 +35,15 @@ Usage::
 from __future__ import annotations
 
 import hashlib
+import json
 import re
-from dataclasses import dataclass, field
+import threading
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, List, Optional
+
+_queue_write_lock = threading.Lock()
 
 
 # ============================================================================
@@ -77,16 +83,52 @@ class ResearchQuestion:
 
 @dataclass
 class QuestionQueue:
-    """In-memory queue of :class:`ResearchQuestion` items.
+    """Queue of :class:`ResearchQuestion` items.
 
     Scoped by ticker — each method that takes a *ticker* argument
     normalises it to uppercase for consistent lookups.
 
-    Parameters:
-        questions: Optional initial list of questions to seed the queue.
+    In-memory by default. With *storage_path* set (see :meth:`persistent`)
+    the queue loads from and writes through to that JSON file, so questions
+    survive a dashboard restart.
     """
 
     _questions: List[ResearchQuestion] = field(default_factory=list)
+    storage_path: Optional[Path] = None
+
+    def __post_init__(self) -> None:
+        if self.storage_path is None:
+            return
+        self.storage_path = Path(self.storage_path)
+        try:
+            raw = json.loads(self.storage_path.read_text(encoding="utf-8"))
+        except (FileNotFoundError, json.JSONDecodeError, OSError):
+            return
+        known = set(ResearchQuestion.__dataclass_fields__)
+        for item in raw if isinstance(raw, list) else []:
+            if isinstance(item, dict) and item.get("question_id"):
+                self._questions.append(
+                    ResearchQuestion(**{k: v for k, v in item.items() if k in known})
+                )
+
+    @classmethod
+    def persistent(cls) -> "QuestionQueue":
+        """Queue backed by ``<data dir>/thesis/questions.json``."""
+        from augur.data_dir import get_data_dir
+
+        return cls(storage_path=get_data_dir() / "thesis" / "questions.json")
+
+    def _save(self) -> None:
+        if self.storage_path is None:
+            return
+        self.storage_path.parent.mkdir(parents=True, exist_ok=True)
+        tmp = self.storage_path.with_suffix(".json.tmp")
+        with _queue_write_lock:
+            tmp.write_text(
+                json.dumps([asdict(q) for q in self._questions], ensure_ascii=False, indent=2),
+                encoding="utf-8",
+            )
+            tmp.replace(self.storage_path)
 
     # ------------------------------------------------------------------
     # Helpers
@@ -111,11 +153,14 @@ class QuestionQueue:
         Returns:
             The question's ``question_id``.
         """
+        if not question.created_at:
+            question.created_at = datetime.now(timezone.utc).isoformat()
         if not question.question_id:
             question.question_id = self._generate_id(
                 question.ticker, question.question, question.created_at
             )
         self._questions.append(question)
+        self._save()
         return question.question_id
 
     def list(
@@ -162,6 +207,7 @@ class QuestionQueue:
                 q.answered_by_run_id = run_id
                 q.answer = answer
                 q.answer_confidence = confidence
+                self._save()
                 return
 
     def mark_stale(self, question_id: str) -> None:
@@ -173,6 +219,7 @@ class QuestionQueue:
         for q in self._questions:
             if q.question_id == question_id:
                 q.status = "stale"
+                self._save()
                 return
 
     def get_open_count(self, ticker: str) -> int:

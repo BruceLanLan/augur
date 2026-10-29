@@ -635,10 +635,12 @@ def scan_all_falsifications(self, data_dir: Optional[Any] = None) -> List[Dict[s
         if th.status not in ("active", "weakened"):
             continue
         # Find latest run for this ticker
+        from augur.run_tracker import list_run_ids
+
         latest = None
-        for f in sorted(runs_dir.glob(f"run_{th.ticker.upper()}_*.json"), reverse=True):
+        for rid in list_run_ids(th.ticker):
             try:
-                latest = json.loads(f.read_text(encoding="utf-8"))
+                latest = json.loads((runs_dir / f"{rid}.json").read_text(encoding="utf-8"))
                 break
             except Exception:
                 continue

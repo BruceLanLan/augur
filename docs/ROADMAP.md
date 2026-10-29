@@ -1,9 +1,9 @@
 # Augur 开发路线图
 
 **状态**：Active
-**生效日期**：2026-08-11（2026-09-17 更新：私有开发仓合并进公开仓）
+**生效日期**：2026-08-11（2026-09-17 更新：私有开发仓合并进公开仓；2026-10-29 更新：v12）
 **维护仓库**：`BruceLanLan/augur`（公开，唯一主仓）
-**当前基线**：v11.0.0-rc1（2026-09-17 公开合并轮之后）
+**当前基线**：v13.0.0（2026-10-29：12.0 财报闭环与学习结算修正 → 12.1 `augur cycle` → 12.2 命令分组与 Dashboard 整理 → 13.0 SEC 财报日期回填、Python 3.10、精简公开 API）
 **详细审计**：[`docs/reviews/PROJECT_REVIEW_2026-08-11.md`](reviews/PROJECT_REVIEW_2026-08-11.md)
 **后续方向**：[`docs/PRODUCT_DIRECTIONS.md`](PRODUCT_DIRECTIONS.md)
 **生态融合调研**：[`docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md`](research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)
@@ -200,6 +200,61 @@ augur/main  (public, single source of truth)
 >
 > **2026-09-03 修正**（[评审报告](reviews/PROJECT_REVIEW_2026-09-03.md)）：上面「全绿」只在本地成立。CI「Tests」自 8/12 起因 `| tail` 吞掉退出码而假绿（实际 0 个测试跑过），「Hermetic Smoke」自创建起全红。两者已修，下一阶段以 CI 真绿为起点。
 
+## 2026-10 阶段：v12 —— 财报闭环与诚实的学习结算
+
+**生效日期**：2026-10-29
+**依据**：2026-10-29 三路只读审计（产品飞轮 / 代码面收敛 / 学习与评估链路）
+**主题**：README 承诺的两条闭环——"watchlist → 财报队列 → dossier → 变化账本 → 事后记分卡 → thesis delta"和"预测 → 结果 → 权重"——单个命令都能跑，但每个衔接处都断了。v12 只修衔接处，不新增模块、不新增 persona、不改共识算法。
+
+### 审计发现（2026-10-29）
+
+| 链路 | 发现 | v12 处理 |
+|---|---|---|
+| 学习结算 | 一个"今天 vs 30 天前"的收益被写进所有 30–60 天龄的预测：漏跑一天，就会把别的区间的收益记到旧预测上。实测已结算的 100 条（7/28–8/04 的预测）全部是同一个值 0.0513 | ✅ 每条预测按自己的日期结算（`resolve_from_prices`），旧格式结果作废、待结算的保留 |
+| 学习结算 | 超过 60 天的预测永久作废；30 天边界按秒比较，09:00 的 cron 因为差 14 毫秒每批都晚一天 | ✅ 不再过期；按日历日比较 |
+| 学习结算 | 已结算记录只保留最近 100 条，而 accuracy 是累计数，权重无法复核 | ✅ 追加写入 `prediction_outcomes.jsonl` |
+| 学习结算 | 同一天重复分析会重复记预测；18 位大师每条预测各重写一次整份 JSON | ✅ 同日去重 + 批量落盘 |
+| 财报飞轮 | `augur earnings` 读 `tickers` 字段，而 `watchlist-add` 写的是 `watchlist[].ticker`，不带 `-t` 时队列永远为空 | 见下表步骤 V1 |
+| 财报飞轮 | dossier 就绪判断去找不存在的文件名和目录，永远不会 ready | 见下表步骤 V1 |
+| 财报飞轮 | Dashboard 的 dossier 返回写死的风险条目和大师名，scorecard 接口是空壳，前端请求的 `/api/scorecard` 不存在 | 见下表步骤 V2 |
+| 财报飞轮 | 记分卡和 thesis delta 的引擎都在，但没有 CLI/API 调用方；没有"一条命令跑完一个周期" | v13 |
+| 运维 | 参考部署的定时任务 10/16 之后没再运行，且仍跑旧目录的 rc1 | owner |
+
+### 步骤与状态
+
+| # | 步骤 | 验证点 | 状态 |
+|---|---|---|---|
+| V0 | 学习结算重写（schema 2） | `tests/test_learning_resolution_v12.py`：不同日期的预测各自得到 t→t+30 收益、不用未来 bar、90 天前的预测仍可结算、jsonl 行数与 accuracy 一致、旧文件迁移 | ✅ |
+| V1 | 财报队列读真实 watchlist；就绪判断改用真实运行记录 | `tests/test_earnings_flywheel_v12.py` | ✅ |
+| V2 | Dashboard 去掉写死的财报内容，缺数据时明确返回 unavailable | `tests/test_dashboard_no_fake_earnings_v12.py` | ✅（scorecard 仍明确返回 unavailable：还没有保存"财报前 / 财报后"运行配对的地方，归 v13 第 1 项） |
+| V3 | 步骤 15 / 17 / 18 | 见上表 | ✅ |
+| V4 | 历史执行记录归档到 `docs/archive/` | 仓库内无失效引用（CHANGELOG 历史条目除外） | ✅ |
+
+### 同日追加：12.1 与 12.2
+
+| 版本 | 内容 | 验证 |
+|---|---|---|
+| 12.1.0 | `augur cycle` / `augur scorecard` / `augur thesis-delta`（原 v13 候选第 1 项） | `tests/test_cycle_v13.py`；README 离线冒烟 24/24 |
+| 12.2.0 | CLI 分组 + 15 个旧名隐藏别名（原候选第 3 项）；Dashboard 侧边栏分组、财报 / 记分卡 / Thesis Journal 体验整理；学习文件多进程合并写（原候选第 5 项前半） | `tests/test_cli_groups_v14.py`；浏览器实看 1280 / 390 宽度无 console error |
+| 13.0.0 | **不兼容**：需要 Python 3.10+；5 个零入口模块移到 `augur.experimental`；删除 `coordinator` / `skill_spec` / `mcp_entry` 三个转发模块。**新增** `augur earnings --backfill`：从 SEC 8-K Item 2.02 回填历史财报日期并按节奏估算下一次（原候选第 2 项 / 步骤 13 的财报日历部分） | `tests/test_earnings_calendar_v13.py`；CI 矩阵改为 3.10 / 3.11 / 3.12 |
+
+12.1 和 12.2 没有不兼容变化（旧命令名都还能用），按语义化版本记为小版本；13.0 改了最低 Python 版本并移动 / 删除了模块，所以是大版本。
+
+### 后续候选（按杠杆排序，未排期）
+
+1. ~~**`augur cycle`**~~（12.1 已完成）：一条命令把 watchlist 依次跑过财报队列 → dossier → 变化账本 → thesis delta，汇总 ready/missing；配套 `augur scorecard`、`augur thesis-delta` 两个入口（引擎已存在：`scorecard.py`、`thesis.py:compute_thesis_delta`）。验证：README 冒烟跑两只票、一只缺数据，输出 `ready 1/2`。
+2. ~~**财报日期数据源**~~（13.0 已完成历史回填 + 节奏估算；未来确认日期仍需人工或付费源）：EDGAR 8-K Item 2.02 回填历史事件日期，未来日期按上一年同季度估算并标注 `estimated`（ROADMAP 步骤 13）。
+3. ~~**CLI 命令树收敛**~~（12.2 已完成）：47 个顶层命令按 `report / skill / watchlist / cron / eval / records / serve / bot` 分组，旧名保留为带警告的别名；`skills` 与 `skill` 只差一个字母却管两件事，优先处理；`update` 在 pip 安装下必然报错，改为只在 git 检出下注册。
+4. ~~**实验模块标注**~~（13.0 已移到 `augur.experimental`）：`accounting` / `capital_allocation` / `debate_engine` / `relative_val` / `scorecard` / `portfolio_risk` 在 `src` 中零引用，接入或移到 `augur.experimental`；`mcp_entry` / `coordinator` / `skill_spec` 是纯兼容垫片。
+5. **学习结算的剩余问题**：多进程整文件覆盖写已在 12.2 改为加锁合并；准确率表仍是各进程内累计，跨进程只合并预测与结果；所谓 IC 实为 score×sign(return)，不是相关系数。R6 真门（步骤 3）仍未定口径。
+6. 步骤 10（回放产物重跑）、14（横截面 IC / 非重叠窗口）、16（数据源层 mock）不变。
+
+### 本阶段 owner 决策
+
+- **v12.0.0 是否推送到公开仓、是否打 tag**：打 `v*` tag 会触发 `publish.yml`（PyPI Trusted Publisher 未配置）。v12.2.0 在 PR #6（`release/v12`），v13.0.0 在 `release/v13`（基于 v12 分支）；合并 main 需 owner 操作（自动合并被权限策略拦截），打 tag、发 PyPI 待 owner 批准（PyPI Trusted Publisher 未配置）。
+- **参考部署的定时任务**：10/16 后停止；是否改用新检出目录并恢复（恢复前新代码会作废旧格式结果，待结算的预测保留）。
+- 2026-09 阶段的 owner 决策批（步骤 1）仍然有效。
+
 ## 2026-09 阶段：RC 收口 → GA
 
 **生效日期**：2026-09-03
@@ -240,10 +295,10 @@ augur/main  (public, single source of truth)
 | 12 | **Skill 执行器** | 清单与权限已实现，执行器没有 | 4 个内置 Skill 端到端可运行，越权在执行前被拒绝 | ✅ 2026-09-17：`augur skill run` + MCP `augur_run_skill`，9 个能力均为真实实现 |
 | 13 | **Skill 数据缺口** | 财报日期来自手工维护的本地日历；债务约束只有参考阈值；部分公司不在 XBRL 披露利息支出；filing-delta 只比较年度数字 | 财报日历有自动数据源；10-Q 支持；信贷协议条款来源评估 | — |
 | 14 | **评估方法升级** | `augur eval` 是单票时间序列 IC，远期收益重叠 | 多票横截面 IC、非重叠窗口或 HAC 标准误 | — |
-| 15 | **研究问题队列不持久化** | `QuestionQueue` 只存在内存里，服务重启后 Dashboard 上的问题全部丢失（thesis 与决策日志已落盘） | 问题写入数据目录，重启后仍可列出 | — |
+| 15 | **研究问题队列不持久化** | `QuestionQueue` 只存在内存里，服务重启后 Dashboard 上的问题全部丢失（thesis 与决策日志已落盘） | 问题写入数据目录，重启后仍可列出 | ✅ 2026-10-29（v12）：写入 `<数据目录>/thesis/questions.json`，Dashboard 与 `augur dossier` 共用 |
 | 16 | **测试仍在调用真实数据源代码** | 网络已被拦截，但约 50 个测试每轮仍有约 310 次请求走到拦截层后回退（stooq、yfinance、StockTwits） | 在数据源层 mock，`AUGUR_TEST_NETWORK_REPORT=1` 报告为 0 | — |
-| 17 | **Kelly 属性测试慢** | `test_iteration11` 的两个 Kelly 测试占全量 107s 中约 79s：`record_prediction` 每次都整份重写权重 JSON，耗时随预测数平方增长 | 批量写入或延迟落盘，两个测试降到秒级 | — |
-| 18 | **同一秒多次运行的排序** | `RunTracker.start_run` 为避免 run-id 冲突会把 `created_at` 往后推，同一秒内启动多次运行时"最新运行"的判断可能错位 | 用单调计数或纳秒时间戳区分，不改写 `created_at` | — |
+| 17 | **Kelly 属性测试慢** | `test_iteration11` 的两个 Kelly 测试占全量 107s 中约 79s：`record_prediction` 每次都整份重写权重 JSON，耗时随预测数平方增长 | 批量写入或延迟落盘，两个测试降到秒级 | ✅ 2026-10-29（v12）：`LearningEngine.batch()` 一次落盘 + 同日去重，两个测试 79s → 约 2s |
+| 18 | **同一秒多次运行的排序** | `RunTracker.start_run` 为避免 run-id 冲突会把 `created_at` 往后推，同一秒内启动多次运行时"最新运行"的判断可能错位 | 用单调计数或纳秒时间戳区分，不改写 `created_at` | ✅ 2026-10-29（v12）：不再改写 `created_at`，冲突时换哈希槽，按创建时间 + 单调启动序号排序 |
 
 ### 本阶段不做
 

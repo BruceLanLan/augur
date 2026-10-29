@@ -2,7 +2,141 @@
 
 All notable changes to augur-agents are documented in this file.
 
-## [Unreleased] - 2026-09-17 docs and hardening round
+## [13.0.0] - 2026-10-29 earnings dates from SEC, Python 3.10, smaller public API
+
+### Breaking
+
+- Python 3.10 or newer is required (3.9 reached end of life in October
+  2025). CI tests 3.10, 3.11 and 3.12.
+- Modules that no CLI, dashboard or MCP path uses moved to
+  `augur.experimental` (library-only, API may change):
+  `augur.accounting`, `augur.capital_allocation`, `augur.debate_engine`,
+  `augur.relative_val`, `augur.portfolio_risk` →
+  `augur.experimental.<same name>`.
+- Compatibility re-export modules are removed: `augur.coordinator` (import
+  from `augur.registry`), `augur.skill_spec` (import from
+  `augur.schemas.skill_spec` or `augur.schemas`), `augur.mcp_entry` (the
+  `augur-mcp` script already points at `augur.mcp_server:run_server`).
+
+### Added
+
+- `augur earnings --backfill`: reads each watchlist ticker's SEC 8-K
+  filings with Item 2.02 (results of operations) to fill past earnings
+  dates, and adds one next date estimated from the recent reporting
+  cadence, marked `estimated`, never `confirmed`. Entries you wrote in
+  `earnings_calendar.json` are kept. This is what `augur cycle` needs to have
+  events to work on without a hand-maintained calendar.
+
+## [12.2.0] - 2026-10-29 one command tree and clearer dashboard
+
+### Changed
+
+- The CLI is grouped: `augur watchlist add|show|watch`, `augur cron
+  run|start`, `augur report run|from-run`, `augur records
+  citations|comments|audit|decisions|ledger|verify-pack`, `augur eval ic`,
+  `augur skill compat|profiles`. The 15 old flat names (`watchlist-add`,
+  `cron-run`, `research-report`, `ledger`, ...) keep working until the next
+  major release; they print a one-line note on stderr (stdout and exit codes
+  are unchanged) and are hidden from `augur --help` (38 entries instead of
+  47). `augur report AAPL` works as before.
+- `augur update` is hidden outside a git checkout and tells pip users to run
+  `pip install -U augur-agents`.
+- Dashboard: the sidebar spans the full page height, phone layouts no longer hide page titles under the menu button, and asset cache keys are current (stylesheets were still requested as ?v=8.1.0).
+- Dashboard sidebar is grouped into Research / Investors / Tools / System;
+  Earnings Queue, Thesis Journal, Scorecard and Research Inbox were not
+  linked from the sidebar and now are (zh/en/ja/ko labels). The stale
+  "v8 Features" group is gone.
+- Earnings Queue: missing dossier items show readable labels and the command
+  that fills each; the dossier panel no longer looks disabled.
+- Scorecard page: the event picker loads the ticker's upcoming events instead
+  of staying on "Loading…"; no-data states explain the reason and next steps.
+- Thesis Journal: compact empty states, error states instead of endless
+  loading skeletons, clearer forms, stacked layout on phones.
+
+### Fixed
+
+- Learning: the dashboard server and the cron job each rewrote the whole
+  weights file from memory, so the last writer silently dropped the other's
+  new predictions and outcomes. Saves now lock the file, merge what is on
+  disk and write atomically.
+
+## [12.1.0] - 2026-10-29 earnings cycle in one command
+
+### Added
+
+- `augur cycle [--days N] [--format text|markdown]`: runs the watchlist's
+  upcoming earnings events through readiness, dossier, ledger and thesis
+  delta from saved state (no network), ending with `ready X/Y` and a next
+  step per ticker.
+- `augur scorecard TICKER [--pre RUN --post RUN]`: checks which research
+  questions the pre- and post-event runs answered. Says `unavailable` with
+  the reason when runs or questions are missing.
+- `augur thesis-delta TICKER`: active theses against the two latest runs.
+- README smoke test covers the three commands (24 commands, offline).
+
+## [12.0.0] - 2026-10-29 earnings loop and honest learning
+
+v12 is a correctness release for the two loops Augur is built around: the
+earnings research cycle and learning from past predictions. Both ran end to
+end on paper but broke at the joints. Version jumps from 11.0.0rc1 straight
+to 12.0.0 because the learned-weights file format and its stored history
+change incompatibly.
+
+v11.0.0 GA was never released, so the three 2026-09-17 rounds below ship for
+the first time as part of 12.0.0.
+
+### Breaking
+
+- `learned_weights.json` schema 2. On first load, outcomes recorded by
+  v11 and the accuracy/weights built from them are discarded (pending
+  predictions are kept): v11 applied one ticker-wide "latest 30-day return"
+  to every eligible prediction, whatever day it was made, so those outcomes
+  were not attributable to the predictions they were stored on. Learned
+  weights stay off by default (`AUGUR_FORCE_LEARNED`).
+
+### Fixed
+
+- Prediction outcomes: each prediction now resolves at its own horizon,
+  from the first close on/after its day to the first close on/after day+30
+  (`LearningEngine.resolve_from_prices`). Predictions no longer age out
+  after 60 days, the 30-day boundary is compared by calendar day (a 09:00
+  cron could miss predictions recorded at 09:00:07 by milliseconds and slip
+  a day each time), and price history covers a year instead of two months.
+- Every resolved prediction is appended to `prediction_outcomes.jsonl`
+  instead of being pruned to the last 100, so accuracy can be audited and
+  recomputed.
+- Analysis records one prediction per ticker, agent and UTC day; re-running
+  a ticker replaces that day's prediction instead of adding duplicates.
+- Recording 18 agents' predictions writes the weights file once, not 18
+  times (`LearningEngine.batch()`); the Kelly property tests went from ~79s
+  to ~2s.
+- Research questions are stored in `<data dir>/thesis/questions.json`, so
+  dashboard questions survive a restart and `augur dossier` shows them.
+- Runs started in the same second kept distinct ids by pushing `created_at`
+  forward a second, which could make an older run look latest. `created_at`
+  is now left alone; collisions pick another hash slot and runs sort by
+  creation time plus a monotonic start sequence.
+- `RunTracker` records the real package version instead of a hard-coded
+  `11.0.0rc1`.
+- `augur earnings` without `-t` read a `tickers` key that `watchlist-add`
+  never writes, so the queue was always empty; it now reads the real
+  watchlist. Dossier readiness looked for file names that are never written,
+  so no dossier was ever ready; it now uses the latest saved run, that run's
+  SEC/EDGAR evidence and the per-ticker guidance record.
+- The dashboard dossier returned hard-coded risk items, persona names and
+  "Pending" rows, and the scorecard API was an empty stub behind a route the
+  page never reached. The dossier now comes from the same builder as
+  `augur dossier`; with no data, dossier and scorecard return
+  `status: unavailable` with a reason.
+- `add_to_watchlist` appended to the shared default config, leaking tickers
+  into every later watchlist created in the same process.
+
+### Changed
+
+- Historical execution records (loop reports and logs, v9 test plan, UI
+  plan, `docs/iterations/`) moved to `docs/archive/`.
+
+## [12.0.0, earlier round] - 2026-09-17 docs and hardening round
 
 Found by running every new command on live data and screenshotting the
 dashboard for the README.
@@ -39,7 +173,7 @@ dashboard for the README.
 
 - Insider-trade fetching moved from the CLI module to `augur.ownership`.
 
-## [Unreleased] - 2026-09-17 research capabilities round
+## [12.0.0, earlier round] - 2026-09-17 research capabilities round
 
 Closes the three gaps the README's feature-maturity table listed after the
 public merge: no skill runner, a template disagreement map, and nine modules
@@ -93,7 +227,7 @@ data before commit; problems found that way are listed under Fixed.
 
 - `augur` now has 47 subcommands and the MCP server 14 tools.
 
-## [Unreleased] - 2026-09-17 public merge round
+## [12.0.0, earlier round] - 2026-09-17 public merge round
 
 The private development line (`augur-next`, v11.0.0-rc1) is merged into the
 public `BruceLanLan/augur` repository. Before publishing, every README command
@@ -1132,7 +1266,7 @@ P1-1（Agent Peer Review backlog）：MCP Workspace 工具，闭合"终端定制
 - **Sentiment integration test**: patch `MetaModel.load` in `test_integration_v8` so sentiment ±0.5 hook is tested without 50/50 meta-model dilution.
 
 ### Notes
-- Full suite: **2043 passed**, 0 failed (rounds 2–10); see `docs/iterations/agent5-fullsuite-SUMMARY.md`.
+- Full suite: **2043 passed**, 0 failed (rounds 2–10); see `docs/archive/iterations/agent5-fullsuite-SUMMARY.md`.
 
 
 ### Stress Test Round 2-6 Additions (2026-08-12)
@@ -1456,7 +1590,7 @@ Loop 200 review patch. 200-round multi-agent code review + UX walkthrough on top
 
 ### Notes
 - Tests: **1362 passed** (up from ~1177 in v8.2.0).
-- Review reports: [`docs/LOOP_200_REPORT.md`](docs/LOOP_200_REPORT.md) (complete) · [`docs/LOOP_400_REPORT.md`](docs/LOOP_400_REPORT.md) (partial — stash recovery pending).
+- Review reports: [`docs/archive/LOOP_200_REPORT.md`](docs/archive/LOOP_200_REPORT.md) (complete) · [`docs/archive/LOOP_400_REPORT.md`](docs/archive/LOOP_400_REPORT.md) (partial — stash recovery pending).
 - README screenshots refreshed for v8.2.1 grid layout and report contrast (see `scripts/capture_readme_screenshots.py`).
 
 ## [8.2.0] - 2026-06-06

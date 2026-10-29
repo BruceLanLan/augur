@@ -10,7 +10,9 @@ from click.testing import CliRunner
 def _run(*args):
     from augur.cli import main
 
-    return CliRunner().invoke(main, list(args))
+    # Use the grouped names (`augur records ...`); the old flat names print a
+    # deprecation note that older click mixes into stdout.
+    return CliRunner().invoke(main, ["records", *args])
 
 
 def test_citation_report_list_accept_roundtrip():

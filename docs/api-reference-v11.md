@@ -36,7 +36,7 @@ This document covers the Python public API and REST endpoints.
 | `augur.questions` | `QuestionQueue` | Open research questions |
 | `augur.questions` | `TemplateLibrary` | Research SOP templates |
 | `augur.disagreement` | `DisagreementMapBuilder` | Persona conflict distillation |
-| `augur.debate_engine` | `EvidenceSeekingDebate` | 4-stage debate protocol |
+| `augur.experimental.debate_engine` | `EvidenceSeekingDebate` | 4-stage debate protocol |
 
 ### Earnings & Filing
 
@@ -50,8 +50,8 @@ This document covers the Python public API and REST endpoints.
 | `augur.covenant` | `CovenantReviewer` | Debt covenant checks |
 | `augur.ownership` | `InsiderAnalyzer` | Insider cluster detection |
 | `augur.ownership` | `OwnershipAnalyzer` | Institutional delta |
-| `augur.accounting` | `AccountingReviewer` | Beneish M / Altman Z |
-| `augur.capital_allocation` | `CapitalAllocationAnalyzer` | Buyback/dividend review |
+| `augur.experimental.accounting` | `AccountingReviewer` | Beneish M / Altman Z |
+| `augur.experimental.capital_allocation` | `CapitalAllocationAnalyzer` | Buyback/dividend review |
 
 ### Valuation (all `decimal.Decimal`)
 
@@ -62,7 +62,7 @@ This document covers the Python public API and REST endpoints.
 | `augur.valuation` | `run_scenarios(base, scenarios)` | Bull/base/bear |
 | `augur.valuation` | `reverse_dcf(...)` | Implied growth |
 | `augur.valuation` | `sensitivity_grid(...)` | WACC × growth matrix |
-| `augur.relative_val` | `build_peer_table(...)` | Peer multiples |
+| `augur.experimental.relative_val` | `build_peer_table(...)` | Peer multiples |
 
 ### Evaluation
 
@@ -132,14 +132,14 @@ This document covers the Python public API and REST endpoints.
 | `augur.provider_health` | `ProviderHealthTracker` | 数据源健康追踪 |
 | `augur.freshness` | `FreshnessTracker` | 数据新鲜度检查 |
 | `augur.cache_health` | `check_edgar_cache_freshness` | EDGAR 缓存健康 |
-| `augur.relative_val` | `build_peer_table` | 同行估值对比 |
+| `augur.experimental.relative_val` | `build_peer_table` | 同行估值对比 |
 | `augur.cost_budget` | `CostTracker` | 成本/延迟预算 |
 | `augur.team_audit` | `AuditLog` | 团队审计 |
 | `augur.compatibility` | `CompatibilityMatrix` | 兼容矩阵 |
 | `augur.prompt_eval` | `PromptEvaluator` | Prompt 评估 |
 | `augur.prompt_eval` | `FactorLab` | 因子实验室 |
 | `augur.outcome_tracker` | `OutcomeTracker` | 决策结果追踪 |
-| `augur.portfolio_risk` | `PortfolioRiskAnalyzer` | 组合集中度分析 |
+| `augur.experimental.portfolio_risk` | `PortfolioRiskAnalyzer` | 组合集中度分析 |
 | `augur.pack_digest` | `compute_manifest_digest` | 研究包完整性 |
 | `augur.research_report` | `ResearchReportBuilder` | 综合研究报告 |
 | `augur.adapters.openbb_adapter` | — | OpenBB schema-only 适配器 |

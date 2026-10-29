@@ -25,7 +25,7 @@ def _questions():
     global _question_queue
     if _question_queue is None:
         from augur.questions import QuestionQueue
-        _question_queue = QuestionQueue()
+        _question_queue = QuestionQueue.persistent()
     return _question_queue
 
 

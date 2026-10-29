@@ -27,7 +27,7 @@
 
 Workspace MCP tools (P1-1), profile i18n (P1-3), step_status envelope (P1-6) remain next-session items — not regressions in full suite.
 
-**Artifact:** `docs/iterations/agent5-fullsuite-SUMMARY.md`
+**Artifact:** `docs/archive/iterations/agent5-fullsuite-SUMMARY.md`
 
 ---
 

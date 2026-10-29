@@ -2,50 +2,79 @@
 {% block title %}Post-Earnings Scorecard — {{ ticker or "Augur" }}{% endblock %}
 {% block content %}
 <div class="scorecard-page" data-ticker="{{ ticker or '' }}">
-  <div class="sc-header">
-    <h1>📊 Post-Earnings Scorecard</h1>
-    <p class="sc-subtitle">Compare pre-event predictions against actual outcomes. Track what Augur got right and wrong.</p>
-  </div>
+  <header class="page-header mb-16">
+    <div class="page-header__text">
+      <h1 class="page-title">📊 Post-Earnings Scorecard</h1>
+      <p class="page-lead">Compare pre-event predictions against actual outcomes. Track what Augur got right and wrong.</p>
+    </div>
+  </header>
 
   <!-- Scorecard Selection -->
-  <div class="sc-controls">
-    <div class="form-row">
-      <div class="form-group">
-        <label>Ticker</label>
-        <input id="sc-ticker" type="text" value="{{ ticker or '' }}" placeholder="AAPL">
+  <form class="sc-controls" id="sc-form" onsubmit="event.preventDefault(); loadScorecard();">
+    <div class="sc-form-row">
+      <div class="sc-field sc-field--ticker">
+        <label for="sc-ticker">Ticker</label>
+        <input id="sc-ticker" type="text" value="{{ ticker or '' }}" placeholder="e.g. AAPL"
+               autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="15">
       </div>
-      <div class="form-group">
-        <label>Event</label>
-        <select id="sc-event"><option>Loading...</option></select>
+      <div class="sc-field sc-field--event">
+        <label for="sc-event">Event</label>
+        <select id="sc-event" disabled><option value="">Enter a ticker</option></select>
+        <div class="sc-field-hint" id="sc-event-hint"></div>
       </div>
-      <div class="form-group" style="align-self: flex-end;">
-        <button class="btn btn-accent" onclick="loadScorecard()">Generate Scorecard</button>
+      <div class="sc-field sc-field--action">
+        <button type="submit" class="btn btn-primary">Generate Scorecard</button>
       </div>
     </div>
-  </div>
+  </form>
 
   <!-- Scorecard Result -->
   <div id="sc-result">
-    <div class="empty-state">
-      <div class="empty-state-icon">🎯</div>
-      <div class="empty-state-title">Select a ticker and event to generate a scorecard</div>
-      <div class="empty-state-desc">Compares pre-event Augur predictions against actual earnings results.</div>
+    <div class="sc-empty">
+      <div class="sc-empty-icon">🎯</div>
+      <div class="sc-empty-title">Pick a ticker to generate a scorecard</div>
+      <div class="sc-empty-desc">Compares pre-event Augur predictions against actual earnings results.</div>
     </div>
   </div>
 </div>
 
 <style>
-.sc-header { margin-bottom: 24px; }
-.sc-subtitle { color: var(--text-muted); }
-.sc-controls { margin-bottom: 24px; padding: 16px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); }
-.sc-controls .form-row { display: flex; gap: 12px; align-items: flex-end; }
-.sc-controls .form-group { flex: 1; }
-.sc-controls label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; }
-.sc-controls input, .sc-controls select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+.sc-controls { margin: 0 0 24px; padding: 16px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); }
+.sc-form-row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.sc-field { display: flex; flex-direction: column; min-width: 0; }
+.sc-field--ticker { flex: 1 1 140px; }
+.sc-field--event { flex: 2 1 220px; }
+.sc-field--action { flex: 0 0 auto; padding-top: 22px; }
+.sc-field label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; line-height: 16px; }
+.sc-field input, .sc-field select {
+  width: 100%; height: 38px; padding: 0 12px; box-sizing: border-box;
+  border: 1px solid var(--border); border-radius: 6px; font-size: 14px;
+  background: var(--bg-primary); color: var(--text-primary);
+}
+.sc-field input { text-transform: uppercase; font-family: var(--font-data); }
+.sc-field input::placeholder { text-transform: none; color: var(--text-muted); }
+.sc-field input:focus, .sc-field select:focus { outline: none; border-color: var(--accent-orange); }
+.sc-field select:disabled { color: var(--text-muted); cursor: not-allowed; }
+.sc-field--action .btn { height: 38px; white-space: nowrap; display: inline-flex; align-items: center; justify-content: center; }
+.sc-field-hint { font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; min-height: 1em; }
 
-.sc-summary { display: flex; gap: 16px; margin-bottom: 20px; }
-.sc-stat { flex: 1; padding: 16px; background: var(--bg-card); border-radius: 10px; text-align: center; border: 1px solid var(--border); }
-.sc-stat-value { font-size: 28px; font-weight: 700; }
+/* Intentional empty / unavailable state */
+.sc-empty { text-align: center; padding: 40px 24px; max-width: 620px; margin: 0 auto; }
+.sc-empty-icon { font-size: 2.2rem; margin-bottom: 12px; }
+.sc-empty-title { font-weight: 600; font-size: 1.05rem; color: var(--text-primary); margin-bottom: 8px; }
+.sc-empty-desc { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.55; }
+.sc-empty--card { background: var(--bg-card); border: 1px dashed var(--border); border-radius: 12px; text-align: left; padding: 24px; max-width: none; }
+.sc-empty--card .sc-empty-icon { font-size: 1.6rem; margin-bottom: 8px; }
+.sc-next { margin: 16px 0 0; padding: 14px 16px; border-radius: 8px; background: var(--bg-primary); border: 1px solid var(--border); }
+.sc-next-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-orange); margin-bottom: 8px; }
+.sc-next ol { margin: 0; padding-left: 20px; color: var(--text-primary); font-size: 0.875rem; line-height: 1.6; }
+.sc-next code { font-family: var(--font-data); font-size: 0.82rem; padding: 1px 6px; border-radius: 4px; background: var(--bg-card); border: 1px solid var(--border); overflow-wrap: anywhere; }
+.sc-next a { color: var(--accent-orange); }
+.sc-meta { margin-top: 12px; font-size: 0.78rem; color: var(--text-muted); }
+
+.sc-summary { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.sc-stat { flex: 1; min-width: 100px; padding: 16px; background: var(--bg-card); border-radius: 10px; text-align: center; border: 1px solid var(--border); }
+.sc-stat-value { font-size: 28px; font-weight: 700; font-family: var(--font-data); }
 .sc-stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 .sc-stat.confirmed .sc-stat-value { color: #10b981; }
 .sc-stat.refuted .sc-stat-value { color: #ef4444; }
@@ -53,55 +82,153 @@
 
 .sc-item { padding: 14px 16px; margin-bottom: 8px; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); display: flex; gap: 12px; align-items: flex-start; }
 .sc-item-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
-.sc-item-body { flex: 1; }
-.sc-item-question { font-weight: 600; margin-bottom: 4px; }
+.sc-item-body { flex: 1; min-width: 0; }
+.sc-item-question { font-weight: 600; margin-bottom: 4px; color: var(--text-primary); }
 .sc-item-pre { font-size: 13px; color: var(--text-muted); margin-bottom: 2px; }
-.sc-item-actual { font-size: 13px; }
+.sc-item-actual { font-size: 13px; color: var(--text-secondary); }
 .sc-item-verdict { display: inline-block; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; margin-top: 4px; }
 .sc-item-verdict.confirmed { background: #d1fae5; color: #047857; }
 .sc-item-verdict.refuted { background: #fee2e2; color: #b91c1c; }
 .sc-item-verdict.partial { background: #fef3c7; color: #b45309; }
 .sc-item-verdict.unknown { background: #f3f4f6; color: #6b7280; }
+
+@media (max-width: 600px) {
+  .sc-field--ticker, .sc-field--event { flex: 1 1 100%; }
+  .sc-field--action { flex: 1 1 100%; padding-top: 0; }
+  .sc-field--action .btn { width: 100%; }
+  .sc-empty--card { padding: 18px; }
+}
 </style>
 
 <script>
-function loadScorecard() {
-  var ticker = document.getElementById('sc-ticker').value.toUpperCase();
-  if (!ticker) return;
-  document.getElementById('sc-result').innerHTML = '<div class="spinner spinner-center spinner-lg"></div>';
-  fetch('/api/scorecard?ticker=' + ticker)
-    .then(r => r.json())
-    .then(renderScorecard)
+var _scEventsCache = null;      // all watchlist events (fetched once)
+var _scEventsTimer = null;
+
+function scTicker() {
+  return (document.getElementById('sc-ticker').value || '').trim().toUpperCase();
+}
+
+function setEventOptions(options, disabled, hint) {
+  var sel = document.getElementById('sc-event');
+  sel.innerHTML = '';
+  options.forEach(function(o) {
+    var opt = document.createElement('option');
+    opt.value = o.value; opt.textContent = o.label;
+    sel.appendChild(opt);
+  });
+  sel.disabled = !!disabled;
+  document.getElementById('sc-event-hint').textContent = hint || '';
+}
+
+function fetchEvents() {
+  if (_scEventsCache) return Promise.resolve(_scEventsCache);
+  return fetch('/api/earnings/events?lookahead_days=180')
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(data) { _scEventsCache = (data && data.events) || []; return _scEventsCache; });
+}
+
+function loadEvents() {
+  var ticker = scTicker();
+  if (!ticker) { setEventOptions([{value: '', label: 'Enter a ticker'}], true, ''); return; }
+  setEventOptions([{value: '', label: 'Loading events…'}], true, '');
+  fetchEvents()
+    .then(function(events) {
+      if (scTicker() !== ticker) return;   // ticker changed while loading
+      var mine = events.filter(function(e) { return (e.ticker || '').toUpperCase() === ticker; });
+      if (!mine.length) {
+        setEventOptions([{value: '', label: 'No upcoming events'}], true,
+          'No earnings event in the next 180 days for ' + ticker + ' (only watchlist tickers are tracked).');
+        return;
+      }
+      setEventOptions(mine.map(function(e) {
+        var label = e.event_date + (e.fiscal_period ? ' · ' + e.fiscal_period : '') +
+                    (e.confidence ? ' (' + e.confidence + ')' : '');
+        return {value: e.event_date, label: label};
+      }), false, '');
+    })
     .catch(function() {
-      document.getElementById('sc-result').innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><div class="empty-state-title">Failed to load scorecard</div></div>';
+      if (scTicker() !== ticker) return;
+      setEventOptions([{value: '', label: 'Events unavailable'}], true, 'Could not load the earnings calendar.');
     });
 }
 
-function renderScorecard(data) {
-  if (!data || !data.items || data.items.length === 0) {
-    document.getElementById('sc-result').innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-title">No scorecard data available</div><div class="empty-state-desc">Run a pre-event analysis first, then come back after earnings.</div></div>';
+function loadScorecard() {
+  var ticker = scTicker();
+  var input = document.getElementById('sc-ticker');
+  if (!ticker) { input.focus(); return; }
+  input.value = ticker;
+  document.getElementById('sc-result').innerHTML = '<div class="spinner spinner-center spinner-lg"></div>';
+  fetch('/api/scorecard?ticker=' + encodeURIComponent(ticker))
+    .then(function(r) { return r.json(); })
+    .then(function(data) { renderScorecard(data, ticker); })
+    .catch(function() {
+      document.getElementById('sc-result').innerHTML =
+        '<div class="sc-empty sc-empty--card"><div class="sc-empty-icon">⚠️</div>' +
+        '<div class="sc-empty-title">Could not reach the scorecard service</div>' +
+        '<div class="sc-empty-desc">Check that <code>augur serve</code> is still running, then try again.</div></div>';
+    });
+}
+
+function renderUnavailable(data, ticker) {
+  var t = escapeHtml(ticker);
+  var reason = (data && data.reason) ? String(data.reason)
+    : 'Run a pre-event analysis first, then come back after earnings.';
+  var runs = (data && typeof data.saved_runs === 'number') ? data.saved_runs : null;
+  var html = '<div class="sc-empty sc-empty--card">' +
+    '<div class="sc-empty-icon">🗓️</div>' +
+    '<div class="sc-empty-title">No scorecard for ' + t + ' yet</div>' +
+    '<div class="sc-empty-desc">' + escapeHtml(reason) + '</div>' +
+    '<div class="sc-next"><div class="sc-next-title">Next steps</div><ol>' +
+      (runs === 0
+        ? '<li>Save a pre-event prediction run: <code>augur workflow ' + t + '</code></li>'
+        : '<li>Keep your pre-event run current: <code>augur workflow ' + t + '</code></li>') +
+      '<li>Review the <a href="/earnings">pre-event dossier</a> in the Earnings Queue before the call.</li>' +
+      '<li>Come back after the event — scorecards appear here once pre/post runs can be paired.</li>' +
+    '</ol></div>';
+  if (runs !== null) {
+    html += '<div class="sc-meta">Saved analysis runs for ' + t + ': ' + runs + '</div>';
+  }
+  return html + '</div>';
+}
+
+function renderScorecard(data, ticker) {
+  var out = document.getElementById('sc-result');
+  if (!data || data.status !== 'ok' || !data.items || data.items.length === 0) {
+    out.innerHTML = renderUnavailable(data, ticker);
     return;
   }
+  var count = function(v) { return data.items.filter(function(i) { return i.verdict === v; }).length; };
   var html = '<div class="sc-summary">'
-    + '<div class="sc-stat confirmed"><div class="sc-stat-value">' + (data.items.filter(function(i){return i.verdict==="confirmed"}).length) + '</div><div class="sc-stat-label">Confirmed</div></div>'
-    + '<div class="sc-stat refuted"><div class="sc-stat-value">' + (data.items.filter(function(i){return i.verdict==="refuted"}).length) + '</div><div class="sc-stat-label">Refuted</div></div>'
-    + '<div class="sc-stat unknown"><div class="sc-stat-value">' + (data.items.filter(function(i){return i.verdict==="unknown"}).length) + '</div><div class="sc-stat-label">Unknown</div></div>'
+    + '<div class="sc-stat confirmed"><div class="sc-stat-value">' + count('confirmed') + '</div><div class="sc-stat-label">Confirmed</div></div>'
+    + '<div class="sc-stat refuted"><div class="sc-stat-value">' + count('refuted') + '</div><div class="sc-stat-label">Refuted</div></div>'
+    + '<div class="sc-stat unknown"><div class="sc-stat-value">' + count('unknown') + '</div><div class="sc-stat-label">Unknown</div></div>'
     + '</div>';
 
   data.items.forEach(function(item) {
     var icon = item.verdict === 'confirmed' ? '✅' : item.verdict === 'refuted' ? '❌' : item.verdict === 'partially_correct' ? '⚠️' : '❓';
+    var cls = item.verdict === 'partially_correct' ? 'partial' : (item.verdict || 'unknown');
     html += '<div class="sc-item">'
       + '<div class="sc-item-icon">' + icon + '</div>'
       + '<div class="sc-item-body">'
-      + '<div class="sc-item-question">' + escapeHtml(item.question) + '</div>'
+      + '<div class="sc-item-question">' + escapeHtml(item.question || '') + '</div>'
       + '<div class="sc-item-pre">Pre-event: ' + escapeHtml(item.pre_event_answer || 'No prediction') + '</div>'
       + '<div class="sc-item-actual">Actual: ' + escapeHtml(item.actual_outcome || 'Unknown') + '</div>'
-      + '<span class="sc-item-verdict ' + (item.verdict === 'partially_correct' ? 'partial' : item.verdict) + '">' + item.verdict + '</span>'
+      + '<span class="sc-item-verdict ' + escapeHtml(cls) + '">' + escapeHtml(String(item.verdict || 'unknown').replace(/_/g, ' ')) + '</span>'
       + '</div></div>';
   });
-  document.getElementById('sc-result').innerHTML = html;
+  out.innerHTML = html;
 }
 
-function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s == null ? '' : String(s); return d.innerHTML; }
+
+(function initScorecard() {
+  var input = document.getElementById('sc-ticker');
+  input.addEventListener('input', function() {
+    clearTimeout(_scEventsTimer);
+    _scEventsTimer = setTimeout(loadEvents, 250);
+  });
+  loadEvents();
+  if (scTicker()) loadScorecard();
+})();
 </script>
 {% endblock %}

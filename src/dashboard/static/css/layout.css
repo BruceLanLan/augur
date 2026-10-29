@@ -34,9 +34,33 @@
   margin-left: 0 !important;
 }
 
+/* Sidebar column backdrop: a grid item stretched over the full row height so
+   the panel colour + border run the whole page even when main content is far
+   taller than the viewport (the sticky .sb itself is only 100vh tall). */
+.app.app-layout::before {
+  content: "";
+  grid-column: 1;
+  grid-row: 1;
+  align-self: stretch;
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  pointer-events: none;
+}
+
+.app-layout .sidebar,
+.app-layout .sb {
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden; /* .sb-nav scrolls; logo + .sb-foot stay pinned */
+}
+.app-layout .sb-nav { min-height: 0; overscroll-behavior: contain; }
+.app-layout .sb-foot { flex-shrink: 0; }
+
 .app-layout .main,
 .app-layout .app-main {
   grid-column: 2;
+  grid-row: 1;
   margin-left: 0 !important;
   max-width: none !important;
 }
@@ -468,6 +492,14 @@ html.light .council-hero {
   .app.app-layout {
     display: block;
     padding-bottom: 64px; /* room for bottom-nav */
+  }
+  .app.app-layout::before { display: none; }
+
+  /* Fixed hamburger sits at top:10px, 44px tall (bottom ≈ 54px). Push page
+     content below it in the shell so no page h1 sits under the button.
+     ui-enhance.css pads .app-main by --main-pad-top + --ticker-tape-height. */
+  .app-layout .app-main {
+    --main-pad-top: 36px;
   }
 
   .app-layout .sidebar,

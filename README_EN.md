@@ -8,7 +8,7 @@
 
 **Not another AI stock picker. A local research memory system that remembers what you knew, when you knew it, what changed, and who disagrees — and why.**
 
-[![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Release_Candidate-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v13.0.0](https://img.shields.io/badge/v13.0.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 Masters](https://img.shields.io/badge/18-Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-claude--agent-integration)
@@ -19,7 +19,7 @@
 
 > ⚠️ **For research and education only. Not investment advice.** The masters are rule-based simulations of publicly known investment philosophies, not the views of those people. Every score, Kelly size and valuation depends on data quality and model assumptions.
 
-**Contents**: [Why Augur](#-why-augur) · [What's new in v11 (screenshots)](#-whats-new-in-v11) · [Quick Start](#-quick-start-5-minutes) · [Upgrading from v10](#-upgrading-from-v10) · [18 Masters](#-18-investment-masters) · [Dashboard](#-dashboard) · [Claude / Agent](#-claude--agent-integration) · [CLI](#-cli-cheat-sheet) · [Feature Maturity](#-feature-maturity) · [Data & Privacy](#-data--privacy) · [Development](#-development) · [Docs & Roadmap](#-docs--roadmap)
+**Contents**: [Why Augur](#-why-augur) · [What's new in v11 (screenshots)](#-whats-new-in-v11) · [Quick Start](#-quick-start-5-minutes) · [Upgrading from v12](#-upgrading-from-v12-to-v13) · [Upgrading from v11](#-upgrading-from-v11-to-v12) · [Upgrading from v10](#-upgrading-from-v10) · [18 Masters](#-18-investment-masters) · [Dashboard](#-dashboard) · [Claude / Agent](#-claude--agent-integration) · [CLI](#-cli-cheat-sheet) · [Feature Maturity](#-feature-maturity) · [Data & Privacy](#-data--privacy) · [Development](#-development) · [Docs & Roadmap](#-docs--roadmap)
 
 ---
 
@@ -85,7 +85,7 @@ Using the records written by `augur backtest`, it removes one persona at a time 
 
 ## 🚀 Quick Start (5 minutes)
 
-Python 3.9+ (MCP needs 3.10+).
+Python 3.10+.
 
 ```bash
 git clone https://github.com/BruceLanLan/augur.git && cd augur
@@ -114,11 +114,44 @@ augur export AAPL --format md      # export the latest run (md / json / evidence
 augur committee AAPL --preset value -q "Is the moat widening or narrowing?"
 augur valuation AAPL               # two-stage DCF, auto-fills FCF/shares/net debt and says so
 augur skill run earnings-prep AAPL # built-in research skill: pre-earnings dossier (3 more skills)
+augur watchlist add AAPL           # add to the watchlist
+augur cycle                        # earnings cycle for the watchlist: what is ready, what is missing, next step
 ```
 
 Offline? `augur analyze NVDA --pe 60 --roe 0.45` takes manual metrics; `augur backtest AAPL --demo` uses synthetic data.
 
 ---
+
+## 🔄 Upgrading from v12 to v13
+
+v13 is a cleanup plus one new feature. The only breaking changes are the three below, all at the import level; command-line usage is unchanged.
+
+| Change | What to do |
+|---|---|
+| Python 3.10+ is required (3.9 reached end of life in October 2025) | Recreate your virtualenv with 3.10 or newer |
+| `augur.experimental.accounting` / `capital_allocation` / `debate_engine` / `relative_val` / `portfolio_risk` moved to `augur.experimental` | Change `from augur.accounting import ...` to `from augur.experimental.accounting import ...`. No product path uses these modules and their API may change |
+| Compatibility modules `augur.coordinator`, `augur.skill_spec`, `augur.mcp_entry` removed | Import from `augur.registry`, `augur.schemas.skill_spec` and `augur.mcp_server` instead; the `augur-mcp` command is unaffected |
+
+New: `augur earnings --backfill` fills past earnings dates for your watchlist from SEC 8-K filings (Item 2.02, results of operations) and estimates the next date from the recent cadence, marked `estimated`, never confirmed. Entries you wrote in the calendar are kept. After a backfill, `augur cycle` has events to work on.
+
+## 🔄 Upgrading from v11 to v12
+
+Current version: 12.2.0. 12.0 fixes correctness, 12.1 adds one command for the whole earnings cycle (`augur cycle`), 12.2 groups the CLI and tidies the dashboard.
+
+v12 adds no personas and no pages. It fixes the joints of the two loops Augur is built around — the **earnings research cycle** and **learning from past predictions**. In v11 each command worked alone, but the chain was broken.
+
+| Change | Effect | What to do |
+|---|---|---|
+| Learned-weights file moves to schema 2 | On first load, outcomes recorded by v11 and the accuracy/weights built on them are discarded (pending predictions are kept). v11 applied one "latest 30-day return" to predictions made on different days, so those outcomes did not belong to the predictions they were stored on | Nothing. Learned weights are off by default (`AUGUR_FORCE_LEARNED`), so analysis results are unaffected |
+| Each prediction resolves at its own horizon | Return from the close on the prediction day to the close 30 days later; nothing expires after 60 days; every outcome is appended to `<data dir>/prediction_outcomes.jsonl` for audit | — |
+| One prediction per persona per day | Re-analysing a ticker used to add another prediction each time | — |
+| `augur earnings` without `-t` reads the real watchlist | It read the wrong key and the queue was always empty | Add tickers with `augur watchlist-add AAPL` |
+| Dashboard earnings pages show no hard-coded content | Missing data is shown with the reason and next step instead of placeholder risks | — |
+| Research questions are saved to `<data dir>/thesis/questions.json` | They survive a dashboard restart and appear in `augur dossier` | — |
+
+| Grouped commands (12.2) | `watchlist-add` → `watchlist add`, `cron-run` → `cron run`, `research-report` → `report from-run`, `ledger` / `citations` / `comments` / `audit` / `decisions` / `verify-pack` → `records ...`, `ic-report` → `eval ic`, `skills` → `skill profiles`, `compat` → `skill compat` | Old names keep working until the next major release and only add one note line on stderr; scripts that parse stdout are unaffected |
+
+Full list in [CHANGELOG.md](CHANGELOG.md).
 
 ## 🔄 Upgrading from v10
 
@@ -204,13 +237,16 @@ augur committee NVDA --agents buffett,munger,dalio
 augur batch AAPL MSFT NVDA
 
 # Research artifacts
-augur research-report AAPL [--format json]      # consensus + evidence-derived disagreement + provenance and latency
+augur report from-run AAPL [--format json]    # consensus + evidence-derived disagreement + provenance and latency
 augur export AAPL --format md|json|evidence-pack|pdf [-o PATH] [--run-id ...]
-augur verify-pack pack.zip                      # check every file's SHA-256 in an evidence pack
+augur records verify-pack pack.zip              # check every file's SHA-256 in an evidence pack
 augur dossier AAPL                              # pre-earnings dossier
 augur valuation AAPL [--fcf 100e9 --shares 15e9 --growth 0.08 --wacc 0.10]
 augur risk-review AAPL                          # new / removed / escalated risk factors across the last two 10-Ks
-augur ledger AAPL                               # what changed between the two latest analysed runs
+augur records ledger AAPL                       # what changed between the two latest analysed runs
+augur thesis-delta AAPL                         # active theses vs the two latest runs (offline)
+augur scorecard AAPL [--pre RUN --post RUN]     # post-earnings scorecard: pre-event answers vs outcomes
+augur cycle [--days 30] [--format markdown]     # watchlist through the earnings cycle: readiness / dossier / ledger / thesis delta
 augur filing-delta AAPL --new q3.json --prev q2.json
 
 # Built-in research skills (permission-checked, saved as RunBundles)
@@ -218,25 +254,27 @@ augur skill list · augur skill show filing-delta
 augur skill run earnings-prep|filing-delta|debt-covenant-review|insider-cluster-review AAPL
 
 # Evaluation (on records written by augur backtest)
-augur backtest AAPL --days 120 [--demo] · augur ic-report
+augur backtest AAPL --days 120 [--demo] · augur eval ic
 augur eval personas AAPL [--horizon 20]         # consensus IC, hit rate, leave-one-out contribution per persona
 augur eval factors AAPL                         # each persona's score as a factor: IC, t, p
 
 # Research records
-augur decisions list|resolve|report             # decision outcomes and win rate
-augur comments add|list|resolve                 # comments on runs / theses / decisions / evidence
-augur citations report|list|accept|reject|fixed # citation-correction queue
-augur audit [--action ...]                      # audit log
+augur records decisions list|resolve|report     # decision outcomes and win rate
+augur records comments add|list|resolve         # comments on runs / theses / decisions / evidence
+augur records citations report|list|accept|reject|fixed # citation-correction queue
+augur records audit [--action ...]              # audit log
 
 # Data
 augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30 · augur doctor
+augur earnings --backfill          # backfill the earnings calendar from SEC 8-K Item 2.02: past dates + one cadence-estimated next date (tagged estimated; never overwrites hand-written entries)
 
 # Monitoring & servers
-augur watch AAPL NVDA --interval 60 · augur watchlist-add AAPL · augur cron-run
-augur serve [--port 8000] · augur mcp-server · augur skills
+augur watchlist add AAPL · augur watchlist show · augur watchlist watch AAPL NVDA --interval 60
+augur cron run · augur cron start
+augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur skill compat
 ```
 
-`augur --help` lists all 47 subcommands.
+`augur --help` lists every subcommand. From v14 related commands are grouped (`watchlist` / `cron` / `report` / `records` / `eval` / `skill`); the old flat names (e.g. `watchlist-add`, `research-report`, `ic-report`, `ledger`) still work and print a one-line hint with the new form on stderr. `augur report AAPL` is unchanged.
 
 ---
 
@@ -249,6 +287,7 @@ Stated plainly, so "there is code for it" is not mistaken for "it works".
 | **Stable** | 18-persona analysis and consensus, the CLI research loop above, main dashboard pages, MCP server, RunBundles and export, the data-source chain (yfinance → SEC EDGAR overlay) |
 | **Works, with stated limits** | The four built-in skills (only built-in manifests run; covenant review defaults to reference thresholds, not the company's credit agreements; earnings dates come from a local calendar file); the disagreement map (derived from per-dimension persona scores and cites evidence, with a fixed dimension-to-metric table); `augur risk-review` (rule-based: a reworded risk factor can show as one new plus one removed item); `augur eval` (single-ticker time-series IC with overlapping forward returns — optimistic significance, a screen only); `augur guidance` (needs `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` and calls a paid LLM); PDF export (needs the `[export]` extra) |
 | **Experimental (off by default)** | Rolling-IC dynamic weights (`AUGUR_FORCE_RIC=1`), learned weights (`AUGUR_FORCE_LEARNED=1`) — neither has passed a pre-registered out-of-sample test |
+| **Code only, no entry point** | `augur.experimental.accounting` (accounting quality), `augur.experimental.capital_allocation`, `augur.experimental.debate_engine` (the dashboard `/debate` page uses a different implementation), `augur.experimental.relative_val` (relative valuation), `augur.experimental.portfolio_risk` — unit-tested, but no CLI, dashboard or MCP path calls them; usable as a library, not product features |
 | **Not instrumented yet** | Token usage in run records (only latency is recorded) |
 
 ---
@@ -285,7 +324,7 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 ```
 
 - Tests run against a temporary `AUGUR_DATA_DIR`, never write to your `~/.augur`, and pass with the network fully blocked.
-- CI (`.github/workflows/`): `Tests` runs the full suite on Python 3.9 / 3.11 / 3.12 and asserts the collected test count; `Hermetic Smoke` installs from the wheel and the sdist into fresh venvs and runs ruff and pip-audit.
+- CI (`.github/workflows/`): `Tests` runs the full suite on Python 3.10 / 3.11 / 3.12 and asserts the collected test count; `Hermetic Smoke` installs from the wheel and the sdist into fresh venvs and runs ruff and pip-audit.
 - See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
@@ -308,7 +347,43 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 ## 📝 Changelog
 
 <details open>
-<summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
+<summary><strong>v13.0.0 — Earnings dates from SEC, Python 3.10, smaller public API (current)</strong></summary>
+
+- **Earnings date backfill**: `augur earnings --backfill` fills past earnings dates from SEC 8-K filings (Item 2.02) and estimates the next one from the cadence (marked estimated); `augur cycle` no longer depends on a hand-written calendar
+- **Breaking**: Python 3.10+; five modules with no product entry point moved to `augur.experimental`; three compatibility modules removed. See "Upgrading from v12 to v13" above
+
+</details>
+
+<details>
+<summary><strong>v12.2.0 — One command tree, clearer dashboard</strong></summary>
+
+- **Grouped CLI**: `watchlist` / `cron` / `report` / `records` / `eval` / `skill` groups; `augur --help` goes from 47 to 38 entries; old names still work and point to the new form
+- **Dashboard**: sidebar grouped into Research / Investors / Tools / System with the Earnings Queue, Thesis Journal, Scorecard and Research Inbox now linked; earnings rows show readable missing items and the command that fills each; the scorecard event picker no longer hangs on Loading; Thesis Journal empty states, errors and phone layout reworked
+- **Learning data**: the dashboard and the cron job no longer overwrite each other's writes
+
+</details>
+
+<details>
+<summary><strong>v12.1.0 — The earnings cycle in one command</strong></summary>
+
+- `augur cycle`: for each watchlist ticker reporting soon — readiness, dossier, change since the last run, thesis delta — ending with `ready X/Y` and a next step per ticker
+- `augur scorecard`: which research questions the pre- and post-event runs answered
+- `augur thesis-delta`: active theses against the two latest runs
+
+</details>
+
+<details>
+<summary><strong>v12.0.0 — Earnings loop and honest learning</strong></summary>
+
+- **Learning outcomes fixed**: each persona prediction resolves at its own 30-day horizon (v11 applied one "latest 30-day return" to predictions made on different days); nothing ages out, the boundary is by calendar day, and every outcome is appended to `prediction_outcomes.jsonl` for audit; one prediction per agent per day. Outcomes recorded by v11 are discarded on first load; pending predictions are kept
+- **Earnings loop wiring**: the earnings queue reads the real watchlist, dossier readiness uses saved runs, and the dashboard no longer shows hard-coded earnings content
+- **Research records**: research questions persist, same-second run ordering fixed, runs record the real package version
+- See [CHANGELOG](CHANGELOG.md) and [ROADMAP](docs/ROADMAP.md)
+
+</details>
+
+<details>
+<summary><strong>v11.0.0-rc1 — Research Memory System</strong></summary>
 
 - **Research foundation**: EvidenceItem with three time semantics, Claim, StepResult, immutable RunBundle, declarative SkillSpec v1
 - **Research loop**: Thesis Journal, Filing Delta, disagreement map, Guidance Tracker, research inbox, DCF valuation lab

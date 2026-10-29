@@ -10,8 +10,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
     <link rel="dns-prefetch" href="https://fonts.gstatic.com">
     <!-- Critical CSS preload -->
-    <link rel="preload" href="/static/css/layout.css?v=11.0.0" as="style">
-    <link rel="preload" href="/static/css/colors_and_type.css?v=11.0.0" as="style">
+    <link rel="preload" href="/static/css/layout.css?v=13.0.0" as="style">
+    <link rel="preload" href="/static/css/colors_and_type.css?v=13.0.0" as="style">
     <meta name="description" content="Augur - Multi-agent investment analysis platform with 18 investor personas">
     <meta name="keywords" content="Augur, AI投资分析, 多智能体, 股票分析, 巴菲特, 投资大师, 共识分析, Multi-Agent, Investment Analysis">
     <meta property="og:title" data-i18n-meta="meta-og-title" content="{% block og_title %}Augur - 18位投资大师AI共识分析系统{% endblock %}">
@@ -26,13 +26,13 @@
     <link rel="icon" type="image/png" href="/static/images/favicon.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <link href="/static/css/bloomberg.css?v=8.1.0" rel="stylesheet">
-    <link href="/static/css/ui-enhance.css?v=8.1.0" rel="stylesheet">
-    <link href="/static/css/colors_and_type.css?v=8.1.0" rel="stylesheet">
-    <link href="/static/css/augur.css?v=8.1.0" rel="stylesheet">
-    <link href="/static/css/layout.css?v=8.1.0" rel="stylesheet">
-    <link href="/static/css/evidence.css?v=8.1.0" rel="stylesheet">
-    <link href="/static/css/loading.css?v=8.1.0" rel="stylesheet">
+    <link href="/static/css/bloomberg.css?v=13.0.0" rel="stylesheet">
+    <link href="/static/css/ui-enhance.css?v=13.0.0" rel="stylesheet">
+    <link href="/static/css/colors_and_type.css?v=13.0.0" rel="stylesheet">
+    <link href="/static/css/augur.css?v=13.0.0" rel="stylesheet">
+    <link href="/static/css/layout.css?v=13.0.0" rel="stylesheet">
+    <link href="/static/css/evidence.css?v=13.0.0" rel="stylesheet">
+    <link href="/static/css/loading.css?v=13.0.0" rel="stylesheet">
     {% block extra_head %}{% endblock %}
     <link rel="manifest" href="/static/manifest.json">
     <meta name="theme-color" content="#d4a017">
@@ -58,8 +58,8 @@
             </button>
 
             <nav class="sb-nav" aria-label="Primary">
-                <!-- 分析 Group -->
-                <div class="sb-group" data-i18n="group-analysis">Analysis</div>
+                <!-- 研究 Group -->
+                <div class="sb-group" data-i18n="group-research">Research</div>
                 <a class="sb-item nav-item" href="/" data-page="home">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
                     <span data-i18n="nav-dashboard">Dashboard</span>
@@ -68,65 +68,76 @@
                     <svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 9l-5 5-2-2-4 4"/></svg>
                     <span data-i18n="nav-stocks">Stock Analysis</span>
                 </a>
-                <a class="sb-item nav-item" href="/signals" data-page="signals">
-                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                    <span data-i18n="nav-signals">Signals</span>
-                    <em class="sb-badge">LIVE</em>
-                </a>
-                <a class="sb-item nav-item" href="/scanner" data-page="scanner">
-                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="currentColor" stroke-width="1" opacity="0.5"/></svg>
-                    <span data-i18n="nav_scanner">Scanner</span>
-                </a>
                 <a class="sb-item nav-item" href="/watchlist" data-page="watchlist">
                     <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
                     <span data-i18n="nav-watchlist">Watchlist</span>
                 </a>
-                <a class="sb-item nav-item" href="/portfolio" data-page="portfolio">
-                    <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 3v4M8 3v4M2 11h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    <span data-i18n="nav-portfolio">Portfolio</span>
+                <a class="sb-item nav-item" href="/earnings" data-page="earnings">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 2v4M8 2v4M3 10h18M8 14h2M14 14h2M8 18h2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span data-i18n="nav-earnings">Earnings Queue</span>
                 </a>
-                <a class="sb-item nav-item" href="/backtest" data-page="backtest">
-                    <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/><path d="M3 12h1M12 3v1M21 12h1M12 21v1"/></svg>
-                    <span data-i18n="nav-backtest">Backtest</span>
+                <a class="sb-item nav-item" href="/thesis" data-page="thesis">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5M9 7h7M9 11h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span data-i18n="nav-thesis">Thesis Journal</span>
+                </a>
+                <a class="sb-item nav-item" href="/scorecard" data-page="scorecard">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 11l3 3 8-8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span data-i18n="nav-scorecard">Scorecard</span>
+                </a>
+                <a class="sb-item nav-item" href="/inbox" data-page="inbox">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 12h-6l-2 3h-4l-2-3H2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span data-i18n="nav-inbox">Research Inbox</span>
                 </a>
 
                 <!-- 投资人 Group -->
-                <div class="sb-group" data-i18n="group-investors">The Council</div>
+                <div class="sb-group" data-i18n="group-investors">Investors</div>
                 <a class="sb-item nav-item" href="/personas" data-page="personas">
                     <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     <span data-i18n="nav-personas">18 Masters</span>
                 </a>
-
                 <a class="sb-item nav-item" href="/create-persona" data-page="create-persona">
                     <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     <span data-i18n="nav-create-persona">Summon New</span>
-                </a>
-
-                <!-- v8 其他功能 -->
-                <div class="sb-group" data-i18n="group-v8">Extra Tools</div>
-                <a class="sb-item nav-item" href="/optimizer" data-page="optimizer">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    <span data-i18n="nav-optimizer">Optimizer</span>
-                </a>
-                <a class="sb-item nav-item" href="/valuation" data-page="valuation">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"/></svg>
-                    <span data-i18n="nav-valuation">Valuation</span>
-                </a>
-                <a class="sb-item nav-item" href="/compare" data-page="compare">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 3v18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-                    <span data-i18n="nav-compare">Compare</span>
-                </a>
-                <a class="sb-item nav-item" href="/debate" data-page="debate">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    <span data-i18n="nav-debate">Debate</span>
                 </a>
                 <a class="sb-item nav-item" href="/committee" data-page="committee">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="9" cy="7" r="3" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17" cy="7" r="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 21v-2a6 6 0 0 1 6-6h6a6 6 0 0 1 6 6v2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v4M10 13h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                     <span data-i18n="nav-committee">Committee</span>
                 </a>
-                <a class="sb-item nav-item" href="/hermes-setup" data-page="hermes-setup">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 12h8M12 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                    <span data-i18n="nav-hermes-setup">Hermes Setup</span>
+                <a class="sb-item nav-item" href="/debate" data-page="debate">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 10h8M8 14h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span data-i18n="nav-debate">Debate</span>
+                </a>
+                <a class="sb-item nav-item" href="/compare" data-page="compare">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3M12 3v18" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    <span data-i18n="nav-compare">Compare</span>
+                </a>
+
+                <!-- 工具 Group -->
+                <div class="sb-group" data-i18n="group-tools">Tools</div>
+                <a class="sb-item nav-item" href="/valuation" data-page="valuation">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="none" stroke="currentColor" stroke-width="2"/><rect x="3" y="3" width="18" height="18" rx="2" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3"/></svg>
+                    <span data-i18n="nav-valuation">Valuation</span>
+                </a>
+                <a class="sb-item nav-item" href="/optimizer" data-page="optimizer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M18 20V10M12 20V4M6 20v-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span data-i18n="nav-optimizer">Optimizer</span>
+                </a>
+                <a class="sb-item nav-item" href="/backtest" data-page="backtest">
+                    <svg viewBox="0 0 24 24"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/><path d="M3 12h1M12 3v1M21 12h1M12 21v1"/></svg>
+                    <span data-i18n="nav-backtest">Backtest</span>
+                </a>
+                <a class="sb-item nav-item" href="/scanner" data-page="scanner">
+                    <svg viewBox="0 0 24 24"><path d="M3 3h18v18H3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke="currentColor" stroke-width="1" opacity="0.5"/></svg>
+                    <span data-i18n="nav_scanner">Scanner</span>
+                </a>
+                <a class="sb-item nav-item" href="/portfolio" data-page="portfolio">
+                    <svg viewBox="0 0 24 24"><path d="M2 7a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 3v4M8 3v4M2 11h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                    <span data-i18n="nav-portfolio">Portfolio</span>
+                </a>
+                <a class="sb-item nav-item" href="/signals" data-page="signals">
+                    <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                    <span data-i18n="nav-signals">Signals</span>
+                    <em class="sb-badge">LIVE</em>
                 </a>
                 <a class="sb-item nav-item" href="/history" data-page="history">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -135,6 +146,10 @@
                 <a class="sb-item nav-item" href="/performance" data-page="performance">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="none" stroke="currentColor" stroke-width="2"/></svg>
                     <span data-i18n="nav-performance">Leaderboard</span>
+                </a>
+                <a class="sb-item nav-item" href="/hermes-setup" data-page="hermes-setup">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8 12h8M12 8l4 4-4 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span data-i18n="nav-hermes-setup">Hermes Setup</span>
                 </a>
 
                 <!-- 系统 Group -->
@@ -1136,9 +1151,9 @@
         startHealthCheck();
     })();
     </script>
-    <script src="/static/js/i18n.js?v=8.1.0" defer></script>
-    <script src="/static/js/command-palette.js?v=11.0.0" defer></script>
-    <script src="/static/js/theme-toggle.js?v=8.1.0" defer></script>
+    <script src="/static/js/i18n.js?v=13.0.0" defer></script>
+    <script src="/static/js/command-palette.js?v=13.0.0" defer></script>
+    <script src="/static/js/theme-toggle.js?v=13.0.0" defer></script>
     {% block extra_scripts %}{% endblock %}
 
     <script>

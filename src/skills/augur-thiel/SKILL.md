@@ -1,7 +1,7 @@
 ---
 name: augur-thiel
 description: "Peter Thiel AI — 0→1 monopoly thinking, tech platforms and deep tech"
-version: 11.0.0rc1
+version: 13.0.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

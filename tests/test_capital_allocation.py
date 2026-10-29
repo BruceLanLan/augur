@@ -3,7 +3,7 @@
 
 import pytest
 
-from augur.capital_allocation import (
+from augur.experimental.capital_allocation import (
     BuybackRecord,
     CapitalAllocationAnalyzer,
     CapitalAllocationReport,

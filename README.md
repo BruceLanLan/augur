@@ -8,7 +8,7 @@
 
 **不是又一个 AI 荐股工具。是一个帮你记住"你何时知道什么、什么变了、谁在什么事实上分歧"的本地研究记忆系统。**
 
-[![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Release_Candidate-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v13.0.0](https://img.shields.io/badge/v13.0.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18-位投资大师)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-接入-claude--agent)
@@ -19,7 +19,7 @@
 
 > ⚠️ **仅供学习研究，不构成投资建议。** 大师观点是基于公开投资理念的规则化模拟，不代表本人立场；所有分数、Kelly 仓位与估值都依赖数据质量和模型假设。
 
-**目录**：[为什么不一样](#-为什么-augur-不一样) · [v11 新功能截图](#-v11-新功能一览) · [5 分钟上手](#-5-分钟上手) · [从 v10 升级](#-从-v10-升级) · [18 位大师](#-18-位投资大师) · [Dashboard](#-dashboard) · [接入 Claude / Agent](#-接入-claude--agent) · [CLI 速查](#-cli-速查) · [功能成熟度](#-功能成熟度) · [数据与隐私](#-数据与隐私) · [开发](#-开发) · [文档与路线图](#-文档与路线图)
+**目录**：[为什么不一样](#-为什么-augur-不一样) · [v11 新功能截图](#-v11-新功能一览) · [5 分钟上手](#-5-分钟上手) · [从 v12 升级](#-从-v12-升级到-v13) · [从 v11 升级](#-从-v11-升级到-v12) · [从 v10 升级](#-从-v10-升级) · [18 位大师](#-18-位投资大师) · [Dashboard](#-dashboard) · [接入 Claude / Agent](#-接入-claude--agent) · [CLI 速查](#-cli-速查) · [功能成熟度](#-功能成熟度) · [数据与隐私](#-数据与隐私) · [开发](#-开发) · [文档与路线图](#-文档与路线图)
 
 ---
 
@@ -85,7 +85,7 @@
 
 ## 🚀 5 分钟上手
 
-需要 Python 3.9+（MCP 功能需要 3.10+）。
+需要 Python 3.10+。
 
 ```bash
 git clone https://github.com/BruceLanLan/augur.git && cd augur
@@ -114,11 +114,44 @@ augur export AAPL --format md      # 导出最近一次运行（md / json / evid
 augur committee AAPL --preset value -q "护城河是在变宽还是变窄？"
 augur valuation AAPL               # 两阶段 DCF，自动取 FCF/股本/净负债并注明来源
 augur skill run earnings-prep AAPL # 内置研究 Skill：财报前 dossier（另有 filing-delta 等 3 个）
+augur watchlist add AAPL           # 加入自选
+augur cycle                        # 自选股的财报周期一览：谁准备好了、缺什么、下一步做什么
 ```
 
 没有网络？`augur analyze NVDA --pe 60 --roe 0.45` 可以手动传指标；`augur backtest AAPL --demo` 使用离线合成数据。
 
 ---
+
+## 🔄 从 v12 升级到 v13
+
+v13 是一次清理加一个新功能。不兼容的地方只有下面三项，都在 import 层面，命令行用法不变。
+
+| 变化 | 如何处理 |
+|---|---|
+| 需要 Python 3.10+（3.9 已于 2025 年 10 月停止官方支持） | 用 3.10 或更新的解释器重建虚拟环境 |
+| `augur.experimental.accounting` / `capital_allocation` / `debate_engine` / `relative_val` / `portfolio_risk` 移到 `augur.experimental` | 把 `from augur.accounting import ...` 改成 `from augur.experimental.accounting import ...`。这几个模块没有任何产品入口在用，API 可能变化 |
+| 删除兼容转发模块 `augur.coordinator`、`augur.skill_spec`、`augur.mcp_entry` | 分别改为从 `augur.registry`、`augur.schemas.skill_spec`、`augur.mcp_server` 导入；`augur-mcp` 命令不受影响 |
+
+新功能：`augur earnings --backfill` 从 SEC 8-K（Item 2.02 业绩公告）回填自选股的历史财报日期，并按最近的发布节奏估算下一次日期，标为 `estimated`，不会标成"已确认"。你手工写进日历的条目会保留。回填之后 `augur cycle` 就有事件可跑了。
+
+## 🔄 从 v11 升级到 v12
+
+当前版本 12.2.0。12.0 修正确性，12.1 加了一条命令跑完财报周期（`augur cycle`），12.2 把命令分了组并整理了 Dashboard。
+
+v12 不加新大师、不加新页面，修的是两条闭环的衔接处：**财报研究周期**和**从历史预测中学习**。旧版本里单个命令都能跑，但连起来是断的。
+
+| 变化 | 影响 | 如何处理 |
+|---|---|---|
+| 学习权重文件升级为 schema 2 | 第一次加载时，v11 记下的结算结果和由它算出的准确率、权重会被作废（待结算的预测保留）。原因是 v11 把同一个"最近 30 天收益"套到了不同日期的预测上，这些结果对不上各自的预测 | 无需操作。学习权重默认本来就关闭（`AUGUR_FORCE_LEARNED`），分析结果不受影响 |
+| 每条预测按自己的日期结算 | 收益从预测当天收盘算到 30 天后收盘；不再因为超过 60 天而作废；全部结算结果追加写入 `<数据目录>/prediction_outcomes.jsonl`，可以复核 | — |
+| 同一天重复分析只记一条预测 | 之前每分析一次就给每位大师多记一条 | — |
+| `augur earnings` 不带 `-t` 时读取真实 watchlist | 之前读错字段，队列永远为空 | 用 `augur watchlist-add AAPL` 加入后即可 |
+| Dashboard 财报页不再显示写死的内容 | 缺数据时明确写出原因和下一步，而不是显示假的风险条目 | — |
+| 研究问题保存到 `<数据目录>/thesis/questions.json` | 重启 Dashboard 后问题还在，`augur dossier` 也能读到 | — |
+
+| 命令分组（12.2） | `watchlist-add` → `watchlist add`、`cron-run` → `cron run`、`research-report` → `report from-run`、`ledger` / `citations` / `comments` / `audit` / `decisions` / `verify-pack` → `records ...`、`ic-report` → `eval ic`、`skills` → `skill profiles`、`compat` → `skill compat` | 旧名字在下一个大版本前都能用，只会在 stderr 多打一行提示；脚本解析 stdout 不受影响 |
+
+完整列表见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 🔄 从 v10 升级
 
@@ -206,13 +239,16 @@ augur committee NVDA --agents buffett,munger,dalio
 augur batch AAPL MSFT NVDA
 
 # 研究产物
-augur research-report AAPL [--format json]      # 共识 + 证据化分歧图 + 来源与耗时
+augur report from-run AAPL [--format json]    # 共识 + 证据化分歧图 + 来源与耗时
 augur export AAPL --format md|json|evidence-pack|pdf [-o 路径] [--run-id ...]
-augur verify-pack pack.zip                      # 校验证据包每个文件的 SHA-256
+augur records verify-pack pack.zip              # 校验证据包每个文件的 SHA-256
 augur dossier AAPL                              # 财报前 dossier
 augur valuation AAPL [--fcf 100e9 --shares 15e9 --growth 0.08 --wacc 0.10]
 augur risk-review AAPL                          # 最近两份 10-K 的风险因素新增/删除/措辞升级
-augur ledger AAPL                               # 最近两次分析运行之间变了什么
+augur records ledger AAPL                       # 最近两次分析运行之间变了什么
+augur thesis-delta AAPL                         # 当前有效论点 vs 最近两次运行（离线）
+augur scorecard AAPL [--pre RUN --post RUN]     # 财报后记分卡：研究问题的事前回答 vs 事后结果
+augur cycle [--days 30] [--format markdown]     # 观察列表跑一遍财报研究闭环：就绪度/dossier/ledger/论点变化
 augur filing-delta AAPL --new q3.json --prev q2.json
 
 # 内置研究 Skill（执行前检查权限，结果存为 RunBundle）
@@ -220,25 +256,27 @@ augur skill list · augur skill show filing-delta
 augur skill run earnings-prep|filing-delta|debt-covenant-review|insider-cluster-review AAPL
 
 # 评估（基于 augur backtest 生成的回测记录）
-augur backtest AAPL --days 120 [--demo] · augur ic-report
+augur backtest AAPL --days 120 [--demo] · augur eval ic
 augur eval personas AAPL [--horizon 20]         # 共识 IC、命中率、逐个剔除大师的边际贡献
 augur eval factors AAPL                         # 每位大师分数作为因子的 IC、t 值、p 值
 
 # 研究记录
-augur decisions list|resolve|report             # 决策结果与胜率
-augur comments add|list|resolve                 # 对运行 / 论点 / 决策 / 证据的评论
-augur citations report|list|accept|reject|fixed # 引用纠错队列
-augur audit [--action ...]                      # 审计日志
+augur records decisions list|resolve|report     # 决策结果与胜率
+augur records comments add|list|resolve         # 对运行 / 论点 / 决策 / 证据的评论
+augur records citations report|list|accept|reject|fixed # 引用纠错队列
+augur records audit [--action ...]              # 审计日志
 
 # 数据
 augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30 · augur doctor
+augur earnings --backfill          # 从 SEC 8-K Item 2.02 回填财报日历：历史日期 + 一个按节奏估算的下次日期（标 estimated，不覆盖手写条目）
 
 # 监控与服务
-augur watch AAPL NVDA --interval 60 · augur watchlist-add AAPL · augur cron-run
-augur serve [--port 8000] · augur mcp-server · augur skills
+augur watchlist add AAPL · augur watchlist show · augur watchlist watch AAPL NVDA --interval 60
+augur cron run · augur cron start
+augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur skill compat
 ```
 
-`augur --help` 列出全部 47 个子命令。
+`augur --help` 列出全部子命令。v14 起相关命令按组归类（`watchlist` / `cron` / `report` / `records` / `eval` / `skill`）；旧的平铺名（如 `watchlist-add`、`research-report`、`ic-report`、`ledger`）仍可用，会在 stderr 打印一行新写法提示。`augur report AAPL` 用法不变。
 
 ---
 
@@ -251,6 +289,7 @@ augur serve [--port 8000] · augur mcp-server · augur skills
 | **稳定** | 18 位大师分析与共识、CLI 研究闭环（上面实测过的命令）、Dashboard 主要页面、MCP server、RunBundle 与导出、数据源链（yfinance → SEC EDGAR 覆盖） |
 | **可用，有明确边界** | 4 个内置 Skill（只运行内置清单；债务约束默认用参考阈值而非信贷协议条款；财报日期来自本地日历文件）；分歧图（按大师的分维度评分推导并引用证据，维度到指标的映射是固定表）；`augur risk-review`（规则匹配，措辞小改可能同时显示为"新增"和"删除"）；`augur eval`（单只股票的时间序列 IC，远期收益重叠，显著性偏乐观，只作筛查）；`augur guidance`（需 `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1`，会调用付费 LLM）；PDF 导出（需 `[export]`） |
 | **实验（默认关闭）** | rolling-IC 动态权重（`AUGUR_FORCE_RIC=1`）、学习权重（`AUGUR_FORCE_LEARNED=1`）——都还没有通过预注册的样本外验证 |
+| **只有代码、没有入口** | `augur.experimental.accounting`（会计质量）、`augur.experimental.capital_allocation`（资本配置）、`augur.experimental.debate_engine`（辩论引擎；Dashboard 的 `/debate` 用的是另一套实现）、`augur.experimental.relative_val`（相对估值）、`augur.experimental.portfolio_risk`（组合风险）——有单元测试，但 CLI、Dashboard 和 MCP 都没有调用它们，可以当库用，不算产品功能 |
 | **尚未计量** | 运行记录中的 token 用量（目前只记录耗时） |
 
 ---
@@ -287,7 +326,7 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 ```
 
 - 测试使用独立的临时 `AUGUR_DATA_DIR`，不会写入你的 `~/.augur`；在完全断网的环境下也能全部通过。
-- CI（`.github/workflows/`）：`Tests` 在 Python 3.9 / 3.11 / 3.12 上跑全量测试并断言收集数；`Hermetic Smoke` 从 wheel 和 sdist 分别全新安装并跑 ruff 与 pip-audit。
+- CI（`.github/workflows/`）：`Tests` 在 Python 3.10 / 3.11 / 3.12 上跑全量测试并断言收集数；`Hermetic Smoke` 从 wheel 和 sdist 分别全新安装并跑 ruff 与 pip-audit。
 - 贡献方式见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ---
@@ -296,7 +335,7 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 
 | 文档 | 内容 |
 |---|---|
-| [docs/ROADMAP.md](docs/ROADMAP.md) | 唯一权威路线图：v11 RC → GA 的步骤、完成定义与待决事项 |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | 唯一权威路线图：当前阶段、每一步的验证点、v13 之后的候选与待决事项 |
 | [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md) | v11 发布说明与迁移指南 |
 | [docs/reviews/](docs/reviews/) | 项目评审记录（含每条问题的证据等级与修复） |
 | [docs/schema-reference.md](docs/schema-reference.md) | EvidenceItem / Claim / StepResult / RunBundle / SkillSpec |
@@ -310,7 +349,43 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 ## 📝 更新日志
 
 <details open>
-<summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
+<summary><strong>v13.0.0 — SEC 财报日期回填、Python 3.10、精简公开 API (current)</strong></summary>
+
+- **财报日期回填**：`augur earnings --backfill` 从 SEC 8-K（Item 2.02）补齐历史财报日期，并按发布节奏估算下一次（标为 estimated）；`augur cycle` 不再依赖手工日历
+- **不兼容变化**：需要 Python 3.10+；5 个没有产品入口的模块移到 `augur.experimental`；删除 3 个兼容转发模块。迁移方法见上方"从 v12 升级到 v13"
+
+</details>
+
+<details>
+<summary><strong>v12.2.0 — 命令分组与 Dashboard 整理</strong></summary>
+
+- **命令分组**：`watchlist` / `cron` / `report` / `records` / `eval` / `skill` 六个分组，`augur --help` 从 47 项减到 38 项；旧命令名保留，会提示新写法
+- **Dashboard**：侧边栏按 研究 / 大师 / 工具 / 系统 分组，补上财报队列、投资论文、记分卡、研究收件箱四个入口；财报页把缺失项写成人话并给出补齐命令；记分卡页的事件下拉不再卡在 Loading；Thesis Journal 的空状态、报错和手机布局都重新整理
+- **学习数据**：Dashboard 和定时任务同时写学习文件时不再互相覆盖
+
+</details>
+
+<details>
+<summary><strong>v12.1.0 — 一条命令跑完财报周期</strong></summary>
+
+- `augur cycle`：自选股里即将发财报的每只票，依次给出就绪状态、dossier、两次运行之间的变化、投资论文变化，最后汇总 `ready X/Y` 和每只票的下一步
+- `augur scorecard`：财报前后两次运行各回答了哪些研究问题
+- `augur thesis-delta`：投资论文和最近两次运行对照
+
+</details>
+
+<details>
+<summary><strong>v12.0.0 — 财报闭环与诚实的学习结算</strong></summary>
+
+- **学习结算修正**：每条大师预测按自己的日期结算 30 天收益（v11 把同一个"最近 30 天收益"套到不同日期的预测上）；不再过期丢弃、按日历日判断、全部结果追加写入 `prediction_outcomes.jsonl` 可复核；同日重复分析只记一条。v11 记录的结算结果在首次加载时作废，待结算预测保留
+- **财报闭环接线**：财报队列读取真实 watchlist、dossier 就绪判断改用真实运行记录、Dashboard 不再显示写死的财报内容
+- **研究记录**：研究问题落盘、同一秒多次运行的排序修正、运行记录写入真实版本号
+- 详见 [CHANGELOG](CHANGELOG.md) 与 [ROADMAP 2026-10 阶段](docs/ROADMAP.md)
+
+</details>
+
+<details>
+<summary><strong>v11.0.0-rc1 — Research Memory System</strong></summary>
 
 - **研究底座**：EvidenceItem 三类时间语义、Claim、StepResult、不可变 RunBundle、声明式 SkillSpec v1
 - **研究闭环**：Thesis Journal、Filing Delta、分歧图、Guidance Tracker、研究收件箱、DCF 估值实验室

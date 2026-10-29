@@ -26,10 +26,12 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
-from datetime import date, datetime, timedelta, timezone
+import time
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from augur import __version__
 from augur.data_dir import get_data_dir
 from augur.schemas.run_bundle import (
     CoverageStats,
@@ -82,6 +84,29 @@ def _json_default(obj: Any) -> Any:
 #: run_ids handed out in this process (a run is only on disk once finished).
 _ISSUED_RUN_IDS: Set[str] = set()
 _ISSUED_RUN_IDS_LOCK = threading.Lock()
+#: last start sequence handed out (ns since epoch, strictly increasing).
+_LAST_START_SEQ = 0
+
+
+def _next_start_seq() -> int:
+    """Strictly increasing ns timestamp used to order runs that share a created_at."""
+    global _LAST_START_SEQ
+    with _ISSUED_RUN_IDS_LOCK:
+        _LAST_START_SEQ = max(time.time_ns(), _LAST_START_SEQ + 1)
+        return _LAST_START_SEQ
+
+
+def _disambiguated_run_id(ticker: str, created_at: datetime, manifest_hash: str, n: int) -> str:
+    """The ``n``-th candidate run_id for a run (``n == 1`` is the plain id).
+
+    ``RunBundle.run_id`` must match ``run_..._<8 hex>``, so a collision is
+    resolved inside the hash slot (hash of ``manifest_hash:n``) rather than
+    by appending a suffix or shifting the timestamp: ``created_at`` stays the
+    real start time and existing ids keep their format.
+    """
+    if n > 1:
+        manifest_hash = hashlib.sha256(f"{manifest_hash}:{n}".encode("utf-8")).hexdigest()
+    return generate_run_id(ticker, created_at, manifest_hash)
 
 
 class RunTracker:
@@ -108,7 +133,7 @@ class RunTracker:
         ticker: str,
         config_version: str = "1.0",
         model_version: str = "1.0",
-        code_version: str = "11.0.0rc1",
+        code_version: str = __version__,
     ) -> None:
         self.ticker = ticker.upper()
         self.config_version = config_version
@@ -120,6 +145,9 @@ class RunTracker:
         self.manifest: Optional[RunManifest] = None
         self.created_at: Optional[datetime] = None
         self.input_snapshot_hash: Optional[str] = None
+        # Strictly increasing start sequence; breaks created_at ties when
+        # picking the latest run.
+        self.start_seq: Optional[int] = None
 
         # Accumulated step results (order preserved)
         self._step_results: List[StepResult] = []
@@ -157,6 +185,7 @@ class RunTracker:
         resumed = self.run_id is not None and self.created_at is not None
         if not resumed:
             self.created_at = datetime.now(timezone.utc)
+            self.start_seq = _next_start_seq()
         self.input_snapshot_hash = input_snapshot_hash or hashlib.sha256(
             b""
         ).hexdigest()
@@ -179,13 +208,15 @@ class RunTracker:
 
         # run_ids have one-second resolution. Two identical runs in the same
         # second produced the same id and the second bundle overwrote the
-        # first, so step the timestamp until the id is unused.
-        run_id = generate_run_id(self.ticker, self.created_at, manifest_hash)
+        # first. Disambiguate the id; never touch created_at, which must stay
+        # the real start time so latest-run ordering is correct.
         data_dir = get_data_dir()
         with _ISSUED_RUN_IDS_LOCK:  # dashboard requests can start runs concurrently
+            n = 1
+            run_id = _disambiguated_run_id(self.ticker, self.created_at, manifest_hash, n)
             while (data_dir / "runs" / f"{run_id}.json").exists() or run_id in _ISSUED_RUN_IDS:
-                self.created_at += timedelta(seconds=1)
-                run_id = generate_run_id(self.ticker, self.created_at, manifest_hash)
+                n += 1
+                run_id = _disambiguated_run_id(self.ticker, self.created_at, manifest_hash, n)
             _ISSUED_RUN_IDS.add(run_id)
         self.run_id = run_id
         return self.run_id
@@ -327,6 +358,7 @@ class RunTracker:
             coverage=coverage,
             metadata={
                 **self._run_metadata,
+                **({"start_seq": self.start_seq} if self.start_seq is not None else {}),
                 "ticker": self.ticker,
                 "code_version": self.code_version,
             },
@@ -374,6 +406,7 @@ class RunTracker:
             "created_at": self.created_at.isoformat()
             if self.created_at
             else None,
+            "start_seq": self.start_seq,
             "step_results": [
                 sr.model_dump(mode="json") for sr in self._step_results
             ],
@@ -456,6 +489,8 @@ class RunTracker:
         created_str = raw.get("created_at")
         if created_str:
             tracker.created_at = datetime.fromisoformat(created_str)
+        if isinstance(raw.get("start_seq"), int):
+            tracker.start_seq = raw["start_seq"]
 
         # Rebuild manifest
         tracker.manifest = RunManifest(
@@ -526,8 +561,30 @@ class RunTracker:
         return list(self._step_results)
 
 
+def _run_sort_key(bundle: Dict[str, Any], fallback_id: str) -> Tuple[datetime, int, str]:
+    """Ordering key for "latest run": (created_at, start sequence, run_id).
+
+    ``created_at`` is parsed (not string-compared) so ``Z`` / ``+00:00`` and
+    missing microseconds order correctly. Bundles written before the start
+    sequence existed sort with sequence 0.
+    """
+    raw = str(bundle.get("created_at", "") or "")
+    try:
+        created = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+    except ValueError:
+        created = datetime.min.replace(tzinfo=timezone.utc)
+    meta = bundle.get("metadata") or {}
+    seq = meta.get("start_seq") if isinstance(meta, dict) else None
+    return created, seq if isinstance(seq, int) else 0, str(bundle.get("run_id", fallback_id))
+
+
 def list_run_ids(ticker: str) -> List[str]:
-    """Persisted RunBundle ids for ``ticker``, newest first (by ``created_at``, then id)."""
+    """Persisted RunBundle ids for ``ticker``, newest first.
+
+    Ordered by ``created_at``, then the run's start sequence, then id.
+    """
     runs_dir = get_data_dir() / "runs"
     if not runs_dir.is_dir():
         return []
@@ -537,11 +594,13 @@ def list_run_ids(ticker: str) -> List[str]:
             bundle = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             continue
+        if not isinstance(bundle, dict):
+            continue
         if str(bundle.get("metadata", {}).get("ticker", "")).upper() != ticker.upper():
             continue
-        keyed.append((str(bundle.get("created_at", "")), str(bundle.get("run_id", path.stem)), bundle))
+        keyed.append((_run_sort_key(bundle, path.stem), path.stem))
     keyed.sort(reverse=True)
-    return [run_id for _created, run_id, _bundle in keyed]
+    return [run_id for _key, run_id in keyed]
 
 
 def extract_persona_results(bundle: Dict[str, Any]) -> Tuple[Dict[str, Dict[str, Any]], Dict[str, Any]]:

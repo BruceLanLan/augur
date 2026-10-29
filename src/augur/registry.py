@@ -11,7 +11,6 @@ Contains:
 
 import logging
 import time
-from datetime import datetime
 from typing import Dict, List, Optional
 from threading import RLock
 from pathlib import Path
@@ -38,19 +37,21 @@ def _get_learning_engine():
 
 def _check_and_record_outcomes(le, ticker: str) -> Dict[str, object]:
     """
-    For any unresolved predictions on `ticker` older than 30 days,
-    fetch the actual price change via yfinance and call record_outcome().
-    Runs silently — never raises.
+    For any unresolved predictions on `ticker` whose 30-day horizon may have
+    passed, fetch price history and resolve each one at its own horizon
+    (LearningEngine.resolve_from_prices). Runs silently — never raises.
 
     Returns {"attempted": bool, "resolved": int}. attempted=True means there
-    were eligible (30-60 day old) pending predictions and a resolve was
+    were eligible (30+ calendar days old) pending predictions and a resolve was
     tried; resolved is how many predictions actually got an outcome (0 if
     nothing was eligible, or if the fetch/computation failed after an
     eligible attempt — those two cases are distinguished by "attempted").
     Used by resolve_pending_outcomes() below for sweep-wide accounting.
     """
     try:
-        cutoff = time.time() - 30 * 86400
+        # Day-granular: a prediction made at 09:00:07 is eligible at 09:00
+        # thirty days later; resolve_from_prices applies the exact rule.
+        cutoff = time.time() - 29 * 86400
         pending = [
             p for p in le._predictions
             if p.get("ticker") == ticker
@@ -60,38 +61,14 @@ def _check_and_record_outcomes(le, ticker: str) -> Dict[str, object]:
         if not pending:
             return {"attempted": False, "resolved": 0}
 
-        pending_before = le.pending_count
-
-        # Fetch 35-day history to cover the 30-day window
+        # Long enough to find the entry close of any pending prediction; v1
+        # fetched 2mo and applied one "latest 30-day return" to all of them.
         from augur.data import fetch_history
-        hist = fetch_history(ticker, period="2mo")
+        hist = fetch_history(ticker, period="1y")
         if not hist or len(hist) < 5:
             return {"attempted": True, "resolved": 0}
-
-        closes_by_ts = {h.get("date"): h.get("close") for h in hist if h.get("close")}
-        if not closes_by_ts:
-            return {"attempted": True, "resolved": 0}
-
-        sorted_closes = sorted(closes_by_ts.items())   # [(date_str, price), ...]
-        last_close = sorted_closes[-1][1]
-        if not last_close:
-            return {"attempted": True, "resolved": 0}
-
-        # Use ~30-day return (closest available bar to 30 days ago vs latest)
-        target_ts = time.time() - 30 * 86400
-        ref_close = sorted_closes[0][1]
-        for date_str, close in sorted_closes:
-            try:
-                bar_ts = datetime.strptime(date_str, "%Y-%m-%d").timestamp()
-            except ValueError:
-                continue
-            if bar_ts <= target_ts:
-                ref_close = close
-        if not ref_close or ref_close == 0:
-            return {"attempted": True, "resolved": 0}
-        actual_return = (last_close - ref_close) / ref_close
-        le.record_outcome(ticker, actual_return, min_age_days=30)
-        resolved = pending_before - le.pending_count
+        closes = [(h.get("date"), h.get("close")) for h in hist if h.get("date") and h.get("close")]
+        resolved = le.resolve_from_prices(ticker, closes, horizon_days=30)
         return {"attempted": True, "resolved": max(0, resolved)}
     except Exception:
         return {"attempted": True, "resolved": 0}
@@ -99,8 +76,8 @@ def _check_and_record_outcomes(le, ticker: str) -> Dict[str, object]:
 
 def resolve_pending_outcomes(le) -> Dict[str, int]:
     """Sweep every ticker with unresolved predictions and attempt to resolve
-    any that are 30-60 days old (see _check_and_record_outcomes / the
-    min_age_days=30 + lookback_days=30 window in LearningEngine.record_outcome).
+    any whose 30-day horizon has passed (see _check_and_record_outcomes /
+    LearningEngine.resolve_from_prices). Nothing ages out.
 
     This is the scheduled-resolution counterpart to the existing per-ticker
     trigger in ConsensusEngine.compute() (which only fires for whatever

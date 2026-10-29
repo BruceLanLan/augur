@@ -65,7 +65,7 @@ def run_earnings_dossier(ticker: str, event_id: str = "", as_of: str = "", outpu
     # Open questions
     try:
         from augur.questions import QuestionQueue
-        q = QuestionQueue()
+        q = QuestionQueue.persistent()
         questions = q.list(t, status="open")
         if questions:
             sections.append("── Open Questions ──")

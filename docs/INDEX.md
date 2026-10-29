@@ -31,5 +31,6 @@
 | FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md | 候选池（不是 roadmap） |
 | V9_ROADMAP.md | v9 session 日志（大部分完成） |
 | FACTOR_ATTRIBUTION_FINDINGS_2026-07.md | rolling IC 研究结果（重要证据） |
-| LOOP_200_REPORT.md / LOOP_400_REPORT.md | v8 review backlog（历史记录） |
-| TEST_PLAN_v9.md / UI_OPTIMIZATION_PLAN.md | 历史计划 |
+| [archive/LOOP_200_REPORT.md](archive/LOOP_200_REPORT.md) / [archive/LOOP_400_REPORT.md](archive/LOOP_400_REPORT.md) | v8 review backlog（历史记录，已归档） |
+| [archive/TEST_PLAN_v9.md](archive/TEST_PLAN_v9.md) / [archive/UI_OPTIMIZATION_PLAN.md](archive/UI_OPTIMIZATION_PLAN.md) | 历史计划（已归档） |
+| [archive/](archive/README.md) | 归档目录：历史执行记录（Loop 日志、v10.15 多 Agent 迭代轮次、参考图等），见其 README |

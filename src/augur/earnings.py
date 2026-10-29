@@ -13,7 +13,7 @@ import json
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 from augur.data_dir import get_data_dir
 
@@ -131,8 +131,7 @@ class EarningsEventService:
         with open(wl_path) as f:
             data = yaml.safe_load(f) or {}
 
-        tickers = list(data.get("tickers", [])) if isinstance(data, dict) else []
-        return self.detect_events(tickers, lookahead_days)
+        return self.detect_events(_watchlist_tickers(data), lookahead_days)
 
     # ------------------------------------------------------------------
     # Dossier readiness
@@ -145,42 +144,66 @@ class EarningsEventService:
         """For each event, check whether a dossier can be generated."""
         results: List[DossierStatus] = []
         for event in events:
-            missing = self._required_sources(event.ticker)
+            missing, run_id = self._readiness(event.ticker)
             results.append(DossierStatus(
                 ticker=event.ticker,
                 event=event,
                 ready=len(missing) == 0,
                 missing_items=missing,
+                run_id=run_id,
             ))
         return results
 
     def _required_sources(self, ticker: str) -> List[str]:
-        """Return list of missing required data sources for *ticker*.
+        """Return list of missing required data sources for *ticker*."""
+        return self._readiness(ticker)[0]
 
-        MVP checks: prior guidance, fundamentals, recent filings.
+    def _readiness(self, ticker: str) -> Tuple[List[str], Optional[str]]:
+        """(missing items, latest run_id) for *ticker*.
+
+        Checks real sources only:
+
+        - ``fundamentals_snapshot``: a saved RunBundle exists for the ticker
+          (``run_tracker.latest_run_id``).
+        - ``recent_filings``: that latest run carries at least one non-missing
+          SEC/EDGAR evidence item in its step results.
+        - ``prior_guidance``: ``GuidanceTracker`` (ticker-keyed, under
+          ``<data_dir>/guidance/``) holds at least one record. The EDGAR
+          guidance extraction cache is keyed by accession number, not
+          ticker, so it cannot be looked up here.
         """
+        from augur.run_tracker import latest_run_id, load_run_bundle_dict
+
         missing: List[str] = []
         t = ticker.upper()
 
-        # Check for prior guidance
-        guidance_dir = get_data_dir() / "edgar_cache"
-        guidance_files = list(guidance_dir.glob(f"guidance_{t}*.json"))
-        if not guidance_files:
+        if not self._has_guidance(t):
             missing.append("prior_guidance")
 
-        # Check for fundamentals snapshot
-        runs_dir = get_data_dir() / "runs"
-        run_files = list(runs_dir.glob(f"run_{t}_*.json"))
-        if not run_files:
+        run_id = latest_run_id(t)
+        if run_id is None:
             missing.append("fundamentals_snapshot")
-
-        # Check for recent filings
-        ev_dir = get_data_dir() / "evidence"
-        filing_evidence = list(ev_dir.glob(f"ev_sec_edgar_{t}*.json"))
-        if not filing_evidence:
             missing.append("recent_filings")
+            return missing, None
 
-        return missing
+        try:
+            bundle = load_run_bundle_dict(run_id)
+        except (OSError, ValueError):
+            bundle = {}
+        if not _bundle_has_sec_evidence(bundle):
+            missing.append("recent_filings")
+        return missing, run_id
+
+    @staticmethod
+    def _has_guidance(ticker: str) -> bool:
+        path = get_data_dir() / "guidance" / f"{ticker.upper()}.json"
+        if not path.exists():
+            return False
+        try:
+            records = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            return False
+        return isinstance(records, list) and len(records) > 0
 
     # ------------------------------------------------------------------
     # Filing delta
@@ -201,13 +224,11 @@ class EarningsEventService:
 
         # Resolve previous run
         if previous_run_id is None:
-            run_files = sorted(
-                runs_dir.glob(f"run_{ticker.upper()}_*.json"),
-                reverse=True,
-            )
-            # Find the most recent run that is not the new one
-            for rf in run_files:
-                rid = rf.stem  # filename without .json
+            from augur.run_tracker import list_run_ids
+
+            # Newest first by created_at + start sequence, not by filename:
+            # run_ids from the same second sort by hash, not start order.
+            for rid in list_run_ids(ticker):
                 if rid != new_run_id:
                     previous_run_id = rid
                     break
@@ -272,6 +293,52 @@ class EarningsEventService:
             return json.loads(run_path.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             return {}
+
+
+# ---------------------------------------------------------------------------
+# Module helpers
+# ---------------------------------------------------------------------------
+
+def _watchlist_tickers(data: Any) -> List[str]:
+    """Tickers from a watchlist YAML payload.
+
+    Accepts the shape ``augur watchlist-add`` writes
+    (``{"watchlist": [{"ticker": "AAPL", ...}, ...]}``) and the legacy
+    ``{"tickers": ["AAPL", ...]}``. Duplicates are dropped, order kept.
+    """
+    if not isinstance(data, dict):
+        return []
+    raw: List[Any] = []
+    for key in ("watchlist", "tickers"):
+        value = data.get(key)
+        if isinstance(value, list):
+            raw.extend(value)
+    tickers: List[str] = []
+    for item in raw:
+        if isinstance(item, dict):
+            item = item.get("ticker")
+        if isinstance(item, str) and item.strip():
+            t = item.strip().upper()
+            if t not in tickers:
+                tickers.append(t)
+    return tickers
+
+
+def _is_sec_source(source: Any) -> bool:
+    s = str(source or "").lower()
+    return s.startswith("sec_") or "edgar" in s
+
+
+def _bundle_has_sec_evidence(bundle: Dict[str, Any]) -> bool:
+    """True when a RunBundle dict holds a non-missing SEC/EDGAR evidence item."""
+    for step in bundle.get("step_results", []) or []:
+        result = step.get("result") if isinstance(step, dict) else None
+        if not isinstance(result, dict):
+            continue
+        for ev in result.get("evidence_items") or []:
+            if isinstance(ev, dict) and _is_sec_source(ev.get("source")) and not ev.get("missing"):
+                return True
+    return False
 
 
 # ---------------------------------------------------------------------------

@@ -57,7 +57,7 @@
 | `docs/FUTURE_DIRECTIONS_BRAINSTORM_2026-07.md` | 14 个方向的发散清单 | 文档自己声明“不是 roadmap” | 否 |
 | `docs/V9_ROADMAP.md` | v9-v10 session 日志与恢复说明 | 大部分完成；含过期分支和 push 指令 | 否 |
 | `docs/FACTOR_ATTRIBUTION_FINDINGS_2026-07.md` | rolling IC 与因子归因研究结果 | 仍是重要证据 | 研究输入 |
-| `docs/LOOP_200_REPORT.md` / `LOOP_400_REPORT.md` | v8 时期 review backlog | 多数被后续版本覆盖，状态难以直接复用 | 历史记录 |
+| `docs/archive/LOOP_200_REPORT.md` / `docs/archive/LOOP_400_REPORT.md` | v8 时期 review backlog | 多数被后续版本覆盖，状态难以直接复用 | 历史记录 |
 | GitHub Issues / PRs | 外部协作队列 | 当前没有可执行开发项 | 否 |
 | `docs/ROADMAP.md` | 新的滚动执行计划 | 从本次审计起生效 | **是** |
 
