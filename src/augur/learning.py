@@ -40,8 +40,10 @@ import logging
 import math
 import threading
 import time
+from bisect import bisect_left
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +54,17 @@ def _get_weights_path() -> Path:
     augur_dir = get_data_dir()
     augur_dir.mkdir(parents=True, exist_ok=True)
     return augur_dir / "learned_weights.json"
+
+
+_SCHEMA_VERSION = 2
+
+
+def _prediction_day(pred: Dict[str, Any]) -> str:
+    """UTC calendar day a prediction was made (YYYY-MM-DD)."""
+    day = pred.get("date")
+    if isinstance(day, str) and len(day) >= 10:
+        return day[:10]
+    return time.strftime("%Y-%m-%d", time.gmtime(pred.get("timestamp", 0)))
 
 
 class LearningEngine:
@@ -79,6 +92,7 @@ class LearningEngine:
         self._accuracy: Dict[str, Dict[str, Any]] = {}
         self._last_resolution: Optional[Dict[str, Any]] = None
         self._lock = threading.RLock()
+        self._defer_saves = 0
         self._load_weights()
 
     def _load_weights(self):
@@ -90,11 +104,39 @@ class LearningEngine:
                 self._accuracy = data.get("accuracy", {})
                 self._predictions = data.get("predictions", [])
                 self._last_resolution = data.get("last_resolution")
+                if data.get("schema", 1) < _SCHEMA_VERSION:
+                    self._migrate_v1()
             except (json.JSONDecodeError, OSError):
                 self._weights = {}
                 self._accuracy = {}
                 self._predictions = []
                 self._last_resolution = None
+
+    def _migrate_v1(self) -> None:
+        """Drop v1 outcomes: they applied one ticker-wide 30-day return to
+        predictions made on different days, so neither the outcomes nor the
+        accuracy/weights built from them are attributable. Pending
+        predictions are kept and resolve correctly under v2."""
+        kept = [p for p in self._predictions if p.get("outcome") is None]
+        dropped = len(self._predictions) - len(kept)
+        self._predictions = kept
+        self._accuracy = {}
+        self._weights = {}
+        if dropped:
+            logger.info("learning: discarded %d v1 outcomes (misattributed returns)", dropped)
+
+    @property
+    def outcomes_path(self) -> Path:
+        """Append-only log of every resolved prediction (never pruned)."""
+        return self.weights_path.with_name("prediction_outcomes.jsonl")
+
+    def _append_outcome(self, pred: Dict[str, Any]) -> None:
+        try:
+            self.outcomes_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(self.outcomes_path, "a", encoding="utf-8") as f:
+                f.write(json.dumps(pred, ensure_ascii=False) + "\n")
+        except OSError as exc:
+            logger.warning("could not append prediction outcome: %s", exc)
 
     def _save_weights(self):
         """Persist learned weights to disk.
@@ -112,6 +154,7 @@ class LearningEngine:
             "accuracy": self._accuracy,
             "predictions": pending + resolved[-100:],
             "last_resolution": self._last_resolution,
+            "schema": _SCHEMA_VERSION,
             "updated_at": time.time(),
         }
         self.weights_path.parent.mkdir(parents=True, exist_ok=True)
@@ -126,9 +169,14 @@ class LearningEngine:
         signal: str,
         score: float,
         confidence: float,
+        dedupe_day: bool = False,
     ):
         """
         Record an agent's prediction for future accuracy tracking.
+
+        With *dedupe_day* the agent's earlier pending prediction for the same
+        ticker and UTC day is replaced, so re-analysing a ticker several
+        times a day records one judgment, not several.
 
         Args:
             ticker: Stock ticker.
@@ -157,14 +205,27 @@ class LearningEngine:
             confidence = 0.5
         confidence = max(0.0, min(1.0, confidence))
 
+        now = time.time()
+        day = time.strftime("%Y-%m-%d", time.gmtime(now))
         with self._lock:
+            if dedupe_day:
+                self._predictions = [
+                    p for p in self._predictions
+                    if not (
+                        p.get("outcome") is None
+                        and p.get("ticker") == ticker
+                        and p.get("agent_id") == agent_id
+                        and _prediction_day(p) == day
+                    )
+                ]
             self._predictions.append({
                 "ticker": ticker,
                 "agent_id": agent_id,
                 "signal": signal,
                 "score": score,
                 "confidence": confidence,
-                "timestamp": time.time(),
+                "timestamp": now,
+                "date": day,
                 "outcome": None,  # To be filled in later
             })
             # Persist immediately. Previously this only happened inside
@@ -176,7 +237,89 @@ class LearningEngine:
             # enough to ever be resolved at all, which is the direct cause
             # of ~/.augur/learned_weights.json never existing in production
             # (docs/PROJECT_REVIEW_AND_ROADMAP_2026-07.md debt 3).
-            self._save_weights()
+            if self._defer_saves == 0:
+                self._save_weights()
+
+    @contextmanager
+    def batch(self):
+        """Group several record_prediction() calls into one write.
+
+        The weights file is rewritten on every prediction; recording 18
+        agents one by one rewrote it 18 times, which made the file cost grow
+        quadratically with history size.
+        """
+        with self._lock:
+            self._defer_saves += 1
+        try:
+            yield self
+        finally:
+            with self._lock:
+                self._defer_saves -= 1
+                if self._defer_saves == 0:
+                    self._save_weights()
+
+    def resolve_from_prices(
+        self,
+        ticker: str,
+        closes: List[Tuple[str, float]],
+        horizon_days: int = 30,
+        now: Optional[float] = None,
+    ) -> int:
+        """Resolve each pending prediction on *ticker* at its own horizon.
+
+        *closes* is daily ``(YYYY-MM-DD, close)`` history. A prediction made
+        on day D resolves with the return from the first close on/after D to
+        the first close on/after D + horizon_days. Predictions whose horizon
+        has not passed, or that the history does not cover, stay pending —
+        nothing ages out.
+
+        This replaces applying one "latest 30-day return" to every pending
+        prediction regardless of when it was made, which credited agents
+        with returns from a window they never predicted.
+
+        Returns the number of predictions resolved.
+        """
+        now = time.time() if now is None else now
+        today = time.strftime("%Y-%m-%d", time.gmtime(now))
+        series = sorted(
+            (d[:10], float(c)) for d, c in closes
+            if d and isinstance(c, (int, float)) and not isinstance(c, bool)
+            and math.isfinite(float(c)) and float(c) > 0
+        )
+        if not series:
+            return 0
+        dates = [d for d, _ in series]
+        last_date = dates[-1]
+        resolved = 0
+        with self._lock:
+            for pred in self._predictions:
+                if pred.get("ticker") != ticker or pred.get("outcome") is not None:
+                    continue
+                ts = pred.get("timestamp", 0)
+                start_day = _prediction_day(pred)
+                end_day = time.strftime(
+                    "%Y-%m-%d", time.gmtime(ts + horizon_days * 86400)
+                )
+                # Compare calendar days, not seconds: a 09:00 cron must be able
+                # to resolve a prediction recorded at 09:00:07 thirty days ago.
+                if end_day > today or end_day > last_date:
+                    continue  # history does not reach the horizon yet
+                i = bisect_left(dates, start_day)
+                j = bisect_left(dates, end_day)
+                if i >= len(series) or j >= len(series) or j <= i:
+                    continue
+                entry, exit_ = series[i][1], series[j][1]
+                actual_return = (exit_ - entry) / entry
+                pred["outcome"] = actual_return
+                pred["entry_date"], pred["exit_date"] = series[i][0], series[j][0]
+                was_correct = self._evaluate_prediction(pred, actual_return)
+                self._update_accuracy(pred["agent_id"], was_correct, actual_return, pred["score"])
+                self._append_outcome(pred)
+                resolved += 1
+            if resolved:
+                self._recalculate_weights()
+                self._save_weights()
+        return resolved
 
     def record_outcome(
         self,

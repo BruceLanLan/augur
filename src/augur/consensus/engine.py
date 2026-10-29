@@ -439,12 +439,14 @@ class ConsensusEngine:
                 # Record each agent's current prediction for future accuracy
                 # tracking -- skipped when today's context is empty.
                 if not context_is_empty:
-                    for agent_id, resp in results.items():
-                        if resp.signal != SignalType.ERROR:
-                            le.record_prediction(
-                                ticker, agent_id,
-                                resp.signal.value, resp.score, resp.confidence,
-                            )
+                    with le.batch():
+                        for agent_id, resp in results.items():
+                            if resp.signal != SignalType.ERROR:
+                                le.record_prediction(
+                                    ticker, agent_id,
+                                    resp.signal.value, resp.score, resp.confidence,
+                                    dedupe_day=True,
+                                )
             except Exception:
                 pass
 
