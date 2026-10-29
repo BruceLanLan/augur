@@ -17,10 +17,7 @@
   "mcpServers": {
     "augur": {
       "command": "python",
-      "args": ["-m", "augur.mcp_server"],
-      "env": {
-        "AUGUR_DEFAULT_PERSONA": "buffett"
-      }
+      "args": ["-m", "augur.mcp_server"]
     }
   }
 }
@@ -301,7 +298,7 @@ hermes skills install https://github.com/BruceLanLan/augur/tree/main/skills/buff
 
 ## 方式 B：通过 MCP Server 接入（单 persona 调用）
 
-Augur 自带的 MCP Server（`augur mcp-server`）会暴露 7 个工具。它**不是为每位投资人单独建一个 server**，而是用统一的 `augur_analyze` 工具，通过 `persona` 参数指定**只用某一位**投资人分析。也就是说：你照常注册一次 MCP Server，但在调用时锁定单个 persona，就实现了"只用巴菲特/只用大宇"。
+Augur 自带的 MCP Server（`augur mcp-server`）会暴露 14 个工具。它**不是为每位投资人单独建一个 server**，而是用统一的 `augur_analyze` 工具，通过 `persona` 参数指定**只用某一位**投资人分析。也就是说：你照常注册一次 MCP Server，但在调用时锁定单个 persona，就实现了"只用巴菲特/只用大宇"。
 
 ### B-1：注册 MCP Server（一次性）
 
@@ -448,7 +445,7 @@ Augur 引擎本身（评分逻辑、共识、inject-soul、CLI）**不需要任�
 两种办法：
 
 - Skill / Open Claw 配置里直接写 `model` 字段（见方式 A 的 JSON）。
-- 用 Augur 的配置：`augur configure` 对应的 MCP 工具 `augur_configure(persona_id, model)`，或编辑 `config/agents.yaml` 的 `per_agent` 段，例如：
+- 用 Augur 的配置：MCP 工具 `augur_configure(persona_id, model)`，或编辑 `config/agents.yaml` 的 `per_agent` 段，例如：
   ```yaml
   per_agent:
     buffett: claude-sonnet-4-6
@@ -482,10 +479,7 @@ CLI / MCP 会直接报 `Persona '<id>' not found` 并列出全部可用 id。用
   "mcpServers": {
     "augur": {
       "command": "python",
-      "args": ["-m", "augur.mcp_server"],
-      "env": {
-        "AUGUR_DEFAULT_PERSONA": "buffett"
-      }
+      "args": ["-m", "augur.mcp_server"]
     }
   }
 }
@@ -498,10 +492,7 @@ CLI / MCP 会直接报 `Persona '<id>' not found` 并列出全部可用 id。用
   "mcpServers": {
     "augur": {
       "command": "/path/to/augur/.venv/bin/python",
-      "args": ["-m", "augur.mcp_server"],
-      "env": {
-        "AUGUR_DEFAULT_PERSONA": "buffett"
-      }
+      "args": ["-m", "augur.mcp_server"]
     }
   }
 }
@@ -515,9 +506,7 @@ mcp_servers:
   augur:
     command: /path/to/augur/.venv/bin/augur
     args: [mcp-server]
-    description: "Augur single-persona analysis (default: buffett)"
-    env:
-      AUGUR_DEFAULT_PERSONA: buffett
+    description: "Augur single-persona analysis (pass persona=buffett in augur_analyze)"
 ```
 
 ---
@@ -666,8 +655,7 @@ curl http://localhost:8000/api/analyze/AAPL | jq '.agents[] | select(.agent_id==
   "mcpServers": {
     "augur": {
       "command": "python",
-      "args": ["-m", "augur.mcp_server"],
-      "env": { "AUGUR_DEFAULT_PERSONA": "buffett" }
+      "args": ["-m", "augur.mcp_server"]
     }
   }
 }

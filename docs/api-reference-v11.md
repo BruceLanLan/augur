@@ -1,4 +1,6 @@
-# API Reference (v11)
+# API Reference
+
+> Covers the current release (v13). The file name keeps its v11 suffix so existing links keep working.
 
 Augur provides four product surfaces: CLI, REST API, MCP, and Python library.
 This document covers the Python public API and REST endpoints.
@@ -89,10 +91,9 @@ This document covers the Python public API and REST endpoints.
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/analyze/{ticker}` | Persona analysis |
-| GET | `/api/consensus/{ticker}` | Weighted consensus |
 | POST | `/api/committee` | Committee verdict |
 | GET | `/api/scorecard?ticker=` | Post-earnings scorecard |
-| GET | `/api/earnings/queue` | Earnings events |
+| GET | `/api/earnings/events` | Earnings events (watchlist) |
 | GET | `/api/inbox/list` | Research inbox |
 | GET | `/api/thesis/list` | Theses |
 | POST | `/api/thesis/create` | Create thesis |
@@ -110,9 +111,12 @@ This document covers the Python public API and REST endpoints.
 
 ## MCP Tools
 
-- `mcp_augur_analyze` / `consensus` / `committee` / `debate` / `workflow`
-- `mcp_augur_workspace_get` / `set` / `profiles`
-- `mcp_augur_fetch` / `sentiment` / `configure` / `create_persona` / `list_personas`
+14 tools (registered as `augur_*`; clients such as OpenClaw prefix them `mcp_augur_*`):
+
+- `augur_analyze` / `augur_consensus` / `augur_committee` / `augur_debate` / `augur_workflow`
+- `augur_workspace_get` / `augur_workspace_set` / `augur_workspace_profiles`
+- `augur_fetch` / `augur_sentiment` / `augur_configure` / `augur_create_persona` / `augur_list_personas`
+- `augur_run_skill` — run a built-in skill
 
 ## MCP Prompts
 
@@ -120,6 +124,9 @@ This document covers the Python public API and REST endpoints.
 - `filing_delta_prompt(ticker, new_accession, previous_accession)`
 - `thesis_review_prompt(ticker, thesis_statement)`
 - `debt_covenant_review_prompt(ticker)`
+- `insider_cluster_review_prompt(ticker)`
+- `capital_allocation_review_prompt(ticker)`
+- `accounting_quality_review_prompt(ticker)`
 
 ## 新增模块（持续循环补充）
 

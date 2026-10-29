@@ -267,8 +267,7 @@ hermes gateway setup --platform telegram
 
 # 或使用自带 Bot
 export TELEGRAM_TOKEN=your_bot_token
-export AUGUR_API_URL=http://localhost:8000
-python3 bots/telegram_bot.py
+augur telegram
 ```
 
 在 Telegram 中直接对话：
@@ -295,9 +294,9 @@ Bot: 18位大师共识报告...
 hermes gateway setup --platform slack
 
 # 或使用自带 Bot
-export SLACK_TOKEN=your_slack_bot_token
-export AUGUR_API_URL=http://localhost:8000
-python3 bots/slack_bot.py
+export SLACK_BOT_TOKEN=xoxb-...
+export SLACK_APP_TOKEN=xapp-...
+augur slack
 ```
 
 在 Slack 频道中：
@@ -619,7 +618,7 @@ for id, r in results.items():
 
 ## 六、架构概览
 
-![Augur Architecture](../docs/images/architecture-baoyu.svg)
+![Augur Architecture](images/architecture-baoyu.svg)
 
 ```
 用户输入

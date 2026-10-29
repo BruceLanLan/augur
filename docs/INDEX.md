@@ -1,6 +1,6 @@
 # 文档索引
 
-## v11 核心文档
+## 核心文档
 
 | 文档 | 内容 |
 |---|---|
@@ -11,9 +11,15 @@
 | [RELEASE_NOTES_v11.md](RELEASE_NOTES_v11.md) | v11 完整发布说明 + 迁移指南 |
 | [schema-reference.md](schema-reference.md) | EvidenceItem/Claim/StepResult/RunBundle/SkillSpec 字段参考 |
 | [skills-guide.md](skills-guide.md) | Skill 使用教程 + 安全模型 + 自定义 Skill |
-| [api-reference-v11.md](api-reference-v11.md) | Python API + REST + MCP 完整参考 |
+| [api-reference-v11.md](api-reference-v11.md) | Python API + REST + MCP 参考（当前版本，文件名沿用 v11） |
+| [api-reference.md](api-reference.md) | Dashboard REST 端点逐个说明（中英） |
 | [examples.md](examples.md) | 10+ 实战示例 |
 | [self-hosted-guide.md](self-hosted-guide.md) | 自托管部署（Docker/systemd/nginx/备份/鉴权） |
+| [data-sources.md](data-sources.md) | 数据源与 provider 链 |
+| [agent-integration-guide.md](agent-integration-guide.md) | 外部 Agent 接入（MCP/REST） |
+| [hermes-setup-guide.md](hermes-setup-guide.md) / [openclaw-setup-guide.md](openclaw-setup-guide.md) | Hermes / OpenClaw 接入（14 个 MCP 工具） |
+| [single-persona-integration.md](single-persona-integration.md) | 只用单个大师的接入方式 |
+| [RELEASE_NOTES.md](RELEASE_NOTES.md) | v10.x 发布说明（历史） |
 
 ## 调研文档
 

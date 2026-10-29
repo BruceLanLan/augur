@@ -1,4 +1,4 @@
-# Augur Skill 使用指南 (v11)
+# Augur Skill 使用指南
 
 Skill 是声明式的研究 SOP（标准操作流程）。Skill 清单本身不包含可执行代码——它声明需要哪些能力（capability）、允许访问哪些网络域名和本地资源、工作流由哪几步组成、输出必须包含什么。执行由 Augur 内置的 Skill 执行器完成。
 
@@ -18,7 +18,7 @@ augur skill run filing-delta AAPL --json           # 完整结果（输出、步
 
 ```bash
 augur export AAPL --run-id <RUN_ID> --format evidence-pack -o pack.zip
-augur verify-pack pack.zip
+augur records verify-pack pack.zip
 ```
 
 需要设置 `AUGUR_EDGAR_CONTACT_EMAIL`（SEC 要求请求带联系邮箱）。
@@ -79,7 +79,7 @@ augur verify-pack pack.zip
 
 > 预检依据的是每个能力**声明**会访问的域名和资源（见下表，与代码中的数据源链保持一致并有测试约束），它是执行前的权限关卡，不是运行时网络沙箱：能力内部调用的库本身不受拦截。
 
-允许和拒绝的检查都会写入审计记录，保存在 RunBundle 的 `metadata.skill.audit_log` 中；执行结果同时写入 `augur audit` 可查看的审计日志。
+允许和拒绝的检查都会写入审计记录，保存在 RunBundle 的 `metadata.skill.audit_log` 中；执行结果同时写入 `augur records audit` 可查看的审计日志。
 
 ```python
 from augur.skills.runner import SkillRunner, get_builtin_skill

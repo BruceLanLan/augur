@@ -65,7 +65,7 @@ def _run_backfill(tickers):
                 data = yaml.safe_load(f) or {}
         tickers = _watchlist_tickers(data)
     if not tickers:
-        click.echo("Watchlist is empty — add tickers with `augur watchlist-add AAPL` or pass -t.")
+        click.echo("Watchlist is empty — add tickers with `augur watchlist add AAPL` or pass -t.")
         return
 
     path = get_data_dir() / "earnings_calendar.json"

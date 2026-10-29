@@ -39,7 +39,7 @@ Configuration (~/.augur/watchlist.yaml):
 CLI commands:
   augur cron-run       - Run watchlist analysis once
   augur cron-start     - Start scheduler daemon
-  augur watchlist-add  - Add ticker to watchlist
+  augur watchlist add   - Add ticker to watchlist
   augur watchlist-show - Show current watchlist
 """
 
@@ -205,7 +205,7 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
     watchlist = config.get("watchlist", [])
 
     if not watchlist:
-        print("Watchlist is empty. Add tickers with: augur watchlist-add TICKER")
+        print("Watchlist is empty. Add tickers with: augur watchlist add TICKER")
         return []
 
     registry = AgentRegistry()

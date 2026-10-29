@@ -20,6 +20,9 @@ _APP_START_TIME = _time.time()
 try:
     from fastapi.templating import Jinja2Templates
     templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
+    from augur import __version__ as _augur_version
+
+    templates.env.globals["augur_version"] = _augur_version
 except ImportError:
     templates = None  # type: ignore[assignment]
 
