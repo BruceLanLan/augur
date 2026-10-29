@@ -10,6 +10,9 @@ end on paper but broke at the joints. Version jumps from 11.0.0rc1 straight
 to 12.0.0 because the learned-weights file format and its stored history
 change incompatibly.
 
+v11.0.0 GA was never released, so the three 2026-09-17 rounds below ship for
+the first time as part of 12.0.0.
+
 ### Breaking
 
 - `learned_weights.json` schema 2. On first load, outcomes recorded by
@@ -61,7 +64,7 @@ change incompatibly.
 - Historical execution records (loop reports and logs, v9 test plan, UI
   plan, `docs/iterations/`) moved to `docs/archive/`.
 
-## [Unreleased] - 2026-09-17 docs and hardening round
+## [12.0.0, earlier round] - 2026-09-17 docs and hardening round
 
 Found by running every new command on live data and screenshotting the
 dashboard for the README.
@@ -98,7 +101,7 @@ dashboard for the README.
 
 - Insider-trade fetching moved from the CLI module to `augur.ownership`.
 
-## [Unreleased] - 2026-09-17 research capabilities round
+## [12.0.0, earlier round] - 2026-09-17 research capabilities round
 
 Closes the three gaps the README's feature-maturity table listed after the
 public merge: no skill runner, a template disagreement map, and nine modules
@@ -152,7 +155,7 @@ data before commit; problems found that way are listed under Fixed.
 
 - `augur` now has 47 subcommands and the MCP server 14 tools.
 
-## [Unreleased] - 2026-09-17 public merge round
+## [12.0.0, earlier round] - 2026-09-17 public merge round
 
 The private development line (`augur-next`, v11.0.0-rc1) is merged into the
 public `BruceLanLan/augur` repository. Before publishing, every README command
