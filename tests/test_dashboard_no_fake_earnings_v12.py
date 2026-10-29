@@ -112,3 +112,15 @@ def test_templates_handle_unavailable_shape():
     eq = (root / "earnings_queue.html").read_text(encoding="utf-8")
     assert "data.reason" in eq
     assert "Array.isArray(d.sections)" in eq
+
+
+def test_dashboard_shows_the_installed_version():
+    """The home page and sidebar used to say 'v8.1.0' whatever was installed."""
+    import augur
+    from fastapi.testclient import TestClient
+
+    from dashboard.app import app
+
+    html = TestClient(app).get("/").text
+    assert f"v{augur.__version__}" in html
+    assert "v8.1.0" not in html

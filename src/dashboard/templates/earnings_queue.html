@@ -764,6 +764,7 @@ function renderDossierContent(d) {
         txt = 'Missing: ' + m[1].split(/\s*,\s*/).map(missingLabel).join(', ');
       }
       txt = txt.replace(/^\?\s+/, '');   // CLI marks open questions with "? "
+      txt = txt.replace(/^[•·]\s+/, '');  // the list already draws its own bullet
       html += '<li><span>' + richText(txt) + '</span></li>';
     });
     html += '</ul></div>';

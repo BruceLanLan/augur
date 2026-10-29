@@ -414,6 +414,9 @@ class AnalyzeResponse(BaseModel):
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+from augur import __version__ as _augur_version  # noqa: E402
+
+templates.env.globals["augur_version"] = _augur_version
 
 # Mount static files with cache headers (immutable content hash + long TTL)
 STATIC_DIR = Path(__file__).parent / "static"
