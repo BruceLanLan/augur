@@ -251,8 +251,8 @@ augur/main  (public, single source of truth)
 
 ### 本阶段 owner 决策
 
-- **v12.0.0 是否推送到公开仓、是否打 tag**：打 `v*` tag 会触发 `publish.yml`（PyPI Trusted Publisher 未配置）。v12.2.0 在 PR #6（`release/v12`），v13.0.0 在 `release/v13`（基于 v12 分支）；合并 main 需 owner 操作（自动合并被权限策略拦截），打 tag、发 PyPI 待 owner 批准（PyPI Trusted Publisher 未配置）。
-- **参考部署的定时任务**：10/16 后停止；是否改用新检出目录并恢复（恢复前新代码会作废旧格式结果，待结算的预测保留）。
+- **v12.0.0 是否推送到公开仓、是否打 tag**：打 `v*` tag 会触发 `publish.yml`（PyPI Trusted Publisher 未配置）。v13.0.0（含 12.0–12.2）已于 2026-10-29 经 PR #7 squash 合并进 main（`6232030`），PR #6 已关闭。尚未打 tag、未发 PyPI：PyPI Trusted Publisher 未配置，打 `v*` tag 会触发 `publish.yml`，需 owner 先配置并批准。
+- **参考部署的定时任务**：10/16 后停止，仍指向旧目录的 rc1。建议从 main 安装一个独立的稳定环境（不要指向开发工作区）后再恢复；首次运行会作废 v11 格式的结算结果，待结算的预测保留。
 - 2026-09 阶段的 owner 决策批（步骤 1）仍然有效。
 
 ## 2026-09 阶段：RC 收口 → GA
