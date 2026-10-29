@@ -18,6 +18,24 @@ All notable changes to augur-agents are documented in this file.
   `augur.schemas.skill_spec` or `augur.schemas`), `augur.mcp_entry` (the
   `augur-mcp` script already points at `augur.mcp_server:run_server`).
 
+### Fixed
+
+- The dashboard home status bar and sidebar footer hardcoded `v8.1.0`; they
+  now show the installed version.
+- The Earnings Queue dossier list drew a second bullet in front of lines that
+  already start with one.
+- Empty-watchlist hints named the deprecated `watchlist-add`; they now say
+  `augur watchlist add`.
+- Documentation checked against the code: a WACC example that used a
+  percentage where the API takes a fraction (every DCF figure after it was
+  wrong), a wrong `ThesisJournal.create` call, commands and environment
+  variables the code never had (`augur configure`, `AUGUR_DEFAULT_PERSONA`,
+  `AUGUR_LOG_LEVEL`), an MCP check script that skipped the handshake, the
+  claim that `augur api` has no authentication, the claim that provider keys
+  can come from `.env`, wrong response shapes in the API reference, and
+  broken links in the English guides. README screenshots were retaken on the
+  current interface from real data.
+
 ### Added
 
 - `augur earnings --backfill`: reads each watchlist ticker's SEC 8-K

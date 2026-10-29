@@ -249,6 +249,14 @@ augur/main  (public, single source of truth)
 5. **学习结算的剩余问题**：多进程整文件覆盖写已在 12.2 改为加锁合并；准确率表仍是各进程内累计，跨进程只合并预测与结果；所谓 IC 实为 score×sign(return)，不是相关系数。R6 真门（步骤 3）仍未定口径。
 6. 步骤 10（回放产物重跑）、14（横截面 IC / 非重叠窗口）、16（数据源层 mock）不变。
 
+### 文档与截图遗留（2026-10-29 评审后）
+
+- `docs/api-reference.md`（中英）约 40 个端点只核对了方法和路径，字段级内容未逐个核对；Finnhub / Alpha Vantage 免费额度数字沿用旧文本，未对照官方说明。
+- `docs/en/CONTRIBUTING.md` 现在是根目录 CONTRIBUTING.md 的中文副本，需要翻译成英文才算与中文版对齐。
+- `scripts/readme_smoke.py` 仍用旧的平铺命令名，分组后的写法只通过别名间接覆盖；`augur earnings --backfill` 需要联网，不在离线冒烟里。
+- 首页下半部分和"大师对决"区域在英文界面下仍有中文文案（产品侧 i18n 缺口）。
+- 记分卡页只能显示 `unavailable`：Dashboard 还没有保存"财报前 / 财报后"运行配对的地方。
+
 ### 本阶段 owner 决策
 
 - **v12.0.0 是否推送到公开仓、是否打 tag**：打 `v*` tag 会触发 `publish.yml`（PyPI Trusted Publisher 未配置）。v13.0.0（含 12.0–12.2）已于 2026-10-29 经 PR #7 squash 合并进 main（`6232030`），PR #6 已关闭。尚未打 tag、未发 PyPI：PyPI Trusted Publisher 未配置，打 `v*` tag 会触发 `publish.yml`，需 owner 先配置并批准。
