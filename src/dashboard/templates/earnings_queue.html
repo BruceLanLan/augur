@@ -161,7 +161,7 @@
   display: none;
   padding: 0 16px 16px;
   border-top: 1px solid var(--border);
-  background: rgba(0, 0, 0, 0.15);
+  background: var(--bg-card);
 }
 .eq-event-card.expanded .eq-dossier {
   display: block;
@@ -208,7 +208,7 @@
   letter-spacing: 0.05em;
   margin-bottom: 10px;
   padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border);
 }
 .eq-kpi-grid {
   display: grid;
@@ -241,12 +241,25 @@
 }
 .eq-item-list li {
   padding: 6px 0;
-  font-size: 0.82rem;
-  color: var(--text-secondary);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: flex-start;
   gap: 8px;
+}
+.eq-item-list li:last-child { border-bottom: none; }
+.eq-item-list li > span { min-width: 0; overflow-wrap: anywhere; }
+.eq-item-list code, .eq-missing code, .eq-empty code {
+  font-family: var(--font-data);
+  font-size: 0.8em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
 }
 .eq-item-list li::before {
   content: "·";
@@ -350,14 +363,49 @@
   cursor: not-allowed;
 }
 
+/* Missing readiness items */
+.eq-missing-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.eq-missing-chip {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  border: 1px dashed var(--border);
+  white-space: nowrap;
+}
+.eq-missing {
+  margin: 4px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent-orange);
+  border-radius: 8px;
+  background: var(--bg-primary);
+}
+.eq-missing-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+.eq-missing ul { list-style: none; margin: 0; padding: 0; }
+.eq-missing li { padding: 4px 0; font-size: 0.82rem; line-height: 1.5; color: var(--text-secondary); }
+.eq-missing li strong { color: var(--text-primary); font-weight: 600; }
+
 /* Empty state */
 .eq-empty {
   text-align: center;
   padding: 48px 24px;
 }
+.eq-empty--inline {
+  padding: 24px 16px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.eq-empty-desc { line-height: 1.55; }
 .eq-empty-icon { font-size: 2.5rem; margin-bottom: 12px; }
 .eq-empty-title { font-weight: 600; font-size: 1rem; color: var(--text-primary); margin-bottom: 6px; }
-.eq-empty-desc { font-size: 0.82rem; color: var(--text-muted); }
+.eq-empty-desc { font-size: 0.85rem; color: var(--text-secondary); }
 
 /* Loading */
 .eq-loading {
@@ -367,8 +415,12 @@
 }
 
 @media (max-width: 768px) {
-  .eq-event-row { flex-wrap: wrap; gap: 8px; }
-  .eq-action-col { margin-left: 0; width: 100%; justify-content: flex-end; }
+  .eq-event-row { flex-wrap: wrap; gap: 8px 12px; }
+  .eq-ticker-col, .eq-date-col, .eq-confidence-col, .eq-readiness-col { min-width: 0; }
+  .eq-missing-chips { width: 100%; order: 10; }
+  .eq-action-col { margin-left: auto; }
+  .eq-dossier { padding: 0 12px 12px; }
+  .eq-dossier-tab { padding: 8px 10px; }
   .eq-kpi-grid { grid-template-columns: 1fr 1fr; }
 }
 </style>
@@ -398,7 +450,7 @@
 <header class="page-header mb-16">
   <div class="page-header__text">
     <h1 class="page-title">📅 Earnings Queue</h1>
-    <p class="page-lead">Watchlist 财报日历 — 临近事件追踪、Pre-event Dossier 生成、Post-event Scorecard 对比</p>
+    <p class="page-lead">Upcoming earnings for your watchlist — check dossier readiness before the call and compare predictions after it.</p>
   </div>
 </header>
 
@@ -478,6 +530,51 @@
 var _eqEvents = [];
 var _expandedTicker = null;
 
+// Human labels + next-step hints for readiness ids (see EarningsEventService._readiness)
+var EQ_MISSING = {
+  prior_guidance: {
+    label: 'Prior guidance',
+    hint: function(t) { return 'No saved management guidance for ' + t + ' yet. The dossier skips this section until a guidance record exists.'; }
+  },
+  fundamentals_snapshot: {
+    label: 'Fundamentals snapshot',
+    hint: function(t) { return 'No saved analysis run. Run `augur workflow ' + t + '` to create one.'; }
+  },
+  recent_filings: {
+    label: 'Recent SEC filings',
+    hint: function(t) { return 'The latest run has no SEC/EDGAR evidence. Re-run `augur workflow ' + t + '` so recent 10-K/10-Q filings are pulled in.'; }
+  }
+};
+
+function missingLabel(id) {
+  return (EQ_MISSING[id] && EQ_MISSING[id].label) ||
+    String(id).replace(/_/g, ' ').replace(/^./, function(c) { return c.toUpperCase(); });
+}
+
+// Escape, then render `backtick` spans as <code>
+function richText(s) {
+  return escapeHtml(String(s)).replace(/`([^`]+)`/g, '<code>$1</code>');
+}
+
+function eqEmptyHtml(icon, title, descHtml) {
+  return '<div class="eq-empty eq-empty--inline"><div class="eq-empty-icon">' + icon + '</div>' +
+    '<div class="eq-empty-title">' + escapeHtml(title) + '</div>' +
+    '<div class="eq-empty-desc">' + descHtml + '</div></div>';
+}
+
+function renderMissingBlock(ev) {
+  var items = (ev && ev.missing_items) || [];
+  if (!items.length) return '';
+  var t = ev.ticker;
+  var html = '<div class="eq-missing"><div class="eq-missing-title">Missing for a complete dossier (' + items.length + ')</div><ul>';
+  items.forEach(function(id) {
+    var m = EQ_MISSING[id];
+    html += '<li><strong>' + escapeHtml(missingLabel(id)) + '</strong>' +
+      (m ? ' — ' + richText(m.hint(t)) : '') + '</li>';
+  });
+  return html + '</ul></div>';
+}
+
 function loadEarningsQueue() {
   var lookahead = document.getElementById('eq-lookahead').value;
   document.getElementById('eq-loading').style.display = 'block';
@@ -493,7 +590,12 @@ function loadEarningsQueue() {
     })
     .catch(function(err) {
       document.getElementById('eq-loading').style.display = 'none';
-      showToast('Failed to load earnings events: ' + (err.message || err), 'error');
+      _eqEvents = [];
+      updateSummary(0, 0, 0);
+      var empty = document.getElementById('eq-empty');
+      empty.querySelector('.eq-empty-title').textContent = 'Could not load earnings events';
+      empty.querySelector('.eq-empty-desc').textContent = 'The events API did not respond (' + (err.message || err) + '). Check that augur serve is running, then press Refresh.';
+      empty.style.display = 'block';
     });
 }
 
@@ -505,6 +607,7 @@ function renderEvents() {
   list.querySelectorAll('.eq-event-card').forEach(function(c) { c.remove(); });
 
   if (!_eqEvents.length) {
+    empty.querySelector('.eq-empty-title').textContent = 'No upcoming earnings events';
     empty.style.display = 'block';
     updateSummary(0, 0, 0);
     return;
@@ -535,8 +638,13 @@ function renderEvents() {
           '<span class="eq-readiness-label ' + escapeHtml(ev.readiness) + '">' + readinessLabel + '</span>' +
         '</span>' +
         (ev.fiscal_period ? '<span style="font-size:0.75rem;color:var(--text-muted);">' + escapeHtml(ev.fiscal_period) + '</span>' : '') +
+        ((ev.missing_items || []).length
+          ? '<span class="eq-missing-chips" title="Missing for a complete dossier">' +
+              ev.missing_items.map(function(id) { return '<span class="eq-missing-chip">' + escapeHtml(missingLabel(id)) + '</span>'; }).join('') +
+            '</span>'
+          : '') +
         '<span class="eq-action-col">' +
-          '<button class="eq-gen-btn" onclick="event.stopPropagation();generateDossier(\'' + escapeHtml(ev.ticker) + '\')" title="Generate Pre-event Dossier">📋 Dossier</button>' +
+          '<button class="eq-gen-btn" onclick="event.stopPropagation();generateDossier(\'' + escapeHtml(ev.ticker) + '\')" title="Open the pre-event dossier">📋 Dossier</button>' +
           '<span class="eq-expand-icon">▼</span>' +
         '</span>' +
       '</div>' +
@@ -626,15 +734,18 @@ function loadDossier(ticker, idx, tab) {
   fetch('/api/earnings/dossier/' + ticker)
     .then(function(r) { return r.json(); })
     .then(function(data) {
+      var missing = renderMissingBlock(_eqEvents[idx]);
       if (!data || data.status !== 'ok' || !data.dossier) {
-        panel.innerHTML = '<p style="color:var(--text-muted);padding:12px;">No dossier data available.' +
-          ((data && data.reason) ? ' ' + escapeHtml(String(data.reason)) : '') + '</p>';
+        var reason = (data && data.reason) ? richText(data.reason)
+          : 'Run <code>augur workflow ' + escapeHtml(ticker) + '</code> to build the inputs, then reopen this panel.';
+        panel.innerHTML = missing + eqEmptyHtml('🗂️', 'No dossier for ' + ticker + ' yet', reason);
         return;
       }
-      panel.innerHTML = renderDossierContent(data.dossier);
+      panel.innerHTML = missing + renderDossierContent(data.dossier);
     })
     .catch(function() {
-      panel.innerHTML = '<p style="color:var(--signal-sell);padding:12px;">Failed to load dossier.</p>';
+      panel.innerHTML = eqEmptyHtml('⚠️', 'Could not load the dossier',
+        'The dossier API did not respond. Check that <code>augur serve</code> is running, then press 📋 Dossier to retry.');
     });
 }
 
@@ -646,14 +757,21 @@ function renderDossierContent(d) {
     html += '<div class="eq-section"><div class="eq-section-title">' + escapeHtml(sec.title || '') + '</div>';
     html += '<ul class="eq-item-list">';
     (sec.lines || []).forEach(function(line) {
-      html += '<li>' + escapeHtml(String(line)) + '</li>';
+      var txt = String(line);
+      // Humanize the CLI's "Missing: a_b, c_d" readiness line
+      var m = /^Missing:\s*(.+)$/.exec(txt);
+      if (m) {
+        txt = 'Missing: ' + m[1].split(/\s*,\s*/).map(missingLabel).join(', ');
+      }
+      txt = txt.replace(/^\?\s+/, '');   // CLI marks open questions with "? "
+      html += '<li><span>' + richText(txt) + '</span></li>';
     });
     html += '</ul></div>';
   });
   if (d.run_id) {
-    html += '<p style="color:var(--text-muted);padding:0 12px 12px;font-size:12px;">Run: ' + escapeHtml(String(d.run_id)) + '</p>';
+    html += '<p style="color:var(--text-muted);margin:0;font-size:12px;">Based on run ' + escapeHtml(String(d.run_id)) + '</p>';
   }
-  return html || '<p style="color:var(--text-muted);padding:12px;">No dossier data available.</p>';
+  return html || eqEmptyHtml('🗂️', 'Dossier is empty', 'Run <code>augur workflow ' + escapeHtml(d.ticker || '') + '</code> to populate it.');
 }
 
 function loadScorecard(ticker, idx, tab) {
@@ -666,14 +784,17 @@ function loadScorecard(ticker, idx, tab) {
     .then(function(r) { return r.json(); })
     .then(function(data) {
       if (!data || data.status !== 'ok' || !data.scorecard) {
-        panel.innerHTML = '<p style="color:var(--text-muted);padding:12px;">No scorecard data available.' +
-          ((data && data.reason) ? ' ' + escapeHtml(String(data.reason)) : '') + '</p>';
+        var reason = (data && data.reason) ? richText(data.reason) : 'Scorecards are produced after the event once actual results are available.';
+        panel.innerHTML = eqEmptyHtml('🗓️', 'Scorecard not available yet', reason +
+          '<br><br>Next step: make sure a pre-event run exists (<code>augur workflow ' + escapeHtml(ticker) + '</code>), then check back after ' +
+          escapeHtml(_eqEvents[idx] ? _eqEvents[idx].event_date : 'the event') + '.');
         return;
       }
       panel.innerHTML = renderScorecardContent(data.scorecard);
     })
     .catch(function() {
-      panel.innerHTML = '<p style="color:var(--signal-sell);padding:12px;">Failed to load scorecard.</p>';
+      panel.innerHTML = eqEmptyHtml('⚠️', 'Could not load the scorecard',
+        'The scorecard API did not respond. Check that <code>augur serve</code> is running and try again.');
     });
 }
 
@@ -711,7 +832,7 @@ function renderScorecardContent(sc) {
 }
 
 function generateDossier(ticker) {
-  showToast('Generating pre-event dossier for ' + ticker + '...', 'info');
+  showToast('Loading pre-event dossier for ' + ticker + '…', 'info');
   // In production this would trigger the earnings-prep Skill asynchronously.
   // For MVP we reload the dossier panel if already expanded.
   var idx = -1;
