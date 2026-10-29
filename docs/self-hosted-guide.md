@@ -24,8 +24,10 @@ augur serve --host 0.0.0.0 --port 8000
 > Without `AUGUR_API_TOKEN` (or `AUGUR_MULTI_USER=1`) every `/api/*` endpoint,
 > including config and data changes, is open to anyone who can reach the port.
 > `augur serve` prints a warning when you bind beyond loopback without auth.
-> `augur api` (the separate REST server) has no authentication at all; keep it
-> on 127.0.0.1 or behind an authenticating reverse proxy.
+> `augur api` (the separate REST server) applies the same check to its `/api/*`
+> routes when `AUGUR_API_TOKEN` or `AUGUR_MULTI_USER=1` is set, and is open
+> otherwise; without either, keep it on 127.0.0.1 or behind an authenticating
+> reverse proxy.
 
 ## Docker Deploy
 

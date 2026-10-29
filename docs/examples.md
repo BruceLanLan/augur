@@ -1,12 +1,12 @@
-# Augur Examples (v11)
+# Augur Examples
 
-Practical usage examples for the v11 Research Memory System.
+Practical usage examples for the Research Memory System (thesis, evidence, earnings, valuation, skills).
 
 ## 1. Full Research Loop
 
 ```python
 from augur.workflow import run_workflow
-from augur.thesis import ThesisJournal
+from augur.thesis import Thesis, ThesisJournal
 
 # 1. Run the analysis pipeline
 result = run_workflow("AAPL", steps="fetch,analyze,consensus")
@@ -15,14 +15,16 @@ print(f"Run: {run_id}")
 
 # 2. Create a thesis tied to the run
 journal = ThesisJournal()
-journal.create(
+thesis_id = journal.create(Thesis(
+    thesis_id="",   # blank: create() assigns one
+    created_at="",  # blank: create() stamps the current UTC time
     ticker="AAPL",
     statement="Services revenue will surpass hardware within 2 years",
     catalysts=["Services growth 15%+", "Installed base expansion"],
     risks=["Regulatory pressure", "China demand weakness"],
     falsification_conditions=["Services growth drops below 10%"],
-    run_id=run_id,
-)
+    run_id=run_id or "",
+))
 ```
 
 ## 2. Evidence-First Analysis
@@ -76,8 +78,8 @@ for status in readiness:
 from augur.valuation import compute_wacc, compute_dcf, WACCInputs, DCFInputs
 
 wacc = compute_wacc(WACCInputs(
-    risk_free_rate=4.5, equity_risk_premium=5.5,
-    beta=1.2, cost_of_debt=3.5, tax_rate=0.21,
+    risk_free_rate=0.045, equity_risk_premium=0.055,  # rates are decimals
+    beta=1.2, cost_of_debt=0.035, tax_rate=0.21,
 ))
 print(f"WACC: {wacc:.2%}")
 
@@ -86,7 +88,7 @@ result = compute_dcf(DCFInputs(
     stage1_years=5, growth_rate_terminal=0.025,
     wacc=wacc, shares_outstanding=15.5e9, net_debt=50e9,
 ))
-print(f"Fair Value: \${result.fair_value_per_share:.2f}")
+print(f"Fair Value: ${result.fair_value_per_share:.2f}")
 ```
 
 ## 5. Disagreement Map
@@ -109,7 +111,7 @@ for conflict in result.conflict_points:
 ## 6. Evidence-seeking Debate
 
 ```python
-from augur.debate_engine import EvidenceSeekingDebate
+from augur.experimental.debate_engine import EvidenceSeekingDebate  # experimental module
 
 debate = EvidenceSeekingDebate("AAPL", "run_001")
 result = debate.run(persona_outputs)
@@ -176,4 +178,16 @@ augur filing-delta AAPL --new q3.json --prev q2.json   # two JSON evidence snaps
 
 # Insider activity
 augur insider AAPL
+
+# Earnings research cycle (offline: reads saved watchlist, calendar, runs, theses)
+augur earnings --backfill            # fill the calendar from SEC 8-K Item 2.02 filings
+augur cycle --days 14
+augur thesis-delta AAPL              # active theses vs the two latest saved runs
+augur scorecard AAPL                 # post-earnings scorecard on the research questions
+
+# Grouped commands (old flat names still work but print a deprecation note)
+augur watchlist add AAPL
+augur cron run
+augur eval ic
+augur records verify-pack pack.zip
 ```

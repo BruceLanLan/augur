@@ -10,7 +10,7 @@
 ## 前置条件
 
 - OpenClaw ≥ 0.8（支持 MCP 技能注册）
-- Python 3.9+ 已安装
+- Python 3.10+ 已安装
 - Augur 已克隆并安装
 
 ```bash
@@ -38,8 +38,6 @@ mcp_servers:
     command: augur
     args: [mcp-server]
     description: "Augur — 18位投资大师多Agent共识分析"
-    env:
-      AUGUR_LOG_LEVEL: "WARNING"   # 减少 stdio 噪音
 ```
 
 或通过 OpenClaw Web UI **Settings → MCP Servers → Add**，填入：
@@ -58,7 +56,7 @@ mcp_servers:
 /tools list
 ```
 
-应看到 13 个 `mcp_augur_*` 工具：
+应看到 14 个 `mcp_augur_*` 工具：
 
 ```
 mcp_augur_analyze      — 单个或全部大师分析
@@ -74,6 +72,7 @@ mcp_augur_workflow     — 可组合多步工作流（fetch→analyze→consensu
 mcp_augur_workspace_get — 读取用户在 Dashboard 设置的终端布局/启用大师
 mcp_augur_workspace_set — 代用户写入终端布局/启用大师配置
 mcp_augur_workspace_profiles — 列出/创建/删除/切换命名工作区配置
+mcp_augur_run_skill    — 执行内置 Skill（earnings-prep 等）
 ```
 
 ### Step 3 — 开始使用
@@ -218,21 +217,27 @@ export ANTHROPIC_API_KEY=sk-ant-...
 ```bash
 #!/bin/bash
 # 验证 Augur MCP 工具列表
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | augur mcp-server 2>/dev/null | python3 -c "
+( printf '%s\n' \
+    '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"check","version":"0"}}}' \
+    '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+    '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+  sleep 8 ) | augur mcp-server 2>/dev/null | python3 -c "
 import json, sys
-d = json.load(sys.stdin)
-tools = d.get('result', {}).get('tools', [])
-print(f'✅ {len(tools)} tools registered:')
-for t in tools: print(f'  - {t[\"name\"]}')
+for line in sys.stdin:
+    d = json.loads(line)
+    if d.get('id') == 2:
+        tools = d['result']['tools']
+        print(f'✅ {len(tools)} tools registered:')
+        for t in tools: print(f'  - {t[\"name\"]}')
 "
 ```
 
 预期输出：
 ```
 ✅ 14 tools registered:
-  - mcp_augur_analyze
-  - mcp_augur_consensus
-  - mcp_augur_committee
+  - augur_analyze
+  - augur_consensus
+  - augur_list_personas
   ...
 ```
 

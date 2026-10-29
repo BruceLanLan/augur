@@ -2,7 +2,7 @@
 
 # OpenClaw Integration with Augur — Complete Guide
 
-> Augur exposes 13 MCP tools and 19 skills to OpenClaw.
+> Augur exposes 14 MCP tools and 19 skills to OpenClaw.
 > After setup, use `/skill augur-buffett` or just chat naturally.
 
 ---
@@ -10,7 +10,7 @@
 ## Prerequisites
 
 - OpenClaw ≥ 0.8 (MCP skill registration support)
-- Python 3.9+
+- Python 3.10+
 - Augur installed
 
 ```bash
@@ -38,8 +38,6 @@ mcp_servers:
     command: augur
     args: [mcp-server]
     description: "Augur — 18-master multi-agent investment analysis"
-    env:
-      AUGUR_LOG_LEVEL: "WARNING"
 ```
 
 Or via OpenClaw Web UI **Settings → MCP Servers → Add**:
@@ -58,7 +56,7 @@ Restart OpenClaw, then:
 /tools list
 ```
 
-You should see 13 `mcp_augur_*` tools:
+You should see 14 `mcp_augur_*` tools:
 
 ```
 mcp_augur_analyze       — Single or all-master analysis
@@ -74,6 +72,7 @@ mcp_augur_workflow      — Composable multi-step pipeline (fetch→analyze→co
 mcp_augur_workspace_get — Read the user's Dashboard layout/enabled personas
 mcp_augur_workspace_set — Write terminal layout/enabled personas on the user's behalf
 mcp_augur_workspace_profiles — List/create/delete/switch named workspace profiles
+mcp_augur_run_skill     — Run a built-in skill (earnings-prep, etc.)
 ```
 
 ### Step 3 — Start Analyzing
@@ -194,21 +193,27 @@ export ANTHROPIC_API_KEY=sk-ant-...
 ## Quick Validation Script
 
 ```bash
-echo '{"jsonrpc":"2.0","id":1,"method":"tools/list","params":{}}' | augur mcp-server 2>/dev/null | python3 -c "
+( printf '%s\n' \
+    '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"check","version":"0"}}}' \
+    '{"jsonrpc":"2.0","method":"notifications/initialized"}' \
+    '{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}'
+  sleep 8 ) | augur mcp-server 2>/dev/null | python3 -c "
 import json, sys
-d = json.load(sys.stdin)
-tools = d.get('result', {}).get('tools', [])
-print(f'✅ {len(tools)} tools registered:')
-for t in tools: print(f'  - {t[\"name\"]}')
+for line in sys.stdin:
+    d = json.loads(line)
+    if d.get('id') == 2:
+        tools = d['result']['tools']
+        print(f'✅ {len(tools)} tools registered:')
+        for t in tools: print(f'  - {t[\"name\"]}')
 "
 ```
 
 Expected output:
 ```
 ✅ 14 tools registered:
-  - mcp_augur_analyze
-  - mcp_augur_consensus
-  - mcp_augur_committee
+  - augur_analyze
+  - augur_consensus
+  - augur_list_personas
   ...
 ```
 

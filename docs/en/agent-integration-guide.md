@@ -267,8 +267,7 @@ hermes gateway setup --platform telegram
 
 # Or use the built-in Bot
 export TELEGRAM_TOKEN=your_bot_token
-export AUGUR_API_URL=http://localhost:8000
-python3 bots/telegram_bot.py
+augur telegram
 ```
 
 Chat directly in Telegram:
@@ -295,9 +294,9 @@ Bot: 18-master consensus report...
 hermes gateway setup --platform slack
 
 # Or use the built-in Bot
-export SLACK_TOKEN=your_slack_bot_token
-export AUGUR_API_URL=http://localhost:8000
-python3 bots/slack_bot.py
+export SLACK_BOT_TOKEN=xoxb-...
+export SLACK_APP_TOKEN=xapp-...
+augur slack
 ```
 
 In Slack channels:
@@ -319,7 +318,7 @@ export GEWECHAT_TOKEN='...' GEWECHAT_BASE_URL='http://127.0.0.1:2531/v2/api'
 augur wechat --mode personal --port 8066
 ```
 
-Personal WeChat, Enterprise WeChat (WeCom), and Webhook modes are all supported. See [README](../README_EN.md) for full details.
+Personal WeChat, Enterprise WeChat (WeCom), and Webhook modes are all supported. See [README](../../README_EN.md) for full details.
 
 ---
 
@@ -619,7 +618,7 @@ for id, r in results.items():
 
 ## 6. Architecture Overview
 
-![Augur Architecture](../docs/images/architecture-baoyu.svg)
+![Augur Architecture](../images/architecture-baoyu.svg)
 
 ```
 User Input
@@ -669,4 +668,4 @@ A: US stocks, Hong Kong stocks, A-shares (China), and Crypto - one system covers
 
 ---
 
-*For more questions, please submit a GitHub Issue or refer to [README.md](../README.md)*
+*For more questions, please submit a GitHub Issue or refer to [README.md](../../README.md)*
