@@ -8,7 +8,7 @@
 
 **不是又一个 AI 荐股工具。是一个帮你记住"你何时知道什么、什么变了、谁在什么事实上分歧"的本地研究记忆系统。**
 
-[![v12.2.0](https://img.shields.io/badge/v12.2.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v13.0.0](https://img.shields.io/badge/v13.0.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18-位投资大师)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-接入-claude--agent)
@@ -19,7 +19,7 @@
 
 > ⚠️ **仅供学习研究，不构成投资建议。** 大师观点是基于公开投资理念的规则化模拟，不代表本人立场；所有分数、Kelly 仓位与估值都依赖数据质量和模型假设。
 
-**目录**：[为什么不一样](#-为什么-augur-不一样) · [v11 新功能截图](#-v11-新功能一览) · [5 分钟上手](#-5-分钟上手) · [从 v11 升级](#-从-v11-升级到-v12) · [从 v10 升级](#-从-v10-升级) · [18 位大师](#-18-位投资大师) · [Dashboard](#-dashboard) · [接入 Claude / Agent](#-接入-claude--agent) · [CLI 速查](#-cli-速查) · [功能成熟度](#-功能成熟度) · [数据与隐私](#-数据与隐私) · [开发](#-开发) · [文档与路线图](#-文档与路线图)
+**目录**：[为什么不一样](#-为什么-augur-不一样) · [v11 新功能截图](#-v11-新功能一览) · [5 分钟上手](#-5-分钟上手) · [从 v12 升级](#-从-v12-升级到-v13) · [从 v11 升级](#-从-v11-升级到-v12) · [从 v10 升级](#-从-v10-升级) · [18 位大师](#-18-位投资大师) · [Dashboard](#-dashboard) · [接入 Claude / Agent](#-接入-claude--agent) · [CLI 速查](#-cli-速查) · [功能成熟度](#-功能成熟度) · [数据与隐私](#-数据与隐私) · [开发](#-开发) · [文档与路线图](#-文档与路线图)
 
 ---
 
@@ -85,7 +85,7 @@
 
 ## 🚀 5 分钟上手
 
-需要 Python 3.9+（MCP 功能需要 3.10+）。
+需要 Python 3.10+。
 
 ```bash
 git clone https://github.com/BruceLanLan/augur.git && cd augur
@@ -121,6 +121,18 @@ augur cycle                        # 自选股的财报周期一览：谁准备�
 没有网络？`augur analyze NVDA --pe 60 --roe 0.45` 可以手动传指标；`augur backtest AAPL --demo` 使用离线合成数据。
 
 ---
+
+## 🔄 从 v12 升级到 v13
+
+v13 是一次清理加一个新功能。不兼容的地方只有下面三项，都在 import 层面，命令行用法不变。
+
+| 变化 | 如何处理 |
+|---|---|
+| 需要 Python 3.10+（3.9 已于 2025 年 10 月停止官方支持） | 用 3.10 或更新的解释器重建虚拟环境 |
+| `augur.experimental.accounting` / `capital_allocation` / `debate_engine` / `relative_val` / `portfolio_risk` 移到 `augur.experimental` | 把 `from augur.accounting import ...` 改成 `from augur.experimental.accounting import ...`。这几个模块没有任何产品入口在用，API 可能变化 |
+| 删除兼容转发模块 `augur.coordinator`、`augur.skill_spec`、`augur.mcp_entry` | 分别改为从 `augur.registry`、`augur.schemas.skill_spec`、`augur.mcp_server` 导入；`augur-mcp` 命令不受影响 |
+
+新功能：`augur earnings --backfill` 从 SEC 8-K（Item 2.02 业绩公告）回填自选股的历史财报日期，并按最近的发布节奏估算下一次日期，标为 `estimated`，不会标成"已确认"。你手工写进日历的条目会保留。回填之后 `augur cycle` 就有事件可跑了。
 
 ## 🔄 从 v11 升级到 v12
 
@@ -256,6 +268,7 @@ augur records audit [--action ...]              # 审计日志
 
 # 数据
 augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30 · augur doctor
+augur earnings --backfill          # 从 SEC 8-K Item 2.02 回填财报日历：历史日期 + 一个按节奏估算的下次日期（标 estimated，不覆盖手写条目）
 
 # 监控与服务
 augur watchlist add AAPL · augur watchlist show · augur watchlist watch AAPL NVDA --interval 60
@@ -276,7 +289,7 @@ augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur s
 | **稳定** | 18 位大师分析与共识、CLI 研究闭环（上面实测过的命令）、Dashboard 主要页面、MCP server、RunBundle 与导出、数据源链（yfinance → SEC EDGAR 覆盖） |
 | **可用，有明确边界** | 4 个内置 Skill（只运行内置清单；债务约束默认用参考阈值而非信贷协议条款；财报日期来自本地日历文件）；分歧图（按大师的分维度评分推导并引用证据，维度到指标的映射是固定表）；`augur risk-review`（规则匹配，措辞小改可能同时显示为"新增"和"删除"）；`augur eval`（单只股票的时间序列 IC，远期收益重叠，显著性偏乐观，只作筛查）；`augur guidance`（需 `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1`，会调用付费 LLM）；PDF 导出（需 `[export]`） |
 | **实验（默认关闭）** | rolling-IC 动态权重（`AUGUR_FORCE_RIC=1`）、学习权重（`AUGUR_FORCE_LEARNED=1`）——都还没有通过预注册的样本外验证 |
-| **只有代码、没有入口** | `augur.accounting`（会计质量）、`augur.capital_allocation`（资本配置）、`augur.debate_engine`（辩论引擎；Dashboard 的 `/debate` 用的是另一套实现）、`augur.relative_val`（相对估值）、`augur.portfolio_risk`（组合风险）——有单元测试，但 CLI、Dashboard 和 MCP 都没有调用它们，可以当库用，不算产品功能 |
+| **只有代码、没有入口** | `augur.experimental.accounting`（会计质量）、`augur.experimental.capital_allocation`（资本配置）、`augur.experimental.debate_engine`（辩论引擎；Dashboard 的 `/debate` 用的是另一套实现）、`augur.experimental.relative_val`（相对估值）、`augur.experimental.portfolio_risk`（组合风险）——有单元测试，但 CLI、Dashboard 和 MCP 都没有调用它们，可以当库用，不算产品功能 |
 | **尚未计量** | 运行记录中的 token 用量（目前只记录耗时） |
 
 ---
@@ -313,7 +326,7 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 ```
 
 - 测试使用独立的临时 `AUGUR_DATA_DIR`，不会写入你的 `~/.augur`；在完全断网的环境下也能全部通过。
-- CI（`.github/workflows/`）：`Tests` 在 Python 3.9 / 3.11 / 3.12 上跑全量测试并断言收集数；`Hermetic Smoke` 从 wheel 和 sdist 分别全新安装并跑 ruff 与 pip-audit。
+- CI（`.github/workflows/`）：`Tests` 在 Python 3.10 / 3.11 / 3.12 上跑全量测试并断言收集数；`Hermetic Smoke` 从 wheel 和 sdist 分别全新安装并跑 ruff 与 pip-audit。
 - 贡献方式见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ---
@@ -336,7 +349,15 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 ## 📝 更新日志
 
 <details open>
-<summary><strong>v12.2.0 — 命令分组与 Dashboard 整理 (current)</strong></summary>
+<summary><strong>v13.0.0 — SEC 财报日期回填、Python 3.10、精简公开 API (current)</strong></summary>
+
+- **财报日期回填**：`augur earnings --backfill` 从 SEC 8-K（Item 2.02）补齐历史财报日期，并按发布节奏估算下一次（标为 estimated）；`augur cycle` 不再依赖手工日历
+- **不兼容变化**：需要 Python 3.10+；5 个没有产品入口的模块移到 `augur.experimental`；删除 3 个兼容转发模块。迁移方法见上方"从 v12 升级到 v13"
+
+</details>
+
+<details>
+<summary><strong>v12.2.0 — 命令分组与 Dashboard 整理</strong></summary>
 
 - **命令分组**：`watchlist` / `cron` / `report` / `records` / `eval` / `skill` 六个分组，`augur --help` 从 47 项减到 38 项；旧命令名保留，会提示新写法
 - **Dashboard**：侧边栏按 研究 / 大师 / 工具 / 系统 分组，补上财报队列、投资论文、记分卡、研究收件箱四个入口；财报页把缺失项写成人话并给出补齐命令；记分卡页的事件下拉不再卡在 Loading；Thesis Journal 的空状态、报错和手机布局都重新整理

@@ -8,7 +8,7 @@
 
 **Not another AI stock picker. A local research memory system that remembers what you knew, when you knew it, what changed, and who disagrees — and why.**
 
-[![v12.2.0](https://img.shields.io/badge/v12.2.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v13.0.0](https://img.shields.io/badge/v13.0.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 Masters](https://img.shields.io/badge/18-Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-claude--agent-integration)
@@ -19,7 +19,7 @@
 
 > ⚠️ **For research and education only. Not investment advice.** The masters are rule-based simulations of publicly known investment philosophies, not the views of those people. Every score, Kelly size and valuation depends on data quality and model assumptions.
 
-**Contents**: [Why Augur](#-why-augur) · [What's new in v11 (screenshots)](#-whats-new-in-v11) · [Quick Start](#-quick-start-5-minutes) · [Upgrading from v11](#-upgrading-from-v11-to-v12) · [Upgrading from v10](#-upgrading-from-v10) · [18 Masters](#-18-investment-masters) · [Dashboard](#-dashboard) · [Claude / Agent](#-claude--agent-integration) · [CLI](#-cli-cheat-sheet) · [Feature Maturity](#-feature-maturity) · [Data & Privacy](#-data--privacy) · [Development](#-development) · [Docs & Roadmap](#-docs--roadmap)
+**Contents**: [Why Augur](#-why-augur) · [What's new in v11 (screenshots)](#-whats-new-in-v11) · [Quick Start](#-quick-start-5-minutes) · [Upgrading from v12](#-upgrading-from-v12-to-v13) · [Upgrading from v11](#-upgrading-from-v11-to-v12) · [Upgrading from v10](#-upgrading-from-v10) · [18 Masters](#-18-investment-masters) · [Dashboard](#-dashboard) · [Claude / Agent](#-claude--agent-integration) · [CLI](#-cli-cheat-sheet) · [Feature Maturity](#-feature-maturity) · [Data & Privacy](#-data--privacy) · [Development](#-development) · [Docs & Roadmap](#-docs--roadmap)
 
 ---
 
@@ -85,7 +85,7 @@ Using the records written by `augur backtest`, it removes one persona at a time 
 
 ## 🚀 Quick Start (5 minutes)
 
-Python 3.9+ (MCP needs 3.10+).
+Python 3.10+.
 
 ```bash
 git clone https://github.com/BruceLanLan/augur.git && cd augur
@@ -121,6 +121,18 @@ augur cycle                        # earnings cycle for the watchlist: what is r
 Offline? `augur analyze NVDA --pe 60 --roe 0.45` takes manual metrics; `augur backtest AAPL --demo` uses synthetic data.
 
 ---
+
+## 🔄 Upgrading from v12 to v13
+
+v13 is a cleanup plus one new feature. The only breaking changes are the three below, all at the import level; command-line usage is unchanged.
+
+| Change | What to do |
+|---|---|
+| Python 3.10+ is required (3.9 reached end of life in October 2025) | Recreate your virtualenv with 3.10 or newer |
+| `augur.experimental.accounting` / `capital_allocation` / `debate_engine` / `relative_val` / `portfolio_risk` moved to `augur.experimental` | Change `from augur.accounting import ...` to `from augur.experimental.accounting import ...`. No product path uses these modules and their API may change |
+| Compatibility modules `augur.coordinator`, `augur.skill_spec`, `augur.mcp_entry` removed | Import from `augur.registry`, `augur.schemas.skill_spec` and `augur.mcp_server` instead; the `augur-mcp` command is unaffected |
+
+New: `augur earnings --backfill` fills past earnings dates for your watchlist from SEC 8-K filings (Item 2.02, results of operations) and estimates the next date from the recent cadence, marked `estimated`, never confirmed. Entries you wrote in the calendar are kept. After a backfill, `augur cycle` has events to work on.
 
 ## 🔄 Upgrading from v11 to v12
 
@@ -254,6 +266,7 @@ augur records audit [--action ...]              # audit log
 
 # Data
 augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30 · augur doctor
+augur earnings --backfill          # backfill the earnings calendar from SEC 8-K Item 2.02: past dates + one cadence-estimated next date (tagged estimated; never overwrites hand-written entries)
 
 # Monitoring & servers
 augur watchlist add AAPL · augur watchlist show · augur watchlist watch AAPL NVDA --interval 60
@@ -274,7 +287,7 @@ Stated plainly, so "there is code for it" is not mistaken for "it works".
 | **Stable** | 18-persona analysis and consensus, the CLI research loop above, main dashboard pages, MCP server, RunBundles and export, the data-source chain (yfinance → SEC EDGAR overlay) |
 | **Works, with stated limits** | The four built-in skills (only built-in manifests run; covenant review defaults to reference thresholds, not the company's credit agreements; earnings dates come from a local calendar file); the disagreement map (derived from per-dimension persona scores and cites evidence, with a fixed dimension-to-metric table); `augur risk-review` (rule-based: a reworded risk factor can show as one new plus one removed item); `augur eval` (single-ticker time-series IC with overlapping forward returns — optimistic significance, a screen only); `augur guidance` (needs `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` and calls a paid LLM); PDF export (needs the `[export]` extra) |
 | **Experimental (off by default)** | Rolling-IC dynamic weights (`AUGUR_FORCE_RIC=1`), learned weights (`AUGUR_FORCE_LEARNED=1`) — neither has passed a pre-registered out-of-sample test |
-| **Code only, no entry point** | `augur.accounting` (accounting quality), `augur.capital_allocation`, `augur.debate_engine` (the dashboard `/debate` page uses a different implementation), `augur.relative_val` (relative valuation), `augur.portfolio_risk` — unit-tested, but no CLI, dashboard or MCP path calls them; usable as a library, not product features |
+| **Code only, no entry point** | `augur.experimental.accounting` (accounting quality), `augur.experimental.capital_allocation`, `augur.experimental.debate_engine` (the dashboard `/debate` page uses a different implementation), `augur.experimental.relative_val` (relative valuation), `augur.experimental.portfolio_risk` — unit-tested, but no CLI, dashboard or MCP path calls them; usable as a library, not product features |
 | **Not instrumented yet** | Token usage in run records (only latency is recorded) |
 
 ---
@@ -311,7 +324,7 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 ```
 
 - Tests run against a temporary `AUGUR_DATA_DIR`, never write to your `~/.augur`, and pass with the network fully blocked.
-- CI (`.github/workflows/`): `Tests` runs the full suite on Python 3.9 / 3.11 / 3.12 and asserts the collected test count; `Hermetic Smoke` installs from the wheel and the sdist into fresh venvs and runs ruff and pip-audit.
+- CI (`.github/workflows/`): `Tests` runs the full suite on Python 3.10 / 3.11 / 3.12 and asserts the collected test count; `Hermetic Smoke` installs from the wheel and the sdist into fresh venvs and runs ruff and pip-audit.
 - See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
@@ -334,7 +347,15 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 ## 📝 Changelog
 
 <details open>
-<summary><strong>v12.2.0 — One command tree, clearer dashboard (current)</strong></summary>
+<summary><strong>v13.0.0 — Earnings dates from SEC, Python 3.10, smaller public API (current)</strong></summary>
+
+- **Earnings date backfill**: `augur earnings --backfill` fills past earnings dates from SEC 8-K filings (Item 2.02) and estimates the next one from the cadence (marked estimated); `augur cycle` no longer depends on a hand-written calendar
+- **Breaking**: Python 3.10+; five modules with no product entry point moved to `augur.experimental`; three compatibility modules removed. See "Upgrading from v12 to v13" above
+
+</details>
+
+<details>
+<summary><strong>v12.2.0 — One command tree, clearer dashboard</strong></summary>
 
 - **Grouped CLI**: `watchlist` / `cron` / `report` / `records` / `eval` / `skill` groups; `augur --help` goes from 47 to 38 entries; old names still work and point to the new form
 - **Dashboard**: sidebar grouped into Research / Investors / Tools / System with the Earnings Queue, Thesis Journal, Scorecard and Research Inbox now linked; earnings rows show readable missing items and the command that fills each; the scorecard event picker no longer hangs on Loading; Thesis Journal empty states, errors and phone layout reworked

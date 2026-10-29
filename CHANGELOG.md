@@ -2,6 +2,31 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [13.0.0] - 2026-10-29 earnings dates from SEC, Python 3.10, smaller public API
+
+### Breaking
+
+- Python 3.10 or newer is required (3.9 reached end of life in October
+  2025). CI tests 3.10, 3.11 and 3.12.
+- Modules that no CLI, dashboard or MCP path uses moved to
+  `augur.experimental` (library-only, API may change):
+  `augur.accounting`, `augur.capital_allocation`, `augur.debate_engine`,
+  `augur.relative_val`, `augur.portfolio_risk` →
+  `augur.experimental.<same name>`.
+- Compatibility re-export modules are removed: `augur.coordinator` (import
+  from `augur.registry`), `augur.skill_spec` (import from
+  `augur.schemas.skill_spec` or `augur.schemas`), `augur.mcp_entry` (the
+  `augur-mcp` script already points at `augur.mcp_server:run_server`).
+
+### Added
+
+- `augur earnings --backfill`: reads each watchlist ticker's SEC 8-K
+  filings with Item 2.02 (results of operations) to fill past earnings
+  dates, and adds one next date estimated from the recent reporting
+  cadence, marked `estimated`, never `confirmed`. Entries you wrote in
+  `earnings_calendar.json` are kept. This is what `augur cycle` needs to have
+  events to work on without a hand-maintained calendar.
+
 ## [12.2.0] - 2026-10-29 one command tree and clearer dashboard
 
 ### Changed

@@ -5,7 +5,7 @@ augur - Multi-agent investment analysis system
 Provides 18 investor persona agents with consensus decision making.
 """
 
-__version__ = "12.2.0"
+__version__ = "13.0.0"
 
 from augur.personas.base import (
     BaseAgent,
