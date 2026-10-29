@@ -16,6 +16,7 @@ All notable changes to augur-agents are documented in this file.
   47). `augur report AAPL` works as before.
 - `augur update` is hidden outside a git checkout and tells pip users to run
   `pip install -U augur-agents`.
+- Dashboard: the sidebar spans the full page height, phone layouts no longer hide page titles under the menu button, and asset cache keys are current (stylesheets were still requested as ?v=8.1.0).
 - Dashboard sidebar is grouped into Research / Investors / Tools / System;
   Earnings Queue, Thesis Journal, Scorecard and Research Inbox were not
   linked from the sidebar and now are (zh/en/ja/ko labels). The stale
