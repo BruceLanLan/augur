@@ -59,6 +59,27 @@ def _get_weights_path() -> Path:
 _SCHEMA_VERSION = 2
 
 
+@contextmanager
+def _file_lock(path: Path):
+    """Exclusive advisory lock across processes (no-op where fcntl is missing)."""
+    try:
+        import fcntl
+    except ImportError:  # Windows
+        yield
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "a") as fh:
+        fcntl.flock(fh, fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(fh, fcntl.LOCK_UN)
+
+
+def _prediction_key(pred: Dict[str, Any]) -> Tuple[Any, Any, float]:
+    return (pred.get("ticker"), pred.get("agent_id"), round(float(pred.get("timestamp", 0) or 0), 6))
+
+
 def _prediction_day(pred: Dict[str, Any]) -> str:
     """UTC calendar day a prediction was made (YYYY-MM-DD)."""
     day = pred.get("date")
@@ -93,6 +114,7 @@ class LearningEngine:
         self._last_resolution: Optional[Dict[str, Any]] = None
         self._lock = threading.RLock()
         self._defer_saves = 0
+        self._dropped: set = set()
         self._load_weights()
 
     def _load_weights(self):
@@ -147,20 +169,50 @@ class LearningEngine:
         the most recent 100 (kept for visibility/debugging, not reprocessed
         by anything that needs the full history).
         """
-        pending = [p for p in self._predictions if p.get("outcome") is None]
-        resolved = [p for p in self._predictions if p.get("outcome") is not None]
-        data = {
-            "weights": self._weights,
-            "accuracy": self._accuracy,
-            "predictions": pending + resolved[-100:],
-            "last_resolution": self._last_resolution,
-            "schema": _SCHEMA_VERSION,
-            "updated_at": time.time(),
-        }
         self.weights_path.parent.mkdir(parents=True, exist_ok=True)
-        self.weights_path.write_text(
-            json.dumps(data, indent=2), encoding="utf-8"
-        )
+        with _file_lock(self.weights_path.with_name(self.weights_path.name + ".lock")):
+            # The dashboard server and the cron job each hold their own engine.
+            # Writing only our in-memory copy silently dropped predictions the
+            # other process had saved since we loaded, so merge first.
+            self._merge_from_disk()
+            pending = [p for p in self._predictions if p.get("outcome") is None]
+            resolved = [p for p in self._predictions if p.get("outcome") is not None]
+            data = {
+                "weights": self._weights,
+                "accuracy": self._accuracy,
+                "predictions": pending + resolved[-100:],
+                "last_resolution": self._last_resolution,
+                "schema": _SCHEMA_VERSION,
+                "updated_at": time.time(),
+            }
+            tmp = self.weights_path.with_name(self.weights_path.name + ".tmp")
+            tmp.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            tmp.replace(self.weights_path)
+
+    def _merge_from_disk(self) -> None:
+        """Adopt predictions another process saved since we loaded: ones we
+        have never seen, and outcomes it resolved that we still hold as
+        pending. Predictions this engine replaced (same-day dedupe) stay
+        dropped."""
+        try:
+            data = json.loads(self.weights_path.read_text(encoding="utf-8"))
+        except (FileNotFoundError, json.JSONDecodeError, OSError):
+            return
+        if not isinstance(data, dict) or data.get("schema", 1) < _SCHEMA_VERSION:
+            return
+        ours = {_prediction_key(p): i for i, p in enumerate(self._predictions)}
+        for p in data.get("predictions", []):
+            if not isinstance(p, dict):
+                continue
+            k = _prediction_key(p)
+            if k in self._dropped:
+                continue
+            i = ours.get(k)
+            if i is None:
+                self._predictions.append(p)
+                ours[k] = len(self._predictions) - 1
+            elif p.get("outcome") is not None and self._predictions[i].get("outcome") is None:
+                self._predictions[i] = p
 
     def record_prediction(
         self,
@@ -209,15 +261,18 @@ class LearningEngine:
         day = time.strftime("%Y-%m-%d", time.gmtime(now))
         with self._lock:
             if dedupe_day:
-                self._predictions = [
-                    p for p in self._predictions
-                    if not (
+                kept = []
+                for p in self._predictions:
+                    if (
                         p.get("outcome") is None
                         and p.get("ticker") == ticker
                         and p.get("agent_id") == agent_id
                         and _prediction_day(p) == day
-                    )
-                ]
+                    ):
+                        self._dropped.add(_prediction_key(p))
+                    else:
+                        kept.append(p)
+                self._predictions = kept
             self._predictions.append({
                 "ticker": ticker,
                 "agent_id": agent_id,
@@ -478,6 +533,7 @@ class LearningEngine:
             self._weights = {}
             self._accuracy = {}
             self._last_resolution = None
+            self._dropped = set()
             if self.weights_path.exists():
                 self.weights_path.unlink()
 

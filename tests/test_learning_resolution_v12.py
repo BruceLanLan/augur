@@ -20,10 +20,11 @@ def _engine(tmp_path):
 
 
 def _add(le, day, agent="buffett", signal="bullish", score=7.0):
-    le.record_prediction("AAPL", agent, signal, score, 0.6)
-    p = le._predictions[-1]
-    p["timestamp"] = _ts(day) + 7  # 09:00:07, like the cron
-    p["date"] = day
+    le._predictions.append({
+        "ticker": "AAPL", "agent_id": agent, "signal": signal, "score": score,
+        "confidence": 0.6, "timestamp": _ts(day) + 7,  # 09:00:07, like the cron
+        "date": day, "outcome": None,
+    })
 
 
 def test_predictions_on_different_days_get_their_own_returns(tmp_path):
@@ -115,3 +116,36 @@ def test_v1_file_drops_misattributed_outcomes_keeps_pending(tmp_path):
     assert le.get_accuracy() == {} and le.get_weights() == {}
     le.record_prediction("MSFT", "buffett", "neutral", 5.0, 0.5)
     assert json.loads(path.read_text())["schema"] == 2
+
+
+def test_two_engines_do_not_overwrite_each_other(tmp_path):
+    path = tmp_path / "w.json"
+    a = LearningEngine(weights_path=path)
+    b = LearningEngine(weights_path=path)
+    a.record_prediction("AAPL", "buffett", "bullish", 7.0, 0.5)
+    b.record_prediction("MSFT", "munger", "bearish", 3.0, 0.5)
+    a.record_prediction("NVDA", "lynch", "neutral", 5.0, 0.5)
+    fresh = LearningEngine(weights_path=path)
+    assert sorted(p["ticker"] for p in fresh._predictions) == ["AAPL", "MSFT", "NVDA"]
+
+
+def test_outcome_resolved_elsewhere_is_adopted(tmp_path):
+    path = tmp_path / "w.json"
+    a = LearningEngine(weights_path=path)
+    _add(a, "2026-01-01")
+    a._save_weights()
+    b = LearningEngine(weights_path=path)
+    closes = _closes("2026-01-01", 120, lambda i: 100.0 + i)
+    assert b.resolve_from_prices("AAPL", closes, now=_ts("2026-04-01")) == 1
+    a.record_prediction("MSFT", "munger", "neutral", 5.0, 0.5)
+    fresh = LearningEngine(weights_path=path)
+    assert fresh.pending_count == 1  # MSFT; AAPL kept its outcome
+
+
+def test_same_day_dedupe_survives_merge(tmp_path):
+    path = tmp_path / "w.json"
+    le = LearningEngine(weights_path=path)
+    le.record_prediction("AAPL", "buffett", "bullish", 6.0, 0.5, dedupe_day=True)
+    le.record_prediction("AAPL", "buffett", "bullish", 8.0, 0.5, dedupe_day=True)
+    fresh = LearningEngine(weights_path=path)
+    assert [p["score"] for p in fresh._predictions] == [8.0]
