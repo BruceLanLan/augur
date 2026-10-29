@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import pytest
 
-from augur.relative_val import (
+from augur.experimental.relative_val import (
     PeerComparison,
     PeerValuation,
     build_peer_table,

@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from augur.skill_spec import SkillSpec, validate_skill_spec
+from augur.schemas.skill_spec import SkillSpec, validate_skill_spec
 from augur.skills.loader import load_skill, load_builtin_skills
 
 

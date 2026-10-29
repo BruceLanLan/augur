@@ -3,7 +3,7 @@
 
 import pytest
 
-from augur.debate_engine import (
+from augur.experimental.debate_engine import (
     Challenge,
     DebateResult,
     EvidenceSeekingDebate,

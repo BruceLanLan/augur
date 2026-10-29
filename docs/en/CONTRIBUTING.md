@@ -52,7 +52,7 @@ factors:
    cd augur
    python3 -c "
    import sys; sys.path.insert(0,'src')
-   from augur.coordinator import DecisionCoordinator
+   from augur.registry import DecisionCoordinator
    from augur.personas.base import MarketContext
    coord = DecisionCoordinator()
    ctx = MarketContext(ticker='TEST', pe=25, gross_margins=0.45, roe=0.20)
