@@ -94,3 +94,10 @@ def test_other_ticker_run_does_not_leak(data_dir):
     _save_run("MSFT", [{"evidence_id": "ev_sec_edgar_1", "source": "sec_edgar"}])
     [status] = EarningsEventService().check_dossier_readiness([_event("AAPL")])
     assert "fundamentals_snapshot" in status.missing_items
+
+
+def test_add_to_watchlist_does_not_leak_into_defaults(tmp_path, monkeypatch):
+    monkeypatch.setattr(cron, "WATCHLIST_PATH", tmp_path / "a.yaml")
+    cron.add_to_watchlist("TSLA")
+    monkeypatch.setattr(cron, "WATCHLIST_PATH", tmp_path / "b.yaml")
+    assert [i["ticker"] for i in cron.load_watchlist().get("watchlist", [])] == []

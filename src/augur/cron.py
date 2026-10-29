@@ -43,6 +43,7 @@ CLI commands:
   augur watchlist-show - Show current watchlist
 """
 
+import copy
 import logging
 import os
 import time
@@ -115,14 +116,17 @@ def _deep_merge(base: dict, override: dict) -> dict:
 
 def load_watchlist() -> dict:
     """Load watchlist configuration from ~/.augur/watchlist.yaml."""
+    # Deep-copy the defaults: _deep_merge copies one level, so the default
+    # "watchlist" list was shared and add_to_watchlist appended to it, leaking
+    # tickers into every later watchlist created in the same process.
     if not WATCHLIST_PATH.exists():
-        return _deep_merge(DEFAULT_CONFIG, {})
+        return _deep_merge(copy.deepcopy(DEFAULT_CONFIG), {})
 
     with open(WATCHLIST_PATH, "r", encoding="utf-8") as f:
         config = yaml.safe_load(f) or {}
 
     # Deep merge with defaults to preserve nested settings
-    merged = _deep_merge(DEFAULT_CONFIG, config)
+    merged = _deep_merge(copy.deepcopy(DEFAULT_CONFIG), config)
     return merged
 
 
