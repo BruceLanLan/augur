@@ -10,7 +10,7 @@ readme = "README.md"
 authors = [{ name = "BruceLanLan" }]
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 keywords = ["investment", "multi-agent", "stock-analysis", "ai", "personas", "consensus"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -21,7 +21,6 @@ classifiers = [
     "Natural Language :: Chinese (Simplified)",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -51,7 +50,7 @@ data = [
 mcp = [
     # create_server() supports both mcp 1.x (FastMCP) and 2.x (MCPServer);
     # CI exercises the resolved latest, tests/test_mcp_*.py cover both.
-    "mcp>=1.0.0,<3; python_version>='3.10'",
+    "mcp>=1.0.0,<3",
 ]
 llm = [
     "anthropic>=0.20",

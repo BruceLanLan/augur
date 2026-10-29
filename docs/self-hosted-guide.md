@@ -117,7 +117,7 @@ augur doctor --offline
 |---|---|---|
 | RAM | 512 MB | 2 GB |
 | Disk | 1 GB | 10 GB (for EDGAR cache) |
-| Python | 3.9+ | 3.11+ |
+| Python | 3.10+ | 3.11+ |
 
 ## Troubleshooting
 
