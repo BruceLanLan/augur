@@ -124,6 +124,13 @@ def contains(*needles: str) -> Check:
     return check
 
 
+def any_of(*checks: Check) -> Check:
+    def check(output: str) -> Optional[str]:
+        errors = [c(output) for c in checks]
+        return None if any(e is None for e in errors) else " / ".join(e for e in errors if e)
+    return check
+
+
 def file_written(pattern: str) -> Check:
     def check(output: str) -> Optional[str]:
         return None if any(Path.cwd().glob(pattern)) else "no file matching %s was written" % pattern
@@ -159,6 +166,9 @@ COMMANDS: List[Tuple[Sequence[str], Sequence[Check]]] = [
     (["dossier", "AAPL"], [contains("Pre-Earnings Dossier: AAPL", "From run run_AAPL_")]),
     (["workflow", "AAPL"], [contains("Run ID: run_AAPL_")]),
     (["ledger", "AAPL"], [contains("Change Ledger: AAPL", "→ run_AAPL_")]),
+    (["thesis-delta", "AAPL"], [contains("Thesis delta AAPL unavailable: no active thesis", "next step:")]),
+    (["scorecard", "AAPL"], [any_of(contains("Post-Earnings Scorecard: AAPL"), contains("Scorecard AAPL unavailable:"))]),
+    (["cycle"], [contains("Earnings Cycle", "ready 0/0")]),
     (["skill", "list"], [contains("filing-delta", "debt-covenant-review", "insider-cluster-review", "earnings-prep")]),
     (["skill", "run", "filing-delta", "AAPL"], [skill_succeeded("filing-delta")]),
     (["skill", "run", "debt-covenant-review", "AAPL"], [skill_succeeded("debt-covenant-review")]),

@@ -13,14 +13,20 @@ Commands:
   augur slack             - Start Slack bot
   augur wechat            - Start WeChat/WeCom bot
   augur lark              - Start Lark/Feishu bot
-  augur cron-run          - Run watchlist analysis once
-  augur cron-start        - Start scheduler daemon
-  augur watchlist-add     - Add ticker to watchlist
-  augur watchlist-show    - Show current watchlist
   augur workflow TICKER     - Multi-step agentic pipeline
   augur filing-delta TICKER --new X --prev Y  - Compare two SEC filing snapshots
   augur insider TICKER      - Insider trading summary (90-day)
   augur doctor [--offline]  - Diagnose local environment (SSL/TLS, API keys, data sources)
+
+Grouped tree (v14; see ``augur.cli_commands.groups``). The old flat names
+still work and print a one-line note to stderr:
+  augur watchlist add|show|watch    (was watchlist-add, watchlist-show, watch)
+  augur cron run|start              (was cron-run, cron-start)
+  augur report TICKER | run TICKER  - Live deep report (unchanged)
+  augur report from-run TICKER      (was research-report)
+  augur eval personas|factors|ic    (ic was ic-report)
+  augur records citations|comments|audit|decisions|ledger|verify-pack
+  augur skill list|show|run|compat|profiles  (profiles was skills)
 
 This file only defines the ``main`` group and wires up every command from
 ``augur.cli_commands`` (R7 -- was previously a single 1476-line file;
@@ -94,6 +100,9 @@ from augur.cli_commands.valuation_cmd import valuation_cmd
 from augur.cli_commands.compat_cmd import compat_cmd
 from augur.cli_commands.dossier_cmd import dossier_cmd
 from augur.cli_commands.ledger_cmd import ledger_cmd
+from augur.cli_commands.cycle_cmd import cycle_cmd
+from augur.cli_commands.scorecard_cmd import scorecard_cmd
+from augur.cli_commands.thesis_delta_cmd import thesis_delta_cmd
 from augur.cli_commands.research_report_cmd import research_report_cmd
 from augur.cli_commands.earnings_cmd import earnings_cmd
 from augur.cli_commands.risk_review_cmd import risk_review_cmd
@@ -113,11 +122,15 @@ for _cmd in (
     skills_cmd, update_cmd, doctor_cmd,
     filing_delta_cmd, insider_cmd,
     batch_cmd, valuation_cmd, compat_cmd, dossier_cmd, ledger_cmd, research_report_cmd, earnings_cmd,
+    cycle_cmd, scorecard_cmd, thesis_delta_cmd,
     citations_cmd, comments_cmd, audit_cmd, decisions_cmd, verify_pack_cmd,
     risk_review_cmd, eval_cmd, skill_cmd,
 ):
     main.add_command(_cmd)
 del _cmd
+
+from augur.cli_commands.groups import register_groups  # noqa: E402  v14 grouped tree
+register_groups(main)
 
 
 if __name__ == "__main__":

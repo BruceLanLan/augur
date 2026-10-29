@@ -221,13 +221,16 @@ augur committee NVDA --agents buffett,munger,dalio
 augur batch AAPL MSFT NVDA
 
 # 研究产物
-augur research-report AAPL [--format json]      # 共识 + 证据化分歧图 + 来源与耗时
+augur report from-run AAPL [--format json]    # 共识 + 证据化分歧图 + 来源与耗时
 augur export AAPL --format md|json|evidence-pack|pdf [-o 路径] [--run-id ...]
-augur verify-pack pack.zip                      # 校验证据包每个文件的 SHA-256
+augur records verify-pack pack.zip              # 校验证据包每个文件的 SHA-256
 augur dossier AAPL                              # 财报前 dossier
 augur valuation AAPL [--fcf 100e9 --shares 15e9 --growth 0.08 --wacc 0.10]
 augur risk-review AAPL                          # 最近两份 10-K 的风险因素新增/删除/措辞升级
-augur ledger AAPL                               # 最近两次分析运行之间变了什么
+augur records ledger AAPL                       # 最近两次分析运行之间变了什么
+augur thesis-delta AAPL                         # 当前有效论点 vs 最近两次运行（离线）
+augur scorecard AAPL [--pre RUN --post RUN]     # 财报后记分卡：研究问题的事前回答 vs 事后结果
+augur cycle [--days 30] [--format markdown]     # 观察列表跑一遍财报研究闭环：就绪度/dossier/ledger/论点变化
 augur filing-delta AAPL --new q3.json --prev q2.json
 
 # 内置研究 Skill（执行前检查权限，结果存为 RunBundle）
@@ -235,25 +238,26 @@ augur skill list · augur skill show filing-delta
 augur skill run earnings-prep|filing-delta|debt-covenant-review|insider-cluster-review AAPL
 
 # 评估（基于 augur backtest 生成的回测记录）
-augur backtest AAPL --days 120 [--demo] · augur ic-report
+augur backtest AAPL --days 120 [--demo] · augur eval ic
 augur eval personas AAPL [--horizon 20]         # 共识 IC、命中率、逐个剔除大师的边际贡献
 augur eval factors AAPL                         # 每位大师分数作为因子的 IC、t 值、p 值
 
 # 研究记录
-augur decisions list|resolve|report             # 决策结果与胜率
-augur comments add|list|resolve                 # 对运行 / 论点 / 决策 / 证据的评论
-augur citations report|list|accept|reject|fixed # 引用纠错队列
-augur audit [--action ...]                      # 审计日志
+augur records decisions list|resolve|report     # 决策结果与胜率
+augur records comments add|list|resolve         # 对运行 / 论点 / 决策 / 证据的评论
+augur records citations report|list|accept|reject|fixed # 引用纠错队列
+augur records audit [--action ...]              # 审计日志
 
 # 数据
 augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30 · augur doctor
 
 # 监控与服务
-augur watch AAPL NVDA --interval 60 · augur watchlist-add AAPL · augur cron-run
-augur serve [--port 8000] · augur mcp-server · augur skills
+augur watchlist add AAPL · augur watchlist show · augur watchlist watch AAPL NVDA --interval 60
+augur cron run · augur cron start
+augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur skill compat
 ```
 
-`augur --help` 列出全部 47 个子命令。
+`augur --help` 列出全部子命令。v14 起相关命令按组归类（`watchlist` / `cron` / `report` / `records` / `eval` / `skill`）；旧的平铺名（如 `watchlist-add`、`research-report`、`ic-report`、`ledger`）仍可用，会在 stderr 打印一行新写法提示。`augur report AAPL` 用法不变。
 
 ---
 

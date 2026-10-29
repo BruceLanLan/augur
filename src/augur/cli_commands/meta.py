@@ -103,8 +103,9 @@ def update_cmd():
     git_dir = repo_root / ".git"
     if not git_dir.exists():
         click.echo(
-            "⚠  This installation is not a git clone.\n"
-            "   To update: git clone https://github.com/BruceLanLan/augur.git",
+            "⚠  This installation is not a git clone, so `augur update` cannot run here.\n"
+            "   pip install:  pip install -U augur-agents\n"
+            "   source tree:  git clone https://github.com/BruceLanLan/augur.git",
             err=True,
         )
         raise SystemExit(1)

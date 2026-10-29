@@ -219,13 +219,16 @@ augur committee NVDA --agents buffett,munger,dalio
 augur batch AAPL MSFT NVDA
 
 # Research artifacts
-augur research-report AAPL [--format json]      # consensus + evidence-derived disagreement + provenance and latency
+augur report from-run AAPL [--format json]    # consensus + evidence-derived disagreement + provenance and latency
 augur export AAPL --format md|json|evidence-pack|pdf [-o PATH] [--run-id ...]
-augur verify-pack pack.zip                      # check every file's SHA-256 in an evidence pack
+augur records verify-pack pack.zip              # check every file's SHA-256 in an evidence pack
 augur dossier AAPL                              # pre-earnings dossier
 augur valuation AAPL [--fcf 100e9 --shares 15e9 --growth 0.08 --wacc 0.10]
 augur risk-review AAPL                          # new / removed / escalated risk factors across the last two 10-Ks
-augur ledger AAPL                               # what changed between the two latest analysed runs
+augur records ledger AAPL                       # what changed between the two latest analysed runs
+augur thesis-delta AAPL                         # active theses vs the two latest runs (offline)
+augur scorecard AAPL [--pre RUN --post RUN]     # post-earnings scorecard: pre-event answers vs outcomes
+augur cycle [--days 30] [--format markdown]     # watchlist through the earnings cycle: readiness / dossier / ledger / thesis delta
 augur filing-delta AAPL --new q3.json --prev q2.json
 
 # Built-in research skills (permission-checked, saved as RunBundles)
@@ -233,25 +236,26 @@ augur skill list · augur skill show filing-delta
 augur skill run earnings-prep|filing-delta|debt-covenant-review|insider-cluster-review AAPL
 
 # Evaluation (on records written by augur backtest)
-augur backtest AAPL --days 120 [--demo] · augur ic-report
+augur backtest AAPL --days 120 [--demo] · augur eval ic
 augur eval personas AAPL [--horizon 20]         # consensus IC, hit rate, leave-one-out contribution per persona
 augur eval factors AAPL                         # each persona's score as a factor: IC, t, p
 
 # Research records
-augur decisions list|resolve|report             # decision outcomes and win rate
-augur comments add|list|resolve                 # comments on runs / theses / decisions / evidence
-augur citations report|list|accept|reject|fixed # citation-correction queue
-augur audit [--action ...]                      # audit log
+augur records decisions list|resolve|report     # decision outcomes and win rate
+augur records comments add|list|resolve         # comments on runs / theses / decisions / evidence
+augur records citations report|list|accept|reject|fixed # citation-correction queue
+augur records audit [--action ...]              # audit log
 
 # Data
 augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30 · augur doctor
 
 # Monitoring & servers
-augur watch AAPL NVDA --interval 60 · augur watchlist-add AAPL · augur cron-run
-augur serve [--port 8000] · augur mcp-server · augur skills
+augur watchlist add AAPL · augur watchlist show · augur watchlist watch AAPL NVDA --interval 60
+augur cron run · augur cron start
+augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur skill compat
 ```
 
-`augur --help` lists all 47 subcommands.
+`augur --help` lists every subcommand. From v14 related commands are grouped (`watchlist` / `cron` / `report` / `records` / `eval` / `skill`); the old flat names (e.g. `watchlist-add`, `research-report`, `ic-report`, `ledger`) still work and print a one-line hint with the new form on stderr. `augur report AAPL` is unchanged.
 
 ---
 
