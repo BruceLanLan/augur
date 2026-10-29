@@ -8,7 +8,7 @@
 
 **不是又一个 AI 荐股工具。是一个帮你记住"你何时知道什么、什么变了、谁在什么事实上分歧"的本地研究记忆系统。**
 
-[![v12.0.0](https://img.shields.io/badge/v12.0.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v12.2.0](https://img.shields.io/badge/v12.2.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18-位投资大师)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-接入-claude--agent)
@@ -114,6 +114,8 @@ augur export AAPL --format md      # 导出最近一次运行（md / json / evid
 augur committee AAPL --preset value -q "护城河是在变宽还是变窄？"
 augur valuation AAPL               # 两阶段 DCF，自动取 FCF/股本/净负债并注明来源
 augur skill run earnings-prep AAPL # 内置研究 Skill：财报前 dossier（另有 filing-delta 等 3 个）
+augur watchlist add AAPL           # 加入自选
+augur cycle                        # 自选股的财报周期一览：谁准备好了、缺什么、下一步做什么
 ```
 
 没有网络？`augur analyze NVDA --pe 60 --roe 0.45` 可以手动传指标；`augur backtest AAPL --demo` 使用离线合成数据。
@@ -121,6 +123,8 @@ augur skill run earnings-prep AAPL # 内置研究 Skill：财报前 dossier（�
 ---
 
 ## 🔄 从 v11 升级到 v12
+
+当前版本 12.2.0。12.0 修正确性，12.1 加了一条命令跑完财报周期（`augur cycle`），12.2 把命令分了组并整理了 Dashboard。
 
 v12 不加新大师、不加新页面，修的是两条闭环的衔接处：**财报研究周期**和**从历史预测中学习**。旧版本里单个命令都能跑，但连起来是断的。
 
@@ -132,6 +136,8 @@ v12 不加新大师、不加新页面，修的是两条闭环的衔接处：**�
 | `augur earnings` 不带 `-t` 时读取真实 watchlist | 之前读错字段，队列永远为空 | 用 `augur watchlist-add AAPL` 加入后即可 |
 | Dashboard 财报页不再显示写死的内容 | 缺数据时明确写出原因和下一步，而不是显示假的风险条目 | — |
 | 研究问题保存到 `<数据目录>/thesis/questions.json` | 重启 Dashboard 后问题还在，`augur dossier` 也能读到 | — |
+
+| 命令分组（12.2） | `watchlist-add` → `watchlist add`、`cron-run` → `cron run`、`research-report` → `report from-run`、`ledger` / `citations` / `comments` / `audit` / `decisions` / `verify-pack` → `records ...`、`ic-report` → `eval ic`、`skills` → `skill profiles`、`compat` → `skill compat` | 旧名字在下一个大版本前都能用，只会在 stderr 多打一行提示；脚本解析 stdout 不受影响 |
 
 完整列表见 [CHANGELOG.md](CHANGELOG.md)。
 
@@ -329,7 +335,25 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 ## 📝 更新日志
 
 <details open>
-<summary><strong>v12.0.0 — 财报闭环与诚实的学习结算 (current)</strong></summary>
+<summary><strong>v12.2.0 — 命令分组与 Dashboard 整理 (current)</strong></summary>
+
+- **命令分组**：`watchlist` / `cron` / `report` / `records` / `eval` / `skill` 六个分组，`augur --help` 从 47 项减到 38 项；旧命令名保留，会提示新写法
+- **Dashboard**：侧边栏按 研究 / 大师 / 工具 / 系统 分组，补上财报队列、投资论文、记分卡、研究收件箱四个入口；财报页把缺失项写成人话并给出补齐命令；记分卡页的事件下拉不再卡在 Loading；Thesis Journal 的空状态、报错和手机布局都重新整理
+- **学习数据**：Dashboard 和定时任务同时写学习文件时不再互相覆盖
+
+</details>
+
+<details>
+<summary><strong>v12.1.0 — 一条命令跑完财报周期</strong></summary>
+
+- `augur cycle`：自选股里即将发财报的每只票，依次给出就绪状态、dossier、两次运行之间的变化、投资论文变化，最后汇总 `ready X/Y` 和每只票的下一步
+- `augur scorecard`：财报前后两次运行各回答了哪些研究问题
+- `augur thesis-delta`：投资论文和最近两次运行对照
+
+</details>
+
+<details>
+<summary><strong>v12.0.0 — 财报闭环与诚实的学习结算</strong></summary>
 
 - **学习结算修正**：每条大师预测按自己的日期结算 30 天收益（v11 把同一个"最近 30 天收益"套到不同日期的预测上）；不再过期丢弃、按日历日判断、全部结果追加写入 `prediction_outcomes.jsonl` 可复核；同日重复分析只记一条。v11 记录的结算结果在首次加载时作废，待结算预测保留
 - **财报闭环接线**：财报队列读取真实 watchlist、dossier 就绪判断改用真实运行记录、Dashboard 不再显示写死的财报内容

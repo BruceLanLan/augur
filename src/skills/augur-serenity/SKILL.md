@@ -1,7 +1,7 @@
 ---
 name: augur-serenity
 description: "Serenity AI — AI/semiconductor supply chain bottlenecks, chokepoint assets"
-version: 12.0.0
+version: 12.2.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

@@ -3,7 +3,7 @@
 **状态**：Active
 **生效日期**：2026-08-11（2026-09-17 更新：私有开发仓合并进公开仓；2026-10-29 更新：v12）
 **维护仓库**：`BruceLanLan/augur`（公开，唯一主仓）
-**当前基线**：v12.0.0（2026-10-29：财报闭环与学习结算修正）
+**当前基线**：v12.2.0（2026-10-29：12.0 财报闭环与学习结算修正 → 12.1 `augur cycle` → 12.2 命令分组与 Dashboard 整理）
 **详细审计**：[`docs/reviews/PROJECT_REVIEW_2026-08-11.md`](reviews/PROJECT_REVIEW_2026-08-11.md)
 **后续方向**：[`docs/PRODUCT_DIRECTIONS.md`](PRODUCT_DIRECTIONS.md)
 **生态融合调研**：[`docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md`](research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)
@@ -200,7 +200,7 @@ augur/main  (public, single source of truth)
 >
 > **2026-09-03 修正**（[评审报告](reviews/PROJECT_REVIEW_2026-09-03.md)）：上面「全绿」只在本地成立。CI「Tests」自 8/12 起因 `| tail` 吞掉退出码而假绿（实际 0 个测试跑过），「Hermetic Smoke」自创建起全红。两者已修，下一阶段以 CI 真绿为起点。
 
-## 2026-10 阶段：v12.0.0 —— 财报闭环与诚实的学习结算
+## 2026-10 阶段：v12 —— 财报闭环与诚实的学习结算
 
 **生效日期**：2026-10-29
 **依据**：2026-10-29 三路只读审计（产品飞轮 / 代码面收敛 / 学习与评估链路）
@@ -230,18 +230,27 @@ augur/main  (public, single source of truth)
 | V3 | 步骤 15 / 17 / 18 | 见上表 | ✅ |
 | V4 | 历史执行记录归档到 `docs/archive/` | 仓库内无失效引用（CHANGELOG 历史条目除外） | ✅ |
 
-### v13 候选（按杠杆排序，未排期）
+### 同日追加：12.1 与 12.2
 
-1. **`augur cycle`**：一条命令把 watchlist 依次跑过财报队列 → dossier → 变化账本 → thesis delta，汇总 ready/missing；配套 `augur scorecard`、`augur thesis-delta` 两个入口（引擎已存在：`scorecard.py`、`thesis.py:compute_thesis_delta`）。验证：README 冒烟跑两只票、一只缺数据，输出 `ready 1/2`。
+| 版本 | 内容 | 验证 |
+|---|---|---|
+| 12.1.0 | `augur cycle` / `augur scorecard` / `augur thesis-delta`（原 v13 候选第 1 项） | `tests/test_cycle_v13.py`；README 离线冒烟 24/24 |
+| 12.2.0 | CLI 分组 + 15 个旧名隐藏别名（原候选第 3 项）；Dashboard 侧边栏分组、财报 / 记分卡 / Thesis Journal 体验整理；学习文件多进程合并写（原候选第 5 项前半） | `tests/test_cli_groups_v14.py`；浏览器实看 1280 / 390 宽度无 console error |
+
+这两版都没有不兼容变化（旧命令名都还能用），所以按语义化版本记为小版本。
+
+### 后续候选（按杠杆排序，未排期）
+
+1. ~~**`augur cycle`**~~（12.1 已完成）：一条命令把 watchlist 依次跑过财报队列 → dossier → 变化账本 → thesis delta，汇总 ready/missing；配套 `augur scorecard`、`augur thesis-delta` 两个入口（引擎已存在：`scorecard.py`、`thesis.py:compute_thesis_delta`）。验证：README 冒烟跑两只票、一只缺数据，输出 `ready 1/2`。
 2. **财报日期数据源**：EDGAR 8-K Item 2.02 回填历史事件日期，未来日期按上一年同季度估算并标注 `estimated`（ROADMAP 步骤 13）。
-3. **CLI 命令树收敛**：47 个顶层命令按 `report / skill / watchlist / cron / eval / records / serve / bot` 分组，旧名保留为带警告的别名；`skills` 与 `skill` 只差一个字母却管两件事，优先处理；`update` 在 pip 安装下必然报错，改为只在 git 检出下注册。
+3. ~~**CLI 命令树收敛**~~（12.2 已完成）：47 个顶层命令按 `report / skill / watchlist / cron / eval / records / serve / bot` 分组，旧名保留为带警告的别名；`skills` 与 `skill` 只差一个字母却管两件事，优先处理；`update` 在 pip 安装下必然报错，改为只在 git 检出下注册。
 4. **实验模块标注**：`accounting` / `capital_allocation` / `debate_engine` / `relative_val` / `scorecard` / `portfolio_risk` 在 `src` 中零引用，接入或移到 `augur.experimental`；`mcp_entry` / `coordinator` / `skill_spec` 是纯兼容垫片。
-5. **学习结算的剩余问题**：多进程（Dashboard 常驻 + cron）整文件覆盖写会互相冲掉；所谓 IC 实为 score×sign(return)，不是相关系数。R6 真门（步骤 3）仍未定口径。
+5. **学习结算的剩余问题**：多进程整文件覆盖写已在 12.2 改为加锁合并；准确率表仍是各进程内累计，跨进程只合并预测与结果；所谓 IC 实为 score×sign(return)，不是相关系数。R6 真门（步骤 3）仍未定口径。
 6. 步骤 10（回放产物重跑）、14（横截面 IC / 非重叠窗口）、16（数据源层 mock）不变。
 
 ### 本阶段 owner 决策
 
-- **v12.0.0 是否推送到公开仓、是否打 tag**：打 `v*` tag 会触发 `publish.yml`（PyPI Trusted Publisher 未配置）。v12 已推到 `release/v12` 分支并开 PR #6，合并 main、打 tag、发 PyPI 均待 owner 批准。
+- **v12.0.0 是否推送到公开仓、是否打 tag**：打 `v*` tag 会触发 `publish.yml`（PyPI Trusted Publisher 未配置）。v12.2.0 在 `release/v12` 分支、PR #6，合并 main、打 tag、发 PyPI 均待 owner 批准。
 - **参考部署的定时任务**：10/16 后停止；是否改用新检出目录并恢复（恢复前新代码会作废旧格式结果，待结算的预测保留）。
 - 2026-09 阶段的 owner 决策批（步骤 1）仍然有效。
 

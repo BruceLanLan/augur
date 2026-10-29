@@ -2,6 +2,52 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [12.2.0] - 2026-10-29 one command tree and clearer dashboard
+
+### Changed
+
+- The CLI is grouped: `augur watchlist add|show|watch`, `augur cron
+  run|start`, `augur report run|from-run`, `augur records
+  citations|comments|audit|decisions|ledger|verify-pack`, `augur eval ic`,
+  `augur skill compat|profiles`. The 15 old flat names (`watchlist-add`,
+  `cron-run`, `research-report`, `ledger`, ...) keep working until the next
+  major release; they print a one-line note on stderr (stdout and exit codes
+  are unchanged) and are hidden from `augur --help` (38 entries instead of
+  47). `augur report AAPL` works as before.
+- `augur update` is hidden outside a git checkout and tells pip users to run
+  `pip install -U augur-agents`.
+- Dashboard sidebar is grouped into Research / Investors / Tools / System;
+  Earnings Queue, Thesis Journal, Scorecard and Research Inbox were not
+  linked from the sidebar and now are (zh/en/ja/ko labels). The stale
+  "v8 Features" group is gone.
+- Earnings Queue: missing dossier items show readable labels and the command
+  that fills each; the dossier panel no longer looks disabled.
+- Scorecard page: the event picker loads the ticker's upcoming events instead
+  of staying on "Loading…"; no-data states explain the reason and next steps.
+- Thesis Journal: compact empty states, error states instead of endless
+  loading skeletons, clearer forms, stacked layout on phones.
+
+### Fixed
+
+- Learning: the dashboard server and the cron job each rewrote the whole
+  weights file from memory, so the last writer silently dropped the other's
+  new predictions and outcomes. Saves now lock the file, merge what is on
+  disk and write atomically.
+
+## [12.1.0] - 2026-10-29 earnings cycle in one command
+
+### Added
+
+- `augur cycle [--days N] [--format text|markdown]`: runs the watchlist's
+  upcoming earnings events through readiness, dossier, ledger and thesis
+  delta from saved state (no network), ending with `ready X/Y` and a next
+  step per ticker.
+- `augur scorecard TICKER [--pre RUN --post RUN]`: checks which research
+  questions the pre- and post-event runs answered. Says `unavailable` with
+  the reason when runs or questions are missing.
+- `augur thesis-delta TICKER`: active theses against the two latest runs.
+- README smoke test covers the three commands (24 commands, offline).
+
 ## [12.0.0] - 2026-10-29 earnings loop and honest learning
 
 v12 is a correctness release for the two loops Augur is built around: the

@@ -8,7 +8,7 @@
 
 **Not another AI stock picker. A local research memory system that remembers what you knew, when you knew it, what changed, and who disagrees — and why.**
 
-[![v12.0.0](https://img.shields.io/badge/v12.0.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v12.2.0](https://img.shields.io/badge/v12.2.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 Masters](https://img.shields.io/badge/18-Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-claude--agent-integration)
@@ -114,6 +114,8 @@ augur export AAPL --format md      # export the latest run (md / json / evidence
 augur committee AAPL --preset value -q "Is the moat widening or narrowing?"
 augur valuation AAPL               # two-stage DCF, auto-fills FCF/shares/net debt and says so
 augur skill run earnings-prep AAPL # built-in research skill: pre-earnings dossier (3 more skills)
+augur watchlist add AAPL           # add to the watchlist
+augur cycle                        # earnings cycle for the watchlist: what is ready, what is missing, next step
 ```
 
 Offline? `augur analyze NVDA --pe 60 --roe 0.45` takes manual metrics; `augur backtest AAPL --demo` uses synthetic data.
@@ -121,6 +123,8 @@ Offline? `augur analyze NVDA --pe 60 --roe 0.45` takes manual metrics; `augur ba
 ---
 
 ## 🔄 Upgrading from v11 to v12
+
+Current version: 12.2.0. 12.0 fixes correctness, 12.1 adds one command for the whole earnings cycle (`augur cycle`), 12.2 groups the CLI and tidies the dashboard.
 
 v12 adds no personas and no pages. It fixes the joints of the two loops Augur is built around — the **earnings research cycle** and **learning from past predictions**. In v11 each command worked alone, but the chain was broken.
 
@@ -132,6 +136,8 @@ v12 adds no personas and no pages. It fixes the joints of the two loops Augur is
 | `augur earnings` without `-t` reads the real watchlist | It read the wrong key and the queue was always empty | Add tickers with `augur watchlist-add AAPL` |
 | Dashboard earnings pages show no hard-coded content | Missing data is shown with the reason and next step instead of placeholder risks | — |
 | Research questions are saved to `<data dir>/thesis/questions.json` | They survive a dashboard restart and appear in `augur dossier` | — |
+
+| Grouped commands (12.2) | `watchlist-add` → `watchlist add`, `cron-run` → `cron run`, `research-report` → `report from-run`, `ledger` / `citations` / `comments` / `audit` / `decisions` / `verify-pack` → `records ...`, `ic-report` → `eval ic`, `skills` → `skill profiles`, `compat` → `skill compat` | Old names keep working until the next major release and only add one note line on stderr; scripts that parse stdout are unaffected |
 
 Full list in [CHANGELOG.md](CHANGELOG.md).
 
@@ -327,7 +333,25 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 ## 📝 Changelog
 
 <details open>
-<summary><strong>v12.0.0 — Earnings loop and honest learning (current)</strong></summary>
+<summary><strong>v12.2.0 — One command tree, clearer dashboard (current)</strong></summary>
+
+- **Grouped CLI**: `watchlist` / `cron` / `report` / `records` / `eval` / `skill` groups; `augur --help` goes from 47 to 38 entries; old names still work and point to the new form
+- **Dashboard**: sidebar grouped into Research / Investors / Tools / System with the Earnings Queue, Thesis Journal, Scorecard and Research Inbox now linked; earnings rows show readable missing items and the command that fills each; the scorecard event picker no longer hangs on Loading; Thesis Journal empty states, errors and phone layout reworked
+- **Learning data**: the dashboard and the cron job no longer overwrite each other's writes
+
+</details>
+
+<details>
+<summary><strong>v12.1.0 — The earnings cycle in one command</strong></summary>
+
+- `augur cycle`: for each watchlist ticker reporting soon — readiness, dossier, change since the last run, thesis delta — ending with `ready X/Y` and a next step per ticker
+- `augur scorecard`: which research questions the pre- and post-event runs answered
+- `augur thesis-delta`: active theses against the two latest runs
+
+</details>
+
+<details>
+<summary><strong>v12.0.0 — Earnings loop and honest learning</strong></summary>
 
 - **Learning outcomes fixed**: each persona prediction resolves at its own 30-day horizon (v11 applied one "latest 30-day return" to predictions made on different days); nothing ages out, the boundary is by calendar day, and every outcome is appended to `prediction_outcomes.jsonl` for audit; one prediction per agent per day. Outcomes recorded by v11 are discarded on first load; pending predictions are kept
 - **Earnings loop wiring**: the earnings queue reads the real watchlist, dossier readiness uses saved runs, and the dashboard no longer shows hard-coded earnings content
