@@ -19,7 +19,7 @@
 
 > ⚠️ **For research and education only. Not investment advice.** The masters are rule-based simulations of publicly known investment philosophies, not the views of those people. Every score, Kelly size and valuation depends on data quality and model assumptions.
 
-**Contents**: [Why Augur](#-why-augur) · [What's new in v11 (screenshots)](#-whats-new-in-v11) · [Quick Start](#-quick-start-5-minutes) · [Upgrading from v10](#-upgrading-from-v10) · [18 Masters](#-18-investment-masters) · [Dashboard](#-dashboard) · [Claude / Agent](#-claude--agent-integration) · [CLI](#-cli-cheat-sheet) · [Feature Maturity](#-feature-maturity) · [Data & Privacy](#-data--privacy) · [Development](#-development) · [Docs & Roadmap](#-docs--roadmap)
+**Contents**: [Why Augur](#-why-augur) · [What's new in v11 (screenshots)](#-whats-new-in-v11) · [Quick Start](#-quick-start-5-minutes) · [Upgrading from v11](#-upgrading-from-v11-to-v12) · [Upgrading from v10](#-upgrading-from-v10) · [18 Masters](#-18-investment-masters) · [Dashboard](#-dashboard) · [Claude / Agent](#-claude--agent-integration) · [CLI](#-cli-cheat-sheet) · [Feature Maturity](#-feature-maturity) · [Data & Privacy](#-data--privacy) · [Development](#-development) · [Docs & Roadmap](#-docs--roadmap)
 
 ---
 
@@ -119,6 +119,21 @@ augur skill run earnings-prep AAPL # built-in research skill: pre-earnings dossi
 Offline? `augur analyze NVDA --pe 60 --roe 0.45` takes manual metrics; `augur backtest AAPL --demo` uses synthetic data.
 
 ---
+
+## 🔄 Upgrading from v11 to v12
+
+v12 adds no personas and no pages. It fixes the joints of the two loops Augur is built around — the **earnings research cycle** and **learning from past predictions**. In v11 each command worked alone, but the chain was broken.
+
+| Change | Effect | What to do |
+|---|---|---|
+| Learned-weights file moves to schema 2 | On first load, outcomes recorded by v11 and the accuracy/weights built on them are discarded (pending predictions are kept). v11 applied one "latest 30-day return" to predictions made on different days, so those outcomes did not belong to the predictions they were stored on | Nothing. Learned weights are off by default (`AUGUR_FORCE_LEARNED`), so analysis results are unaffected |
+| Each prediction resolves at its own horizon | Return from the close on the prediction day to the close 30 days later; nothing expires after 60 days; every outcome is appended to `<data dir>/prediction_outcomes.jsonl` for audit | — |
+| One prediction per persona per day | Re-analysing a ticker used to add another prediction each time | — |
+| `augur earnings` without `-t` reads the real watchlist | It read the wrong key and the queue was always empty | Add tickers with `augur watchlist-add AAPL` |
+| Dashboard earnings pages show no hard-coded content | Missing data is shown with the reason and next step instead of placeholder risks | — |
+| Research questions are saved to `<data dir>/thesis/questions.json` | They survive a dashboard restart and appear in `augur dossier` | — |
+
+Full list in [CHANGELOG.md](CHANGELOG.md).
 
 ## 🔄 Upgrading from v10
 

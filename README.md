@@ -19,7 +19,7 @@
 
 > ⚠️ **仅供学习研究，不构成投资建议。** 大师观点是基于公开投资理念的规则化模拟，不代表本人立场；所有分数、Kelly 仓位与估值都依赖数据质量和模型假设。
 
-**目录**：[为什么不一样](#-为什么-augur-不一样) · [v11 新功能截图](#-v11-新功能一览) · [5 分钟上手](#-5-分钟上手) · [从 v10 升级](#-从-v10-升级) · [18 位大师](#-18-位投资大师) · [Dashboard](#-dashboard) · [接入 Claude / Agent](#-接入-claude--agent) · [CLI 速查](#-cli-速查) · [功能成熟度](#-功能成熟度) · [数据与隐私](#-数据与隐私) · [开发](#-开发) · [文档与路线图](#-文档与路线图)
+**目录**：[为什么不一样](#-为什么-augur-不一样) · [v11 新功能截图](#-v11-新功能一览) · [5 分钟上手](#-5-分钟上手) · [从 v11 升级](#-从-v11-升级到-v12) · [从 v10 升级](#-从-v10-升级) · [18 位大师](#-18-位投资大师) · [Dashboard](#-dashboard) · [接入 Claude / Agent](#-接入-claude--agent) · [CLI 速查](#-cli-速查) · [功能成熟度](#-功能成熟度) · [数据与隐私](#-数据与隐私) · [开发](#-开发) · [文档与路线图](#-文档与路线图)
 
 ---
 
@@ -119,6 +119,21 @@ augur skill run earnings-prep AAPL # 内置研究 Skill：财报前 dossier（�
 没有网络？`augur analyze NVDA --pe 60 --roe 0.45` 可以手动传指标；`augur backtest AAPL --demo` 使用离线合成数据。
 
 ---
+
+## 🔄 从 v11 升级到 v12
+
+v12 不加新大师、不加新页面，修的是两条闭环的衔接处：**财报研究周期**和**从历史预测中学习**。旧版本里单个命令都能跑，但连起来是断的。
+
+| 变化 | 影响 | 如何处理 |
+|---|---|---|
+| 学习权重文件升级为 schema 2 | 第一次加载时，v11 记下的结算结果和由它算出的准确率、权重会被作废（待结算的预测保留）。原因是 v11 把同一个"最近 30 天收益"套到了不同日期的预测上，这些结果对不上各自的预测 | 无需操作。学习权重默认本来就关闭（`AUGUR_FORCE_LEARNED`），分析结果不受影响 |
+| 每条预测按自己的日期结算 | 收益从预测当天收盘算到 30 天后收盘；不再因为超过 60 天而作废；全部结算结果追加写入 `<数据目录>/prediction_outcomes.jsonl`，可以复核 | — |
+| 同一天重复分析只记一条预测 | 之前每分析一次就给每位大师多记一条 | — |
+| `augur earnings` 不带 `-t` 时读取真实 watchlist | 之前读错字段，队列永远为空 | 用 `augur watchlist-add AAPL` 加入后即可 |
+| Dashboard 财报页不再显示写死的内容 | 缺数据时明确写出原因和下一步，而不是显示假的风险条目 | — |
+| 研究问题保存到 `<数据目录>/thesis/questions.json` | 重启 Dashboard 后问题还在，`augur dossier` 也能读到 | — |
+
+完整列表见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## 🔄 从 v10 升级
 
@@ -296,7 +311,7 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 
 | 文档 | 内容 |
 |---|---|
-| [docs/ROADMAP.md](docs/ROADMAP.md) | 唯一权威路线图：v11 RC → GA 的步骤、完成定义与待决事项 |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | 唯一权威路线图：当前阶段、每一步的验证点、v13 之后的候选与待决事项 |
 | [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md) | v11 发布说明与迁移指南 |
 | [docs/reviews/](docs/reviews/) | 项目评审记录（含每条问题的证据等级与修复） |
 | [docs/schema-reference.md](docs/schema-reference.md) | EvidenceItem / Claim / StepResult / RunBundle / SkillSpec |
