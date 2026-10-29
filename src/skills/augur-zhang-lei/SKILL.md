@@ -1,7 +1,7 @@
 ---
 name: augur-zhang-lei
 description: "张磊（高瓴）AI — 结构性长期价值，消费升级与医疗"
-version: 11.0.0rc1
+version: 12.0.0
 author: BruceBlue (https://x.com/BruceBlue)
 license: MIT
 platforms: [linux, macos, windows]

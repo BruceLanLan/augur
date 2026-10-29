@@ -2,6 +2,65 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [12.0.0] - 2026-10-29 earnings loop and honest learning
+
+v12 is a correctness release for the two loops Augur is built around: the
+earnings research cycle and learning from past predictions. Both ran end to
+end on paper but broke at the joints. Version jumps from 11.0.0rc1 straight
+to 12.0.0 because the learned-weights file format and its stored history
+change incompatibly.
+
+### Breaking
+
+- `learned_weights.json` schema 2. On first load, outcomes recorded by
+  v11 and the accuracy/weights built from them are discarded (pending
+  predictions are kept): v11 applied one ticker-wide "latest 30-day return"
+  to every eligible prediction, whatever day it was made, so those outcomes
+  were not attributable to the predictions they were stored on. Learned
+  weights stay off by default (`AUGUR_FORCE_LEARNED`).
+
+### Fixed
+
+- Prediction outcomes: each prediction now resolves at its own horizon,
+  from the first close on/after its day to the first close on/after day+30
+  (`LearningEngine.resolve_from_prices`). Predictions no longer age out
+  after 60 days, the 30-day boundary is compared by calendar day (a 09:00
+  cron could miss predictions recorded at 09:00:07 by milliseconds and slip
+  a day each time), and price history covers a year instead of two months.
+- Every resolved prediction is appended to `prediction_outcomes.jsonl`
+  instead of being pruned to the last 100, so accuracy can be audited and
+  recomputed.
+- Analysis records one prediction per ticker, agent and UTC day; re-running
+  a ticker replaces that day's prediction instead of adding duplicates.
+- Recording 18 agents' predictions writes the weights file once, not 18
+  times (`LearningEngine.batch()`); the Kelly property tests went from ~79s
+  to ~2s.
+- Research questions are stored in `<data dir>/thesis/questions.json`, so
+  dashboard questions survive a restart and `augur dossier` shows them.
+- Runs started in the same second kept distinct ids by pushing `created_at`
+  forward a second, which could make an older run look latest. `created_at`
+  is now left alone; collisions pick another hash slot and runs sort by
+  creation time plus a monotonic start sequence.
+- `RunTracker` records the real package version instead of a hard-coded
+  `11.0.0rc1`.
+- `augur earnings` without `-t` read a `tickers` key that `watchlist-add`
+  never writes, so the queue was always empty; it now reads the real
+  watchlist. Dossier readiness looked for file names that are never written,
+  so no dossier was ever ready; it now uses the latest saved run, that run's
+  SEC/EDGAR evidence and the per-ticker guidance record.
+- The dashboard dossier returned hard-coded risk items, persona names and
+  "Pending" rows, and the scorecard API was an empty stub behind a route the
+  page never reached. The dossier now comes from the same builder as
+  `augur dossier`; with no data, dossier and scorecard return
+  `status: unavailable` with a reason.
+- `add_to_watchlist` appended to the shared default config, leaking tickers
+  into every later watchlist created in the same process.
+
+### Changed
+
+- Historical execution records (loop reports and logs, v9 test plan, UI
+  plan, `docs/iterations/`) moved to `docs/archive/`.
+
 ## [Unreleased] - 2026-09-17 docs and hardening round
 
 Found by running every new command on live data and screenshotting the
@@ -1132,7 +1191,7 @@ P1-1（Agent Peer Review backlog）：MCP Workspace 工具，闭合"终端定制
 - **Sentiment integration test**: patch `MetaModel.load` in `test_integration_v8` so sentiment ±0.5 hook is tested without 50/50 meta-model dilution.
 
 ### Notes
-- Full suite: **2043 passed**, 0 failed (rounds 2–10); see `docs/iterations/agent5-fullsuite-SUMMARY.md`.
+- Full suite: **2043 passed**, 0 failed (rounds 2–10); see `docs/archive/iterations/agent5-fullsuite-SUMMARY.md`.
 
 
 ### Stress Test Round 2-6 Additions (2026-08-12)
@@ -1456,7 +1515,7 @@ Loop 200 review patch. 200-round multi-agent code review + UX walkthrough on top
 
 ### Notes
 - Tests: **1362 passed** (up from ~1177 in v8.2.0).
-- Review reports: [`docs/LOOP_200_REPORT.md`](docs/LOOP_200_REPORT.md) (complete) · [`docs/LOOP_400_REPORT.md`](docs/LOOP_400_REPORT.md) (partial — stash recovery pending).
+- Review reports: [`docs/archive/LOOP_200_REPORT.md`](docs/archive/LOOP_200_REPORT.md) (complete) · [`docs/archive/LOOP_400_REPORT.md`](docs/archive/LOOP_400_REPORT.md) (partial — stash recovery pending).
 - README screenshots refreshed for v8.2.1 grid layout and report contrast (see `scripts/capture_readme_screenshots.py`).
 
 ## [8.2.0] - 2026-06-06

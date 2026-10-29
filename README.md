@@ -8,7 +8,7 @@
 
 **不是又一个 AI 荐股工具。是一个帮你记住"你何时知道什么、什么变了、谁在什么事实上分歧"的本地研究记忆系统。**
 
-[![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Release_Candidate-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v12.0.0](https://img.shields.io/badge/v12.0.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18-位投资大师)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-接入-claude--agent)
@@ -310,7 +310,17 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 ## 📝 更新日志
 
 <details open>
-<summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
+<summary><strong>v12.0.0 — 财报闭环与诚实的学习结算 (current)</strong></summary>
+
+- **学习结算修正**：每条大师预测按自己的日期结算 30 天收益（v11 把同一个"最近 30 天收益"套到不同日期的预测上）；不再过期丢弃、按日历日判断、全部结果追加写入 `prediction_outcomes.jsonl` 可复核；同日重复分析只记一条。v11 记录的结算结果在首次加载时作废，待结算预测保留
+- **财报闭环接线**：财报队列读取真实 watchlist、dossier 就绪判断改用真实运行记录、Dashboard 不再显示写死的财报内容
+- **研究记录**：研究问题落盘、同一秒多次运行的排序修正、运行记录写入真实版本号
+- 详见 [CHANGELOG](CHANGELOG.md) 与 [ROADMAP 2026-10 阶段](docs/ROADMAP.md)
+
+</details>
+
+<details>
+<summary><strong>v11.0.0-rc1 — Research Memory System</strong></summary>
 
 - **研究底座**：EvidenceItem 三类时间语义、Claim、StepResult、不可变 RunBundle、声明式 SkillSpec v1
 - **研究闭环**：Thesis Journal、Filing Delta、分歧图、Guidance Tracker、研究收件箱、DCF 估值实验室

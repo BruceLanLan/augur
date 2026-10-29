@@ -8,7 +8,7 @@
 
 **Not another AI stock picker. A local research memory system that remembers what you knew, when you knew it, what changed, and who disagrees — and why.**
 
-[![v11.0.0-rc1](https://img.shields.io/badge/v11.0.0--rc1-Release_Candidate-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v12.0.0](https://img.shields.io/badge/v12.0.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 Masters](https://img.shields.io/badge/18-Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-claude--agent-integration)
@@ -308,7 +308,17 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 ## 📝 Changelog
 
 <details open>
-<summary><strong>v11.0.0-rc1 — Research Memory System (current)</strong></summary>
+<summary><strong>v12.0.0 — Earnings loop and honest learning (current)</strong></summary>
+
+- **Learning outcomes fixed**: each persona prediction resolves at its own 30-day horizon (v11 applied one "latest 30-day return" to predictions made on different days); nothing ages out, the boundary is by calendar day, and every outcome is appended to `prediction_outcomes.jsonl` for audit; one prediction per agent per day. Outcomes recorded by v11 are discarded on first load; pending predictions are kept
+- **Earnings loop wiring**: the earnings queue reads the real watchlist, dossier readiness uses saved runs, and the dashboard no longer shows hard-coded earnings content
+- **Research records**: research questions persist, same-second run ordering fixed, runs record the real package version
+- See [CHANGELOG](CHANGELOG.md) and [ROADMAP](docs/ROADMAP.md)
+
+</details>
+
+<details>
+<summary><strong>v11.0.0-rc1 — Research Memory System</strong></summary>
 
 - **Research foundation**: EvidenceItem with three time semantics, Claim, StepResult, immutable RunBundle, declarative SkillSpec v1
 - **Research loop**: Thesis Journal, Filing Delta, disagreement map, Guidance Tracker, research inbox, DCF valuation lab

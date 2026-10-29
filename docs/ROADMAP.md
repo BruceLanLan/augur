@@ -225,8 +225,8 @@ augur/main  (public, single source of truth)
 | # | 步骤 | 验证点 | 状态 |
 |---|---|---|---|
 | V0 | 学习结算重写（schema 2） | `tests/test_learning_resolution_v12.py`：不同日期的预测各自得到 t→t+30 收益、不用未来 bar、90 天前的预测仍可结算、jsonl 行数与 accuracy 一致、旧文件迁移 | ✅ |
-| V1 | 财报队列读真实 watchlist；就绪判断改用真实运行记录 | `tests/test_earnings_flywheel_v12.py` | 见 CHANGELOG |
-| V2 | Dashboard 去掉写死的财报内容，缺数据时明确返回 unavailable | `tests/test_dashboard_no_fake_earnings_v12.py` | 见 CHANGELOG |
+| V1 | 财报队列读真实 watchlist；就绪判断改用真实运行记录 | `tests/test_earnings_flywheel_v12.py` | ✅ |
+| V2 | Dashboard 去掉写死的财报内容，缺数据时明确返回 unavailable | `tests/test_dashboard_no_fake_earnings_v12.py` | ✅（scorecard 仍明确返回 unavailable：还没有保存"财报前 / 财报后"运行配对的地方，归 v13 第 1 项） |
 | V3 | 步骤 15 / 17 / 18 | 见上表 | ✅ |
 | V4 | 历史执行记录归档到 `docs/archive/` | 仓库内无失效引用（CHANGELOG 历史条目除外） | ✅ |
 
