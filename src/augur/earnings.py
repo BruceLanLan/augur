@@ -302,7 +302,7 @@ class EarningsEventService:
 def _watchlist_tickers(data: Any) -> List[str]:
     """Tickers from a watchlist YAML payload.
 
-    Accepts the shape ``augur watchlist-add`` writes
+    Accepts the shape ``augur watchlist add`` writes
     (``{"watchlist": [{"ticker": "AAPL", ...}, ...]}``) and the legacy
     ``{"tickers": ["AAPL", ...]}``. Duplicates are dropped, order kept.
     """

@@ -117,7 +117,7 @@ def portfolio_cmd(tickers, weights, days, fmt):
         ticker_list = [item.get("ticker", "") for item in watchlist if item.get("ticker")]
         if not ticker_list:
             click.echo("No tickers provided and watchlist is empty.", err=True)
-            click.echo("  Add tickers: augur watchlist-add TICKER", err=True)
+            click.echo("  Add tickers: augur watchlist add TICKER", err=True)
             raise SystemExit(1)
         if fmt == "text":
             click.echo(f"Using watchlist: {', '.join(ticker_list)}\n")

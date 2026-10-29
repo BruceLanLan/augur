@@ -14,7 +14,7 @@ def cron_run_cmd():
 
     if not results:
         click.echo("No results. Is your watchlist empty?")
-        click.echo("Add tickers with: augur watchlist-add TICKER --pe X --roe X")
+        click.echo("Add tickers with: augur watchlist add TICKER --pe X --roe X")
         return
 
     click.echo(f"\nCompleted: {len(results)} tickers analyzed.")
@@ -51,9 +51,9 @@ def watchlist_add_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_r
 
     \b
     Examples:
-      augur watchlist-add AAPL --pe 30 --roe 0.55
-      augur watchlist-add NVDA --sector Technology
-      augur watchlist-add BTC-USD
+      augur watchlist add AAPL --pe 30 --roe 0.55
+      augur watchlist add NVDA --sector Technology
+      augur watchlist add BTC-USD
     """
     from augur.cron import add_to_watchlist, WATCHLIST_PATH
 
@@ -102,7 +102,7 @@ def watchlist_show_cmd():
 
     if not watchlist:
         click.echo("Watchlist is empty.")
-        click.echo("Add tickers with: augur watchlist-add TICKER --pe X --roe X")
+        click.echo("Add tickers with: augur watchlist add TICKER --pe X --roe X")
         return
 
     click.echo(f"Augur Watchlist ({len(watchlist)} tickers)")

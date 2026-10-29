@@ -88,7 +88,7 @@ def cycle_cmd(days, fmt):
     out: List[str] = [head(f"Earnings Cycle — next {days} days", 1), ""]
     tickers = _watchlist_tickers()
     if not tickers:
-        out.append("Watchlist is empty — next step: `augur watchlist-add TICKER`.")
+        out.append("Watchlist is empty — next step: `augur watchlist add TICKER`.")
     with_event = {s.ticker for s in statuses}
     no_event = [t for t in tickers if t not in with_event]
 
