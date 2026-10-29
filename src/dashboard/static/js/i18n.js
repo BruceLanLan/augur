@@ -70,7 +70,12 @@ window.I18N = {
         "nav-performance": "大师排行",
         // Nav group labels
         "group-analysis": "分析",
-        "group-v8": "v8 功能",
+        "group-research": "研究",
+        "group-tools": "工具",
+        "nav-earnings": "财报队列",
+        "nav-thesis": "投资论文",
+        "nav-scorecard": "财报记分卡",
+        "nav-inbox": "研究收件箱",
         "group-investors": "投资人",
         "group-system": "系统",
         // Accessibility
@@ -1035,7 +1040,12 @@ window.I18N = {
         "preset-all": "Full Council",
         // Nav group labels
         "group-analysis": "Analysis",
-        "group-v8": "v8 Features",
+        "group-research": "Research",
+        "group-tools": "Tools",
+        "nav-earnings": "Earnings Queue",
+        "nav-thesis": "Thesis Journal",
+        "nav-scorecard": "Scorecard",
+        "nav-inbox": "Research Inbox",
         "group-investors": "Investors",
         "group-system": "System",
         // Accessibility
@@ -1984,7 +1994,12 @@ window.I18N = {
         "preset-all": "全員委員会",
         // Nav group labels
         "group-analysis": "分析",
-        "group-v8": "v8 機能",
+        "group-research": "リサーチ",
+        "group-tools": "ツール",
+        "nav-earnings": "決算キュー",
+        "nav-thesis": "投資仮説ジャーナル",
+        "nav-scorecard": "決算スコアカード",
+        "nav-inbox": "リサーチ受信箱",
         "group-investors": "投資家",
         "group-system": "システム",
         // Sidebar footer
@@ -2217,7 +2232,12 @@ window.I18N = {
         "preset-all": "전체 위원회",
         // Nav group labels
         "group-analysis": "분석",
-        "group-v8": "v8 기능",
+        "group-research": "리서치",
+        "group-tools": "도구",
+        "nav-earnings": "실적 대기열",
+        "nav-thesis": "투자 논지 저널",
+        "nav-scorecard": "실적 스코어카드",
+        "nav-inbox": "리서치 받은편지함",
         "group-investors": "투자자",
         "group-system": "시스템",
         // Sidebar footer
