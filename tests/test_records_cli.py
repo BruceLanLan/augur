@@ -10,14 +10,16 @@ from click.testing import CliRunner
 def _run(*args):
     from augur.cli import main
 
-    return CliRunner().invoke(main, list(args))
+    # Use the grouped names (`augur records ...`); the old flat names print a
+    # deprecation note that older click mixes into stdout.
+    return CliRunner().invoke(main, ["records", *args])
 
 
 def test_citation_report_list_accept_roundtrip():
     r = _run("citations", "report", "AAPL", "--claim-id", "claim_rec_cli_1",
              "--issue", "wrong_source", "--wrong", "ev_bad", "--correct", "ev_good")
     assert r.exit_code == 0, r.output
-    cid = r.stdout.split()[1]  # stdout only: stderr carries the v14 alias note
+    cid = r.output.split()[1]
     assert cid.startswith("cc_")
     assert cid in _run("citations", "list").output
     assert _run("citations", "accept", cid).exit_code == 0
@@ -28,7 +30,7 @@ def test_citation_report_list_accept_roundtrip():
 def test_comments_persist_across_processes_and_resolve():
     r = _run("comments", "add", "run", "run_REC_1", "check the FCF source", "--author", "reviewer")
     assert r.exit_code == 0, r.output
-    comment_id = r.stdout.split()[2]
+    comment_id = r.output.split()[2]
 
     # A fresh ReviewSystem (new process equivalent) must still see it.
     listed = _run("comments", "list", "--target", "run:run_REC_1")
