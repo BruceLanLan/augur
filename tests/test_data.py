@@ -28,6 +28,30 @@ class TestDataCalculations:
         rsi = _calculate_rsi([100, 101, 102], period=14)
         assert rsi == 50.0
 
+    def test_calculate_rsi_matches_wilder_reference(self):
+        """Wilder's own worked example: RSI(14) is 70.46, then 66.25 (TA-Lib RSI)."""
+        from augur.data import _calculate_rsi
+
+        closes = [44.34, 44.09, 44.15, 43.61, 44.33, 44.83, 45.10, 45.42,
+                  45.84, 46.08, 45.89, 46.03, 45.61, 46.28, 46.28, 46.00]
+        assert _calculate_rsi(closes[:15], period=14) == 70.46
+        assert _calculate_rsi(closes, period=14) == 66.25
+
+    def test_calculate_rsi_uses_whole_history(self):
+        """Wilder's RSI carries the earlier moves; a last-14-changes average does not.
+
+        Twenty bars of steady selling, then 14 alternating +2/-1 bars. The last 14
+        changes alone average to RSI 66.67; Wilder's smoothing still remembers the
+        sell-off and stays below 50.
+        """
+        from augur.data import _calculate_rsi
+
+        closes = [200.0 - 2 * i for i in range(21)]
+        for i in range(14):
+            closes.append(closes[-1] + (2.0 if i % 2 == 0 else -1.0))
+        rsi = _calculate_rsi(closes, period=14)
+        assert rsi < 50
+
     def test_calculate_macd(self):
         """Need 26+ prices for MACD calculation."""
         from augur.data import _calculate_macd

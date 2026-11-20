@@ -39,6 +39,8 @@ dependencies = [
     "httpx>=0.24.0",
     "pydantic>=2.0",
     "jsonschema>=4.0",
+    # Wilder RSI matched to TA-Lib; abi3 wheels, no dependencies of its own
+    "fin-primitives>=4.0",
 ]
 
 [project.optional-dependencies]
