@@ -133,12 +133,9 @@ class StockDataFetcher:
         high = hist['High']
         low = hist['Low']
 
-        # RSI
-        delta = close.diff()
-        gain = delta.where(delta > 0, 0).rolling(window=14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
-        rsi_14 = float((100 - (100 / (1 + rs))).iloc[-1])
+        # RSI: Wilder's smoothing (TA-Lib RSI), the same as augur.data._calculate_rsi
+        import fin_primitives as fp
+        rsi_14 = round(float(fp.rsi(close.tolist(), 14, mode="float")[-1]), 2)
 
         # MACD
         ema_12 = close.ewm(span=12).mean()

@@ -1066,33 +1066,24 @@ def _calculate_technicals_from_prices(closes: List[float]) -> Dict[str, Any]:
 
 
 def _calculate_rsi(closes: List[float], period: int = 14) -> float:
-    """Calculate RSI (Relative Strength Index)."""
+    """Wilder's RSI (Wilder 1978; TA-Lib ``RSI``) of the last close.
+
+    The first average gain and loss are the simple means of the first ``period``
+    changes; every later change is folded in with Wilder's smoothing
+    (``avg = (avg * (period - 1) + change) / period``). Computed by fin-primitives,
+    so every caller gets the same, TA-Lib-matched value. Returns 50.0 (neutral)
+    when there are not yet ``period`` changes.
+    """
     closes = _sanitize_price_series(closes)
     if len(closes) < period + 1:
         return 50.0
 
-    deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
+    import fin_primitives as fp
 
-    # Use last `period` deltas for initial calculation, then smooth
-    gains = []
-    losses = []
-    for d in deltas[-period:]:
-        if d > 0:
-            gains.append(d)
-            losses.append(0)
-        else:
-            gains.append(0)
-            losses.append(abs(d))
-
-    avg_gain = sum(gains) / period
-    avg_loss = sum(losses) / period
-
-    # All gains, no losses -> RSI=100; if avg_gain were 0 (all losses), rs=0 -> RSI=0
-    if avg_loss == 0:
-        return 100.0
-    rs = avg_gain / avg_loss
-    rsi = 100.0 - (100.0 / (1.0 + rs))
-    return round(rsi, 2)
+    rsi = fp.rsi(closes, period, mode="float")[-1]
+    if rsi is None or not math.isfinite(rsi):
+        return 50.0
+    return round(float(rsi), 2)
 
 
 def _calculate_macd(closes: List[float]) -> Dict[str, float]:
