@@ -19,6 +19,13 @@ Environment variables:
 import os
 import re
 from typing import Optional, Dict
+from augur.consensus_display import (
+    consensus_withheld,
+    display_confidence,
+    display_persona_score,
+    display_score,
+    display_signal,
+)
 
 # Signal emoji mapping
 SIGNAL_EMOJI = {
@@ -159,15 +166,15 @@ def _build_market_context(ticker: str, metrics: Dict[str, float]):
 
 def format_consensus_message(ticker: str, consensus, results: dict) -> str:
     """Format consensus results as a Telegram message with emoji."""
-    signal_emoji = SIGNAL_EMOJI.get(consensus.signal.value, "")
-    signal_cn = SIGNAL_CN.get(consensus.signal.value, consensus.signal.value)
+    signal_emoji = ("" if consensus_withheld(consensus) else SIGNAL_EMOJI.get(consensus.signal.value, ""))
+    signal_cn = display_signal(consensus, SIGNAL_CN)
 
     lines = [
         f"\U0001f989 Augur \u5171\u8bc6\u5206\u6790 \u2014 {ticker.upper()}",
         "",
         f"\U0001f4ca \u4fe1\u53f7: {signal_emoji} {signal_cn.upper()}",
-        f"\u2b50 \u8bc4\u5206: {consensus.score:.1f}/10",
-        f"\U0001f3af \u7f6e\u4fe1\u5ea6: {consensus.confidence:.0%}",
+        f"\u2b50 \u8bc4\u5206: {display_score(consensus)}",
+        f"\U0001f3af \u7f6e\u4fe1\u5ea6: {display_confidence(consensus)}",
         "",
         "\u2501\u2501\u2501 Agent \u660e\u7ec6 \u2501\u2501\u2501",
     ]
@@ -179,7 +186,7 @@ def format_consensus_message(ticker: str, consensus, results: dict) -> str:
         signal_cn_agent = SIGNAL_CN.get(result.signal.value, result.signal.value)
         name = result.agent_name[:12]
         lines.append(
-            f"{emoji} {name:<12s} | {signal_cn_agent} | {result.score:.1f}/10"
+            f"{emoji} {name:<12s} | {signal_cn_agent} | {display_persona_score(result)}"
         )
 
     if consensus.key_findings:
@@ -207,7 +214,7 @@ def format_single_agent_message(ticker: str, result) -> str:
         f"{emoji} {result.agent_name} \u5206\u6790 \u2014 {ticker.upper()}",
         "",
         f"\U0001f4ca \u4fe1\u53f7: {signal_emoji} {signal_cn.upper()}",
-        f"\u2b50 \u8bc4\u5206: {result.score:.1f}/10",
+        f"\u2b50 \u8bc4\u5206: {display_persona_score(result)}",
         f"\U0001f3af \u7f6e\u4fe1\u5ea6: {result.confidence:.0%}",
         "",
         "\U0001f4dd \u63a8\u7406:",

@@ -46,11 +46,24 @@ FUND_ASSET_TYPES = frozenset({"etf", "fund"})
 # score-invariance test (tests/test_etf_consensus.py): on an ETF context, a
 # persona is applicable only if perturbing company fields (pe, pb, roe,
 # margins, revenue growth, fcf, debt ratio, market cap, institutional
-# ownership) leaves its score and signal unchanged. v14.0: only dalio passes.
-FUND_APPLICABLE_PERSONAS: frozenset = frozenset({"dalio"})
+# ownership) leaves its score and signal unchanged. v14.0: only dalio passed.
+# v14.1: marks, soros and arps gained fund paths (``analyze_fund``) that read
+# only technical / market / ETF-profile fields, and pass the same test.
+FUND_APPLICABLE_PERSONAS: frozenset = frozenset({"dalio", "marks", "soros", "arps"})
 
 # Below this many applicable personas a fund gets no consensus signal.
 MIN_APPLICABLE_FOR_CONSENSUS = 3
+
+# Fixed signal cut-offs for the personas' fund paths (``analyze_fund``). They
+# are deliberately separate from each persona's ``thresholds``, which are
+# tuned on equities and can be overlaid by saved hyper-parameters.
+FUND_BULLISH_CUTOFF = 6.5
+FUND_BEARISH_CUTOFF = 4.0
+
+# What a fund reading may look at: technicals, market/macro state and the
+# ETF profile. Never company fields (pe, pb, roe, margins, growth, fcf, debt,
+# market_cap, institutional ownership).
+FUND_READING_BASIS = "technical + market + ETF profile fields only (no company fundamentals)"
 
 # ---- ETF health-check thresholds (assess_etf) ----
 EXPENSE_RATIO_HIGH = 0.005       # 0.50%
@@ -76,6 +89,20 @@ def _num(profile: Dict[str, Any], key: str) -> Optional[float]:
     except (TypeError, ValueError):
         return None
     return value if math.isfinite(value) else None
+
+
+def profile_num(ctx: Any, key: str) -> Optional[float]:
+    """Finite numeric ETF-profile value of a context, or None when unknown."""
+    return _num(dict(getattr(ctx, "etf", None) or {}), key)
+
+
+def fund_signal(score: float) -> str:
+    """Signal value for a fund-path score on the fixed fund cut-offs."""
+    if score >= FUND_BULLISH_CUTOFF:
+        return "bullish"
+    if score <= FUND_BEARISH_CUTOFF:
+        return "bearish"
+    return "neutral"
 
 
 def assess_etf(profile: Dict[str, Any], lang: str = "zh") -> List[str]:

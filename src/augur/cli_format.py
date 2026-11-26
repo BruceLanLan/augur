@@ -7,6 +7,7 @@ Provides color, table, icon, and box formatting that respects --no-color mode.
 
 import os
 import re
+import unicodedata
 
 # ANSI color codes
 _COLORS = {
@@ -29,6 +30,26 @@ _SIGNAL_ICONS = {
     "strong_buy": ("🟢🟢", "[STRONG BUY]"),
     "strong_sell": ("🔴🔴", "[STRONG SELL]"),
 }
+
+
+_ANSI_RE = re.compile(r"\033\[[0-9;]*m")
+
+
+def display_width(text) -> int:
+    """Terminal column width of ``text``: wide/fullwidth chars (CJK, most
+    emoji) count 2, combining marks, variation selectors and ZWJ count 0,
+    ANSI color codes count 0."""
+    width = 0
+    for ch in _ANSI_RE.sub("", str(text)):
+        if unicodedata.combining(ch) or ch in "\u200d\ufe0e\ufe0f":
+            continue
+        width += 2 if unicodedata.east_asian_width(ch) in ("W", "F") else 1
+    return width
+
+
+def _pad(text, width: int) -> str:
+    text = str(text)
+    return text + " " * max(0, width - display_width(text))
 
 
 def _is_no_color() -> bool:
@@ -85,21 +106,22 @@ def format_table(headers: list, rows: list, col_sep: str = " | ") -> str:
         return ""
 
     # Calculate column widths from headers and data
-    widths = [len(str(h)) for h in headers]
+    # Widths are terminal columns, so emoji and CJK cells line up.
+    widths = [display_width(h) for h in headers]
     for row in rows:
         for i, cell in enumerate(row):
             if i < len(widths):
-                widths[i] = max(widths[i], len(str(cell)))
+                widths[i] = max(widths[i], display_width(cell))
 
     # Build header line
-    header_line = col_sep.join(str(h).ljust(widths[i]) for i, h in enumerate(headers))
-    separator = "-" * len(header_line)
+    header_line = col_sep.join(_pad(h, widths[i]) for i, h in enumerate(headers))
+    separator = "-" * display_width(header_line)
 
     # Build data lines
     lines = [header_line, separator]
     for row in rows:
         line = col_sep.join(
-            str(cell).ljust(widths[i]) if i < len(widths) else str(cell)
+            _pad(cell, widths[i]) if i < len(widths) else str(cell)
             for i, cell in enumerate(row)
         )
         lines.append(line)
@@ -120,19 +142,15 @@ def format_box(lines: list, title: str = "") -> str:
     if not lines:
         return ""
 
-    # Strip ANSI for width calculation
-    ansi_escape = re.compile(r"\033\[[0-9;]*m")
-
-    def visible_len(s):
-        return len(ansi_escape.sub("", s))
+    visible_len = display_width
 
     max_width = max(visible_len(line) for line in lines)
     if title:
-        max_width = max(max_width, len(title) + 2)
+        max_width = max(max_width, display_width(title) + 2)
 
     # Build box
     if title:
-        fill = max(0, max_width - len(title) - 3)
+        fill = max(0, max_width - display_width(title) - 2)
         top = f"+-- {title} " + "-" * fill + "+"
     else:
         top = "+" + "-" * (max_width + 2) + "+"

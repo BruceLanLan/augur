@@ -8,6 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from augur.consensus_display import consensus_record, consensus_withheld, persona_abstained
 from augur.workspace import get_enabled_personas
 from dashboard.deps import _get_rules_engine, get_coordinator
 
@@ -135,19 +136,22 @@ def api_run_watchlist_analysis():
 
         results = coordinator.analyze_with_all(ctx, enabled_personas=get_enabled_personas())
         consensus = coordinator.get_consensus(results, ticker=ticker, context=ctx)
+        withheld = consensus_withheld(consensus)
+        # Abstaining personas (rules not applicable to a fund) do not vote.
+        voting = [r for r in results.values() if not persona_abstained(r)]
 
         result_item = {
+            **consensus_record(consensus),
             "ticker": ticker,
-            "signal": consensus.signal.value,
-            "score": round(consensus.score, 1),
-            "confidence": round(consensus.confidence, 2) if hasattr(consensus, 'confidence') else 0.0,
+            "consensus_withheld": withheld,
             "agent_count": len(results),
-            "buy_count": sum(1 for r in results.values() if r.signal.value == "bullish"),
-            "sell_count": sum(1 for r in results.values() if r.signal.value == "bearish"),
-            "hold_count": sum(1 for r in results.values() if r.signal.value == "neutral"),
+            "buy_count": sum(1 for r in voting if r.signal.value == "bullish"),
+            "sell_count": sum(1 for r in voting if r.signal.value == "bearish"),
+            "hold_count": sum(1 for r in voting if r.signal.value == "neutral"),
+            "abstained_count": len(results) - len(voting),
             "last_run": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S") + "Z",
             "key_findings": consensus.key_findings[:2] if consensus.key_findings else [],
-            "kelly_pct": consensus.metadata.get("position_sizing", {}).get("position_pct"),
+            "kelly_pct": 0.0 if withheld else consensus.metadata.get("position_sizing", {}).get("position_pct"),
         }
         all_results.append(result_item)
 
@@ -155,9 +159,7 @@ def api_run_watchlist_analysis():
             from augur.history import save_analysis
             save_analysis(ticker, {
                 "consensus": {
-                    "signal": result_item["signal"],
-                    "score": result_item["score"],
-                    "confidence": result_item["confidence"],
+                    **consensus_record(consensus),
                     "key_findings": result_item["key_findings"],
                 },
                 "agent_count": result_item["agent_count"],
@@ -168,7 +170,8 @@ def api_run_watchlist_analysis():
 
         try:
             engine = _get_rules_engine()
-            if engine.get_rules():
+            # A withheld consensus has no score for rules to compare.
+            if not withheld and engine.get_rules():
                 rule_data = {
                     "ticker": ticker.upper(),
                     "signal": consensus.signal.value,
@@ -187,6 +190,10 @@ def api_run_watchlist_analysis():
                 if w_item.get("ticker", "").upper() == ticker.upper():
                     w_item["last_signal"] = consensus.signal.value
                     w_item["last_score"] = result_item["score"]
+                    if withheld:
+                        w_item["last_withheld"] = True
+                    else:
+                        w_item.pop("last_withheld", None)
                     w_item["last_run"] = result_item["last_run"]
                     break
         except Exception:

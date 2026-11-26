@@ -24,6 +24,7 @@ def watch_cmd(tickers, interval, persona, alert_above, alert_below):
     """
     import time
 
+    from augur.consensus_display import consensus_withheld, persona_abstained
     from augur.registry import AgentRegistry, DecisionCoordinator
 
     registry = AgentRegistry()
@@ -53,13 +54,19 @@ def watch_cmd(tickers, interval, persona, alert_above, alert_below):
                         result = agent.analyze(ctx)
                         score = result.score
                         signal = result.signal.value.upper()
+                        # An abstaining persona's 5.0 is not a reading.
+                        no_reading = persona_abstained(result)
+                        if no_reading:
+                            signal = "N/A"
                     else:
                         coordinator = DecisionCoordinator(registry)
                         results = coordinator.analyze_with_all(ctx)
                         consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
                         score = consensus.score
                         signal = consensus.signal.value.upper()
-                        if consensus.metadata.get("consensus_withheld"):
+                        # A withheld consensus's 5.0 is a placeholder.
+                        no_reading = consensus_withheld(consensus)
+                        if no_reading:
                             signal = "WITHHELD"
 
                     change_pct = ctx.change_pct
@@ -68,12 +75,13 @@ def watch_cmd(tickers, interval, persona, alert_above, alert_below):
                     else:
                         change_str = f"↓ {change_pct:.2%}"
 
-                    line = f"  {ticker.upper():<8s} {signal:<10s} {score:.1f}/10  {change_str}"
+                    score_text = "--" if no_reading else f"{score:.1f}/10"
+                    line = f"  {ticker.upper():<8s} {signal:<10s} {score_text}  {change_str}"
 
                     alerts = []
-                    if alert_above is not None and score > alert_above:
+                    if not no_reading and alert_above is not None and score > alert_above:
                         alerts.append(f"ALERT: score {score:.1f} > {alert_above}")
-                    if alert_below is not None and score < alert_below:
+                    if not no_reading and alert_below is not None and score < alert_below:
                         alerts.append(f"ALERT: score {score:.1f} < {alert_below}")
 
                     if alerts:

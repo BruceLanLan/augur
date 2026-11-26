@@ -249,7 +249,7 @@
             </div>
         </div>
         <div class="exec-mid">
-            <div class="t-eyebrow" style="color:var(--gilt)">◈ Council Consensus</div>
+            <div class="t-eyebrow" id="exec-eyebrow" style="color:var(--gilt)">◈ Council Consensus</div>
             <div id="exec-signal" class="verdict neutral" style="margin:6px 0 10px">--</div>
             <div class="exec-metrics">
                 <div><span class="l">Confidence</span><span class="v" id="exec-conf">--%</span></div>
@@ -877,6 +877,24 @@ function _withheldMessage(ticker, cons) {
         .replace('{ticker}', ticker).replace('{n}', n).replace('{total}', n + k).replace('{k}', k);
 }
 
+// True for a real (not withheld) fund consensus: equal-weighted technical and
+// market readings, no position sizing, not recorded for learning.
+function isFundConsensus(cons) {
+    return !!(cons && cons.metadata && cons.metadata.fund_basis) && !consensusWithheld(cons);
+}
+
+// Localized explanation for a fund consensus. Built from the counts and
+// numbers because the engine's reasoning text is Chinese only.
+function _fundConsensusMessage(ticker, cons) {
+    var meta = (cons && cons.metadata) || {};
+    var n = (meta.applicable_agents || []).length;
+    var k = (meta.abstained_agents || []).length;
+    return _t('fund-consensus-oracle', 'Fund consensus for {ticker}.')
+        .replace('{ticker}', ticker).replace('{n}', n).replace('{total}', n + k).replace('{k}', k)
+        .replace('{signal}', signalLabel(cons.signal)).replace('{score}', (cons.score || 0).toFixed(1))
+        .replace('{conf}', ((cons.confidence || 0) * 100).toFixed(0) + '%');
+}
+
 function renderResults(data) {
     var cons = data.consensus;
     var agents = data.agents || [];
@@ -909,6 +927,12 @@ function renderResults(data) {
     
     // ExecCard updates
     var withheld = consensusWithheld(cons);
+    var fundCons = isFundConsensus(cons);
+    var eyebrow = document.getElementById('exec-eyebrow');
+    if (eyebrow) {
+        eyebrow.textContent = fundCons ? '◈ ' + _t('fund-consensus-label', 'Fund Consensus') : '◈ Council Consensus';
+        eyebrow.title = fundCons ? _t('fund-consensus-tip', '') : '';
+    }
     var score = cons.score || 0;
     var pct = withheld ? 0 : Math.round(score * 10);
     document.getElementById('exec-ring').style.setProperty('--pct', pct);
@@ -933,6 +957,7 @@ function renderResults(data) {
         var posPct = cons.metadata && cons.metadata.position_sizing
             ? (cons.metadata.position_sizing.position_pct || 0).toFixed(1) + '%'
             : '--';
+        if (fundCons) posPct = 'n/a';  // funds get no position size
         document.getElementById('exec-kelly').textContent = posPct;
     }
     
@@ -973,6 +998,8 @@ function renderResults(data) {
     // OracleSays
     var oracleMsg = withheld
         ? escapeHtml(_withheldMessage(ticker, cons)).replace(escapeHtml(ticker), '<b style="color:var(--gilt-bright)">' + escapeHtml(ticker) + '</b>')
+        : fundCons
+        ? escapeHtml(_fundConsensusMessage(ticker, cons)).replace(escapeHtml(ticker), '<b style="color:var(--gilt-bright)">' + escapeHtml(ticker) + '</b>')
         : 'The council has spoken. <b style="color:var(--gilt-bright)">' + ticker + '</b> draws a <b style="color:var(--signal-' + (sigClass==='neutral'?'warn':sigClass) + ')">' + signalLabel(cons.signal) + '</b> omen — score ' + score.toFixed(1) + ', confidence ' + ((cons.confidence||0)*100).toFixed(0) + '%. The Kelly oracle counsels a <b style="color:var(--gilt-bright)">' + posPct + '</b> position. <br><br>' + escapeHtml(cons.reasoning || '');
     document.getElementById('oracle-says').innerHTML = oracleMsg;
 
@@ -1732,7 +1759,11 @@ function loadHistoryChart(ticker) {
     fetch('/api/history?ticker=' + encodeURIComponent(ticker) + '&limit=60')
         .then(function(r) { return r.ok ? r.json() : null; })
         .then(function(data) {
-            _historyRecords = (data && data.records) ? data.records.slice().reverse() : [];
+            // Withheld fund consensuses are stored with a placeholder 5.0;
+            // plotting them would draw fake HOLD readings.
+            _historyRecords = (data && data.records) ? data.records.slice().reverse().filter(function(r) {
+                return !augurIsWithheld(r) && typeof r.score === 'number';
+            }) : [];
             renderHistoryChart(_historyRecords);
         })
         .catch(function() { /* silently fail */ });
@@ -1774,9 +1805,9 @@ function renderHistoryComparison(ticker) {
 
     items.forEach(function(item) {
         var date = item.time ? new Date(item.time).toLocaleDateString() : '--';
-        var score = (item.result && item.result.score) ? item.result.score.toFixed(1) : '--';
+        var score = (item.result && item.result.score && !augurIsWithheld(item.result)) ? item.result.score.toFixed(1) : '--';
         var signal = (item.result && item.result.signal) || 'neutral';
-        var signalText = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+        var signalText = augurIsWithheld(item.result) ? augurWithheldLabel() : signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
         var sigClass = signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral';
         var price = (item.result && item.result.price) ? '$' + item.result.price.toFixed(2) : '--';
 

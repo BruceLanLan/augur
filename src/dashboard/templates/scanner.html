@@ -20,6 +20,7 @@
 .consensus-badge.bullish { background: var(--signal-buy); color: var(--bg-void); }
 .consensus-badge.neutral { background: var(--signal-neutral); color: var(--bg-void); }
 .consensus-badge.bearish { background: var(--signal-sell); color: var(--fg-1); }
+.consensus-badge.withheld { background: transparent; color: var(--text-muted); border: 1px dashed var(--border-color); }
 .consensus-badge.error { background: var(--signal-sell); color: var(--fg-1); opacity: 0.85; }
 .heatmap-cell.error { background: rgba(255,60,60,0.15); color: var(--signal-sell); }
 </style>
@@ -256,10 +257,13 @@ function exportScannerCSV() {
         }
         var agentMap = {};
         (row.agents || []).forEach(function(a) { agentMap[a.agent_id] = a; });
-        var cols = [row.ticker, row.consensus_signal || 'neutral', Number(row.consensus_score || 0).toFixed(1)];
+        // A withheld fund consensus has no score (5.0 is a placeholder).
+        var cols = row.consensus_withheld
+            ? [row.ticker, 'withheld', '']
+            : [row.ticker, row.consensus_signal || 'neutral', Number(row.consensus_score || 0).toFixed(1)];
         agentIds.forEach(function(id) {
             var a = agentMap[id];
-            cols.push(a ? Number(a.score || 0).toFixed(1) : '');
+            cols.push(a && !a.not_applicable ? Number(a.score || 0).toFixed(1) : '');
         });
         rows.push(cols.join(','));
     });
@@ -323,12 +327,18 @@ function renderHeatmap(results) {
             var errDetail = (row.error && row.error.detail) ? row.error.detail : _t('scanner-error-row');
             html += '<td colspan="' + (agentIds.length + 1) + '"><span class="consensus-badge error">' + escapeHtml(_t('scanner-error-row')) + '</span> <span class="text-muted" style="font-size:0.7rem;">' + escapeHtml(errDetail) + '</span></td>';
         } else {
-            html += '<td><span class="consensus-badge ' + consCls + '">' + Number(row.consensus_score).toFixed(1) + '</span></td>';
+            if (row.consensus_withheld) {
+                html += '<td><span class="consensus-badge withheld" title="' + escapeHtml(_t('fund-withheld-tip', 'Too few masters apply to this fund')) + '">' + escapeHtml(_t('fund-withheld', 'WITHHELD')) + '</span></td>';
+            } else {
+                html += '<td><span class="consensus-badge ' + consCls + '">' + Number(row.consensus_score).toFixed(1) + '</span></td>';
+            }
             var agentMap = {};
             (row.agents || []).forEach(function(a) { agentMap[a.agent_id] = a; });
             agentIds.forEach(function(id) {
                 var a = agentMap[id];
-                if (a) {
+                if (a && a.not_applicable) {
+                    html += '<td><span class="heatmap-cell" title="' + escapeHtml(_t('fund-abstained-tip', 'Abstained')) + '">' + escapeHtml(_t('fund-abstained', 'N/A')) + '</span></td>';
+                } else if (a) {
                     var score = (typeof a.score === 'number') ? a.score : 0;
                     var cls = a.signal === 'bullish' ? 'bullish' : a.signal === 'bearish' ? 'bearish' : 'neutral';
                     html += '<td><span class="heatmap-cell ' + cls + '">' + score.toFixed(1) + '</span></td>';
@@ -345,7 +355,8 @@ function renderHeatmap(results) {
     var okRows = results.filter(function(r) { return r.consensus_signal !== 'error'; });
     var bullish = okRows.filter(function(r) { return r.consensus_signal === 'bullish'; }).length;
     var bearish = okRows.filter(function(r) { return r.consensus_signal === 'bearish'; }).length;
-    var neutral = okRows.length - bullish - bearish;
+    // Withheld fund consensuses are not neutral readings.
+    var neutral = okRows.filter(function(r) { return r.consensus_signal !== 'bullish' && r.consensus_signal !== 'bearish' && !r.consensus_withheld; }).length;
     var summaryTpl = _t('scanner-summary');
     document.getElementById('scanner-summary').textContent = summaryTpl
         .replace('{n}', okRows.length)

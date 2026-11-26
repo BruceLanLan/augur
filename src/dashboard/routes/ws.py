@@ -9,6 +9,12 @@ from fastapi import WebSocket, WebSocketDisconnect
 from fastapi.concurrency import run_in_threadpool
 
 from augur.auth import authenticate_websocket
+from augur.consensus_display import (
+    consensus_record,
+    consensus_withheld,
+    persona_abstained,
+    withheld_reason,
+)
 from augur.personas.base import MarketContext
 from dashboard.deps import _save_history_safe, get_coordinator, get_registry
 
@@ -155,7 +161,7 @@ async def ws_committee(websocket: WebSocket):
                 "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "session_type": "committee",
                 "question": question,
-                "consensus": {"signal": consensus.signal.value, "score": round(consensus.score, 1), "confidence": round(consensus.confidence, 2)},
+                "consensus": consensus_record(consensus),
                 "agents": [op["agent_name"] for op in opinions_sorted],
                 "opinions": opinions_sorted,
             })
@@ -323,6 +329,13 @@ async def ws_workflow(websocket: WebSocket):
                         "kelly_pct": meta.get("position_sizing", {}).get("position_pct"),
                         "regime": (meta.get("regime_features") or {}).get("regime"),
                     }
+                    if consensus_withheld(consensus_result):
+                        # Same shape as augur.workflow: no signal, no size.
+                        cons_dict.update({
+                            "withheld": True,
+                            "withheld_reason": withheld_reason(consensus_result),
+                            "kelly_pct": 0.0,
+                        })
                     if "consensus" in step_list:
                         output["results"]["consensus"] = cons_dict
                 except Exception as e:
@@ -347,12 +360,16 @@ async def ws_workflow(websocket: WebSocket):
                 consensus = consensus_result or await run_in_threadpool(
                     coordinator.get_consensus, responses, ticker=ticker, context=ctx
                 )
-                bullish = sum(1 for r in responses.values() if r.signal.value == "bullish")
-                bearish = sum(1 for r in responses.values() if r.signal.value == "bearish")
+                voting = [r for r in responses.values() if not persona_abstained(r)]
+                bullish = sum(1 for r in voting if r.signal.value == "bullish")
+                bearish = sum(1 for r in voting if r.signal.value == "bearish")
+                withheld = consensus_withheld(consensus)
                 result = {
-                    "verdict": consensus.signal.value,
-                    "score": consensus.score,
-                    "vote": {"bullish": bullish, "neutral": len(responses) - bullish - bearish, "bearish": bearish},
+                    "verdict": "withheld" if withheld else consensus.signal.value,
+                    "score": None if withheld else consensus.score,
+                    "withheld": withheld,
+                    "abstained": len(responses) - len(voting),
+                    "vote": {"bullish": bullish, "neutral": len(voting) - bullish - bearish, "bearish": bearish},
                     "opinions": [
                         {"agent": r.agent_name, "signal": r.signal.value, "score": r.score}
                         for r in sorted(responses.values(), key=lambda x: -x.score)

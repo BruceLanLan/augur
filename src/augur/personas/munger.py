@@ -75,7 +75,9 @@ class MungerAgent(BaseAgent):
 
         # 2. 心理因素 - 波动率作为市场情绪代理
         psych_score = 5
-        if context.price and context.price > 0 and context.atr/context.price*100 > 3:
+        # ATR% 阈值按真 True Range（v14.1）重校：旧近似 >3% 的触发率 15.4%，
+        # 真 ATR 下 >5.75% 保持同一触发率（docs/research/ATR_RECALIBRATION_2026-11.md）
+        if context.price and context.price > 0 and context.atr/context.price*100 > 5.75:
             psych_score += 2  # 高波动反映恐惧
         if context.price_vs_52w_low < 10:  # 接近低点
             psych_score += 1

@@ -22,6 +22,13 @@ import hashlib
 from datetime import datetime, timezone
 from typing import Any, Callable, Dict, List, Optional
 
+from augur.consensus_display import (
+    WITHHELD_SIGNAL,
+    consensus_record,
+    consensus_withheld,
+    withheld_reason,
+)
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -120,13 +127,17 @@ def analyze_personas(inputs: Dict[str, Any], upstream: Dict[str, Dict[str, Any]]
                 "agent_name": r.agent_name, "signal": r.signal.value, "score": r.score,
                 "confidence": r.confidence, "factors": dict((r.metadata or {}).get("factors") or {}),
                 "key_findings": list(r.key_findings[:3]), "risks": list(r.risks[:3]),
+                # Fund abstention, same shape as the workflow's analyze step.
+                **({"abstained": True,
+                    "abstain_reason": (r.metadata or {}).get("reason", "fund")}
+                   if (r.metadata or {}).get("not_applicable") else {}),
             }
             for aid, r in responses.items()
         },
         "consensus": {
-            "signal": consensus.signal.value, "score": round(consensus.score, 2),
-            "confidence": round(consensus.confidence, 3),
-            "kelly_pct": (consensus.metadata or {}).get("position_sizing", {}).get("position_pct"),
+            **consensus_record(consensus, score_digits=2, confidence_digits=3),
+            "kelly_pct": (0.0 if consensus_withheld(consensus)
+                          else (consensus.metadata or {}).get("position_sizing", {}).get("position_pct")),
         },
     }
 
@@ -148,12 +159,17 @@ def compare_with_previous_run(inputs: Dict[str, Any], upstream: Dict[str, Dict[s
     diffs: List[Dict[str, Any]] = []
     if prev_consensus and current_consensus:
         before, after = prev_consensus.get("score"), current_consensus.get("score")
+        if consensus_withheld(prev_consensus) or consensus_withheld(current_consensus):
+            before = after = None  # a withheld 5.0 is a placeholder, not a score to diff
         if isinstance(before, (int, float)) and isinstance(after, (int, float)) and abs(after - before) >= 0.005:
             diffs.append({"field": "consensus.score", "before": round(before, 2), "after": round(after, 2),
                           "delta": round(after - before, 2)})
-        if prev_consensus.get("signal") != current_consensus.get("signal"):
-            diffs.append({"field": "consensus.signal", "before": prev_consensus.get("signal"),
-                          "after": current_consensus.get("signal")})
+        def _sig(c):
+            return "withheld" if consensus_withheld(c) else c.get("signal")
+
+        if _sig(prev_consensus) != _sig(current_consensus):
+            diffs.append({"field": "consensus.signal", "before": _sig(prev_consensus),
+                          "after": _sig(current_consensus)})
     for aid, now in sorted(current.items()):
         was = prev_personas.get(aid)
         if was and was.get("signal") != now.get("signal"):
@@ -179,8 +195,13 @@ def build_earnings_dossier(inputs: Dict[str, Any], upstream: Dict[str, Dict[str,
     else:
         lines.append(f"Next earnings: {event.get('note', 'unknown')}")
     if consensus:
-        lines += ["", "## Consensus", f"{consensus.get('signal', '').upper()} {consensus.get('score')}/10, "
-                  f"confidence {consensus.get('confidence')}"]
+        if consensus_withheld(consensus):
+            reason = withheld_reason(consensus)
+            lines += ["", "## Consensus", f"{WITHHELD_SIGNAL}, score --"
+                      + (f" ({reason})" if reason else "")]
+        else:
+            lines += ["", "## Consensus", f"{consensus.get('signal', '').upper()} {consensus.get('score')}/10, "
+                      f"confidence {consensus.get('confidence')}"]
     lines += ["", "## Where the personas disagree", dm.summary]
     for cp in dm.conflict_points:
         lines.append(f"- **{cp.claim}** — high: {', '.join(cp.bullish_personas)}; low: {', '.join(cp.bearish_personas)}; "

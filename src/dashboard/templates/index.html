@@ -987,7 +987,7 @@ function heroGo() {
             var withheld = !!(cons.metadata && cons.metadata.consensus_withheld);
 
             var sigEl = document.getElementById('hr-signal');
-            sigEl.textContent = withheld ? 'WITHHELD' : signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+            sigEl.textContent = withheld ? augurWithheldLabel() : signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
             sigEl.className = 'signal-badge signal-big ' + (signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral');
 
             document.getElementById('hr-score').textContent = withheld ? '--' : (cons.score || 0).toFixed(1) + '/10';
@@ -1003,11 +1003,11 @@ function heroGo() {
             _scrollHeroPanel('hero-result');
 
             // Cache the result
-            augurCache.add(ticker, {
-                signal: cons.signal || 'neutral',
-                score: cons.score || 0,
-                confidence: cons.confidence || 0
-            });
+            // A withheld fund consensus has no score: cache it as such so the
+            // recent list and leaderboard do not show a placeholder 5.0.
+            augurCache.add(ticker, withheld
+                ? { signal: 'neutral', score: null, confidence: 0, consensus_withheld: true }
+                : { signal: cons.signal || 'neutral', score: cons.score || 0, confidence: cons.confidence || 0 });
             renderRecentAnalyses();
             renderLeaderboard();
             resetHeroBtn();
@@ -1766,13 +1766,13 @@ function renderRecentAnalyses() {
     list.innerHTML = '';
     recent.forEach(function(item) {
         var signal = (item.result.signal || 'neutral').toLowerCase();
-        var signalLabel = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+        var signalLabel = augurIsWithheld(item.result) ? augurWithheldLabel() : signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
         var badgeClass = signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral';
         var li = document.createElement('li');
         li.onclick = function() { window.location.href = '/stocks?ticker=' + item.ticker; };
         li.innerHTML = '<span class="rt">' + item.ticker + '</span>' +
             '<span class="signal-badge ' + badgeClass + '" style="font-size:0.62rem;padding:2px 8px">' + signalLabel + '</span>' +
-            '<span style="font:600 0.82rem/1 var(--font-mono);color:var(--fg-2);margin-left:auto">' + (item.result.score || 0).toFixed(1) + '</span>' +
+            '<span style="font:600 0.82rem/1 var(--font-mono);color:var(--fg-2);margin-left:auto">' + augurScoreText(item.result, item.result.score) + '</span>' +
             '<span style="font:500 0.62rem/1 var(--font-mono);color:var(--fg-3);width:72px;text-align:right">' + relativeTime(item.time) + '</span>';
         list.appendChild(li);
     });
@@ -1909,7 +1909,7 @@ function renderLeaderboard() {
     if (!list) return;
     var recent = augurCache.getLast(10);
     // Sort by score descending
-    var scored = recent.filter(function(item) { return item.result && typeof item.result.score === 'number'; });
+    var scored = recent.filter(function(item) { return item.result && typeof item.result.score === 'number' && !augurIsWithheld(item.result); });
     scored.sort(function(a, b) { return (b.result.score || 0) - (a.result.score || 0); });
     var top = scored.slice(0, 5);
     if (!top.length) {

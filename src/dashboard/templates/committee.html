@@ -242,6 +242,19 @@ var _committeeVerdict = null;
 var _committeeOpinions = [];
 var _committeeTicker = '';
 
+// With nothing selected the backend convenes every master, so say so
+// instead of "0 masters".
+function _updateSelectedCount() {
+    var el = document.getElementById('selected-count');
+    if (!el) return;
+    if (_selectedAgents.size === 0) {
+        var total = document.querySelectorAll('.committee-agent-chip').length;
+        el.textContent = _t('committee-all-agents', 'All {n} masters').replace('{n}', total);
+    } else {
+        el.textContent = _selectedAgents.size + ' ' + _t('committee-agents-unit', '位');
+    }
+}
+
 function toggleAgent(id, el) {
     if (_selectedAgents.has(id)) {
         _selectedAgents.delete(id);
@@ -250,7 +263,7 @@ function toggleAgent(id, el) {
         _selectedAgents.add(id);
         el.classList.add('selected');
     }
-    document.getElementById('selected-count').textContent = _selectedAgents.size + ' ' + _t('committee-agents-unit', '位');
+    _updateSelectedCount();
 }
 
 function selectAll() {
@@ -259,7 +272,7 @@ function selectAll() {
         _selectedAgents.add(id);
         el.classList.add('selected');
     });
-    document.getElementById('selected-count').textContent = _selectedAgents.size + ' ' + _t('committee-agents-unit', '位');
+    _updateSelectedCount();
 }
 
 function clearAll() {
@@ -267,7 +280,7 @@ function clearAll() {
         el.classList.remove('selected');
     });
     _selectedAgents.clear();
-    document.getElementById('selected-count').textContent = '0 ' + _t('committee-agents-unit', '位');
+    _updateSelectedCount();
 }
 
 var _PRESETS = {
@@ -295,7 +308,7 @@ function loadPreset(name) {
             var chip = document.querySelector('.committee-agent-chip[data-id="' + id + '"]');
             if (chip) { _selectedAgents.add(id); chip.classList.add('selected'); }
         });
-        document.getElementById('selected-count').textContent = _selectedAgents.size + ' ' + _t('committee-agents-unit', '位');
+        _updateSelectedCount();
     }
     if (!document.getElementById('committee-question').value) {
         document.getElementById('committee-question').placeholder = _PRESET_LABELS[name] || '';
@@ -306,7 +319,7 @@ var _committeeWs = null;
 
 document.addEventListener('DOMContentLoaded', function() {
     var sc = document.getElementById('selected-count');
-    if (sc && !sc.textContent) sc.textContent = _selectedAgents.size + ' ' + _t('committee-agents-unit', '位');
+    if (sc && !sc.textContent) _updateSelectedCount();
     fetch('/api/workspace').then(function(r) { return r.ok ? r.json() : null; }).then(function(ws) {
         var preset = ws && ws.committee_preset;
         if (preset && _PRESETS.hasOwnProperty(preset)) {

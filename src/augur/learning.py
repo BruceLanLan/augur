@@ -40,7 +40,8 @@ import logging
 import math
 import threading
 import time
-from bisect import bisect_left
+from bisect import bisect_left, bisect_right
+from datetime import datetime, timedelta, timezone
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
@@ -86,6 +87,47 @@ def _prediction_day(pred: Dict[str, Any]) -> str:
     if isinstance(day, str) and len(day) >= 10:
         return day[:10]
     return time.strftime("%Y-%m-%d", time.gmtime(pred.get("timestamp", 0)))
+
+
+# Regular-session close per exchange, by ticker suffix (local wall clock).
+# Anything else is treated as a US listing. Holidays, half-days and lunch
+# breaks are ignored: only "was the prediction made at/after today's close"
+# matters, and the price history itself decides which day is the next session.
+_EXCHANGE_CLOSE = {
+    ".HK": ("Asia/Hong_Kong", 16, 0),
+    ".SS": ("Asia/Shanghai", 15, 0),
+    ".SZ": ("Asia/Shanghai", 15, 0),
+}
+_DEFAULT_CLOSE = ("America/New_York", 16, 0)
+
+
+def _entry_reference(pred: Dict[str, Any]) -> Tuple[str, bool]:
+    """Exchange-local day a prediction was made and whether it came after close.
+
+    Returns ``(day, after_close)``. A prediction made at or after the
+    exchange's close cannot trade at that day's close -- and may already
+    reflect after-hours news (e.g. earnings released after the bell) -- so
+    its entry is the *next* session's close; otherwise the entry is that
+    day's close. Exits use the same rule at ``day + horizon``.
+
+    Falls back to the legacy UTC day with ``after_close=False`` when the
+    prediction has no timestamp or the time-zone database is unavailable.
+    """
+    ts = pred.get("timestamp")
+    if isinstance(ts, (int, float)) and not isinstance(ts, bool) and ts > 0:
+        ticker = str(pred.get("ticker") or "").upper()
+        tz_name, hour, minute = next(
+            (v for suffix, v in _EXCHANGE_CLOSE.items() if ticker.endswith(suffix)),
+            _DEFAULT_CLOSE,
+        )
+        try:
+            from zoneinfo import ZoneInfo
+            local = datetime.fromtimestamp(ts, tz=timezone.utc).astimezone(ZoneInfo(tz_name))
+        except Exception:
+            return _prediction_day(pred), False
+        after_close = (local.hour, local.minute) >= (hour, minute)
+        return local.strftime("%Y-%m-%d"), after_close
+    return _prediction_day(pred), False
 
 
 class LearningEngine:
@@ -322,11 +364,14 @@ class LearningEngine:
     ) -> int:
         """Resolve each pending prediction on *ticker* at its own horizon.
 
-        *closes* is daily ``(YYYY-MM-DD, close)`` history. A prediction made
-        on day D resolves with the return from the first close on/after D to
-        the first close on/after D + horizon_days. Predictions whose horizon
-        has not passed, or that the history does not cover, stay pending —
-        nothing ages out.
+        *closes* is daily ``(YYYY-MM-DD, close)`` history (exchange-local
+        dates). A prediction made on exchange-local day D resolves with the
+        return from the first close on/after D to the first close on/after
+        D + horizon_days. If it was made at or after that exchange's close
+        (see ``_entry_reference``) both ends move to the first close strictly
+        after D and D + horizon_days, so the entry is a close that had not
+        printed yet. Predictions whose horizon has not passed, or that the
+        history does not cover, stay pending — nothing ages out.
 
         This replaces applying one "latest 30-day return" to every pending
         prediction regardless of when it was made, which credited agents
@@ -350,19 +395,21 @@ class LearningEngine:
             for pred in self._predictions:
                 if pred.get("ticker") != ticker or pred.get("outcome") is not None:
                     continue
-                ts = pred.get("timestamp", 0)
-                start_day = _prediction_day(pred)
-                end_day = time.strftime(
-                    "%Y-%m-%d", time.gmtime(ts + horizon_days * 86400)
-                )
+                start_day, after_close = _entry_reference(pred)
+                end_day = (
+                    datetime.strptime(start_day, "%Y-%m-%d") + timedelta(days=horizon_days)
+                ).strftime("%Y-%m-%d")
                 # Compare calendar days, not seconds: a 09:00 cron must be able
                 # to resolve a prediction recorded at 09:00:07 thirty days ago.
                 if end_day > today or end_day > last_date:
                     continue  # history does not reach the horizon yet
-                i = bisect_left(dates, start_day)
-                j = bisect_left(dates, end_day)
+                find = bisect_right if after_close else bisect_left
+                i = find(dates, start_day)
+                j = find(dates, end_day)
                 if i >= len(series) or j >= len(series) or j <= i:
                     continue
+                if series[j][0] > today:
+                    continue  # exit close is not known yet
                 entry, exit_ = series[i][1], series[j][1]
                 actual_return = (exit_ - entry) / entry
                 pred["outcome"] = actual_return

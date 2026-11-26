@@ -8,15 +8,34 @@ from unittest.mock import patch
 from click.testing import CliRunner
 
 from augur.cli import main
-from tests.test_etf_output import aapl_ctx, fake_learning, fetch_returns, spy_ctx  # noqa: F401
+from tests.test_etf_output import (  # noqa: F401
+    aapl_ctx,
+    fake_learning,
+    fetch_returns,
+    spy_ctx,
+    spy_ctx_no_technicals,
+)
 
 
 def _run(args):
     return CliRunner().invoke(main, args, catch_exceptions=False)
 
 
-def test_committee_etf_shows_withheld(fetch_returns, fake_learning):  # noqa: F811
+def test_committee_etf_real_consensus(fetch_returns, fake_learning):  # noqa: F811
     fetch_returns["SPY"] = spy_ctx
+    with patch.dict("os.environ", {"AUGUR_SKIP_MACRO_FETCH": "1"}):
+        result = _run(["committee", "SPY"])
+    out = result.output
+    assert result.exit_code == 0, out
+    assert "WITHHELD" not in out
+    assert "Basis:       fund consensus of 4 personas" in out
+    assert "Kelly Size:  n/a (fund)" in out
+    assert "Abstain 14" in out
+    assert fake_learning.recorded == []
+
+
+def test_committee_etf_shows_withheld(fetch_returns, fake_learning):  # noqa: F811
+    fetch_returns["SPY"] = spy_ctx_no_technicals
     with patch.dict("os.environ", {"AUGUR_SKIP_MACRO_FETCH": "1"}):
         result = _run(["committee", "SPY"])
     out = result.output
@@ -39,10 +58,29 @@ def test_committee_equity_unchanged(fetch_returns, fake_learning):  # noqa: F811
     assert "Score:" in out
 
 
-def test_workflow_summary_etf_withheld(fetch_returns, fake_learning):  # noqa: F811
+def test_workflow_summary_etf_real_consensus(fetch_returns, fake_learning):  # noqa: F811
     from augur.workflow import run_workflow
 
     fetch_returns["SPY"] = spy_ctx
+    with patch.dict("os.environ", {"AUGUR_SKIP_MACRO_FETCH": "1"}):
+        result = run_workflow("SPY", steps="fetch,analyze,consensus,committee")
+    cons = result["results"]["consensus"]
+    assert "withheld" not in cons
+    assert cons["kelly_pct"] == 0.0
+    assert cons["fund_basis"]["applicable_agents"] == ["arps", "dalio", "marks", "soros"]
+    committee = result["results"]["committee"]
+    assert committee["abstained"] == 14
+    assert sum(committee["vote"].values()) == 4
+    assert len(committee["opinions"]) == 4  # abstainers do not appear as neutral 5.0
+    summary = result["summary"]
+    assert "Basis: fund consensus of 4 personas" in summary
+    assert fake_learning.recorded == []
+
+
+def test_workflow_summary_etf_withheld(fetch_returns, fake_learning):  # noqa: F811
+    from augur.workflow import run_workflow
+
+    fetch_returns["SPY"] = spy_ctx_no_technicals
     with patch.dict("os.environ", {"AUGUR_SKIP_MACRO_FETCH": "1"}):
         result = run_workflow("SPY", steps="fetch,analyze,consensus,committee")
     cons = result["results"]["consensus"]
@@ -87,7 +125,7 @@ def test_stock_page_handles_withheld_consensus():
 def test_workflow_summary_lists_abstainers_and_fund_type(fetch_returns, fake_learning):  # noqa: F811
     from augur.workflow import run_workflow
 
-    fetch_returns["SPY"] = spy_ctx
+    fetch_returns["SPY"] = spy_ctx_no_technicals
     with patch.dict("os.environ", {"AUGUR_SKIP_MACRO_FETCH": "1"}):
         result = run_workflow("SPY", steps="fetch,analyze,consensus")
     assert result["results"]["fetch"]["asset_type"] == "etf"
@@ -96,7 +134,8 @@ def test_workflow_summary_lists_abstainers_and_fund_type(fetch_returns, fake_lea
     summary = result["summary"]
     assert "Type: ETF" in summary
     assert "PE: 0.0" not in summary
-    assert "Abstained (17" in summary
+    assert "Abstained (14, rules not applicable to funds)" in summary
+    assert "Abstained (3, fund technicals missing): arps, marks, soros" in summary
 
 
 def _fund_bundle():

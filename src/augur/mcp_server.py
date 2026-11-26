@@ -320,25 +320,35 @@ def _fund_consensus_text(ticker: str, ctx, results, consensus, source: str, fres
     from augur.etf import MIN_APPLICABLE_FOR_CONSENSUS, etf_overview_lines
 
     meta = consensus.metadata or {}
-    abstained = sorted(aid for aid, r in results.items() if (r.metadata or {}).get("not_applicable"))
+    from augur.consensus_display import split_abstained
+
+    no_rules, no_data = split_abstained(results)
+    abstained = no_rules + no_data
     applicable = {aid: r for aid, r in results.items() if aid not in abstained}
     lines = [f"Consensus for {ticker} ({str(ctx.asset_type).upper()}):"]
     if meta.get("consensus_withheld"):
         lines.append("  Signal: WITHHELD (no consensus signal)")
-        lines.append(f"  Reason: only {len(applicable)} of {len(results)} personas have rules that "
-                     f"apply to a fund (at least {MIN_APPLICABLE_FOR_CONSENSUS} are needed)")
+        why = f"{len(no_rules)} have rules that do not apply to funds"
+        if no_data:
+            why += f", {len(no_data)} abstained because fund technicals are missing"
+        lines.append(f"  Reason: only {len(applicable)} of {len(results)} personas gave a fund "
+                     f"reading (at least {MIN_APPLICABLE_FOR_CONSENSUS} are needed); {why}")
     else:
         lines.append(f"  Signal: {consensus.signal.value.upper()}")
         lines.append(f"  Score: {consensus.score:.1f}/10")
         lines.append(f"  Confidence: {consensus.confidence:.0%}")
+        lines.append(f"  Basis: fund consensus of {len(applicable)} personas' technical/market "
+                     "readings; no company fundamentals, not recorded for learning")
     lines.append("  Kelly Position: n/a (fund)")
     lines.append(f"  Source: {source}  Freshness: {freshness}")
     lines.extend("  " + ln for ln in etf_overview_lines(ctx))
     lines.append(f"  Applicable personas ({len(applicable)}):")
     for r in applicable.values():
         lines.append(f"    {r.agent_name:20s} | {r.signal.value:8s} | {r.score:.1f}/10")
-    if abstained:
-        lines.append(f"  Abstained ({len(abstained)}, not applicable to funds): {', '.join(abstained)}")
+    if no_rules:
+        lines.append(f"  Abstained ({len(no_rules)}, rules not applicable to funds): {', '.join(no_rules)}")
+    if no_data:
+        lines.append(f"  Abstained ({len(no_data)}, fund technicals missing): {', '.join(no_data)}")
     return "\n".join(lines)
 
 
@@ -685,12 +695,15 @@ def create_server():
 
         results = coordinator.run_debate(ctx, rounds=rounds)
         consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
+        from augur.consensus_display import (
+            consensus_withheld, display_confidence, display_score, display_signal,
+        )
 
         lines = [
             f"Debate Results for {ticker.upper()} ({rounds} rounds, {len(results)} agents):",
-            f"  Consensus Signal: {consensus.signal.value}",
-            f"  Score: {consensus.score:.1f}/10",
-            f"  Confidence: {consensus.confidence:.0%}",
+            f"  Consensus Signal: {display_signal(consensus) if consensus_withheld(consensus) else consensus.signal.value}",
+            f"  Score: {display_score(consensus)}",
+            f"  Confidence: {display_confidence(consensus)}",
             "",
             "Agent Positions After Debate:",
         ]
@@ -758,10 +771,12 @@ def create_server():
 
         consensus = coordinator.get_consensus(responses, ticker=ticker.upper(), context=ctx)
 
-        # Build committee report
-        bullish = [(aid, r) for aid, r in responses.items() if r.signal.value == "bullish"]
-        bearish = [(aid, r) for aid, r in responses.items() if r.signal.value == "bearish"]
-        neutral = [(aid, r) for aid, r in responses.items() if r.signal.value == "neutral"]
+        # Build committee report (fund abstentions do not vote)
+        abstain = {aid for aid, r in responses.items() if (r.metadata or {}).get("not_applicable")}
+        voters = {aid: r for aid, r in responses.items() if aid not in abstain}
+        bullish = [(aid, r) for aid, r in voters.items() if r.signal.value == "bullish"]
+        bearish = [(aid, r) for aid, r in voters.items() if r.signal.value == "bearish"]
+        neutral = [(aid, r) for aid, r in voters.items() if r.signal.value == "neutral"]
 
         lines = [
             f"═══ Investment Committee: {ticker.upper()} ═══",
@@ -770,7 +785,10 @@ def create_server():
             "",
             "─── Independent Opinions ───",
         ]
-        for aid, r in sorted(responses.items(), key=lambda x: -x[1].score):
+        for aid, r in sorted(responses.items(), key=lambda x: (x[0] in abstain, -x[1].score)):
+            if aid in abstain:
+                lines.append(f"  {r.agent_name:22s} │ {'ABSTAIN':8s} │ n/a (not applicable to funds)")
+                continue
             stance = r.signal.value.upper()
             lines.append(f"  {r.agent_name:22s} │ {stance:8s} │ {r.score:.1f}/10")
             if r.key_findings:
@@ -805,9 +823,14 @@ def create_server():
             f"  Signal:     {consensus.signal.value.upper()}",
             f"  Score:      {consensus.score:.1f}/10",
             f"  Confidence: {consensus.confidence:.0%}",
-            f"  Kelly Size: {kelly:.0%}" if kelly else "  Kelly Size: N/A (signal not bullish)",
-            f"  Vote:       Bullish {len(bullish)} / Neutral {len(neutral)} / Bearish {len(bearish)}",
+            ("  Kelly Size: n/a (fund)" if consensus.metadata.get("fund_basis")
+             else f"  Kelly Size: {kelly:.0%}" if kelly else "  Kelly Size: N/A (signal not bullish)"),
+            f"  Vote:       Bullish {len(bullish)} / Neutral {len(neutral)} / Bearish {len(bearish)}"
+            + (f" / Abstain {len(abstain)}" if abstain else ""),
         ]
+        if consensus.metadata.get("fund_basis"):
+            lines.append(f"  Basis:      fund consensus of {len(voters)} personas' technical/market "
+                         "readings; no company fundamentals")
         return "\n".join(lines)
 
     @mcp.tool()

@@ -166,7 +166,11 @@ COMMANDS: List[Tuple[Sequence[str], Sequence[Check]]] = [
     (["analyze", "AAPL"], [contains("Price: 190.00", "AAPL — 18 Masters Consensus", "Signal:")]),
     (["analyze", "NVDA", "--pe", "60", "--roe", "0.45"], [contains("NVDA — 18 Masters Consensus", "Signal:")]),
     (["fetch", "SPY"], [contains("ETF", "$797.00B", "0.09%", "+0.04%")]),
-    (["consensus", "SPY"], [contains("WITHHELD", "Applicable: 1 of 18", "Abstained (17")]),
+    # The offline fake ETF has no MACD history: arps and soros abstain for
+    # missing technicals, so only dalio and marks apply and it is withheld.
+    (["consensus", "SPY"], [contains("WITHHELD", "Applicable: 2 of 18",
+                                     "Abstained (14, rules not applicable",
+                                     "Abstained (2, fund technicals missing)")]),
     (["watchlist", "add", "AAPL"], [contains("AAPL")]),
     (["watchlist", "show"], [contains("AAPL")]),
     (["workflow", "AAPL"], [contains("Price: $190.00", "── Consensus ──", "Run ID: run_AAPL_")]),

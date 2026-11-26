@@ -1011,6 +1011,8 @@ def _generate_fund_report(
     """基金报告：概况 + 体检 + 适用大师读数；不按公司财务评分，不给仓位。"""
     meta = consensus.metadata or {}
     abstained = [r for r in results.values() if (r.metadata or {}).get("not_applicable")]
+    no_data = [r for r in abstained if (r.metadata or {}).get("reason") == "fund_data_missing"]
+    no_rules = [r for r in abstained if r not in no_data]
     applicable = {aid: r for aid, r in results.items()
                   if not (r.metadata or {}).get("not_applicable")}
     asset = str(getattr(context, "asset_type", "") or "fund").upper()
@@ -1029,10 +1031,19 @@ def _generate_fund_report(
     ]
     if meta.get("consensus_withheld"):
         s.append(f"**不输出共识信号**：适用大师 {len(applicable)} 位（至少需要 3 位）。"
-                 f"{len(abstained)} 位大师的规则基于公司财务，不适用于基金。")
+                 f"{len(no_rules)} 位大师的规则基于公司财务，不适用于基金"
+                 + (f"；{len(no_data)} 位因技术指标缺失弃权。" if no_data else "。"))
     else:
-        s.append(f"适用大师共识：{_format_signal_chinese(consensus.signal.value)}，"
-                 f"评分 {consensus.score:.1f}/10，置信度 {consensus.confidence:.0%}。")
+        # Same row labels as the equity report so the dashboard report page
+        # can parse the signal and score.
+        s.append("| 指标 | 数值 |")
+        s.append("|------|------|")
+        s.append(f"| **综合信号** | {_format_signal_chinese(consensus.signal.value)}（基金共识） |")
+        s.append(f"| **综合评分** | {consensus.score:.1f}/10 |")
+        s.append(f"| **置信度** | {consensus.confidence:.0%} |")
+        s.append("")
+        s.append(f"共识依据：{len(applicable)} 位适用大师的技术与市场读数（等权，按数据覆盖度折算），"
+                 "不含公司基本面；不写入学习记录。")
     s.append("")
     s.append("本报告不提供仓位建议。")
     s.append("")
@@ -1054,9 +1065,13 @@ def _generate_fund_report(
     else:
         s.append("*无*")
         s.append("")
-    if abstained:
-        s.append(f"**弃权（规则不适用于基金，{len(abstained)} 位）**："
-                 + "、".join(r.agent_name for r in abstained))
+    if no_rules:
+        s.append(f"**弃权（规则不适用于基金，{len(no_rules)} 位）**："
+                 + "、".join(r.agent_name for r in no_rules))
+        s.append("")
+    if no_data:
+        s.append(f"**弃权（技术指标缺失，{len(no_data)} 位）**："
+                 + "、".join(r.agent_name for r in no_data))
         s.append("")
     s.append("---")
     s.append("")

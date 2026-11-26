@@ -295,7 +295,8 @@ def run_workflow(
                             "key_findings": list(r.key_findings[:3]),
                             "risks": list(r.risks[:3]),
                             # Fund abstention: the persona's rules do not apply.
-                            **({"abstained": True}
+                            **({"abstained": True,
+                                "abstain_reason": (r.metadata or {}).get("reason", "fund")}
                                if (r.metadata or {}).get("not_applicable") else {}),
                         }
                         for aid, r in responses.items()
@@ -423,6 +424,8 @@ def run_workflow(
             "low_participation": bool(meta.get("low_participation")),
             "regime": meta.get("regime_features", {}).get("regime"),
         }
+        if meta.get("fund_basis"):
+            output["results"]["consensus"]["fund_basis"] = meta["fund_basis"]
         if meta.get("consensus_withheld"):
             # Funds with too few applicable personas: no signal, no size.
             output["results"]["consensus"].update({
@@ -470,9 +473,7 @@ def run_workflow(
                             "signal": r.signal.value,
                             "score": r.score,
                         }
-                        for r in sorted(
-                            responses.values(), key=lambda x: -x.score
-                        )
+                        for r in sorted(voting, key=lambda x: -x.score)
                     ],
                 }
                 output["results"]["committee"] = committee_result
@@ -527,6 +528,9 @@ def run_workflow(
                     "score": debate_consensus.score,
                     "rounds": 2,
                 }
+                if (getattr(debate_consensus, "metadata", None) or {}).get("consensus_withheld"):
+                    # Same shape as the committee step: no placeholder 5.0.
+                    debate_result.update({"signal": "withheld", "score": None, "withheld": True})
                 output["results"]["debate"] = debate_result
                 if tracker and sid:
                     tracker.finish_step(
@@ -675,10 +679,18 @@ def format_workflow_summary(data: Dict[str, Any]) -> str:
             )
         if len(voting) > 5:
             lines.append(f"  … and {len(voting) - 5} more")
-        if abstained:
+        no_data = [aid for aid in abstained
+                   if agents[aid].get("abstain_reason") == "fund_data_missing"]
+        no_rules = [aid for aid in abstained if aid not in no_data]
+        if no_rules:
             lines.append(
-                f"  Abstained ({len(abstained)}, rules not applicable to funds): "
-                + ", ".join(abstained)
+                f"  Abstained ({len(no_rules)}, rules not applicable to funds): "
+                + ", ".join(no_rules)
+            )
+        if no_data:
+            lines.append(
+                f"  Abstained ({len(no_data)}, fund technicals missing): "
+                + ", ".join(no_data)
             )
         lines.append("")
 
@@ -696,8 +708,14 @@ def format_workflow_summary(data: Dict[str, Any]) -> str:
                 "── Consensus ──",
                 f"  Signal: {c['signal'].upper()}  Score: {c['score']:.1f}/10  "
                 f"Conf: {c['confidence']:.0%}",
-                "",
             ]
+            basis = c.get("fund_basis") or {}
+            if basis:
+                lines.append(
+                    f"  Basis: fund consensus of {len(basis.get('applicable_agents', []))} "
+                    "personas' technical/market readings; no position, no learning record"
+                )
+            lines.append("")
 
     if "committee" in results and "error" not in results["committee"]:
         cm = results["committee"]

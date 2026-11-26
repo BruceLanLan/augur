@@ -30,8 +30,11 @@ def _load_panel(ticker: str, horizon: str, include_demo: bool) -> Tuple[List[str
     scores: Dict[str, Dict[str, float]] = {}
     returns: Dict[str, float] = {}
     for r in records:  # later records for the same (agent, date) win
+        value = getattr(r, field)
+        if value is None:  # horizon not reached when the record was made
+            continue
         scores.setdefault(r.agent_id, {})[r.date] = float(r.score)
-        returns[r.date] = float(getattr(r, field))
+        returns[r.date] = float(value)
     dates = sorted(d for d in returns if all(d in s for s in scores.values()))
     return dates, scores, returns
 

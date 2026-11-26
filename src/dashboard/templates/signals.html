@@ -295,19 +295,22 @@ function updateStatsPanel() {
         return;
     }
     document.getElementById('signal-stats').style.display = '';
-    var buyCount = 0, sellCount = 0, holdCount = 0, totalScore = 0;
+    var buyCount = 0, sellCount = 0, holdCount = 0, totalScore = 0, scored = 0;
     for (var i = 0; i < keys.length; i++) {
         var r = analysisResults[keys[i]];
+        // A withheld fund consensus is neither HOLD nor a 5.0 for the average.
+        if (augurIsWithheld(r)) continue;
         if (r.signal === 'bullish') buyCount++;
         else if (r.signal === 'bearish') sellCount++;
         else holdCount++;
         totalScore += (r.score || 0);
+        scored++;
     }
     document.getElementById('stat-total').textContent = total;
     document.getElementById('stat-buy').textContent = buyCount;
     document.getElementById('stat-sell').textContent = sellCount;
     document.getElementById('stat-hold').textContent = holdCount;
-    document.getElementById('stat-avg-score').textContent = (totalScore / total).toFixed(1);
+    document.getElementById('stat-avg-score').textContent = scored ? (totalScore / scored).toFixed(1) : '--';
     document.getElementById('bar-buy').style.width = (total ? (buyCount / total * 100) : 0) + '%';
     document.getElementById('bar-sell').style.width = (total ? (sellCount / total * 100) : 0) + '%';
     document.getElementById('bar-hold').style.width = (total ? (holdCount / total * 100) : 0) + '%';
@@ -329,7 +332,7 @@ function getFilteredData() {
             if (!result) return false;
             if (signalType === 'BUY') return result.signal === 'bullish';
             if (signalType === 'SELL') return result.signal === 'bearish';
-            if (signalType === 'HOLD') return result.signal !== 'bullish' && result.signal !== 'bearish';
+            if (signalType === 'HOLD') return result.signal !== 'bullish' && result.signal !== 'bearish' && !augurIsWithheld(result);
             return true;
         });
     }
@@ -337,8 +340,14 @@ function getFilteredData() {
     items.sort(function(a, b) {
         var ra = analysisResults[a.ticker] || {};
         var rb = analysisResults[b.ticker] || {};
-        if (sortBy === 'score-desc') return (rb.score || 0) - (ra.score || 0);
-        if (sortBy === 'score-asc') return (ra.score || 0) - (rb.score || 0);
+        // Withheld (no score) rows sort last either way.
+        var sa = augurIsWithheld(ra) ? null : (ra.score || 0);
+        var sb = augurIsWithheld(rb) ? null : (rb.score || 0);
+        if ((sortBy === 'score-desc' || sortBy === 'score-asc') && (sa === null || sb === null)) {
+            return (sa === null ? 1 : 0) - (sb === null ? 1 : 0);
+        }
+        if (sortBy === 'score-desc') return sb - sa;
+        if (sortBy === 'score-asc') return sa - sb;
         if (sortBy === 'ticker-asc') return (a.ticker || '').localeCompare(b.ticker || '');
         return 0;
     });
@@ -388,7 +397,13 @@ function renderWatchlist() {
         var scoreHtml = '<span style="color:var(--text-muted);">--</span>';
         var votesHtml = '<span style="color:var(--text-muted);">--</span>';
 
-        if (result) {
+        if (result && augurIsWithheld(result)) {
+            signalHtml = '<span style="color:var(--text-muted); font-weight:600; font-family:var(--font-data);" title="' + escapeHtml(_t('fund-withheld-tip', '')) + '">' + escapeHtml(augurWithheldLabel()) + '</span>';
+            votesHtml = '<span style="font-family:var(--font-data);">' +
+                '<span style="color:var(--signal-buy);">' + (result.buy_count || 0) + '</span>/' +
+                '<span style="color:var(--signal-sell);">' + (result.sell_count || 0) + '</span>/' +
+                '<span style="color:var(--signal-neutral);">' + (result.hold_count || 0) + '</span></span>';
+        } else if (result) {
             var sigColor = result.signal === 'bullish' ? 'var(--signal-buy)' :
                            result.signal === 'bearish' ? 'var(--signal-sell)' : 'var(--signal-neutral)';
             var sigText = result.signal === 'bullish' ? 'BUY' :
@@ -670,8 +685,9 @@ function exportSignalsCSV() {
             item.gross_margin != null ? item.gross_margin : ''
         ];
         if (hasResults) {
-            cols.push(r ? (r.signal || '') : '');
-            cols.push(r ? (r.score != null ? Number(r.score).toFixed(1) : '') : '');
+            var wh = augurIsWithheld(r);
+            cols.push(r ? (wh ? 'withheld' : (r.signal || '')) : '');
+            cols.push(r && !wh ? (r.score != null ? Number(r.score).toFixed(1) : '') : '');
             cols.push(r ? (r.buy_votes != null ? r.buy_votes : '') : '');
             cols.push(r ? (r.sell_votes != null ? r.sell_votes : '') : '');
             cols.push(r ? (r.hold_votes != null ? r.hold_votes : '') : '');

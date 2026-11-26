@@ -6,7 +6,7 @@ import math
 import time
 from typing import Dict, Optional
 
-from augur.etf import MIN_APPLICABLE_FOR_CONSENSUS, assess_etf, is_fund
+from augur.etf import FUND_READING_BASIS, MIN_APPLICABLE_FOR_CONSENSUS, assess_etf, is_fund
 from augur.personas.base import AgentResponse, MarketContext, SignalType
 
 logger = logging.getLogger(__name__)
@@ -67,7 +67,14 @@ class ConsensusEngine:
         # (BaseAgent guard). Drop them before any weighting; the context may be
         # None here, so a dropped abstention alone also marks a fund run.
         abstained = sorted(aid for aid, r in results.items() if _is_not_applicable(r))
-        fund_mode = is_fund(context) or bool(abstained)
+        missing_data = sorted(
+            aid for aid in abstained
+            if (results[aid].metadata or {}).get("reason") == "fund_data_missing"
+        )
+        # A fund reading (stamped by the guard) also marks a fund run, so a
+        # caller passing context=None never takes the equity path for it.
+        fund_mode = (is_fund(context) or bool(abstained)
+                     or any((r.metadata or {}).get("fund_reading") for r in results.values()))
         if abstained:
             results = {aid: r for aid, r in results.items() if not _is_not_applicable(r)}
         if fund_mode:
@@ -76,7 +83,7 @@ class ConsensusEngine:
             )
             if len(applicable) < MIN_APPLICABLE_FOR_CONSENSUS:
                 return self._withheld(results, applicable, abstained, context,
-                                      t0_consensus, analysis_ms)
+                                      t0_consensus, analysis_ms, missing_data=missing_data)
 
         # --- Industry-aware weights ---
         from augur.consensus import (
@@ -180,6 +187,22 @@ class ConsensusEngine:
         for agent_id, response in results.items():
             if response.signal == SignalType.ERROR:
                 continue
+            if fund_mode:
+                # v14.1: industry, regime-router, global, rolling-IC, learned
+                # and correlation weights are all fitted on equities. A fund
+                # consensus weights its applicable readings equally, scaled
+                # only by each persona's own coverage; no sector boosts.
+                adjusted_w = default_weight * self._normalize_coverage_confidence(
+                    response.coverage_confidence)
+                adjusted_weights[agent_id] = adjusted_w
+                if response.signal in signal_counts:
+                    signal_counts[response.signal] += adjusted_w
+                total_score += response.score * adjusted_w
+                total_confidence += response.confidence * adjusted_w
+                total_weight += adjusted_w
+                all_findings.extend(response.key_findings)
+                all_risks.extend(response.risks)
+                continue
             if weights and agent_id in weights:
                 w = weights[agent_id]
             else:
@@ -236,8 +259,9 @@ class ConsensusEngine:
             total_confidence = 0.0
             consensus_signal = SignalType.NEUTRAL
 
-        # v8: Apply sentiment factor (±0.5 max, clamped to [0,10])
-        if ticker:
+        # v8: Apply sentiment factor (±0.5 max, clamped to [0,10]).
+        # Not for funds: the fund basis is technical/market/ETF-profile only.
+        if ticker and not fund_mode:
             try:
                 from augur.registry import _get_sentiment_analyzer
                 sentiment_factor = _get_sentiment_analyzer().get_sentiment_factor(ticker)
@@ -307,7 +331,12 @@ class ConsensusEngine:
             signal=consensus_signal,
             confidence=calibrated_confidence,
             score=total_score,
-            reasoning=f"Consensus from {len(results)} agents{regime_note}",
+            reasoning=(
+                f"基金共识：适用大师 {len(results)} 位的技术/市场读数"
+                f"（{', '.join(sorted(results))}），{len(abstained)} 位弃权；"
+                f"不含公司基本面，不给仓位{regime_note}"
+                if fund_mode else f"Consensus from {len(results)} agents{regime_note}"
+            ),
             key_findings=all_findings[:5],
             risks=all_risks[:3],
         )
@@ -374,6 +403,20 @@ class ConsensusEngine:
             result.metadata["applicable_agents"] = sorted(
                 aid for aid, r in results.items() if r.signal != SignalType.ERROR
             )
+            if missing_data:
+                result.metadata["fund_data_missing_agents"] = missing_data
+            result.metadata["fund_basis"] = {
+                "applicable_agents": result.metadata["applicable_agents"],
+                "abstained_agents": abstained,
+                "fields": FUND_READING_BASIS,
+                "weighting": "equal, scaled by coverage (equity-fitted weights not used)",
+                "adjustments": "no sector boost, no news-sentiment shift, no 10x overlay; "
+                               "confidence passes the shared calibrator",
+                "position_sizing": "none",
+                "learning_record": False,
+            }
+            result.metadata["etf_findings"] = assess_etf(
+                dict(getattr(context, "etf", None) or {}))
 
         if regime_features:
             result.metadata["regime_features"] = regime_features
@@ -389,12 +432,13 @@ class ConsensusEngine:
                 },
             }
 
-        # 10x multi-factor overlay
-        try:
-            from scanner.ten_x_screener import attach_ten_x_to_consensus
-            attach_ten_x_to_consensus(result, context, results)
-        except Exception:
-            pass
+        # 10x multi-factor overlay (company screen; not for funds)
+        if not fund_mode:
+            try:
+                from scanner.ten_x_screener import attach_ten_x_to_consensus
+                attach_ten_x_to_consensus(result, context, results)
+            except Exception:
+                pass
 
         # When all agents return neutral, the consensus is neutral with score reflecting
         # the weighted average (~5.0). This is expected behavior - it indicates the
@@ -500,12 +544,15 @@ class ConsensusEngine:
         return result
 
     @staticmethod
-    def _withheld(results, applicable, abstained, context, t0_consensus, analysis_ms) -> AgentResponse:
+    def _withheld(results, applicable, abstained, context, t0_consensus, analysis_ms,
+                  missing_data=()) -> AgentResponse:
         """Neutral, zero-confidence result when too few personas apply to a fund.
 
         No weighting, sentiment, risk veto, position sizing or learning record
-        runs: there is no consensus to act on. Score is the neutral midpoint
-        so score-threshold consumers (watch alerts, cron) do not fire.
+        runs: there is no consensus to act on. ``score=5.0`` is only a
+        placeholder; ``metadata["consensus_withheld"]`` is the source of truth,
+        and every surface (CLI, dashboard, cron, bots, skills, MCP) checks it
+        via ``augur.consensus_display`` instead of reading the score.
         """
         n = len(applicable)
         etf_profile = dict(getattr(context, "etf", None) or {})
@@ -515,8 +562,12 @@ class ConsensusEngine:
         risks = []
         for aid in applicable:
             risks.extend(results[aid].risks)
+        missing_data = list(missing_data or [])
+        n_rules = len(abstained) - len(missing_data)
         reason = (f"适用大师 {n} 位（少于 {MIN_APPLICABLE_FOR_CONSENSUS} 位），"
-                  f"不输出共识；{len(abstained)} 位大师的规则不适用于基金")
+                  f"不输出共识；{n_rules} 位大师的规则不适用于基金")
+        if missing_data:
+            reason += f"，{len(missing_data)} 位因技术指标缺失弃权"
         result = AgentResponse(
             agent_id="consensus",
             agent_name="Multi-Agent Consensus",
@@ -533,6 +584,7 @@ class ConsensusEngine:
             "asset_type": str(getattr(context, "asset_type", "") or "fund"),
             "applicable_agents": list(applicable),
             "abstained_agents": list(abstained),
+            **({"fund_data_missing_agents": missing_data} if missing_data else {}),
             "etf_findings": assess_etf(etf_profile),
             "position_pct": 0.0,
             "position_sizing": {

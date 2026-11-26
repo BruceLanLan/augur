@@ -433,14 +433,17 @@ def build_disagreement_from_bundle(bundle: Dict[str, Any], ticker: str, run_id: 
 
     persona_outputs, _consensus = extract_persona_results(bundle)
     # Personas that abstained on a fund hold no view to disagree about.
-    abstained = [aid for aid, p in persona_outputs.items() if p.get("abstained")]
-    persona_outputs = {aid: p for aid, p in persona_outputs.items() if not p.get("abstained")}
+    from augur.consensus_display import abstained_label, split_abstained
+
+    no_rules, no_data = split_abstained(persona_outputs)
+    abstained = no_rules + no_data
+    persona_outputs = {aid: p for aid, p in persona_outputs.items() if aid not in abstained}
     if abstained and len(persona_outputs) < 2:
         result = DisagreementMap(ticker=ticker, run_id=run_id)
         result.consensus_strength = "n/a"
         result.summary = (
             f"{len(persona_outputs)} applicable persona(s), {len(abstained)} abstained "
-            "(rules not applicable to funds): no disagreement to map."
+            f"({abstained_label(no_rules, no_data)}): no disagreement to map."
         )
         return result
     evidence: List[Dict[str, Any]] = []

@@ -8,7 +8,7 @@
 
 **A local investment research tool: rule-based scoring from 18 investment masters, plus a research record you can check later.**
 
-[![v14.0.0](https://img.shields.io/badge/v14.0.0-ETF_Native-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v14.1.0](https://img.shields.io/badge/v14.1.0-ETF_Consensus-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 Masters](https://img.shields.io/badge/18-Masters-gold?style=for-the-badge)](#-18-investment-masters)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-claude--agent-integration)
@@ -19,7 +19,7 @@
 
 Augur analyzes stocks with 18 sets of deterministic rules, each written from a well-known investor's public philosophy (the "masters"), and combines them into a consensus signal and a Kelly position size. Every run is saved with its evidence and sources as an immutable record, so months later you can still see what you knew at the time, what changed since, and which facts the masters disagree on. Scoring never calls an LLM, and your data stays on your machine.
 
-**The headline of v14 is ETF-native analysis.** Augur now recognizes ETFs and shows an ETF overview (AUM, expense ratio, NAV, premium/discount and more) with a health checklist, instead of scoring a fund as if it were a company. Masters whose rules depend on company financials abstain on funds. In v14.0 only Dalio applies, short of the 3 that a consensus needs, so ETFs currently never get a consensus. v14 also switches RSI to Wilder smoothing and converts amounts for non-USD listings to US dollars. See [What's new in v14](#-whats-new-in-v14).
+**The headline of v14 is ETF-native analysis.** Augur now recognizes ETFs and shows an ETF overview (AUM, expense ratio, NAV, premium/discount and more) with a health checklist, instead of scoring a fund as if it were a company. Masters whose rules depend on company financials abstain on funds. Since v14.1, Dalio, Marks, Soros and ARPS give fund readings from technical and market data, combined into a "fund consensus" without position sizing; with technicals missing there is no consensus. v14 also switches RSI to Wilder smoothing, ATR to the true range, and converts amounts for non-USD listings to US dollars. See [What's new in v14](#-whats-new-in-v14).
 
 Try it (Python 3.10+):
 
@@ -27,7 +27,7 @@ Try it (Python 3.10+):
 git clone https://github.com/BruceLanLan/augur.git && cd augur
 python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[data]"
 augur analyze AAPL     # each master's verdict, the consensus and a Kelly size
-augur consensus SPY    # an ETF: overview, health checklist, which masters apply
+augur consensus SPY    # an ETF: fund consensus, overview, health checklist, which masters apply
 ```
 
 > ⚠️ **For research and education only. Not investment advice.** The masters are rule-based simulations of publicly known investment philosophies, not the views of those people. Every score, Kelly size and valuation depends on data quality and model assumptions.
@@ -77,7 +77,7 @@ Common commands:
 ```bash
 augur analyze AAPL                 # all 18 masters + weighted consensus + Kelly size
 augur fetch SPY                    # ETF: overview (AUM, expense ratio, NAV, premium/discount) + health checklist
-augur consensus SPY                # ETF: applicable and abstaining masters; no consensus with fewer than 3
+augur consensus SPY                # ETF: fund consensus of 4 masters (no sizing); none if technicals are missing (fewer than 3 apply)
 augur workflow AAPL                # multi-step analysis, saves a RunBundle, prints the Run ID
 augur report from-run AAPL         # report from the latest run: consensus, disagreement map, provenance
 augur export AAPL --format md      # export the latest run (md / json / evidence-pack / pdf)
@@ -103,12 +103,13 @@ Except for `augur earnings --backfill`, these commands run from a fresh install 
 
 <img src="docs/images/screenshots/v14/etf-consensus.png" alt="augur consensus SPY" width="100%">
 
-`augur consensus SPY`: the consensus is WITHHELD, followed by the ETF overview, the health checklist, and the applicable and abstaining masters.
+`augur consensus SPY` on live data (2026-11-26): fund consensus NEUTRAL 5.0/10, confidence 43%, 4 of 18 masters applicable, Kelly size n/a; then the ETF overview, the health checklist, the 4 applicable masters' readings and the 14 that abstained. Persona notes are still Chinese only.
 
 - **How ETFs are recognized**: yfinance `quoteType` ETF or MUTUALFUND, or an A-share fund code (Shanghai codes starting 51 / 56 / 58, Shenzhen codes starting 15). `fetch`, `analyze`, `consensus` and `report` show an ETF overview for funds instead of company fundamentals.
 - **ETF overview**: AUM in USD, expense ratio, yield, category, NAV and its date, premium/discount (against the close on the NAV date), top-10 weight, bid/ask spread and look-through P/E.
 - **Health checklist**: flags an expense ratio above 0.50% or 1.00%, AUM below $50M (closure risk), a premium/discount beyond ±1%, a top-10 weight above 50%, and a spread above 0.5%. Items that cannot be checked for lack of data are listed as unchecked rather than guessed.
-- **Abstention**: masters whose rules read company financials return "not applicable" on a fund instead of a score. Which masters apply is decided by a test: change company fields on an ETF and see whose score moves; those masters do not apply. In v14.0 only Dalio applies, and a consensus needs at least 3 applicable masters, so every ETF's consensus is currently WITHHELD: no signal, no Kelly size, and nothing written to the learning records.
+- **Abstention**: masters whose rules read company financials return "not applicable" on a fund instead of a score. Which masters apply is decided by a test: change company fields on an ETF and see whose score moves; those masters do not apply. In v14.0 only Dalio applied; since v14.1 Marks, Soros and ARPS also have a fund reading that uses only technical, market and ETF-profile data (price vs. the 50/200-day averages, the 52-week range, RSI, MACD, 20-day volatility), so 4 masters apply.
+- **Fund consensus**: with at least 3 applicable masters the output is a "fund consensus": equal weights scaled by data coverage, without the industry weights, learned weights or news-sentiment shift tuned for stocks; no Kelly size, and nothing written to the learning records. When price, the moving averages or MACD are missing (for example with only a manual price), these masters abstain with "fund technicals missing" and the consensus is WITHHELD; the output lists "rules not applicable" and "fund technicals missing" separately.
 - **Data sources and limits**: US and Hong Kong ETFs take NAV from yfinance, which gives no date; Augur infers it as the trading day before the latest bar and marks it as inferred. A-share ETFs take unit NAV and its real date from Sina's public quote endpoint; free sources do not provide AUM, expense ratio or holdings for A-share ETFs, so those show as unchecked. Premium/discount covers the latest day only, with no history or tracking error.
 
 <img src="docs/images/screenshots/v14/etf-fetch.png" alt="augur fetch 510300.SS" width="100%">
@@ -117,7 +118,7 @@ Except for `augur earnings --backfill`, these commands run from a fresh install 
 
 <img src="docs/images/screenshots/v14/dashboard-etf-card.png" alt="ETF card on the dashboard stock page" width="100%">
 
-The dashboard stock page (`/stocks`) shows an ETF overview card for funds; the consensus card shows WITHHELD and the position as n/a.
+The dashboard stock page (`/stocks`) shows an ETF overview card for funds; the consensus card is labelled Fund Consensus with the position as n/a, and the note below says how many masters it combines and that no company fundamentals are used.
 
 ### Correctness fixes
 
@@ -336,7 +337,7 @@ Labelled honestly, so that "there is code for it" is not mistaken for "it works"
 | Status | Scope |
 |---|---|
 | Stable | Analysis and consensus by the 18 masters, the command-line research flow listed above, the main dashboard pages, the MCP server, RunBundles and export, the data-source chain (yfinance, with SEC EDGAR overriding US filing fields) |
-| Usable, with clear limits | ETF analysis: only Dalio applies in v14.0, so the consensus is always WITHHELD; A-share ETFs have only NAV and premium/discount; premium/discount covers the latest day only; these places still show the withheld fund consensus as 5.0: the dashboard watchlist, portfolio, scanner, history and Signals page (notifications and live feed), `augur cron` summaries, the chat bots and the built-in skills (the CLI, MCP and the dashboard stock, home and committee pages show WITHHELD).<br>Built-in skills (4): only the built-in manifests run; the debt covenant review uses reference thresholds, not the terms of a credit agreement.<br>Disagreement map: derived from each master's per-dimension scores with evidence citations; the dimension-to-metric mapping is a fixed table.<br>`augur risk-review`: rule matching; a slightly reworded risk can show as both "new" and "removed".<br>`augur eval`: single-ticker time-series IC with overlapping forward returns, so significance is optimistic; a screen only.<br>`augur guidance`: needs `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` and calls a paid LLM.<br>PDF export: needs `[export]`. |
+| Usable, with clear limits | ETF analysis: 4 masters give fund readings; the fund consensus is equal-weighted, with no position size and no learning record; persona findings are in Chinese only; A-share ETFs have only NAV and premium/discount; premium/discount covers the latest day only; compact history records written before v14.1 still store a withheld fund consensus as 5.0.<br>Built-in skills (4): only the built-in manifests run; the debt covenant review uses reference thresholds, not the terms of a credit agreement.<br>Disagreement map: derived from each master's per-dimension scores with evidence citations; the dimension-to-metric mapping is a fixed table.<br>`augur risk-review`: rule matching; a slightly reworded risk can show as both "new" and "removed".<br>`augur eval`: single-ticker time-series IC with overlapping forward returns, so significance is optimistic; a screen only.<br>`augur guidance`: needs `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` and calls a paid LLM.<br>PDF export: needs `[export]`. |
 | Experimental (off by default) | Rolling-IC dynamic weights (`AUGUR_FORCE_RIC=1`) and learned weights (`AUGUR_FORCE_LEARNED=1`). Neither has passed pre-registered out-of-sample validation |
 | Code only, no entry point | Accounting quality, capital allocation, the debate engine (the dashboard `/debate` uses a different implementation), relative valuation and portfolio risk under `augur.experimental`. They have unit tests, but no CLI, dashboard or MCP path calls them; usable as a library, not product features |
 | Not measured yet | Token usage in run records (only timing is recorded) |
@@ -344,6 +345,17 @@ Labelled honestly, so that "there is code for it" is not mistaken for "it works"
 ---
 
 ## 🔄 Upgrading
+
+### From v14.0 to v14.1
+
+Commands are used the same way. Changes to note:
+
+| Change | Impact and what to do |
+|---|---|
+| ETFs get a real fund consensus | Most ETFs now have a signal and score (no position size); scripts that parse the output should not assume WITHHELD. Watchlist monitoring and `augur cron` alerts can fire on ETFs; a withheld consensus never alerts |
+| ATR uses the true range, thresholds recalibrated | Munger (>3% → >5.75%) and Dalio (<2 / >5 → <3.75 / >9.25) scores change for individual tickers; overall trigger rates stay the same. See the [ATR recalibration note](docs/research/ATR_RECALIBRATION_2026-11.md) (Chinese) |
+| Backtests use the production technical fields | Backtest and regime-IC numbers differ from earlier versions; re-run your baseline if you compare across versions |
+| After-close predictions enter at the next session's close | Affects newly written learning records only |
 
 ### From v13 to v14
 
@@ -356,7 +368,7 @@ Commands are used the same way, but some scores and outputs change:
 | Amounts for non-USD listings are in USD | Hong Kong and A-share listings, and anything whose financials are not in USD (such as some ADRs): `market_cap`, `fcf`, `revenue` and the like are USD billions; price stays in the trading currency. Mind the units if your code reads `MarketContext` |
 | Communication Services counts as tech | Thiel and the consensus engine's sector weighting change for GOOGL, META, Tencent and similar |
 | A neutral consensus sizes at 0 | `analyze` used to show small sizes such as 0.6% |
-| ETFs no longer get an 18-master consensus | You get the ETF overview, the health checklist and the applicable masters' readings; the consensus is WITHHELD. Fund `pe` / `pb` are 0; look-through values are in the `etf` dict. Do not reuse results from analyzing ETFs as stocks |
+| ETFs no longer get an 18-master consensus | You get the ETF overview, the health checklist and the applicable masters' readings; in v14.0 the consensus is WITHHELD (since v14.1, 4 applicable masters give a fund consensus). Fund `pe` / `pb` are 0; look-through values are in the `etf` dict. Do not reuse results from analyzing ETFs as stocks |
 | `--json` progress goes to stderr | stdout carries JSON only. Scripts that parse progress text from stdout should read stderr |
 | `[llm]` no longer installs `anthropic`; MCP `augur_configure` deprecated | Nothing in the code used them. Install `anthropic` yourself if your own code needs it |
 | Dashboard backtest API returns `null` for return, drawdown, Sharpe | They used to be derived from the hit rate, not measured |
@@ -434,7 +446,16 @@ make test-wheel # install the built artifacts in a fresh venv and smoke-test the
 ## 📝 Changelog
 
 <details open>
-<summary><strong>v14.0.0 — ETF-native analysis, correctness fixes, a clear account of the LLM's role (current)</strong></summary>
+<summary><strong>v14.1.0 — A real ETF fund consensus, no placeholder 5.0, true-range ATR (current)</strong></summary>
+
+- Fund consensus: Marks, Soros and ARPS join Dalio, so 4 masters read ETFs and form a "fund consensus" without position sizing; with technicals missing there is still no consensus, and abstentions are split by reason.
+- A withheld consensus shows as WITHHELD everywhere (dashboard, `augur cron`, `augur watchlist watch`, chat bots, skills, MCP), never as 5.0, and no longer triggers alerts.
+- True-range ATR with recalibrated Munger / Dalio thresholds; backtest contexts match production; after-close predictions enter at the next session's close; dividend-yield units fixed.
+
+</details>
+
+<details>
+<summary><strong>v14.0.0 — ETF-native analysis, correctness fixes, a clear account of the LLM's role</strong></summary>
 
 - ETF-native analysis: recognizes ETFs and shows AUM, expense ratio, NAV (with the real NAV date for A-shares), premium/discount aligned to the NAV date, top-10 weight and a health checklist; masters whose rules do not apply abstain, and with fewer than 3 applicable there is no consensus, no position size and no learning record.
 - Correctness: Wilder RSI, non-USD amounts converted to USD, Dayu's volatility units, Communication Services counted as tech, zero size for a neutral consensus, JSON-only `--json` output, recalibrated fear/greed gauge.

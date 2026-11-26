@@ -28,6 +28,13 @@ import json
 import time
 import threading
 from typing import Optional, Dict, Any, List
+from augur.consensus_display import (
+    consensus_withheld,
+    display_confidence,
+    display_persona_score,
+    display_score,
+    display_signal,
+)
 
 
 # Signal emoji mapping
@@ -147,12 +154,14 @@ def format_lark_card(ticker: str, consensus, results: dict) -> Dict[str, Any]:
 
     Lark cards support: header, divider, columns, fields, buttons.
     """
-    signal_emoji = SIGNAL_EMOJI.get(consensus.signal.value, "")
-    signal_cn = SIGNAL_CN.get(consensus.signal.value, consensus.signal.value)
+    signal_emoji = ("" if consensus_withheld(consensus) else SIGNAL_EMOJI.get(consensus.signal.value, ""))
+    signal_cn = display_signal(consensus, SIGNAL_CN)
 
     # Header template color based on signal
-    template = "green" if consensus.signal.value == "bullish" else (
-        "red" if consensus.signal.value == "bearish" else "yellow"
+    template = "grey" if consensus_withheld(consensus) else (
+        "green" if consensus.signal.value == "bullish" else (
+            "red" if consensus.signal.value == "bearish" else "yellow"
+        )
     )
 
     # Build agent detail text
@@ -163,7 +172,7 @@ def format_lark_card(ticker: str, consensus, results: dict) -> Dict[str, Any]:
         emoji = AGENT_EMOJI.get(agent_id, "\U0001f464")
         scn = SIGNAL_CN.get(result.signal.value, result.signal.value)
         name = result.agent_name[:8]
-        agent_lines.append(f"{emoji} {name} | {scn} | {result.score:.1f}/10")
+        agent_lines.append(f"{emoji} {name} | {scn} | {display_persona_score(result)}")
 
     agent_text = "\n".join(agent_lines) if agent_lines else "\u65e0\u6570\u636e"
 
@@ -172,8 +181,8 @@ def format_lark_card(ticker: str, consensus, results: dict) -> Dict[str, Any]:
             "tag": "div",
             "fields": [
                 {"is_short": True, "text": {"tag": "lark_md", "content": f"**\u4fe1\u53f7:** {signal_emoji} {signal_cn}"}},
-                {"is_short": True, "text": {"tag": "lark_md", "content": f"**\u8bc4\u5206:** {consensus.score:.1f}/10"}},
-                {"is_short": True, "text": {"tag": "lark_md", "content": f"**\u7f6e\u4fe1\u5ea6:** {consensus.confidence:.0%}"}},
+                {"is_short": True, "text": {"tag": "lark_md", "content": f"**\u8bc4\u5206:** {display_score(consensus)}"}},
+                {"is_short": True, "text": {"tag": "lark_md", "content": f"**\u7f6e\u4fe1\u5ea6:** {display_confidence(consensus)}"}},
             ],
         },
         {"tag": "hr"},
@@ -222,11 +231,11 @@ def format_lark_card(ticker: str, consensus, results: dict) -> Dict[str, Any]:
 
 def format_lark_rich_text(ticker: str, consensus, results: dict) -> Dict[str, Any]:
     """Format as Lark rich text (post) message for webhook."""
-    signal_emoji = SIGNAL_EMOJI.get(consensus.signal.value, "")
-    signal_cn = SIGNAL_CN.get(consensus.signal.value, consensus.signal.value)
+    signal_emoji = ("" if consensus_withheld(consensus) else SIGNAL_EMOJI.get(consensus.signal.value, ""))
+    signal_cn = display_signal(consensus, SIGNAL_CN)
 
     content: List[List[Dict[str, Any]]] = [
-        [{"tag": "text", "text": f"\u4fe1\u53f7: {signal_emoji} {signal_cn}  |  \u8bc4\u5206: {consensus.score:.1f}/10  |  \u7f6e\u4fe1\u5ea6: {consensus.confidence:.0%}"}],
+        [{"tag": "text", "text": f"\u4fe1\u53f7: {signal_emoji} {signal_cn}  |  \u8bc4\u5206: {display_score(consensus)}  |  \u7f6e\u4fe1\u5ea6: {display_confidence(consensus)}"}],
         [{"tag": "text", "text": ""}],
     ]
 
@@ -236,7 +245,7 @@ def format_lark_rich_text(ticker: str, consensus, results: dict) -> Dict[str, An
         emoji = AGENT_EMOJI.get(agent_id, "\U0001f464")
         scn = SIGNAL_CN.get(result.signal.value, result.signal.value)
         name = result.agent_name[:10]
-        content.append([{"tag": "text", "text": f"{emoji} {name} | {scn} | {result.score:.1f}/10"}])
+        content.append([{"tag": "text", "text": f"{emoji} {name} | {scn} | {display_persona_score(result)}"}])
 
     if consensus.key_findings:
         content.append([{"tag": "text", "text": ""}])
@@ -427,17 +436,17 @@ class LarkEventBot:
             results = coordinator.analyze_with_all(market_ctx)
             consensus = coordinator.get_consensus(results, ticker=ticker, context=market_ctx)
 
-            signal_cn = SIGNAL_CN.get(consensus.signal.value, consensus.signal.value)
+            signal_cn = display_signal(consensus, SIGNAL_CN)
             lines = [
                 f"\U0001f989 Augur \u5171\u8bc6 - {ticker}",
-                f"\u4fe1\u53f7: {signal_cn} | \u8bc4\u5206: {consensus.score:.1f}/10 | \u7f6e\u4fe1\u5ea6: {consensus.confidence:.0%}",
+                f"\u4fe1\u53f7: {signal_cn} | \u8bc4\u5206: {display_score(consensus)} | \u7f6e\u4fe1\u5ea6: {display_confidence(consensus)}",
                 "",
             ]
             for aid, r in results.items():
                 if r.signal.value == "error":
                     continue
                 scn = SIGNAL_CN.get(r.signal.value, r.signal.value)
-                lines.append(f"  {r.agent_name[:10]} | {scn} | {r.score:.1f}")
+                lines.append(f"  {r.agent_name[:10]} | {scn} | {display_persona_score(r, '{:.1f}')}")
 
             return "\n".join(lines)
         except Exception as e:
@@ -460,7 +469,7 @@ class LarkEventBot:
             signal_cn = SIGNAL_CN.get(result.signal.value, result.signal.value)
             lines = [
                 f"{result.agent_name} \u5206\u6790 - {ticker}",
-                f"\u4fe1\u53f7: {signal_cn} | \u8bc4\u5206: {result.score:.1f}/10",
+                f"\u4fe1\u53f7: {signal_cn} | \u8bc4\u5206: {display_persona_score(result)}",
                 "",
                 result.reasoning[:300],
             ]
@@ -690,7 +699,7 @@ def run_webhook_mode():
         agent_results = analysis["results"]
 
         bot.send_consensus(ticker, consensus, agent_results)
-        print(f"  Sent: {ticker} ({consensus.signal.value})")
+        print(f"  Sent: {ticker} ({display_signal(consensus)})")
 
     print(f"\nDone. Sent {len(results)} reports to Lark group.")
 

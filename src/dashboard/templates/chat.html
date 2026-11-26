@@ -372,6 +372,7 @@ function _cdcFetchSignal(ticker) {
                 signal: consensus.signal || '',
                 score: consensus.score || 0,
                 confidence: consensus.confidence || 0,
+                consensus_withheld: augurIsWithheld(consensus),
             };
             try { localStorage.setItem(CDC_CACHE_KEY_PREFIX + ticker, JSON.stringify(cacheObj)); } catch(e) {}
             _cdcRenderSignal(ticker, cacheObj);
@@ -406,6 +407,12 @@ function _cdcRenderSignal(ticker, obj) {
     var signal = (obj.signal || '').toLowerCase();
     var score = parseFloat(obj.score || 0).toFixed(1);
     if (!signal || signal === 'error') { signalEl.textContent = ''; signalEl.className = 'cdc-signal'; return; }
+    if (augurIsWithheld(obj)) {
+        // Withheld fund consensus: its 5.0 is a placeholder, not a HOLD.
+        signalEl.textContent = augurWithheldLabel();
+        signalEl.className = 'cdc-signal';
+        return;
+    }
     signalEl.textContent = signal.toUpperCase() + ' ' + score;
     signalEl.className = 'cdc-signal ' + signal;
 }

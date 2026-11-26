@@ -144,6 +144,52 @@ def resolve_fx(currency: str, financial_currency: str) -> Dict[str, Any]:
     return out
 
 
+def _aligned_high_low(hist: Any, n: int):
+    """Daily High/Low columns as float lists aligned with Close, else (None, None).
+
+    Missing columns (mocked frames, odd sources) or length mismatches return
+    ``(None, None)`` so technicals fall back to the close-only ATR instead of
+    failing; NaN / 0 cells become 0.0 and are treated as absent downstream.
+    """
+    try:
+        columns = getattr(hist, "columns", None)
+        if columns is None or "High" not in columns or "Low" not in columns:
+            return None, None
+        highs = [safe_num(v) for v in hist["High"].tolist()]
+        lows = [safe_num(v) for v in hist["Low"].tolist()]
+    except Exception:
+        return None, None
+    if len(highs) != n or len(lows) != n:
+        return None, None
+    return highs, lows
+
+
+
+def dividend_yield_from_info(info: dict, price: float) -> float:
+    """Dividend yield as a 0-1 fraction from a yfinance ``info`` dict.
+
+    ``dividendYield`` is ambiguous across yfinance versions (recent ones
+    report percent: 0.3 means 0.3%, and SPY reads 1.0 for a 1% yield), so it
+    is the last resort. Unambiguous fields come first: forward rate / price,
+    a fund's ``yield`` (a fraction, the figure the ETF profile shows),
+    trailing yield (a fraction), then trailing rate / price.
+    """
+    rate = safe_num(info.get("dividendRate"))
+    if rate > 0 and price > 0:
+        return clamp(rate / price, 0.0, 1.0)
+    fund_yield = safe_num(info.get("yield"))
+    if fund_yield > 0:  # funds: same figure as the ETF profile's yield
+        return clamp(fund_yield, 0.0, 1.0)
+    trailing = safe_num(info.get("trailingAnnualDividendYield"))
+    if trailing > 0:
+        return clamp(trailing, 0.0, 1.0)
+    trailing_rate = safe_num(info.get("trailingAnnualDividendRate"))
+    if trailing_rate > 0 and price > 0:
+        return clamp(trailing_rate / price, 0.0, 1.0)
+    # Percent form in yfinance >= 0.2.5x; nothing else left to cross-check.
+    return clamp(safe_num(info.get("dividendYield")) / 100.0, 0.0, 1.0)
+
+
 class YFinanceProvider(DataProvider):
     """基于 yfinance 的主数据源。
 
@@ -169,11 +215,17 @@ class YFinanceProvider(DataProvider):
         from augur import data as _data
         return _data._get_yfinance()
 
-    def _technicals(self, closes: List[float]) -> Dict[str, Any]:
+    def _technicals(
+        self,
+        closes: List[float],
+        highs: Optional[List[float]] = None,
+        lows: Optional[List[float]] = None,
+    ) -> Dict[str, Any]:
+        # 注入的 technicals_fn 沿用单参数签名（只给收盘价）；默认路径才带 high/low。
         if self._technicals_fn is not None:
             return self._technicals_fn(closes)
         from augur import data as _data
-        return _data._calculate_technicals_from_prices(closes)
+        return _data._calculate_technicals_from_prices(closes, highs, lows)
 
     def fetch(self, ticker: str) -> Dict[str, Any]:
         yf = self._load_yf()
@@ -252,15 +304,7 @@ class YFinanceProvider(DataProvider):
 
         # ---- 股息 ----
         dividend_rate = safe_num(info.get("dividendRate"))
-        # yfinance 的 dividendYield 格式不稳定（有时是 0.35 表示 0.35%，有时是 0.0035 小数）。
-        # 最稳健的做法：当有每股股息与价格时，直接用 dividend_rate / price 计算真实收益率（小数）。
-        if dividend_rate > 0 and price > 0:
-            dividend_yield = dividend_rate / price
-        else:
-            dividend_yield = safe_num(info.get("dividendYield"))
-            if dividend_yield > 1:  # 明显是百分数形式
-                dividend_yield = dividend_yield / 100.0
-        dividend_yield = clamp(dividend_yield, 0.0, 1.0)
+        dividend_yield = dividend_yield_from_info(info, price)
         payout_ratio = clamp(safe_num(info.get("payoutRatio")), 0.0, 5.0)
 
         # ---- 分析师一致预期 ----
@@ -292,9 +336,17 @@ class YFinanceProvider(DataProvider):
             hist = stock.history(period="3mo")
             if hist is not None and not hist.empty:
                 closes = [safe_num(c) for c in hist["Close"].tolist()]
-                closes = [c for c in closes if c > 0]  # 过滤 NaN/0 收盘价
+                highs, lows = _aligned_high_low(hist, len(closes))
+                if highs is not None:
+                    # 按行一起过滤，保持 high/low 与收盘价对齐
+                    rows = [(c, h, lo) for c, h, lo in zip(closes, highs, lows) if c > 0]
+                    closes = [r[0] for r in rows]
+                    highs = [r[1] for r in rows]
+                    lows = [r[2] for r in rows]
+                else:
+                    closes = [c for c in closes if c > 0]  # 过滤 NaN/0 收盘价
                 if closes:
-                    technicals = self._technicals(closes)
+                    technicals = self._technicals(closes, highs, lows)
         except Exception:
             technicals = {}
 

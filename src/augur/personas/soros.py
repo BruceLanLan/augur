@@ -174,3 +174,130 @@ class SorosAgent(BaseAgent):
             metadata={"factors": factors, "philosophy": self.philosophy},
             coverage_confidence=coverage_confidence,
         )
+
+    # ------------------------------------------------------------------
+    # v14.1 fund path: called by the BaseAgent guard for ETF / fund contexts
+    # instead of ``analyze`` (whose PE / revenue-growth / market-cap rules are
+    # company rules).
+    # ------------------------------------------------------------------
+    def analyze_fund(self, context: MarketContext) -> AgentResponse:
+        """Soros 反身性的基金读数：顺势看趋势是否在自我强化，再看是否过热。
+
+        只用价格、均线、MACD、RSI、成交量与 ETF 溢价折价。
+        """
+        from augur.etf import FUND_READING_BASIS, fund_signal, profile_num
+        from augur.personas.base import SignalType
+
+        if self._fund_technicals_missing(context, need_macd=True):
+            return self._fund_not_applicable(context, reason="fund_data_missing")
+
+        factors = {}
+        price, sma50, sma200 = context.price, context.sma50, context.sma200
+        premium = profile_num(context, "premium_pct")
+
+        # 1. 趋势强化：价格与 50/200 日均线的排列 + MACD
+        trend = 5
+        trend += 1 if price > sma50 else -1
+        trend += 1 if price > sma200 else -1
+        trend += 2 if sma50 > sma200 else -2
+        trend += 1 if context.macd > context.macd_signal else -1
+        factors["trend_reinforcement"] = min(max(trend, 0), 10)
+
+        # 2. 动能加速：MACD 柱与短期均线
+        # （放量方向需要当日涨跌幅，基金上下文里没有可靠来源，不使用）
+        accel = 5
+        accel += 2 if context.macd_histogram > 0 else -2
+        if context.sma20 > 0:
+            accel += 1 if price > context.sma20 else -1
+        factors["momentum_acceleration"] = min(max(accel, 0), 10)
+
+        # 3. 拐点条件（与股票规则相同，纯技术）
+        inflection = 5
+        if context.rsi > 75:
+            inflection -= 3
+        elif context.rsi < 30:
+            inflection += 3
+        if context.price_vs_52w_high > -5:
+            inflection -= 2
+        elif context.price_vs_52w_high < -30:
+            inflection += 2
+        factors["inflection_condition"] = min(max(inflection, 0), 10)
+
+        # 4. 退出信号：极度超买 / MACD 顶部背离 / 人群溢价追入
+        exit_score = 5
+        if context.rsi > 80:
+            exit_score -= 3
+        elif context.rsi < 25:
+            exit_score += 3
+        if context.macd_histogram < 0 and context.macd > 0:
+            exit_score -= 2
+        if premium is not None and premium > 1.0:
+            exit_score -= 1
+        factors["exit_signal"] = min(max(exit_score, 0), 10)
+
+        weights = {"trend_reinforcement": 0.35, "momentum_acceleration": 0.25,
+                   "inflection_condition": 0.20, "exit_signal": 0.20}
+        score = sum(factors[k] * w for k, w in weights.items())
+        signal = SignalType(fund_signal(score))
+        confidence = min(0.75, 0.4 + abs(factors["trend_reinforcement"] - 5) / 15)
+
+        key_findings = []
+        risks = []
+        if factors["trend_reinforcement"] >= 8:
+            key_findings.append("基金读数：价格在50/200日均线上方且均线多头排列，趋势在自我强化")
+        elif factors["trend_reinforcement"] <= 2:
+            risks.append("基金读数：价格在50/200日均线下方且均线空头排列，下行趋势在自我强化")
+        elif factors["trend_reinforcement"] <= 4:
+            risks.append("基金读数：价格跌破中长期均线或MACD死叉，趋势在走弱")
+        if factors["momentum_acceleration"] <= 3:
+            risks.append("基金读数：MACD柱为负且价格在20日均线下方，下行动能在加速")
+        elif factors["momentum_acceleration"] >= 7:
+            key_findings.append("基金读数：MACD柱为正且价格在20日均线上方，上行动能在加速")
+        if context.rsi > 75:
+            risks.append(f"基金读数：RSI={context.rsi:.0f}，超买，趋势有自我颠覆风险")
+        elif context.rsi < 30:
+            key_findings.append(f"基金读数：RSI={context.rsi:.0f}，超卖，悲观偏见可能过度")
+        if premium is not None and premium > 1.0:
+            risks.append(f"基金读数：溢价 {premium:+.2f}%，人群在高于净值追入")
+        if not key_findings and not risks:
+            key_findings.append("基金读数：趋势信号混杂，未见明确的自我强化")
+
+        premium_txt = f"{premium:+.2f}%" if premium is not None else "未知"
+        verdict = ("趋势仍在自我强化" if signal == SignalType.BULLISH
+                   else "趋势向下或接近自我颠覆" if signal == SignalType.BEARISH else "趋势中性")
+        reasoning = f"""## {self.name} 基金读数 for {context.ticker}
+
+
+**趋势强化: {factors['trend_reinforcement']}/10**
+- 价格 vs SMA50: {'✓' if price > sma50 else '✗'}，价格 vs SMA200: {'✓' if price > sma200 else '✗'}
+- SMA50 vs SMA200: {'多头排列' if sma50 > sma200 else '空头排列'}
+- MACD: {'金叉' if context.macd > context.macd_signal else '死叉'}
+
+**动能加速: {factors['momentum_acceleration']}/10**
+- MACD柱: {context.macd_histogram:.3f}
+
+**拐点条件: {factors['inflection_condition']}/10**
+- RSI: {context.rsi:.1f}，距52周高点: {context.price_vs_52w_high:.1f}%
+
+**退出信号: {factors['exit_signal']}/10**
+- 溢价/折价: {premium_txt}
+
+**基金读数评分: {score:.1f}/10**
+反身性判断：{verdict}
+依据：仅技术指标、市场状态与 ETF 画像；公司规则（PE、收入增速、市值）不用于基金。
+"""
+        coverage = 0.9 if context.macd != 0 else 0.7
+
+        return AgentResponse(
+            agent_id=self.agent_id,
+            agent_name=self.name,
+            signal=signal,
+            confidence=confidence,
+            score=score,
+            reasoning=reasoning,
+            key_findings=key_findings,
+            risks=risks,
+            metadata={"factors": factors, "philosophy": self.philosophy,
+                      "fund_reading": True, "fund_basis": FUND_READING_BASIS},
+            coverage_confidence=coverage,
+        )

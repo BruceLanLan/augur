@@ -22,6 +22,7 @@ def research_report_cmd(ticker, run_id, fmt):
       augur workflow AAPL && augur report from-run AAPL
       augur report from-run AAPL --format json
     """
+    from augur.consensus_display import abstained_label, split_abstained
     from augur.disagreement import build_disagreement_from_bundle
     from augur.run_tracker import extract_persona_results, latest_run_id, load_run_bundle_dict
 
@@ -38,8 +39,9 @@ def research_report_cmd(ticker, run_id, fmt):
 
     persona_outputs, consensus = extract_persona_results(bundle)
     steps = {sr.get("step_name"): sr for sr in bundle.get("step_results", [])}
-    abstained = sorted(aid for aid, p in persona_outputs.items() if p.get("abstained"))
-    persona_outputs = {aid: p for aid, p in persona_outputs.items() if not p.get("abstained")}
+    no_rules, no_data = split_abstained(persona_outputs)
+    abstained = no_rules + no_data
+    persona_outputs = {aid: p for aid, p in persona_outputs.items() if aid not in abstained}
     if consensus.get("withheld"):
         # A fund with too few applicable personas: there is no signal to report.
         consensus = {
@@ -57,7 +59,7 @@ def research_report_cmd(ticker, run_id, fmt):
             f"bearish {signals.count('bearish')}"
         )
     if abstained:
-        consensus["abstained"] = f"{len(abstained)} (rules not applicable to funds): " + ", ".join(abstained)
+        consensus["abstained"] = f"{len(abstained)} ({abstained_label(no_rules, no_data)})"
 
     disagreement = {}
     if persona_outputs:
