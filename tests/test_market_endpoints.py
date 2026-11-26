@@ -188,6 +188,51 @@ class TestApiFearGreed:
             )
 
 
+class TestVixFearGreedMapping:
+    """VIX -> fear/greed recalibration (v14): long-run VIX ~20 is neutral."""
+
+    @staticmethod
+    def _label(index):
+        if index >= 75:
+            return "Extreme Greed"
+        if index >= 55:
+            return "Greed"
+        if index >= 45:
+            return "Neutral"
+        if index >= 25:
+            return "Fear"
+        return "Extreme Fear"
+
+    @pytest.mark.parametrize("vix,expected", [
+        (12, "Extreme Greed"),
+        (20, "Neutral"),
+        (28, "Fear"),
+        (40, "Extreme Fear"),
+    ])
+    def test_table(self, vix, expected):
+        from dashboard.routes.market import vix_to_fear_greed
+        assert self._label(vix_to_fear_greed(vix)) == expected
+
+    def test_monotonic_and_clamped(self):
+        from dashboard.routes.market import vix_to_fear_greed
+        vals = [vix_to_fear_greed(v / 2) for v in range(0, 160)]
+        assert all(a >= b for a, b in zip(vals, vals[1:]))
+        assert vix_to_fear_greed(5) == 100
+        assert vix_to_fear_greed(80) == 0
+        assert vix_to_fear_greed(20) == 50
+
+    def test_endpoint_uses_mapping(self, monkeypatch):
+        import augur.data as data_mod
+        monkeypatch.setattr(
+            data_mod, "fetch_market_overview",
+            lambda force_refresh=False: {"items": [{"key": "vix", "price": 28.0}]},
+        )
+        data = client.get("/api/fear-greed").json()
+        assert data["status"] == "ok"
+        assert data["label"] == "Fear"
+        assert data["vix_value"] == 28.0
+
+
 # ============ Event-Loop-Blocking Regression Tests ============
 #
 # Found via live user testing: sector-performance/crypto-overview/commodities/

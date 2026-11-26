@@ -982,12 +982,15 @@ function heroGo() {
             var cons = data.consensus || {};
             var signal = (cons.signal || 'neutral').toLowerCase();
 
+            // Funds with fewer than 3 applicable personas get no consensus signal.
+            var withheld = !!(cons.metadata && cons.metadata.consensus_withheld);
+
             var sigEl = document.getElementById('hr-signal');
-            sigEl.textContent = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+            sigEl.textContent = withheld ? 'WITHHELD' : signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
             sigEl.className = 'signal-badge signal-big ' + (signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral');
 
-            document.getElementById('hr-score').textContent = (cons.score || 0).toFixed(1) + '/10';
-            document.getElementById('hr-confidence').textContent = ((cons.confidence || 0) * 100).toFixed(0) + '%';
+            document.getElementById('hr-score').textContent = withheld ? '--' : (cons.score || 0).toFixed(1) + '/10';
+            document.getElementById('hr-confidence').textContent = withheld ? '--' : ((cons.confidence || 0) * 100).toFixed(0) + '%';
             document.getElementById('hr-reasoning').textContent = cons.reasoning || '';
             document.getElementById('hr-link').href = '/stocks?ticker=' + ticker;
             document.getElementById('hr-report-link').href = '/stocks?ticker=' + ticker + '&report=1';
@@ -1551,7 +1554,20 @@ function renderFearGreed(data) {
         return;
     }
     var vixVal = vix.price || 0;
-    var index = Math.max(0, Math.min(100, Math.round(100 - ((vixVal - 12) / 38) * 100)));
+    // Piecewise VIX -> index; keep in sync with vix_to_fear_greed() in routes/market.py
+    var fgPts = [[10, 100], [15, 75], [20, 50], [30, 25], [45, 0]];
+    var index;
+    if (vixVal <= fgPts[0][0]) { index = fgPts[0][1]; }
+    else if (vixVal >= fgPts[fgPts.length - 1][0]) { index = fgPts[fgPts.length - 1][1]; }
+    else {
+        for (var fi = 0; fi < fgPts.length - 1; fi++) {
+            var p0 = fgPts[fi], p1 = fgPts[fi + 1];
+            if (vixVal >= p0[0] && vixVal <= p1[0]) {
+                index = Math.round(p0[1] + (vixVal - p0[0]) / (p1[0] - p0[0]) * (p1[1] - p0[1]));
+                break;
+            }
+        }
+    }
     var label = _fgLabel(index);
     var color = '';
     if (index >= 75) { color = '#00c853'; }

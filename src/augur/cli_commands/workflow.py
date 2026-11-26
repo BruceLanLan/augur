@@ -126,7 +126,13 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
     for field_name, value in overrides.items():
         if value is not None:
             setattr(ctx, field_name, value)
-    if ctx.price:
+    from augur.etf import is_fund
+    if ctx.price and is_fund(ctx):
+        click.echo(
+            f"   {ticker}: ${ctx.price:.2f} | {str(ctx.asset_type).upper()} | "
+            f"source={getattr(ctx, 'data_source', 'unknown')}"
+        )
+    elif ctx.price:
         click.echo(
             f"   {ticker}: ${ctx.price:.2f} | PE={ctx.pe:.1f} | ROE={ctx.roe:.0%} | "
             f"Sector={ctx.sector or 'n/a'} | source={getattr(ctx, 'data_source', 'unknown')}"
@@ -149,9 +155,14 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
 
     consensus = coordinator.get_consensus(responses, ticker=ticker, context=ctx)
 
-    bullish = [(aid, r) for aid, r in responses.items() if r.signal.value == "bullish"]
-    bearish = [(aid, r) for aid, r in responses.items() if r.signal.value == "bearish"]
-    neutral = [(aid, r) for aid, r in responses.items() if r.signal.value == "neutral"]
+    def _abstained(r):
+        return bool((r.metadata or {}).get("not_applicable"))
+
+    withheld = bool((consensus.metadata or {}).get("consensus_withheld"))
+    voting = {aid: r for aid, r in responses.items() if not _abstained(r)}
+    bullish = [(aid, r) for aid, r in voting.items() if r.signal.value == "bullish"]
+    bearish = [(aid, r) for aid, r in voting.items() if r.signal.value == "bearish"]
+    neutral = [(aid, r) for aid, r in voting.items() if r.signal.value == "neutral"]
 
     click.echo(f"\n{'═'*58}")
     click.echo(f"  Investment Committee: {ticker}")
@@ -160,6 +171,9 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
     click.echo("  Independent Opinions")
     click.echo(f"  {'─'*54}")
     for aid, r in sorted(responses.items(), key=lambda x: -x[1].score):
+        if _abstained(r):
+            click.echo(f"  {r.agent_name:24s} │ {'ABSTAIN':8s} │ n/a (rules not applicable)")
+            continue
         stance = r.signal.value.upper()
         line = f"  {r.agent_name:24s} │ {stance:8s} │ {r.score:.1f}/10"
         click.echo(line)
@@ -178,11 +192,21 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
     kelly = consensus.metadata.get("position_sizing", {}).get("position_pct", 0)
     click.echo("\n  Verdict")
     click.echo(f"  {'─'*54}")
-    click.echo(f"  Signal:      {consensus.signal.value.upper()}")
-    click.echo(f"  Score:       {consensus.score:.1f}/10")
-    click.echo(f"  Confidence:  {consensus.confidence:.0%}")
-    if kelly:
+    if withheld:
+        click.echo("  Signal:      WITHHELD (no consensus signal)")
+        reason = (consensus.metadata or {}).get("withheld_reason", "")
+        if reason:
+            click.echo(f"  Reason:      {reason}")
+        click.echo("  Kelly Size:  n/a (fund)")
+    else:
+        click.echo(f"  Signal:      {consensus.signal.value.upper()}")
+        click.echo(f"  Score:       {consensus.score:.1f}/10")
+        click.echo(f"  Confidence:  {consensus.confidence:.0%}")
+    if kelly and not withheld:
         # position_pct is already a percentage (same as `augur analyze`).
         click.echo(f"  Kelly Size:  {kelly:.1f}%")
-    click.echo(f"  Vote:        Bullish {len(bullish)} / Neutral {len(neutral)} / Bearish {len(bearish)}")
+    vote = f"  Vote:        Bullish {len(bullish)} / Neutral {len(neutral)} / Bearish {len(bearish)}"
+    if len(voting) < len(responses):
+        vote += f" / Abstain {len(responses) - len(voting)}"
+    click.echo(vote)
     click.echo(f"{'═'*58}\n")

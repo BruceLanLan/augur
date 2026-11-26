@@ -10,10 +10,21 @@ def run_valuation(ticker: str, fcf: float = 0, growth: float = 0.08, wacc: float
     Anything left unset is filled from the live MarketContext, whose
     ``fcf``/``market_cap``/``total_cash``/``total_debt`` are in *billions* of
     USD. Missing inputs are reported as an error rather than guessed.
+
+    The quoted price stays in the trading currency (``ctx.currency``); it is
+    turned into USD with ``ctx.fx_rate_usd`` before deriving shares and
+    comparing against the USD fair value. When the context could not be
+    converted (``fx_rate_usd == 0`` with a known non-USD currency) nothing is
+    auto-filled from it and no price comparison is printed, instead of mixing
+    currencies; explicit ``--fcf``/``--shares`` still produce a DCF.
     """
     from augur.valuation import compute_dcf, DCFInputs
 
-    market_price = 0.0
+    market_price = 0.0          # trading currency, as quoted
+    price_usd = 0.0             # same price in USD (0 = cannot convert)
+    fx_rate = 1.0               # USD per quoted price unit
+    currency = ""
+    fx_note = ""
     sources: list[str] = []
     if fcf <= 0 or shares <= 0 or net_debt is None:
         try:
@@ -24,14 +35,24 @@ def run_valuation(ticker: str, fcf: float = 0, growth: float = 0.08, wacc: float
             sources.append(f"auto-fetch failed: {e}")
         if ctx is not None:
             market_price = float(getattr(ctx, "price", 0) or 0)
-            if fcf <= 0 and (getattr(ctx, "fcf", 0) or 0) > 0:
-                fcf = ctx.fcf * 1e9
-                sources.append("FCF")
-            market_cap = float(getattr(ctx, "market_cap", 0) or 0)
-            if shares <= 0 and market_cap > 0 and market_price > 0:
-                shares = market_cap * 1e9 / market_price
-                sources.append("shares (market cap / price)")
-            if net_debt is None:
+            currency = str(getattr(ctx, "currency", "") or "")
+            ctx_rate = float(getattr(ctx, "fx_rate_usd", 0) or 0)
+            if ctx_rate > 0:
+                fx_rate = ctx_rate
+            elif currency and currency.upper() != "USD":
+                fx_rate = 0.0
+                fx_note = (f"FX rate for {currency} unavailable: amounts are in local "
+                           "currency, price comparison skipped")
+            price_usd = market_price * fx_rate
+            if fx_rate > 0:
+                if fcf <= 0 and (getattr(ctx, "fcf", 0) or 0) > 0:
+                    fcf = ctx.fcf * 1e9
+                    sources.append("FCF")
+                market_cap = float(getattr(ctx, "market_cap", 0) or 0)
+                if shares <= 0 and market_cap > 0 and price_usd > 0:
+                    shares = market_cap * 1e9 / price_usd
+                    sources.append("shares (market cap / price)")
+            if net_debt is None and fx_rate > 0:
                 debt = float(getattr(ctx, "total_debt", 0) or 0)
                 cash = float(getattr(ctx, "total_cash", 0) or 0)
                 if debt or cash:
@@ -44,7 +65,10 @@ def run_valuation(ticker: str, fcf: float = 0, growth: float = 0.08, wacc: float
     if shares <= 0:
         missing.append("shares outstanding (pass --shares)")
     if missing:
-        return f"Error: insufficient data for {ticker.upper()} valuation: " + "; ".join(missing)
+        msg = f"Error: insufficient data for {ticker.upper()} valuation: " + "; ".join(missing)
+        if fx_note:
+            msg += f" ({fx_note})"
+        return msg
     if net_debt is None:
         net_debt = 0.0
 
@@ -65,9 +89,14 @@ def run_valuation(ticker: str, fcf: float = 0, growth: float = 0.08, wacc: float
     lines.append(f"  Equity Value:        ${result.equity_value/1e9:.1f}B")
     lines.append("")
 
-    if market_price > 0:
-        upside = (result.fair_value_per_share / market_price - 1) * 100
-        lines.append(f"  Market Price:        ${market_price:.2f}")
+    if price_usd > 0:
+        upside = (result.fair_value_per_share / price_usd - 1) * 100
+        if currency and currency.upper() != "USD":
+            fair_local = result.fair_value_per_share / fx_rate
+            lines.append(f"  Fair Value ({currency}):".ljust(23) + f"{fair_local:.2f} per share")
+            lines.append(f"  Market Price:        {currency} {market_price:.2f} (${price_usd:.2f})")
+        else:
+            lines.append(f"  Market Price:        ${market_price:.2f}")
         lines.append(f"  Upside/Downside:     {upside:+.1f}%")
         lines.append("")
         if upside > 20:
@@ -76,6 +105,9 @@ def run_valuation(ticker: str, fcf: float = 0, growth: float = 0.08, wacc: float
             lines.append("  Verdict: overvalued relative to DCF")
         else:
             lines.append("  Verdict: fairly valued within ±20% band")
+        lines.append("")
+    elif fx_note:
+        lines.append(f"  Note: {fx_note}")
         lines.append("")
     if sources:
         lines.append(f"  Auto-filled: {', '.join(sources)}")

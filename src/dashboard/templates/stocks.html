@@ -3,8 +3,16 @@
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="/static/js/factor-map.js"></script>
+<script src="/static/js/etf-card.js?v={{ augur_version }}"></script>
 <style>
 #results { display:none; }
+.etf-card { margin-bottom: 16px; }
+.etf-card__grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 8px; }
+.etf-card__cell { display:flex; flex-direction:column; gap:2px; }
+.etf-card__label { font-size:0.7rem; color:var(--fg-3, var(--text-secondary)); text-transform:uppercase; letter-spacing:0.04em; }
+.etf-card__value { font:600 1rem/1.2 var(--font-mono); color:var(--fg-1, var(--text-primary)); }
+.etf-card__note, .etf-card__source { font-size:0.68rem; color:var(--fg-3, var(--text-secondary)); }
+.etf-card__inferred { color: var(--amber, #e6b84a); }
 #results.show { display:block; animation: fadeInUp 0.5s ease forwards; }
 #history-chart-container { margin-bottom: 16px; }
 #history-chart-canvas { max-height: 200px; }
@@ -218,6 +226,9 @@
             <button class="pixel-btn" onclick="generateReport()" id="gen-report-btn">Deep Report</button>
         </div>
     </div>
+
+    <!-- ETF overview (funds only; filled by etf-card.js) -->
+    <div id="etf-card" style="display:none;"></div>
 
     <!-- ExecCard -->
     <div class="exec gilt-edge">
@@ -811,6 +822,11 @@ function toggleAllAgents(expand) {
     });
 }
 
+// True when the engine withheld the consensus (e.g. an ETF with < 3 applicable personas).
+function consensusWithheld(cons) {
+    return !!(cons && cons.metadata && cons.metadata.consensus_withheld);
+}
+
 function renderResults(data) {
     var cons = data.consensus;
     var agents = data.agents || [];
@@ -835,24 +851,38 @@ function renderResults(data) {
     document.getElementById('an-ticker').textContent = ticker;
     document.getElementById('an-name').textContent = data.market_data ? (data.market_data.name || ticker) : ticker;
     document.getElementById('an-price').textContent = data.market_data && data.market_data.price ? '$' + data.market_data.price.toFixed(2) : '--';
+    if (typeof window.renderEtfCard === 'function') {
+        window.renderEtfCard(document.getElementById('etf-card'), data.etf_overview || null);
+    }
     
     // ExecCard updates
+    var withheld = consensusWithheld(cons);
     var score = cons.score || 0;
-    var pct = Math.round(score * 10);
+    var pct = withheld ? 0 : Math.round(score * 10);
     document.getElementById('exec-ring').style.setProperty('--pct', pct);
-    document.getElementById('exec-score').textContent = score.toFixed(1);
+    document.getElementById('exec-score').textContent = withheld ? '--' : score.toFixed(1);
     
     var sigEl = document.getElementById('exec-signal');
-    var sigClass = (cons.signal==='bullish')?'buy':(cons.signal==='bearish')?'sell':'neutral';
-    sigEl.className = 'verdict ' + sigClass;
-    sigEl.textContent = signalLabel(cons.signal);
+    if (withheld) {
+        // Funds with fewer than 3 applicable personas get no consensus signal.
+        sigEl.className = 'verdict neutral';
+        sigEl.textContent = 'WITHHELD';
+        sigEl.title = (cons.metadata && cons.metadata.withheld_reason) || '';
+        document.getElementById('exec-conf').textContent = '--';
+        document.getElementById('exec-kelly').textContent = 'n/a';
+        lastConsensusText = ticker + ': consensus withheld\n' + (cons.reasoning || '');
+    } else {
+        var sigClass = (cons.signal==='bullish')?'buy':(cons.signal==='bearish')?'sell':'neutral';
+        sigEl.className = 'verdict ' + sigClass;
+        sigEl.textContent = signalLabel(cons.signal);
     
-    document.getElementById('exec-conf').textContent = ((cons.confidence||0)*100).toFixed(0) + '%';
+        document.getElementById('exec-conf').textContent = ((cons.confidence||0)*100).toFixed(0) + '%';
     
-    var posPct = cons.metadata && cons.metadata.position_sizing
-        ? (cons.metadata.position_sizing.position_pct || 0).toFixed(1) + '%'
-        : '--';
-    document.getElementById('exec-kelly').textContent = posPct;
+        var posPct = cons.metadata && cons.metadata.position_sizing
+            ? (cons.metadata.position_sizing.position_pct || 0).toFixed(1) + '%'
+            : '--';
+        document.getElementById('exec-kelly').textContent = posPct;
+    }
     
     document.getElementById('exec-pe').textContent = data.market_data && data.market_data.pe ? data.market_data.pe.toFixed(1) : '--';
     
@@ -860,6 +890,7 @@ function renderResults(data) {
     var bull=0, neu=0, bear=0;
     agents.forEach(function(a) {
         var s = (a.signal||'').toLowerCase();
+        if (a.metadata && a.metadata.not_applicable) return;  // abstained on a fund
         if (s==='bullish') bull++;
         else if (s==='bearish') bear++;
         else if (s==='neutral') neu++;
@@ -881,19 +912,27 @@ function renderResults(data) {
     }
 
     // OracleSays
-    var oracleMsg = 'The council has spoken. <b style="color:var(--gilt-bright)">' + ticker + '</b> draws a <b style="color:var(--signal-' + (sigClass==='neutral'?'warn':sigClass) + ')">' + signalLabel(cons.signal) + '</b> omen — score ' + score.toFixed(1) + ', confidence ' + ((cons.confidence||0)*100).toFixed(0) + '%. The Kelly oracle counsels a <b style="color:var(--gilt-bright)">' + posPct + '</b> position. <br><br>' + escapeHtml(cons.reasoning || '');
+    var oracleMsg = withheld
+        ? 'No consensus for <b style="color:var(--gilt-bright)">' + escapeHtml(ticker) + '</b>: too few personas have rules that apply to this fund, so no signal or position size is given. <br><br>' + escapeHtml(cons.reasoning || '')
+        : 'The council has spoken. <b style="color:var(--gilt-bright)">' + ticker + '</b> draws a <b style="color:var(--signal-' + (sigClass==='neutral'?'warn':sigClass) + ')">' + signalLabel(cons.signal) + '</b> omen — score ' + score.toFixed(1) + ', confidence ' + ((cons.confidence||0)*100).toFixed(0) + '%. The Kelly oracle counsels a <b style="color:var(--gilt-bright)">' + posPct + '</b> position. <br><br>' + escapeHtml(cons.reasoning || '');
     document.getElementById('oracle-says').innerHTML = oracleMsg;
 
     // ScorecardGrid
     var scGrid = document.getElementById('sc-grid');
     scGrid.innerHTML = '';
-    var sortedAgents = agents.slice().sort(function(a,b) { return (b.score||0)-(a.score||0); });
+    // Personas that abstained on a fund sort last and show N/A instead of a score.
+    function _abstained(a) { return !!(a.metadata && a.metadata.not_applicable); }
+    var sortedAgents = agents.slice().sort(function(a,b) {
+        return (_abstained(a) - _abstained(b)) || ((b.score||0)-(a.score||0));
+    });
     sortedAgents.forEach(function(m) {
         var s = m.score || 0;
+        var abstained = _abstained(m);
         var cls = s >= 8 ? 'score-5' : s >= 6.5 ? 'score-4' : s >= 4.5 ? 'score-3' : s >= 2.5 ? 'score-2' : 'score-1';
         var scoreSz = s >= 8 ? '1.15rem' : s >= 6.5 ? '1.05rem' : '0.95rem';
         var sigCls = m.signal==='bullish'?'buy':m.signal==='bearish'?'sell':'neutral';
-        var sigLbl = signalLabel(m.signal);
+        var sigLbl = abstained ? 'N/A' : signalLabel(m.signal);
+        if (abstained) { cls = 'score-3'; scoreSz = '0.95rem'; }
 
         var d = document.createElement('div');
         d.className = 'sc';
@@ -902,7 +941,7 @@ function renderResults(data) {
         d.setAttribute('data-agent-id', m.agent_id);
         d.innerHTML = '<img src="/static/images/avatars/' + m.agent_id + '.png" class="avatar" width="34" height="34" alt="" onerror="this.src=\'/static/images/augur-owl-64.png\'"/>' +
             '<div class="sc-nm">' + escapeHtml(m.agent_name) + '</div>' +
-            '<div class="sc-score ' + cls + '" style="font-size:' + scoreSz + '">' + s.toFixed(1) + '</div>' +
+            '<div class="sc-score ' + cls + '" style="font-size:' + scoreSz + (abstained ? ';opacity:0.5' : '') + '">' + (abstained ? '--' : s.toFixed(1)) + '</div>' +
             '<span class="signal-badge ' + sigCls + '" style="font-size:0.56rem;padding:1px 7px">' + sigLbl + '</span>';
         (function(agent) {
             d.addEventListener('click', function() { showAgentDetail(agent); });
@@ -1120,8 +1159,13 @@ function buildExecutiveSummary(md, data) {
         var cons = data.consensus;
         signal = signalLabel(cons.signal);
         score = (cons.score || 0).toFixed(1) + '/10';
+        if (consensusWithheld(cons)) {
+            signal = 'WITHHELD';
+            score = '--';
+        }
         var s = cons.score || 0;
-        if (s >= 8) grade = 'A+';
+        if (consensusWithheld(cons)) grade = '--';
+        else if (s >= 8) grade = 'A+';
         else if (s >= 7) grade = 'A';
         else if (s >= 6) grade = 'B+';
         else if (s >= 5) grade = 'B';
@@ -1371,7 +1415,7 @@ function createScoreGauge(score, maxScore) {
 function renderReportScoreGauge(data) {
     var container = document.getElementById('report-score-gauge');
     if (!container) return;
-    if (!data || !data.consensus) { container.style.display = 'none'; return; }
+    if (!data || !data.consensus || consensusWithheld(data.consensus)) { container.style.display = 'none'; return; }
     var score = data.consensus.score || 0;
     var signal = data.consensus.signal || 'neutral';
     var confidence = data.consensus.confidence || 0;

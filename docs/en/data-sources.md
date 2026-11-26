@@ -588,6 +588,46 @@ augur earnings --backfill -t AAPL -t MSFT
 augur earnings --days 30
 ```
 
+## 10. ETF Data, the Sina NAV Endpoint and FX (v14, checked against `src/`)
+
+### Recognition
+
+`src/augur/datasources/fund_profile.py`: a yfinance `quoteType` of `ETF` / `MUTUALFUND`, or an A-share code starting with 51/56/58 on `.SS` or 15 on `.SZ`, sets `MarketContext.asset_type = "etf"`. The code rule also runs in `data.py` for providers that do not report `quoteType`.
+
+### `MarketContext.etf` keys (defined in `src/augur/etf.py`)
+
+| Key | Meaning | yfinance source |
+|---|---|---|
+| `aum_usd_bn` | AUM, USD billions | `info.totalAssets` (or `netAssets`) × FX |
+| `expense_ratio` | Annual expense ratio as a fraction (0.000945 = 0.0945%) | `info.netExpenseRatio` (or `annualReportExpenseRatio`); percent values are converted to fractions |
+| `yield` | Distribution yield, fraction | `info.yield` |
+| `category` | Fund category | `info.category` or `funds_data.fund_overview` |
+| `nav` / `nav_date` / `nav_date_inferred` | Unit NAV, NAV date, whether the date is inferred | `info.navPrice` (undated; taken as the session before the latest bar, `nav_date_inferred=True`); A-shares: see below |
+| `premium_pct` | Premium/discount in percent (+0.04 = +0.04%), against the close on the NAV date | — |
+| `top10_weight` / `hhi` | Top-10 holdings weight, holdings HHI | `funds_data.top_holdings` |
+| `sector_weights` / `asset_classes` | Sector and asset-class weights | `funds_data.sector_weightings` / `asset_classes` |
+| `turnover` | Turnover | `funds_data.fund_operations` |
+| `spread_pct` | Bid/ask spread as a percent of mid | `info.bid` / `info.ask` |
+| `dollar_volume` | Average daily dollar volume | average volume × price × FX |
+| `portfolio_pe` / `portfolio_pb` | Look-through P/E and P/B | `info.trailingPE` / `priceToBook` (the fund's `ctx.pe` / `ctx.pb` are set to 0) |
+| `source` | Where the profile came from | `"yfinance"` |
+
+A key that cannot be fetched is simply missing; it never fails the whole profile. Health-checklist thresholds (`augur.etf.assess_etf`): expense ratio > 0.50% high, > 1.00% very high; AUM < $50M closure risk; |premium/discount| > 1%; top-10 weight > 50%; spread > 0.5%. Items without data are listed as not checked. Funds skip the SEC EDGAR overlay (funds file N-PORT, not 10-K).
+
+### A-share ETF NAV: Sina quotes
+
+`src/augur/datasources/cn_fund_nav_provider.py`. yfinance has no NAV for Shanghai/Shenzhen ETFs, so Augur uses Sina's public quote endpoint (no key, but a `Referer: https://finance.sina.com.cn` header is required):
+
+```
+GET https://hq.sinajs.cn/list=f_510300,sh510300
+```
+
+`f_<code>` returns the name, unit NAV, accumulated NAV, previous NAV, **NAV date** and fund size; the `sh` / `sz` quote supplies the close on the NAV date when yfinance lacks that bar. The response is GBK-encoded; the timeout is 5 seconds. This is not an official API: any failure (network, HTTP status, format change) returns nothing and the ETF profile simply has no NAV. A-share ETFs currently have NAV and premium/discount only, with no AUM, expense ratio, holdings or live IOPV.
+
+### FX
+
+`src/augur/datasources/yfinance_provider.py`: the rate is the last close of yfinance `<CCY>USD=X` over 5 days; successful lookups are cached in-process for 6 hours, failures are not cached. Market cap, EV and AUM use the trading-currency rate; FCF, revenue, EBITDA, cash and debt use the financial-statement currency (`financialCurrency`) rate; price stays in the trading currency. Minor-unit quotes (`GBp`, `ZAc`, `ILA`) are converted to the major unit before USD. If either rate is missing **nothing** is converted (a context never mixes USD and local amounts), `fx_rate_usd` is 0, `ctx.data_warnings` says why, and the output labels amounts with the local currency.
+
 ---
 
 *This document provides supplemental data integration options for investment analysis Skills. Integration is optional.*

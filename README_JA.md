@@ -8,7 +8,7 @@
 
 **よくある AI 銘柄推奨ツールではありません。「いつ何を知っていたか、何が変わったか、誰がなぜ異なる見解を持っているか」を記憶する、ローカルのリサーチ記憶システムです。**
 
-[![v13.0.0](https://img.shields.io/badge/v13.0.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v14.0.0](https://img.shields.io/badge/v14.0.0-ETF_Native-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 Masters](https://img.shields.io/badge/18-Masters-gold?style=for-the-badge)](#-18-人の投資マスター)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-claude--agent-連携)
@@ -19,16 +19,17 @@
 
 > ⚠️ **研究・教育目的のみです。投資助言ではありません。** マスターたちは公に知られた投資哲学をルールベースでシミュレーションしたものであり、本人の見解ではありません。すべてのスコア、Kelly ポジションサイズ、バリュエーションは、データの品質とモデルの前提に依存します。
 
-**目次**: [なぜ Augur なのか](#-なぜ-augur-なのか) · [v13 の新機能](#-v13-の新機能) · [クイックスタート](#-クイックスタート5分) · [v13 へのアップグレード（および以前のアップグレード）](#-v12-から-v13-へのアップグレード) · [18 人のマスター](#-18-人の投資マスター) · [ダッシュボード](#-ダッシュボード) · [Claude / Agent](#-claude--agent-連携) · [CLI](#-cli-チートシート) · [機能の成熟度](#-機能の成熟度) · [データとプライバシー](#-データとプライバシー) · [開発](#-開発) · [ドキュメントとロードマップ](#-ドキュメントとロードマップ)
+**目次**: [なぜ Augur なのか](#-なぜ-augur-なのか) · [Augur の LLM の使い方](#-augur-の-llm-の使い方) · [v14 の新機能](#-v14-の新機能) · [リサーチの流れ](#-リサーチの流れ) · [クイックスタート](#-クイックスタート5分) · [v14 へのアップグレード（および以前のアップグレード）](#-v13-から-v14-へのアップグレード) · [18 人のマスター](#-18-人の投資マスター) · [ダッシュボード](#-ダッシュボード) · [Claude / Agent](#-claude--agent-連携) · [CLI](#-cli-チートシート) · [機能の成熟度](#-機能の成熟度) · [データとプライバシー](#-データとプライバシー) · [開発](#-開発) · [ドキュメントとロードマップ](#-ドキュメントとロードマップ)
 
 ---
 
 ## 🤔 なぜ Augur なのか
 
-多くの AI 金融ツールは答えを返します。Augur は**後から検証できるリサーチ成果物**を返します。
+多くの AI 銘柄推奨ツールは大規模言語モデル（LLM）に答えを出させます。Augur の分析は LLM を呼び出しません。18 人のマスターは各投資家の公開された投資哲学から書かれた決定的なルールであり、Augur が返すのは**後から検証できるリサーチ成果物**です。
 
-| | 一般的な AI ツール | Augur |
+| | LLM 銘柄推奨ツール | Augur |
 |---|---|---|
+| 結論の出し方 | LLM が生成し、同じ質問でも答えが変わることがある | ルールによるスコアリング。同じ入力なら同じスコアになり、バックテストできる |
 | 得られるもの | 「一方では…、他方では…」 | 18 人のマスターによる独立した判定と、どこで一致しどこで対立しているか |
 | データの出どころ | 不明 | すべての証拠項目に、ソース、ビジネス時刻、利用可能時刻、取得時刻が付与される |
 | 欠損データ | 黙ってゼロ扱い | `missing` と表示され、そのフィールドを必要とするマスターは `abstain`（棄権）して理由を述べる |
@@ -37,9 +38,52 @@
 
 ---
 
-## ✨ v13 の新機能
+## 🧠 Augur の LLM の使い方
 
-このセクションは、新しいユーザーが実際に作業する順序に沿っています: ウォッチリストにティッカーを追加 → 決算日をバックフィル → 決算サイクルを実行 → リサーチ成果物を読む → ダッシュボードを開く。v13 のスクリーンショットは 2026-10-29 に実際の AAPL / MSFT / NVDA データ（ライブの市場データ + SEC EDGAR）で撮影しました。報告サイクルから推定した決算日は、CLI 出力とダッシュボードの両方で `estimated` と表示されます。これは企業が発表した日付ではありません。ターミナルのスクリーンショットは出力の主要部分を示しています。
+一言でいうと、**スコアリングに LLM は使いません。解釈は LLM に任せられます。** 使い方は 3 つです:
+
+| モード | 考えるのは誰か | API キー | 使い方 |
+|---|---|---|---|
+| デフォルト: 決定的なルール | 18 人のマスターのルール（`src/augur/personas/`）とコンセンサスエンジン | 不要 | `augur analyze` / `consensus` / `workflow` / ダッシュボード。指標を手動で渡せばオフラインでも動きます |
+| MCP / スキル: ホストのエージェントが LLM | 使っているエージェント（Claude Code、Claude Desktop、Hermes など）が Augur のツールでスコアと証拠を取得し、自分のモデルで解釈します | ホスト側で用意。Augur には不要 | `claude mcp add augur -- augur-mcp`、または Claude Desktop に `augur-mcp` を設定（[Claude / Agent 連携](#-claude--agent-連携)を参照） |
+| オプション: 自分のキーでマスターと会話 | 設定した OpenAI 互換エンドポイント | `OPENAI_API_KEY` が必要 | `pip install -e ".[llm]"` の後、`OPENAI_API_KEY` を設定。必要なら `OPENAI_BASE_URL`（OpenAI 互換サービス）と `AUGUR_CHAT_MODEL`（デフォルト `gpt-4o`）も設定。`augur chat` とダッシュボードの `/chat` で使われます。キーがなければテンプレートの返答になります |
+
+もう 1 つ、デフォルトでオフの有料機能があります。`AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` のとき、`augur guidance` は同じ OpenAI 互換エンドポイントで 10-K/10-Q から経営陣の見通しを抽出します。MCP ツール `augur_configure` は v14 で非推奨になりました。Augur のスコアリングはモデルを呼び出さず、このツールが書いた設定は読まれていなかったため、現在は説明を返すだけです。
+
+---
+
+## ✨ v14 の新機能
+
+### 1. ETF ネイティブ分析
+
+<img src="docs/images/screenshots/v14/etf-consensus.png" alt="augur consensus SPY" width="100%">
+
+`augur consensus SPY`: Augur は ETF を識別し（yfinance の `quoteType`、A 株はコードの先頭 `.SS` 51/56/58、`.SZ` 15）、ファンドを企業として採点しなくなりました。企業の財務に基づくルールを持つマスターはファンドに対して**棄権**し、理由を示します。v14.0 で適用されるのは Dalio だけです（ETF の企業フィールドを変えてスコアが動くかどうかを調べるテストで決めています）。適用されるマスターが 3 人未満のときは**コンセンサスを出しません**（WITHHELD）。Kelly サイズも出さず、学習記録にも書きません。その下は ETF の概要とヘルスチェックです: 純資産総額（米ドル）、経費率、分配利回り、NAV とその日付、NAV の日付にそろえた乖離率、上位 10 銘柄の比率、売買スプレッド、組入銘柄ベースの PE。スクリーンショットは 2026-11-26 のライブデータです。米国・香港の ETF の NAV には日付がないため、最新の足の前の取引日と推定し、「推定」と表示します。CLI の ETF ブロックのラベルは今のところ中国語のみです。
+
+<img src="docs/images/screenshots/v14/etf-fetch.png" alt="augur fetch 510300.SS" width="100%">
+
+`augur fetch 510300.SS`: A 株 ETF の基準価額と**実際の NAV 日付**は Sina の公開相場エンドポイントから取得します（yfinance には中国本土のファンドの NAV がありません）。yfinance はこれらのファンドの純資産総額、経費率、保有銘柄を提供しないため、チェックリストはそれらを推測せず「未チェック」と表示します。
+
+<img src="docs/images/screenshots/v14/dashboard-etf-card.png" alt="ダッシュボードの銘柄ページの ETF カード" width="100%">
+
+ダッシュボード `/stocks?ticker=SPY`: 銘柄ページに ETF Overview カードが加わり、コンセンサスのカードは WITHHELD、ポジションサイズは n/a と表示されます。
+
+### 2. 正確性の修正
+
+- **RSI を Wilder の平滑化に変更**（以前は直近 14 個の変化だけを見る Cutler の RSI）。RSI を使うマスター（arps、dalio、marks、munger、soros、serenity、dayu、カスタムの `da-yu.yaml`）のスコアが変わります。
+- **米ドル以外の銘柄は米ドルで計算**: 時価総額や FCF などを為替レートで米ドルに換算します。Tencent（0700.HK）は $3,097.6B の企業として扱われていましたが、約 $397.5B になりました。
+- **Dayu のボラティリティのルール**は単位の誤りで発動していませんでした。**Thiel** とセクターの重み付けは Communication Services（GOOGL、META、Tencent）をテックとして扱います。中立のコンセンサスのポジションは 0 です。
+- `--json` の stdout は JSON だけになりました。ダッシュボードの恐怖・強欲指数を再調整しました（VIX 28 は Fear）。バックテストページは的中率からドローダウンやシャープレシオを推定しなくなりました。全項目は [CHANGELOG](CHANGELOG.md) にあります。
+
+### 3. LLM の役割をはっきりさせた
+
+上の「[Augur の LLM の使い方](#-augur-の-llm-の使い方)」を参照してください。`[llm]` extra は使われていない `anthropic` をインストールしなくなりました。
+
+---
+
+## 📖 リサーチの流れ
+
+このセクションは、新しいユーザーが実際に作業する順序に沿っています: ウォッチリストにティッカーを追加 → 決算日をバックフィル → 決算サイクルを実行 → リサーチ成果物を読む → ダッシュボードを開く。このセクションのスクリーンショットは 2026-10-29 に実際の AAPL / MSFT / NVDA データ（ライブの市場データ + SEC EDGAR）で撮影しました。報告サイクルから推定した決算日は、CLI 出力とダッシュボードの両方で `estimated` と表示されます。これは企業が発表した日付ではありません。ターミナルのスクリーンショットは出力の主要部分を示しています。
 
 ### 1. ウォッチリストを作る: `augur watchlist add`
 
@@ -140,6 +184,8 @@ augur serve --open                 # http://localhost:8000 · ⌘K command palet
 
 ```bash
 augur analyze AAPL                 # 18 masters + weighted consensus + Kelly size
+augur fetch SPY                    # ETF: overview (AUM, expense ratio, NAV, premium/discount) + health checklist
+augur consensus SPY                # ETF: applicable vs abstaining masters; no consensus below 3 applicable
 augur workflow AAPL                # tracked pipeline, saves a RunBundle, prints the Run ID
 augur report from-run AAPL         # from the latest run: consensus, disagreement map, provenance
 augur export AAPL --format md      # export the latest run (md / json / evidence-pack / pdf)
@@ -155,7 +201,26 @@ augur cycle                        # earnings cycle for the watchlist: what is r
 
 ---
 
-## 🔄 v12 から v13 へのアップグレード
+## 🔄 v13 から v14 へのアップグレード
+
+v14 でコマンドの使い方は変わりませんが、一部のスコアと出力が変わります:
+
+| 変更点 | 影響 | 対応 |
+|---|---|---|
+| RSI を Wilder の平滑化に変更 | arps、dalio、marks、munger、soros、serenity、dayu とカスタムの `da-yu.yaml` のスコアが変わります。RSI が 30 / 70 付近の銘柄で特に目立ちます | 不要。保存した v13 のスコアと比べる場合は注意してください |
+| Dayu のボラティリティのルールが発動するように | 年率の小数をパーセントのしきい値と比べていたため、すべての銘柄が低ボラティリティの加点を受けていました。v13 と比べたポジションリスク要素の変化: 20 日ボラティリティ 15% 未満 0、15–25% −1、25–40% −2、40–60% −3、60% 超 −4。この要素は Dayu のスコアの 20% です | — |
+| 米ドル以外の金額は米ドル | 香港株・A 株、および米ドル以外の通貨で決算を報告する銘柄（ADR など）: `market_cap`、`fcf`、`revenue` などは米ドル（十億）。価格は取引通貨のまま。為替レートが取れないときは換算せず、出力に現地通貨を表示します | `MarketContext` を読むコードでは単位に注意してください |
+| Communication Services をテックとして扱う | Thiel とエンジンのセクター重み付けで GOOGL、META、Tencent などの判定が変わります | — |
+| 中立のコンセンサスのポジションは 0 | 以前は `analyze` が 0.6% のような小さなサイズを出していました | — |
+| ETF には 18 人のコンセンサスがなくなった | 概要、ヘルスチェック、適用されるマスターの判定を表示します。適用が 3 人未満（v14.0 では Dalio のみ）のときコンセンサスは WITHHELD で、ポジションサイズも学習記録もありません。ファンドの `pe` / `pb` は 0 で、組入銘柄ベースの値は `etf` 辞書にあります | ETF を株式として分析した以前の結果は使わないでください |
+| `--json` のとき進捗メッセージは stderr へ | stdout は JSON だけになります | stdout の進捗テキストを読んでいたスクリプトは stderr を読むようにしてください |
+| `[llm]` extra は `anthropic` をインストールしない。MCP `augur_configure` は非推奨 | コードでは使われていませんでした | 自分のコードで `anthropic` が必要なら別途インストールしてください |
+| ダッシュボードのバックテスト API はリターン、ドローダウン、シャープレシオに `null` を返す | 以前は的中率から推定した値で、実測ではありませんでした | — |
+
+学習データのスキーマは 2 のままで、何も破棄されません。旧 RSI で記録された未決済の予測は通常どおり決済されます（その判断は実際に行われたものだからです）。v14 より前に ETF を分析して書かれた学習記録はそのまま残り、関係するマスターの正解率にわずかなノイズを加えます。クリーンアップツールは後のバージョンに回しました。
+
+<details>
+<summary><strong>v12 から v13 へのアップグレード</strong></summary>
 
 v13 は整理に加えて新機能を 1 つ追加したリリースです。破壊的変更は以下の 3 つだけで、いずれもインポートレベルのものです。コマンドラインの使い方は変わりません。
 
@@ -166,6 +231,8 @@ v13 は整理に加えて新機能を 1 つ追加したリリースです。破�
 | 互換モジュール `augur.coordinator`、`augur.skill_spec`、`augur.mcp_entry` を削除 | 代わりに `augur.registry`、`augur.schemas.skill_spec`、`augur.mcp_server` からインポートしてください。`augur-mcp` コマンドには影響しません |
 
 新機能: `augur earnings --backfill` は、SEC 8-K 提出書類（Item 2.02、業績）からウォッチリストの過去の決算日を埋め、直近のサイクルから次の日付を推定して `estimated` と表示します。確定扱いにはしません。カレンダーに自分で書いたエントリは保持されます。バックフィル後は、`augur cycle` が処理するイベントを持つようになります。
+
+</details>
 
 <details>
 <summary><strong>v11 から v12 へのアップグレード</strong></summary>
@@ -189,7 +256,7 @@ v13 は整理に加えて新機能を 1 つ追加したリリースです。破�
 <details>
 <summary><strong>v10 からのアップグレード</strong></summary>
 
-v11.0.0 は単独ではリリースされず、その内容は v12.0.0 とともに出荷されました。v11 は**信頼性とリサーチ基盤**のリリースであり、以下の挙動の変更は v12 と v13 でも引き続き適用されます:
+v11.0.0 は単独ではリリースされず、その内容は v12.0.0 とともに出荷されました。v11 は**信頼性とリサーチ基盤**のリリースであり、以下の挙動の変更は v12 から v14 でも引き続き適用されます:
 
 | 変更点 | 影響 | 対応 |
 |---|---|---|
@@ -201,7 +268,7 @@ v11.0.0 は単独ではリリースされず、その内容は v12.0.0 ととも
 | `field_availability` のないレガシーなリプレイ記録は拒否される | 黙って読み込む代わりに明確なエラーになります | 再生成してください |
 | MCP は `mcp` 1.x と 2.x で動作 | — | — |
 
-その後、上記の v11 → v12 と v12 → v13 の手順（Python 3.10 以上を含む）に従ってください。詳細: [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md) と [CHANGELOG.md](CHANGELOG.md)。
+その後、上記の v11 → v12、v12 → v13、v13 → v14 の手順（Python 3.10 以上を含む）に従ってください。詳細: [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md) と [CHANGELOG.md](CHANGELOG.md)。
 
 </details>
 
@@ -250,6 +317,7 @@ MCP サーバーは 14 個のツール（組み込みスキル用の `augur_run_
 
 ```bash
 pip install -e ".[data,mcp]"
+claude mcp add augur -- augur-mcp   # Claude Code: stdio MCP サーバーとして登録
 ```
 
 Claude Desktop の設定:
@@ -262,7 +330,7 @@ Claude Desktop の設定:
 }
 ```
 
-Hermes / OpenClaw のスキルパック（`src/skills/`、[docs/hermes-setup-guide.md](docs/hermes-setup-guide.md) を参照）や、Telegram / Slack / Lark / WeChat のボットのエントリポイントもあります。
+analyze、consensus、debate、committee の各ツールは `asset_type`（`equity` / `etf` / `fund`、空なら自動判定）を受け付けます。Hermes / OpenClaw のスキルパック（`src/skills/`、[docs/hermes-setup-guide.md](docs/hermes-setup-guide.md) を参照）や、Telegram / Slack / Lark / WeChat のボットのエントリポイントもあります。設定の詳細は [docs/en/agent-integration-guide.md](docs/en/agent-integration-guide.md)（英語）を参照してください。
 
 ---
 
@@ -305,6 +373,7 @@ augur records audit [--action ...]              # audit log
 
 # Data
 augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30 · augur doctor
+augur fetch SPY · augur consensus SPY · augur report SPY   # ETF: overview, health checklist, applicable / abstaining masters
 augur earnings --backfill          # backfill the earnings calendar from SEC 8-K Item 2.02: past dates + one cadence-estimated next date (tagged estimated; never overwrites hand-written entries)
 
 # Monitoring & servers
@@ -313,7 +382,7 @@ augur cron run · augur cron start
 augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur skill compat
 ```
 
-`augur --help` はトップレベルの全 38 コマンドを一覧表示します（pip インストールでは `augur update` が非表示になるため 37）。v12.2 以降、関連するコマンドはグループ化されています（`watchlist` / `cron` / `report` / `records` / `eval` / `skill`）。旧来のフラットな名前（例: `watchlist-add`、`research-report`、`ic-report`、`ledger`）は次のメジャーリリースまで動作し続けますが、`--help` には表示されず、stderr に新しい形式を示す 1 行のヒントを出力します。`augur report AAPL` は変わらず、`augur report run AAPL` と同じです。
+`augur --help` はトップレベルの全 38 コマンドを一覧表示します（pip インストールでは `augur update` が非表示になるため 37）。v12.2 以降、関連するコマンドはグループ化されています（`watchlist` / `cron` / `report` / `records` / `eval` / `skill`）。旧来のフラットな名前（例: `watchlist-add`、`research-report`、`ic-report`、`ledger`）は v14 でも動作しますが、`--help` には表示されず、stderr に新しい形式を示す 1 行のヒントを出力します。`augur report AAPL` は変わらず、`augur report run AAPL` と同じです。
 
 <img src="docs/images/screenshots/v13/cli-help.png" alt="augur --help" width="100%">
 
@@ -326,7 +395,7 @@ augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur s
 | 状態 | 範囲 |
 |---|---|
 | **安定** | 18 人のマスターによる分析とコンセンサス、上記の CLI リサーチループ、ダッシュボードの主要ページ、MCP サーバー、RunBundle とエクスポート、データソースチェーン（yfinance → SEC EDGAR オーバーレイ） |
-| **動作するが、制限事項あり** | 4 つの組み込みスキル（組み込みのマニフェストのみ実行可能。コベナンツレビューはデフォルトで参考しきい値を使い、企業の与信契約は使いません。決算日はローカルのカレンダーファイル `earnings_calendar.json` から取得され、これは手で書くか `augur earnings --backfill` で SEC 8-K から埋められます。推定された次の日付は `estimated` と表示されます）、意見の相違マップ（観点ごとのマスターのスコアから導出され、証拠を引用し、観点と指標の対応表は固定）、`augur risk-review`（ルールベース: 言い回しが変わったリスク要因は新規 1 件と削除 1 件として表示されることがあります）、`augur eval`（フォワードリターンが重なり合う単一ティッカーの時系列 IC — 有意性は楽観的で、スクリーニング専用）、`augur guidance`（`AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` が必要で、有料の LLM を呼び出します）、PDF エクスポート（`[export]` extra が必要） |
+| **動作するが、制限事項あり** | ETF 分析（v14.0 で適用されるのは Dalio のみなので、コンセンサスは常に WITHHELD。A 株 ETF は NAV と乖離率のみで、純資産総額、経費率、保有銘柄、リアルタイムの IOPV はなし。乖離率は最新の 1 日分のみで、履歴やトラッキングエラーはなし。CLI の ETF ラベルは中国語のみ）。4 つの組み込みスキル（組み込みのマニフェストのみ実行可能。コベナンツレビューはデフォルトで参考しきい値を使い、企業の与信契約は使いません。決算日はローカルのカレンダーファイル `earnings_calendar.json` から取得され、これは手で書くか `augur earnings --backfill` で SEC 8-K から埋められます。推定された次の日付は `estimated` と表示されます）、意見の相違マップ（観点ごとのマスターのスコアから導出され、証拠を引用し、観点と指標の対応表は固定）、`augur risk-review`（ルールベース: 言い回しが変わったリスク要因は新規 1 件と削除 1 件として表示されることがあります）、`augur eval`（フォワードリターンが重なり合う単一ティッカーの時系列 IC — 有意性は楽観的で、スクリーニング専用）、`augur guidance`（`AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` が必要で、有料の LLM を呼び出します）、PDF エクスポート（`[export]` extra が必要） |
 | **実験的（デフォルトでオフ）** | Rolling-IC 動的ウェイト（`AUGUR_FORCE_RIC=1`）、学習済みウェイト（`AUGUR_FORCE_LEARNED=1`）— いずれも事前登録されたサンプル外テストに合格していません |
 | **コードのみ、エントリポイントなし** | `augur.experimental.accounting`（会計の質）、`augur.experimental.capital_allocation`、`augur.experimental.debate_engine`（ダッシュボードの `/debate` ページは別の実装を使用）、`augur.experimental.relative_val`（相対バリュエーション）、`augur.experimental.portfolio_risk` — ユニットテストはありますが、CLI、ダッシュボード、MCP のどのパスからも呼び出されません。ライブラリとしては使えますが、製品機能ではありません |
 | **未計測** | 実行記録におけるトークン使用量（記録されるのはレイテンシのみ） |
@@ -336,7 +405,7 @@ augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur s
 ## 🔒 データとプライバシー
 
 - すべての状態はローカルのデータディレクトリ（デフォルトは `~/.augur`、変更するには `AUGUR_DATA_DIR`）に保存されます。テレメトリはありません。デフォルトではサインアップ不要のシングルユーザーです（`AUGUR_MULTI_USER=1` でマルチユーザーモードも利用可能）。
-- Augur が行うネットワークリクエスト: 市場データとファンダメンタルズデータ（yfinance、SEC EDGAR）。オプションの LLM 呼び出し（キーを設定して機能を有効にした場合のみ）。ダッシュボードのページは jsDelivr CDN から Chart.js を読み込みます。
+- Augur が行うネットワークリクエスト: 市場データ、ファンダメンタルズデータ、為替レート（yfinance、SEC EDGAR）。A 株 ETF の NAV（Sina の相場 `hq.sinajs.cn`）。オプションの LLM 呼び出し（`OPENAI_API_KEY` を設定して会話やガイダンス抽出を使う場合のみ）。ダッシュボードのページは jsDelivr CDN から Chart.js を読み込みます。
 - ダッシュボードはデフォルトで localhost のみで待ち受けます。外部に公開する前に `AUGUR_API_TOKEN` を設定してください。[docs/self-hosted-guide.md](docs/self-hosted-guide.md) を参照してください。
 
 主な環境変数:
@@ -349,7 +418,10 @@ augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur s
 | `AUGUR_CORS_ORIGINS` | 許可する CORS オリジン |
 | `AUGUR_FORCE_RIC` / `AUGUR_FORCE_LEARNED` | 実験的な動的ウェイトを有効化 |
 | `AUGUR_SKIP_MACRO_FETCH` | VIX/SPY のマクロデータ取得をスキップ（オフラインまたは CI） |
-| `AUGUR_EDGAR_GUIDANCE_EXTRACTION` | LLM ベースのガイダンス抽出を有効化（有料） |
+| `AUGUR_EDGAR_GUIDANCE_EXTRACTION` | LLM ベースのガイダンス抽出を有効化（有料。下の OpenAI 互換エンドポイントを使用） |
+| `OPENAI_API_KEY` | オプション: マスターとの会話とガイダンス抽出に使う OpenAI 互換エンドポイントのキー（`[llm]` が必要） |
+| `OPENAI_BASE_URL` | オプション: OpenAI 互換サービスの URL（未設定なら OpenAI） |
+| `AUGUR_CHAT_MODEL` / `AUGUR_CHAT_MAXTOK` | オプション: 会話に使うモデル名（デフォルト `gpt-4o`）と最大出力トークン数（デフォルト 1024） |
 
 ---
 
@@ -374,7 +446,8 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 
 | ドキュメント | 内容 |
 |---|---|
-| [docs/ROADMAP.md](docs/ROADMAP.md) | 唯一の公式ロードマップ: 現在のフェーズ、各ステップの検証ポイント、v13 以降の候補、未決定事項（中国語） |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | 唯一の公式ロードマップ: 現在のフェーズ、各ステップの検証ポイント、v14 以降の候補、未決定事項（中国語） |
+| [docs/en/RELEASE_NOTES.md](docs/en/RELEASE_NOTES.md) | ユーザー向けのリリースノート（英語、v14 が先頭） |
 | [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md) | v11 のリリースノートと移行ガイド（v12 と v13 の変更は [CHANGELOG.md](CHANGELOG.md) にあります） |
 | [docs/reviews/](docs/reviews/) | プロジェクトのレビュー。各指摘に証拠レベルと修正内容が付いています（中国語） |
 | [docs/schema-reference.md](docs/schema-reference.md) | EvidenceItem / Claim / StepResult / RunBundle / SkillSpec |
@@ -388,7 +461,16 @@ make test-wheel # install the built wheel into a fresh venv and smoke-test it
 ## 📝 変更履歴
 
 <details open>
-<summary><strong>v13.0.0 — SEC からの決算日取得、Python 3.10、より小さな公開 API（現行）</strong></summary>
+<summary><strong>v14.0.0 — ETF ネイティブ分析、正確性の修正、LLM の役割の明確化（現行）</strong></summary>
+
+- **ETF ネイティブ分析**: ETF を識別し、純資産総額、経費率、NAV（A 株は Sina の実際の NAV 日付）、NAV の日付にそろえた乖離率、上位 10 銘柄の比率、ヘルスチェックを表示します。ルールが当てはまらないマスターは棄権し、適用が 3 人未満ならコンセンサス、ポジションサイズ、学習記録はありません
+- **正確性**: Wilder の RSI、米ドル以外の金額の米ドル換算、Dayu のボラティリティの単位、Communication Services をテックとして扱う、中立のサイズは 0、`--json` の stdout は JSON のみ、恐怖・強欲指数の再調整
+- **LLM の役割**: README に「Augur の LLM の使い方」を追加。`augur_configure` は非推奨。`[llm]` は `anthropic` をインストールしない。上の「v13 から v14 へのアップグレード」を参照してください
+
+</details>
+
+<details>
+<summary><strong>v13.0.0 — SEC からの決算日取得、Python 3.10、より小さな公開 API</strong></summary>
 
 - **決算日のバックフィル**: `augur earnings --backfill` は SEC 8-K 提出書類（Item 2.02）から過去の決算日を埋め、サイクルから次の日付を推定します（estimated と表示）。`augur cycle` は手書きのカレンダーに依存しなくなりました
 - **破壊的変更**: Python 3.10 以上。製品のエントリポイントを持たない 5 つのモジュールを `augur.experimental` に移動。3 つの互換モジュールを削除。上記の「v12 から v13 へのアップグレード」を参照してください

@@ -126,6 +126,11 @@ def clear_cache() -> None:
     """Clear all cached data entries."""
     with _cache_lock:
         _cache.clear()
+    try:
+        from augur.datasources.yfinance_provider import clear_fx_cache
+        clear_fx_cache()
+    except Exception:  # pragma: no cover - import failure must not break cache reset
+        pass
 
 
 def reset_providers_cache() -> None:
@@ -253,6 +258,28 @@ def _is_market_context_default(field_name: str, value: Any) -> bool:
     return False
 
 
+def _apply_fund_fallback(ctx: MarketContext) -> None:
+    """Classify A-share ETFs by code for providers that do not report quoteType.
+
+    yfinance sets ``asset_type`` itself; stooq and the optional providers do
+    not, so the ``.SS 51/56/58`` / ``.SZ 15`` rule is applied here as well.
+    A fund's P/E and P/B (if any) are moved into the ETF profile.
+    """
+    from augur.datasources.fund_profile import asset_type_for
+
+    if ctx.asset_type == "equity" and asset_type_for(ctx.ticker) == "etf":
+        ctx.asset_type = "etf"
+    if ctx.asset_type in ("etf", "fund"):
+        etf = dict(ctx.etf or {})
+        if ctx.pe and "portfolio_pe" not in etf:
+            etf["portfolio_pe"] = ctx.pe
+        if ctx.pb and "portfolio_pb" not in etf:
+            etf["portfolio_pb"] = ctx.pb
+        ctx.pe = 0.0
+        ctx.pb = 0.0
+        ctx.etf = etf
+
+
 def _build_context_from_providers(ticker: str) -> MarketContext:
     """按 provider 链顺序尝试获取数据并构建 MarketContext。
 
@@ -290,10 +317,16 @@ def _build_context_from_providers(ticker: str) -> MarketContext:
             continue
 
         source = raw.pop("data_source", name)
+        warnings_raw = raw.pop("data_warnings", None)
         # 仅保留 MarketContext 合法字段，避免未知键导致 TypeError
         kwargs = {k: v for k, v in raw.items() if k in valid_fields and k != "ticker"}
         ctx = MarketContext(ticker=upper, **kwargs)
         setattr(ctx, "data_source", source)
+        _apply_fund_fallback(ctx)
+        if warnings_raw:
+            # Non-fatal data caveats (e.g. FX unavailable); unlike data_error
+            # they do not mean the fetch failed.
+            setattr(ctx, "data_warnings", [str(w) for w in warnings_raw])
 
         # ---- F0.3: EvidenceItem generation & missingness ----
         evidence_items: list = []
@@ -389,6 +422,38 @@ _EDGAR_OVERLAY_FIELDS = (
 )
 
 
+def _sync_overlay_evidence(ctx: MarketContext, fields: List[str]) -> None:
+    """Replace the evidence items of overlaid fields with EDGAR-sourced ones.
+
+    Without this the persona read EDGAR's value while the evidence trail
+    (disagreement map, dossier) still cited the provider's: e.g. a debt ratio
+    of 72% in the persona text next to 45.7% in the evidence.
+    """
+    from datetime import timezone
+
+    from augur.datasources.base import DataProvider
+
+    class _EdgarEvidence(DataProvider):
+        name = "edgar"
+
+        def fetch(self, ticker: str) -> Dict[str, Any]:  # pragma: no cover - never called
+            return {}
+
+    builder = _EdgarEvidence()
+    replaced = set(fields)
+    items = [ev for ev in (ctx.evidence_items or [])
+             if not (isinstance(ev, dict) and ev.get("metric") in replaced)]
+    now = datetime.now(timezone.utc)
+    for field in fields:
+        ev = builder.to_evidence_item(field, getattr(ctx, field, None), ctx.ticker, available_at=now)
+        if ev is not None:
+            items.append(ev)
+    ctx.evidence_items = items
+    if isinstance(ctx.field_availability, dict):
+        for field in fields:
+            ctx.field_availability[field] = "live"
+
+
 def _overlay_edgar_fundamentals(ctx: MarketContext) -> None:
     """Overlay EDGAR-sourced fundamentals onto an already-built context,
     field by field -- mutates ``ctx`` in place.
@@ -407,6 +472,9 @@ def _overlay_edgar_fundamentals(ctx: MarketContext) -> None:
     """
     if not ctx.price or ctx.price <= 0:
         return
+    if ctx.asset_type in ("etf", "fund"):
+        # Funds file N-PORT, not 10-K: EDGAR company fundamentals do not apply.
+        return
     try:
         from augur.consensus.edgar_fundamentals import fetch_edgar_fundamentals
 
@@ -422,6 +490,7 @@ def _overlay_edgar_fundamentals(ctx: MarketContext) -> None:
                 applied.append(field)
         if applied:
             setattr(ctx, "fundamentals_source", "edgar")
+            _sync_overlay_evidence(ctx, applied)
             logger.debug("EDGAR overlay applied for %s: %s", ctx.ticker, applied)
     except Exception:
         logger.debug("EDGAR overlay failed for %s", ctx.ticker, exc_info=True)
@@ -1012,6 +1081,9 @@ def _sanitize_price_series(closes: List[Any]) -> List[float]:
     return clean
 
 
+from augur import indicators as _indicators  # noqa: E402
+
+
 def _calculate_technicals_from_prices(closes: List[float]) -> Dict[str, Any]:
     """Calculate technical indicators from a list of closing prices."""
     result = {}
@@ -1022,16 +1094,10 @@ def _calculate_technicals_from_prices(closes: List[float]) -> Dict[str, Any]:
         return result
 
     # SMA 20
-    if n >= 20:
-        result["sma20"] = round(sum(closes[-20:]) / 20, 4)
-    else:
-        result["sma20"] = round(sum(closes) / n, 4)
+    result["sma20"] = round(_indicators.sma(closes, 20), 4)
 
     # SMA 50
-    if n >= 50:
-        result["sma50"] = round(sum(closes[-50:]) / 50, 4)
-    else:
-        result["sma50"] = round(sum(closes) / n, 4)
+    result["sma50"] = round(_indicators.sma(closes, 50), 4)
 
     # RSI (14-period)
     result["rsi"] = _calculate_rsi(closes, period=14)
@@ -1066,61 +1132,15 @@ def _calculate_technicals_from_prices(closes: List[float]) -> Dict[str, Any]:
 
 
 def _calculate_rsi(closes: List[float], period: int = 14) -> float:
-    """Calculate RSI (Relative Strength Index)."""
-    closes = _sanitize_price_series(closes)
-    if len(closes) < period + 1:
-        return 50.0
+    """Wilder's RSI of the last close (thin wrapper over ``augur.indicators``).
 
-    deltas = [closes[i] - closes[i - 1] for i in range(1, len(closes))]
-
-    # Use last `period` deltas for initial calculation, then smooth
-    gains = []
-    losses = []
-    for d in deltas[-period:]:
-        if d > 0:
-            gains.append(d)
-            losses.append(0)
-        else:
-            gains.append(0)
-            losses.append(abs(d))
-
-    avg_gain = sum(gains) / period
-    avg_loss = sum(losses) / period
-
-    # All gains, no losses -> RSI=100; if avg_gain were 0 (all losses), rs=0 -> RSI=0
-    if avg_loss == 0:
-        return 100.0
-    rs = avg_gain / avg_loss
-    rsi = 100.0 - (100.0 / (1.0 + rs))
-    return round(rsi, 2)
+    Non-finite / non-positive closes are dropped first; see
+    :func:`augur.indicators.wilder_rsi` for the conventions (too short or flat
+    -> 50, gains only -> 100).
+    """
+    return _indicators.wilder_rsi(_sanitize_price_series(closes), period)
 
 
 def _calculate_macd(closes: List[float]) -> Dict[str, float]:
-    """Calculate MACD (12/26/9)."""
-    closes = _sanitize_price_series(closes)
-    if len(closes) < 26:
-        return {"macd": 0, "signal": 0, "histogram": 0}
-
-    # EMA helper
-    def ema(data, span):
-        multiplier = 2.0 / (span + 1)
-        result = [data[0]]
-        for i in range(1, len(data)):
-            result.append((data[i] - result[-1]) * multiplier + result[-1])
-        return result
-
-    ema12 = ema(closes, 12)
-    ema26 = ema(closes, 26)
-
-    macd_line = [ema12[i] - ema26[i] for i in range(len(closes))]
-    signal_line = ema(macd_line, 9)
-
-    macd_val = macd_line[-1]
-    signal_val = signal_line[-1]
-    histogram = macd_val - signal_val
-
-    return {
-        "macd": round(macd_val, 4),
-        "signal": round(signal_val, 4),
-        "histogram": round(histogram, 4),
-    }
+    """Calculate MACD (12/26/9) (thin wrapper over ``augur.indicators``)."""
+    return _indicators.macd(_sanitize_price_series(closes))

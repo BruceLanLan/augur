@@ -59,6 +59,8 @@ def watch_cmd(tickers, interval, persona, alert_above, alert_below):
                         consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
                         score = consensus.score
                         signal = consensus.signal.value.upper()
+                        if consensus.metadata.get("consensus_withheld"):
+                            signal = "WITHHELD"
 
                     change_pct = ctx.change_pct
                     if change_pct >= 0:
@@ -140,17 +142,24 @@ def portfolio_cmd(tickers, weights, days, fmt):
             pos = consensus.metadata.get("position_sizing", {})
             kelly_pct = pos.get("position_pct", 0.0) if pos else 0.0
 
-            # For NEUTRAL/BEARISH use 0% allocation
+            # NEUTRAL/BEARISH: 0% allocation. The consensus engine already
+            # sizes these at 0; kept as a guard for risk-manager adjustments.
             from augur.personas.base import SignalType
             if consensus.signal != SignalType.BULLISH:
                 kelly_pct = 0.0
 
-            rows.append({
+            row = {
                 "ticker": t,
                 "signal": consensus.signal.value.upper(),
                 "score": round(consensus.score, 1),
                 "kelly_pct": round(kelly_pct, 1),
-            })
+            }
+            if consensus.metadata.get("consensus_withheld"):
+                # Funds: too few applicable personas -> no signal, no position.
+                row["signal"] = "WITHHELD"
+                row["kelly_pct"] = 0.0
+                row["consensus_withheld"] = True
+            rows.append(row)
         except Exception as e:
             errors.append((t, str(e)))
             if fmt == "text":

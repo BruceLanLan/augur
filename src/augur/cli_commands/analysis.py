@@ -6,6 +6,54 @@ import click
 from augur.cli_helpers import _auto_fetch_context, _print_result
 
 
+def fund_consensus_lines(ticker, ctx, results, consensus):
+    """Text block for a fund (ETF) consensus: profile, health check, and
+    the applicable personas' readings instead of an 18-master vote."""
+    from augur.cli_format import clean_output, format_box, format_table, signal_icon
+    from augur.etf import etf_overview_lines
+
+    meta = consensus.metadata or {}
+    abstained = sorted(aid for aid, r in results.items()
+                       if (r.metadata or {}).get("not_applicable"))
+    applicable = {aid: r for aid, r in results.items() if aid not in abstained}
+    asset = str(getattr(ctx, "asset_type", "") or "fund").upper()
+    out = []
+    if meta.get("consensus_withheld"):
+        box = [
+            "Signal:     WITHHELD (no consensus signal)",
+            f"Applicable: {len(applicable)} of {len(results)} personas",
+            "Kelly Size: n/a (fund)",
+        ]
+    else:
+        box = [
+            f"Signal:     {signal_icon(consensus.signal.value)} {consensus.signal.value.upper()}",
+            f"Score:      {consensus.score:.1f}/10",
+            f"Confidence: {consensus.confidence:.0%}",
+            f"Applicable: {len(applicable)} of {len(results)} personas",
+            "Kelly Size: n/a (fund)",
+        ]
+    out.append(format_box(box, title=f"{ticker} Consensus ({asset})"))
+    if meta.get("consensus_withheld"):
+        out.append(f"\n适用大师 {len(applicable)} 位，不输出共识（至少需要 3 位）。")
+    out.append("")
+    out.extend(etf_overview_lines(ctx))
+
+    out.append(f"\n--- Applicable personas ({len(applicable)}) ---")
+    if applicable:
+        rows = [[r.agent_name, f"{signal_icon(r.signal.value)} {r.signal.value}",
+                 f"{r.score:.1f}/10"] for r in applicable.values()]
+        out.append(format_table(["Agent", "Signal", "Score"], rows))
+        for r in applicable.values():
+            for f in r.key_findings[:3]:
+                out.append(f"  - {r.agent_name}: {clean_output(f)}")
+    else:
+        out.append("  (none)")
+    if abstained:
+        out.append(f"\nAbstained ({len(abstained)}, rules not applicable to funds): "
+                   + ", ".join(abstained))
+    return out
+
+
 @click.command("analyze")
 @click.argument("ticker")
 @click.option("--persona", "-p", default=None, help="Specific persona ID to use")
@@ -96,6 +144,12 @@ def analyze_cmd(ticker, persona, pe, pb, roe, gross_margins, revenue_growth, deb
             except Exception as e:
                 click.echo(f"Analysis failed: {e}", err=True)
                 raise SystemExit(1)
+
+            from augur.etf import is_fund
+            if is_fund(ctx) or consensus.metadata.get("abstained_agents"):
+                for line in fund_consensus_lines(ticker.upper(), ctx, results, consensus):
+                    click.echo(line)
+                return
 
             # Build the README-style consensus summary box
             separator = "━" * 46  # heavy horizontal line
@@ -203,18 +257,30 @@ def consensus_cmd(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio
     coordinator = DecisionCoordinator(registry)
 
     if not as_json:
-        click.echo(f"Computing consensus for {ticker.upper()}...\n")
+        click.echo(f"Computing consensus for {ticker.upper()}...\n", err=True)
     results = coordinator.analyze_with_all(ctx)
     consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
+
+    from augur.etf import assess_etf, is_fund
+    fund = is_fund(ctx) or bool(consensus.metadata.get("abstained_agents"))
 
     if as_json:
         import json as _json
         payload = {
             "ticker": ticker.upper(),
+            "asset_type": getattr(ctx, "asset_type", "equity") or "equity",
             "consensus": consensus.to_dict(),
             "individual": {aid: r.to_dict() for aid, r in results.items()},
         }
-        click.echo(_json.dumps(payload, ensure_ascii=False, indent=2))
+        if fund:
+            payload["etf"] = dict(getattr(ctx, "etf", None) or {})
+            payload["etf_findings"] = assess_etf(payload["etf"])
+        click.echo(_json.dumps(payload, ensure_ascii=False, indent=2, default=str))
+        return
+
+    if fund:
+        for line in fund_consensus_lines(ticker.upper(), ctx, results, consensus):
+            click.echo(line)
         return
 
     from augur.cli_format import format_box, format_table, signal_icon, clean_output
@@ -311,7 +377,7 @@ def report_cmd(ticker, output, pe, pb, roe, gross_margins, revenue_growth, debt_
     registry = AgentRegistry()
     coordinator = DecisionCoordinator(registry)
 
-    click.echo(f"Generating deep report for {ticker.upper()}...\n")
+    click.echo(f"Generating deep report for {ticker.upper()}...\n", err=True)
     results = coordinator.analyze_with_all(ctx)
     consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
 

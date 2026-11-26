@@ -20,6 +20,13 @@ from datetime import datetime
 warnings.filterwarnings('ignore')
 
 try:
+    from augur.indicators import wilder_rsi as _wilder_rsi
+except ImportError:  # running from a source checkout without augur installed
+    import os
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
+    from augur.indicators import wilder_rsi as _wilder_rsi
+
+try:
     import yfinance as yf
     import pandas as pd
     import numpy as np
@@ -133,12 +140,8 @@ class StockDataFetcher:
         high = hist['High']
         low = hist['Low']
 
-        # RSI
-        delta = close.diff()
-        gain = delta.where(delta > 0, 0).rolling(window=14).mean()
-        loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
-        rs = gain / loss
-        rsi_14 = float((100 - (100 / (1 + rs))).iloc[-1])
+        # RSI: Wilder's smoothing, the same function augur.data uses
+        rsi_14 = _wilder_rsi([float(x) for x in close.dropna().tolist()], 14)
 
         # MACD
         ema_12 = close.ewm(span=12).mean()

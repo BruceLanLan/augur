@@ -238,7 +238,8 @@ class DayuAgent(BaseAgent):
         """仓位风险评估 — 大宇的归零不痛心原则"""
         score = 5.0
 
-        vol = ctx.volatility_20d or 0
+        # volatility_20d is an annualised fraction (0.30 = 30%); thresholds are in percent
+        vol = (ctx.volatility_20d or 0) * 100
         max_dd = ctx.max_drawdown or 0
 
         # 波动率
@@ -420,7 +421,7 @@ class DayuAgent(BaseAgent):
 - 机构持股: {f'{ctx.institutional_ownership:.1f}%' if ctx.institutional_ownership is not None else 'N/A'}
 
 **仓位风险: {factors['risk_capital']:.1f}/10**
-- 20日波动: {f'{ctx.volatility_20d:.1f}%' if ctx.volatility_20d else 'N/A'}
+- 20日波动: {f'{ctx.volatility_20d * 100:.1f}%' if ctx.volatility_20d else 'N/A'}
 - 最大回撤: {f'{ctx.max_drawdown:.1f}%' if ctx.max_drawdown else 'N/A'}
 - 建议高风险仓位: ≤{suggested_pos}%（大宇10%原则）
 
@@ -453,7 +454,7 @@ class DayuAgent(BaseAgent):
         if factors["momentum_sentiment"] >= 6 and factors["risk_capital"] >= 6:
             findings.append("🏆 看准+重仓信号：动量强且风险可控，适合重点参与")
 
-        vol = ctx.volatility_20d or 0
+        vol = (ctx.volatility_20d or 0) * 100  # fraction -> percent
         if vol > 40:
             risks.append(f"⚠️ 超高波动({vol:.0f}%)，大宇建议：只拿归零不心痛的小仓位")
         if factors["momentum_sentiment"] >= 8 and factors["risk_capital"] <= 4:

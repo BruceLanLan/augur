@@ -66,7 +66,7 @@ mcp_augur_debate        — Structured bull/bear debate
 mcp_augur_fetch         — Real-time market data (yfinance)
 mcp_augur_sentiment     — Social sentiment (StockTwits + news)
 mcp_augur_list_personas — List all 18 masters
-mcp_augur_configure     — Configure per-master model params
+mcp_augur_configure     — deprecated in v14, no effect (Augur scoring calls no model)
 mcp_augur_create_persona — Create a custom YAML persona
 mcp_augur_workflow      — Composable multi-step pipeline (fetch→analyze→consensus→committee→debate→sentiment)
 mcp_augur_workspace_get — Read the user's Dashboard layout/enabled personas

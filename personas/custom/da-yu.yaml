@@ -64,10 +64,10 @@ factors:
   risk_capital:
     base: 5
     rules:
-      - {if: "volatility_20d > 40", add: -2}          # 极高波动=高风险
+      - {if: "volatility_20d * 100 > 40", add: -2}    # 极高波动=高风险（volatility_20d 是小数，0.30=30%）
       - {if: "max_drawdown > 30", add: -2}            # 高回撤=不适合重仓
       - {if: "max_drawdown < 10", add: 2}             # 低回撤=可重仓
-      - {if: "volatility_20d > 20 and volatility_20d <= 40", add: 1}  # 适度波动=机会
+      - {if: "volatility_20d * 100 > 20 and volatility_20d * 100 <= 40", add: 1}  # 适度波动=机会
       - {if: "short_interest > 20", add: -1}          # 高做空=对赌压力
       - {if: "var_95 > 8", add: -1}                   # VAR高
 
@@ -79,7 +79,7 @@ factors:
       - {if: "pe > 100 or pe == 0", add: 2}            # 叙事驱动（非盈利）
       - {if: "price_vs_52w_low < 10", add: 1}          # 低位启动
       - {if: "price_vs_52w_high > -5", add: 0}         # 高位中性
-      - {if: "sector in ['technology', 'communication_services']", add: 1}  # 科技赛道偏好
+      - {if: "sector in ['Technology', 'Communication Services']", add: 1}  # 科技赛道偏好
 
   valuation_crypto:
     base: 5
@@ -95,7 +95,7 @@ factors:
   stablecoin_thesis:
     base: 5
     rules:
-      - {if: "sector in ['financial_services', 'technology']", add: 1}
+      - {if: "sector in ['Financial Services', 'Technology']", add: 1}
       - {if: "gross_margins > 0.60", add: 1}           # 高毛利=平台/基础设施
       - {if: "operating_margins > 0.20", add: 1}
       # CRCL/稳定币类标的会有特殊处理（通过revenue_growth高+FCF好识别）

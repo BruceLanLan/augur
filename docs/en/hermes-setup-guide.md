@@ -64,7 +64,7 @@ mcp_servers:
    - `augur_sentiment` - Social/news sentiment snapshot
    - `augur_workflow` - **Composable multi-step pipeline** (fetch → analyze → consensus → committee → debate → sentiment)
    - `augur_list_personas` - List all 18 investors
-   - `augur_configure` - Configure LLM model per investor
+   - `augur_configure` - deprecated in v14: Augur's scoring does not call a model, so this setting has no effect (Hermes picks the model)
    - `augur_create_persona` - Create custom YAML persona
    - `augur_workspace_get` - Read the user's Dashboard layout/enabled personas
    - `augur_workspace_set` - Write terminal layout/enabled personas on the user's behalf

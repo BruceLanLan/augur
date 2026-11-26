@@ -38,6 +38,14 @@ def research_report_cmd(ticker, run_id, fmt):
 
     persona_outputs, consensus = extract_persona_results(bundle)
     steps = {sr.get("step_name"): sr for sr in bundle.get("step_results", [])}
+    abstained = sorted(aid for aid, p in persona_outputs.items() if p.get("abstained"))
+    persona_outputs = {aid: p for aid, p in persona_outputs.items() if not p.get("abstained")}
+    if consensus.get("withheld"):
+        # A fund with too few applicable personas: there is no signal to report.
+        consensus = {
+            "signal": "withheld (no consensus signal)",
+            "reason": consensus.get("withheld_reason", ""),
+        }
     if isinstance(consensus.get("score"), (int, float)):
         consensus["score"] = f"{consensus['score']:.2f} / 10"
     if isinstance(consensus.get("confidence"), (int, float)):
@@ -48,6 +56,8 @@ def research_report_cmd(ticker, run_id, fmt):
             f"bullish {signals.count('bullish')} / neutral {signals.count('neutral')} / "
             f"bearish {signals.count('bearish')}"
         )
+    if abstained:
+        consensus["abstained"] = f"{len(abstained)} (rules not applicable to funds): " + ", ".join(abstained)
 
     disagreement = {}
     if persona_outputs:

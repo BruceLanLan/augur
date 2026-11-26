@@ -177,6 +177,22 @@
 
 ---
 
+## MarketContext 的 v14 新增字段
+
+`MarketContext`（`src/augur/personas/base.py`）不是 `augur.schemas` 里的冻结 schema，而是大师分析的输入。v14 新增以下字段，旧代码不传时取默认值：
+
+| 字段 | 类型 | 默认 | 说明 |
+|---|---|---|---|
+| `asset_type` | `str` | `"equity"` | `"equity"` / `"etf"` / `"fund"`。为 `etf` / `fund` 时，`FUND_APPLICABLE_PERSONAS`（v14.0 只有 `dalio`）以外的大师返回 `metadata.not_applicable=True` 的中性结果，不参与共识 |
+| `etf` | `Dict` | `{}` | 基金概况，键见 `augur.etf` 与 [data-sources.md 第十节](data-sources.md)。基金的 `pe` / `pb` 为 0，组合口径的值在 `etf["portfolio_pe"]` / `etf["portfolio_pb"]` |
+| `financial_currency` | `str` | `""` | 财报货币（yfinance `financialCurrency`），可能与交易货币 `currency` 不同 |
+| `fx_rate_usd` | `float` | `0.0` | 每 1 个报价单位折合多少美元；`0` 表示汇率未知，此时金额未换算 |
+| `data_warnings` | `List[str]` | 无（动态属性） | 数据层的提示，例如拿不到汇率、金额保持本币。只在有提示时设置，读取时用 `getattr(ctx, "data_warnings", [])` |
+
+单位约定：汇率已知时，`market_cap`、`fcf`、`revenue` 等金额是**十亿美元**；`price` 始终是交易货币。
+
+基金共识被扣下时，共识 `AgentResponse.metadata` 含 `consensus_withheld=True`、`withheld_reason`、`applicable_agents`、`abstained_agents`、`etf_findings`，`position_pct` 为 0。工作流保存的 RunBundle 里，`analyze` 步骤中弃权的大师带 `abstained: true`，`consensus` 步骤带 `withheld: true` 与 `withheld_reason`。
+
 ## 使用
 
 ```python

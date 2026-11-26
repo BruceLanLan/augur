@@ -8,7 +8,7 @@
 
 **不是又一个 AI 荐股工具。是一个帮你记住"你何时知道什么、什么变了、谁在什么事实上分歧"的本地研究记忆系统。**
 
-[![v13.0.0](https://img.shields.io/badge/v13.0.0-Earnings_Loop-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v14.0.0](https://img.shields.io/badge/v14.0.0-ETF_Native-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18-位投资大师)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-接入-claude--agent)
@@ -19,16 +19,17 @@
 
 > ⚠️ **仅供学习研究，不构成投资建议。** 大师观点是基于公开投资理念的规则化模拟，不代表本人立场；所有分数、Kelly 仓位与估值都依赖数据质量和模型假设。
 
-**目录**：[为什么不一样](#-为什么-augur-不一样) · [v13 新功能](#-v13-新功能一览) · [5 分钟上手](#-5-分钟上手) · [升级到 v13（含更早版本）](#-从-v12-升级到-v13) · [18 位大师](#-18-位投资大师) · [Dashboard](#-dashboard) · [接入 Claude / Agent](#-接入-claude--agent) · [CLI 速查](#-cli-速查) · [功能成熟度](#-功能成熟度) · [数据与隐私](#-数据与隐私) · [开发](#-开发) · [文档与路线图](#-文档与路线图)
+**目录**：[为什么不一样](#-为什么-augur-不一样) · [Augur 怎么用大模型](#-augur-怎么用大模型) · [v14 新功能](#-v14-新功能一览) · [研究流程走一遍](#-研究流程走一遍) · [5 分钟上手](#-5-分钟上手) · [升级到 v14（含更早版本）](#-从-v13-升级到-v14) · [18 位大师](#-18-位投资大师) · [Dashboard](#-dashboard) · [接入 Claude / Agent](#-接入-claude--agent) · [CLI 速查](#-cli-速查) · [功能成熟度](#-功能成熟度) · [数据与隐私](#-数据与隐私) · [开发](#-开发) · [文档与路线图](#-文档与路线图)
 
 ---
 
 ## 🤔 为什么 Augur 不一样
 
-大多数 AI 金融工具给你一个答案。Augur 给你的是**可复查的研究产物**。
+大多数 AI 荐股工具让大模型直接给一个答案。Augur 的分析本身不调用大模型：18 位大师是按各自公开投资理念写成的确定性规则，给你的是**可复查的研究产物**。
 
-| | 普通 AI 工具 | Augur |
+| | 大模型荐股工具 | Augur |
 |---|---|---|
+| 结论怎么来 | 大模型生成，同一个问题每次可能不同 | 规则打分，同样的输入得到同样的分数，可以回测 |
 | 给你什么 | 一段"一方面…另一方面…" | 18 位大师的独立判断 + 他们在哪里一致、在哪里打架 |
 | 数据从哪来 | 不清楚 | 每条证据带来源、业务时点、可得时点、获取时点 |
 | 缺失数据 | 静默填 0 | 显式标注 `missing`，依赖该字段的大师 `abstain` 并说明原因 |
@@ -37,9 +38,52 @@
 
 ---
 
-## ✨ v13 新功能一览
+## 🧠 Augur 怎么用大模型
 
-下面按新用户的实际顺序走一遍：加自选 → 回填财报日期 → 跑财报周期 → 看研究产物 → 打开 Dashboard。v13 的截图都是 2026-10-29 用 AAPL / MSFT / NVDA 的真实数据（实时行情 + SEC EDGAR）运行的结果；按发布节奏推算出来的财报日期在输出和页面上都标为 `estimated`，不是公司公告的日期。终端截图只截取了输出的主要部分。
+一句话：**打分不用大模型，解读可以交给大模型**。有三种用法：
+
+| 模式 | 谁在思考 | 要不要 API key | 怎么用 |
+|---|---|---|---|
+| 默认：确定性规则 | 18 位大师的规则（`src/augur/personas/`）和共识引擎 | 不需要 | `augur analyze` / `consensus` / `workflow` / Dashboard，离线也能跑（手动传指标） |
+| MCP / Skill：宿主 Agent 当大模型 | 你正在用的 Agent（如 Claude Code、Claude Desktop、Hermes），它调 Augur 的工具拿分数和证据，再用自己的模型解读 | 由宿主负责，Augur 不需要 | `claude mcp add augur -- augur-mcp`，或在 Claude Desktop 配置 `augur-mcp`（见[接入 Claude / Agent](#-接入-claude--agent)） |
+| 可选：自带 key 的大师聊天 | 你配置的 OpenAI 兼容接口 | 需要 `OPENAI_API_KEY` | `pip install -e ".[llm]"`，设 `OPENAI_API_KEY`，可选 `OPENAI_BASE_URL`（任何 OpenAI 兼容服务）和 `AUGUR_CHAT_MODEL`（默认 `gpt-4o`）；用于 `augur chat` 和 Dashboard `/chat`。不配置时聊天退回模板回复 |
+
+另外有一项默认关闭的付费功能：`AUGUR_EDGAR_GUIDANCE_EXTRACTION=1` 时，`augur guidance` 用同一个 OpenAI 兼容接口从 10-K/10-Q 抽取管理层展望。MCP 工具 `augur_configure` 在 v14 起弃用：Augur 的评分从来不调用模型，它写的配置没有被读取过，现在调用只返回一条说明。
+
+---
+
+## ✨ v14 新功能一览
+
+### 1. ETF 原生分析
+
+<img src="docs/images/screenshots/v14/etf-consensus.png" alt="augur consensus SPY" width="100%">
+
+`augur consensus SPY`：Augur 会识别 ETF（yfinance 的 `quoteType`，A 股按代码前缀 `.SS` 51/56/58、`.SZ` 15），不再把基金当公司打分。18 位大师里，规则建立在公司财务上的大师对基金**弃权**并写明原因；v14.0 只有 Dalio 适用（由一个测试决定：在 ETF 上改动公司字段，看谁的分数会变）。适用大师不足 3 位时**不输出共识**（WITHHELD），不给 Kelly 仓位，也不写入学习记录。下面是 ETF 概况和体检清单：规模（美元）、费率、分红率、净值和净值日期、按净值日期对齐的溢价折价、前十大占比、买卖价差、成分股 PE。截图是 2026-11-26 的实时数据；美股 / 港股 ETF 的净值没有日期，按最近一根 K 线的前一个交易日推断，并标"推断"。
+
+<img src="docs/images/screenshots/v14/etf-fetch.png" alt="augur fetch 510300.SS" width="100%">
+
+`augur fetch 510300.SS`：A 股 ETF 的单位净值和**真实净值日期**来自新浪公开行情接口（yfinance 没有 A 股基金净值）。yfinance 对 A 股 ETF 不提供规模、费率和持仓，体检清单把这几项列为"未检查（缺数据）"，不猜。ETF 概况的标签目前只有中文。
+
+<img src="docs/images/screenshots/v14/dashboard-etf-card.png" alt="Dashboard 股票页的 ETF 卡片" width="100%">
+
+Dashboard `/stocks?ticker=SPY`：股票页多了 ETF Overview 卡片，共识卡片显示 WITHHELD、仓位 n/a。
+
+### 2. 正确性修复
+
+- **RSI 改为 Wilder 平滑**（此前是只看最近 14 个变化的 Cutler 算法），读 RSI 的大师（arps、dalio、marks、munger、soros、serenity、dayu 和自定义 `da-yu.yaml`）分数会变。
+- **非美元标的按美元计**：市值、FCF 等金额按汇率换算成美元。腾讯（0700.HK）的市值从被当成 $3,097.6B 变为约 $397.5B。
+- **大宇的波动率规则**此前单位错了，从不触发；**Thiel** 和行业加权把 Communication Services（GOOGL、META、腾讯）算作科技；中性共识的仓位为 0。
+- `--json` 的 stdout 只有 JSON；Dashboard 恐惧贪婪指数重新校准（VIX 28 显示为 Fear）；回测页不再用命中率推算回撤和夏普。完整列表见 [CHANGELOG](CHANGELOG.md)。
+
+### 3. 讲清楚大模型的角色
+
+见上一节"[Augur 怎么用大模型](#-augur-怎么用大模型)"。`[llm]` extra 不再安装用不到的 `anthropic`。
+
+---
+
+## 📖 研究流程走一遍
+
+下面按新用户的实际顺序走一遍：加自选 → 回填财报日期 → 跑财报周期 → 看研究产物 → 打开 Dashboard。这一节的截图都是 2026-10-29 用 AAPL / MSFT / NVDA 的真实数据（实时行情 + SEC EDGAR）运行的结果；按发布节奏推算出来的财报日期在输出和页面上都标为 `estimated`，不是公司公告的日期。终端截图只截取了输出的主要部分。
 
 ### 1. 加入自选：`augur watchlist add`
 
@@ -140,6 +184,8 @@ augur serve --open                 # http://localhost:8000 · ⌘K 命令面板
 
 ```bash
 augur analyze AAPL                 # 18 位大师同时分析 + 加权共识 + Kelly 仓位
+augur fetch SPY                    # ETF：概况（规模、费率、净值、溢价折价）+ 体检清单
+augur consensus SPY                # ETF：列出适用与弃权的大师；不足 3 位适用时不出共识
 augur workflow AAPL                # 带追踪的流水线，保存 RunBundle，末尾打印 Run ID
 augur report from-run AAPL         # 基于最近一次运行：共识、分歧图、来源信息
 augur export AAPL --format md      # 导出最近一次运行（md / json / evidence-pack / pdf）
@@ -155,7 +201,26 @@ augur cycle                        # 自选股的财报周期一览：谁准备�
 
 ---
 
-## 🔄 从 v12 升级到 v13
+## 🔄 从 v13 升级到 v14
+
+v14 不改命令用法，但有些分数和输出会变。逐项说明：
+
+| 变化 | 影响 | 如何处理 |
+|---|---|---|
+| RSI 改为 Wilder 平滑 | arps、dalio、marks、munger、soros、serenity、dayu 以及自定义 `da-yu.yaml` 的分数会变，RSI 在 30 / 70 附近的标的变化最明显 | 无需操作；如果你保存了 v13 的分数做对比，注意这一项 |
+| 大宇的波动率规则开始生效 | 此前单位错了（年化小数和百分比阈值比较），每只股票都拿到低波动加分。现在仓位风险维度相对 v13 的变化：20 日波动率 <15% 不变，15–25% −1，25–40% −2，40–60% −3，>60% −4；该维度占大宇总分的 20% | — |
+| 非美元标的的金额按美元计 | 港股、A 股，以及财报货币不是美元的标的（如 ADR）：`market_cap`、`fcf`、`revenue` 等是美元（十亿）；价格仍是交易货币。拿不到汇率时不换算，输出标明原币种 | 自己读 `MarketContext` 的代码注意单位 |
+| Communication Services 算作科技 | Thiel 和共识引擎的行业加权对 GOOGL、META、腾讯等的判断会变 | — |
+| 中性共识的仓位为 0 | 此前 `analyze` 会给 0.6% 这样的小仓位 | — |
+| ETF 不再有 18 位大师的共识 | 输出概况、体检清单和适用大师的读数；适用不足 3 位（v14.0 只有 Dalio 适用）时共识为 WITHHELD，不给仓位，不写 learning。基金的 `pe` / `pb` 为 0，组合口径的值在 `etf` 字典里 | 以前把 ETF 当股票分析的结果不要再沿用 |
+| `--json` 时进度提示改走 stderr | stdout 只有 JSON | 解析 stdout 提示文字的脚本改读 stderr |
+| `[llm]` extra 不再安装 `anthropic`；MCP `augur_configure` 弃用 | 代码里从来没有用到它们 | 需要 `anthropic` 的自定义代码请自行安装 |
+| Dashboard 回测接口的收益、回撤、夏普为 `null` | 此前是用命中率推算出来的，不是实测 | — |
+
+学习数据 schema 仍是 2，不作废。旧 RSI 下记下的待结算预测照常结算（当时的判断是真实做出的）。v14 之前分析 ETF 时写入的学习记录还留在原处，会给相关大师的准确率混入少量噪声；清理工具推迟到后续版本。
+
+<details>
+<summary><strong>从 v12 升级到 v13</strong></summary>
 
 v13 是一次清理加一个新功能。不兼容的地方只有下面三项，都在 import 层面，命令行用法不变。
 
@@ -166,6 +231,8 @@ v13 是一次清理加一个新功能。不兼容的地方只有下面三项，�
 | 删除兼容转发模块 `augur.coordinator`、`augur.skill_spec`、`augur.mcp_entry` | 分别改为从 `augur.registry`、`augur.schemas.skill_spec`、`augur.mcp_server` 导入；`augur-mcp` 命令不受影响 |
 
 新功能：`augur earnings --backfill` 从 SEC 8-K（Item 2.02 业绩公告）回填自选股的历史财报日期，并按最近的发布节奏估算下一次日期，标为 `estimated`，不会标成"已确认"。你手工写进日历的条目会保留。回填之后 `augur cycle` 就有事件可跑了。
+
+</details>
 
 <details>
 <summary><strong>从 v11 升级到 v12</strong></summary>
@@ -189,7 +256,7 @@ v13 是一次清理加一个新功能。不兼容的地方只有下面三项，�
 <details>
 <summary><strong>从 v10 升级</strong></summary>
 
-v11.0.0 正式版没有单独发布，它的内容随 v12.0.0 一起发布。v11 是一次**可信度与研究底座**升级，以下行为变化在 v12、v13 中依然有效：
+v11.0.0 正式版没有单独发布，它的内容随 v12.0.0 一起发布。v11 是一次**可信度与研究底座**升级，以下行为变化在 v12–v14 中依然有效：
 
 | 变化 | 影响 | 如何处理 |
 |---|---|---|
@@ -201,7 +268,7 @@ v11.0.0 正式版没有单独发布，它的内容随 v12.0.0 一起发布。v11
 | 旧格式回放记录（无 `field_availability`）会被拒绝 | 给出明确报错，而不是静默加载 | 重新生成 |
 | MCP 支持 `mcp` 1.x 与 2.x | — | — |
 
-另外还要完成上面 v11 → v12 和 v12 → v13 的步骤（包括 Python 3.10+）。完整说明见 [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md) 与 [CHANGELOG.md](CHANGELOG.md)。
+另外还要完成上面 v11 → v12、v12 → v13 和 v13 → v14 的步骤（包括 Python 3.10+）。完整说明见 [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md) 与 [CHANGELOG.md](CHANGELOG.md)。
 
 </details>
 
@@ -250,6 +317,7 @@ MCP server 提供 14 个工具（含 `augur_run_skill` 执行内置 Skill）、7
 
 ```bash
 pip install -e ".[data,mcp]"
+claude mcp add augur -- augur-mcp   # Claude Code：注册为 stdio MCP 服务器
 ```
 
 Claude Desktop 配置示例：
@@ -262,7 +330,7 @@ Claude Desktop 配置示例：
 }
 ```
 
-另有 Hermes / OpenClaw 技能包（`src/skills/`，见 [docs/hermes-setup-guide.md](docs/hermes-setup-guide.md)）以及 Telegram / Slack / 飞书 / 微信机器人入口。
+分析、共识、辩论、委员会四个工具接受 `asset_type`（`equity` / `etf` / `fund`，留空自动识别）。另有 Hermes / OpenClaw 技能包（`src/skills/`，见 [docs/hermes-setup-guide.md](docs/hermes-setup-guide.md)）以及 Telegram / Slack / 飞书 / 微信机器人入口。完整接入说明见 [docs/agent-integration-guide.md](docs/agent-integration-guide.md)。
 
 ---
 
@@ -305,6 +373,7 @@ augur records audit [--action ...]              # 审计日志
 
 # 数据
 augur fetch AAPL · augur sentiment AAPL · augur insider AAPL · augur earnings --days 30 · augur doctor
+augur fetch SPY · augur consensus SPY · augur report SPY   # ETF：概况、体检清单、适用 / 弃权的大师
 augur earnings --backfill          # 从 SEC 8-K Item 2.02 回填财报日历：历史日期 + 一个按节奏估算的下次日期（标 estimated，不覆盖手写条目）
 
 # 监控与服务
@@ -313,7 +382,7 @@ augur cron run · augur cron start
 augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur skill compat
 ```
 
-`augur --help` 列出全部 38 个顶层命令（pip 安装时隐藏 `augur update`，是 37 个）。从 v12.2 起相关命令按组归类（`watchlist` / `cron` / `report` / `records` / `eval` / `skill`）；旧的平铺名（如 `watchlist-add`、`research-report`、`ic-report`、`ledger`）在下一个大版本前仍可用，不出现在 `--help` 里，执行时会在 stderr 打印一行新写法提示。`augur report AAPL` 用法不变，等同于 `augur report run AAPL`。
+`augur --help` 列出全部 38 个顶层命令（pip 安装时隐藏 `augur update`，是 37 个）。从 v12.2 起相关命令按组归类（`watchlist` / `cron` / `report` / `records` / `eval` / `skill`）；旧的平铺名（如 `watchlist-add`、`research-report`、`ic-report`、`ledger`）在 v14 中仍可用，不出现在 `--help` 里，执行时会在 stderr 打印一行新写法提示。`augur report AAPL` 用法不变，等同于 `augur report run AAPL`。
 
 <img src="docs/images/screenshots/v13/cli-help.png" alt="augur --help" width="100%">
 
@@ -326,7 +395,7 @@ augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur s
 | 状态 | 范围 |
 |---|---|
 | **稳定** | 18 位大师分析与共识、CLI 研究闭环（上面实测过的命令）、Dashboard 主要页面、MCP server、RunBundle 与导出、数据源链（yfinance → SEC EDGAR 覆盖） |
-| **可用，有明确边界** | 4 个内置 Skill（只运行内置清单；债务约束默认用参考阈值而非信贷协议条款；财报日期来自本地日历文件 `earnings_calendar.json`，可以手写，也可以用 `augur earnings --backfill` 从 SEC 8-K 回填，推算的下次日期标为 `estimated`）；分歧图（按大师的分维度评分推导并引用证据，维度到指标的映射是固定表）；`augur risk-review`（规则匹配，措辞小改可能同时显示为"新增"和"删除"）；`augur eval`（单只股票的时间序列 IC，远期收益重叠，显著性偏乐观，只作筛查）；`augur guidance`（需 `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1`，会调用付费 LLM）；PDF 导出（需 `[export]`） |
+| **可用，有明确边界** | ETF 分析（v14.0 只有 Dalio 适用，所以共识一律 WITHHELD；A 股 ETF 只有净值与溢价折价，没有规模、费率、持仓和实时 IOPV；溢价折价只看最新一天，没有历史与跟踪误差；CLI 的 ETF 概况标签只有中文）；4 个内置 Skill（只运行内置清单；债务约束默认用参考阈值而非信贷协议条款；财报日期来自本地日历文件 `earnings_calendar.json`，可以手写，也可以用 `augur earnings --backfill` 从 SEC 8-K 回填，推算的下次日期标为 `estimated`）；分歧图（按大师的分维度评分推导并引用证据，维度到指标的映射是固定表）；`augur risk-review`（规则匹配，措辞小改可能同时显示为"新增"和"删除"）；`augur eval`（单只股票的时间序列 IC，远期收益重叠，显著性偏乐观，只作筛查）；`augur guidance`（需 `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1`，会调用付费 LLM）；PDF 导出（需 `[export]`） |
 | **实验（默认关闭）** | rolling-IC 动态权重（`AUGUR_FORCE_RIC=1`）、学习权重（`AUGUR_FORCE_LEARNED=1`）——都还没有通过预注册的样本外验证 |
 | **只有代码、没有入口** | `augur.experimental.accounting`（会计质量）、`augur.experimental.capital_allocation`（资本配置）、`augur.experimental.debate_engine`（辩论引擎；Dashboard 的 `/debate` 用的是另一套实现）、`augur.experimental.relative_val`（相对估值）、`augur.experimental.portfolio_risk`（组合风险）——有单元测试，但 CLI、Dashboard 和 MCP 都没有调用它们，可以当库用，不算产品功能 |
 | **尚未计量** | 运行记录中的 token 用量（目前只记录耗时） |
@@ -336,7 +405,7 @@ augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur s
 ## 🔒 数据与隐私
 
 - 所有状态保存在本地数据目录（默认 `~/.augur`，`AUGUR_DATA_DIR` 可改）。没有遥测；默认单用户、无需注册（可选开启多用户模式 `AUGUR_MULTI_USER=1`）。
-- 会发出的网络请求：行情与基本面（yfinance、SEC EDGAR）；可选的 LLM 调用（仅在你配置 API key 并启用相关功能时）；Dashboard 页面从 jsDelivr CDN 加载 Chart.js。
+- 会发出的网络请求：行情、基本面与汇率（yfinance、SEC EDGAR）；A 股 ETF 净值（新浪行情 `hq.sinajs.cn`）；可选的 LLM 调用（仅在你设置 `OPENAI_API_KEY` 并使用聊天或 guidance 抽取时）；Dashboard 页面从 jsDelivr CDN 加载 Chart.js。
 - Dashboard 默认只监听本机。需要对外暴露时先设 `AUGUR_API_TOKEN`，详见 [docs/self-hosted-guide.md](docs/self-hosted-guide.md)。
 
 主要环境变量：
@@ -349,7 +418,10 @@ augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur s
 | `AUGUR_CORS_ORIGINS` | 允许的跨域来源 |
 | `AUGUR_FORCE_RIC` / `AUGUR_FORCE_LEARNED` | 打开实验性动态权重 |
 | `AUGUR_SKIP_MACRO_FETCH` | 跳过 VIX/SPY 宏观数据拉取（离线或 CI） |
-| `AUGUR_EDGAR_GUIDANCE_EXTRACTION` | 启用基于 LLM 的 guidance 抽取（付费） |
+| `AUGUR_EDGAR_GUIDANCE_EXTRACTION` | 启用基于 LLM 的 guidance 抽取（付费，用下面的 OpenAI 兼容接口） |
+| `OPENAI_API_KEY` | 可选：大师聊天与 guidance 抽取用的 OpenAI 兼容接口 key（需 `[llm]`） |
+| `OPENAI_BASE_URL` | 可选：OpenAI 兼容服务的地址（不设则用 OpenAI 官方） |
+| `AUGUR_CHAT_MODEL` / `AUGUR_CHAT_MAXTOK` | 可选：聊天用的模型名（默认 `gpt-4o`）与最大输出 token（默认 1024） |
 
 ---
 
@@ -374,7 +446,8 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 
 | 文档 | 内容 |
 |---|---|
-| [docs/ROADMAP.md](docs/ROADMAP.md) | 唯一权威路线图：当前阶段、每一步的验证点、v13 之后的候选与待决事项 |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | 唯一权威路线图：当前阶段、每一步的验证点、v14 之后的候选与待决事项 |
+| [docs/RELEASE_NOTES.md](docs/RELEASE_NOTES.md) | 面向用户的更新说明（v14 在最上面） |
 | [docs/RELEASE_NOTES_v11.md](docs/RELEASE_NOTES_v11.md) | v11 发布说明与迁移指南（v12、v13 的变化见 [CHANGELOG.md](CHANGELOG.md)） |
 | [docs/reviews/](docs/reviews/) | 项目评审记录（含每条问题的证据等级与修复） |
 | [docs/schema-reference.md](docs/schema-reference.md) | EvidenceItem / Claim / StepResult / RunBundle / SkillSpec |
@@ -388,7 +461,16 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 ## 📝 更新日志
 
 <details open>
-<summary><strong>v13.0.0 — SEC 财报日期回填、Python 3.10、精简公开 API (current)</strong></summary>
+<summary><strong>v14.0.0 — ETF 原生分析、正确性修复、讲清楚大模型的角色 (current)</strong></summary>
+
+- **ETF 原生分析**：识别 ETF，输出规模、费率、净值（A 股用新浪的真实净值日期）、按净值日期对齐的溢价折价、前十大占比与体检清单；规则不适用的大师弃权，适用不足 3 位时不出共识、不给仓位、不写学习记录
+- **正确性**：Wilder RSI、非美元金额按汇率换算成美元、大宇波动率单位、Communication Services 算科技、中性仓位为 0、`--json` 输出纯 JSON、恐惧贪婪指数校准
+- **大模型的角色**：README 新增"Augur 怎么用大模型"；`augur_configure` 弃用；`[llm]` 不再装 `anthropic`。迁移方法见上方"从 v13 升级到 v14"
+
+</details>
+
+<details>
+<summary><strong>v13.0.0 — SEC 财报日期回填、Python 3.10、精简公开 API</strong></summary>
 
 - **财报日期回填**：`augur earnings --backfill` 从 SEC 8-K（Item 2.02）补齐历史财报日期，并按发布节奏估算下一次（标为 estimated）；`augur cycle` 不再依赖手工日历
 - **不兼容变化**：需要 Python 3.10+；5 个没有产品入口的模块移到 `augur.experimental`；删除 3 个兼容转发模块。迁移方法见上方"从 v12 升级到 v13"

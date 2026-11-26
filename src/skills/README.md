@@ -47,13 +47,13 @@ Copy the desired `SKILL.md` content as your system prompt, or load it via a skil
 OpenClaw reads `manifest.json` from any skills directory:
 
 ```bash
-openclaw skill install ./skills/augur-buffett
+openclaw skill install ./src/skills/augur-buffett
 ```
 
 Or install all skills at once:
 
 ```bash
-for d in skills/augur-*; do openclaw skill install "$d"; done
+for d in src/skills/augur-*; do openclaw skill install "$d"; done
 ```
 
 ### Any MCP Client
@@ -115,7 +115,7 @@ When running the Augur Dashboard alongside Hermes, customize the Bloomberg-style
 **Single skill** — copy or symlink one directory:
 
 ```bash
-cp -r skills/augur-buffett ~/.config/hermes/skills/
+cp -r src/skills/augur-buffett ~/.config/hermes/skills/
 ```
 
 **All skills** — regenerate from source (requires the full Augur repo):

@@ -6,6 +6,21 @@ ThielAgent - Peter Thiel 从0到1垄断投资框架
 from augur.personas.base import BaseAgent, MarketContext, AgentResponse
 
 
+def is_tech_business(sector: str, industry: str) -> bool:
+    """Whether Thiel's framework treats the business as tech.
+
+    Technology / software sectors, Communication Services (GOOGL, META,
+    Tencent) and any internet or software industry count. Case-insensitive.
+    """
+    sector = (sector or "").lower()
+    industry = (industry or "").lower()
+    if "software" in sector or "tech" in sector:
+        return True
+    if "communication services" in sector:
+        return True
+    return "internet" in industry or "software" in industry
+
+
 class ThielAgent(BaseAgent):
     """Peter Thiel - 从0到1垄断投资 / 逆向思维"""
 
@@ -261,7 +276,7 @@ class ThielAgent(BaseAgent):
             risks.append("技术护城河薄弱，容易被复制——不是从0到1的生意")
         if context.pe > 80 and context.revenue_growth < 0.10:
             risks.append("高PE+低增长=市场已经定价了长期故事，Thiel不喜欢已经在共识中的标的")
-        if "software" not in sector and "tech" not in sector and "technology" not in sector:
+        if not is_tech_business(sector, industry):
             risks.append("非科技行业，Thiel框架最佳适用场景是科技/垄断型企业")
 
         # 模型适用性：Thiel框架对高毛利+高增长公司最佳

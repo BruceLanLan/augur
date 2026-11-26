@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from augur.personas.base import MarketContext
 from augur.report import generate_report
 from augur.workspace import get_enabled_personas
+from dashboard.etf_overview import build_etf_overview
 from dashboard.deps import _check_rate_limit, _get_rules_engine, get_coordinator
 
 router = APIRouter()
@@ -250,7 +251,10 @@ def analyze_ticker(
             "fcf": ctx.fcf,
             "revenue_growth": ctx.revenue_growth,
             "debt_ratio": ctx.debt_ratio,
+            "asset_type": getattr(ctx, "asset_type", "equity") or "equity",
         },
+        # None for equities; the stock page renders the ETF card only when set.
+        "etf_overview": build_etf_overview(ctx),
         "consensus": consensus_resp.to_dict(),
         "divergence": consensus_resp.metadata.get("divergence"),
         "agents": [r.to_dict() for r in agent_responses.values()],

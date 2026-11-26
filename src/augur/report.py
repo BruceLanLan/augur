@@ -296,7 +296,7 @@ def _format_executive_summary(
     lines.append(f"| **多空分布** | 🟢看多 {bull} · 🟡中性 {neut} · 🔴看空 {bear}（共 {total} 位有效裁决） |")
     lines.append(f"| **建议仓位** | {position_pct:.1f}%（18位大师加权 · 半Kelly） |")
     if _is_finite_number(context.price):
-        lines.append(f"| **当前价格** | ${context.price:.2f} |")
+        lines.append(f"| **当前价格** | {_format_price(context)} |")
     lines.append(f"| **参与大师** | {len(results)} 位（覆盖价值 / 成长 / 宏观风险 / 技术量化四大流派） |")
     lines.append("")
 
@@ -709,19 +709,39 @@ def _biggest_contention(bullish, bearish, neutral, score_spread: float) -> str:
 
 # ============ 报告区段：财务概览 ============
 
-def _format_market_cap(value: float) -> str:
-    """格式化市值/现金流（输入单位：十亿美元）。
+def _format_market_cap(value: float, currency: str = "USD") -> str:
+    """格式化市值/现金流（输入单位：十亿，默认美元）。
 
     非有限数（NaN/Inf/None）返回 "$N/A"，避免在报告中出现 "$nanM" 等垃圾字符串。
+    非美元金额（汇率未知、未换算时）不加 "$"，在数值后标注货币代码。
     """
+    usd = (currency or "USD").upper() == "USD"
     if not _is_finite_number(value):
-        return "$N/A"
+        return "$N/A" if usd else "N/A"
     value = float(value)
     if abs(value) >= 1000:
-        return f"${value / 1000:.2f}万亿"
-    if abs(value) >= 1:
-        return f"${value:.2f}B"
-    return f"${value * 1000:.0f}M"
+        body = f"{value / 1000:.2f}万亿"
+    elif abs(value) >= 1:
+        body = f"{value:.2f}B"
+    else:
+        body = f"{value * 1000:.0f}M"
+    return f"${body}" if usd else f"{body} {currency.upper()}"
+
+
+def _format_price(context: MarketContext) -> str:
+    """股价保持交易货币：美元写 "$123.45"，其他货币写 "380.00 HKD"。"""
+    from augur.cli_helpers import trading_currency
+    ccy = trading_currency(context)
+    if ccy in ("", "USD"):
+        return f"${context.price:.2f}"
+    return f"{context.price:.2f} {ccy}"
+
+
+def _amount_label(label: str, context: MarketContext, kind: str) -> Tuple[str, str]:
+    """(行标签, 货币)：已换算为美元时标签不变，汇率未知时写 "市值 (HKD)"。"""
+    from augur.cli_helpers import amount_currency
+    ccy = amount_currency(context, kind)
+    return (label if ccy == "USD" else f"{label} ({ccy})"), ccy
 
 
 def _valuation_comment(pe: float) -> str:
@@ -752,9 +772,10 @@ def _format_financial_overview(context: MarketContext) -> str:
     lines.append("| 指标 | 数值 |")
     lines.append("|------|------|")
     if _is_finite_number(context.price):
-        lines.append(f"| 当前价格 | ${context.price:.2f} |")
+        lines.append(f"| 当前价格 | {_format_price(context)} |")
     if _is_finite_number(context.market_cap):
-        lines.append(f"| 市值 | {_format_market_cap(context.market_cap)} |")
+        label, ccy = _amount_label("市值", context, "market")
+        lines.append(f"| {label} | {_format_market_cap(context.market_cap, ccy)} |")
     if _is_finite_number(context.pe):
         comment = _valuation_comment(context.pe)
         comment_str = f"（{comment}）" if comment else ""
@@ -807,7 +828,8 @@ def _format_financial_overview(context: MarketContext) -> str:
         if _is_finite_number(context.current_ratio):
             lines.append(f"| 流动比率 | {context.current_ratio:.2f} |")
         if _is_finite_number(context.fcf):
-            lines.append(f"| 自由现金流 | {_format_market_cap(context.fcf)} |")
+            label, ccy = _amount_label("自由现金流", context, "financial")
+            lines.append(f"| {label} | {_format_market_cap(context.fcf, ccy)} |")
         lines.append("")
 
     # —— 行业定位 ——
@@ -911,11 +933,141 @@ def _format_position_recommendation(consensus: AgentResponse) -> str:
         lines.append("- 看空信号：建议 **不建仓** 或 **减仓**")
         lines.append("- 等待更明确的入场信号与安全边际")
     else:
-        lines.append(f"- 中性信号：建议 **观望** 或 **轻仓**（{position_pct:.1f}%）")
+        lines.append(f"- 中性信号：建议 **观望**（{position_pct:.1f}%）")
         lines.append("- 等待方向明确（估值回落或基本面催化）后再加仓")
 
     lines.append("")
     return "\n".join(lines)
+
+
+# ============ 基金（ETF）报告 ============
+
+def _format_etf_profile(context: MarketContext) -> str:
+    """ETF 概况 + 体检（Markdown）。"""
+    from augur.etf import assess_etf, unchecked_items
+
+    p = dict(getattr(context, "etf", None) or {})
+    lines: List[str] = ["## ETF 概况", "", "| 指标 | 数值 |", "|------|------|"]
+
+    def num(key):
+        v = p.get(key)
+        return float(v) if _is_finite_number(v) and not isinstance(v, bool) else None
+
+    if context.company_name:
+        lines.append(f"| 名称 | {context.company_name} |")
+    if p.get("category"):
+        lines.append(f"| 类别 | {p['category']} |")
+    if _is_finite_number(context.price) and context.price:
+        lines.append(f"| 当前价格 | {_format_price(context)} |")
+    aum = num("aum_usd_bn")
+    lines.append(f"| 规模 | {_format_market_cap(aum) if aum else '未知'} |")
+    er = num("expense_ratio")
+    lines.append(f"| 费率 | {f'{er * 100:.2f}%' if er is not None else '未知'} |")
+    yld = num("yield")
+    if yld is not None:
+        lines.append(f"| 分红率 | {yld * 100:.2f}% |")
+    nav = num("nav")
+    if nav is not None:
+        date = p.get("nav_date") or "日期未知"
+        if p.get("nav_date_inferred"):
+            date = f"{date}，按上一交易日推断"
+        lines.append(f"| 净值 | {nav:,.4f}（{date}） |")
+    prem = num("premium_pct")
+    lines.append(f"| 溢价折价 | {f'{prem:+.2f}%' if prem is not None else '未知'} |")
+    top10 = num("top10_weight")
+    lines.append(f"| 前十大占比 | {f'{top10 * 100:.1f}%' if top10 is not None else '未知'} |")
+    spread = num("spread_pct")
+    if spread is not None:
+        lines.append(f"| 买卖价差 | {spread:.3f}% |")
+    ppe, ppb = num("portfolio_pe"), num("portfolio_pb")
+    if ppe:
+        lines.append(f"| 成分股加权 PE | {ppe:.1f}x |")
+    if ppb:
+        lines.append(f"| 成分股加权 PB | {ppb:.2f}x |")
+    lines.append("")
+
+    lines.append("### ETF 体检")
+    lines.append("")
+    findings = assess_etf(p)
+    if findings:
+        lines.extend(f"- ⚠️ {f}" for f in findings)
+    else:
+        lines.append("- 未发现问题")
+    missing = unchecked_items(p)
+    if missing:
+        lines.append(f"- 未检查（缺数据）：{'、'.join(missing)}")
+    lines.append("")
+    lines.append("> 体检为确定性清单，不参与打分。")
+    lines.append("")
+    return "\n".join(lines)
+
+
+def _generate_fund_report(
+    ticker: str,
+    context: MarketContext,
+    results: Dict[str, AgentResponse],
+    consensus: AgentResponse,
+) -> str:
+    """基金报告：概况 + 体检 + 适用大师读数；不按公司财务评分，不给仓位。"""
+    meta = consensus.metadata or {}
+    abstained = [r for r in results.values() if (r.metadata or {}).get("not_applicable")]
+    applicable = {aid: r for aid, r in results.items()
+                  if not (r.metadata or {}).get("not_applicable")}
+    asset = str(getattr(context, "asset_type", "") or "fund").upper()
+
+    s: List[str] = [
+        f"# {ticker} 基金分析报告（{asset}）",
+        "",
+        f"> **分析日期**：{datetime.now().strftime('%Y年%m月%d日')}",
+        "> **分析方法**：ETF 概况与确定性体检；公司财务类大师对基金弃权",
+        "> **数据来源**：公开市场数据",
+        "",
+        "---",
+        "",
+        "## 结论",
+        "",
+    ]
+    if meta.get("consensus_withheld"):
+        s.append(f"**不输出共识信号**：适用大师 {len(applicable)} 位（至少需要 3 位）。"
+                 f"{len(abstained)} 位大师的规则基于公司财务，不适用于基金。")
+    else:
+        s.append(f"适用大师共识：{_format_signal_chinese(consensus.signal.value)}，"
+                 f"评分 {consensus.score:.1f}/10，置信度 {consensus.confidence:.0%}。")
+    s.append("")
+    s.append("本报告不提供仓位建议。")
+    s.append("")
+    s.append("---")
+    s.append("")
+    s.append(_format_etf_profile(context))
+    s.append("---")
+    s.append("")
+    s.append(f"## 适用大师读数（{len(applicable)} 位）")
+    s.append("")
+    if applicable:
+        s.append(_format_agent_table(applicable))
+        s.append("")
+        for r in applicable.values():
+            if r.key_findings:
+                s.append(f"**{r.agent_name}**：")
+                s.extend(f"- {f}" for f in r.key_findings[:5])
+                s.append("")
+    else:
+        s.append("*无*")
+        s.append("")
+    if abstained:
+        s.append(f"**弃权（规则不适用于基金，{len(abstained)} 位）**："
+                 + "、".join(r.agent_name for r in abstained))
+        s.append("")
+    s.append("---")
+    s.append("")
+    s.append("## 免责声明")
+    s.append("")
+    s.append(
+        "本报告由规则化分析框架自动生成，各位大师视角均为受其公开投资理念启发的分析框架，"
+        "**不代表任何真实人物的观点**。本分析仅供教育与研究用途，不构成投资建议。"
+    )
+    s.append("")
+    return "\n".join(s)
 
 
 # ============ 主入口 ============
@@ -950,6 +1102,10 @@ def generate_report(
                 "请提供有效的股票代码（仅限英文字母、数字、点号和连字符，最长15字符）。\n"
             )
         ticker = sanitized
+
+    from augur.etf import is_fund
+    if is_fund(context) or (consensus.metadata or {}).get("abstained_agents"):
+        return _generate_fund_report(ticker, context, results, consensus)
 
     sections: List[str] = []
 

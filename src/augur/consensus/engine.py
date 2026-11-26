@@ -6,9 +6,33 @@ import math
 import time
 from typing import Dict, Optional
 
+from augur.etf import MIN_APPLICABLE_FOR_CONSENSUS, assess_etf, is_fund
 from augur.personas.base import AgentResponse, MarketContext, SignalType
 
 logger = logging.getLogger(__name__)
+
+# Engine-only industry keywords kept from v13 so nothing that used to count
+# as tech for weighting stops counting. The sector rule itself (incl.
+# Communication Services / internet) is Thiel's ``is_tech_business``, the one
+# shared predicate.
+_LEGACY_TECH_INDUSTRY_KEYWORDS = (
+    "artificial intelligence", "machine learning", "semiconductor",
+)
+
+
+def is_tech_sector(sector: str = "", industry: str = "") -> bool:
+    """True for technology / communication-services / internet businesses."""
+    from augur.personas.thiel import is_tech_business
+
+    if is_tech_business(sector, industry):
+        return True
+    industry_lower = (industry or "").lower()
+    return any(kw in industry_lower for kw in _LEGACY_TECH_INDUSTRY_KEYWORDS)
+
+
+def _is_not_applicable(resp: AgentResponse) -> bool:
+    meta = getattr(resp, "metadata", None) or {}
+    return bool(meta.get("not_applicable"))
 
 
 class ConsensusEngine:
@@ -37,6 +61,22 @@ class ConsensusEngine:
                 score=0,
                 reasoning="No results",
             )
+
+        # --- Fund abstention (v14) ---
+        # Personas that do not apply to funds return not_applicable results
+        # (BaseAgent guard). Drop them before any weighting; the context may be
+        # None here, so a dropped abstention alone also marks a fund run.
+        abstained = sorted(aid for aid, r in results.items() if _is_not_applicable(r))
+        fund_mode = is_fund(context) or bool(abstained)
+        if abstained:
+            results = {aid: r for aid, r in results.items() if not _is_not_applicable(r)}
+        if fund_mode:
+            applicable = sorted(
+                aid for aid, r in results.items() if r.signal != SignalType.ERROR
+            )
+            if len(applicable) < MIN_APPLICABLE_FOR_CONSENSUS:
+                return self._withheld(results, applicable, abstained, context,
+                                      t0_consensus, analysis_ms)
 
         # --- Industry-aware weights ---
         from augur.consensus import (
@@ -157,11 +197,7 @@ class ConsensusEngine:
             # Sector-aware weight boosting
             if context and hasattr(context, "sector") and context.sector:
                 sector_lower = (context.sector or "").lower()
-                industry_lower = (context.industry or "").lower() if hasattr(context, "industry") else ""
-                is_tech = sector_lower in ("technology", "information technology") or any(
-                    kw in industry_lower
-                    for kw in ["artificial intelligence", "machine learning", "semiconductor", "software"]
-                )
+                is_tech = is_tech_sector(context.sector, getattr(context, "industry", "") or "")
                 is_financial = "financial" in sector_lower
                 is_healthcare = "health" in sector_lower or "medical" in sector_lower
 
@@ -313,10 +349,12 @@ class ConsensusEngine:
                 # Minimum 1% token position for bullish signal with sufficient confidence
                 if pct < 1.0 and conf >= 0.5:
                     pct = 1.0
-            elif sig == "bearish":
-                pct = 0.0
             else:
-                pct = max(0.0, round((conf - 0.5) * 3.0, 1))
+                # Neutral / bearish: no position (same rule as `augur portfolio`).
+                pct = 0.0
+            if fund_mode:
+                # v14: funds get no position sizing from company-rule personas.
+                pct = 0.0
 
             position = {
                 "position_pct": pct,
@@ -329,6 +367,13 @@ class ConsensusEngine:
             result.metadata["position_pct"] = pct
         except Exception:
             pass
+
+        if fund_mode:
+            result.metadata["asset_type"] = str(getattr(context, "asset_type", "") or "fund")
+            result.metadata["abstained_agents"] = abstained
+            result.metadata["applicable_agents"] = sorted(
+                aid for aid, r in results.items() if r.signal != SignalType.ERROR
+            )
 
         if regime_features:
             result.metadata["regime_features"] = regime_features
@@ -438,7 +483,9 @@ class ConsensusEngine:
                 _check_and_record_outcomes(le, ticker)
                 # Record each agent's current prediction for future accuracy
                 # tracking -- skipped when today's context is empty.
-                if not context_is_empty:
+                # Funds never feed the learning sample (v14): the company-rule
+                # personas abstain and the rest are not calibrated for funds.
+                if not context_is_empty and not fund_mode:
                     with le.batch():
                         for agent_id, resp in results.items():
                             if resp.signal != SignalType.ERROR:
@@ -450,6 +497,56 @@ class ConsensusEngine:
             except Exception:
                 pass
 
+        return result
+
+    @staticmethod
+    def _withheld(results, applicable, abstained, context, t0_consensus, analysis_ms) -> AgentResponse:
+        """Neutral, zero-confidence result when too few personas apply to a fund.
+
+        No weighting, sentiment, risk veto, position sizing or learning record
+        runs: there is no consensus to act on. Score is the neutral midpoint
+        so score-threshold consumers (watch alerts, cron) do not fire.
+        """
+        n = len(applicable)
+        etf_profile = dict(getattr(context, "etf", None) or {})
+        findings = []
+        for aid in applicable:
+            findings.extend(results[aid].key_findings)
+        risks = []
+        for aid in applicable:
+            risks.extend(results[aid].risks)
+        reason = (f"适用大师 {n} 位（少于 {MIN_APPLICABLE_FOR_CONSENSUS} 位），"
+                  f"不输出共识；{len(abstained)} 位大师的规则不适用于基金")
+        result = AgentResponse(
+            agent_id="consensus",
+            agent_name="Multi-Agent Consensus",
+            signal=SignalType.NEUTRAL,
+            confidence=0.0,
+            score=5.0,
+            reasoning=reason,
+            key_findings=findings[:5],
+            risks=risks[:3],
+        )
+        result.metadata.update({
+            "consensus_withheld": True,
+            "withheld_reason": reason,
+            "asset_type": str(getattr(context, "asset_type", "") or "fund"),
+            "applicable_agents": list(applicable),
+            "abstained_agents": list(abstained),
+            "etf_findings": assess_etf(etf_profile),
+            "position_pct": 0.0,
+            "position_sizing": {
+                "position_pct": 0.0,
+                "signal": "neutral",
+                "score": 5.0,
+                "confidence": 0.0,
+                "rationale": "consensus withheld for fund: no position sizing",
+            },
+            "timing_ms": {
+                "analysis_ms": analysis_ms,
+                "consensus_ms": (time.perf_counter() - t0_consensus) * 1000,
+            },
+        })
         return result
 
     @staticmethod

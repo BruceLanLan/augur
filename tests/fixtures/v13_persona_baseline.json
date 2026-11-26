@@ -1,0 +1,919 @@
+{
+ "empty": {
+  "arps": {
+   "confidence": 0.65,
+   "coverage_confidence": 0.7,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "市值偏小或波动率极高，流动性风险不可忽视"
+   ],
+   "score": 4.3,
+   "signal": "neutral"
+  },
+  "aschenbrenner": {
+   "confidence": 0.8,
+   "coverage_confidence": 0.25,
+   "key_findings": [
+    "⚠️ Aschenbrenner框架对该公司适用性低（非AI/算力基础设施行业），评分仅供参考"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "算力投入不足，可能被AGI浪潮甩在后面",
+    "非科技行业，AGI基础设施主题暴露不足",
+    "市值偏小，在万亿美元AGI竞赛中缺乏资源"
+   ],
+   "score": 3.4,
+   "signal": "bearish"
+  },
+  "buffett": {
+   "confidence": 0.5,
+   "coverage_confidence": 0.4,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 4.1,
+   "signal": "neutral"
+  },
+  "cathie_wood": {
+   "confidence": 0.55,
+   "coverage_confidence": 0.35,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "行业属性非ARK核心覆盖范围，破坏性有限"
+   ],
+   "score": 3.9,
+   "signal": "neutral"
+  },
+  "dalio": {
+   "confidence": 0.4,
+   "coverage_confidence": 0.7,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 3.9,
+   "signal": "bearish"
+  },
+  "dan_bin": {
+   "confidence": 0.65,
+   "coverage_confidence": 0.5,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "毛利率过低，缺乏品牌护城河，非但斌偏好标的"
+   ],
+   "score": 3.75,
+   "signal": "neutral"
+  },
+  "dayu": {
+   "confidence": 0.721667,
+   "coverage_confidence": 0.4,
+   "key_findings": [
+    "信息差空间大：低机构覆盖/高增长/小市值",
+    "🏆 看准+重仓信号：动量强且风险可控，适合重点参与"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "缺少成交量数据 — 大宇无法判断动量真实性"
+   ],
+   "score": 6.375,
+   "signal": "neutral"
+  },
+  "duan_yongping": {
+   "confidence": 0.775,
+   "coverage_confidence": 0.4,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 4.925,
+   "signal": "neutral"
+  },
+  "fisher": {
+   "confidence": 0.65,
+   "coverage_confidence": 0.4,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "收入增速仅0%，成长持续性存疑",
+    "毛利率偏低，定价权不足，非Fisher理想标的"
+   ],
+   "score": 5.0,
+   "signal": "neutral"
+  },
+  "graham": {
+   "confidence": 0.75,
+   "coverage_confidence": 0.3,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 5.6,
+   "signal": "neutral"
+  },
+  "li_lu": {
+   "confidence": 0.8,
+   "coverage_confidence": 0.4,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 4.65,
+   "signal": "neutral"
+  },
+  "lynch": {
+   "confidence": 0.5,
+   "coverage_confidence": 0.4,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 4.1,
+   "signal": "neutral"
+  },
+  "marks": {
+   "confidence": 0.75,
+   "coverage_confidence": 0.7,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 5.0,
+   "signal": "neutral"
+  },
+  "munger": {
+   "confidence": 0.5,
+   "coverage_confidence": 0.4,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 5.65,
+   "signal": "neutral"
+  },
+  "serenity": {
+   "confidence": 0.85,
+   "coverage_confidence": 0.25,
+   "key_findings": [
+    "⚠️ Serenity框架对该公司适用性低（非AI供应链/半导体行业），评分仅供参考"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "非供应链卡脖子位置，缺乏物理不可替代性逻辑",
+    "非AI供应链相关行业，Chokepoint Theory框架适用性低"
+   ],
+   "score": 4.6,
+   "signal": "neutral"
+  },
+  "soros": {
+   "confidence": 0.75,
+   "coverage_confidence": 0.7,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 4.6,
+   "signal": "neutral"
+  },
+  "thiel": {
+   "confidence": 0.85,
+   "coverage_confidence": 0.3,
+   "key_findings": [
+    "🔥 逆向时机成熟，市场忽略了这个机会（评分:8/10）"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "竞争环境激烈，缺乏垄断特征——Thiel只会投垄断型企业",
+    "非科技行业，Thiel框架最佳适用场景是科技/垄断型企业"
+   ],
+   "score": 5.05,
+   "signal": "neutral"
+  },
+  "yaml:dayu": {
+   "confidence": 0.725,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.75,
+   "signal": "neutral"
+  },
+  "yaml:thiel": {
+   "confidence": 0.64,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 4.8,
+   "signal": "neutral"
+  },
+  "zhang_lei": {
+   "confidence": 0.7225,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "增速不足，结构性机会可能已过峰值"
+   ],
+   "score": 4.375,
+   "signal": "neutral"
+  }
+ },
+ "hk_stock": {
+  "arps": {
+   "confidence": 0.65,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 5.9,
+   "signal": "neutral"
+  },
+  "aschenbrenner": {
+   "confidence": 0.85,
+   "coverage_confidence": 0.7,
+   "key_findings": [
+    "🔗 垂直整合度高，芯片→云→应用全栈控制",
+    "👁️ 管理层高持仓+机构信任，AGI愿景清晰",
+    "🛡️ AI正在强化护城河，竞争优势在扩大"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "非科技行业，AGI基础设施主题暴露不足"
+   ],
+   "score": 5.825,
+   "signal": "neutral"
+  },
+  "buffett": {
+   "confidence": 0.8,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.25,
+   "signal": "bullish"
+  },
+  "cathie_wood": {
+   "confidence": 0.55,
+   "coverage_confidence": 0.35,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "行业属性非ARK核心覆盖范围，破坏性有限"
+   ],
+   "score": 3.5,
+   "signal": "bearish"
+  },
+  "dalio": {
+   "confidence": 0.4,
+   "coverage_confidence": 0.9,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 4.5,
+   "signal": "neutral"
+  },
+  "dan_bin": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "品牌护城河强：毛利率52%，ROE21%",
+    "定价权强：高毛利+增速组合，消费者愿意付溢价"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 8.225,
+   "signal": "bullish"
+  },
+  "dayu": {
+   "confidence": 0.885,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 5.9,
+   "signal": "neutral"
+  },
+  "duan_yongping": {
+   "confidence": 0.9,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "商业模式清晰，FCF=160，可预测盈利",
+    "护城河强：毛利率52%，ROE21%",
+    "管理层本分：内部人持股28.0%"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 9.25,
+   "signal": "bullish"
+  },
+  "fisher": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "毛利率52%，强定价权和客户忠诚",
+    "ROE=21%，管理层资本配置能力突出(>15%)"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "收入增速仅8%，成长持续性存疑"
+   ],
+   "score": 8.4,
+   "signal": "bullish"
+  },
+  "graham": {
+   "confidence": 0.55,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 5.4,
+   "signal": "neutral"
+  },
+  "li_lu": {
+   "confidence": 0.92,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "竞争地位强：毛利率52%，ROE21%",
+    "财务稳健：负债率30%，流动比1.30"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.525,
+   "signal": "bullish"
+  },
+  "lynch": {
+   "confidence": 0.7,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "盈利增长超过收入增长（正向经营杠杆）",
+    "PEG合理(1.20, ≤1.5)"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.25,
+   "signal": "neutral"
+  },
+  "marks": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "情绪钟摆偏向恐惧端，历史上的买入良机"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.0,
+   "signal": "neutral"
+  },
+  "munger": {
+   "confidence": 0.5,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.25,
+   "signal": "bullish"
+  },
+  "serenity": {
+   "confidence": 0.85,
+   "coverage_confidence": 0.25,
+   "key_findings": [
+    "⚠️ Serenity框架对该公司适用性低（非AI供应链/半导体行业），评分仅供参考"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "非供应链卡脖子位置，缺乏物理不可替代性逻辑",
+    "非AI供应链相关行业，Chokepoint Theory框架适用性低"
+   ],
+   "score": 4.3,
+   "signal": "neutral"
+  },
+  "soros": {
+   "confidence": 0.75,
+   "coverage_confidence": 0.9,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 5.4,
+   "signal": "neutral"
+  },
+  "thiel": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "👑 垄断型企业特征显著，定价权强（评分:7/10）",
+    "🔥 逆向时机成熟，市场忽略了这个机会（评分:7/10）",
+    "👨‍💼 创始人高度commit，内部人持仓强劲（评分:7/10）",
+    "📡 长期押注价值高，商业模式可持续（评分:10/10）"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "非科技行业，Thiel框架最佳适用场景是科技/垄断型企业"
+   ],
+   "score": 7.0,
+   "signal": "bullish"
+  },
+  "yaml:dayu": {
+   "confidence": 0.75,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.75,
+   "signal": "neutral"
+  },
+  "yaml:thiel": {
+   "confidence": 0.8,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 8.35,
+   "signal": "bullish"
+  },
+  "zhang_lei": {
+   "confidence": 0.845,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "商业模式优质：毛利率52%，FCF正向",
+    "管理层卓越：创始人持股28.0%，ROE21%"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "增速不足，结构性机会可能已过峰值"
+   ],
+   "score": 7.5,
+   "signal": "bullish"
+  }
+ },
+ "large_cap_us": {
+  "arps": {
+   "confidence": 0.75,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "技术动量强，MACD金叉+价格在均线上方"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.4,
+   "signal": "bullish"
+  },
+  "aschenbrenner": {
+   "confidence": 0.85,
+   "coverage_confidence": 0.7,
+   "key_findings": [
+    "🚀 算力基础设施投资力度强，百万卡集群候选者（评分:8.5/10）",
+    "🔗 垂直整合度高，芯片→云→应用全栈控制",
+    "👁️ 管理层高持仓+机构信任，AGI愿景清晰",
+    "🛡️ AI正在强化护城河，竞争优势在扩大"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.85,
+   "signal": "bullish"
+  },
+  "buffett": {
+   "confidence": 0.95,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "护城河强大：毛利率46%, ROE145%"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.75,
+   "signal": "bullish"
+  },
+  "cathie_wood": {
+   "confidence": 0.65,
+   "coverage_confidence": 0.7,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 3.9,
+   "signal": "bearish"
+  },
+  "dalio": {
+   "confidence": 0.75,
+   "coverage_confidence": 0.9,
+   "key_findings": [
+    "上升趋势确认",
+    "MACD柱状图为正，动能向上"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.7,
+   "signal": "neutral"
+  },
+  "dan_bin": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "品牌护城河强：毛利率46%，ROE145%",
+    "定价权强：高毛利+增速组合，消费者愿意付溢价"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 8.105,
+   "signal": "bullish"
+  },
+  "dayu": {
+   "confidence": 0.9,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "动量强劲(RSI=58, 涨跌+0.8%)",
+    "🏆 看准+重仓信号：动量强且风险可控，适合重点参与"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.625,
+   "signal": "neutral"
+  },
+  "duan_yongping": {
+   "confidence": 0.9,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "商业模式清晰，FCF=105，可预测盈利",
+    "护城河强：毛利率46%，ROE145%",
+    "管理层本分：内部人持股0.1%"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "负债率偏高(62%)，降低长期持续性"
+   ],
+   "score": 8.325,
+   "signal": "bullish"
+  },
+  "fisher": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "ROE=145%，管理层资本配置能力突出(>15%)"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "收入增速仅5%，成长持续性存疑"
+   ],
+   "score": 7.2,
+   "signal": "bullish"
+  },
+  "graham": {
+   "confidence": 0.55,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 3.495,
+   "signal": "bearish"
+  },
+  "li_lu": {
+   "confidence": 0.805,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "竞争地位强：毛利率46%，ROE145%"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "估值偏高(PE=32)，安全边际不足，与李录偏好相悖",
+    "负债率62%偏高，财务风险需关注"
+   ],
+   "score": 5.455,
+   "signal": "neutral"
+  },
+  "lynch": {
+   "confidence": 0.74,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "盈利增长超过收入增长（正向经营杠杆）"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 5.415,
+   "signal": "neutral"
+  },
+  "marks": {
+   "confidence": 0.75,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 4.0,
+   "signal": "bearish"
+  },
+  "munger": {
+   "confidence": 0.475,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.11,
+   "signal": "neutral"
+  },
+  "serenity": {
+   "confidence": 0.85,
+   "coverage_confidence": 0.7,
+   "key_findings": [
+    "📈 IV Expansion机会: 动量向上+催化剂窗口（评分:10/10）",
+    "🛡️ 财务健康: 低负债高现金，流动性风险可控（评分:7/10）"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.65,
+   "signal": "neutral"
+  },
+  "soros": {
+   "confidence": 0.85,
+   "coverage_confidence": 0.9,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.0,
+   "signal": "neutral"
+  },
+  "thiel": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "👑 垄断型企业特征显著，定价权强（评分:9/10）",
+    "📡 长期押注价值高，商业模式可持续（评分:8/10）"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.25,
+   "signal": "neutral"
+  },
+  "yaml:dayu": {
+   "confidence": 0.75,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.95,
+   "signal": "neutral"
+  },
+  "yaml:thiel": {
+   "confidence": 0.74,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.3,
+   "signal": "bullish"
+  },
+  "zhang_lei": {
+   "confidence": 0.88,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "结构性机会明确：营收增速5%，处于高增长赛道",
+    "商业模式优质：毛利率46%，FCF正向",
+    "管理层卓越：创始人持股0.1%，ROE145%"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "增速不足，结构性机会可能已过峰值"
+   ],
+   "score": 7.77,
+   "signal": "bullish"
+  }
+ },
+ "small_cap_growth": {
+  "arps": {
+   "confidence": 0.75,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "技术动量强，MACD金叉+价格在均线上方"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "市值偏小或波动率极高，流动性风险不可忽视",
+    "Beta=1.80，与风险资产高度相关，避险属性弱"
+   ],
+   "score": 5.1,
+   "signal": "neutral"
+  },
+  "aschenbrenner": {
+   "confidence": 0.85,
+   "coverage_confidence": 0.7,
+   "key_findings": [
+    "⚡ AI营收高速增长，AGI商业化路径清晰（评分:10/10）",
+    "👁️ 管理层高持仓+机构信任，AGI愿景清晰",
+    "🛡️ AI正在强化护城河，竞争优势在扩大"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "市值偏小，在万亿美元AGI竞赛中缺乏资源"
+   ],
+   "score": 7.0,
+   "signal": "bullish"
+  },
+  "buffett": {
+   "confidence": 0.95,
+   "coverage_confidence": 0.7,
+   "key_findings": [
+    "护城河强大：毛利率72%, ROE-8%"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 8.1,
+   "signal": "bullish"
+  },
+  "cathie_wood": {
+   "confidence": 0.8,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "核心破坏性技术属性强（行业:Technology）",
+    "收入增速65%，S曲线快速扩张期"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 8.35,
+   "signal": "bullish"
+  },
+  "dalio": {
+   "confidence": 0.75,
+   "coverage_confidence": 0.9,
+   "key_findings": [
+    "上升趋势确认",
+    "宏观环境有利",
+    "MACD柱状图为正，动能向上"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.925,
+   "signal": "neutral"
+  },
+  "dan_bin": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "品牌护城河强：毛利率72%，ROE-8%",
+    "定价权强：高毛利+增速组合，消费者愿意付溢价",
+    "高质量成长：营收增速65%且FCF正向"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.775,
+   "signal": "bullish"
+  },
+  "dayu": {
+   "confidence": 0.9,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "动量强劲(RSI=67, 涨跌+3.5%)",
+    "信息差空间大：低机构覆盖/高增长/小市值",
+    "🏆 看准+重仓信号：动量强且风险可控，适合重点参与"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 8.975,
+   "signal": "bullish"
+  },
+  "duan_yongping": {
+   "confidence": 0.9,
+   "coverage_confidence": 0.75,
+   "key_findings": [
+    "护城河强：毛利率72%，ROE-8%",
+    "管理层本分：内部人持股18.0%"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "负FCF：商业模式尚未证明可持续"
+   ],
+   "score": 6.9,
+   "signal": "neutral"
+  },
+  "fisher": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "毛利率72%，强定价权和客户忠诚"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 8.0,
+   "signal": "bullish"
+  },
+  "graham": {
+   "confidence": 0.55,
+   "coverage_confidence": 0.3,
+   "key_findings": [
+    "流动比率优秀(3.2)"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 5.075,
+   "signal": "neutral"
+  },
+  "li_lu": {
+   "confidence": 0.7875,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "竞争地位强：毛利率72%，ROE-8%",
+    "财务稳健：负债率20%，流动比3.20"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [
+    "无FCF+低ROE，内在价值难以评估"
+   ],
+   "score": 6.43,
+   "signal": "bullish"
+  },
+  "lynch": {
+   "confidence": 0.9,
+   "coverage_confidence": 0.6,
+   "key_findings": [
+    "收入增长强劲(65%, bar>15%)"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.745,
+   "signal": "bullish"
+  },
+  "marks": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "风险溢价偏高，市场高估了风险"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 6.5,
+   "signal": "bullish"
+  },
+  "munger": {
+   "confidence": 0.655,
+   "coverage_confidence": 0.7,
+   "key_findings": [
+    "深度逆向机会",
+    "距高点跌超30%，可能过度悲观"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.43,
+   "signal": "bullish"
+  },
+  "serenity": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "🔗 卡脖子位置确认: 物理不可替代的供应链垄断者（评分:8.0/10）",
+    "📈 IV Expansion机会: 动量向上+催化剂窗口（评分:9/10）",
+    "⚡ AI算力直接受益: NeoCloud级增速验证（评分:9/10）",
+    "🛡️ 财务健康: 低负债高现金，流动性风险可控（评分:7/10）"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.9,
+   "signal": "bullish"
+  },
+  "soros": {
+   "confidence": 0.85,
+   "coverage_confidence": 0.9,
+   "key_findings": [
+    "收入增速65%，趋势强化阶段"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.2,
+   "signal": "bullish"
+  },
+  "thiel": {
+   "confidence": 0.85,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "👑 垄断型企业特征显著，定价权强（评分:7/10）",
+    "🔥 逆向时机成熟，市场忽略了这个机会（评分:9/10）",
+    "👨‍💼 创始人高度commit，内部人持仓强劲（评分:10/10）",
+    "🛡️ 技术护城河深厚，难以被复制（评分:9.5/10）",
+    "📡 长期押注价值高，商业模式可持续（评分:10/10）"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 8.775,
+   "signal": "bullish"
+  },
+  "yaml:dayu": {
+   "confidence": 0.766667,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 7.75,
+   "signal": "bullish"
+  },
+  "yaml:thiel": {
+   "confidence": 0.8,
+   "coverage_confidence": 1.0,
+   "key_findings": [],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 8.85,
+   "signal": "bullish"
+  },
+  "zhang_lei": {
+   "confidence": 0.88,
+   "coverage_confidence": 1.0,
+   "key_findings": [
+    "结构性机会明确：营收增速65%，处于高增长赛道",
+    "管理层卓越：创始人持股18.0%，ROE-8%"
+   ],
+   "risk_adjusted_score": 0.0,
+   "risks": [],
+   "score": 8.05,
+   "signal": "bullish"
+  }
+ }
+}

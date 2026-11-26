@@ -24,10 +24,11 @@ def _auto_fetch_context(ticker: str):
 
     try:
         from augur.data import fetch_market_context
-        click.echo(f"Auto-fetching live data for {ticker.upper()}...\n")
+        # Progress goes to stderr so `--json` stdout stays pure JSON.
+        click.echo(f"Auto-fetching live data for {ticker.upper()}...\n", err=True)
         ctx = fetch_market_context(ticker)
-        click.echo(f"  Price: {ctx.price:.2f} | PE: {ctx.pe:.1f} | ROE: {ctx.roe:.2%} | GM: {ctx.gross_margins:.2%}")
-        click.echo(f"  [{describe_data_source(ctx)}]\n")
+        click.echo(f"  {fetch_summary_line(ctx)}", err=True)
+        click.echo(f"  [{describe_data_source(ctx)}]\n", err=True)
         return ctx
     except Exception as e:
         click.echo(
@@ -39,11 +40,63 @@ def _auto_fetch_context(ticker: str):
         return MarketContext(ticker=ticker.upper())
 
 
+def fetch_summary_line(ctx) -> str:
+    """One-line summary printed after an auto-fetch (fund-aware)."""
+    from augur.etf import is_fund
+
+    ccy = trading_currency(ctx)
+    price = f"Price: {ctx.price:.2f}" + (f" {ccy}" if ccy else "")
+    if is_fund(ctx):
+        etf = getattr(ctx, "etf", None) or {}
+        aum = etf.get("aum_usd_bn")
+        aum_s = f"${aum:,.1f}B" if isinstance(aum, (int, float)) and aum > 0 else "unknown"
+        return f"{price} | ETF | AUM: {aum_s}"
+    return f"{price} | PE: {ctx.pe:.1f} | ROE: {ctx.roe:.2%} | GM: {ctx.gross_margins:.2%}"
+
+
+def trading_currency(ctx) -> str:
+    """Trading currency code of the quote (price is always in this currency)."""
+    return str(getattr(ctx, "currency", "") or "").upper()
+
+
+def amount_currency(ctx, kind: str = "market") -> str:
+    """Currency of a billions-denominated amount on ``ctx``.
+
+    The data layer converts amounts to USD when it knows the FX rate
+    (``fx_rate_usd > 0``). When the rate is unknown it leaves them unconverted:
+    market-side amounts (market cap, EV) in the trading currency, statement
+    amounts (FCF, revenue, cash, debt) in the financial-statement currency.
+    """
+    fx = getattr(ctx, "fx_rate_usd", 0) or 0
+    ccy = trading_currency(ctx)
+    try:
+        fx = float(fx)
+    except (TypeError, ValueError):
+        fx = 0.0
+    if fx > 0 or ccy in ("", "USD"):
+        return "USD"
+    if kind == "financial":
+        return str(getattr(ctx, "financial_currency", "") or ccy).upper()
+    return ccy
+
+
+def format_amount_bn(value, ccy: str, decimals: int = 1) -> str:
+    """Billions amount: ``$12.3B`` for USD, ``12.3B HKD`` otherwise."""
+    if ccy == "USD":
+        return f"${value:,.{decimals}f}B"
+    return f"{value:,.{decimals}f}B {ccy}"
+
+
 def _print_result(result):
     """Pretty print a single analysis result"""
     from augur.cli_format import signal_icon, clean_output
 
     icon = signal_icon(result.signal.value)
+    if (result.metadata or {}).get("not_applicable"):
+        click.echo(f"Agent:      {result.agent_name}")
+        click.echo("Signal:     N/A (not applicable to funds)")
+        click.echo(f"Reason:     {clean_output(result.reasoning)}")
+        return
     click.echo(f"Agent:      {result.agent_name}")
     click.echo(f"Signal:     {icon} {result.signal.value}")
     click.echo(f"Score:      {result.score:.1f}/10")

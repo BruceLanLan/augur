@@ -65,6 +65,8 @@ from augur.auth import (
     verify_jwt,
 )
 
+from augur import __version__ as _augur_version  # noqa: E402
+
 logger = logging.getLogger(__name__)
 
 # Module-level startup time for uptime tracking
@@ -73,7 +75,7 @@ _APP_START_TIME = _time.time()
 app = FastAPI(
     title="Augur — 多智能体投资分析",
     description="18位虚拟投资大师，多维度共识分析",
-    version="10.15.1",
+    version=_augur_version,
 )
 
 from dashboard.routes.workspace import router as _workspace_router  # noqa: E402
@@ -414,7 +416,6 @@ class AnalyzeResponse(BaseModel):
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
-from augur import __version__ as _augur_version  # noqa: E402
 
 templates.env.globals["augur_version"] = _augur_version
 

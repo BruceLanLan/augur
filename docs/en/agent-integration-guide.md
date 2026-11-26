@@ -1,346 +1,191 @@
-English | [中文](agent-integration-guide.md)
+English | [中文](../agent-integration-guide.md)
 
 # Augur Agent Integration Guide
 
 > Make 18 legendary investment masters your AI Agent companions, ready to analyze for you anytime, anywhere
 
+One thing up front: the 18 masters' **scores are deterministic rules** (`src/augur/personas/`). They call no LLM and run offline. An LLM appears only on two optional paths: an external agent (Claude Code, Hermes, ...) that loads a Skill and converses with its own model, and dashboard chat, which writes persona-voiced replies when an OpenAI-compatible endpoint is configured.
+
 ---
 
-## 1. Product Form Overview
-
-Augur's 18 investor Agents can exist independently and be embedded into your workflow in multiple forms:
+## 1. Product Overview
 
 | Form | Interaction | Use Case |
 |------|------------|----------|
-| 🖥️ **Augur Dashboard** | Web interface (FastAPI) | Deep analysis, multi-Agent comparison, visualization |
-| 💬 **Hermes Agent Skill** | Conversational (/skill augur) | Quick inquiries, daily analysis |
-| 🌐 **Hermes Web UI** | Chat interface | Seamless integration with existing Web UI |
-| 🤖 **OpenClaude (OpenClaw)** | Standalone Agent | Complex reasoning tasks |
-| 💻 **Claude Code / Codex** | IDE terminal | Investment analysis during development |
-| 📱 **Telegram / Slack** | Messaging bot | On-the-go inquiries |
-| 🔧 **API Calls** | REST API | Automated workflows |
+| 🖥️ **Augur Dashboard** | Web UI (FastAPI) | Deep analysis, multi-agent comparison, visualization |
+| 🧩 **Skill + MCP** | Hermes Studio / Claude Desktop / Claude Code / OpenClaw, etc. | Conversational queries, daily analysis |
+| 📱 **Telegram / Slack / WeChat** | Built-in bots | Query anytime, anywhere |
+| 🔧 **REST API** | HTTP | Automated workflows |
 | 🔗 **Agentic Workflow** | CLI / MCP / API | Multi-step fetch → analyze → consensus → committee |
 
 ---
 
-## 2. Platform Integration Guide
+## 2. Platform Integration Guides
 
-### Method 1: Augur Dashboard (Built-in Web Interface)
-
-Augur comes with a Bloomberg dark-theme FastAPI Web Dashboard where all 18 Agents are automatically loaded:
+### Method 1: Augur Dashboard (Built-in Web UI)
 
 ```bash
-# Start
-cd augur && python3 -m dashboard.app
-
-# -> Visit http://localhost:8000
-# -> All 18 Agents are automatically loaded, no extra configuration needed
+pip install 'augur-agents[data]'
+augur serve              # default http://127.0.0.1:8000
+augur serve --port 8080  # custom port
+augur serve --open       # open the browser on start
 ```
 
-Dashboard pages at a glance:
+All 18 masters load automatically. To expose it beyond localhost use `--host 0.0.0.0` and set `AUGUR_API_TOKEN` first.
+
+Main pages:
 
 | Page | Function |
 |------|----------|
-| 🏠 Home | System overview + quick analysis entry |
-| 🤖 Personas | 18 investment masters side-by-side |
-| 📈 Stock Analysis | Single-stock deep analysis + real-time Agent scoring |
-| ⚡ Signal Monitor | Watchlist batch scanning (in development) |
-| ⚙️ Settings | Agent model configuration (in development) |
-
-```bash
-# Optional parameters
-python3 -m dashboard.app --port 8000 --cors
-```
+| 🏠 `/` | System overview + quick analysis entry |
+| 🤖 `/personas` | 18 investment masters comparison |
+| 📈 `/stocks` | Single-ticker deep analysis + real-time agent scoring |
+| ⚡ `/signals`, `/scanner` | Signal monitoring and batch scanning |
+| 🧪 `/backtest` | Historical backtest (hit rate / IC) |
+| ⚙️ `/settings` | Settings |
 
 ---
 
-### Method 2: Hermes Agent Skill
+### Method 2: Skill + MCP (Hermes Studio, Claude Desktop, OpenClaw, ...)
 
-Each investor is an independent Skill (following the [agentskills.io](https://agentskills.io) standard) that can be installed directly into a Hermes Agent.
+Each master is a Skill directory in the repo: `src/skills/augur-<id>/`, containing:
 
-#### Install a Single Investor Agent
+- `SKILL.md` — YAML frontmatter + persona system prompt
+- `manifest.json` — universal JSON manifest (read by OpenClaw, Hermes Studio, Claude Desktop, ...)
 
-```bash
-# Install from local
-hermes skills install ./skills/buffett/SKILL.md --name buffett
-
-# Or install from GitHub
-hermes skills install https://github.com/BruceLanLan/augur/tree/main/skills/buffett
-```
-
-Activate in conversation:
-
-```
-/skill buffett
-
--> "Analyze AAPL using the Buffett persona"
--> Returns Buffett-perspective scoring, reasoning, and signals
-```
-
-#### Install the Entire Augur System (All 18 Masters)
+There are also `src/skills/augur-committee/` (the investment-committee coordinator) and `src/skills/augur-terminal/`. Skills get data and scores from the Augur MCP server, so make sure `augur-mcp` works first:
 
 ```bash
-# Method 1: Install the main Skill (unified dispatch)
-hermes skills install https://github.com/BruceLanLan/augur
-
-# Method 2: Install the standalone SKILL.md (recommended for Hermes Agent)
-hermes skills install ./SKILL.md --name augur
+pip install 'augur-agents[data,mcp]'
+augur-mcp            # MCP server in stdio mode (same as `augur mcp-server`)
 ```
 
-Activate in conversation:
+Per-platform setup is maintained in [src/skills/README.md](../../src/skills/README.md); the essentials:
 
-```
-/skill augur
-
--> "Analyze TSLA, compare Buffett and Musk"
--> Returns consensus results from all 18 Agents
-```
-
-#### Example Conversations
-
-| User Command | Effect |
-|-------------|--------|
-| `/skill augur-buffett` -> "Analyze AAPL with the Buffett framework, PE=32, gross margin 46%, ROE=55%" | Returns Buffett-perspective deep analysis |
-| `/skill augur-zhang-lei` -> "Zhang Lei's perspective on PDD, revenue growth 86%" | Zhang Lei's (Hillhouse) long-term structural value assessment |
-| `/skill augur-dayu` -> "Dayu, what's the BTC sentiment right now?" | Dayu's crypto narrative analysis |
-| `/skill augur` -> "What do all the masters think about NVDA?" | 18-master consensus report |
-
----
-
-### Method 3: Hermes Web UI
-
-Integrate with [Hermes Web UI](https://github.com/EKKOLearnAI/hermes-web-ui):
-
-**Option A: Skill Mode (Recommended, Zero-Code)**
-
-1. Open Hermes Web UI
-2. Type `/skill augur` or `/skill buffett` in the chat window
-3. Start conversational analysis immediately
-
-```
-/skill augur
--> "Analyze Apple AAPL using the Buffett persona"
--> Results stream back via Socket.IO
-```
-
-**Option B: Standalone Dashboard + iframe Embedding**
-
-1. Start Augur Dashboard (`python3 -m dashboard.app --port 8000 --cors`)
-2. Embed `http://localhost:8000` via iframe in Hermes Web UI
-
-**Option C: Hermes Agent Skill Mode**
-
-Load directly into any Hermes Agent instance via Skill:
-```bash
-hermes skills install ./skills/buffett/SKILL.md
-# Then use /skill buffett on any platform
-```
-
----
-
-### Method 4: OpenClaude / OpenClaw
-
-Register as a standalone Agent in OpenClaude or OpenClaw.
-
-#### OpenClaude Configuration
-
-Edit `openclaude.yaml`:
+#### Hermes Studio
 
 ```yaml
-agents:
-  buffett:
-    name: "Warren Buffett"
-    description: "Moat value investing analysis Agent"
-    skill: "./skills/buffett/SKILL.md"
-    model: "claude-sonnet-4"
-  graham:
-    name: "Benjamin Graham"
-    description: "Deep value / margin of safety analysis Agent"
-    skill: "./skills/graham/SKILL.md"
-    model: "claude-sonnet-4"
-  lynch:
-    name: "Peter Lynch"
-    description: "GARP growth stock analysis Agent"
-    skill: "./skills/lynch/SKILL.md"
-    model: "claude-sonnet-4"
-  dayu:
-    name: "Dayu (BTCdayu)"
-    description: "Crypto conviction-weighted analysis Agent"
-    skill: "./skills/dayu/SKILL.md"
-    model: "deepseek-v4"
-  duan_yongping:
-    name: "Duan Yongping (段永平)"
-    description: "Ben Fen value / extreme concentration analysis Agent"
-    skill: "./skills/duan_yongping/SKILL.md"
-    model: "deepseek-v4"
-  dan_bin:
-    name: "Dan Bin (但斌)"
-    description: "Brand moat / era beta analysis Agent"
-    skill: "./skills/dan_bin/SKILL.md"
-    model: "kimi-k2"
+# hermes/config.yaml
+mcp_servers:
+  augur:
+    command: augur-mcp
+
+skills_dir: ./src/skills
 ```
 
-After registration, start chatting directly:
+Then activate in chat: `/skill augur-buffett`, `/skill augur-committee`, etc.
 
-```
-> Buffett, AAPL's current PE=32, gross margin 46%, ROE=55% - is it a buy?
-> Dayu, BTC just broke below key support. What's your take?
-> Duan Yongping, is Tencent's management team trustworthy?
-```
-
-#### OpenClaw Configuration
-
-OpenClaw also supports Skill file registration with a similar configuration:
+#### Claude Desktop
 
 ```json
+// claude_desktop_config.json
 {
-  "agents": [
-    {
-      "id": "buffett",
-      "name": "Warren Buffett",
-      "skill": "./skills/buffett/SKILL.md",
-      "model": "claude-sonnet-4"
-    }
-  ]
+  "mcpServers": {
+    "augur": { "command": "augur-mcp" }
+  }
 }
 ```
 
----
+Use the relevant `SKILL.md` content as the system prompt.
 
-### Method 5: Claude Code / Codex
+#### OpenClaw
 
-Use Claude Code or Codex to invoke Skills directly from the terminal.
+OpenClaw reads `manifest.json` from a Skill directory; see the OpenClaw section of [src/skills/README.md](../../src/skills/README.md) for the install command (point it at `src/skills/augur-<id>`).
 
-#### Claude Code
+#### Example Conversations
 
-```bash
-# One-off analysis
-claude -p "Analyze AAPL's current valuation" --skill ./skills/buffett/SKILL.md
-
-# Comparative analysis
-claude -p "Compare the moats of AAPL and NVDA" --skill ./skills/buffett/SKILL.md
-
-# Chinese market analysis
-claude -p "Is Moutai's current valuation reasonable?" --skill ./skills/duan_yongping/SKILL.md
-
-# Crypto analysis
-claude -p "What does the ETH on-chain data look like?" --skill ./skills/dayu/SKILL.md
-```
-
-#### Codex
-
-```bash
-# Basic usage
-codex -p "NVDA moat analysis" --skill ./skills/buffett/SKILL.md
-
-# Multi-turn conversation (requires skill pre-installation)
-codex --skill ./skills/buffett/SKILL.md
--> "Analyze AAPL"
--> "What about MSFT?"
--> "Compare these two"
-```
-
-#### Development Workflow Scenarios
-
-Analyze while coding in VSCode / Cursor:
-
-```bash
-# While researching a stock
-claude -p "Analyze TSLA's current valuation, PE=85, revenue growth=8%"
--> Returns analysis from Buffett, Lynch, and Duan Yongping
-
-# While writing investment notes
-codex -p "Evaluate META's growth prospects using Fisher's framework, R&D ratio 20%"
-```
+| User Command | Result |
+|-------------|--------|
+| `/skill augur-buffett` → "Analyze AAPL with Buffett's framework" | Buffett-perspective analysis (data and scores from the MCP tools) |
+| `/skill augur-zhang-lei` → "Zhang Lei's view on PDD" | Zhang Lei's long-term structural value assessment |
+| `/skill augur-dayu` → "Dayu, what's the current BTC sentiment?" | Dayu's crypto narrative analysis |
+| `/skill augur-committee` → "What do all masters think of NVDA?" | Investment-committee consensus report |
 
 ---
 
-### Method 6: Telegram / Slack Bot
+### Method 3: Claude Code / Codex
 
-Connect to messaging platforms via the Hermes Agent Gateway.
+Claude Code has no `--skill` flag. Register the MCP server, then put a Skill in Claude Code's skills directory.
+
+```bash
+# Register the Augur MCP server (stdio)
+claude mcp add augur -- augur-mcp
+
+# Optional: use a master as a project Skill (Claude Code reads .claude/skills/<name>/SKILL.md)
+mkdir -p .claude/skills/augur-buffett
+cp src/skills/augur-buffett/SKILL.md .claude/skills/augur-buffett/SKILL.md
+
+# One-shot, non-interactive
+claude -p "Use the augur MCP tools to get the consensus on AAPL"
+```
+
+Codex and other MCP-capable terminal agents: register `augur-mcp` as a stdio MCP server (see that tool's docs for the exact command), then use the `SKILL.md` content as instructions.
+
+#### MCP changes in v14
+
+- **ETFs**: `augur_analyze`, `augur_consensus`, `augur_debate` and `augur_committee` accept `asset_type` (`equity` / `etf` / `fund`; empty = detect). On a fund only Dalio of the 18 masters scores; the others return "not applicable". With fewer than 3 applicable masters the consensus is **withheld**: no signal and no position size. `augur_fetch` prints the ETF overview and health checklist for funds.
+- **`augur_configure` is deprecated**: Augur's scoring does not call a model, and nothing ever read the setting this tool wrote. From v14 it only returns a deprecation note and writes nothing. The host agent (for example Claude Code) chooses its own model.
+
+---
+
+### Method 4: Telegram / Slack / WeChat Bots
 
 #### Telegram
 
 ```bash
-# Connect via Hermes Gateway
-hermes gateway setup --platform telegram
-
-# Or use the built-in Bot
+pip install 'augur-agents[telegram,data]'
 export TELEGRAM_TOKEN=your_bot_token
 augur telegram
 ```
 
-Chat directly in Telegram:
+Commands: `/analyze`, `/consensus`, `/ask`, `/personas`, `/help`.
 
 ```
 User: /analyze AAPL pe=32 gm=46 roe=55
-Bot: 18-master analysis results...
-  [Consensus Signal: BUY | Overall Score: 7.2/10]
-  🏆 Buffett: BUY (7.5/10) - Excellent moat, gross margin meets requirements
-  🌐 Dalio: HOLD (6.0/10) - Tight macro environment
-  ...
-
-User: /ask buffett Do you think Apple is worth holding right now?
-Bot: Buffett-perspective analysis...
-
+User: /ask buffett Is Apple worth holding right now?
 User: /consensus TSLA
-Bot: 18-master consensus report...
 ```
 
 #### Slack
 
 ```bash
-# Connect via Hermes Gateway
-hermes gateway setup --platform slack
-
-# Or use the built-in Bot
+pip install 'augur-agents[slack,data]'
 export SLACK_BOT_TOKEN=xoxb-...
 export SLACK_APP_TOKEN=xapp-...
 augur slack
 ```
 
-In Slack channels:
-
-```
-/ask-buffett AAPL
--> Buffett analysis results
-
-/consensus NVDA
--> All 18 masters consensus
-```
+Slash commands: `/augur-analyze TICKER [pe=X roe=X ...]` (or `/augur`), `/augur-ask`, `/augur-personas`, `/augur-help`.
 
 #### WeChat
 
 ```bash
-# Connect via Hermes Gateway or use the built-in Bot
 pip install 'augur-agents[wechat]'
 export GEWECHAT_TOKEN='...' GEWECHAT_BASE_URL='http://127.0.0.1:2531/v2/api'
 augur wechat --mode personal --port 8066
 ```
 
-Personal WeChat, Enterprise WeChat (WeCom), and Webhook modes are all supported. See [README](../../README_EN.md) for full details.
+Supports personal WeChat (GeWeChat), WeCom, and Webhook modes. See [README](../../README_EN.md) for details.
 
 ---
 
-### Method 7: REST API Calls
+### Method 5: REST API
 
-Call Augur API endpoints directly for integration into automated workflows.
+Common endpoints on the dashboard (`augur serve`, port 8000):
 
 ```bash
-# Single-stock analysis (returns all Agent results)
+# Single-ticker analysis: returns consensus + agents (one per master) + market_data
 curl http://localhost:8000/api/analyze/AAPL
 
-# Get consensus report
-curl http://localhost:8000/api/consensus/AAPL
+# Supply metrics by hand (no data fetch)
+curl "http://localhost:8000/api/analyze/AAPL?price=210&pe=32&gross_margins=0.46&roe=0.55"
 
-# Specify Agent
-curl "http://localhost:8000/api/analyze/AAPL?agent=buffett"
+# Persona list / single persona
+curl http://localhost:8000/api/personas
+curl http://localhost:8000/api/persona/buffett
 
-# Get investor list
-curl http://localhost:8000/personas
-
-# Get persona evolution timeline
-curl http://localhost:8000/api/persona/buffett/evolution
+# Health check (includes the version)
+curl http://localhost:8000/api/health
 ```
 
 Python example:
@@ -348,19 +193,18 @@ Python example:
 ```python
 import requests
 
-response = requests.get("http://localhost:8000/api/consensus/AAPL")
-data = response.json()
-print(f"Consensus Signal: {data['signal']}")
-print(f"Overall Score: {data['score']}")
-for agent_id, result in data['agents'].items():
-    print(f"  {result['name']}: {result['signal']} ({result['score']}/10)")
+data = requests.get("http://localhost:8000/api/analyze/AAPL").json()
+print(f"Consensus signal: {data['consensus']['signal']}")
+print(f"Overall score: {data['consensus']['score']:.1f}")
+for a in data["agents"]:
+    print(f"  {a['agent_name']}: {a['signal']} ({a['score']:.1f}/10)")
 ```
 
 ---
 
-### Method 8: Agentic Workflow Pipeline
+### Method 6: Agentic Workflow Pipelines
 
-Run configurable multi-step pipelines: **fetch → analyze → consensus → committee → debate → sentiment**.
+Run a configurable multi-step pipeline: **fetch → analyze → consensus → committee → debate → sentiment**.
 
 #### CLI
 
@@ -371,28 +215,32 @@ augur workflow AAPL
 # Full committee pipeline
 augur workflow AAPL --steps fetch,analyze,consensus,committee
 
-# Subset of agents + committee question
-augur workflow NVDA --agents buffett,munger,dalio --steps fetch,analyze,committee -q "Is the moat widening?"
+# Specific agents + committee question
+augur workflow NVDA --agents buffett,munger,dalio --steps fetch,analyze,committee -q "Is the moat widening or narrowing?"
 
-# JSON for scripting
+# JSON output (for scripts)
 augur workflow TSLA --steps fetch,consensus,sentiment --json
 ```
 
 Valid steps: `fetch`, `analyze`, `consensus`, `committee`, `debate`, `sentiment`.
 
-#### MCP tool
+#### MCP Tool
 
-When using `augur mcp-server`, call the `augur_workflow` tool:
+With `augur-mcp` (or `augur mcp-server`), call the `augur_workflow` tool:
 
 ```
 augur_workflow(ticker="AAPL", steps="fetch,analyze,consensus,committee")
 ```
 
-Optional parameters: `agents` (comma-separated IDs), `question` (for committee).
+Optional parameters: `agents` (comma-separated IDs), `question` (committee question).
 
 #### REST API
 
+The standalone REST API server (`augur api`, default port 8900) serves `/api/workflow`:
+
 ```bash
+augur api   # http://127.0.0.1:8900
+
 curl -X POST http://localhost:8900/api/workflow \
   -H "Content-Type: application/json" \
   -d '{"ticker":"AAPL","steps":"fetch,analyze,consensus,committee"}'
@@ -408,106 +256,55 @@ resp = requests.post(
     json={
         "ticker": "AAPL",
         "steps": "fetch,analyze,consensus,committee",
-        "question": "Should we add to the position?",
+        "question": "Is the current valuation worth adding to?",
     },
 )
 data = resp.json()
-print(data["summary"])
+print(data["step_status"])
 print(data["results"]["consensus"]["signal"])
 ```
 
 ---
 
-## 3. Skill File Reference
-
-Each investor corresponds to a `skills/{persona_id}/SKILL.md` file. The file structure is:
+## 3. Skill Files
 
 ```
-skills/
-├── buffett/SKILL.md             # Warren Buffett - Moat Value Investing
-├── graham/SKILL.md              # Benjamin Graham - Deep Value / Margin of Safety
-├── lynch/SKILL.md               # Peter Lynch - GARP Growth
-├── dalio/SKILL.md               # Ray Dalio - Macro / All Weather
-├── munger/SKILL.md              # Charlie Munger - Latticework of Mental Models
-├── soros/SKILL.md               # George Soros - Reflexivity
-├── marks/SKILL.md               # Howard Marks - Cycles / Contrarian
-├── cathie_wood/SKILL.md         # Cathie Wood - Disruptive Innovation
-├── fisher/SKILL.md              # Philip Fisher - Growth Stocks / Scuttlebutt
-├── arps/SKILL.md                # ARPS - Crypto / Gold Macro
-├── aschenbrenner/SKILL.md       # Leopold Aschenbrenner - AI Geopolitics
-├── dayu/SKILL.md                # Dayu (BTCdayu) - Information Edge / Sentiment Momentum
-├── thiel/SKILL.md               # Peter Thiel - Zero to One Monopoly
-├── duan_yongping/SKILL.md       # Duan Yongping (段永平) - Ben Fen / Extreme Concentration
-├── zhang_lei/SKILL.md           # Zhang Lei (张磊, Hillhouse) - Long-term Structural Value
-├── li_lu/SKILL.md               # Li Lu (李录, Himalaya) - Deep Value
-├── dan_bin/SKILL.md             # Dan Bin (但斌, Oriental Harbor) - Brand Moat
-└── serenity/SKILL.md            # Serenity (@aleabitoreddit) - AI/Semi Supply Chain Chokepoint
+src/skills/
+├── augur-buffett/{SKILL.md,manifest.json}        # Warren Buffett - moat value investing
+├── augur-graham/                                 # Benjamin Graham - deep value / margin of safety
+├── augur-lynch/                                  # Peter Lynch - GARP growth
+├── augur-dalio/                                  # Ray Dalio - macro / All Weather
+├── augur-munger/                                 # Charlie Munger - latticework
+├── augur-soros/                                  # George Soros - reflexivity
+├── augur-marks/                                  # Howard Marks - cycles / contrarian
+├── augur-cathie-wood/                            # Cathie Wood - disruptive innovation
+├── augur-fisher/                                 # Philip Fisher - growth / scuttlebutt
+├── augur-arps/                                   # ARPS - crypto / gold macro
+├── augur-aschenbrenner/                          # Leopold Aschenbrenner - AI geopolitics
+├── augur-dayu/                                   # Dayu (BTCdayu) - information edge / sentiment momentum
+├── augur-thiel/                                  # Peter Thiel - zero to one monopoly
+├── augur-duan-yongping/                          # Duan Yongping - integrity, extreme concentration
+├── augur-zhang-lei/                              # Zhang Lei (Hillhouse) - long-term structural value
+├── augur-li-lu/                                  # Li Lu (Himalaya) - deep value
+├── augur-dan-bin/                                # Dan Bin (Oriental Harbor) - brand moats
+├── augur-serenity/                               # Serenity - AI / semiconductor supply-chain bottlenecks
+├── augur-committee/                              # investment-committee coordinator
+└── augur-terminal/                               # terminal workspace
 ```
+
+Directory names use hyphens (`augur-duan-yongping`); persona IDs in the CLI and API use underscores (`duan_yongping`).
 
 ### Skill File Structure
 
-Each `SKILL.md` follows the [agentskills.io](https://agentskills.io) standard and contains:
-
-| Section | Content |
-|---------|---------|
-| **Identity Definition** | Investor's name, avatar, core philosophy |
-| **Analysis Framework** | Dimensions and weights used by the investor to evaluate companies |
-| **Scoring Rules** | How different factors are scored (positive/negative) |
-| **Output Format** | Signal output specification (BUY/SELL/HOLD + score) |
-| **Trigger Conditions** | When this persona is activated |
-| **Example Conversations** | Demonstrates how to interact with this Agent |
-
-### Example: Buffett Skill Summary
-
-```markdown
-# Warren Buffett
-
-## Persona Definition
-- Core Philosophy: Moat value investing
-- Key Metrics: Gross margin > 40%, ROE > 15%, Debt ratio < 50%
-- Style: Long-term holding, within circle of competence, values management quality
-
-## Scoring Rules
-- Moat Width: Wide(1~3) -> +2, Medium(0~1) -> +1, Narrow(<0) -> -2
-- Profitability: Gross margin > 40% -> +1, ROE > 15% -> +1
-- Debt Level: Total debt/Total assets < 50% -> +1, > 70% -> -1
-- Management: Trusted -> +1, Not trusted -> -1
-
-## Output Format
-SCORE: X.X/10
-SIGNAL: BUY | SELL | HOLD
-REASONING: ...
-KEY_METRICS: ...
-```
+- **Frontmatter**: `name`, `description`, `version`, suggested model, `metadata.augur.persona` (the matching persona ID), `mcp_required: augur-mcp`.
+- **Body**: the master's system prompt: voice, core convictions, and how to call the Augur MCP tools for data and scores.
+- The actual scoring rules live in `src/augur/personas/<id>.py` (or `personas/custom/*.yaml`); a Skill contains no scoring logic.
 
 ---
 
 ## 4. Per-Agent Model Configuration
 
-Different investors can use different LLM models. Edit `config/agents.yaml`:
-
-```yaml
-per_agent:
-  buffett:       claude-sonnet-4-6       # English value analysis
-  graham:        claude-sonnet-4-6       # English deep value
-  lynch:         claude-sonnet-4-6       # GARP growth
-  dalio:         claude-sonnet-4-6       # Macro analysis
-  munger:        claude-sonnet-4-6       # Multi-disciplinary thinking
-  soros:         claude-sonnet-4-6       # Reflexivity
-  marks:         claude-sonnet-4-6       # Cycle investing
-  cathie_wood:   claude-sonnet-4-6       # Disruptive innovation
-  fisher:        claude-sonnet-4-6       # Growth stocks
-  arps:          claude-sonnet-4-6       # Crypto / Gold
-  aschenbrenner: claude-opus-4-7         # AI geopolitics (strongest reasoning)
-  dayu:          deepseek-v4             # Crypto narrative (Chinese community)
-  thiel:         claude-sonnet-4-6       # Monopoly analysis
-  duan_yongping: deepseek-v4             # Chinese investment analysis
-  zhang_lei:     deepseek-v4             # China structural sectors
-  li_lu:         claude-sonnet-4-6       # Global value investing
-  dan_bin:       kimi-k2                 # Chinese consumer culture context
-```
-
-Supported models: `claude-*` | `gpt-4o*` | `deepseek-v4` | `kimi-k2` | `minimax-01` | local Ollama
+`config/agents.yaml` records a suggested LLM for each master (`defaults` + `per_agent`), and the dashboard settings page reads it. This file **does not affect scores**, which are deterministic rules; it is only a reference for external agents using the Skills and for the optional chat LLM path.
 
 ---
 
@@ -515,12 +312,12 @@ Supported models: `claude-*` | `gpt-4o*` | `deepseek-v4` | `kimi-k2` | `minimax-
 
 ### 5.1 Create a Custom Agent (YAML)
 
-No code required. Simply add a YAML file under `personas/custom/` for automatic registration:
+No code required: add a YAML file under `personas/custom/` and it registers automatically (see `personas/custom/thiel.yaml` for the format):
 
 ```yaml
 agent_id: my_quant
 name: "My Quant Strategy"
-description: "Quantitative strategy Agent based on technical indicators"
+description: "Technical indicator-based quant strategy agent"
 scoring_weights:
   momentum: 0.50
   value: 0.50
@@ -539,79 +336,70 @@ factors:
 
 ### 5.2 Create a Custom Skill
 
-Reference any `skills/*/SKILL.md` format to create a standalone Skill for any investment style:
+Use any Skill directory as a template:
 
 ```bash
-mkdir -p skills/my_strategy
-cp skills/buffett/SKILL.md skills/my_strategy/SKILL.md
-# Edit the content to match your strategy
+cp -r src/skills/augur-buffett src/skills/augur-my-strategy
+# Edit SKILL.md and manifest.json: name, description, metadata.augur.persona and the body
 ```
 
-Then install to any platform:
+Then load it the way Method 2 describes for your platform.
+
+### 5.3 Call from Python
 
 ```bash
-hermes skills install ./skills/my_strategy/SKILL.md --name my-strategy
-```
-
-### 5.3 REST API Calls
-
-Call the API directly in automated workflows:
-
-```bash
-# Schedule daily analysis with curl
+# Scheduled analysis (cron)
 0 9 * * 1-5 curl -s http://localhost:8000/api/analyze/AAPL >> ~/augur-reports.log
+```
 
-# Using a Python script
-python3 -c "
+```python
+from augur.personas.base import MarketContext
 from augur.registry import AgentRegistry, DecisionCoordinator
-reg = AgentRegistry()
-coord = DecisionCoordinator(reg)
-results = coord.analyze_with_all(MarketContext(ticker='AAPL', ...))
-print(coord.get_consensus(results, 'AAPL'))
-"
+
+coord = DecisionCoordinator(AgentRegistry())
+ctx = MarketContext(ticker="AAPL", price=210, pe=32, gross_margins=0.46, roe=0.55)
+results = coord.analyze_with_all(ctx)
+consensus = coord.get_consensus(results, ticker="AAPL", context=ctx)
+print(consensus.signal.value, round(consensus.score, 1))
 ```
 
 ### 5.4 Standalone Agent Process
 
-Run in the background using tmux or systemd:
+Run in the background with tmux or systemd:
 
 ```bash
 # tmux
-tmux new-session -d -s augur 'cd /tmp/augur && python3 -m dashboard.app'
+tmux new-session -d -s augur 'augur serve --port 8000'
 
-# systemd service
+# systemd service (replace ExecStart with the absolute path of augur on your machine, e.g. `which augur`)
 cat <<EOF | sudo tee /etc/systemd/system/augur.service
 [Unit]
 Description=Augur Investment Analysis Dashboard
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python3 -m dashboard.app
-WorkingDirectory=/tmp/augur
+ExecStart=/usr/local/bin/augur serve --port 8000
 Restart=always
-User=bruce
+User=augur
 
 [Install]
 WantedBy=multi-user.target
 EOF
 ```
 
-### 5.5 Multi-Agent Comparative Analysis
+### 5.5 Multi-Agent Comparison
 
-Use the consensus engine to invoke any combination of Agents simultaneously for comparison:
+Run only a subset of masters:
 
-```bash
-python3 -c "
+```python
+from augur.personas.base import MarketContext
 from augur.registry import AgentRegistry, DecisionCoordinator
-reg = AgentRegistry()
-# Enable only specific Agents for comparison
-agents = ['buffett', 'lynch', 'dayu', 'duan_yongping']
-coord = DecisionCoordinator(reg, enabled_agents=agents)
-ctx = MarketContext(ticker='AAPL', ...)
-results = coord.analyze_with_all(ctx)
-for id, r in results.items():
-    print(f'{r.agent_name:>30}: {r.signal.value.upper():>8} ({r.score:.1f}/10)')
-"
+
+coord = DecisionCoordinator(AgentRegistry())
+ctx = MarketContext(ticker="AAPL", price=210, pe=32, gross_margins=0.46, roe=0.55)
+results = coord.analyze_with_all(ctx, enabled_personas=["buffett", "lynch", "dayu", "duan_yongping"])
+for agent_id, r in results.items():
+    print(f"{r.agent_name:>30}: {r.signal.value.upper():>8} ({r.score:.1f}/10)")
 ```
 
 ---
@@ -622,50 +410,46 @@ for id, r in results.items():
 
 ```
 User Input
-  |
-  |---> Hermes Agent Skill -> SKILL.md -> Call LLM -> Return analysis
-  |---> Augur Dashboard (FastAPI) -> src/augur/ -> 18 Agents -> Consensus -> Results
-  |---> OpenClaude/OpenClaw -> Standalone Agent process
-  |---> Claude Code/Codex -> Terminal one-off analysis
-  |---> Telegram/Slack Bot -> Messaging platform interaction
-  |---> REST API -> Automated workflows
+  │
+  ├──→ Skill (Hermes Studio / Claude Desktop / Claude Code / OpenClaw) → augur-mcp → 18 Agents → Consensus
+  ├──→ Augur Dashboard (augur serve) → src/augur/ → 18 Agents → Consensus → Result
+  ├──→ Telegram / Slack / WeChat Bot → Messaging platform interaction
+  └──→ REST API (augur serve / augur api) → Automated workflow
 ```
 
 ---
 
 ## 7. Quick Reference Card
 
-| Platform | One-Line Install | Interaction |
-|----------|-----------------|-------------|
-| Dashboard | `python3 -m dashboard.app` | Web browser |
-| Hermes Agent | `hermes skills install ./SKILL.md` | Chat `/skill augur` |
-| Hermes Web UI | Type `/skill augur` in chat | Conversational |
-| OpenClaude | Edit `openclaude.yaml` | Direct chat |
-| Claude Code | `claude -p "..." --skill ./SKILL.md` | Terminal |
-| Codex | `codex -p "..." --skill ./SKILL.md` | Terminal |
-| Telegram | `hermes gateway setup --platform telegram` | Messaging |
-| Slack | `hermes gateway setup --platform slack` | Messaging |
+| Platform | One-line start | Interaction |
+|----------|---------------|-------------|
+| Dashboard | `augur serve` | Web browser |
+| MCP server | `augur-mcp` | Any MCP client |
+| Hermes Studio | `mcp_servers.augur.command: augur-mcp` + `skills_dir: ./src/skills` | Chat `/skill augur-buffett` |
+| Claude Code | `claude mcp add augur -- augur-mcp` | Terminal |
+| Telegram | `augur telegram` | Messaging |
+| Slack | `augur slack` | Messaging |
 | API | `curl localhost:8000/api/analyze/AAPL` | HTTP |
 
 ---
 
 ## 8. FAQ
 
-**Q: Does it require GPU or high-performance hardware?**
-A: No. All Agents call LLM APIs. Locally you only need to run the FastAPI service.
+**Q: Do I need a GPU or high-performance hardware?**
+A: No. Scoring is local rule evaluation; you only need Python.
 
-**Q: Can it be used offline?**
-A: Network connectivity is required to call LLM APIs. However, the analysis engine itself can run locally by connecting to a local Ollama instance for offline use.
+**Q: Can it work offline?**
+A: The scoring engine runs fully offline (pass metrics by hand or use cached data); live market data needs a network connection. An LLM is used only on the optional chat path and by external agents.
 
 **Q: How do I add a new investor?**
-A: Two methods: 1) Write a YAML file under `personas/custom/` (no code needed); 2) Write a Python Agent under `src/augur/personas/` (more powerful).
+A: Two ways: 1) write YAML under `personas/custom/` (no code); 2) write a Python agent under `src/augur/personas/` (more powerful).
 
-**Q: Can all 18 Agents work simultaneously?**
-A: Yes. The consensus engine supports parallel invocation of all Agents and automatically aggregates results.
+**Q: Can all 18 agents work simultaneously?**
+A: Yes. `analyze_with_all` runs all agents in parallel and the consensus engine aggregates the results.
 
 **Q: What asset types are supported?**
-A: US stocks, Hong Kong stocks, A-shares (China), and Crypto - one system covers all.
+A: US stocks, HK stocks, A-shares, and crypto, all in one system.
 
 ---
 
-*For more questions, please submit a GitHub Issue or refer to [README.md](../../README.md)*
+*For more questions, open a GitHub Issue or see [README_EN.md](../../README_EN.md)*

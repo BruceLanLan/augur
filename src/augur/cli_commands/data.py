@@ -24,7 +24,8 @@ def fetch_cmd(ticker, as_json):
         click.echo(f"Error: {e}", err=True)
         raise SystemExit(1)
 
-    click.echo(f"Fetching data for {ticker.upper()}...\n")
+    # Progress goes to stderr so `--json` stdout stays pure JSON.
+    click.echo(f"Fetching data for {ticker.upper()}...\n", err=True)
 
     try:
         ctx = fetch_market_context(ticker)
@@ -37,30 +38,63 @@ def fetch_cmd(ticker, as_json):
 
     if as_json:
         import json
-        click.echo(json.dumps(ctx.to_dict(), indent=2, ensure_ascii=False))
+        click.echo(json.dumps(ctx.to_dict(), indent=2, ensure_ascii=False, default=str))
+        return
+
+    for line in fetch_text_lines(ctx):
+        click.echo(line)
+
+
+def fetch_text_lines(ctx):
+    """Human-readable `augur fetch` output.
+
+    Amounts (market cap, FCF) are billions of USD once the data layer has
+    converted them; when the FX rate is unknown the label names the native
+    currency instead (e.g. "Market Cap (HKD)"). Price stays in the trading
+    currency. Funds show the ETF profile + health check instead of company
+    fundamentals.
+    """
+    from augur.cli_helpers import (
+        amount_currency, describe_data_source, format_amount_bn, trading_currency,
+    )
+    from augur.etf import etf_overview_lines, is_fund
+
+    lines = []
+    ccy = trading_currency(ctx)
+    lines.append(f"{'Ticker':<18s} {ctx.ticker}")
+    if is_fund(ctx):
+        lines.append(f"{'Type':<18s} {str(ctx.asset_type).upper()}")
+    lines.append(f"{'Price':<18s} {ctx.price:.2f}" + (f" {ccy}" if ccy else ""))
+
+    if is_fund(ctx):
+        lines.append("")
+        lines.extend(etf_overview_lines(ctx))
+        lines.append("")
     else:
-        click.echo(f"{'Ticker':<18s} {ctx.ticker}")
-        click.echo(f"{'Price':<18s} {ctx.price:.2f}")
-        click.echo(f"{'Market Cap':<18s} ${ctx.market_cap:,.1f}B")
-        click.echo(f"{'PE':<18s} {ctx.pe:.2f}")
-        click.echo(f"{'PB':<18s} {ctx.pb:.2f}")
-        click.echo(f"{'PS':<18s} {ctx.ps:.2f}")
-        click.echo(f"{'ROE':<18s} {ctx.roe:.2%}")
-        click.echo(f"{'Gross Margins':<18s} {ctx.gross_margins:.2%}")
-        click.echo(f"{'Operating Margins':<18s} {ctx.operating_margins:.2%}")
-        click.echo(f"{'Revenue Growth':<18s} {ctx.revenue_growth:.2%}")
-        click.echo(f"{'Earnings Growth':<18s} {ctx.earnings_growth:.2%}")
-        click.echo(f"{'Debt Ratio':<18s} {ctx.debt_ratio:.2f}")
-        click.echo(f"{'FCF':<18s} ${ctx.fcf:,.2f}B")
-        click.echo(f"{'Current Ratio':<18s} {ctx.current_ratio:.2f}")
-        click.echo(f"{'Sector':<18s} {ctx.sector}")
-        click.echo(f"{'Industry':<18s} {ctx.industry}")
-        click.echo(f"{'RSI':<18s} {ctx.rsi:.1f}")
-        click.echo(f"{'MACD':<18s} {ctx.macd:.4f}")
-        click.echo(f"{'SMA20':<18s} {ctx.sma20:.2f}")
-        click.echo(f"{'SMA50':<18s} {ctx.sma50:.2f}")
-        from augur.cli_helpers import describe_data_source
-        click.echo(f"\n[{describe_data_source(ctx)}]")
+        mcap_ccy = amount_currency(ctx, "market")
+        fin_ccy = amount_currency(ctx, "financial")
+        mcap_label = "Market Cap" if mcap_ccy == "USD" else f"Market Cap ({mcap_ccy})"
+        fcf_label = "FCF" if fin_ccy == "USD" else f"FCF ({fin_ccy})"
+        lines.append(f"{mcap_label:<18s} {format_amount_bn(ctx.market_cap, mcap_ccy)}")
+        lines.append(f"{'PE':<18s} {ctx.pe:.2f}")
+        lines.append(f"{'PB':<18s} {ctx.pb:.2f}")
+        lines.append(f"{'PS':<18s} {ctx.ps:.2f}")
+        lines.append(f"{'ROE':<18s} {ctx.roe:.2%}")
+        lines.append(f"{'Gross Margins':<18s} {ctx.gross_margins:.2%}")
+        lines.append(f"{'Operating Margins':<18s} {ctx.operating_margins:.2%}")
+        lines.append(f"{'Revenue Growth':<18s} {ctx.revenue_growth:.2%}")
+        lines.append(f"{'Earnings Growth':<18s} {ctx.earnings_growth:.2%}")
+        lines.append(f"{'Debt Ratio':<18s} {ctx.debt_ratio:.2f}")
+        lines.append(f"{fcf_label:<18s} {format_amount_bn(ctx.fcf, fin_ccy, 2)}")
+        lines.append(f"{'Current Ratio':<18s} {ctx.current_ratio:.2f}")
+        lines.append(f"{'Sector':<18s} {ctx.sector}")
+        lines.append(f"{'Industry':<18s} {ctx.industry}")
+    lines.append(f"{'RSI':<18s} {ctx.rsi:.1f}")
+    lines.append(f"{'MACD':<18s} {ctx.macd:.4f}")
+    lines.append(f"{'SMA20':<18s} {ctx.sma20:.2f}")
+    lines.append(f"{'SMA50':<18s} {ctx.sma50:.2f}")
+    lines.append(f"\n[{describe_data_source(ctx)}]")
+    return lines
 
 
 @click.command("sentiment")

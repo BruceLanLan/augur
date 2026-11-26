@@ -186,3 +186,52 @@ class TestBuilder:
         # 1/1 = 100% bull → strong
         assert result.consensus_strength == "strong"
         assert len(result.silent_personas) == 0
+
+
+# ---------------------------------------------------------------------------
+# v14: "majority" wording is measured against ALL votes, neutral included
+# ---------------------------------------------------------------------------
+
+def _votes(n_bull: int, n_bear: int, n_neut: int) -> dict:
+    out = {}
+    for i in range(n_bull):
+        out[f"bull_{i}"] = {"signal": "bullish", "score": 7.0, "confidence": 0.8}
+    for i in range(n_bear):
+        out[f"bear_{i}"] = {"signal": "bearish", "score": 3.0, "confidence": 0.8}
+    for i in range(n_neut):
+        out[f"neut_{i}"] = {"signal": "neutral", "score": 5.0, "confidence": 0.4}
+    return out
+
+
+class TestMajorityWording:
+    def _signal_points(self, b, s, n):
+        dm = DisagreementMapBuilder("X", "r").build(_votes(b, s, n))
+        return dm, [p for p in dm.agreement_points if p.startswith("Signals:")]
+
+    def test_minority_of_all_votes_is_not_a_majority(self):
+        # 4 bulls, 1 bear, 13 neutral: bulls beat bears 4:1 but hold 4/18.
+        dm, pts = self._signal_points(4, 1, 13)
+        assert pts == []
+        assert dm.consensus_strength == "weak"
+
+    def test_strong_majority(self):
+        _, pts = self._signal_points(15, 0, 3)
+        assert pts == ["Signals: strong majority bullish (15/18)"]
+
+    def test_plain_majority(self):
+        _, pts = self._signal_points(0, 11, 7)
+        assert pts == ["Signals: majority bearish (11/18)"]
+
+    def test_never_contradicts_consensus_strength(self):
+        for total in range(1, 19):
+            for b in range(total + 1):
+                for s in range(total - b + 1):
+                    dm, pts = self._signal_points(b, s, total - b - s)
+                    joined = " ".join(pts)
+                    if dm.consensus_strength in ("weak", "divided"):
+                        assert "strong majority" not in joined, (b, s, total)
+                    if dm.consensus_strength != "strong":
+                        assert "strong majority" not in joined, (b, s, total)
+                    for side, n in (("bullish", b), ("bearish", s)):
+                        if f"majority {side}" in joined:
+                            assert n * 2 > total, (b, s, total)

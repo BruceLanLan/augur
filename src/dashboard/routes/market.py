@@ -7,6 +7,7 @@ Mounts via: app.include_router(market_router)
 import hashlib
 import json
 import logging
+import math
 import re
 from concurrent.futures import ThreadPoolExecutor, TimeoutError as FuturesTimeoutError
 from datetime import datetime, timezone
@@ -392,11 +393,38 @@ def api_treasury_rates():
     return {"status": "ok", "rates": rates}
 
 
+# VIX -> fear/greed anchors (VIX level, index). Piecewise linear between them,
+# clamped to 0-100 outside the range.
+#   - VIX ~19-20 is its long-run average (CBOE history since 1990), so 20 maps
+#     to a neutral 50.
+#   - VIX 15 or lower is an unusually calm tape -> 75 (Extreme Greed boundary).
+#   - VIX 30 is the conventional "stressed market" line -> 25 (Extreme Fear
+#     boundary); VIX 45+ (2008 / 2020 / Aug-2024 spikes) pins at 0.
+# The previous linear map (100 - (VIX-12)/38*100) put the neutral point at
+# VIX 31, so a VIX of 28 read as "Neutral". Must stay in sync with the JS copy
+# in templates/index.html (renderFearGreed).
+_VIX_FG_ANCHORS = ((10.0, 100.0), (15.0, 75.0), (20.0, 50.0), (30.0, 25.0), (45.0, 0.0))
+
+
+def vix_to_fear_greed(vix: float) -> int:
+    """Map a VIX level to a 0-100 fear/greed index (higher = greedier)."""
+    pts = _VIX_FG_ANCHORS
+    if vix <= pts[0][0]:
+        return int(pts[0][1])
+    if vix >= pts[-1][0]:
+        return int(pts[-1][1])
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        if x0 <= vix <= x1:
+            # floor(x + 0.5) matches JS Math.round (Python round() is banker's)
+            return int(math.floor(y0 + (vix - x0) / (x1 - x0) * (y1 - y0) + 0.5))
+    return 50  # unreachable
+
+
 @router.get("/api/fear-greed", summary="恐慌与贪婪指数")
 def api_fear_greed():
     """基于 VIX 计算恐慌与贪婪指数 (0-100)。
 
-    公式: index = max(0, min(100, 100 - ((VIX - 12) / 38) * 100))
+    映射见 ``vix_to_fear_greed``（分段线性，VIX≈20 为中性 50）。
     0-25: Extreme Fear, 25-45: Fear, 45-55: Neutral, 55-75: Greed, 75-100: Extreme Greed
 
     同步 def：fetch_market_overview 在缓存未命中时同步调用 yfinance，
@@ -418,7 +446,7 @@ def api_fear_greed():
         if not vix_item or not vix_item.get("price"):
             return {"status": "degraded", "index": 50, "label": "Neutral", "vix_value": 0.0, "description": "VIX 数据暂时不可用"}
         vix_val = float(vix_item["price"])
-        index = max(0, min(100, int(100 - ((vix_val - 12) / 38) * 100)))
+        index = vix_to_fear_greed(vix_val)
         if index >= 75:
             label, desc = "Extreme Greed", f"VIX={vix_val:.2f}，市场处于极度贪婪状态，波动率极低"
         elif index >= 55:

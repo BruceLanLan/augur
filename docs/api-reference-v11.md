@@ -115,7 +115,8 @@ This document covers the Python public API and REST endpoints.
 
 - `augur_analyze` / `augur_consensus` / `augur_committee` / `augur_debate` / `augur_workflow`
 - `augur_workspace_get` / `augur_workspace_set` / `augur_workspace_profiles`
-- `augur_fetch` / `augur_sentiment` / `augur_configure` / `augur_create_persona` / `augur_list_personas`
+- `augur_fetch` / `augur_sentiment` / `augur_create_persona` / `augur_list_personas`
+- `augur_configure`：v14 起弃用，只返回弃用说明，不写配置
 - `augur_run_skill` — run a built-in skill
 
 ## MCP Prompts
