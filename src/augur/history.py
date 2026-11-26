@@ -95,14 +95,20 @@ def _load_summary(f: Path) -> Optional[Dict[str, Any]]:
     try:
         with open(f, "r", encoding="utf-8") as fp:
             data = json.load(fp)
-        consensus = data.get("result", {}).get("consensus", {})
-        return {
+        consensus = data.get("result", {}).get("consensus", {}) or {}
+        summary = {
             "id": data.get("id", f.stem),
             "ticker": data.get("ticker", ""),
             "signal": consensus.get("signal", "unknown"),
             "score": consensus.get("score", 0),
             "timestamp": data.get("timestamp", ""),
         }
+        # A withheld fund consensus is stored with a placeholder 5.0 score;
+        # flag it so tables and charts do not show it as a neutral reading.
+        from augur.consensus_display import consensus_withheld
+        if consensus_withheld(consensus):
+            summary["consensus_withheld"] = True
+        return summary
     except (json.JSONDecodeError, OSError):
         return None
 
@@ -140,7 +146,7 @@ def list_history(
                 continue
             if tf and tf not in rec["ticker"].upper():
                 continue
-            if sf and rec["signal"].lower() != sf:
+            if sf and (rec["signal"].lower() != sf or rec.get("consensus_withheld")):
                 continue
             all_records.append(rec)
         if page is not None:
@@ -186,7 +192,7 @@ def count_history(
                 continue
             if tf and tf not in rec["ticker"].upper():
                 continue
-            if sf and rec["signal"].lower() != sf:
+            if sf and (rec["signal"].lower() != sf or rec.get("consensus_withheld")):
                 continue
             count += 1
         return count

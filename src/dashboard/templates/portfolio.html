@@ -432,7 +432,9 @@ function renderPortfolio() {
         totalCurrent += current;
 
         var pnlClass = pnl > 0 ? 'pnl-positive' : pnl < 0 ? 'pnl-negative' : 'pnl-zero';
-        var scoreHtml = h.score !== null ? '<span class="augur-score-badge">' + h.score.toFixed(1) + '</span>' : '--';
+        var scoreHtml = h.consensus_withheld
+            ? '<span class="augur-score-badge" title="' + escapeHtml(_t('fund-withheld-tip', '')) + '">' + escapeHtml(augurWithheldLabel()) + '</span>'
+            : (h.score !== null && h.score !== undefined ? '<span class="augur-score-badge">' + h.score.toFixed(1) + '</span>' : '--');
 
         return {
             ticker: h.ticker, cost: cost, current: h.currentPrice || h.buyPrice,
@@ -663,7 +665,10 @@ function onAnalysisDone(results) {
     var list = getPortfolio();
     list.forEach(function(h) {
         if (results[h.ticker] && results[h.ticker].consensus) {
-            h.score = results[h.ticker].consensus.score || 0;
+            var c = results[h.ticker].consensus;
+            // A withheld fund consensus has no score (5.0 is a placeholder).
+            h.consensus_withheld = augurIsWithheld(c);
+            h.score = h.consensus_withheld ? null : (c.score || 0);
         }
     });
     savePortfolio(list);
@@ -682,13 +687,14 @@ function onAnalysisDone(results) {
     Object.keys(results).forEach(function(t) {
         var r = results[t];
         var signal = r.consensus.signal || 'neutral';
-        var signalLabel = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+        var withheld = augurIsWithheld(r.consensus);
+        var signalLabel = withheld ? augurWithheldLabel() : signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
         var sigClass = signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral';
         html += '<tr>' +
             '<td style="font-weight:600; font-family:var(--font-data);">' + escapeHtml(t) + '</td>' +
             '<td><span class="signal-badge ' + sigClass + '">' + signalLabel + '</span></td>' +
-            '<td style="font-family:var(--font-data); color:var(--accent-orange);">' + (r.consensus.score || 0).toFixed(1) + '</td>' +
-            '<td style="font-family:var(--font-data);">' + ((r.consensus.confidence || 0) * 100).toFixed(0) + '%</td>' +
+            '<td style="font-family:var(--font-data); color:var(--accent-orange);">' + augurScoreText(r.consensus, r.consensus.score) + '</td>' +
+            '<td style="font-family:var(--font-data);">' + (withheld ? '--' : ((r.consensus.confidence || 0) * 100).toFixed(0) + '%') + '</td>' +
             '</tr>';
     });
 

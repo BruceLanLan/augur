@@ -53,6 +53,12 @@ import yaml
 
 logger = logging.getLogger(__name__)
 
+from augur.consensus_display import (
+    consensus_record,
+    consensus_withheld,
+    display_score,
+    display_signal,
+)
 from augur.data_dir import get_data_dir
 
 WATCHLIST_PATH = get_data_dir() / "watchlist.yaml"
@@ -197,9 +203,8 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
     except ImportError:
         def format_consensus_message(ticker, consensus, results):
             """Fallback formatter when telegram_bot is not available."""
-            signal = consensus.signal.value.upper()
-            score = f"{consensus.score:.1f}/10"
-            return f"[Augur] {ticker}: {signal} ({score}) - {len(results)} agents analyzed"
+            return (f"[Augur] {ticker}: {display_signal(consensus)} "
+                    f"({display_score(consensus)}) - {len(results)} agents analyzed")
 
     config = load_watchlist()
     watchlist = config.get("watchlist", [])
@@ -268,9 +273,7 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
                 from augur.history import save_analysis
                 save_analysis(ticker, {
                     "consensus": {
-                        "signal": consensus.signal.value,
-                        "score": consensus.score,
-                        "confidence": getattr(consensus, "confidence", 0.0),
+                        **consensus_record(consensus, score_digits=2, confidence_digits=3),
                         "key_findings": (consensus.key_findings or [])[:3],
                     },
                     "agent_count": len(results),
@@ -279,7 +282,7 @@ def run_watchlist_analysis() -> List[Dict[str, Any]]:
             except Exception as _hist_err:
                 logger.warning("Failed to save history for %s: %s", ticker, _hist_err)
 
-            print(f"  {ticker}: {consensus.signal.value.upper()} ({consensus.score:.1f}/10)")
+            print(f"  {ticker}: {display_signal(consensus)} ({display_score(consensus)})")
         except Exception as e:
             logger.error("Error analyzing %s: %s", ticker, e)
             continue
@@ -324,6 +327,11 @@ def _send_notifications(config: dict, results: List[Dict[str, Any]]):
         for r in results:
             consensus = r.get("consensus")
             if consensus is not None:
+                if consensus_withheld(consensus):
+                    # No score to compare: the 5.0 is a placeholder.
+                    logger.debug("Skipping notification for %s: consensus withheld",
+                                 r.get("ticker", "?"))
+                    continue
                 score = abs(consensus.score) if hasattr(consensus, "score") else 0
                 if score >= threshold:
                     filtered_results.append(r)

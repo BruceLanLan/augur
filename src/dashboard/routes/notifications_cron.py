@@ -180,5 +180,8 @@ def api_cron_run_now():
             item["signal"] = consensus.signal.value if hasattr(consensus, "signal") else ""
             item["score"] = round(consensus.score, 1) if hasattr(consensus, "score") else 0
             item["confidence"] = round(consensus.confidence, 2) if hasattr(consensus, "confidence") else 0
+            from augur.consensus_display import consensus_withheld
+            # When set, score is the engine's 5.0 placeholder, not a reading.
+            item["consensus_withheld"] = consensus_withheld(consensus)
         serialized.append(item)
     return {"status": "ok", "count": len(serialized), "results": serialized}

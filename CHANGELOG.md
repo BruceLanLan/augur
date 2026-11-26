@@ -2,6 +2,125 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [14.1.0] - 2026-11-26 Real ETF consensus, no 5.0 placeholders, true-range ATR
+
+### Added
+
+- Fund readings for Marks, Soros and ARPS. Each has a fund path that reads
+  only technical, market and ETF-profile fields (price vs. 50/200-day
+  averages, 52-week range, RSI, MACD, 20-day volatility), never company
+  financials. With Dalio, 4 of the 18 personas now apply to funds; the
+  list is still decided by the score-invariance test, which now runs each
+  persona's fund path.
+- Real fund consensus. With at least 3 applicable personas a fund gets a
+  consensus labelled "Fund consensus": equal weights scaled by data
+  coverage (no equity-fitted industry, learned or correlation weights, no
+  sector boosts, no news-sentiment shift), `metadata.fund_basis` listing
+  the adjustments that do and do not apply, no Kelly position and no
+  learning record. Live SPY on 2026-11-26: NEUTRAL 5.0/10, confidence 43%,
+  4 of 18 personas.
+- Fund paths abstain with reason `fund_data_missing` when price, the
+  50/200-day averages or all MACD fields are missing, so such funds (for
+  example a manual `--price` run without technicals) are still WITHHELD.
+  CLI, committee, workflow, MCP, `report from-run`, the disagreement map
+  and reports name the two groups separately: "rules not applicable to
+  funds" and "fund technicals missing". Skill runs now record abstention
+  the same way as workflow runs.
+- `augur.consensus_display`: shared helpers that render a withheld
+  consensus as `WITHHELD (fund)` / `--` and build compact records that keep
+  the `consensus_withheld` flag. They key off the flag, never off the
+  asset type.
+- `scripts/atr_recalibration.py` and
+  `docs/research/ATR_RECALIBRATION_2026-11.md` (41 tickers, 10,373 63-bar
+  windows).
+
+### Changed
+
+- ATR is a true-range Wilder ATR (14 periods, seeded with the simple mean
+  of the first 14 TRs) built from the provider's daily highs and lows;
+  the close-to-close approximation is kept only when no high/low data
+  exists. True ATR reads about 1.86x the old proxy, so the ATR% thresholds
+  were quantile-matched to keep the old trigger rates: Munger > 3% →
+  > 5.75%, Dalio < 2 / > 5 → < 3.75 / > 9.25. **Dalio and Munger scores
+  change** for individual tickers, most visibly Munger's high-volatility
+  rule on US large caps, HK and A-shares, which now almost never fires
+  (see the research note).
+- **ETF consensus is now a real reading** instead of always WITHHELD.
+  `augur watchlist watch`, the dashboard watchlist and `augur cron`
+  alerts can now fire on a fund whose consensus clears the threshold; a
+  withheld consensus never alerts.
+- Backtest contexts get the same technical fields as production
+  (`macd_signal`, `macd_histogram`, `sma20/50`, `atr`, `volatility_20d`;
+  before only `rsi` / `macd`, so `macd > signal` became `macd > 0` and
+  `price > sma` was always true), computed over a trailing 63-bar window
+  with a warm-up before the first replayed day. Unknown forward returns
+  are excluded instead of counted as 0.0. **Backtest and regime-IC numbers
+  are not exactly reproducible against earlier versions.**
+- Learning entry price: a prediction made at or after the exchange's
+  close (.HK 16:00, .SS/.SZ 15:00, else New York 16:00, exchange-local
+  time) enters and exits at the next session's close instead of a close
+  it had already seen. Holidays and half-days are ignored; records
+  without a timestamp keep the old rule.
+- History summaries expose `consensus_withheld` (including v14.0 records
+  saved with a full `to_dict()`), and a withheld record no longer matches
+  the neutral signal filter.
+
+### Fixed
+
+- No surface shows a withheld consensus as HOLD / NEUTRAL 5.0 any more:
+  dashboard history, signals (average, sort, HOLD filter, CSV), watchlist,
+  portfolio, scanner (matrix and CSV), home recent list and leaderboard,
+  stock-page trend chart, chat data card, `/ws/workflow`; `augur cron`
+  console line, fallback message and history record; Telegram, Slack,
+  Lark and WeChat messages (abstaining personas show N/A); skill handlers
+  and the dossier; the workflow debate step, MCP `augur_debate` and
+  `compare_with_previous_run`.
+- `augur cron` sent alerts for withheld fund consensuses: the 5.0
+  placeholder passed the default threshold of 3. Thresholded
+  notifications now skip a withheld consensus.
+- `augur watchlist watch` compared the 5.0 placeholder of a withheld
+  consensus (or an abstaining `--persona`) with `--alert-above` /
+  `--alert-below` and could alert; it now prints `--` and skips the
+  alert.
+- Dashboard stock page showed a real fund consensus as "Council
+  Consensus" with Kelly 0.0% and the engine's Chinese reasoning; it is now
+  labelled Fund Consensus, Kelly n/a, with a localized explanation (new
+  i18n keys `fund-consensus-label`, `fund-consensus-tip`,
+  `fund-consensus-oracle` in zh/en/ja/ko).
+- Dashboard committee page said "0 masters" convene when none were
+  selected; it now says all N.
+- CLI tables and boxes measured cells with `len()`, so emoji signal icons
+  and CJK names pushed columns out of line; they use the terminal display
+  width. The box title border was one column short.
+- `MarketContext.dividend_yield` read 1.0 (100%) on live SPY: yfinance 1.x
+  reports `dividendYield` in percent and the guard only divided values
+  above 1. The provider now prefers dividend rate / price, the fund
+  `yield`, the trailing yield and the trailing rate / price, and divides
+  `dividendYield` by 100 only as a last resort. Equities that report a
+  dividend rate are unchanged; no persona reads the field.
+- Soros and ARPS no longer read all-zero MACD fields as a death cross;
+  ARPS no longer scores price > SMA20 when SMA20 is missing; Marks treats
+  an unknown 52-week range as unknown rather than at the highs.
+
+### Deferred
+
+- `price_vs_52w_high` / `price_vs_52w_low` and `sma200` are still missing
+  from backtest contexts, so fund paths and the rules that read them do not replay
+  exactly.
+- Compact history records written before v14.1 store a withheld fund
+  consensus as a plain 5.0 without the flag.
+- 20-day volatility stays population variance (ddof=0); switching to
+  ddof=1 moves about a tenth of windows across some persona threshold.
+- MACD EMA seeding is documented and unchanged.
+- Persona findings and reasoning are Chinese only, also in the English UI.
+- VIX / regime features do not reach persona contexts.
+- `change_pct` is not populated for fund contexts (Soros dropped its
+  volume-direction rule on funds for this reason).
+- Still open from 14.0: backtest return / drawdown / Sharpe (`null`),
+  `augur risk-review` rewording, `augur memo`, ETF historical premium and
+  tracking error, clean-up of pre-v14 ETF learning records, YAML persona
+  units and shadowing, `uv.lock` (still 10.16.2).
+
 ## [14.0.0] - 2026-11-26 ETF-native analysis, correctness fixes, honest LLM role
 
 ### Added

@@ -720,17 +720,19 @@ def calculate_technicals(prices: List[Dict]) -> Dict[str, Any]:
     Calculate technical indicators from price history.
 
     Args:
-        prices: List of dicts with at least 'close' field.
+        prices: List of dicts with at least 'close' field; 'high'/'low'
+            (as returned by fetch_history) enable a true-range ATR.
 
     Returns:
         Dict with: rsi, macd, macd_signal, sma20, sma50, atr, volatility_20d, etc.
     """
-    closes = _sanitize_price_series(
-        [p["close"] for p in prices if "close" in p]
-    )
-    if not closes:
+    rows = [p for p in prices if "close" in p]
+    closes = [p["close"] for p in rows]
+    highs = [p.get("high") for p in rows]
+    lows = [p.get("low") for p in rows]
+    if not _sanitize_price_series(closes):
         return {}
-    return _calculate_technicals_from_prices(closes)
+    return _calculate_technicals_from_prices(closes, highs, lows)
 
 
 def fetch_market_overview(force_refresh: bool = False) -> Dict[str, Any]:
@@ -1084,11 +1086,47 @@ def _sanitize_price_series(closes: List[Any]) -> List[float]:
 from augur import indicators as _indicators  # noqa: E402
 
 
-def _calculate_technicals_from_prices(closes: List[float]) -> Dict[str, Any]:
-    """Calculate technical indicators from a list of closing prices."""
+def _sanitize_ohlc(closes: List[Any], highs: Optional[List[Any]],
+                   lows: Optional[List[Any]]):
+    """Sanitise closes and keep highs/lows aligned with the surviving bars.
+
+    Bars whose close is unusable are dropped together with their high/low
+    (sanitising the lists separately would shift them against each other).
+    A usable close with an unusable high/low keeps ``None`` there; the
+    indicator code treats that bar as ``H = L = C``. Returns
+    ``(closes, highs, lows)``; highs/lows are ``None`` when not supplied or
+    not the same length as ``closes``.
+    """
+    if highs is None or lows is None or len(highs) != len(closes) or len(lows) != len(closes):
+        return _sanitize_price_series(closes), None, None
+    out_c: List[float] = []
+    out_h: List[Optional[float]] = []
+    out_l: List[Optional[float]] = []
+    for c, h, lo in zip(closes, highs, lows):
+        kept = _sanitize_price_series([c])
+        if not kept:
+            continue
+        out_c.append(kept[0])
+        hl = _sanitize_price_series([h, lo]) if not isinstance(h, bool) and not isinstance(lo, bool) else []
+        if len(hl) == 2 and hl[0] >= hl[1]:
+            out_h.append(hl[0])
+            out_l.append(hl[1])
+        else:
+            out_h.append(None)
+            out_l.append(None)
+    return out_c, out_h, out_l
+
+
+def _calculate_technicals_from_prices(
+    closes: List[float],
+    highs: Optional[List[float]] = None,
+    lows: Optional[List[float]] = None,
+) -> Dict[str, Any]:
+    """Calculate technical indicators from closing prices (plus optional
+    aligned daily highs/lows, used for a true-range ATR)."""
     result = {}
 
-    closes = _sanitize_price_series(closes)
+    closes, highs, lows = _sanitize_ohlc(closes, highs, lows)
     n = len(closes)
     if n < 2:
         return result
@@ -1108,15 +1146,24 @@ def _calculate_technicals_from_prices(closes: List[float]) -> Dict[str, Any]:
     result["macd_signal"] = macd_vals.get("signal", 0)
     result["macd_histogram"] = macd_vals.get("histogram", 0)
 
-    # ATR (14-period, approximated from close-to-close)
+    # ATR (14-period). With daily highs/lows: Wilder ATR over true ranges
+    # (v14.1). Without any high/low data: the legacy close-to-close
+    # approximation, which reads ~0.54x a true ATR -- persona ATR% thresholds
+    # are calibrated for the true-range scale (docs/research/
+    # ATR_RECALIBRATION_2026-11.md), so this fallback under-triggers them.
     if n >= 15:
-        true_ranges = [abs(closes[i] - closes[i - 1]) for i in range(1, n)]
-        atr_window = true_ranges[-14:]
-        result["atr"] = round(sum(atr_window) / len(atr_window), 4)
+        if _indicators.has_high_low(highs, lows):
+            atr = _indicators.wilder_atr(closes, highs, lows, period=14)
+        else:
+            atr = _indicators.close_to_close_atr(closes, period=14)
+        result["atr"] = round(atr, 4)
     else:
         result["atr"] = 0
 
-    # 20-day volatility (annualized)
+    # 20-day volatility (annualized). Population std (ddof=0), kept on purpose:
+    # sample std is a fixed x1.026, but that moves ~10.6% of real 63-bar
+    # windows across at least one persona vol threshold (0.10-0.60), so the
+    # switch was judged not negligible (docs/research/ATR_RECALIBRATION_2026-11.md).
     if n >= 21:
         returns = [(closes[i] / closes[i - 1] - 1) for i in range(max(1, n - 20), n)]
         if returns:

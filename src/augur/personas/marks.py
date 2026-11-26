@@ -174,3 +174,139 @@ class MarksAgent(BaseAgent):
             metadata={"factors": factors, "philosophy": self.philosophy},
             coverage_confidence=coverage_confidence,
         )
+
+    # ------------------------------------------------------------------
+    # v14.1 fund path: called by the BaseAgent guard for ETF / fund contexts
+    # instead of ``analyze`` (whose PE / PB / ROE rules are company rules).
+    # ------------------------------------------------------------------
+    def analyze_fund(self, context: MarketContext) -> AgentResponse:
+        """Marks 周期/情绪钟摆的基金读数：只看价格位置、波动率与溢价折价。
+
+        逆向：恐惧（深度回撤、超卖、高波动、折价）是建设性的，贪婪（贴近
+        高点、超买、低波动的自满、溢价、远离长期均线）是风险。
+        """
+        from augur.etf import FUND_READING_BASIS, fund_signal, profile_num
+        from augur.personas.base import SignalType
+
+        if self._fund_technicals_missing(context):
+            return self._fund_not_applicable(context, reason="fund_data_missing")
+
+        factors = {}
+        drawdown = context.price_vs_52w_high  # 距 52 周高点，负数为回撤（%）
+        # 0 is also the "unknown" default; only trust it with a 52-week high.
+        has_range = bool(drawdown) or (context.fifty_two_week_high or 0) > 0
+        vol = context.volatility_20d if context.volatility_20d > 0 else 0.0
+        premium = profile_num(context, "premium_pct")
+        sma200_dev = (context.price / context.sma200 - 1.0) * 100.0
+
+        # 1. 情绪钟摆：价格离高点多远 + RSI 极值
+        pendulum = 5
+        if not has_range:
+            pass
+        elif drawdown < -20:
+            pendulum += 3      # 深度回撤 = 恐惧端
+        elif drawdown < -10:
+            pendulum += 1
+        elif drawdown > -3:
+            pendulum -= 2      # 贴近高点 = 贪婪端
+        if context.rsi < 30:
+            pendulum += 2
+        elif context.rsi > 70:
+            pendulum -= 2
+        factors["pendulum_position"] = min(max(pendulum, 0), 10)
+
+        # 2. 风险定价：高波动 = 恐慌已计价（机会），低波动贴近高点 = 自满
+        if vol <= 0:
+            risk_pricing = 5
+        elif vol > 0.30:
+            risk_pricing = 8
+        elif vol > 0.22:
+            risk_pricing = 6
+        elif vol < 0.12:
+            risk_pricing = 3 if has_range and drawdown > -5 else 4
+        else:
+            risk_pricing = 5
+        factors["risk_pricing"] = risk_pricing
+
+        # 3. 二阶思维：人群为份额付的价（溢价折价）与对长期均线的偏离
+        second = 5
+        if premium is not None:
+            if premium > 1.0:
+                second -= 2    # 高于净值买入 = 人群追捧
+            elif premium > 0.5:
+                second -= 1
+            elif premium < -1.0:
+                second += 2    # 低于净值 = 人群抛售
+            elif premium < -0.5:
+                second += 1
+        if sma200_dev > 15:
+            second -= 2        # 远高于 200 日均线 = 外推乐观
+        elif sma200_dev > 8:
+            second -= 1
+        elif sma200_dev < -15:
+            second += 2
+        elif sma200_dev < -8:
+            second += 1
+        factors["second_level_thinking"] = min(max(second, 0), 10)
+
+        score = sum(factors.values()) / len(factors)
+        signal = SignalType(fund_signal(score))
+        confidence = min(0.75, 0.4 + abs(score - 5) / 10)
+
+        key_findings = []
+        risks = []
+        where = (f"距52周高点 {drawdown:.1f}%，" if has_range else "") + f"RSI {context.rsi:.0f}"
+        if factors["pendulum_position"] >= 7:
+            key_findings.append(f"基金读数：钟摆偏恐惧端（{where}），逆向看是建设性的")
+        if factors["risk_pricing"] >= 8:
+            key_findings.append(f"基金读数：20日波动率 {vol * 100:.1f}%，恐慌已计入价格")
+        if premium is not None and premium < -1.0:
+            key_findings.append(f"基金读数：折价 {premium:+.2f}%，市场在低于净值抛售")
+        if factors["pendulum_position"] <= 3:
+            risks.append(f"基金读数：钟摆偏贪婪端（{where}）")
+        if factors["risk_pricing"] <= 3:
+            risks.append(f"基金读数：波动率仅 {vol * 100:.1f}% 且贴近高点，风险可能被低估")
+        if premium is not None and premium > 1.0:
+            risks.append(f"基金读数：溢价 {premium:+.2f}%，买入价高于净值")
+        er = profile_num(context, "expense_ratio")
+        if er is not None and er > 0.005:
+            risks.append(f"基金读数：费率 {er * 100:.2f}%，长期侵蚀回报")
+        if not key_findings and not risks:
+            key_findings.append("基金读数：钟摆在中间区域，无明显恐惧或贪婪")
+
+        premium_txt = f"{premium:+.2f}%" if premium is not None else "未知"
+        verdict = ("恐惧端 — 逆向买入区间" if signal == SignalType.BULLISH
+                   else "贪婪端 — 谨慎" if signal == SignalType.BEARISH else "中性区间")
+        reasoning = f"""## {self.name} 基金读数 for {context.ticker}
+
+
+**情绪钟摆: {factors['pendulum_position']}/10**
+- 距52周高点: {f"{drawdown:.1f}%" if has_range else "未知"}
+- RSI: {context.rsi:.1f}
+
+**风险定价: {factors['risk_pricing']}/10**
+- 20日波动率: {vol * 100:.1f}%
+
+**二阶思维: {factors['second_level_thinking']}/10**
+- 溢价/折价: {premium_txt}
+- 相对200日均线: {sma200_dev:+.1f}%
+
+**基金读数评分: {score:.1f}/10**
+钟摆判断：{verdict}
+依据：仅技术指标、市场状态与 ETF 画像；公司估值规则（PE/PB/ROE）不用于基金。
+"""
+        coverage = 1.0 if vol > 0 and has_range else 0.7
+
+        return AgentResponse(
+            agent_id=self.agent_id,
+            agent_name=self.name,
+            signal=signal,
+            confidence=confidence,
+            score=score,
+            reasoning=reasoning,
+            key_findings=key_findings,
+            risks=risks,
+            metadata={"factors": factors, "philosophy": self.philosophy,
+                      "fund_reading": True, "fund_basis": FUND_READING_BASIS},
+            coverage_confidence=coverage,
+        )

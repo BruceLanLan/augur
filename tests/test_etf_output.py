@@ -34,6 +34,14 @@ def spy_ctx() -> MarketContext:
     return ctx
 
 
+def spy_ctx_no_technicals() -> MarketContext:
+    """SPY whose moving averages are missing: the three fund-path personas
+    abstain for lack of data, only dalio applies, consensus is withheld."""
+    ctx = spy_ctx()
+    ctx.sma20 = ctx.sma50 = ctx.sma200 = 0.0
+    return ctx
+
+
 def aapl_ctx() -> MarketContext:
     ctx = MarketContext(
         ticker="AAPL", price=210.0, market_cap=3200.0, pe=32.0, pb=48.0,
@@ -119,8 +127,21 @@ def test_json_stdout_is_pure_json(args, fetch_returns, fake_learning):
     assert "Fetching" in result.stderr or "Auto-fetching" in result.stderr
 
 
-def test_consensus_json_for_etf(fetch_returns, fake_learning):
+def test_consensus_json_for_etf_real_consensus(fetch_returns, fake_learning):
     fetch_returns["SPY"] = spy_ctx
+    payload = json.loads(_run(["consensus", "SPY", "--json"]).stdout)
+    meta = payload["consensus"]["metadata"]
+    assert not meta.get("consensus_withheld")
+    assert meta["applicable_agents"] == ["arps", "dalio", "marks", "soros"]
+    assert meta["fund_basis"]["learning_record"] is False
+    assert meta["position_pct"] == 0
+    assert payload["individual"]["marks"]["metadata"]["fund_reading"] is True
+    assert payload["individual"]["buffett"]["metadata"]["not_applicable"] is True
+    assert fake_learning.recorded == []
+
+
+def test_consensus_json_for_etf(fetch_returns, fake_learning):
+    fetch_returns["SPY"] = spy_ctx_no_technicals
     result = _run(["consensus", "SPY", "--json"])
     payload = json.loads(result.stdout)
     assert payload["asset_type"] == "etf"
@@ -133,8 +154,16 @@ def test_consensus_json_for_etf(fetch_returns, fake_learning):
     assert fake_learning.recorded == []
 
 
-def test_portfolio_json_marks_withheld_fund(fetch_returns, fake_learning):
+def test_portfolio_json_fund_consensus_has_no_position(fetch_returns, fake_learning):
     fetch_returns["SPY"] = spy_ctx
+    payload = json.loads(_run(["portfolio", "SPY", "--format", "json"]).stdout)
+    row = payload["tickers"][0]
+    assert row["signal"] in ("BULLISH", "NEUTRAL", "BEARISH") and row["kelly_pct"] == 0.0
+    assert payload["cash_pct"] == 100.0
+
+
+def test_portfolio_json_marks_withheld_fund(fetch_returns, fake_learning):
+    fetch_returns["SPY"] = spy_ctx_no_technicals
     payload = json.loads(_run(["portfolio", "SPY", "--format", "json"]).stdout)
     row = payload["tickers"][0]
     assert row["signal"] == "WITHHELD" and row["kelly_pct"] == 0.0
@@ -144,8 +173,25 @@ def test_portfolio_json_marks_withheld_fund(fetch_returns, fake_learning):
 
 # --------------------------------------------------------- consensus text --
 
-def test_consensus_text_for_etf(fetch_returns, fake_learning):
+def test_consensus_text_for_etf_real_consensus(fetch_returns, fake_learning):
     fetch_returns["SPY"] = spy_ctx
+    out = _run(["consensus", "SPY"]).stdout
+    assert "SPY Consensus (ETF)" in out
+    assert "WITHHELD" not in out
+    assert "Applicable: 4 of 18 personas" in out and "Kelly Size: n/a (fund)" in out
+    assert "Fund consensus: technical/market readings of 4 personas" in out
+    assert "no company fundamentals" in out and "not recorded for learning" in out
+    assert "Applicable personas (4)" in out
+    for name in ("Howard Marks", "George Soros", "ARPS", "Ray Dalio"):
+        assert name in out, name
+    assert "基金读数" in out  # persona text stays Chinese, as everywhere else
+    assert "Abstained (14, rules not applicable to funds)" in out
+    for banned in ("小市值", "毛利率过低", "Market Cap", "ROE", "Kelly Size: 0"):
+        assert banned not in out, banned
+
+
+def test_consensus_text_for_etf(fetch_returns, fake_learning):
+    fetch_returns["SPY"] = spy_ctx_no_technicals
     result = _run(["consensus", "SPY"])
     out = result.stdout
     assert "SPY Consensus (ETF)" in out
@@ -155,14 +201,15 @@ def test_consensus_text_for_etf(fetch_returns, fake_learning):
     # the CLI frame is English: no Chinese labels in the ETF block
     assert "ETF 概况" not in out and "适用大师" not in out
     assert "Applicable personas (1)" in out and "Dalio" in out
-    assert "Abstained (17" in out and "buffett" in out
+    assert "Abstained (14, rules not applicable to funds)" in out and "buffett" in out
+    assert "Abstained (3, fund technicals missing): arps, marks, soros" in out
     # no company-fundamental verdicts or position for a fund
     for banned in ("小市值", "毛利率过低", "Market Cap", "ROE", "Kelly Size: 0"):
         assert banned not in out, banned
 
 
 def test_analyze_text_for_etf_uses_fund_block(fetch_returns, fake_learning):
-    fetch_returns["SPY"] = spy_ctx
+    fetch_returns["SPY"] = spy_ctx_no_technicals
     out = _run(["analyze", "SPY"]).stdout
     assert "WITHHELD" in out and "ETF health check" in out
     assert "Masters Consensus" not in out
@@ -222,7 +269,7 @@ def test_fetch_text_usd_equity(fetch_returns):
 
 # ---------------------------------------------------------------- report --
 
-def test_report_for_etf(fake_learning):
+def test_report_for_etf_real_consensus(fake_learning):
     from augur.registry import AgentRegistry, DecisionCoordinator
     from augur.report import generate_report
 
@@ -231,8 +278,30 @@ def test_report_for_etf(fake_learning):
     results = coord.analyze_with_all(ctx)
     consensus = coord.get_consensus(results, ticker="SPY", context=ctx)
     report = generate_report("SPY", ctx, results, consensus)
+    assert "不输出共识信号" not in report
+    # rows the dashboard report page parses
+    assert "| **综合信号** |" in report and "（基金共识）" in report
+    assert f"| **综合评分** | {consensus.score:.1f}/10 |" in report
+    assert "共识依据：4 位适用大师的技术与市场读数" in report and "不含公司基本面" in report
+    assert "## 适用大师读数（4 位）" in report and "基金读数" in report
+    assert "弃权（规则不适用于基金，14 位）" in report
+    for banned in ("毛利率", "ROE:", "建议仓位", "半Kelly", "小市值"):
+        assert banned not in report, banned
+    assert fake_learning.recorded == []
+
+
+def test_report_for_etf(fake_learning):
+    from augur.registry import AgentRegistry, DecisionCoordinator
+    from augur.report import generate_report
+
+    ctx = spy_ctx_no_technicals()
+    coord = DecisionCoordinator(AgentRegistry())
+    results = coord.analyze_with_all(ctx)
+    consensus = coord.get_consensus(results, ticker="SPY", context=ctx)
+    report = generate_report("SPY", ctx, results, consensus)
     assert "SPY 基金分析报告（ETF）" in report
     assert "不输出共识信号" in report and "适用大师 1 位" in report
+    assert "3 位因技术指标缺失弃权" in report and "弃权（技术指标缺失，3 位）" in report
     assert "## ETF 概况" in report and "### ETF 体检" in report
     assert "$797.00B" in report and "按上一交易日推断" in report
     assert "弃权" in report and "不提供仓位建议" in report
@@ -304,11 +373,41 @@ def _call_tool(name, args):
     return "\n".join(getattr(c, "text", str(c)) for c in out)
 
 
+def test_mcp_consensus_fund_text_real_consensus():
+    from augur.mcp_server import _fund_consensus_text
+    from augur.registry import AgentRegistry, DecisionCoordinator
+
+    ctx = spy_ctx()
+    with patch("augur.registry._get_learning_engine") as le, \
+         patch("augur.registry._check_and_record_outcomes"):
+        le.return_value.has_learned_weights = False
+        coord = DecisionCoordinator(AgentRegistry())
+        results = coord.analyze_with_all(ctx)
+        consensus = coord.get_consensus(results, ticker="SPY", context=ctx)
+        assert not le.return_value.record_prediction.called
+    text = _fund_consensus_text("SPY", ctx, results, consensus, "yfinance", "fresh")
+    assert "WITHHELD" not in text
+    assert "Basis: fund consensus of 4 personas" in text
+    assert "Kelly Position: n/a (fund)" in text and "Applicable personas (4)" in text
+
+
+def test_mcp_committee_fund_real_consensus(fetch_returns, fake_learning):
+    fetch_returns["SPY"] = spy_ctx
+    with patch.dict("os.environ", {"AUGUR_SKIP_MACRO_FETCH": "1"}):
+        text = _call_tool("augur_committee", {"ticker": "SPY", "question": "Buy SPY?"})
+    assert "Basis:      fund consensus of 4 personas" in text
+    assert "Kelly Size: n/a (fund)" in text
+    assert "/ Abstain 14" in text and "ABSTAIN" in text
+    assert "Neutral 15" not in text
+    assert fake_learning.recorded == []
+
+
 def test_mcp_consensus_manual_etf(fake_learning):
     text = _call_tool("augur_consensus", {"ticker": "SPY", "price": 600, "asset_type": "etf"})
     assert "Consensus for SPY (ETF)" in text
     assert "WITHHELD" in text and "Kelly Position: n/a (fund)" in text
-    assert "Abstained (17" in text
+    assert "Abstained (14, rules not applicable to funds)" in text
+    assert "Abstained (3, fund technicals missing): arps, marks, soros" in text
     assert fake_learning.recorded == []
 
 

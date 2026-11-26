@@ -84,6 +84,22 @@ def _raw_analyze(agent):
     return lambda ctx: raw(agent, ctx)
 
 
+def _fund_rules(agent):
+    """What the guard would run for a fund if the persona were applicable:
+    its dedicated ``analyze_fund`` path when it has one, else its own rules.
+    Deliberately not the guarded ``analyze`` — abstentions are trivially
+    invariant and would let every persona pass."""
+    fund_path = getattr(agent, "analyze_fund", None)
+    return fund_path if callable(fund_path) else _raw_analyze(agent)
+
+
+def etf_ctx_no_technicals(**overrides) -> MarketContext:
+    """Fund context whose moving averages are missing (provider gave none)."""
+    base = dict(sma20=0.0, sma50=0.0, sma200=0.0)
+    base.update(overrides)
+    return etf_ctx(**base)
+
+
 # ---------------------------------------------------------------- guard ----
 
 @pytest.mark.parametrize("persona", ["buffett", "dan_bin", "dayu", "thiel"])
@@ -187,7 +203,7 @@ def test_fund_asset_type_is_case_insensitive():
 def _invariant_personas():
     invariant = set()
     for agent_id, agent in _builtin_agents():
-        run = _raw_analyze(agent)
+        run = _fund_rules(agent)
         base = run(etf_ctx())
         moved = False
         for change in COMPANY_PERTURBATIONS:
@@ -206,9 +222,159 @@ def test_fund_applicable_personas_decided_by_score_invariance():
 
 
 def test_fund_applicable_personas_locked():
-    # v14.0 lock. Changing this set needs the invariance test above to agree.
-    assert FUND_APPLICABLE_PERSONAS == frozenset({"dalio"})
-    assert len(FUND_APPLICABLE_PERSONAS) < MIN_APPLICABLE_FOR_CONSENSUS
+    # v14.1 lock. Changing this set needs the invariance test above to agree.
+    assert FUND_APPLICABLE_PERSONAS == frozenset({"dalio", "marks", "soros", "arps"})
+    assert len(FUND_APPLICABLE_PERSONAS) >= MIN_APPLICABLE_FOR_CONSENSUS
+
+
+def test_invariance_test_has_teeth():
+    """The equity rules of the fund-path personas do move with company
+    fields, so the invariance test is really checking the fund path."""
+    agents = dict(_builtin_agents())
+    for aid in ("marks", "soros", "arps"):
+        run = _raw_analyze(agents[aid])
+        base = run(etf_ctx())
+        assert any(
+            abs(run(etf_ctx(**c)).score - base.score) > 1e-9 for c in COMPANY_PERTURBATIONS
+        ), aid
+
+
+def test_fund_paths_ignore_company_fields_in_text_too():
+    """Not only score and signal: the whole fund reading is unchanged."""
+    agents = dict(_builtin_agents())
+    for aid in ("marks", "soros", "arps"):
+        base = agents[aid].analyze(etf_ctx())
+        for change in COMPANY_PERTURBATIONS:
+            resp = agents[aid].analyze(etf_ctx(**change))
+            assert resp.reasoning == base.reasoning, (aid, change)
+            assert resp.key_findings == base.key_findings, (aid, change)
+            assert resp.risks == base.risks, (aid, change)
+
+
+# ------------------------------------------------------- fund paths ----
+
+FUND_PATH_PERSONAS = ("marks", "soros", "arps")
+
+
+@pytest.mark.parametrize("persona", FUND_PATH_PERSONAS)
+def test_fund_path_is_labelled_fund_reading(persona):
+    resp = dict(_builtin_agents())[persona].analyze(etf_ctx())
+    assert not resp.metadata.get("not_applicable")
+    assert resp.metadata["fund_reading"] is True
+    assert resp.metadata["fund_basis"]
+    assert "基金读数" in resp.reasoning
+    assert resp.key_findings or resp.risks
+    assert all(t.startswith("基金读数") for t in resp.key_findings + resp.risks)
+    # company metrics may be named in the disclaimer, never shown as values
+    for company_word in ("PE:", "P/B:", "ROE:", "市值:", "收入增速:"):
+        assert company_word not in resp.reasoning, (persona, company_word)
+    assert 0 <= resp.score <= 10 and 0 < resp.confidence <= 0.75
+    assert resp.coverage_confidence > 0
+
+
+@pytest.mark.parametrize("persona", FUND_PATH_PERSONAS)
+def test_fund_path_abstains_without_technicals(persona):
+    resp = dict(_builtin_agents())[persona].analyze(etf_ctx_no_technicals())
+    assert resp.metadata["not_applicable"] is True
+    assert resp.metadata["reason"] == "fund_data_missing"
+    assert "基金数据不足" in resp.reasoning
+    assert resp.coverage_confidence == 0
+
+
+def test_fund_paths_without_macd_abstain_trend_readers_only():
+    """Moving averages present but no MACD (history-derived): Soros and
+    ARPS abstain instead of reading zeros as a death cross; Marks, which
+    does not use MACD, still reads."""
+    agents = dict(_builtin_agents())
+    ctx = etf_ctx(macd=0.0, macd_signal=0.0, macd_histogram=0.0)
+    for aid in ("soros", "arps"):
+        assert agents[aid].analyze(ctx).metadata["reason"] == "fund_data_missing", aid
+    assert agents["marks"].analyze(ctx).metadata["fund_reading"] is True
+
+
+def test_etf_with_partial_technicals_is_withheld(fake_learning):
+    ctx = etf_ctx(macd=0.0, macd_signal=0.0, macd_histogram=0.0)
+    coord = _coordinator()
+    consensus = coord.get_consensus(coord.analyze_with_all(ctx), ticker="SPY", context=ctx)
+    assert consensus.metadata["consensus_withheld"] is True
+    assert consensus.metadata["applicable_agents"] == ["dalio", "marks"]
+    assert consensus.metadata["fund_data_missing_agents"] == ["arps", "soros"]
+    assert fake_learning.recorded == []
+
+
+def test_marks_unknown_52w_range_is_not_read_as_at_highs():
+    marks = dict(_builtin_agents())["marks"]
+    resp = marks.analyze(etf_ctx(price_vs_52w_high=0.0, fifty_two_week_high=0.0,
+                                 volatility_20d=0.10))
+    assert resp.metadata["factors"]["pendulum_position"] == 5
+    assert resp.metadata["factors"]["risk_pricing"] == 4
+    assert not any("贪婪" in r for r in resp.risks)
+    assert "距52周高点: 未知" in resp.reasoning
+    assert resp.coverage_confidence == 0.7
+
+
+def test_soros_bearish_reading_explains_itself():
+    soros = dict(_builtin_agents())["soros"]
+    # live SPY 2026-11-26 shape: below SMA20/50/200, SMA50 > SMA200, MACD < signal
+    resp = soros.analyze(etf_ctx(price=716.7, sma20=740.3, sma50=757.9, sma200=733.0,
+                                 macd=-12.96, macd_signal=-10.04, macd_histogram=-2.92,
+                                 rsi=39.8, price_vs_52w_high=-8.3))
+    assert resp.signal == SignalType.BEARISH
+    assert resp.risks and not any("混杂" in f for f in resp.key_findings)
+
+
+def test_dalio_has_no_fund_path_and_is_stamped():
+    dalio = dict(_builtin_agents())["dalio"]
+    assert not hasattr(dalio, "analyze_fund")
+    resp = dalio.analyze(etf_ctx())
+    assert resp.metadata["fund_reading"] is True
+    raw = _raw_analyze(dalio)(etf_ctx())
+    assert (resp.score, resp.signal, resp.reasoning) == (raw.score, raw.signal, raw.reasoning)
+
+
+def test_equity_contexts_never_reach_fund_paths():
+    agents = dict(_builtin_agents())
+    ctx = MarketContext(ticker="AAPL", price=210, pe=30, sma50=200, sma200=190)
+    for aid in FUND_PATH_PERSONAS:
+        with patch.object(type(agents[aid]), "analyze_fund",
+                          side_effect=AssertionError("fund path on equity")):
+            resp = agents[aid].analyze(ctx)
+        assert "fund_reading" not in resp.metadata
+        assert "基金读数" not in resp.reasoning
+
+
+def test_marks_fund_reading_is_contrarian():
+    marks = dict(_builtin_agents())["marks"]
+    fear = marks.analyze(etf_ctx(price_vs_52w_high=-28.0, rsi=25.0, volatility_20d=0.38,
+                                 price=480.0, sma200=600.0,
+                                 etf={"premium_pct": -1.5}))
+    greed = marks.analyze(etf_ctx(price_vs_52w_high=-0.5, rsi=78.0, volatility_20d=0.09,
+                                  price=700.0, sma200=580.0,
+                                  etf={"premium_pct": 1.4, "expense_ratio": 0.0075}))
+    assert fear.signal == SignalType.BULLISH and greed.signal == SignalType.BEARISH
+    assert any("折价" in f for f in fear.key_findings)
+    assert any("溢价" in r for r in greed.risks) and any("费率" in r for r in greed.risks)
+
+
+def test_soros_fund_reading_follows_trend():
+    soros = dict(_builtin_agents())["soros"]
+    down = soros.analyze(etf_ctx(price=500.0, sma20=520.0, sma50=540.0, sma200=560.0,
+                                 macd=-3.0, macd_signal=-1.0, macd_histogram=-2.0,
+                                 rsi=42.0, price_vs_52w_high=-15.0))
+    up = soros.analyze(etf_ctx(price_vs_52w_high=-8.0))
+    assert down.signal == SignalType.BEARISH
+    assert up.signal == SignalType.BULLISH
+    assert any("空头排列" in r for r in down.risks)
+
+
+def test_arps_fund_liquidity_uses_profile_not_market_cap():
+    arps = dict(_builtin_agents())["arps"]
+    big = arps.analyze(etf_ctx())
+    tiny = arps.analyze(etf_ctx(etf={"aum_usd_bn": 0.02, "dollar_volume": 2e5, "spread_pct": 1.2}))
+    assert big.metadata["factors"]["liquidity_risk"] > tiny.metadata["factors"]["liquidity_risk"]
+    assert any("流动性风险" in r for r in tiny.risks)
+    # market_cap (= AUM for funds) is not read
+    assert arps.analyze(etf_ctx(market_cap=0.01)).score == big.score
 
 
 # ------------------------------------------------------------ consensus ----
@@ -243,8 +409,62 @@ def _coordinator():
     return DecisionCoordinator(AgentRegistry())
 
 
-def test_etf_consensus_is_withheld(fake_learning):
+def test_etf_consensus_is_real_with_four_fund_readers(fake_learning):
     ctx = etf_ctx()
+    coord = _coordinator()
+    results = coord.analyze_with_all(ctx)
+    consensus = coord.get_consensus(results, ticker="SPY", context=ctx)
+
+    meta = consensus.metadata
+    assert not meta.get("consensus_withheld")
+    assert meta["applicable_agents"] == ["arps", "dalio", "marks", "soros"]
+    assert "buffett" in meta["abstained_agents"] and len(meta["abstained_agents"]) == 14
+    basis = meta["fund_basis"]
+    assert basis["applicable_agents"] == meta["applicable_agents"]
+    assert basis["learning_record"] is False and basis["position_sizing"] == "none"
+    assert "no company fundamentals" in basis["fields"]
+    assert meta["position_pct"] == 0
+    assert meta["position_sizing"]["position_pct"] == 0
+    assert meta["asset_type"] == "etf"
+    assert meta["etf_findings"] == []
+    assert consensus.reasoning.startswith("基金共识：适用大师 4 位")
+    assert consensus.signal in (SignalType.BULLISH, SignalType.NEUTRAL, SignalType.BEARISH)
+    assert consensus.confidence > 0
+    assert fake_learning.recorded == []
+
+
+def test_fund_consensus_weights_are_equal_times_coverage(fake_learning):
+    """Equity-fitted weights (industry matrix, global, learned) and sector
+    boosts are not applied to funds."""
+    from augur.consensus.engine import ConsensusEngine
+
+    ctx = etf_ctx(sector="Financial Services")  # would boost marks x1.2 on equities
+    results = {aid: a.analyze(ctx) for aid, a in _builtin_agents()}
+    with patch("augur.consensus.load_global_consensus_weights",
+               return_value={"marks": 0.9, "dalio": 0.01}):
+        consensus = ConsensusEngine().compute(results, ticker="SPY", context=ctx)
+    weights = consensus.metadata["weighting"]["agent_weights"]
+    applicable = consensus.metadata["applicable_agents"]
+    for aid in applicable:
+        expected = 0.25 * results[aid].coverage_confidence
+        assert weights[aid] == pytest.approx(expected, abs=1e-4), aid
+
+
+def test_fund_readings_without_context_stay_in_fund_mode(fake_learning):
+    """Four fund readings and no context: still no position, no record."""
+    from augur.consensus.engine import ConsensusEngine
+
+    agents = dict(_builtin_agents())
+    results = {aid: agents[aid].analyze(etf_ctx()) for aid in sorted(FUND_APPLICABLE_PERSONAS)}
+    consensus = ConsensusEngine().compute(results, ticker="SPY", context=None)
+    assert not consensus.metadata.get("consensus_withheld")
+    assert consensus.metadata["position_pct"] == 0
+    assert consensus.metadata["fund_basis"]["applicable_agents"] == sorted(FUND_APPLICABLE_PERSONAS)
+    assert fake_learning.recorded == []
+
+
+def test_etf_without_technicals_is_withheld(fake_learning):
+    ctx = etf_ctx_no_technicals()
     coord = _coordinator()
     results = coord.analyze_with_all(ctx)
     consensus = coord.get_consensus(results, ticker="SPY", context=ctx)
@@ -256,17 +476,20 @@ def test_etf_consensus_is_withheld(fake_learning):
     assert meta["applicable_agents"] == ["dalio"]
     assert "buffett" in meta["abstained_agents"]
     assert "dalio" not in meta["abstained_agents"]
+    assert meta["fund_data_missing_agents"] == ["arps", "marks", "soros"]
     assert meta["position_pct"] == 0
     assert meta["position_sizing"]["position_pct"] == 0
     assert meta["asset_type"] == "etf"
     assert "适用大师 1 位" in consensus.reasoning
+    assert "14 位大师的规则不适用于基金" in consensus.reasoning
+    assert "3 位因技术指标缺失弃权" in consensus.reasoning
     assert fake_learning.recorded == []
 
 
 def test_withheld_without_context_uses_abstentions(fake_learning):
     from augur.consensus.engine import ConsensusEngine
 
-    ctx = etf_ctx()
+    ctx = etf_ctx_no_technicals()
     results = {aid: a.analyze(ctx) for aid, a in _builtin_agents()}
     consensus = ConsensusEngine().compute(results, ticker="SPY", context=None)
     assert consensus.metadata["consensus_withheld"] is True

@@ -343,7 +343,9 @@ function renderWatchlist() {
         // Get cached analysis score
         var cached = augurCache.get();
         var cachedItem = cached.find(function(c) { return c.ticker === item.ticker; });
-        var scoreHtml = cachedItem ? '<span class="wl-score">' + (cachedItem.result.score || 0).toFixed(1) + '/10</span>' : '';
+        var scoreHtml = !cachedItem ? '' : augurIsWithheld(cachedItem.result)
+            ? '<span class="wl-score" title="' + escapeHtml(_t('fund-withheld-tip', '')) + '">' + escapeHtml(augurWithheldLabel()) + '</span>'
+            : '<span class="wl-score">' + (cachedItem.result.score || 0).toFixed(1) + '/10</span>';
 
         var priceHtml = item.price ? '<span class="wl-price">$' + item.price.toFixed(2) + '</span>' : '';
 
@@ -388,11 +390,9 @@ function batchAnalyzeAll() {
             // Cache results
             data.results.forEach(function(r) {
                 if (r.consensus_signal && r.consensus_signal !== 'error') {
-                    augurCache.add(r.ticker, {
-                        signal: r.consensus_signal,
-                        score: r.consensus_score || 0,
-                        confidence: 0
-                    });
+                    augurCache.add(r.ticker, r.consensus_withheld
+                        ? { signal: r.consensus_signal, score: null, confidence: 0, consensus_withheld: true }
+                        : { signal: r.consensus_signal, score: r.consensus_score || 0, confidence: 0 });
                 }
             });
             renderWatchlist();
@@ -417,12 +417,13 @@ function renderBatchResults(results) {
 
     results.forEach(function(r) {
         var signal = r.consensus_signal || 'neutral';
-        var signalLabel = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+        var withheld = !!r.consensus_withheld;
+        var signalLabel = withheld ? augurWithheldLabel() : signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
         var sigClass = signal === 'bullish' ? 'signal-badge-buy' : signal === 'bearish' ? 'signal-badge-sell' : 'signal-badge-neutral';
         html += '<tr>' +
             '<td style="font-weight:600; font-family:var(--font-data);">' + escapeHtml(r.ticker) + '</td>' +
             '<td><span class="signal-badge ' + sigClass + '">' + signalLabel + '</span></td>' +
-            '<td style="font-family:var(--font-data); color:var(--accent-orange);">' + (r.consensus_score || 0).toFixed(1) + '</td>' +
+            '<td style="font-family:var(--font-data); color:var(--accent-orange);">' + augurScoreText(r, r.consensus_score) + '</td>' +
             '<td><a href="/stocks?ticker=' + escapeHtml(r.ticker) + '" class="btn btn-sm">详情</a></td>' +
             '</tr>';
     });

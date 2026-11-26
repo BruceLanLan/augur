@@ -249,27 +249,67 @@ class BaseAgent:
         @functools.wraps(raw)
         def analyze(self, context, *args, **kw):
             from augur.etf import FUND_APPLICABLE_PERSONAS, is_fund
-            if is_fund(context) and getattr(self, "agent_id", "") not in FUND_APPLICABLE_PERSONAS:
+            if not is_fund(context):
+                return raw(self, context, *args, **kw)
+            if getattr(self, "agent_id", "") not in FUND_APPLICABLE_PERSONAS:
                 return self._fund_not_applicable(context)
-            return raw(self, context, *args, **kw)
+            # v14.1: a persona with a dedicated fund path (``analyze_fund``)
+            # reads only technical / macro / ETF-profile fields; one without
+            # (dalio) runs its own rules, which are already technical-only.
+            fund_path = getattr(self, "analyze_fund", None)
+            resp = fund_path(context) if callable(fund_path) else raw(self, context, *args, **kw)
+            if isinstance(resp, AgentResponse) and not resp.metadata.get("not_applicable"):
+                resp.metadata["fund_reading"] = True
+                resp.metadata.setdefault("asset_type", str(getattr(context, "asset_type", "") or "fund").lower())
+            return resp
 
         analyze._augur_fund_guard = True
         cls.analyze = analyze
 
-    def _fund_not_applicable(self, context: "MarketContext") -> AgentResponse:
-        """Neutral abstention returned for funds instead of running company rules."""
+    def _fund_not_applicable(self, context: "MarketContext", reason: str = "fund") -> AgentResponse:
+        """Neutral abstention returned for funds instead of running company rules.
+
+        ``reason="fund"``: the persona's rules are company rules.
+        ``reason="fund_data_missing"``: the persona has a fund path but the
+        technical inputs it needs (price, moving averages) are missing.
+        """
         name = getattr(self, "name", "") or getattr(self, "agent_id", "")
         asset_type = str(getattr(context, "asset_type", "") or "fund").lower()
+        if reason == "fund_data_missing":
+            text = f"基金数据不足：{name} 的基金读数需要价格与均线等技术指标，当前缺失，不参与评分。"
+        else:
+            text = f"不适用于基金：{name} 的规则基于公司财务，{asset_type.upper()} 不参与评分。"
         return AgentResponse(
             agent_id=getattr(self, "agent_id", ""),
             agent_name=name,
             signal=SignalType.NEUTRAL,
             confidence=0.0,
             score=5.0,
-            reasoning=f"不适用于基金：{name} 的规则基于公司财务，{asset_type.upper()} 不参与评分。",
+            reasoning=text,
             coverage_confidence=0.0,
-            metadata={"not_applicable": True, "reason": "fund", "asset_type": asset_type},
+            metadata={"not_applicable": True, "reason": reason, "asset_type": asset_type},
         )
+
+    @staticmethod
+    def _fund_technicals_missing(context: "MarketContext", need_macd: bool = False) -> bool:
+        """True when a fund context lacks the minimum technical inputs.
+
+        ``rsi`` defaults to 50 and cannot signal absence, so the zero
+        sentinels of price and the 50/200-day averages are used instead.
+        With ``need_macd``, MACD line, signal and histogram all at 0 also
+        count as missing (they come from price history, which can fail
+        while the quote still arrives).
+        """
+        price = getattr(context, "price", 0) or 0
+        sma50 = getattr(context, "sma50", 0) or 0
+        sma200 = getattr(context, "sma200", 0) or 0
+        if not (price > 0 and sma50 > 0 and sma200 > 0):
+            return True
+        if need_macd and not any(
+            getattr(context, k, 0) for k in ("macd", "macd_signal", "macd_histogram")
+        ):
+            return True
+        return False
 
     def __init__(
         self,

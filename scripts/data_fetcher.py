@@ -25,6 +25,9 @@ except ImportError:  # running from a source checkout without augur installed
     import os
     sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src"))
     from augur.indicators import wilder_rsi as _wilder_rsi
+# dividendYield is percent on yfinance 1.x; share the provider's unit handling.
+from augur.datasources.base import safe_num  # noqa: E402
+from augur.datasources.yfinance_provider import dividend_yield_from_info  # noqa: E402
 
 try:
     import yfinance as yf
@@ -102,7 +105,10 @@ class StockDataFetcher:
             "eps": self.info.get("trailingEps"),
             "forward_eps": self.info.get("forwardEps"),
             "dividend": self.info.get("dividendRate"),
-            "dividend_yield": self.info.get("dividendYield"),
+            "dividend_yield": dividend_yield_from_info(
+                self.info,
+                safe_num(self.info.get("currentPrice")) or safe_num(self.info.get("regularMarketPrice")),
+            ),
             "beta": self.info.get("beta"),
             "52w_high": self.info.get("fiftyTwoWeekHigh"),
             "52w_low": self.info.get("fiftyTwoWeekLow"),

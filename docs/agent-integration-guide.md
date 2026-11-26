@@ -123,7 +123,7 @@ Codex 等其他支持 MCP 的终端 Agent：把 `augur-mcp` 注册为 stdio MCP 
 
 #### v14 的 MCP 变化
 
-- **ETF**：`augur_analyze`、`augur_consensus`、`augur_debate`、`augur_committee` 接受 `asset_type`（`equity` / `etf` / `fund`，留空自动识别）。基金上 18 位大师里只有 Dalio 参与评分，其余返回"不适用"；适用大师不足 3 位时共识被**扣下（withheld）**，不给信号和仓位。`augur_fetch` 对基金输出 ETF 概况与体检清单。
+- **ETF**：`augur_analyze`、`augur_consensus`、`augur_debate`、`augur_committee` 接受 `asset_type`（`equity` / `etf` / `fund`，留空自动识别）。基金上 18 位大师里 Dalio、Marks、Soros、ARPS 用技术面和行情给出读数，其余返回"不适用"；适用的至少 3 位时给出"基金共识"（等权、不给仓位、不写学习记录）；技术指标缺失导致适用不足 3 位时共识被**扣下（withheld）**，不给信号和仓位。`augur_fetch` 对基金输出 ETF 概况与体检清单。
 - **`augur_configure` 已弃用**：Augur 的评分不调用模型，这个工具写的配置从来没有被读取。v14 起调用它只返回一条弃用说明，不写任何文件。模型由宿主 Agent（例如 Claude Code）自己决定。
 
 ---

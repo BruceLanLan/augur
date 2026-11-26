@@ -22,6 +22,51 @@ from typing import Any, List, Dict, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
+# Production technicals are computed on ``stock.history(period="3mo")``
+# (~63 daily bars, see datasources/yfinance_provider.py); historical replays
+# use a trailing window of the same length so Wilder RSI/ATR and the MACD
+# EMAs see the same amount of history as a live analysis would.
+TECHNICALS_WINDOW = 63
+
+# Technical fields production puts on a MarketContext, with the defaults
+# YFinanceProvider uses when a value cannot be computed.
+_TECHNICAL_DEFAULTS = (
+    ("rsi", 50), ("macd", 0), ("macd_signal", 0), ("macd_histogram", 0),
+    ("sma20", 0), ("sma50", 0), ("atr", 0), ("volatility_20d", 0),
+)
+
+
+def _technicals_as_of(prices: List[Dict], i: int) -> Dict[str, Any]:
+    """Production-equivalent technical fields for bar ``i`` of ``prices``.
+
+    Uses only bars ``<= i`` (no look-ahead), at most ``TECHNICALS_WINDOW`` of
+    them, including highs/lows so ATR is the same true-range ATR production
+    computes.
+    """
+    from augur.data import calculate_technicals
+
+    window = prices[max(0, i - TECHNICALS_WINDOW + 1):i + 1]
+    technicals = calculate_technicals(window) if len(window) >= 5 else {}
+    return {k: technicals.get(k, default) for k, default in _TECHNICAL_DEFAULTS}
+
+
+def _forward_return(prices: List[Dict], i: int, horizon: int) -> Optional[float]:
+    """Close-to-close return from bar ``i`` to ``i + horizon``; ``None`` when
+    the history does not reach that far (unknown is not the same as flat)."""
+    if i + horizon >= len(prices):
+        return None
+    return round((prices[i + horizon]["close"] / prices[i]["close"]) - 1, 5)
+
+
+def _finite_or_none(value: Any) -> Optional[float]:
+    if value is None or isinstance(value, bool):
+        return None
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return None
+    return v if math.isfinite(v) else None
+
 
 # ============ Data Classes ============
 
@@ -34,9 +79,15 @@ class BacktestRecord:
     signal: str           # bullish / neutral / bearish
     score: float          # 0-10
     confidence: float     # 0-1
-    actual_return_5d: float = 0.0
+    # Forward returns. 20d is always realised (records without a 20d return
+    # are not created; ``hit`` is defined on it). 5d/60d are ``None`` when the
+    # history did not reach that horizon -- never 0.0, which would read as a
+    # flat move and score a neutral call as a hit. Records persisted before
+    # v14.1 may carry a 0.0 that really meant "missing"; those cannot be told
+    # apart from a true zero and are read back as-is.
+    actual_return_5d: Optional[float] = None
     actual_return_20d: float = 0.0
-    actual_return_60d: float = 0.0
+    actual_return_60d: Optional[float] = None
     hit: bool = False     # 预测是否正确
     # "live" (real yfinance history), "demo" (generate_sample_data synthetic
     # data), or "unknown" (legacy records persisted before this field existed,
@@ -154,19 +205,22 @@ class Backtester:
             date_str = day_data.get("date", "")
             if not date_str:
                 continue
+
+            # Forward returns for this date. A missing / None 20d return means
+            # the outcome is unknown: skip the day instead of scoring it
+            # against 0.0 (which would count every neutral call as a hit).
+            fwd = fwd_lookup.get(date_str) or {}
+            ret_20d = _finite_or_none(fwd.get("return_20d"))
+            if ret_20d is None:
+                continue
+            ret_5d = _finite_or_none(fwd.get("return_5d"))
+            ret_60d = _finite_or_none(fwd.get("return_60d"))
             dates.append(date_str)
 
-            # Get forward returns for this date
-            fwd = fwd_lookup.get(date_str, {})
-            ret_5d = fwd.get("return_5d", 0.0)
-            ret_20d = fwd.get("return_20d", 0.0)
-            ret_60d = fwd.get("return_60d", 0.0)
-
-            # Build MarketContext from day data
+            # Build MarketContext from day data: same fundamentals + technical
+            # fields production fills (see _REPLAY_RECORD_FIELDS).
             ctx_kwargs = {"ticker": ticker.upper()}
-            for k in ["price", "pe", "pb", "roe", "gross_margins", "revenue_growth",
-                       "debt_ratio", "fcf", "market_cap", "operating_margins",
-                       "rsi", "macd", "earnings_growth", "current_ratio"]:
+            for k in _REPLAY_RECORD_FIELDS:
                 if k in day_data:
                     ctx_kwargs[k] = day_data[k]
             ctx = MarketContext(**ctx_kwargs)
@@ -263,13 +317,16 @@ class Backtester:
                 else:
                     signal_scores.append(0)
 
-            returns_5d = [r.actual_return_5d for r in recs]
-            returns_20d = [r.actual_return_20d for r in recs]
-            returns_60d = [r.actual_return_60d for r in recs]
+            # Per horizon, only records whose return at that horizon is known.
+            def _ic(attr: str) -> float:
+                pairs = [(s, _finite_or_none(getattr(r, attr)))
+                         for s, r in zip(signal_scores, recs)]
+                pairs = [(s, v) for s, v in pairs if v is not None]
+                return self._rank_correlation([p[0] for p in pairs], [p[1] for p in pairs])
 
-            ic_5d = self._rank_correlation(signal_scores, returns_5d)
-            ic_20d = self._rank_correlation(signal_scores, returns_20d)
-            ic_60d = self._rank_correlation(signal_scores, returns_60d)
+            ic_5d = _ic("actual_return_5d")
+            ic_20d = _ic("actual_return_20d")
+            ic_60d = _ic("actual_return_60d")
 
             agent_ics.append(AgentIC(
                 agent_id=agent_id,
@@ -340,8 +397,6 @@ class Backtester:
                 date_records[r.date] = []
             date_records[r.date].append(r)
 
-        fwd_lookup = {fr["date"]: fr for fr in forward_returns}
-
         consensus_scores = []
         actual_returns = []
 
@@ -356,11 +411,13 @@ class Backtester:
                     total += r.score
                 elif r.signal == "bearish":
                     total -= r.score
+            ret_20d = _finite_or_none(recs[0].actual_return_20d)
+            if ret_20d is None:
+                continue
             avg = total / len(recs)
             consensus_scores.append(avg)
-
-            fwd = fwd_lookup.get(date_str, {})
-            actual_returns.append(fwd.get("return_20d", 0.0))
+            # Every record on a date carries the same realised 20d return.
+            actual_returns.append(ret_20d)
 
         return round(self._rank_correlation(consensus_scores, actual_returns), 4)
 
@@ -489,11 +546,13 @@ class Backtester:
         Returns:
             BacktestResult with all records and IC calculations
         """
-        from augur.data import fetch_history, calculate_technicals
+        from augur.data import fetch_history
         from augur.consensus.edgar_fundamentals import fetch_edgar_fundamentals
 
-        # Fetch enough history for forward returns (days + 60)
-        total_period = days + 70
+        # Fetch enough history for forward returns (days + 60) plus a
+        # production-length technicals warm-up before the first day.
+        lookback = TECHNICALS_WINDOW - 1
+        total_period = days + 70 + lookback
         period_map = {
             60: "6mo",
             120: "1y",
@@ -513,31 +572,25 @@ class Backtester:
         if not prices or len(prices) < days + 5:
             raise ValueError(f"Insufficient data for {ticker}: got {len(prices)} days, need at least {days + 5}")
 
-        # Build historical_data and forward_returns
-        # Use last `days + 60` entries, backtest on first `days`
-        if len(prices) > days + 60:
-            prices = prices[-(days + 60):]
+        # Build historical_data and forward_returns: backtest `days` days
+        # that each have 60 bars of forward history after them and (when the
+        # fetch reaches back far enough) TECHNICALS_WINDOW bars of history
+        # up to and including them.
+        if len(prices) > days + 60 + lookback:
+            prices = prices[-(days + 60 + lookback):]
+        offset = min(lookback, max(0, len(prices) - (days + 60)))
 
-        actual_days = min(days, len(prices) - 5)
+        actual_days = min(days, len(prices) - offset - 5)
         historical_data = []
         forward_returns = []
 
-        for i in range(actual_days):
+        for i in range(offset, offset + actual_days):
             day = prices[i]
             date_str = day["date"]
 
-            # Calculate technicals from prices up to this point
-            history_slice = prices[:i + 1]
-            technicals = calculate_technicals(history_slice) if len(history_slice) >= 5 else {}
-
-            day_record = {
-                "date": date_str,
-                "price": day["close"],
-                "rsi": technicals.get("rsi", 50),
-                "macd": technicals.get("macd", 0),
-                "sma20": technicals.get("sma20", 0),
-                "sma50": technicals.get("sma50", 0),
-            }
+            day_record = {"date": date_str, "price": day["close"]}
+            # Same technical fields and window length as a live analysis
+            day_record.update(_technicals_as_of(prices, i))
 
             # Point-in-time fundamentals: only what would actually have been
             # filed/available as of this historical date, sourced from real
@@ -555,22 +608,12 @@ class Backtester:
 
             historical_data.append(day_record)
 
-            # Forward returns
-            ret_5d = 0.0
-            ret_20d = 0.0
-            ret_60d = 0.0
-            if i + 5 < len(prices):
-                ret_5d = (prices[i + 5]["close"] / prices[i]["close"]) - 1
-            if i + 20 < len(prices):
-                ret_20d = (prices[i + 20]["close"] / prices[i]["close"]) - 1
-            if i + 60 < len(prices):
-                ret_60d = (prices[i + 60]["close"] / prices[i]["close"]) - 1
-
+            # Forward returns; None where the history ends first
             forward_returns.append({
                 "date": date_str,
-                "return_5d": round(ret_5d, 5),
-                "return_20d": round(ret_20d, 5),
-                "return_60d": round(ret_60d, 5),
+                "return_5d": _forward_return(prices, i, 5),
+                "return_20d": _forward_return(prices, i, 20),
+                "return_60d": _forward_return(prices, i, 60),
             })
 
         return self.run_backtest(ticker, historical_data, forward_returns, data_source="live")
@@ -637,15 +680,14 @@ def generate_sample_data(ticker: str = "AAPL", days: int = 30) -> Tuple[List[Dic
         })
 
         # Forward returns
-        ret_5d = (prices[i + 5] / prices[i] - 1) if i + 5 < len(prices) else 0.0
-        ret_20d = (prices[i + 20] / prices[i] - 1) if i + 20 < len(prices) else 0.0
-        ret_60d = (prices[i + 60] / prices[i] - 1) if i + 60 < len(prices) else 0.0
+        def _ret(h: int) -> Optional[float]:
+            return round(prices[i + h] / prices[i] - 1, 5) if i + h < len(prices) else None
 
         forward_returns.append({
             "date": date_str,
-            "return_5d": round(ret_5d, 5),
-            "return_20d": round(ret_20d, 5),
-            "return_60d": round(ret_60d, 5),
+            "return_5d": _ret(5),
+            "return_20d": _ret(20),
+            "return_60d": _ret(60),
         })
 
     return historical_data, forward_returns
@@ -741,7 +783,9 @@ def fetch_ticker_replay_records(
     reachable -- EDGAR annual filings typically cover back to ~2011 for
     established large caps (yfinance-derived point-in-time fundamentals
     only reached ~2022; see edgar_fundamentals module docstring). Each
-    record has: date, price, rsi, macd, pe, pb, roe, gross_margins,
+    record has: date, price, the production technical fields (rsi, macd,
+    macd_signal, macd_histogram, sma20, sma50, atr, volatility_20d -- on a
+    trailing ``TECHNICALS_WINDOW``-bar window), pe, pb, roe, gross_margins,
     operating_margins, revenue_growth, earnings_growth, debt_ratio,
     market_cap, actual_return_20d. Days with insufficient point-in-time
     fundamentals, or without a realized 20-day forward return yet, are
@@ -757,7 +801,7 @@ def fetch_ticker_replay_records(
     than ``period`` in the past, pass a longer ``period`` (e.g. "max") or
     this function will quietly produce empty results with no error.
     """
-    from augur.data import fetch_history, calculate_technicals
+    from augur.data import fetch_history
     from augur.consensus.edgar_fundamentals import fetch_edgar_fundamentals
 
     prices = fetch_history(ticker, period=period)
@@ -779,19 +823,12 @@ def fetch_ticker_replay_records(
         if i + 20 >= len(prices):
             continue
 
-        history_slice = prices[:i + 1]
-        technicals = calculate_technicals(history_slice) if len(history_slice) >= 5 else {}
-
         pit = fetch_edgar_fundamentals(ticker, date_str, price=day["close"])
         if pit.get("insufficient"):
             continue
 
-        record = {
-            "date": date_str,
-            "price": day["close"],
-            "rsi": technicals.get("rsi", 50),
-            "macd": technicals.get("macd", 0),
-        }
+        record = {"date": date_str, "price": day["close"]}
+        record.update(_technicals_as_of(prices, i))
         for k, v in pit.items():
             record[k] = v
         # F0.3: insider_ownership / institutional_ownership intentionally NOT
@@ -818,8 +855,8 @@ def fetch_ticker_replay_records(
 _REPLAY_RECORD_FIELDS = (
     "price", "pe", "pb", "roe", "gross_margins", "revenue_growth",
     "debt_ratio", "fcf", "market_cap", "operating_margins",
-    "rsi", "macd", "earnings_growth", "current_ratio",
-)
+    "earnings_growth", "current_ratio",
+) + tuple(k for k, _ in _TECHNICAL_DEFAULTS)
 
 
 def _signed_agent_scores(ticker: str, record: Dict, agents) -> Dict[str, float]:

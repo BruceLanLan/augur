@@ -8,7 +8,7 @@
 
 **在本机运行的投资研究工具：18 位投资大师的规则化打分，加上可以事后复查的研究记录。**
 
-[![v14.0.0](https://img.shields.io/badge/v14.0.0-ETF_Native-ff6b35?style=for-the-badge)](CHANGELOG.md)
+[![v14.1.0](https://img.shields.io/badge/v14.1.0-ETF_Consensus-ff6b35?style=for-the-badge)](CHANGELOG.md)
 [![Tests](https://img.shields.io/github/actions/workflow/status/BruceLanLan/augur/tests.yml?branch=main&label=tests&style=for-the-badge)](https://github.com/BruceLanLan/augur/actions/workflows/tests.yml)
 [![18 大师](https://img.shields.io/badge/18-投资大师-gold?style=for-the-badge)](#-18-位投资大师)
 [![MCP](https://img.shields.io/badge/MCP-1.x_%2F_2.x-orange?style=for-the-badge)](#-接入-claude--agent)
@@ -19,7 +19,7 @@
 
 Augur 用 18 套按公开投资理念写成的确定性规则（下文称"大师"）分析股票，汇总成共识信号和 Kelly 仓位建议。每次运行连同证据来源存成不可变的记录，几个月后你仍能查到当时知道什么、后来什么变了、大师们在哪些事实上有分歧。打分不调用大模型，数据保存在本机。
 
-**v14 的主要变化是 ETF 原生分析。** Augur 现在能识别 ETF，输出 ETF 概况（规模、费率、净值、溢价折价等）和体检清单，不再把基金当成公司打分。规则依赖公司财务数据的大师会对基金弃权；v14.0 只有 Dalio 适用，不够出共识所需的 3 位，所以 ETF 目前一律不给共识。v14 还把 RSI 改为 Wilder 平滑，并把非美元标的的金额换算成美元。详见 [v14 新功能](#-v14-新功能)。
+**v14 的主要变化是 ETF 原生分析。** Augur 现在能识别 ETF，输出 ETF 概况（规模、费率、净值、溢价折价等）和体检清单，不再把基金当成公司打分。规则依赖公司财务数据的大师会对基金弃权；v14.1 起 Dalio、Marks、Soros、ARPS 这 4 位用技术面和行情给出基金读数，合成一个不带仓位建议的"基金共识"，技术指标缺失时不出共识。v14 还把 RSI 改为 Wilder 平滑、ATR 改用真实波幅，并把非美元标的的金额换算成美元。详见 [v14 新功能](#-v14-新功能)。
 
 试一下（需要 Python 3.10+）：
 
@@ -27,7 +27,7 @@ Augur 用 18 套按公开投资理念写成的确定性规则（下文称"大师
 git clone https://github.com/BruceLanLan/augur.git && cd augur
 python3 -m venv .venv && source .venv/bin/activate && pip install -e ".[data]"
 augur analyze AAPL     # 18 位大师各自的判断、共识与 Kelly 仓位
-augur consensus SPY    # ETF：ETF 概况、体检清单、哪些大师适用
+augur consensus SPY    # ETF：基金共识、ETF 概况、体检清单、哪些大师适用
 ```
 
 > ⚠️ **仅供学习研究，不构成投资建议。** 大师是对公开投资理念的规则化模拟，不代表本人观点。所有分数、Kelly 仓位和估值都取决于数据质量和模型假设。
@@ -77,7 +77,7 @@ augur serve --open                 # http://localhost:8000，⌘K 打开命令�
 ```bash
 augur analyze AAPL                 # 18 位大师同时分析 + 加权共识 + Kelly 仓位
 augur fetch SPY                    # ETF：ETF 概况（规模、费率、净值、溢价折价）+ 体检清单
-augur consensus SPY                # ETF：列出适用和弃权的大师；适用不足 3 位时不给共识
+augur consensus SPY                # ETF：4 位大师的基金共识（无仓位）；技术指标缺失、适用不足 3 位时不给共识
 augur workflow AAPL                # 多步分析，保存 RunBundle，末尾打印 Run ID
 augur report from-run AAPL         # 基于最近一次运行生成报告：共识、分歧图、来源信息
 augur export AAPL --format md      # 导出最近一次运行（md / json / evidence-pack / pdf）
@@ -103,12 +103,13 @@ augur cycle                        # 自选股的财报周期：谁准备好了�
 
 <img src="docs/images/screenshots/v14/etf-consensus.png" alt="augur consensus SPY" width="100%">
 
-`augur consensus SPY` 的输出：共识为 WITHHELD，下面是 ETF 概况、体检清单，以及适用和弃权的大师。
+`augur consensus SPY` 的输出（2026-11-26 实时数据）：基金共识为 NEUTRAL 5.0/10、置信度 43%，18 位中 4 位适用，Kelly 仓位为 n/a；下面是 ETF 概况、体检清单、4 位适用大师的读数和 14 位弃权的大师。
 
 - **怎么识别 ETF**：yfinance 的 `quoteType` 为 ETF 或 MUTUALFUND，或者是 A 股基金代码（上交所 51 / 56 / 58 开头，深交所 15 开头）。`fetch`、`analyze`、`consensus`、`report` 对基金输出 ETF 概况，不再输出公司基本面。
 - **ETF 概况**：规模（美元）、费率、分红率、类别、净值和净值日期、溢价折价（用净值日期当天的收盘价计算）、前十大持仓占比、买卖价差、成分股 PE。
 - **体检清单**：费率高于 0.50% 或 1.00%、规模低于 5000 万美元（有清盘风险）、溢价折价绝对值超过 1%、前十大占比超过 50%、买卖价差超过 0.5% 时提示。缺数据无法检查的项列为"未检查"，不猜。
-- **大师弃权**：规则读取公司财务数据的大师对基金返回"不适用"，不打分。哪些大师适用由一个测试决定：在 ETF 上改动公司字段，分数跟着变的大师就不适用。v14.0 只有 Dalio 适用，而共识至少需要 3 位适用的大师，所以目前所有 ETF 的共识都是 WITHHELD：没有信号，没有 Kelly 仓位，也不写入学习记录。
+- **大师弃权**：规则读取公司财务数据的大师对基金返回"不适用"，不打分。哪些大师适用由一个测试决定：在 ETF 上改动公司字段，分数跟着变的大师就不适用。v14.0 只有 Dalio 适用；v14.1 起 Marks、Soros、ARPS 也有了基金读法，只看技术面、行情和 ETF 概况（相对 50 / 200 日均线、52 周区间、RSI、MACD、20 日波动率），共 4 位适用。
+- **基金共识**：适用的大师至少 3 位时输出"基金共识"：等权，按数据覆盖率打折，不用为股票调过的行业权重、学习权重和新闻情绪调整；不给 Kelly 仓位，也不写入学习记录。价格、均线或 MACD 缺失时（例如只手填了价格），这几位以"技术指标缺失"弃权，共识为 WITHHELD，输出里分开列出"规则不适用"和"技术指标缺失"两类弃权。
 - **数据来源和限制**：美股和港股 ETF 的净值来自 yfinance，不带日期，Augur 按最新一根 K 线的前一个交易日推断，并标注"推断"。A 股 ETF 的单位净值和真实净值日期来自新浪公开行情接口；免费数据源没有 A 股 ETF 的规模、费率和持仓，这几项显示为"未检查"。溢价折价只看最新一天，没有历史和跟踪误差。
 
 <img src="docs/images/screenshots/v14/etf-fetch.png" alt="augur fetch 510300.SS" width="100%">
@@ -117,7 +118,7 @@ augur cycle                        # 自选股的财报周期：谁准备好了�
 
 <img src="docs/images/screenshots/v14/dashboard-etf-card.png" alt="Dashboard 股票页的 ETF 卡片" width="100%">
 
-Dashboard 股票页（`/stocks`）对 ETF 显示 ETF 概况卡片，共识卡片显示 WITHHELD，仓位为 n/a。
+Dashboard 股票页（`/stocks`）对 ETF 显示 ETF 概况卡片；共识卡片标为 Fund Consensus（中文界面为"基金共识"），仓位为 n/a，下方说明是几位大师的读数、不含公司基本面。
 
 ### 正确性修复
 
@@ -336,7 +337,7 @@ augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur s
 | 状态 | 范围 |
 |---|---|
 | 稳定 | 18 位大师的分析与共识、上面列出的命令行研究流程、Dashboard 主要页面、MCP server、RunBundle 与导出、数据源链（yfinance，SEC EDGAR 覆盖美股财报字段） |
-| 可用，有明确边界 | ETF 分析：v14.0 只有 Dalio 适用，所以共识一律 WITHHELD；A 股 ETF 只有净值和溢价折价；溢价折价只看最新一天；以下地方对基金仍会把不输出的共识显示成 5.0：Dashboard 的自选、组合、扫描器、历史记录、信号页（通知和实时推送），`augur cron` 摘要，聊天机器人，以及内置 Skill（CLI、MCP、Dashboard 股票页、首页和委员会页已显示 WITHHELD）。<br>内置 Skill（4 个）：只运行内置清单；债务约束默认用参考阈值，不是信贷协议条款。<br>分歧图：按大师的分维度评分推导并引用证据，维度到指标的映射是固定表。<br>`augur risk-review`：规则匹配，措辞小改可能同时显示为"新增"和"删除"。<br>`augur eval`：单只股票的时间序列 IC，远期收益重叠，显著性偏乐观，只用于筛查。<br>`augur guidance`：需要 `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1`，会调用付费大模型。<br>PDF 导出：需要 `[export]`。 |
+| 可用，有明确边界 | ETF 分析：4 位大师给基金读数，基金共识等权、不给仓位、不写学习记录；大师的分析文字只有中文；A 股 ETF 只有净值和溢价折价；溢价折价只看最新一天；v14.1 之前的精简历史记录里，不出共识的基金仍存成 5.0。<br>内置 Skill（4 个）：只运行内置清单；债务约束默认用参考阈值，不是信贷协议条款。<br>分歧图：按大师的分维度评分推导并引用证据，维度到指标的映射是固定表。<br>`augur risk-review`：规则匹配，措辞小改可能同时显示为"新增"和"删除"。<br>`augur eval`：单只股票的时间序列 IC，远期收益重叠，显著性偏乐观，只用于筛查。<br>`augur guidance`：需要 `AUGUR_EDGAR_GUIDANCE_EXTRACTION=1`，会调用付费大模型。<br>PDF 导出：需要 `[export]`。 |
 | 实验（默认关闭） | rolling-IC 动态权重（`AUGUR_FORCE_RIC=1`）、学习权重（`AUGUR_FORCE_LEARNED=1`）。两者都还没有通过预注册的样本外验证 |
 | 只有代码、没有入口 | `augur.experimental` 下的会计质量、资本配置、辩论引擎（Dashboard 的 `/debate` 用的是另一套实现）、相对估值、组合风险。有单元测试，但 CLI、Dashboard 和 MCP 都没有调用，可以当库用，不算产品功能 |
 | 尚未计量 | 运行记录里的 token 用量（目前只记录耗时） |
@@ -344,6 +345,17 @@ augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur s
 ---
 
 ## 🔄 升级说明
+
+### 从 v14.0 升级到 v14.1
+
+命令用法不变。需要注意的变化：
+
+| 变化 | 影响与处理 |
+|---|---|
+| ETF 有了真实的基金共识 | 多数 ETF 现在有信号和分数（不给仓位）；解析输出的脚本不要再假定 ETF 一律 WITHHELD。自选盯盘和 `augur cron` 的提醒对 ETF 也可能触发，不出共识时不会提醒 |
+| ATR 改用真实波幅，阈值重校 | Munger（>3% → >5.75%）和 Dalio（<2 / >5 → <3.75 / >9.25）在个别标的上的分数会变，整体触发率不变。见 [ATR 重校说明](docs/research/ATR_RECALIBRATION_2026-11.md) |
+| 回测与实盘同口径 | 回测和分市况 IC 的数字和旧版本对不上；在意可比性的话升级后重跑基线 |
+| 收盘后预测按下一交易日收盘入场 | 只影响新写入的学习记录 |
 
 ### 从 v13 升级到 v14
 
@@ -356,7 +368,7 @@ augur serve [--port 8000] · augur mcp-server · augur skill profiles · augur s
 | 非美元标的的金额按美元计 | 港股、A 股以及财报货币不是美元的标的（如部分 ADR）：`market_cap`、`fcf`、`revenue` 等是十亿美元，价格仍是交易货币。自己读取 `MarketContext` 的代码请注意单位 |
 | Communication Services 算作科技 | Thiel 和共识引擎的行业加权对 GOOGL、META、腾讯等的判断会变 |
 | 中性共识的仓位为 0 | 此前 `analyze` 会给出 0.6% 这样的小仓位 |
-| ETF 不再给 18 位大师的共识 | 输出 ETF 概况、体检清单和适用大师的读数，共识为 WITHHELD。基金的 `pe` / `pb` 为 0，成分股口径的值在 `etf` 字典里。以前把 ETF 当股票分析得到的结果不要再沿用 |
+| ETF 不再给 18 位大师的共识 | 输出 ETF 概况、体检清单和适用大师的读数，v14.0 的共识为 WITHHELD（v14.1 起 4 位适用大师给出基金共识）。基金的 `pe` / `pb` 为 0，成分股口径的值在 `etf` 字典里。以前把 ETF 当股票分析得到的结果不要再沿用 |
 | `--json` 时进度提示改走 stderr | stdout 只有 JSON。从 stdout 解析提示文字的脚本请改读 stderr |
 | `[llm]` 不再安装 `anthropic`；MCP `augur_configure` 弃用 | 代码从未用到它们。自定义代码需要 `anthropic` 时请自行安装 |
 | Dashboard 回测接口的收益、回撤、夏普为 `null` | 此前是用命中率推算的，不是实测值 |
@@ -434,7 +446,16 @@ make test-wheel # 在全新虚拟环境里安装构建产物并做冒烟检查
 ## 📝 更新日志
 
 <details open>
-<summary><strong>v14.0.0 — ETF 原生分析、正确性修复、讲清楚大模型的角色 (current)</strong></summary>
+<summary><strong>v14.1.0 — ETF 的真实基金共识、不再把占位的 5.0 当分数、真实波幅 ATR (current)</strong></summary>
+
+- 基金共识：Marks、Soros、ARPS 加上 Dalio 共 4 位大师给 ETF 读数，合成不带仓位的"基金共识"；技术指标缺失时仍不出共识，弃权按原因分开写。
+- 不出共识时，Dashboard、`augur cron`、`augur watchlist watch`、聊天机器人、Skill 和 MCP 都显示 WITHHELD，不再显示 5.0，也不再对占位值发提醒。
+- 真实波幅 ATR 并重校 Munger / Dalio 阈值；回测上下文与实盘同口径；收盘后预测按下一交易日收盘入场；股息率单位修正。
+
+</details>
+
+<details>
+<summary><strong>v14.0.0 — ETF 原生分析、正确性修复、讲清楚大模型的角色</strong></summary>
 
 - ETF 原生分析：识别 ETF，输出规模、费率、净值（A 股带真实净值日期）、按净值日期对齐的溢价折价、前十大占比和体检清单；规则不适用的大师弃权，适用不足 3 位时不给共识和仓位，也不写学习记录。
 - 正确性：Wilder RSI、非美元金额换算成美元、大宇波动率单位、Communication Services 算作科技、中性仓位为 0、`--json` 只输出 JSON、恐惧贪婪指数校准。

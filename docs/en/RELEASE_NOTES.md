@@ -4,6 +4,40 @@
 
 ---
 
+## v14.1.0 — A real ETF consensus, no placeholder 5.0, true-range ATR (2026-11-26)
+
+v14.0 stopped scoring ETFs as companies, but only Dalio applied, so ETFs never got a consensus. This release fills that gap and removes a few misleading numbers.
+
+### ETFs get a real consensus
+
+- Marks, Soros and ARPS gained a fund reading that uses only technical, market and ETF-profile data (price vs. the 50/200-day averages, the 52-week range, RSI, MACD, 20-day volatility), never company financials. With Dalio, 4 of the 18 masters now apply to funds.
+- With at least 3 applicable masters an ETF gets a result labelled "Fund consensus": equal weights scaled by data coverage, without the industry weights, learned weights or news-sentiment shift tuned for stocks; no position size, and nothing written to the learning records. Live SPY on 2026-11-26: NEUTRAL, 5.0/10, 43% confidence, 4 of 18 masters.
+- When technicals are missing (for example only a manual price), these masters abstain with "fund technicals missing" and the ETF is still WITHHELD. The output lists "rules not applicable to funds" and "fund technicals missing" separately.
+- Because ETFs now have a real consensus, watchlist monitoring (`augur watchlist watch`), the dashboard watchlist and `augur cron` alerts can fire on them; a withheld consensus never alerts.
+
+### A withheld consensus never shows as 5.0
+
+In v14.0 a fund without a consensus still showed as "HOLD 5.0" in many places. It now reads WITHHELD or `--` everywhere: dashboard history, signals, watchlist, portfolio, scanner, home page and stock-page trend chart, `augur cron` summaries, the Telegram / Slack / Lark / WeChat bots, built-in skills and the dossier, and the MCP debate tool. The `augur cron` case was a real bug: the 5.0 placeholder cleared the default threshold of 3, so it alerted on funds with no conclusion; `augur watchlist watch --alert-above / --alert-below` had the same problem and is fixed too. Also fixed: the committee page said "0 masters" when none were selected, and CLI tables lost alignment with emoji and CJK text.
+
+### Indicators and backtests closer to reality
+
+- **ATR uses the true range** (daily highs and lows, Wilder smoothing). True ATR is about 1.86x the old approximation, so the Munger and Dalio volatility thresholds were recalibrated on 41 tickers and 10,373 windows (Munger > 3% → > 5.75%, Dalio < 2 / > 5 → < 3.75 / > 9.25), keeping overall trigger rates where they were. **Dalio and Munger scores change for individual tickers**; most visibly, Munger's high-volatility rule now almost never fires on US large caps, HK and A-shares. See the [ATR recalibration note](../research/ATR_RECALIBRATION_2026-11.md) (Chinese).
+- **Backtests** now give replayed days the same technical fields as production (before only RSI and MACD, so "MACD above signal" became "MACD above 0" and "price above the average" was always true), over a 63-bar window with a warm-up; missing forward returns are skipped instead of counted as 0. **Backtest and regime-IC numbers therefore differ from earlier versions**, as expected.
+- **Learning entry price**: a prediction made after the close (HK 16:00, A-shares 15:00, otherwise New York 16:00) enters at the next session's close instead of a close it had already seen.
+- Live SPY's dividend yield read as 100% (yfinance changed the field's unit); no master reads that field, so scores are unaffected.
+
+### When upgrading
+
+- Scripts that parse ETF output: ETFs usually have a signal and score now; don't assume WITHHELD.
+- If you compare backtest numbers across versions, re-run your baseline after upgrading.
+- Full list: "Upgrading from v14.0 to v14.1" in the README and [CHANGELOG.md](../../CHANGELOG.md).
+
+### Not done yet
+
+Backtest contexts still lack the 52-week position and the 200-day average; compact history records from before v14.1 still store a withheld fund consensus as 5.0; whether 20-day volatility should use sample variance is undecided; persona text is Chinese only; VIX and regime features do not reach persona contexts; funds have no daily change percentage. All listed in the [ROADMAP](../ROADMAP.md) (Chinese).
+
+---
+
 ## v14.0.0 — ETF-native analysis, correctness fixes, a clear LLM role (2026-11-26)
 
 This release answers two things: a user asked "can it analyse ETFs?" and "does Augur actually use an LLM?" (Issue #5), and another user pointed out that the RSI formula was wrong (PR #10). Three threads.

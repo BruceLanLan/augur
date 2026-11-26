@@ -49,6 +49,13 @@ import os
 import re
 import json
 from typing import Optional, Dict, Any
+from augur.consensus_display import (
+    consensus_withheld,
+    display_confidence,
+    display_persona_score,
+    display_score,
+    display_signal,
+)
 
 # Signal emoji mapping (WeCom markdown支持)
 SIGNAL_EMOJI = {
@@ -177,15 +184,15 @@ def format_wechat_message(ticker: str, consensus, results: dict) -> str:
     企业微信 markdown 支持: **bold**, `code`, > quote, [link](url)
     保持紧凑布局以适配手机屏幕宽度
     """
-    signal_emoji = SIGNAL_EMOJI.get(consensus.signal.value, "")
-    signal_cn = SIGNAL_CN.get(consensus.signal.value, consensus.signal.value)
+    signal_emoji = ("" if consensus_withheld(consensus) else SIGNAL_EMOJI.get(consensus.signal.value, ""))
+    signal_cn = display_signal(consensus, SIGNAL_CN)
 
     lines = [
         f"**\U0001f989 Augur \u5171\u8bc6\u5206\u6790 - {ticker.upper()}**",
         "",
         f"> \u4fe1\u53f7: {signal_emoji} **{signal_cn.upper()}**",
-        f"> \u8bc4\u5206: **{consensus.score:.1f}/10**",
-        f"> \u7f6e\u4fe1\u5ea6: **{consensus.confidence:.0%}**",
+        f"> \u8bc4\u5206: **{display_score(consensus)}**",
+        f"> \u7f6e\u4fe1\u5ea6: **{display_confidence(consensus)}**",
         "",
     ]
 
@@ -197,7 +204,7 @@ def format_wechat_message(ticker: str, consensus, results: dict) -> str:
         emoji = AGENT_EMOJI.get(agent_id, "\U0001f464")
         signal_cn_agent = SIGNAL_CN.get(result.signal.value, result.signal.value)
         name = result.agent_name[:8]
-        lines.append(f"{emoji} {name} | {signal_cn_agent} | {result.score:.1f}")
+        lines.append(f"{emoji} {name} | {signal_cn_agent} | {display_persona_score(result, '{:.1f}')}")
         agent_count += 1
 
     # 关键发现
@@ -227,7 +234,7 @@ def format_single_agent_wechat(ticker: str, result) -> str:
         f"**{emoji} {result.agent_name} \u5206\u6790 - {ticker.upper()}**",
         "",
         f"> \u4fe1\u53f7: {signal_emoji} **{signal_cn.upper()}**",
-        f"> \u8bc4\u5206: **{result.score:.1f}/10**",
+        f"> \u8bc4\u5206: **{display_persona_score(result)}**",
         f"> \u7f6e\u4fe1\u5ea6: **{result.confidence:.0%}**",
         "",
         "**\u63a8\u7406:**",
@@ -985,7 +992,7 @@ def run_webhook_mode():
         agent_results = analysis["results"]
 
         bot.send_consensus(ticker, consensus, agent_results)
-        print(f"  Sent: {ticker} ({consensus.signal.value})")
+        print(f"  Sent: {ticker} ({display_signal(consensus)})")
 
     print(f"\nDone. Sent {len(results)} reports to WeChat group.")
 

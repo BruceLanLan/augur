@@ -51,6 +51,15 @@ ALLOWED_DIFFS: Dict[str, Set[str]] = {
     # (monopoly_power, founder_quality) were always blocked; now +1 each.
     "large_cap_us/yaml:thiel": {"score", "confidence"},
     "small_cap_growth/yaml:thiel": {"score"},
+    # v14.1 ATR recalibration: atr is now a true-range Wilder ATR (~1.86x the
+    # old close-to-close proxy), so dalio's ATR% bands moved <2/>5 -> <3.75/
+    # >9.25 (docs/research/ATR_RECALIBRATION_2026-11.md). The fixture's
+    # hand-set atr values sit on the old scale: hk_stock 2.4% now counts as
+    # low vol (+3 risk_adjusted), small_cap_growth 5.8% no longer counts as
+    # high vol (-3 gone) and crosses neutral -> bullish. munger's >3 -> >5.75
+    # move changes no fixture context (1.7% / 2.4% / 5.8% stay on the same side).
+    "hk_stock/dalio": {"score"},
+    "small_cap_growth/dalio": {"score", "signal"},
 }
 
 

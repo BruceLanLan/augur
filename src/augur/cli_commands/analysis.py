@@ -34,8 +34,14 @@ def fund_consensus_lines(ticker, ctx, results, consensus):
         ]
     out.append(format_box(box, title=f"{ticker} Consensus ({asset})"))
     if meta.get("consensus_withheld"):
-        out.append(f"\nNo consensus: only {len(applicable)} of {len(results)} personas have rules "
-                   f"that apply to a fund (at least {MIN_APPLICABLE_FOR_CONSENSUS} are needed).")
+        n_data = len(meta.get("fund_data_missing_agents") or [])
+        why = f" ({n_data} abstained because fund technicals are missing)" if n_data else ""
+        out.append(f"\nNo consensus: only {len(applicable)} of {len(results)} personas gave a fund "
+                   f"reading (at least {MIN_APPLICABLE_FOR_CONSENSUS} are needed){why}.")
+    else:
+        out.append(f"\nFund consensus: technical/market readings of {len(applicable)} personas "
+                   f"({', '.join(sorted(applicable))}); no company fundamentals, "
+                   "equal weights, no position sizing, not recorded for learning.")
     out.append("")
     out.extend(etf_overview_lines(ctx))
 
@@ -49,9 +55,14 @@ def fund_consensus_lines(ticker, ctx, results, consensus):
                 out.append(f"  - {r.agent_name}: {clean_output(f)}")
     else:
         out.append("  (none)")
-    if abstained:
-        out.append(f"\nAbstained ({len(abstained)}, rules not applicable to funds): "
-                   + ", ".join(abstained))
+    no_data = [aid for aid in abstained
+               if (results[aid].metadata or {}).get("reason") == "fund_data_missing"]
+    no_rules = [aid for aid in abstained if aid not in no_data]
+    if no_rules:
+        out.append(f"\nAbstained ({len(no_rules)}, rules not applicable to funds): "
+                   + ", ".join(no_rules))
+    if no_data:
+        out.append(f"Abstained ({len(no_data)}, fund technicals missing): " + ", ".join(no_data))
     return out
 
 

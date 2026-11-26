@@ -598,6 +598,21 @@
         }
     };
 
+    // A withheld fund consensus (too few masters apply) carries a placeholder
+    // 5.0 score. These helpers make every page show it as WITHHELD / "--"
+    // instead of HOLD 5.0. They key off the flag, never off the asset type.
+    function augurIsWithheld(x) {
+        return !!(x && (x.consensus_withheld || x.withheld === true || x.last_withheld ||
+            (x.metadata && x.metadata.consensus_withheld)));
+    }
+    function augurWithheldLabel() {
+        return (typeof _t === 'function') ? _t('fund-withheld', 'WITHHELD') : 'WITHHELD';
+    }
+    function augurScoreText(x, score, suffix) {
+        if (augurIsWithheld(x) || score === null || score === undefined) return '--';
+        return Number(score || 0).toFixed(1) + (suffix || '');
+    }
+
     // Global error handler — user-friendly toast for uncaught errors
     window.onerror = function(msg, url, line) {
         var friendly = _friendlyError(msg);

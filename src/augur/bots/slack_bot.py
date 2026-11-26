@@ -36,6 +36,13 @@ Environment Variables:
 import os
 import re
 from typing import Optional, Dict, List, Any
+from augur.consensus_display import (
+    consensus_withheld,
+    display_confidence,
+    display_persona_score,
+    display_score,
+    display_signal,
+)
 
 
 # Signal emoji mapping (Slack style)
@@ -146,8 +153,8 @@ def _build_market_context(ticker: str, metrics: Dict[str, float]):
 
 def format_consensus_blocks(ticker: str, consensus, results: dict) -> List[Dict[str, Any]]:
     """Format consensus results as Slack Block Kit blocks."""
-    signal_emoji = SIGNAL_EMOJI.get(consensus.signal.value, ":question:")
-    signal_text = SIGNAL_CN.get(consensus.signal.value, consensus.signal.value.upper())
+    signal_emoji = ("" if consensus_withheld(consensus) else SIGNAL_EMOJI.get(consensus.signal.value, ":question:"))
+    signal_text = display_signal(consensus, SIGNAL_CN)
 
     blocks = [
         {
@@ -162,8 +169,8 @@ def format_consensus_blocks(ticker: str, consensus, results: dict) -> List[Dict[
             "type": "section",
             "fields": [
                 {"type": "mrkdwn", "text": f"*\u4fe1\u53f7:* {signal_emoji} {signal_text}"},
-                {"type": "mrkdwn", "text": f"*\u8bc4\u5206:* {consensus.score:.1f}/10"},
-                {"type": "mrkdwn", "text": f"*\u7f6e\u4fe1\u5ea6:* {consensus.confidence:.0%}"},
+                {"type": "mrkdwn", "text": f"*\u8bc4\u5206:* {display_score(consensus)}"},
+                {"type": "mrkdwn", "text": f"*\u7f6e\u4fe1\u5ea6:* {display_confidence(consensus)}"},
             ],
         },
         {"type": "divider"},
@@ -177,7 +184,7 @@ def format_consensus_blocks(ticker: str, consensus, results: dict) -> List[Dict[
         emoji = AGENT_EMOJI.get(agent_id, ":bust_in_silhouette:")
         signal_cn = SIGNAL_CN.get(result.signal.value, result.signal.value)
         name = result.agent_name[:12]
-        agent_lines.append(f"{emoji} `{name:<12s}` | {signal_cn} | {result.score:.1f}/10")
+        agent_lines.append(f"{emoji} `{name:<12s}` | {signal_cn} | {display_persona_score(result)}")
 
     if agent_lines:
         blocks.append({
@@ -242,7 +249,7 @@ def format_single_agent_blocks(ticker: str, result) -> List[Dict[str, Any]]:
             "type": "section",
             "fields": [
                 {"type": "mrkdwn", "text": f"*\u4fe1\u53f7:* {signal_emoji} {signal_text}"},
-                {"type": "mrkdwn", "text": f"*\u8bc4\u5206:* {result.score:.1f}/10"},
+                {"type": "mrkdwn", "text": f"*\u8bc4\u5206:* {display_persona_score(result)}"},
                 {"type": "mrkdwn", "text": f"*\u7f6e\u4fe1\u5ea6:* {result.confidence:.0%}"},
             ],
         },
@@ -390,14 +397,14 @@ def format_help_blocks() -> List[Dict[str, Any]]:
 
 def format_consensus_text(ticker: str, consensus, results: dict) -> str:
     """Format consensus as plain text fallback for notifications."""
-    signal_emoji = SIGNAL_EMOJI.get(consensus.signal.value, "")
-    signal_text = SIGNAL_CN.get(consensus.signal.value, consensus.signal.value.upper())
+    signal_emoji = ("" if consensus_withheld(consensus) else SIGNAL_EMOJI.get(consensus.signal.value, ""))
+    signal_text = display_signal(consensus, SIGNAL_CN)
 
     lines = [
         f"\U0001f989 Augur \u5171\u8bc6\u5206\u6790 - {ticker.upper()}",
         f"\u4fe1\u53f7: {signal_emoji} {signal_text}",
-        f"\u8bc4\u5206: {consensus.score:.1f}/10",
-        f"\u7f6e\u4fe1\u5ea6: {consensus.confidence:.0%}",
+        f"\u8bc4\u5206: {display_score(consensus)}",
+        f"\u7f6e\u4fe1\u5ea6: {display_confidence(consensus)}",
         "",
     ]
 
@@ -406,7 +413,7 @@ def format_consensus_text(ticker: str, consensus, results: dict) -> str:
             continue
         name = result.agent_name[:12]
         signal_cn = SIGNAL_CN.get(result.signal.value, result.signal.value)
-        lines.append(f"  {name:<12s} | {signal_cn} | {result.score:.1f}/10")
+        lines.append(f"  {name:<12s} | {signal_cn} | {display_persona_score(result)}")
 
     return "\n".join(lines)
 

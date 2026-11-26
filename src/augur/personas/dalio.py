@@ -80,9 +80,11 @@ class DalioAgent(BaseAgent):
         risk_score = 5
         if context.atr > 0 and context.price > 0:
             atr_pct = context.atr / context.price * 100
-            if atr_pct < 2:
+            # 阈值按真 True Range ATR（v14.1）重校，保持旧近似 <2% / >5% 的触发率
+            # （65.4% / 3.1%）：见 docs/research/ATR_RECALIBRATION_2026-11.md
+            if atr_pct < 3.75:
                 risk_score += 3  # 低波动
-            elif atr_pct > 5:
+            elif atr_pct > 9.25:
                 risk_score -= 3  # 高波动
         factors["risk_adjusted"] = min(max(risk_score * stability_multiplier, 0), 10)
 

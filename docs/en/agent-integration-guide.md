@@ -123,7 +123,7 @@ Codex and other MCP-capable terminal agents: register `augur-mcp` as a stdio MCP
 
 #### MCP changes in v14
 
-- **ETFs**: `augur_analyze`, `augur_consensus`, `augur_debate` and `augur_committee` accept `asset_type` (`equity` / `etf` / `fund`; empty = detect). On a fund only Dalio of the 18 masters scores; the others return "not applicable". With fewer than 3 applicable masters the consensus is **withheld**: no signal and no position size. `augur_fetch` prints the ETF overview and health checklist for funds.
+- **ETFs**: `augur_analyze`, `augur_consensus`, `augur_debate` and `augur_committee` accept `asset_type` (`equity` / `etf` / `fund`; empty = detect). On a fund, Dalio, Marks, Soros and ARPS of the 18 masters give readings from technical and market data; the others return "not applicable". With at least 3 applicable the result is a "fund consensus" (equal weights, no position size, no learning record); when missing technicals leave fewer than 3, the consensus is **withheld**: no signal and no position size. `augur_fetch` prints the ETF overview and health checklist for funds.
 - **`augur_configure` is deprecated**: Augur's scoring does not call a model, and nothing ever read the setting this tool wrote. From v14 it only returns a deprecation note and writes nothing. The host agent (for example Claude Code) chooses its own model.
 
 ---

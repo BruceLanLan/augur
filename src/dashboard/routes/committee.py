@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
+from augur.consensus_display import consensus_record
 from augur.personas.base import MarketContext
 from dashboard.deps import (
     _i18n_context,
@@ -178,11 +179,7 @@ def api_committee(body: dict):
             "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "session_type": "committee",
             "question": question,
-            "consensus": {
-                "signal": consensus.signal.value,
-                "score": round(consensus.score, 1),
-                "confidence": round(consensus.confidence, 2),
-            },
+            "consensus": consensus_record(consensus),
             "agents": [op["agent_name"] for op in opinions],
             "opinions": opinions,
         }

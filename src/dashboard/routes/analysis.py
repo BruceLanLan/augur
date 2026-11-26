@@ -12,6 +12,7 @@ from typing import Any, Dict, List, Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
+from augur.consensus_display import consensus_withheld, persona_abstained
 from augur.personas.base import MarketContext
 from augur.report import generate_report
 from augur.workspace import get_enabled_personas
@@ -114,11 +115,14 @@ async def api_scanner_run(body: ScannerRunBody):
                     "agent_id": agent_id,
                     "signal": resp.signal.value,
                     "score": round(resp.score, 1),
+                    "not_applicable": persona_abstained(resp),
                 })
             results.append({
                 "ticker": ticker.upper(),
                 "consensus_signal": consensus.signal.value,
                 "consensus_score": round(consensus.score, 1),
+                # When set, consensus_score is the engine's 5.0 placeholder.
+                "consensus_withheld": consensus_withheld(consensus),
                 "agents": agents_data,
             })
         except Exception as e:
@@ -272,7 +276,8 @@ def analyze_ticker(
     # Fire-and-forget rules evaluation (errors silently ignored)
     try:
         engine = _get_rules_engine()
-        if engine.get_rules():
+        # A withheld consensus has no score for rules to compare.
+        if not consensus_withheld(consensus_resp) and engine.get_rules():
             rule_data = {
                 "ticker": ticker.upper(),
                 "signal": consensus_resp.signal,

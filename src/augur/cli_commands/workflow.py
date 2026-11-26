@@ -172,7 +172,9 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
     click.echo(f"  {'─'*54}")
     for aid, r in sorted(responses.items(), key=lambda x: -x[1].score):
         if _abstained(r):
-            click.echo(f"  {r.agent_name:24s} │ {'ABSTAIN':8s} │ n/a (rules not applicable)")
+            why = ("fund data missing" if (r.metadata or {}).get("reason") == "fund_data_missing"
+                   else "rules not applicable")
+            click.echo(f"  {r.agent_name:24s} │ {'ABSTAIN':8s} │ n/a ({why})")
             continue
         stance = r.signal.value.upper()
         line = f"  {r.agent_name:24s} │ {stance:8s} │ {r.score:.1f}/10"
@@ -202,6 +204,9 @@ def committee_cmd(ticker, question, agents, preset, pe, roe, debt_ratio, market_
         click.echo(f"  Signal:      {consensus.signal.value.upper()}")
         click.echo(f"  Score:       {consensus.score:.1f}/10")
         click.echo(f"  Confidence:  {consensus.confidence:.0%}")
+        if (consensus.metadata or {}).get("fund_basis"):
+            click.echo(f"  Basis:       fund consensus of {len(voting)} personas' technical/market readings")
+            click.echo("  Kelly Size:  n/a (fund)")
     if kelly and not withheld:
         # position_pct is already a percentage (same as `augur analyze`).
         click.echo(f"  Kelly Size:  {kelly:.1f}%")
