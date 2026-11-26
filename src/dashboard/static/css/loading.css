@@ -176,7 +176,8 @@
 .empty-state-desc {
   font: var(--body);
   color: var(--fg-2, #8892b0);
-  margin: 0 0 var(--space-5, 24px);
+  /* auto side margins keep it centered when JS shows the box as display:block */
+  margin: 0 auto var(--space-5, 24px);
   max-width: 360px;
 }
 .empty-state .btn { display: inline-block; }

@@ -167,7 +167,7 @@
     "register_desc": "Create a new Augur account"
   },
   "index": {
-    "onboard_title": "Welcome to Augur — your council of 18 AI investment masters",
+    "onboard_title": "Welcome to Augur — rule-based scoring from 18 investment masters",
     "onboard_desc": "Enter a ticker (e.g. AAPL) and Augur fetches live data automatically. 18 masters score independently and produce a consensus buy/sell/hold signal.",
     "hero_examples_hint": "First time? Click any example below — no financial inputs needed:",
     "hero_shortcut_hint": "Press / to focus · Ctrl+Enter to submit",

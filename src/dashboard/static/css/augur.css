@@ -94,6 +94,10 @@ body.augur {
 .pixel-btn:active { transform: translate(4px,4px); box-shadow: 0 0 0 0 rgba(0,0,0,0.55); }
 .pixel-btn.dark { background: var(--oracle-purple); color: var(--parchment); border-color: #000; }
 .pixel-btn.dark:hover { background: #4c3a8c; }
+/* The dark theme's generic `button` colour rule would otherwise paint
+   light text onto the parchment button, leaving its label unreadable. */
+html.dark button.pixel-btn:not(.dark):not(.theme-toggle-fab),
+[data-theme="dark"] button.pixel-btn:not(.dark):not(.theme-toggle-fab) { color: var(--parchment-ink); }
 
 /* ============================================================
    SIGNALS · badges & verdicts

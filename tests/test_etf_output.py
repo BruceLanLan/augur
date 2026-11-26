@@ -150,8 +150,10 @@ def test_consensus_text_for_etf(fetch_returns, fake_learning):
     out = result.stdout
     assert "SPY Consensus (ETF)" in out
     assert "WITHHELD" in out
-    assert "适用大师 1 位，不输出共识" in out
-    assert "ETF 概况" in out and "ETF 体检" in out and "$797.00B" in out
+    assert "No consensus: only 1 of 18 personas" in out
+    assert "ETF profile" in out and "ETF health check" in out and "$797.00B" in out
+    # the CLI frame is English: no Chinese labels in the ETF block
+    assert "ETF 概况" not in out and "适用大师" not in out
     assert "Applicable personas (1)" in out and "Dalio" in out
     assert "Abstained (17" in out and "buffett" in out
     # no company-fundamental verdicts or position for a fund
@@ -162,7 +164,7 @@ def test_consensus_text_for_etf(fetch_returns, fake_learning):
 def test_analyze_text_for_etf_uses_fund_block(fetch_returns, fake_learning):
     fetch_returns["SPY"] = spy_ctx
     out = _run(["analyze", "SPY"]).stdout
-    assert "WITHHELD" in out and "ETF 体检" in out
+    assert "WITHHELD" in out and "ETF health check" in out
     assert "Masters Consensus" not in out
 
 
@@ -187,8 +189,8 @@ def test_fetch_text_for_etf_hides_company_lines(fetch_returns):
     out = _run(["fetch", "SPY"]).stdout
     assert "Type               ETF" in out
     assert "Price              600.00 USD" in out
-    assert "ETF 概况" in out and "费率" in out and "0.09%" in out
-    assert "溢价折价" in out and "-0.04%" in out and "36.0%" in out
+    assert "ETF profile" in out and "  Expense ratio    0.09%" in out
+    assert "  Premium/discount -0.04%" in out and "36.0%" in out
     for banned in ("Market Cap", "ROE", "Gross Margins", "FCF", "Debt Ratio"):
         assert banned not in out, banned
     assert "RSI" in out
@@ -285,7 +287,7 @@ def test_mcp_fetch_text():
     from augur.mcp_server import _fetch_text
 
     etf = _fetch_text(spy_ctx())
-    assert "Type:         ETF" in etf and "ETF 概况" in etf and "ROE" not in etf
+    assert "Type:         ETF" in etf and "ETF profile" in etf and "ROE" not in etf
     hk = _fetch_text(tencent_ctx(0.0))
     assert "Market Cap (HKD):" in hk and "3,100B HKD" in hk and "FCF (CNY):" in hk
     assert "Price:        380.00 HKD" in hk

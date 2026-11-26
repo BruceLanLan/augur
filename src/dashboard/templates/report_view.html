@@ -652,13 +652,17 @@ function renderReportPage(data) {
     var scoreMatch = rpMarkdown.match(/综合评分[^|]*\|\s*([0-9.]+)/i) || rpMarkdown.match(/Score[：:]\s*\*?\*?([0-9.]+)/i);
     if (scoreMatch) score = parseFloat(scoreMatch[1]) || 5.0;
 
+    // A fund with too few applicable masters has no consensus: the markdown
+    // has no signal/score rows, so the parsed defaults would read HOLD 5.0.
+    var withheld = !!data.consensus_withheld;
+
     // Signal badge
     var badgeClass = signal === 'bullish' ? 'buy' : signal === 'bearish' ? 'sell' : 'neutral';
-    var badgeText = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
-    document.getElementById('rp-signal-badge').innerHTML = '<span class="report-signal-badge-lg ' + badgeClass + '">' + badgeText + '</span>';
+    var badgeText = withheld ? _t('fund-withheld', 'WITHHELD') : (signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD');
+    document.getElementById('rp-signal-badge').innerHTML = '<span class="report-signal-badge-lg ' + badgeClass + '">' + escapeHtml(badgeText) + '</span>';
 
     // Score gauge
-    document.getElementById('rp-gauge').innerHTML = createScoreGauge(score, 10);
+    document.getElementById('rp-gauge').innerHTML = withheld ? '' : createScoreGauge(score, 10);
 
     // Verdict strip - count bull/bear/neutral votes
     var votingAgents = parseAgentsFromMarkdown();
@@ -680,7 +684,7 @@ function renderReportPage(data) {
     }
 
     // Executive summary
-    renderExecSummary(score, signal, confidence);
+    renderExecSummary(score, signal, confidence, withheld);
 
     // Provenance badges
     if (data.provenance) {
@@ -713,10 +717,10 @@ function renderReportPage(data) {
     document.getElementById('rp-full-md').innerHTML = renderReportMarkdown(rpMarkdown);
 }
 
-function renderExecSummary(score, signal, confidence) {
+function renderExecSummary(score, signal, confidence, withheld) {
     var container = document.getElementById('rp-exec-summary');
-    var grade = score >= 8 ? 'A+' : score >= 7 ? 'A' : score >= 6 ? 'B+' : score >= 5 ? 'B' : score >= 4 ? 'C' : 'D';
-    var signalText = signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD';
+    var grade = withheld ? '--' : (score >= 8 ? 'A+' : score >= 7 ? 'A' : score >= 6 ? 'B+' : score >= 5 ? 'B' : score >= 4 ? 'C' : 'D');
+    var signalText = withheld ? _t('fund-withheld', 'WITHHELD') : (signal === 'bullish' ? 'BUY' : signal === 'bearish' ? 'SELL' : 'HOLD');
     var signalColor = signal === 'bullish' ? 'var(--signal-buy)' : signal === 'bearish' ? 'var(--signal-sell)' : 'var(--signal-neutral)';
 
     // Extract metrics from table format: | **key** | value |
@@ -730,7 +734,7 @@ function renderExecSummary(score, signal, confidence) {
     var html = '<div class="exec-title">' + _t('report-exec-summary') + '</div>';
     html += '<div class="report-exec-metrics">';
     html += '<div class="metric-item"><div class="metric-label">Signal</div><div class="metric-value" style="color:' + signalColor + ';">' + signalText + '</div></div>';
-    html += '<div class="metric-item"><div class="metric-label">Score</div><div class="metric-value" style="color:var(--accent-orange);">' + score.toFixed(1) + '/10</div></div>';
+    html += '<div class="metric-item"><div class="metric-label">Score</div><div class="metric-value" style="color:var(--accent-orange);">' + (withheld ? '--' : score.toFixed(1) + '/10') + '</div></div>';
     html += '<div class="metric-item"><div class="metric-label">Grade</div><div class="metric-value">' + grade + '</div></div>';
     html += '<div class="metric-item"><div class="metric-label">Confidence</div><div class="metric-value">' + escapeHtml(confText) + '</div></div>';
     html += '<div class="metric-item"><div class="metric-label">Position</div><div class="metric-value">' + escapeHtml(posText) + '</div></div>';

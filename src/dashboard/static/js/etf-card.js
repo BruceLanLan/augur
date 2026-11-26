@@ -25,9 +25,14 @@
     function fmtSigned(v) { return isNum(v) ? (v > 0 ? '+' : '') + v.toFixed(2) + '%' : '--'; }
 
     function cell(key, label, value, note) {
+        // '--' = the data source did not report it; muted so it reads as
+        // "unknown" rather than as a value.
+        var na = value === '--';
         return '<div class="etf-card__cell">' +
             '<span class="etf-card__label" data-i18n="' + key + '">' + esc(tr(key, label)) + '</span>' +
-            '<span class="etf-card__value">' + esc(value) + '</span>' +
+            (na
+                ? '<span class="etf-card__value etf-card__value--na" title="' + esc(tr('etf-na-tip', 'Not reported by the data source')) + '">--</span>'
+                : '<span class="etf-card__value">' + esc(value) + '</span>') +
             (note ? '<span class="etf-card__note">' + note + '</span>' : '') +
             '</div>';
     }
@@ -35,7 +40,15 @@
     function buildEtfCardHtml(ov) {
         if (!ov || typeof ov !== 'object') return '';
         var navNote = '';
-        if (ov.nav_date) {
+        if (isNum(ov.nav)) {
+            navNote = '<span data-i18n="etf-nav">' + esc(tr('etf-nav', 'NAV')) + '</span> ' +
+                esc(ov.nav.toFixed(ov.nav < 10 ? 4 : 2) + (ov.currency ? ' ' + ov.currency : ''));
+            if (ov.nav_date) navNote += ' · ' + esc(ov.nav_date);
+            if (ov.nav_date_inferred) {
+                navNote += ' <span class="etf-card__inferred" data-i18n="etf-nav-inferred">' +
+                    esc(tr('etf-nav-inferred', '(date inferred)')) + '</span>';
+            }
+        } else if (ov.nav_date) {
             navNote = '<span data-i18n="etf-nav-as-of">' + esc(tr('etf-nav-as-of', 'NAV as of')) + '</span> ' + esc(ov.nav_date);
             if (ov.nav_date_inferred) {
                 navNote += ' <span class="etf-card__inferred" data-i18n="etf-nav-inferred">' +
@@ -43,7 +56,10 @@
             }
         }
         return '<div class="card etf-card" role="region" aria-label="ETF overview">' +
+            '<div class="etf-card__head">' +
             '<div class="sec-title" data-i18n="etf-card-title">' + esc(tr('etf-card-title', 'ETF Overview')) + '</div>' +
+            (ov.source ? '<div class="etf-card__source"><span data-i18n="etf-source">' + esc(tr('etf-source', 'Source')) + '</span>: ' + esc(ov.source) + '</div>' : '') +
+            '</div>' +
             '<div class="etf-card__grid">' +
             cell('etf-aum', 'AUM', fmtAum(ov.aum_usd_bn)) +
             cell('etf-expense', 'Expense ratio', fmtDecPct(ov.expense_ratio, 2)) +
@@ -52,7 +68,6 @@
             cell('etf-category', 'Category', ov.category || '--') +
             cell('etf-spread', 'Bid/ask spread', fmtPct(ov.spread_pct, 3)) +
             '</div>' +
-            (ov.source ? '<div class="etf-card__source">' + esc(tr('etf-source', 'Source')) + ': ' + esc(ov.source) + '</div>' : '') +
             '</div>';
     }
 

@@ -389,7 +389,7 @@
 <div class="onboard-banner" id="onboard-banner" style="display:none;" role="region" aria-labelledby="onboard-title">
     <span class="onboard-icon">&#x1F44B;</span>
     <div class="onboard-body">
-        <div class="onboard-title" id="onboard-title" data-i18n="onboard-title">欢迎使用 Augur — 你的 18 位 AI 投资大师智囊团</div>
+        <div class="onboard-title" id="onboard-title" data-i18n="onboard-title">欢迎使用 Augur — 18 位投资大师的规则化评分</div>
         <div class="onboard-desc" data-i18n="onboard-desc">只需输入一个股票代码（如 AAPL），系统会自动获取实时财务数据，让 18 位大师从各自视角独立打分，并形成共识买/卖/持建议。无需手动填写任何财务指标。下方点一下示例即可立即体验 ↓</div>
         <button class="btn btn-sm onboard-cta" type="button" onclick="tryExample('AAPL')" data-i18n="onboard-try-aapl">立即体验 AAPL</button>
     </div>
@@ -436,7 +436,7 @@
 <section class="hero hero-section gilt-edge mb-24" id="hero-section">
     <div class="hero-glow"></div>
     <img src="/static/images/augur-owl-128.png" class="pixelated hero-owl" width="92" height="92" alt=""/>
-    <div class="hero-eyebrow">▸ AI Investment Oracle</div>
+    <div class="hero-eyebrow">▸ Investment Oracle</div>
     <h1 class="hero-title">Summon your council of <span>18 masters</span></h1>
     <p class="hero-sub" data-i18n="hero-subtitle">输入股票代码，一键获得18位大师共识</p>
     
@@ -533,7 +533,7 @@
     {% for stat in stats %}
     <div class="card stat-card" style="text-align:center; padding:20px 12px;">
         <div class="data-value">{{ stat.value }}</div>
-        <div class="data-label" style="margin-top:4px;">{{ stat.label }}</div>
+        <div class="data-label" style="margin-top:4px;"{% if stat.i18n %} data-i18n="{{ stat.i18n }}"{% endif %}>{{ stat.label }}</div>
     </div>
     {% endfor %}
 </div>
@@ -904,6 +904,7 @@ function _syncPersonaLabels() {
 window._refreshIndexDynamicI18n = function() {
     _syncPersonaLabels();
     if (_marketOverviewData) {
+        if (typeof _origRenderMarketBoard === "function") _origRenderMarketBoard(_marketOverviewData);
         renderFearGreed(_marketOverviewData);
         renderMacroSnapshot(_marketOverviewData);
         renderIntlMarkets(_marketOverviewData);
@@ -1323,6 +1324,16 @@ function loadMarketOverview(forceRefresh) {
         });
 }
 
+// Market instrument names/groups come from the API in Chinese; localize by key.
+var _MKT_GROUP_KEYS = {'指数': 'index', '波动率': 'volatility', '利率': 'rate', '商品': 'commodity', '加密': 'crypto', '汇率': 'fx'};
+function _mktName(it) {
+    return (it && it.key) ? _t('mkt-' + it.key, it.name || it.key) : ((it && it.name) || '');
+}
+function _mktGroup(g) {
+    var k = _MKT_GROUP_KEYS[g];
+    return k ? _t('mkt-group-' + k, g) : (g || '');
+}
+
 function renderMarketBoard(data) {
     var board = document.getElementById('market-board');
     var asof = document.getElementById('market-asof');
@@ -1343,8 +1354,8 @@ function renderMarketBoard(data) {
         tile.className = 'mtile ' + (up ? 'up' : 'down');
         tile.innerHTML =
             '<div style="display:flex;justify-content:space-between;align-items:baseline">' +
-                '<div class="nm">' + escapeHtml(it.name || '') + '</div>' +
-                '<div style="font:600 0.55rem/1 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;letter-spacing:.5px">' + escapeHtml(it.group || '') + '</div>' +
+                '<div class="nm">' + escapeHtml(_mktName(it)) + '</div>' +
+                '<div style="font:600 0.55rem/1 var(--font-pixfin);color:var(--fg-3);text-transform:uppercase;letter-spacing:.5px">' + escapeHtml(_mktGroup(it.group)) + '</div>' +
             '</div>' +
             '<div class="px">' + priceStr + '</div>' +
             '<div class="ch">' + arrow + ' ' + (up ? '+' : '') + pct + '%</div>';
@@ -1647,7 +1658,7 @@ function renderMacroSnapshot(data) {
         var card = document.createElement('div');
         card.className = 'macro-card ' + cls;
         card.innerHTML =
-            '<div class="macro-card-name">' + escapeHtml(m.name) + '</div>' +
+            '<div class="macro-card-name">' + escapeHtml(_mktName(m)) + '</div>' +
             '<div class="macro-card-price">' + (m.price || 0).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}) + '</div>' +
             '<div class="macro-card-change">' + (up ? '+' : '') + (pct * 100).toFixed(2) + '%</div>' +
             '<div class="macro-card-comment">' + commentary + '</div>';
@@ -1737,7 +1748,7 @@ function renderIntlMarkets(data) {
         card.className = 'intl-market-card';
         card.innerHTML =
             '<div class="intl-market-region">' + entry.region + '</div>' +
-            '<div class="intl-market-name">' + escapeHtml(it.name) + '</div>' +
+            '<div class="intl-market-name">' + escapeHtml(_mktName(it)) + '</div>' +
             '<div class="intl-market-price">' + priceStr + '</div>' +
             '<div class="intl-market-change" style="color:' + changeColor + ';">' +
                 arrow + ' ' + (up ? '+' : '') + (pct * 100).toFixed(2) + '%</div>';
@@ -1810,9 +1821,11 @@ function renderSectorGrid(data) {
         var barColor = up ? 'var(--signal-buy)' : (pct < 0 ? 'var(--signal-sell)' : 'var(--text-muted)');
         var card = document.createElement('div');
         card.className = 'sector-card ' + heatClass;
-        card.title = (s.name || '') + ': ' + (pct * 100).toFixed(2) + '%';
+        // API sends the Chinese name plus en_name; use English outside the zh UI
+        var secName = (typeof getCurrentLang === 'function' && getCurrentLang() !== 'zh' && s.en_name) ? s.en_name : (s.name || '');
+        card.title = secName + ': ' + (pct * 100).toFixed(2) + '%';
         card.innerHTML =
-            '<div class="sector-name">' + escapeHtml(s.name) + '</div>' +
+            '<div class="sector-name">' + escapeHtml(secName) + '</div>' +
             '<div class="sector-ticker">' + escapeHtml(s.symbol) + '</div>' +
             '<div class="sector-price">' + (s.price || 0).toFixed(2) + '</div>' +
             '<div class="sector-change" style="color:' + (up ? 'var(--signal-buy)' : (pct < 0 ? 'var(--signal-sell)' : 'var(--text-muted)')) + ';">' +

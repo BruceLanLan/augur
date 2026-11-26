@@ -252,6 +252,9 @@ def analyze_ticker(
             "revenue_growth": ctx.revenue_growth,
             "debt_ratio": ctx.debt_ratio,
             "asset_type": getattr(ctx, "asset_type", "equity") or "equity",
+            # price is in the trading currency; market_cap/fcf are USD
+            "currency": (getattr(ctx, "currency", "") or "USD").upper(),
+            "company_name": getattr(ctx, "company_name", "") or "",
         },
         # None for equities; the stock page renders the ETF card only when set.
         "etf_overview": build_etf_overview(ctx),
@@ -406,6 +409,8 @@ def report_ticker(
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "data_source": data_source,
         "provenance": provenance,
+        # lets the report page show WITHHELD instead of a parsed HOLD 5.0
+        "consensus_withheld": bool((consensus_resp.metadata or {}).get("consensus_withheld")),
     }
 
 
@@ -440,7 +445,18 @@ async def generate_report_from_data(ticker: str, request: Request):
         market_cap=market_data.get("market_cap", 0),
         sector=market_data.get("sector", ""),
         industry=market_data.get("industry", ""),
+        currency=market_data.get("currency", "") or "",
+        company_name=market_data.get("company_name", "") or "",
     )
+    # Funds: without asset_type/etf the report fell back to an "EQUITY"
+    # header with every ETF field unknown. The overview card payload carries
+    # the profile fields the report needs.
+    asset_type = str(market_data.get("asset_type") or "").lower()
+    if asset_type and asset_type != "equity":
+        ctx.asset_type = asset_type
+        overview = body.get("etf_overview") or {}
+        ctx.etf = {k: v for k, v in overview.items()
+                   if v is not None and k not in ("asset_type", "currency")}
 
     signal_map = {
         "bullish": SignalType.BULLISH,
@@ -483,4 +499,5 @@ async def generate_report_from_data(ticker: str, request: Request):
         "report": report_md,
         "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "data_source": "cached",
+        "consensus_withheld": bool((consensus_resp.metadata or {}).get("consensus_withheld")),
     }

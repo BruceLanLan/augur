@@ -31,7 +31,6 @@ look-through ratios go to ``portfolio_pe`` / ``portfolio_pb`` instead.
 """
 
 import math
-import unicodedata
 from typing import Any, Dict, List, Optional
 
 ETF_PROFILE_KEYS = (
@@ -79,105 +78,129 @@ def _num(profile: Dict[str, Any], key: str) -> Optional[float]:
     return value if math.isfinite(value) else None
 
 
-def assess_etf(profile: Dict[str, Any]) -> List[str]:
+def assess_etf(profile: Dict[str, Any], lang: str = "zh") -> List[str]:
     """Deterministic ETF health checklist; returns findings, never a score.
 
     Only problems are reported. A check whose input is missing is skipped
     (see :func:`unchecked_items`), so an empty list means "nothing flagged",
     not "everything verified".
+
+    ``lang="zh"`` (default) is the wording used by the Chinese report and the
+    engine metadata; ``lang="en"`` is used by the English CLI / MCP text.
     """
     profile = profile or {}
+    en = lang == "en"
     findings: List[str] = []
 
     er = _num(profile, "expense_ratio")
     if er is not None:
         if er > EXPENSE_RATIO_VERY_HIGH:
-            findings.append(f"费率很高：{er * 100:.2f}%（> {EXPENSE_RATIO_VERY_HIGH * 100:.2f}%）")
+            findings.append(
+                f"Very high expense ratio: {er * 100:.2f}% (> {EXPENSE_RATIO_VERY_HIGH * 100:.2f}%)" if en
+                else f"费率很高：{er * 100:.2f}%（> {EXPENSE_RATIO_VERY_HIGH * 100:.2f}%）")
         elif er > EXPENSE_RATIO_HIGH:
-            findings.append(f"费率偏高：{er * 100:.2f}%（> {EXPENSE_RATIO_HIGH * 100:.2f}%）")
+            findings.append(
+                f"High expense ratio: {er * 100:.2f}% (> {EXPENSE_RATIO_HIGH * 100:.2f}%)" if en
+                else f"费率偏高：{er * 100:.2f}%（> {EXPENSE_RATIO_HIGH * 100:.2f}%）")
 
     aum = _num(profile, "aum_usd_bn")
     if aum is not None and 0 < aum < AUM_CLOSURE_RISK_USD_BN:
-        findings.append(f"规模过小：${aum * 1000:.1f}M（< $50M），有清盘风险")
+        findings.append(
+            f"Small fund: ${aum * 1000:.1f}M (< $50M), closure risk" if en
+            else f"规模过小：${aum * 1000:.1f}M（< $50M），有清盘风险")
 
     prem = _num(profile, "premium_pct")
     if prem is not None and abs(prem) > PREMIUM_ABS_MAX_PCT:
-        kind = "溢价" if prem > 0 else "折价"
-        note = "（净值日期为推断）" if profile.get("nav_date_inferred") else ""
-        findings.append(f"{kind}偏大：{prem:+.2f}%（|溢价| > {PREMIUM_ABS_MAX_PCT:.0f}%）{note}")
+        if en:
+            kind = "Large premium" if prem > 0 else "Large discount"
+            note = " (NAV date inferred)" if profile.get("nav_date_inferred") else ""
+            findings.append(f"{kind}: {prem:+.2f}% (|premium| > {PREMIUM_ABS_MAX_PCT:.0f}%){note}")
+        else:
+            kind = "溢价" if prem > 0 else "折价"
+            note = "（净值日期为推断）" if profile.get("nav_date_inferred") else ""
+            findings.append(f"{kind}偏大：{prem:+.2f}%（|溢价| > {PREMIUM_ABS_MAX_PCT:.0f}%）{note}")
 
     top10 = _num(profile, "top10_weight")
     if top10 is not None and top10 > TOP10_CONCENTRATION:
-        findings.append(f"持仓集中：前十大占 {top10 * 100:.1f}%（> {TOP10_CONCENTRATION * 100:.0f}%）")
+        findings.append(
+            f"Concentrated: top 10 holdings are {top10 * 100:.1f}% (> {TOP10_CONCENTRATION * 100:.0f}%)" if en
+            else f"持仓集中：前十大占 {top10 * 100:.1f}%（> {TOP10_CONCENTRATION * 100:.0f}%）")
 
     spread = _num(profile, "spread_pct")
     if spread is not None and spread > SPREAD_WIDE_PCT:
-        findings.append(f"买卖价差偏宽：{spread:.2f}%（> {SPREAD_WIDE_PCT:.1f}%）")
+        findings.append(
+            f"Wide bid/ask spread: {spread:.2f}% (> {SPREAD_WIDE_PCT:.1f}%)" if en
+            else f"买卖价差偏宽：{spread:.2f}%（> {SPREAD_WIDE_PCT:.1f}%）")
 
     return findings
 
 
 _CHECK_INPUTS = (
-    ("expense_ratio", "费率"),
-    ("aum_usd_bn", "规模"),
-    ("premium_pct", "溢价折价"),
-    ("top10_weight", "持仓集中度"),
-    ("spread_pct", "买卖价差"),
+    ("expense_ratio", "费率", "expense ratio"),
+    ("aum_usd_bn", "规模", "AUM"),
+    ("premium_pct", "溢价折价", "premium/discount"),
+    ("top10_weight", "持仓集中度", "concentration"),
+    ("spread_pct", "买卖价差", "bid/ask spread"),
 )
 
 
-def unchecked_items(profile: Dict[str, Any]) -> List[str]:
+def unchecked_items(profile: Dict[str, Any], lang: str = "zh") -> List[str]:
     """Labels of health checks skipped because their input is missing."""
-    return [label for key, label in _CHECK_INPUTS if _num(profile or {}, key) is None]
+    idx = 2 if lang == "en" else 1
+    return [item[idx] for item in _CHECK_INPUTS if _num(profile or {}, item[0]) is None]
 
 
 def etf_overview_lines(ctx: Any) -> List[str]:
-    """Plain-text "ETF 概况 + 体检" block shared by the CLI surfaces."""
+    """Plain-text "ETF profile + health check" block for the CLI and MCP text.
+
+    English, like the rest of the CLI frame (Ticker / Price / RSI ...); the
+    Chinese Markdown report has its own table in ``augur.report``. Values sit
+    in the same column as the 18-wide labels of ``augur fetch``.
+    """
     p = dict(getattr(ctx, "etf", None) or {})
     ccy = str(getattr(ctx, "currency", "") or "").upper()
-    lines: List[str] = ["ETF 概况"]
+    unknown = "unknown"
+    lines: List[str] = ["ETF profile"]
 
     def row(label: str, value: str) -> None:
-        # pad by display width: CJK characters take two terminal columns
-        width = sum(2 if unicodedata.east_asian_width(ch) in "WF" else 1 for ch in label)
-        lines.append(f"  {label}{' ' * max(1, 12 - width)}{value}")
+        lines.append(f"  {label:<17s}{value}")
 
     name = getattr(ctx, "company_name", "") or ""
     if name:
-        row("名称", name)
+        row("Name", name)
     if p.get("category"):
-        row("类别", str(p["category"]))
+        row("Category", str(p["category"]))
     aum = _num(p, "aum_usd_bn")
-    row("规模", f"${aum:,.2f}B" if aum is not None else "未知")
+    row("AUM", f"${aum:,.2f}B" if aum is not None else unknown)
     er = _num(p, "expense_ratio")
-    row("费率", f"{er * 100:.2f}%" if er is not None else "未知")
+    row("Expense ratio", f"{er * 100:.2f}%" if er is not None else unknown)
     yld = _num(p, "yield")
     if yld is not None:
-        row("分红率", f"{yld * 100:.2f}%")
+        row("Yield", f"{yld * 100:.2f}%")
     nav = _num(p, "nav")
     if nav is not None:
-        date = p.get("nav_date") or "日期未知"
+        date = p.get("nav_date") or "date unknown"
         if p.get("nav_date_inferred"):
-            date = f"{date}，推断"
-        row("净值", f"{nav:,.4f} {ccy}".rstrip() + f"（{date}）")
+            date = f"{date}, inferred"
+        row("NAV", f"{nav:,.4f} {ccy}".rstrip() + f" ({date})")
     prem = _num(p, "premium_pct")
-    row("溢价折价", f"{prem:+.2f}%" if prem is not None else "未知")
+    row("Premium/discount", f"{prem:+.2f}%" if prem is not None else unknown)
     top10 = _num(p, "top10_weight")
-    row("前十大占比", f"{top10 * 100:.1f}%" if top10 is not None else "未知")
+    row("Top-10 weight", f"{top10 * 100:.1f}%" if top10 is not None else unknown)
     spread = _num(p, "spread_pct")
     if spread is not None:
-        row("买卖价差", f"{spread:.3f}%")
+        row("Bid/ask spread", f"{spread:.3f}%")
     ppe = _num(p, "portfolio_pe")
     if ppe:
-        row("成分股 PE", f"{ppe:.1f}")
+        row("Holdings P/E", f"{ppe:.1f}")
 
-    lines.append("ETF 体检")
-    findings = assess_etf(p)
+    lines.append("ETF health check")
+    findings = assess_etf(p, lang="en")
     if findings:
         lines.extend(f"  ! {f}" for f in findings)
     else:
-        lines.append("  未发现问题")
-    missing = unchecked_items(p)
+        lines.append("  No issues flagged")
+    missing = unchecked_items(p, lang="en")
     if missing:
-        lines.append(f"  未检查（缺数据）：{'、'.join(missing)}")
+        lines.append(f"  Not checked (no data): {', '.join(missing)}")
     return lines

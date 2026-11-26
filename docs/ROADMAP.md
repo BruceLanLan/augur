@@ -231,8 +231,8 @@ augur/main  (public, single source of truth)
 6. **ETF 历史溢价折价与跟踪误差**：目前只看最新一天。
 7. **learning 里 v14 之前的 ETF 记录**：留在原处，会给相关大师的准确率混入少量噪声；需要一个清理工具。
 8. **自定义 YAML 大师**：`da-yu.yaml` / `thiel.yaml` 里仍有百分比与小数混用的规则；和内置大师同 id 的 YAML 大师会被内置版本遮蔽，用户看不到提示。
-9. **CLI 的 ETF 概况只有中文标签**（`augur.etf.etf_overview_lines`、体检清单）；英文界面需要 i18n。
-10. **其他输出面仍把基金显示成 5.0 分**：本版改了 CLI（fetch / consensus / analyze / report / committee / workflow / `report from-run` / dossier / portfolio / watch）、MCP、Dashboard 股票页（共识卡、大师卡片显示 N/A）和首页快速分析。仍未处理：Dashboard 委员会、自选、组合、扫描器、通知与实时推送（`routes/committee.py`、`watchlist.py`、`analysis.py` 批量扫描、`notifications_cron.py`、`ws.py`），定时任务 `cron.py` 的摘要，Telegram / Slack / 飞书 / 微信机器人，以及内置 Skill 的 `skills/handlers.py`。
+9. **ETF 概况的语言**：v14.0 发布前已把 CLI（fetch / consensus / analyze）和 MCP 文本里的 ETF 概况、体检清单、WITHHELD 说明和数据来源行改成英文标签（原先只有中文）；`augur report` 的 Markdown 报告和引擎的 `etf_findings` 仍是中文。是否按语言切换，留待以后决定。
+10. **其他输出面仍把基金显示成 5.0 分**：本版改了 CLI（fetch / consensus / analyze / report / committee / workflow / `report from-run` / dossier / portfolio / watch）、MCP、Dashboard 股票页（共识卡、大师卡片和详情弹窗显示 N/A、深度报告）、首页快速分析和委员会页（`routes/committee.py` 与 `/ws/committee`）。仍未处理：Dashboard 自选、组合、扫描器、历史记录和信号页的通知与实时推送（`watchlist.py`、`analysis.py` 批量扫描、`history.py`、`notifications_cron.py`、`/ws/workflow`；历史里基金的分数存的是 5.0 占位值，股票页的历史趋势图已跳过它），定时任务 `cron.py` 的摘要，Telegram / Slack / 飞书 / 微信机器人，以及内置 Skill 的 `skills/handlers.py`。
 11. **`uv.lock` 过期**：仍记录 10.16.2，需要重新生成。
 12. **旧的平铺命令名**：12.2 时说"下一个大版本前都能用"，v14 没有移除；是否在 v15 移除由 owner 决定。
 

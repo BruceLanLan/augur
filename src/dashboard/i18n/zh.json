@@ -167,7 +167,7 @@
     "register_desc": "创建新的 Augur 账号"
   },
   "index": {
-    "onboard_title": "欢迎使用 Augur — 你的 18 位 AI 投资大师智囊团",
+    "onboard_title": "欢迎使用 Augur — 18 位投资大师的规则化评分",
     "onboard_desc": "只需输入一个股票代码（如 AAPL），系统会自动获取实时财务数据，让 18 位大师从各自视角独立打分，并形成共识买/卖/持建议。",
     "hero_examples_hint": "第一次用？点下面任意一个，无需填写财务指标，系统自动获取实时数据：",
     "hero_shortcut_hint": "按 / 快速聚焦 · Ctrl+Enter 提交",

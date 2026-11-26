@@ -358,17 +358,34 @@ def test_assess_etf_boundaries_and_bad_values():
 
 def test_unchecked_items_lists_missing_inputs():
     assert unchecked_items({}) == ["费率", "规模", "溢价折价", "持仓集中度", "买卖价差"]
+    assert unchecked_items({}, lang="en") == [
+        "expense ratio", "AUM", "premium/discount", "concentration", "bid/ask spread"]
     assert unchecked_items(etf_ctx().etf) == []
+
+
+def test_assess_etf_english():
+    findings = assess_etf({
+        "expense_ratio": 0.0075, "aum_usd_bn": 0.03, "premium_pct": -1.6,
+        "nav_date_inferred": True, "top10_weight": 0.62, "spread_pct": 0.9,
+    }, lang="en")
+    text = "\n".join(findings)
+    assert len(findings) == 5
+    assert "High expense ratio: 0.75%" in text and "closure risk" in text
+    assert "Large discount: -1.60%" in text and "NAV date inferred" in text
+    assert "top 10 holdings are 62.0%" in text and "Wide bid/ask spread" in text
+    assert not any("\u4e00" <= ch <= "\u9fff" for ch in text)
 
 
 def test_etf_overview_lines():
     text = "\n".join(etf_overview_lines(etf_ctx()))
-    assert "ETF 概况" in text and "ETF 体检" in text
+    assert "ETF profile" in text and "ETF health check" in text
     assert "$797.00B" in text and "0.09%" in text and "-0.04%" in text
-    assert "36.0%" in text and "推断" in text
-    assert "未发现问题" in text
+    assert "36.0%" in text and "inferred" in text
+    assert "No issues flagged" in text
+    assert not any("\u4e00" <= ch <= "\u9fff" for ch in text)
     sparse = "\n".join(etf_overview_lines(MarketContext(ticker="X", asset_type="etf")))
-    assert "规模" in sparse and "未知" in sparse and "未检查" in sparse
+    assert "  AUM              unknown" in sparse
+    assert "Not checked (no data): expense ratio, AUM" in sparse
 
 
 # ------------------------------------------------------------- engine misc --

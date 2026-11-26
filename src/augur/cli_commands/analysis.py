@@ -10,7 +10,7 @@ def fund_consensus_lines(ticker, ctx, results, consensus):
     """Text block for a fund (ETF) consensus: profile, health check, and
     the applicable personas' readings instead of an 18-master vote."""
     from augur.cli_format import clean_output, format_box, format_table, signal_icon
-    from augur.etf import etf_overview_lines
+    from augur.etf import MIN_APPLICABLE_FOR_CONSENSUS, etf_overview_lines
 
     meta = consensus.metadata or {}
     abstained = sorted(aid for aid, r in results.items()
@@ -34,7 +34,8 @@ def fund_consensus_lines(ticker, ctx, results, consensus):
         ]
     out.append(format_box(box, title=f"{ticker} Consensus ({asset})"))
     if meta.get("consensus_withheld"):
-        out.append(f"\n适用大师 {len(applicable)} 位，不输出共识（至少需要 3 位）。")
+        out.append(f"\nNo consensus: only {len(applicable)} of {len(results)} personas have rules "
+                   f"that apply to a fund (at least {MIN_APPLICABLE_FOR_CONSENSUS} are needed).")
     out.append("")
     out.extend(etf_overview_lines(ctx))
 

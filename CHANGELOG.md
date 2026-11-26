@@ -25,8 +25,8 @@ All notable changes to augur-agents are documented in this file.
   applicable personas the consensus is **withheld**: no signal, confidence
   0, no Kelly size, and fund analyses never write learning predictions.
   `committee`, `workflow`, `report from-run`, `dossier`, `portfolio` and
-  the dashboard stock and home pages show "WITHHELD" rather than a neutral
-  5.0; persona cards on the stock page show N/A for abstainers.
+  the dashboard stock, home and committee pages show "WITHHELD" rather than
+  a neutral 5.0; persona cards on the stock page show N/A for abstainers.
 - Dashboard stock page: ETF overview card. MCP: `augur_analyze`,
   `augur_consensus`, `augur_debate` and `augur_committee` accept
   `asset_type`; `augur_fetch` is fund- and currency-aware.
@@ -77,6 +77,26 @@ All notable changes to augur-agents are documented in this file.
 - YAML persona rules accept list literals (`sector in [...]`), and
   `da-yu.yaml` / `thiel.yaml` use the real sector names.
 - `src/skills/README.md` install paths point at `src/skills/`.
+- Dashboard committee page (`/api/committee`, `/ws/committee`) for funds:
+  shows WITHHELD with no score or Kelly size, abstained masters as N/A
+  cards left out of the vote, and the withheld reason (it showed NEUTRAL
+  5.0 with 18 neutral votes).
+- Dashboard stock page: the header shows the fund or company name and the
+  price in its trading currency (HK$, CN¥) instead of always `$`; the ETF
+  card shows NAV with its currency and mutes unknown cells; abstained
+  masters show N/A in the detail modal and the inline deep report; the
+  Deep Report button keeps the ETF profile and shows WITHHELD for funds
+  (it produced an "EQUITY" report with every ETF field unknown).
+- Dashboard stock page history trend chart never rendered (a recursion
+  between `renderHistoryChart()` and `setHistoryRange()`); it also skips
+  withheld fund records, whose stored score is a 5.0 placeholder.
+- Dashboard backtest page shows `--` instead of a red 0% win rate and
+  0.0000 IC when a window has no scored predictions.
+- Dashboard i18n: home stats, market board, sector names, advanced metric
+  labels and analysis progress text were Chinese in the English UI. The
+  onboarding banner and report footer no longer call the masters "AI"
+  (scoring is rule-based), and the parchment buttons are readable in the
+  dark theme.
 
 ### Breaking
 
@@ -91,6 +111,12 @@ All notable changes to augur-agents are documented in this file.
   nothing. Augur's scoring never called a model.
 - The dashboard backtest API returns `null` for return, drawdown and
   Sharpe.
+- The ETF overview block, health checklist, withheld note and data-source
+  footer printed by `augur fetch`, `consensus` and `analyze` (and the MCP
+  fetch / consensus text, and the `backtest` footer) are in English; they
+  were Chinese. Scripts that parse those strings need to match the new
+  labels. `--json` output, the `augur report` Markdown and the engine's
+  `etf_findings` are unchanged (still Chinese).
 
 ### Deferred
 
@@ -102,10 +128,10 @@ All notable changes to augur-agents are documented in this file.
 - Clean-up tool for ETF learning records written before v14.
 - Remaining percent-vs-fraction rules in `da-yu.yaml` / `thiel.yaml`; YAML
   personas shadowed by a built-in with the same id.
-- English labels for the CLI ETF overview (currently Chinese only); other
-  surfaces still print the withheld fund consensus as 5.0: dashboard
-  committee / watchlist / portfolio / scanner / notifications / live feed,
-  `augur cron` summaries, the chat bots and built-in skill handlers.
+- Other surfaces still print the withheld fund consensus as 5.0:
+  dashboard watchlist / portfolio / scanner / history / Signals page
+  (notifications and live feed), `augur cron` summaries, the chat bots and
+  built-in skill handlers.
 - `uv.lock` is stale (still records 10.16.2).
 
 ## [13.0.0] - 2026-10-29 earnings dates from SEC, Python 3.10, smaller public API

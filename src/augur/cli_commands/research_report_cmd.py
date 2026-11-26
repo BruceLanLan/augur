@@ -19,8 +19,8 @@ def research_report_cmd(ticker, run_id, fmt):
 
     \b
     Examples:
-      augur workflow AAPL && augur research-report AAPL
-      augur research-report AAPL --format json
+      augur workflow AAPL && augur report from-run AAPL
+      augur report from-run AAPL --format json
     """
     from augur.disagreement import build_disagreement_from_bundle
     from augur.run_tracker import extract_persona_results, latest_run_id, load_run_bundle_dict

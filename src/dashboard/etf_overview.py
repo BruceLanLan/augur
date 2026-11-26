@@ -39,4 +39,6 @@ def build_etf_overview(ctx: Any) -> Optional[Dict[str, Any]]:
         v = profile.get(k)
         out[k] = str(v) if v not in (None, "") else None
     out["nav_date_inferred"] = bool(profile.get("nav_date_inferred", False))
+    # NAV is quoted in the fund's trading currency (AUM is always USD)
+    out["currency"] = str(getattr(ctx, "currency", "") or "").upper() or None
     return out

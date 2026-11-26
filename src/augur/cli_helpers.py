@@ -116,11 +116,11 @@ def _print_result(result):
 def describe_data_source(ctx) -> str:
     """Human-readable data source line for a fetched MarketContext.
 
-    The CLI used to print "数据来源: yfinance 实时" whatever provider (or none)
-    actually served the data.
+    The CLI used to print "yfinance" whatever provider (or none) actually
+    served the data. English, like the rest of the CLI frame.
     """
     source = getattr(ctx, "data_source", None) or "unknown"
-    label = {"none": "无可用数据源（指标为空）", "error": "获取失败"}.get(source, f"{source} 实时")
+    label = {"none": "none available (metrics empty)", "error": "fetch failed"}.get(source, f"{source} (live)")
     if getattr(ctx, "fundamentals_source", None) == "edgar":
-        label += " + SEC EDGAR 基本面"
-    return f"数据来源: {label}"
+        label += " + SEC EDGAR fundamentals"
+    return f"Data source: {label}"

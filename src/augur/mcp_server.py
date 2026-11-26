@@ -317,7 +317,7 @@ def _validate_asset_type(asset_type: str) -> Optional[str]:
 
 def _fund_consensus_text(ticker: str, ctx, results, consensus, source: str, freshness: str) -> str:
     """MCP text for a fund consensus: ETF profile, health check, applicable personas."""
-    from augur.etf import etf_overview_lines
+    from augur.etf import MIN_APPLICABLE_FOR_CONSENSUS, etf_overview_lines
 
     meta = consensus.metadata or {}
     abstained = sorted(aid for aid, r in results.items() if (r.metadata or {}).get("not_applicable"))
@@ -325,7 +325,8 @@ def _fund_consensus_text(ticker: str, ctx, results, consensus, source: str, fres
     lines = [f"Consensus for {ticker} ({str(ctx.asset_type).upper()}):"]
     if meta.get("consensus_withheld"):
         lines.append("  Signal: WITHHELD (no consensus signal)")
-        lines.append(f"  Reason: {meta.get('withheld_reason', consensus.reasoning)}")
+        lines.append(f"  Reason: only {len(applicable)} of {len(results)} personas have rules that "
+                     f"apply to a fund (at least {MIN_APPLICABLE_FOR_CONSENSUS} are needed)")
     else:
         lines.append(f"  Signal: {consensus.signal.value.upper()}")
         lines.append(f"  Score: {consensus.score:.1f}/10")

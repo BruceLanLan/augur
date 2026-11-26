@@ -506,10 +506,13 @@ function renderResults(data) {
 
     var ic = data.consensus_ic;
     var icEl = document.getElementById('bt-consensus-ic');
-    var icNum = (ic != null && !isNaN(ic)) ? Number(ic) : null;
-    icEl.textContent = icNum !== null ? icNum.toFixed(4) : 'N/A';
+    // No predictions in the window: an IC of 0 / win rate of 0% would read as
+    // a measured (bad) result, so show "--" in neutral colors instead.
+    var noPredictions = !data.total_records;
+    var icNum = (!noPredictions && ic != null && !isNaN(ic)) ? Number(ic) : null;
+    icEl.textContent = icNum !== null ? icNum.toFixed(4) : '--';
     icEl.style.color = icNum > 0 ? 'var(--signal-buy)' : icNum < 0 ? 'var(--signal-sell)' : 'var(--text-secondary)';
-    banner.style.borderLeftColor = icNum > 0 ? 'var(--signal-buy)' : 'var(--signal-sell)';
+    banner.style.borderLeftColor = icNum === null ? 'var(--border-color)' : icNum > 0 ? 'var(--signal-buy)' : 'var(--signal-sell)';
 
     document.getElementById('bt-result-ticker').textContent = data.ticker;
     document.getElementById('bt-total-records').textContent = data.total_records;
@@ -617,9 +620,10 @@ function renderMetrics(data) {
         sharpeRatio != null ? sharpeRatio.toFixed(2) : '',
         sharpeRatio > 1 ? 'var(--signal-buy)' : sharpeRatio > 0 ? 'var(--signal-neutral)' : 'var(--signal-sell)');
 
+    if (!data.total_records) winRate = null;  // nothing scored in this window
     var wrEl = document.getElementById('bt-win-rate');
     wrEl.textContent = winRate != null ? (winRate * 100).toFixed(1) + '%' : '--';
-    wrEl.style.color = winRate > 0.55 ? 'var(--signal-buy)' : winRate > 0.45 ? 'var(--signal-neutral)' : 'var(--signal-sell)';
+    wrEl.style.color = winRate == null ? 'var(--text-secondary)' : winRate > 0.55 ? 'var(--signal-buy)' : winRate > 0.45 ? 'var(--signal-neutral)' : 'var(--signal-sell)';
 }
 
 function renderTimeline(data) {

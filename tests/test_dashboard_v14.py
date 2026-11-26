@@ -142,3 +142,100 @@ class TestEtfCardRender:
 
     def test_equity_renders_nothing(self):
         assert _render_card(build_etf_overview(_equity_ctx())) == ""
+
+
+# ---------------------------------------------------------------------------
+# Committee verdict for a fund
+# ---------------------------------------------------------------------------
+class TestCommitteeFundVerdict:
+    def _run(self, monkeypatch):
+        import augur.data as data_mod
+
+        monkeypatch.setattr(data_mod, "fetch_market_context", lambda t, *a, **k: _etf_ctx())
+        return client.post("/api/committee", json={"ticker": "SPY", "question": "q"}).json()
+
+    def test_withheld_verdict_and_abstainers(self, monkeypatch):
+        data = self._run(monkeypatch)
+        v = data["verdict"]
+        assert v["withheld"] is True
+        assert v["abstained_count"] > 0
+        assert v["applicable_count"] + v["abstained_count"] == len(data["opinions"])
+        # abstainers are not counted as neutral votes
+        assert v["vote"]["abstained"] == v["abstained_count"]
+        assert sum(v["vote"][k] for k in ("bullish", "neutral", "bearish")) == v["applicable_count"]
+        assert v["kelly_pct"] == 0
+
+    def test_abstainers_flagged_and_sorted_last(self, monkeypatch):
+        ops = self._run(monkeypatch)["opinions"]
+        flags = [op["not_applicable"] for op in ops]
+        assert any(flags) and flags == sorted(flags)
+
+    def test_page_renders_withheld_state(self):
+        html = client.get("/committee").text
+        assert "v.withheld" in html and "op.not_applicable" in html
+        assert 'data-i18n="committee-question-ph"' in html
+
+
+class TestStockPageFundPolish:
+    def test_analyze_api_reports_currency_and_name(self, monkeypatch):
+        import augur.data as data_mod
+        import dashboard.routes.analysis as analysis_routes
+
+        ctx = MarketContext(ticker="510300.SS", price=3.96, asset_type="etf", currency="CNY",
+                            company_name="CSI 300 ETF", etf={"nav": 3.97})
+        monkeypatch.setattr(data_mod, "fetch_market_context", lambda t, *a, **k: ctx)
+        monkeypatch.setattr(analysis_routes, "_check_rate_limit", lambda t: True)
+        monkeypatch.setattr(analysis_routes, "_build_api_provenance", lambda *a, **k: None)
+        data = client.get("/api/analyze/510300.SS").json()
+        assert data["market_data"]["currency"] == "CNY"
+        assert data["market_data"]["company_name"] == "CSI 300 ETF"
+        assert data["etf_overview"]["currency"] == "CNY"
+
+    def test_withheld_oracle_does_not_echo_engine_reasoning(self):
+        html = client.get("/stocks").text
+        assert "_withheldMessage(ticker, cons)" in html
+        assert "too few personas have rules that apply to this fund, so no signal or position size is given. <br><br>' + escapeHtml(cons.reasoning" not in html
+        assert "点击查看详情" not in html
+
+
+@pytest.mark.skipif(shutil.which("node") is None, reason="node not on PATH")
+class TestEtfCardPolish:
+    def test_nav_value_shown_with_currency(self):
+        ov = build_etf_overview(MarketContext(ticker="SPY", asset_type="etf", currency="USD", etf=dict(ETF_PROFILE)))
+        html = _render_card(ov)
+        assert "601.12 USD" in html and "2026-11-25" in html
+
+    def test_unknown_values_are_muted(self):
+        html = _render_card(build_etf_overview(MarketContext(ticker="X", asset_type="etf")))
+        assert "etf-card__value--na" in html
+
+
+class TestFundReportRoutes:
+    def _analysis(self, monkeypatch):
+        import augur.data as data_mod
+        import dashboard.routes.analysis as analysis_routes
+
+        ctx = MarketContext(ticker="SPY", price=600.9, asset_type="etf", currency="USD",
+                            company_name="SPDR S&P 500 ETF Trust", etf=dict(ETF_PROFILE))
+        monkeypatch.setattr(data_mod, "fetch_market_context", lambda t, *a, **k: ctx)
+        monkeypatch.setattr(analysis_routes, "_check_rate_limit", lambda t: True)
+        monkeypatch.setattr(analysis_routes, "_build_api_provenance", lambda *a, **k: None)
+        return client.get("/api/analyze/SPY").json()
+
+    def test_post_report_keeps_fund_profile(self, monkeypatch):
+        data = self._analysis(monkeypatch)
+        out = client.post("/api/report/SPY", json=data).json()
+        assert out["consensus_withheld"] is True
+        report = out["report"]
+        assert "（EQUITY）" not in report and "（ETF）" in report
+        assert "$512" in report and "0.09%" in report      # AUM and expense ratio reached the report
+        assert "SPDR S&P 500 ETF Trust" in report
+
+    def test_get_report_flags_withheld(self, monkeypatch):
+        self._analysis(monkeypatch)
+        out = client.get("/api/report/SPY?auto_fetch=true").json()
+        assert out["consensus_withheld"] is True
+
+    def test_report_page_handles_withheld(self):
+        html = client.get("/report/SPY").text
+        assert "data.consensus_withheld" in html

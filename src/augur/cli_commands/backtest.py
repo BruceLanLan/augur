@@ -38,7 +38,7 @@ def backtest_cmd(ticker, days, demo, live):
         click.echo(result.summary)
         click.echo(f"\nTotal records: {len(result.records)}")
         click.echo(f"Consensus IC (20d): {result.consensus_ic:.4f}")
-        click.echo("\n[数据来源: 演示数据 (--demo，非真实历史，不计入 leaderboard)]")
+        click.echo("\n[Data source: demo data (--demo; not real history, not counted in the leaderboard)]")
         return
 
     # Default (and --live, now a no-op alias): real data. No silent fallback
@@ -77,7 +77,7 @@ def backtest_cmd(ticker, days, demo, live):
     click.echo(result.summary)
     click.echo(f"\nTotal records: {len(result.records)}")
     click.echo(f"Consensus IC (20d): {result.consensus_ic:.4f}")
-    click.echo("\n[数据来源: yfinance 实时历史数据]")
+    click.echo("\n[Data source: yfinance price history (live)]")
 
 
 @click.command("ic-report")
