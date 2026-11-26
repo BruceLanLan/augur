@@ -25,10 +25,10 @@ async def index(request: Request):
     except Exception:
         ds_count = 2
     stats = [
-        {"value": str(agent_count), "label": "虚拟投资大师", "icon": "users"},
-        {"value": "6", "label": "共识加权层", "icon": "layers"},
-        {"value": "40+", "label": "评分因子", "icon": "sliders"},
-        {"value": str(ds_count), "label": "数据源链路", "icon": "database"},
+        {"value": str(agent_count), "label": "虚拟投资大师", "icon": "users", "i18n": "home-stat-masters"},
+        {"value": "6", "label": "共识加权层", "icon": "layers", "i18n": "home-stat-layers"},
+        {"value": "40+", "label": "评分因子", "icon": "sliders", "i18n": "home-stat-factors"},
+        {"value": str(ds_count), "label": "数据源链路", "icon": "database", "i18n": "home-stat-sources"},
     ]
     featured = [
         {"avatar": "🏦", "id": "buffett", "name": "Warren Buffett", "style": "价值 · 护城河", "desc": "寻找具有持久竞争优势的企业，以合理价格长期持有。FCF 和 ROE 是核心衡量标准。", "tag": "价值投资"},

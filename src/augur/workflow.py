@@ -158,6 +158,8 @@ def run_workflow(
                     "sector": ctx.sector,
                     "industry": ctx.industry,
                 }
+                if str(getattr(ctx, "asset_type", "") or "").lower() in ("etf", "fund"):
+                    fetch_result["asset_type"] = str(ctx.asset_type).lower()
                 if "fetch" in step_list:
                     output["results"]["fetch"] = fetch_result
                 if tracker and sid:
@@ -265,6 +267,7 @@ def run_workflow(
                         confidence=rdict.get("confidence", 0.0),
                         score=rdict.get("score", 0.0),
                         reasoning=rdict.get("reasoning", ""),
+                        metadata=dict(rdict.get("metadata") or {}),
                     )
         else:
             sid = tracker.start_step("analyze") if tracker else None
@@ -291,6 +294,9 @@ def run_workflow(
                             "factors": dict((r.metadata or {}).get("factors") or {}),
                             "key_findings": list(r.key_findings[:3]),
                             "risks": list(r.risks[:3]),
+                            # Fund abstention: the persona's rules do not apply.
+                            **({"abstained": True}
+                               if (r.metadata or {}).get("not_applicable") else {}),
                         }
                         for aid, r in responses.items()
                     }
@@ -371,6 +377,9 @@ def run_workflow(
                             "signal": consensus_result.signal.value,
                             "score": consensus_result.score,
                             "confidence": consensus_result.confidence,
+                            **({"withheld": True,
+                                "withheld_reason": meta.get("withheld_reason", "")}
+                               if meta.get("consensus_withheld") else {}),
                         },
                     )
                     # Persist consensus metadata for resume
@@ -414,6 +423,13 @@ def run_workflow(
             "low_participation": bool(meta.get("low_participation")),
             "regime": meta.get("regime_features", {}).get("regime"),
         }
+        if meta.get("consensus_withheld"):
+            # Funds with too few applicable personas: no signal, no size.
+            output["results"]["consensus"].update({
+                "withheld": True,
+                "withheld_reason": meta.get("withheld_reason", ""),
+                "kelly_pct": 0.0,
+            })
 
     # ------------------------------------------------------------------
     # PHASE 4: committee
@@ -428,19 +444,21 @@ def run_workflow(
                 consensus = consensus_result or coordinator.get_consensus(
                     responses, ticker=ticker, context=ctx
                 )
-                bullish = sum(
-                    1 for r in responses.values()
-                    if r.signal.value == "bullish"
+                voting = [
+                    r for r in responses.values()
+                    if not (r.metadata or {}).get("not_applicable")
+                ]
+                bullish = sum(1 for r in voting if r.signal.value == "bullish")
+                bearish = sum(1 for r in voting if r.signal.value == "bearish")
+                neutral = len(voting) - bullish - bearish
+                withheld = bool(
+                    (getattr(consensus, "metadata", None) or {}).get("consensus_withheld")
                 )
-                bearish = sum(
-                    1 for r in responses.values()
-                    if r.signal.value == "bearish"
-                )
-                neutral = len(responses) - bullish - bearish
                 committee_result = {
                     "question": question or f"Should we invest in {ticker}?",
-                    "verdict": consensus.signal.value,
-                    "score": consensus.score,
+                    "verdict": "withheld" if withheld else consensus.signal.value,
+                    "score": None if withheld else consensus.score,
+                    "abstained": len(responses) - len(voting),
                     "vote": {
                         "bullish": bullish,
                         "neutral": neutral,
@@ -632,32 +650,54 @@ def format_workflow_summary(data: Dict[str, Any]) -> str:
 
     if "fetch" in results and "error" not in results["fetch"]:
         f = results["fetch"]
-        lines += [
-            "── Fetch ──",
-            f"  Price: ${f.get('price', 0):.2f}  PE: {f.get('pe', 0):.1f}",
-            f"  Sector: {f.get('sector', 'N/A')}",
-            "",
-        ]
+        if f.get("asset_type") in ("etf", "fund"):
+            lines += [
+                "── Fetch ──",
+                f"  Price: ${f.get('price', 0):.2f}  Type: {f['asset_type'].upper()}",
+                "",
+            ]
+        else:
+            lines += [
+                "── Fetch ──",
+                f"  Price: ${f.get('price', 0):.2f}  PE: {f.get('pe', 0):.1f}",
+                f"  Sector: {f.get('sector', 'N/A')}",
+                "",
+            ]
 
     if "analyze" in results and "error" not in results["analyze"]:
         agents = results["analyze"]
+        abstained = sorted(aid for aid, a in agents.items() if a.get("abstained"))
+        voting = {aid: a for aid, a in agents.items() if not a.get("abstained")}
         lines += [f"── Analyze ({len(agents)} agents) ──", ""]
-        for aid, a in sorted(agents.items(), key=lambda x: -x[1]["score"])[:5]:
+        for aid, a in sorted(voting.items(), key=lambda x: -x[1]["score"])[:5]:
             lines.append(
                 f"  {a['agent_name']:<22s} {a['signal'].upper():<8s} {a['score']:.1f}/10"
             )
-        if len(agents) > 5:
-            lines.append(f"  … and {len(agents) - 5} more")
+        if len(voting) > 5:
+            lines.append(f"  … and {len(voting) - 5} more")
+        if abstained:
+            lines.append(
+                f"  Abstained ({len(abstained)}, rules not applicable to funds): "
+                + ", ".join(abstained)
+            )
         lines.append("")
 
     if "consensus" in results and "error" not in results["consensus"]:
         c = results["consensus"]
-        lines += [
-            "── Consensus ──",
-            f"  Signal: {c['signal'].upper()}  Score: {c['score']:.1f}/10  "
-            f"Conf: {c['confidence']:.0%}",
-            "",
-        ]
+        if c.get("withheld"):
+            lines += [
+                "── Consensus ──",
+                "  Signal: WITHHELD (no consensus signal)",
+                f"  {c.get('withheld_reason', '')}".rstrip(),
+                "",
+            ]
+        else:
+            lines += [
+                "── Consensus ──",
+                f"  Signal: {c['signal'].upper()}  Score: {c['score']:.1f}/10  "
+                f"Conf: {c['confidence']:.0%}",
+                "",
+            ]
 
     if "committee" in results and "error" not in results["committee"]:
         cm = results["committee"]

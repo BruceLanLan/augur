@@ -4,6 +4,41 @@
 
 ---
 
+## v14.0.0 — ETF-native analysis, correctness fixes, a clear LLM role (2026-11-26)
+
+This release answers two things: a user asked "can it analyse ETFs?" and "does Augur actually use an LLM?" (Issue #5), and another user pointed out that the RSI formula was wrong (PR #10). Three threads.
+
+### Thread one: ETFs are no longer scored as companies
+
+Before, entering SPY made the 18 masters apply company-financials rules to a fund, which produced conclusions like "small cap" or "gross margin too low". Now `augur fetch / consensus / analyze / report` first recognise an ETF (by yfinance's instrument type for US and HK funds, by code prefix for A-shares) and show an ETF overview: AUM (in USD), expense ratio, yield, NAV and its date, premium/discount, top-10 holdings weight, bid/ask spread and look-through P/E, followed by a health checklist (high expense ratio, AUM small enough to risk closure, premium/discount above 1%, concentrated holdings, wide spread).
+
+The premium/discount always compares against the close on the NAV date. US and HK NAVs come without a date, so it is inferred as the session before the latest bar and marked as inferred; A-share ETF NAVs and their real dates come from Sina's public quote endpoint.
+
+Masters whose rules are built on company financials explicitly **abstain** on a fund and say why. In this release only Dalio's rules apply to funds (decided by a test: change company fields on an ETF and see whose score moves). With fewer than 3 applicable masters there is no consensus: the output says WITHHELD, gives no position size and writes nothing to the learning records. The dashboard stock page has a new ETF card.
+
+### Thread two: calculation errors that biased scores
+
+- **RSI**: it looked only at the last 14 changes (Cutler's RSI); it now uses Wilder smoothing, the industry standard, matching TA-Lib. The seven masters that read RSI score differently. The two tests from PR #10 are in the suite as written, and the fix adds no dependency.
+- **Non-USD stocks**: HK and A-share market caps and free cash flow were used as if they were USD, so Tencent looked like a $3 trillion company. Amounts are now converted at the FX rate; Tencent is about $397.5B. Without a rate nothing is converted and the output names the local currency.
+- **Dayu's volatility rule** had a unit bug and never fired, so every stock got the "low volatility, size up" bonus; now higher volatility costs more points.
+- Also: Thiel counts Google, Meta and Tencent as tech; a neutral verdict sizes the position at 0; `--json` prints pure JSON that scripts can parse directly; the fear/greed gauge is recalibrated (VIX 28 reads as Fear); the backtest page no longer "derives" drawdown and Sharpe from the hit rate.
+
+### Thread three: what Augur does and doesn't do with LLMs
+
+Augur's scoring **does not call any LLM**. It is deterministic rules, so the same inputs give the same scores, which is what makes backtesting possible. LLMs come in two places: through MCP, where an agent such as Claude Code calls Augur and interprets the scores and evidence with its own model (`claude mcp add augur -- augur-mcp`); and the optional persona chat, using an OpenAI-compatible key you configure. The README has a new section, "How Augur uses LLMs". Clean-up: the MCP tool `augur_configure` wrote a setting nothing ever read and is now deprecated; the `[llm]` extra no longer installs the unused `anthropic` package.
+
+### When upgrading
+
+- Scripts that read progress text from stdout with `--json` must read stderr instead.
+- Code that reads `MarketContext`: amounts for non-USD instruments are now USD.
+- The full list is in the README section "Upgrading from v13 to v14" and in [CHANGELOG.md](../../CHANGELOG.md).
+
+### Not done yet
+
+ATR with true range, ETF premium/discount history and tracking error, more master rules that apply to funds, and a clean-up of ETF learning records written before v14 are listed as v14 deferred items in the [ROADMAP](../ROADMAP.md) (Chinese).
+
+---
+
 ## v10.15.0 — Public sync release (2026-07-15)
 
 The last public release was v10.0.0 on 2026-06-29 (Terminal Workspace + 13 MCP tools). This release brings over three and a half weeks of development since then -- it's a lot, organized into four threads.

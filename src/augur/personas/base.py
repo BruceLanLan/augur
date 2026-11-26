@@ -11,6 +11,7 @@ Agent人格系统 — 基类与类型定义
   - DebateProtocol (辩论协议)
 """
 
+import functools
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
@@ -193,6 +194,12 @@ class MarketContext:
     recommendation_key: str = ""  # 评级关键词 strong_buy/buy/hold/sell
     num_analyst_opinions: int = 0  # 覆盖分析师数量
 
+    # ============ v14: 资产类型 / 基金画像 / 货币 ============
+    asset_type: str = "equity"    # "equity" | "etf" | "fund"
+    etf: Dict = field(default_factory=dict)  # 基金画像，键见 augur.etf
+    financial_currency: str = ""  # 财报货币（可能与交易货币 currency 不同）
+    fx_rate_usd: float = 0.0      # 交易货币兑美元汇率，0 = 未知
+
     def get(self, key: str, default: Any = None) -> Any:
         return getattr(self, key, default)
 
@@ -224,6 +231,45 @@ class BaseAgent:
     4. thresholds - 判断阈值
     5. biases - 认知偏差倾向
     """
+
+    def __init_subclass__(cls, **kwargs):
+        """Wrap every subclass ``analyze`` with the fund-abstention guard.
+
+        This is the single choke point for ETF / fund contexts: callers reach
+        personas through many paths (registry, MCP, dashboard, bots,
+        backtests) that all end in ``agent.analyze(ctx)``. Only classes that
+        define ``analyze`` themselves are wrapped, so inheritance never
+        double-wraps; the original is kept as ``analyze.__wrapped__``.
+        """
+        super().__init_subclass__(**kwargs)
+        raw = cls.__dict__.get("analyze")
+        if raw is None or not callable(raw) or getattr(raw, "_augur_fund_guard", False):
+            return
+
+        @functools.wraps(raw)
+        def analyze(self, context, *args, **kw):
+            from augur.etf import FUND_APPLICABLE_PERSONAS, is_fund
+            if is_fund(context) and getattr(self, "agent_id", "") not in FUND_APPLICABLE_PERSONAS:
+                return self._fund_not_applicable(context)
+            return raw(self, context, *args, **kw)
+
+        analyze._augur_fund_guard = True
+        cls.analyze = analyze
+
+    def _fund_not_applicable(self, context: "MarketContext") -> AgentResponse:
+        """Neutral abstention returned for funds instead of running company rules."""
+        name = getattr(self, "name", "") or getattr(self, "agent_id", "")
+        asset_type = str(getattr(context, "asset_type", "") or "fund").lower()
+        return AgentResponse(
+            agent_id=getattr(self, "agent_id", ""),
+            agent_name=name,
+            signal=SignalType.NEUTRAL,
+            confidence=0.0,
+            score=5.0,
+            reasoning=f"不适用于基金：{name} 的规则基于公司财务，{asset_type.upper()} 不参与评分。",
+            coverage_confidence=0.0,
+            metadata={"not_applicable": True, "reason": "fund", "asset_type": asset_type},
+        )
 
     def __init__(
         self,

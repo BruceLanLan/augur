@@ -76,19 +76,16 @@ async def api_run_backtest(
     if agent_ics:
         avg_hit_rate = sum(a.hit_rate for a in agent_ics) / len(agent_ics)
 
-    avg_gain = 0.02
-    avg_loss = -0.015
-    daily_return = (avg_hit_rate * avg_gain + (1 - avg_hit_rate) * avg_loss)
-    annualized_return = daily_return * 252
-    max_drawdown = -((1 - avg_hit_rate) * 0.15 + 0.05)
-    vol = abs(max_drawdown) * 1.5
-    sharpe_ratio = (annualized_return - 0.04) / vol if vol > 0 else 0.0
-
+    # The backtester only measures hit rate / IC. Return, drawdown and Sharpe
+    # were previously synthesised from the hit rate with assumed +2% / -1.5%
+    # daily moves, i.e. invented numbers. Until a real P&L simulation exists
+    # they are reported as null ("not measured").
     metrics = {
-        "annualized_return": round(annualized_return, 4),
-        "max_drawdown": round(max_drawdown, 4),
-        "sharpe_ratio": round(sharpe_ratio, 2),
+        "annualized_return": None,
+        "max_drawdown": None,
+        "sharpe_ratio": None,
         "win_rate": round(avg_hit_rate, 4),
+        "not_measured": ["annualized_return", "max_drawdown", "sharpe_ratio"],
     }
 
     signals_timeline = []

@@ -76,6 +76,17 @@ SITECUSTOMIZE = textwrap.dedent('''
             name = "readme_smoke"
 
             def fetch(self, ticker):
+                if ticker.upper() == "SPY":
+                    # A fund: the data layer must route it to the ETF profile, not
+                    # company fundamentals (aum_usd_bn is in billions USD).
+                    return {"data_source": "readme_smoke", "price": 600.0, "asset_type": "etf",
+                            "company_name": "SPDR S&P 500 ETF Trust", "currency": "USD",
+                            "rsi": 55.0, "sma20": 595.0, "sma50": 585.0, "sma200": 560.0,
+                            "volatility_20d": 0.14,
+                            "etf": {"aum_usd_bn": 797.0, "expense_ratio": 0.000945, "yield": 0.0115,
+                                    "category": "Large Blend", "nav": 599.76, "nav_date": "2026-11-25",
+                                    "nav_date_inferred": True, "premium_pct": 0.04, "top10_weight": 0.36,
+                                    "spread_pct": 0.002, "portfolio_pe": 22.8, "source": "readme_smoke"}}
                 # fcf and market_cap are in billions USD, as the real providers return.
                 return {"data_source": "readme_smoke", "price": 190.0, "pe": 30.0, "pb": 45.0, "roe": 1.5,
                         "gross_margins": 0.46, "revenue_growth": 0.06, "debt_ratio": 0.8, "fcf": 100.0,
@@ -148,24 +159,28 @@ def skill_succeeded(skill_id: str) -> Check:
     return contains("Skill: %s · status: success" % skill_id, "Run ID: run_AAPL_")
 
 
-# Order matters: research-report, export, dossier and ledger read the runs
+# Order matters: report from-run, export, dossier and ledger read the runs
 # saved by the earlier workflow commands; verify-pack reads the exported pack.
 COMMANDS: List[Tuple[Sequence[str], Sequence[Check]]] = [
     (["--version"], [contains("augur, version")]),
     (["analyze", "AAPL"], [contains("Price: 190.00", "AAPL — 18 Masters Consensus", "Signal:")]),
     (["analyze", "NVDA", "--pe", "60", "--roe", "0.45"], [contains("NVDA — 18 Masters Consensus", "Signal:")]),
+    (["fetch", "SPY"], [contains("ETF", "$797.00B", "0.09%", "+0.04%")]),
+    (["consensus", "SPY"], [contains("WITHHELD", "Applicable: 1 of 18", "Abstained (17")]),
+    (["watchlist", "add", "AAPL"], [contains("AAPL")]),
+    (["watchlist", "show"], [contains("AAPL")]),
     (["workflow", "AAPL"], [contains("Price: $190.00", "── Consensus ──", "Run ID: run_AAPL_")]),
-    (["research-report", "AAPL"], [contains("## Consensus", "## Disagreement Map", "## Provenance")]),
+    (["report", "from-run", "AAPL"], [contains("## Consensus", "## Disagreement Map", "## Provenance")]),
     (["export", "AAPL", "--format", "md"], [contains("Exported md to run_AAPL_"), file_written("run_AAPL_*_report.md")]),
     (["export", "AAPL", "--format", "evidence-pack", "-o", "pack.zip"],
      [contains("Exported evidence-pack to pack.zip"), file_written("pack.zip")]),
-    (["verify-pack", "pack.zip"], [contains("OK: every file matches")]),
+    (["records", "verify-pack", "pack.zip"], [contains("OK: every file matches")]),
     (["committee", "AAPL", "--preset", "value", "-q", "护城河是在变宽还是变窄？"],
      [contains("Investment Committee: AAPL", "source=readme_smoke", "Verdict", "Signal:")]),
     (["valuation", "AAPL"], [contains("DCF Valuation: AAPL", "net debt (debt - cash)"), fair_value_positive]),
     (["dossier", "AAPL"], [contains("Pre-Earnings Dossier: AAPL", "From run run_AAPL_")]),
     (["workflow", "AAPL"], [contains("Run ID: run_AAPL_")]),
-    (["ledger", "AAPL"], [contains("Change Ledger: AAPL", "→ run_AAPL_")]),
+    (["records", "ledger", "AAPL"], [contains("Change Ledger: AAPL", "→ run_AAPL_")]),
     (["thesis-delta", "AAPL"], [contains("Thesis delta AAPL unavailable: no active thesis", "next step:")]),
     (["scorecard", "AAPL"], [any_of(contains("Post-Earnings Scorecard: AAPL"), contains("Scorecard AAPL unavailable:"))]),
     (["cycle"], [contains("Earnings Cycle", "ready 0/0")]),
@@ -175,8 +190,8 @@ COMMANDS: List[Tuple[Sequence[str], Sequence[Check]]] = [
     (["skill", "run", "insider-cluster-review", "AAPL"], [skill_succeeded("insider-cluster-review")]),
     (["skill", "run", "earnings-prep", "AAPL"], [skill_succeeded("earnings-prep"), contains("## Consensus")]),
     (["backtest", "AAPL", "--demo", "--days", "30"], [contains("Total records:", "--demo")]),
-    (["decisions", "report"], [contains("Decisions:")]),
-    (["audit"], [contains("skill_run")]),
+    (["records", "decisions", "report"], [contains("Decisions:")]),
+    (["records", "audit"], [contains("skill_run")]),
 ]
 
 

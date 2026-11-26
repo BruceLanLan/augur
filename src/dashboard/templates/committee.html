@@ -125,6 +125,10 @@
     to   { opacity: 1; transform: translateY(0); }
 }
 .opinion-card { animation: opinion-in 0.22s ease both; }
+/* Persona abstained (rules do not apply to a fund): muted, no score */
+.opinion-card.na { opacity: 0.55; border-left-color: var(--border-color); }
+.opinion-card.na .signal { color: var(--text-muted); border-color: var(--border-color); }
+.verdict-note { grid-column: 1/-1; font-size: 0.8rem; line-height: 1.5; color: var(--text-secondary, var(--text-muted)); text-align: left; }
 @keyframes verdict-reveal {
     from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -164,7 +168,7 @@
         </div>
         <div style="flex:1; min-width:240px;">
             <label class="form-label" data-i18n="committee-question-label">提问（可选）</label>
-            <input id="committee-question" type="text" class="form-input"
+            <input id="committee-question" type="text" class="form-input" data-i18n="committee-question-ph"
                    placeholder="护城河是否真实？当前估值合理吗？" maxlength="200">
         </div>
         <div style="display:flex; align-items:flex-end;">
@@ -180,7 +184,7 @@
         <div style="display:flex; gap:8px;">
             <button class="btn btn-sm btn-ghost" onclick="selectAll()" data-i18n="committee-select-all">全选</button>
             <button class="btn btn-sm btn-ghost" onclick="clearAll()" data-i18n="committee-clear-all">清空</button>
-            <span id="selected-count" style="font-size:0.75rem; color:var(--text-muted); line-height:28px;">0 位</span>
+            <span id="selected-count" style="font-size:0.75rem; color:var(--text-muted); line-height:28px;"></span>
         </div>
     </div>
     <div class="committee-agent-grid" id="agent-grid">
@@ -301,6 +305,8 @@ function loadPreset(name) {
 var _committeeWs = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    var sc = document.getElementById('selected-count');
+    if (sc && !sc.textContent) sc.textContent = _selectedAgents.size + ' ' + _t('committee-agents-unit', '位');
     fetch('/api/workspace').then(function(r) { return r.ok ? r.json() : null; }).then(function(ws) {
         var preset = ws && ws.committee_preset;
         if (preset && _PRESETS.hasOwnProperty(preset)) {
@@ -392,8 +398,17 @@ function showError(msg) {
 }
 
 function _opinionCardHtml(op) {
+    var na = !!op.not_applicable;  // abstained: rules do not apply to a fund
     var finding = op.key_findings && op.key_findings[0] ? escapeHtml(op.key_findings[0]) : '';
     var risk = op.risks && op.risks[0] ? escapeHtml(op.risks[0]) : '';
+    if (na) {
+        return '<div class="opinion-card na" title="' + escapeHtml(_t('fund-abstained-tip', 'Abstained: rules do not apply to funds')) + '">' +
+            '<div><div class="opinion-name">' + escapeHtml(op.agent_name || op.agent_id) + '</div>' +
+            '<div class="opinion-finding">' + escapeHtml(_t('fund-abstained-tip', 'Abstained: rules do not apply to funds')) + '</div></div>' +
+            '<div class="opinion-badge"><span class="signal">' + escapeHtml(_t('fund-abstained', 'N/A')) + '</span>' +
+            '<span class="score">--</span></div>' +
+        '</div>';
+    }
     return '<div class="opinion-card ' + escapeHtml(op.signal || 'neutral') + '">' +
         '<div>' +
             '<div class="opinion-name">' + escapeHtml(op.agent_name || op.agent_id) + '</div>' +
@@ -434,17 +449,22 @@ function _buildCommitteeMarkdown() {
         '# Augur Committee Report — ' + ticker + ' (' + date + ')',
         '',
         '## Verdict',
-        '- **Signal**: ' + (v.signal || 'neutral').toUpperCase(),
-        '- **Score**: ' + Number(v.score || 0).toFixed(1) + '/10',
-        '- **Confidence**: ' + Math.round((v.confidence || 0) * 100) + '%',
+        '- **Signal**: ' + (v.withheld ? 'WITHHELD (too few masters apply to this fund)' : (v.signal || 'neutral').toUpperCase()),
+        '- **Score**: ' + (v.withheld ? '—' : Number(v.score || 0).toFixed(1) + '/10'),
+        '- **Confidence**: ' + (v.withheld ? '—' : Math.round((v.confidence || 0) * 100) + '%'),
         '- **Kelly Position**: ' + (v.kelly_pct > 0 ? v.kelly_pct.toFixed(1) + '%' : '—'),
-        '- **Vote**: Bullish ' + vote.bullish + ' / Neutral ' + vote.neutral + ' / Bearish ' + vote.bearish,
+        '- **Vote**: Bullish ' + vote.bullish + ' / Neutral ' + vote.neutral + ' / Bearish ' + vote.bearish +
+            (vote.abstained ? ' / Abstained ' + vote.abstained : ''),
         ''
     ];
     if (_committeeOpinions.length > 0) {
         lines.push('## Individual Opinions', '');
         _committeeOpinions.forEach(function(op) {
             var agent = op.agent_name || op.agent_id;
+            if (op.not_applicable) {
+                lines.push('### ' + agent + ' — N/A (rules do not apply to funds)', '');
+                return;
+            }
             lines.push('### ' + agent + ' — ' + (op.signal || 'neutral').toUpperCase() + ' ' + (op.score || 0) + '/10');
             if (op.key_findings && op.key_findings.length) {
                 lines.push('**Key Findings:**');
@@ -507,34 +527,48 @@ function _countUp(el, target, decimals, suffix, duration) {
 
 function renderVerdict(v) {
     var vote = v.vote || {bullish:0, neutral:0, bearish:0};
+    var withheld = !!v.withheld;  // fund with too few applicable masters
+    var sigText = withheld ? _t('fund-withheld', 'WITHHELD') : v.signal.toUpperCase();
+    var voteText = escapeHtml(_t('committee-vote', '票数')) + ' &nbsp;Bullish ' + vote.bullish + ' / Neutral ' + vote.neutral + ' / Bearish ' + vote.bearish +
+        (vote.abstained ? ' / ' + escapeHtml(_t('fund-abstained', 'N/A')) + ' ' + vote.abstained : '');
+    var note = '';
+    if (withheld) {
+        var total = (v.applicable_count || 0) + (v.abstained_count || 0);
+        note = '<div class="verdict-note">' + escapeHtml(_t('fund-withheld-oracle', 'No consensus for {ticker}.')
+            .replace('{ticker}', _committeeTicker || '')
+            .replace('{n}', v.applicable_count || 0)
+            .replace('{total}', total)
+            .replace('{k}', v.abstained_count || 0)) + '</div>';
+    }
     document.getElementById('verdict-panel').innerHTML =
         '<div class="verdict-stat">' +
             '<div class="label">' + escapeHtml(_t('committee-signal', '信号')) + '</div>' +
-            '<div class="value ' + escapeHtml(v.signal) + '" id="vd-signal">' + escapeHtml(v.signal.toUpperCase()) + '</div>' +
+            '<div class="value ' + (withheld ? '' : escapeHtml(v.signal)) + '" id="vd-signal">' + escapeHtml(sigText) + '</div>' +
         '</div>' +
         '<div class="verdict-stat">' +
             '<div class="label">' + escapeHtml(_t('committee-score', '评分')) + '</div>' +
-            '<div class="value"><span id="vd-score">0.0</span><span style="font-size:0.8rem;color:var(--text-muted)">/10</span></div>' +
+            '<div class="value"><span id="vd-score">' + (withheld ? '--' : '0.0') + '</span><span style="font-size:0.8rem;color:var(--text-muted)">/10</span></div>' +
         '</div>' +
         '<div class="verdict-stat">' +
             '<div class="label">' + escapeHtml(_t('committee-confidence', '置信度')) + '</div>' +
-            '<div class="value"><span id="vd-conf">0</span>%</div>' +
+            '<div class="value"><span id="vd-conf">' + (withheld ? '--' : '0') + '</span>' + (withheld ? '' : '%') + '</div>' +
         '</div>' +
         '<div class="verdict-stat">' +
             '<div class="label">Kelly</div>' +
-            '<div class="value ' + (v.kelly_pct > 0 ? 'bullish' : '') + '" id="vd-kelly">' + (v.kelly_pct > 0 ? '0%' : '—') + '</div>' +
+            '<div class="value ' + (v.kelly_pct > 0 ? 'bullish' : '') + '" id="vd-kelly">' + (v.kelly_pct > 0 ? '0%' : (withheld ? 'n/a' : '—')) + '</div>' +
         '</div>' +
         '<div class="verdict-stat" style="grid-column:1/-1;">' +
-            '<div class="label" style="margin-bottom:6px;" id="vd-vote-label">' + escapeHtml(_t('committee-vote', '票数')) + ' &nbsp;Bullish ' + vote.bullish + ' / Neutral ' + vote.neutral + ' / Bearish ' + vote.bearish + '</div>' +
+            '<div class="label" style="margin-bottom:6px;" id="vd-vote-label">' + voteText + '</div>' +
             '<div class="vote-bar">' +
                 '<div class="bull" style="flex:' + vote.bullish + '"></div>' +
                 '<div class="neut" style="flex:' + vote.neutral + '"></div>' +
                 '<div class="bear" style="flex:' + vote.bearish + '"></div>' +
             '</div>' +
-        '</div>';
+        '</div>' + note;
 
     // Animate numbers after DOM is ready
     requestAnimationFrame(function() {
+        if (withheld) return;
         var scoreEl = document.getElementById('vd-score');
         var confEl  = document.getElementById('vd-conf');
         var kellyEl = document.getElementById('vd-kelly');

@@ -66,7 +66,7 @@ mcp_augur_debate       — 结构化多空辩论
 mcp_augur_fetch        — 实时行情（yfinance）
 mcp_augur_sentiment    — 社交情绪（StockTwits + 新闻）
 mcp_augur_list_personas — 列出所有大师
-mcp_augur_configure    — 配置大师模型参数
+mcp_augur_configure    — v14 起弃用，无效（Augur 评分不调用模型）
 mcp_augur_create_persona — 创建自定义大师
 mcp_augur_workflow     — 可组合多步工作流（fetch→analyze→consensus→committee→debate→sentiment）
 mcp_augur_workspace_get — 读取用户在 Dashboard 设置的终端布局/启用大师

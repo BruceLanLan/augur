@@ -126,6 +126,7 @@ async def ws_committee(websocket: WebSocket):
                     "confidence": round(result.confidence, 2),
                     "key_findings": result.key_findings[:2],
                     "risks": result.risks[:1],
+                    "not_applicable": bool((result.metadata or {}).get("not_applicable")),
                     "progress": f"{i}/{total}",
                 })
             except Exception:
@@ -142,34 +143,9 @@ async def ws_committee(websocket: WebSocket):
                 })
 
         consensus = coord.get_consensus(responses, ticker=ticker, context=ctx)
-        bullish_cnt = sum(1 for r in responses.values() if r.signal.value == "bullish")
-        bearish_cnt = sum(1 for r in responses.values() if r.signal.value == "bearish")
-        neutral_cnt = sum(1 for r in responses.values() if r.signal.value == "neutral")
-        kelly = consensus.metadata.get("position_sizing", {}).get("position_pct", 0)
+        from dashboard.routes.committee import committee_verdict
+        opinions_sorted, verdict = committee_verdict(responses, consensus)
 
-        opinions_sorted = sorted(
-            [
-                {
-                    "agent_id": aid,
-                    "agent_name": r.agent_name,
-                    "signal": r.signal.value,
-                    "score": round(r.score, 1),
-                    "confidence": round(r.confidence, 2),
-                    "key_findings": r.key_findings[:2],
-                    "risks": r.risks[:1],
-                }
-                for aid, r in responses.items()
-            ],
-            key=lambda x: -x["score"],
-        )
-
-        verdict = {
-            "signal": consensus.signal.value,
-            "score": round(consensus.score, 1),
-            "confidence": round(consensus.confidence, 2),
-            "kelly_pct": round(kelly, 1) if kelly else 0,
-            "vote": {"bullish": bullish_cnt, "neutral": neutral_cnt, "bearish": bearish_cnt},
-        }
         await websocket.send_json({"type": "verdict", "verdict": verdict, "opinions": opinions_sorted})
 
         try:

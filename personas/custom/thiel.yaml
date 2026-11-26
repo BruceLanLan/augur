@@ -49,7 +49,7 @@ factors:
       - {if: "operating_margins > 0.20", add: 1}
       - {if: "roe > 0.30", add: 2}                     # 竞争优势
       - {if: "roe > 0.20", add: 1}
-      - {if: "sector in ['technology', 'software']", add: 1}
+      - {if: "sector in ['Technology']", add: 1}
 
   contrarian_timing:
     base: 5
@@ -71,7 +71,7 @@ factors:
       - {if: "insider_ownership > 15", add: 2}
       - {if: "insider_ownership > 5", add: 1}
       - {if: "gross_margins > 0.60 and revenue_growth > 0.20", add: 2}  # 创始人有vision
-      - {if: "sector in ['software', 'technology']", add: 1}
+      - {if: "sector in ['Technology']", add: 1}
       - {if: "debt_ratio < 20", add: 1}                 # 不愿稀释控制权
       - {if: "debt_ratio > 60", add: -1}
 

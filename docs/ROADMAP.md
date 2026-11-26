@@ -1,9 +1,9 @@
 # Augur 开发路线图
 
 **状态**：Active
-**生效日期**：2026-08-11（2026-09-17 更新：私有开发仓合并进公开仓；2026-10-29 更新：v12）
+**生效日期**：2026-08-11（2026-09-17 更新：私有开发仓合并进公开仓；2026-10-29 更新：v12；2026-11-26 更新：v14）
 **维护仓库**：`BruceLanLan/augur`（公开，唯一主仓）
-**当前基线**：v13.0.0（2026-10-29：12.0 财报闭环与学习结算修正 → 12.1 `augur cycle` → 12.2 命令分组与 Dashboard 整理 → 13.0 SEC 财报日期回填、Python 3.10、精简公开 API）
+**当前基线**：v14.0.0（2026-11-26：ETF 原生分析、正确性修复、讲清楚大模型的角色；之前 2026-10-29：12.0 财报闭环与学习结算修正 → 12.1 `augur cycle` → 12.2 命令分组与 Dashboard 整理 → 13.0 SEC 财报日期回填、Python 3.10、精简公开 API）
 **详细审计**：[`docs/reviews/PROJECT_REVIEW_2026-08-11.md`](reviews/PROJECT_REVIEW_2026-08-11.md)
 **后续方向**：[`docs/PRODUCT_DIRECTIONS.md`](PRODUCT_DIRECTIONS.md)
 **生态融合调研**：[`docs/research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md`](research/FINANCIAL_PLATFORM_AGENT_SKILL_BENCHMARK_2026-08-11.md)
@@ -200,6 +200,47 @@ augur/main  (public, single source of truth)
 >
 > **2026-09-03 修正**（[评审报告](reviews/PROJECT_REVIEW_2026-09-03.md)）：上面「全绿」只在本地成立。CI「Tests」自 8/12 起因 `| tail` 吞掉退出码而假绿（实际 0 个测试跑过），「Hermetic Smoke」自创建起全红。两者已修，下一阶段以 CI 真绿为起点。
 
+## 2026-11 阶段：v14 —— ETF 原生分析、正确性修复、讲清楚大模型的角色
+
+**生效日期**：2026-11-26
+**依据**：[`docs/V14_PLAN.md`](V14_PLAN.md)（规划交接单），以及 Issue #5（ETF 分析、大模型的角色）和 PR #10（RSI 算法）
+**主题**：ETF 不再被当成公司打分；修掉几处会让分数系统性偏差的计算错误；在 README 里讲清楚 Augur 本身不调用大模型。
+
+### 步骤与状态
+
+| # | 步骤 | 验证点 | 状态 |
+|---|---|---|---|
+| 0 | 契约：`MarketContext` 加 `asset_type` / `etf` / `financial_currency` / `fx_rate_usd`；v13 大师基线快照 | `tests/test_persona_baseline.py`（对照 `tests/fixtures/v13_persona_baseline.json`，有意的变化写进 `ALLOWED_DIFFS`） | ✅ |
+| 1 | ETF 弃权与共识：规则基于公司财务的大师对基金弃权；适用不足 3 位时共识 WITHHELD、仓位 0、不写 learning；`assess_etf` 体检清单 | `tests/test_etf_consensus.py`；适用名单由"改公司字段、看谁的分数变"的不变性测试决定，v14.0 只有 Dalio | ✅ |
+| 2 | 货币换算：金额按 yfinance `<CCY>USD=X` 换成美元，GBp 等辅币单位，拿不到汇率时整体不换算并写 `data_warnings` | 实跑 0700.HK 市值 $3,097.6B → $397.5B | ✅ |
+| 3 | ETF 数据：`quoteType` / A 股代码识别，规模、费率、净值、按净值日期对齐的溢价折价、前十大、价差、成分股 PE | `tests/test_etf_data.py`；实跑 SPY 规模 $796.87B、溢价 +0.04%（对 11-24 净值） | ✅ |
+| 4 | Wilder RSI 与零依赖 `augur.indicators` | PR #10 的两个测试原样收入 | ✅ |
+| 5 | 大师小修：大宇波动率单位、Thiel 与引擎把 Communication Services 算科技、YAML 规则支持列表字面量 | `tests/test_v14_persona_fixes.py` | ✅ |
+| 6 | A 股 ETF 净值（新浪 `hq.sinajs.cn`，带真实净值日期） | 实跑 510300.SS 净值 3.9718（2026-11-25），溢价 −0.05% | ✅ |
+| 7 | 输出面：fetch / consensus / analyze / report / MCP 识别基金；`--json` 的 stdout 只有 JSON；金额标币种 | `tests/test_etf_output.py` | ✅ |
+| 8 | Dashboard 与杂项：ETF 卡片、版本号取 `__version__`、恐惧贪婪校准、回测页风险指标改为 null、分歧措辞、`[llm]` 去掉 `anthropic`、`augur_configure` 弃用 | `tests/test_dashboard_v14.py`；`/api/health` 为 14.0.0，VIX 28.29 显示 Fear | ✅ |
+| 9 | 文档与发布准备：三份 README、CHANGELOG、更新说明、数据源与 schema 文档、截图；`readme_smoke.py` 改分组写法并加假 ETF；committee / workflow / `report from-run` / dossier / 分歧图和 Dashboard 股票页、首页显示 WITHHELD | `tests/test_etf_workflow_v14.py`；全量 3792 passed / 1 skipped；README 离线冒烟 28/28 | ✅（未 push、未打 tag，等 owner 审核） |
+
+### 推迟项（14.x 之后，未排期）
+
+1. **ATR 用真实波幅（true range）并重校阈值**：真 TR 会让 `munger.py`（>3%）和 `dalio.py`（<2 / >5）的触发率整体上移，要先用数据重定阈值。**MACD 的 EMA 种子**一并处理。
+2. **回测保真度**：回测页的收益、回撤、夏普现在是 `null`（不再用命中率推算），真正计量要从回放记录算。
+3. **`augur risk-review` 措辞**：规则匹配让措辞小改同时显示为"新增"和"删除"，需要改写比对与措辞。
+4. **`augur memo`**：一页式研究备忘录（规划阶段提出，未开工）。
+5. **对基金也有意义的大师规则**：Marks、Soros、ARPS 的部分规则（周期、流动性、宏观）对基金可能适用，需要逐条确认后再加入 `FUND_APPLICABLE_PERSONAS`；适用满 3 位前，基金共识一律 WITHHELD。
+6. **ETF 历史溢价折价与跟踪误差**：目前只看最新一天。
+7. **learning 里 v14 之前的 ETF 记录**：留在原处，会给相关大师的准确率混入少量噪声；需要一个清理工具。
+8. **自定义 YAML 大师**：`da-yu.yaml` / `thiel.yaml` 里仍有百分比与小数混用的规则；和内置大师同 id 的 YAML 大师会被内置版本遮蔽，用户看不到提示。
+9. **ETF 概况的语言**：v14.0 发布前已把 CLI（fetch / consensus / analyze）和 MCP 文本里的 ETF 概况、体检清单、WITHHELD 说明和数据来源行改成英文标签（原先只有中文）；`augur report` 的 Markdown 报告和引擎的 `etf_findings` 仍是中文。是否按语言切换，留待以后决定。
+10. **其他输出面仍把基金显示成 5.0 分**：本版改了 CLI（fetch / consensus / analyze / report / committee / workflow / `report from-run` / dossier / portfolio / watch）、MCP、Dashboard 股票页（共识卡、大师卡片和详情弹窗显示 N/A、深度报告）、首页快速分析和委员会页（`routes/committee.py` 与 `/ws/committee`）。仍未处理：Dashboard 自选、组合、扫描器、历史记录和信号页的通知与实时推送（`watchlist.py`、`analysis.py` 批量扫描、`history.py`、`notifications_cron.py`、`/ws/workflow`；历史里基金的分数存的是 5.0 占位值，股票页的历史趋势图已跳过它），定时任务 `cron.py` 的摘要，Telegram / Slack / 飞书 / 微信机器人，以及内置 Skill 的 `skills/handlers.py`。
+11. **`uv.lock` 过期**：仍记录 10.16.2，需要重新生成。
+12. **旧的平铺命令名**：12.2 时说"下一个大版本前都能用"，v14 没有移除；是否在 v15 移除由 owner 决定。
+
+### 本阶段 owner 决策
+
+- 是否推送 `v14` 分支、合并进 main、打 `v14.0.0` tag（打 tag 会触发 `publish.yml`，PyPI Trusted Publisher 仍未配置）。
+- Issue #5 与 PR #10 的回复草稿在 [`docs/V14_PLAN.md`](V14_PLAN.md) 第 7 节，未发出。
+
 ## 2026-10 阶段：v12 —— 财报闭环与诚实的学习结算
 
 **生效日期**：2026-10-29
@@ -253,7 +294,7 @@ augur/main  (public, single source of truth)
 
 - `docs/api-reference.md`（中英）约 40 个端点只核对了方法和路径，字段级内容未逐个核对；Finnhub / Alpha Vantage 免费额度数字沿用旧文本，未对照官方说明。
 - `docs/en/CONTRIBUTING.md` 现在是根目录 CONTRIBUTING.md 的中文副本，需要翻译成英文才算与中文版对齐。
-- `scripts/readme_smoke.py` 仍用旧的平铺命令名，分组后的写法只通过别名间接覆盖；`augur earnings --backfill` 需要联网，不在离线冒烟里。
+- ~~`scripts/readme_smoke.py` 仍用旧的平铺命令名~~（v14 已改为分组写法，并加了假 ETF 的 `fetch` / `consensus` 和 `watchlist add/show`）；`augur earnings --backfill` 需要联网，仍不在离线冒烟里。
 - 首页下半部分和"大师对决"区域在英文界面下仍有中文文案（产品侧 i18n 缺口）。
 - 记分卡页只能显示 `unavailable`：Dashboard 还没有保存"财报前 / 财报后"运行配对的地方。
 

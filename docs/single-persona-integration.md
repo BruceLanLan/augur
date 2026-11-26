@@ -442,15 +442,7 @@ Augur 引擎本身（评分逻辑、共识、inject-soul、CLI）**不需要任�
 - 实时行情数据用的是 `yfinance`（`pip install -e ".[data]"`），同样不需要 key。
 
 **Q3：怎么给单个投资人指定使用的模型？**
-两种办法：
-
-- Skill / Open Claw 配置里直接写 `model` 字段（见方式 A 的 JSON）。
-- 用 Augur 的配置：MCP 工具 `augur_configure(persona_id, model)`，或编辑 `config/agents.yaml` 的 `per_agent` 段，例如：
-  ```yaml
-  per_agent:
-    buffett: claude-sonnet-4-6
-    dayu:    deepseek-v4
-  ```
+在 Skill / Open Claw 配置里直接写 `model` 字段（见方式 A 的 JSON），由宿主平台决定用哪个模型。Augur 自己的评分不调用模型，所以 MCP 工具 `augur_configure` 在 v14 起弃用，调用它不会产生任何效果；`config/agents.yaml` 里的 `per_agent` 段也没有代码读取。
 
 **Q4：以后投资人的逻辑更新了，我怎么同步？**
 - 方式 A / C 是"快照"式：更新代码后（`git pull` + `pip install -e .`），重新执行一次 `hermes skills install ...` 或重新跑 `augur inject-soul ...` 覆盖旧文件即可。

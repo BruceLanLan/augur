@@ -262,20 +262,31 @@ def _build_context(ticker: str, pe: float = 0, pb: float = 0, roe: float = 0,
                    insider_ownership: float = 0, rsi: float = 50,
                    volatility_20d: float = 0, short_interest: float = 0,
                    volume: float = 0, sector: str = "", industry: str = "",
-                   auto_fetch: bool = True):
-    """Build a MarketContext from parameters, with optional auto-fetch from yfinance."""
+                   auto_fetch: bool = True, asset_type: str = ""):
+    """Build a MarketContext from parameters, with optional auto-fetch from yfinance.
+
+    ``asset_type`` ("equity" | "etf" | "fund"; empty = auto) marks a manual
+    context as a fund so company-rule personas abstain. On an auto-fetched
+    context an explicit value overrides the detected type.
+    """
     from augur.personas.base import MarketContext
+
+    asset_type = (asset_type or "").strip().lower()
 
     # Auto-fetch if no core metrics provided
     has_metrics = any([pe, pb, roe, gross_margins, revenue_growth, market_cap, price])
     if not has_metrics and auto_fetch:
         try:
             from augur.data import fetch_market_context
-            return fetch_market_context(ticker)
+            ctx = fetch_market_context(ticker)
+            if asset_type:
+                ctx.asset_type = asset_type
+            return ctx
         except Exception:
             pass
 
     return MarketContext(
+        asset_type=asset_type or "equity",
         ticker=ticker.upper(),
         pe=pe, pb=pb, roe=roe,
         gross_margins=gross_margins,
@@ -293,6 +304,89 @@ def _build_context(ticker: str, pe: float = 0, pb: float = 0, roe: float = 0,
         sector=sector,
         industry=industry,
     )
+
+
+_ASSET_TYPES = ("", "equity", "etf", "fund")
+
+
+def _validate_asset_type(asset_type: str) -> Optional[str]:
+    if (asset_type or "").strip().lower() not in _ASSET_TYPES:
+        return "Error: asset_type must be one of: equity, etf, fund (or empty for auto)"
+    return None
+
+
+def _fund_consensus_text(ticker: str, ctx, results, consensus, source: str, freshness: str) -> str:
+    """MCP text for a fund consensus: ETF profile, health check, applicable personas."""
+    from augur.etf import MIN_APPLICABLE_FOR_CONSENSUS, etf_overview_lines
+
+    meta = consensus.metadata or {}
+    abstained = sorted(aid for aid, r in results.items() if (r.metadata or {}).get("not_applicable"))
+    applicable = {aid: r for aid, r in results.items() if aid not in abstained}
+    lines = [f"Consensus for {ticker} ({str(ctx.asset_type).upper()}):"]
+    if meta.get("consensus_withheld"):
+        lines.append("  Signal: WITHHELD (no consensus signal)")
+        lines.append(f"  Reason: only {len(applicable)} of {len(results)} personas have rules that "
+                     f"apply to a fund (at least {MIN_APPLICABLE_FOR_CONSENSUS} are needed)")
+    else:
+        lines.append(f"  Signal: {consensus.signal.value.upper()}")
+        lines.append(f"  Score: {consensus.score:.1f}/10")
+        lines.append(f"  Confidence: {consensus.confidence:.0%}")
+    lines.append("  Kelly Position: n/a (fund)")
+    lines.append(f"  Source: {source}  Freshness: {freshness}")
+    lines.extend("  " + ln for ln in etf_overview_lines(ctx))
+    lines.append(f"  Applicable personas ({len(applicable)}):")
+    for r in applicable.values():
+        lines.append(f"    {r.agent_name:20s} | {r.signal.value:8s} | {r.score:.1f}/10")
+    if abstained:
+        lines.append(f"  Abstained ({len(abstained)}, not applicable to funds): {', '.join(abstained)}")
+    return "\n".join(lines)
+
+
+def _configure_deprecated_message() -> str:
+    return (
+        "augur_configure is deprecated: Augur does not call models; this setting has no effect. "
+        "Persona scores come from deterministic rules. The MCP host you are using is the "
+        "language model that interprets them. Nothing was saved."
+    )
+
+
+def _fetch_text(ctx) -> str:
+    """augur_fetch text: ETF profile for funds; USD amounts with currency labels."""
+    from augur.cli_helpers import amount_currency, format_amount_bn, trading_currency
+    from augur.etf import etf_overview_lines, is_fund
+
+    ccy = trading_currency(ctx)
+    price = f"{ctx.price:.2f}" + (f" {ccy}" if ccy else "")
+    lines = [f"Market data for {ctx.ticker} (via yfinance):",
+             f"  Price:        {price}"]
+    if is_fund(ctx):
+        lines.append(f"  Type:         {str(ctx.asset_type).upper()}")
+        lines.extend("  " + ln for ln in etf_overview_lines(ctx))
+        lines += [
+            f"  RSI:          {ctx.rsi:.0f}",
+            f"  Beta:         {ctx.beta_1y:.2f}",
+        ]
+        return "\n".join(lines)
+    mcap_ccy = amount_currency(ctx, "market")
+    fin_ccy = amount_currency(ctx, "financial")
+    mcap_label = "Market Cap:" if mcap_ccy == "USD" else f"Market Cap ({mcap_ccy}):"
+    fcf_label = "FCF:" if fin_ccy == "USD" else f"FCF ({fin_ccy}):"
+    lines += [
+        f"  PE:           {ctx.pe:.1f}",
+        f"  PB:           {ctx.pb:.2f}",
+        f"  {mcap_label:<13s} {format_amount_bn(ctx.market_cap, mcap_ccy, 0)}",
+        f"  ROE:          {ctx.roe:.1%}",
+        f"  Gross Margin: {ctx.gross_margins:.1%}",
+        f"  Op. Margin:   {ctx.operating_margins:.1%}",
+        f"  Rev Growth:   {ctx.revenue_growth:.1%}",
+        f"  Debt Ratio:   {ctx.debt_ratio:.1%}",
+        f"  {fcf_label:<13s} {format_amount_bn(ctx.fcf, fin_ccy, 1)}",
+        f"  RSI:          {ctx.rsi:.0f}",
+        f"  Beta:         {ctx.beta_1y:.2f}",
+        f"  Sector:       {ctx.sector}",
+        f"  Industry:     {ctx.industry}",
+    ]
+    return "\n".join(lines)
 
 
 def _run_skill_tool(skill_id: str, ticker: str, inputs_json: str = "") -> str:
@@ -346,7 +440,8 @@ def create_server():
                       revenue_growth: float = 0, debt_ratio: float = 0,
                       fcf: float = 0, market_cap: float = 0, price: float = 0,
                       institutional_ownership: float = 0, insider_ownership: float = 0,
-                      rsi: float = 50, sector: str = "", industry: str = "") -> str:
+                      rsi: float = 50, sector: str = "", industry: str = "",
+                      asset_type: str = "") -> str:
         """Analyze a ticker with one or all agents. Auto-fetches live data if no metrics given.
 
         Args:
@@ -366,17 +461,19 @@ def create_server():
             rsi: RSI indicator (default 50 = neutral)
             sector: Sector name (e.g. Technology)
             industry: Industry name
+            asset_type: "equity", "etf" or "fund" (empty = auto). Company-rule
+                personas abstain on funds.
         """
         from augur.registry import AgentRegistry
 
-        err = _validate_ticker(ticker)
+        err = _validate_ticker(ticker) or _validate_asset_type(asset_type)
         if err:
             return err
 
         has_metrics = any([pe, pb, roe, gross_margins, revenue_growth, market_cap, price])
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
                              fcf, market_cap, price, institutional_ownership, insider_ownership,
-                             rsi, sector=sector, industry=industry)
+                             rsi, sector=sector, industry=industry, asset_type=asset_type)
         registry = AgentRegistry()
 
         source = "demo" if has_metrics else "live"
@@ -387,6 +484,9 @@ def create_server():
             if not agent:
                 return f"Error: Persona '{persona}' not found. Available: {', '.join(a.agent_id for a in registry.get_all())}"
             result = agent.analyze(ctx)
+            if result.metadata.get("not_applicable"):
+                return (f"Agent: {result.agent_name}\nSignal: N/A (not applicable to funds)\n"
+                        f"Reason: {result.reasoning}")
             lines = [
                 f"Agent: {result.agent_name}",
                 f"Signal: {result.signal.value.upper()}",
@@ -409,6 +509,9 @@ def create_server():
             for agent in registry.get_all():
                 try:
                     result = agent.analyze(ctx)
+                    if result.metadata.get("not_applicable"):
+                        lines.append(f"  {result.agent_name:20s} | N/A      | not applicable to funds")
+                        continue
                     lines.append(f"  {result.agent_name:20s} | {result.signal.value:8s} | {result.score:.1f}/10")
                 except Exception as e:
                     lines.append(f"  {agent.name:20s} | ERROR    | {e}")
@@ -420,8 +523,13 @@ def create_server():
                         debt_ratio: float = 0, fcf: float = 0, market_cap: float = 0,
                         price: float = 0, institutional_ownership: float = 0,
                         insider_ownership: float = 0, rsi: float = 50,
-                        sector: str = "", industry: str = "") -> str:
+                        sector: str = "", industry: str = "",
+                        asset_type: str = "") -> str:
         """Get multi-agent consensus on a ticker. Auto-fetches live data if no metrics given.
+
+        Funds (ETFs) get an ETF profile + health check; company-rule personas
+        abstain and, with fewer than 3 applicable personas, no consensus
+        signal or position is given.
 
         Args:
             ticker: Stock ticker symbol
@@ -439,17 +547,18 @@ def create_server():
             rsi: RSI indicator (default 50)
             sector: Sector name
             industry: Industry name
+            asset_type: "equity", "etf" or "fund" (empty = auto)
         """
         from augur.registry import AgentRegistry, DecisionCoordinator
 
-        err = _validate_ticker(ticker)
+        err = _validate_ticker(ticker) or _validate_asset_type(asset_type)
         if err:
             return err
 
         has_metrics = any([pe, pb, roe, gross_margins, revenue_growth, market_cap, price])
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
                              fcf, market_cap, price, institutional_ownership, insider_ownership,
-                             rsi, sector=sector, industry=industry)
+                             rsi, sector=sector, industry=industry, asset_type=asset_type)
         registry = AgentRegistry()
         coordinator = DecisionCoordinator(registry)
 
@@ -458,6 +567,10 @@ def create_server():
 
         results = coordinator.analyze_with_all(ctx)
         consensus = coordinator.get_consensus(results, ticker=ticker.upper(), context=ctx)
+
+        from augur.etf import is_fund
+        if is_fund(ctx) or consensus.metadata.get("abstained_agents"):
+            return _fund_consensus_text(ticker.upper(), ctx, results, consensus, source, freshness)
 
         pos = consensus.metadata.get("position_sizing", {})
         kelly = pos.get("position_pct", None)
@@ -497,38 +610,18 @@ def create_server():
 
     @mcp.tool()
     def augur_configure(persona_id: str, model: str) -> str:
-        """Configure model for a specific persona.
+        """[Deprecated] Has no effect: Augur does not call models.
+
+        Persona analysis is deterministic rule scoring. The MCP host (the
+        agent calling these tools) is the language model; Augur never routes
+        a persona to a model, so there is nothing to configure. Kept so old
+        clients get a clear answer instead of an unknown-tool error.
 
         Args:
-            persona_id: The persona ID to configure (e.g. buffett, graham)
-            model: The model to use (e.g. claude-sonnet-4-6, deepseek-v4)
+            persona_id: Ignored.
+            model: Ignored.
         """
-        from augur.config import set_config, save_config
-        from augur.registry import AgentRegistry
-
-        # Validate persona_id: must be a non-empty string of safe identifier chars
-        # (alphanumeric, underscore, hyphen). This prevents the value from being
-        # injected into a dot-notation config key path (set_config splits on "."),
-        # which could overwrite arbitrary nested config keys or produce surprising
-        # nesting when the value contains a ".".
-        if not isinstance(persona_id, str) or not persona_id:
-            return "Error: persona_id must be a non-empty string"
-        err = _validate_persona_id(persona_id)
-        if err:
-            return err
-
-        # Validate the persona actually exists in the registry
-        registry = AgentRegistry()
-        if not registry.get(persona_id):
-            return f"Error: Persona '{persona_id}' not found. Available: {', '.join(a.agent_id for a in registry.get_all())}"
-
-        err = _validate_model_name(model)
-        if err:
-            return err
-
-        set_config(f"per_agent.{persona_id}", model)
-        path = save_config()
-        return f"Configured {persona_id} to use model '{model}'. Saved to {path}"
+        return _configure_deprecated_message()
 
     @mcp.tool()
     def augur_create_persona(yaml_content: str) -> str:
@@ -565,7 +658,8 @@ def create_server():
     def augur_debate(ticker: str, rounds: int = 2, pe: float = 0, pb: float = 0,
                      roe: float = 0, gross_margins: float = 0, revenue_growth: float = 0,
                      debt_ratio: float = 0, fcf: float = 0, market_cap: float = 0,
-                     price: float = 0, sector: str = "", industry: str = "") -> str:
+                     price: float = 0, sector: str = "", industry: str = "",
+                     asset_type: str = "") -> str:
         """Run a multi-round debate among agents on a ticker. Auto-fetches live data if no metrics given.
 
         Args:
@@ -574,16 +668,18 @@ def create_server():
             pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price: Financial metrics
             sector: Sector name
             industry: Industry name
+            asset_type: "equity", "etf" or "fund" (empty = auto)
         """
         from augur.registry import AgentRegistry, DecisionCoordinator
 
-        err = _validate_ticker(ticker)
+        err = _validate_ticker(ticker) or _validate_asset_type(asset_type)
         if err:
             return err
         rounds = max(1, min(5, rounds))
 
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
-                             fcf, market_cap, price, sector=sector, industry=industry)
+                             fcf, market_cap, price, sector=sector, industry=industry,
+                             asset_type=asset_type)
         registry = AgentRegistry()
         coordinator = DecisionCoordinator(registry)
 
@@ -617,6 +713,7 @@ def create_server():
         market_cap: float = 0,
         price: float = 0,
         sector: str = "",
+        asset_type: str = "",
     ) -> str:
         """Convene an investment committee: multiple masters analyze independently then yield a verdict.
 
@@ -629,12 +726,16 @@ def create_server():
             agents: Comma-separated agent IDs to include (empty = all 18, e.g. "buffett,munger,dalio")
             pe, pb, roe, gross_margins, revenue_growth, debt_ratio, fcf, market_cap, price, sector:
                 Optional financial metrics (auto-fetched via yfinance if omitted)
+            asset_type: "equity", "etf" or "fund" (empty = auto)
 
         Returns:
             Structured committee report: independent opinions, dissents, and weighted verdict
         """
+        err = _validate_asset_type(asset_type)
+        if err:
+            return err
         ctx = _build_context(ticker, pe, pb, roe, gross_margins, revenue_growth, debt_ratio,
-                             fcf, market_cap, price, sector=sector)
+                             fcf, market_cap, price, sector=sector, asset_type=asset_type)
 
         from augur.registry import AgentRegistry, DecisionCoordinator
         registry = AgentRegistry()
@@ -689,6 +790,15 @@ def create_server():
             lines.append("  No bearish dissents.")
 
         kelly = consensus.metadata.get("position_sizing", {}).get("position_pct", 0)
+        if consensus.metadata.get("consensus_withheld"):
+            lines += [
+                "",
+                "─── Committee Verdict ───",
+                "  Signal:     WITHHELD (no consensus signal)",
+                f"  Reason:     {consensus.metadata.get('withheld_reason', consensus.reasoning)}",
+                "  Kelly Size: n/a (fund)",
+            ]
+            return "\n".join(lines)
         lines += [
             "",
             "─── Committee Verdict ───",
@@ -752,24 +862,7 @@ def create_server():
         try:
             from augur.data import fetch_market_context
             ctx = fetch_market_context(ticker)
-            lines = [
-                f"Market data for {ctx.ticker} (via yfinance):",
-                f"  Price:        ${ctx.price:.2f}",
-                f"  PE:           {ctx.pe:.1f}",
-                f"  PB:           {ctx.pb:.2f}",
-                f"  Market Cap:   ${ctx.market_cap:.0f}B",
-                f"  ROE:          {ctx.roe:.1%}",
-                f"  Gross Margin: {ctx.gross_margins:.1%}",
-                f"  Op. Margin:   {ctx.operating_margins:.1%}",
-                f"  Rev Growth:   {ctx.revenue_growth:.1%}",
-                f"  Debt Ratio:   {ctx.debt_ratio:.1%}",
-                f"  FCF:          ${ctx.fcf:.1f}B",
-                f"  RSI:          {ctx.rsi:.0f}",
-                f"  Beta:         {ctx.beta_1y:.2f}",
-                f"  Sector:       {ctx.sector}",
-                f"  Industry:     {ctx.industry}",
-            ]
-            return "\n".join(lines)
+            return _fetch_text(ctx)
         except Exception as e:
             return f"Error fetching data for {ticker}: {e}\nMake sure yfinance is installed: pip install 'augur-agents[data]'"
 

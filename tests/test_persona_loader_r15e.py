@@ -142,3 +142,49 @@ def test_compute_factor_rejects_bool_base(tmp_path):
     ctx = MarketContext(ticker="TEST")
     score = _compute_factor({"base": True, "rules": []}, ctx)
     assert score == 5.0
+
+
+# ---------------------------------------------------------------------------
+# v14: list literals in rule conditions
+# ---------------------------------------------------------------------------
+
+def test_rule_condition_accepts_constant_list_membership():
+    from augur.personas.base import MarketContext
+    from augur.persona_loader import _eval_rule_condition
+
+    ctx = MarketContext(ticker="X", sector="Communication Services")
+    assert _eval_rule_condition("sector in ['Technology', 'Communication Services']", ctx)
+    assert _eval_rule_condition("sector in ('Communication Services',)", ctx)
+    assert not _eval_rule_condition("sector in ['Technology', 'Energy']", ctx)
+    assert _eval_rule_condition("sector not in ['Energy']", ctx)
+
+
+def test_rule_condition_list_still_blocks_calls_and_comprehensions():
+    from augur.personas.base import MarketContext
+    from augur.persona_loader import _eval_rule_condition
+
+    ctx = MarketContext(ticker="X", sector="Technology")
+    assert not _eval_rule_condition("sector in [open('x')]", ctx)
+    assert not _eval_rule_condition("sector in [s for s in ['Technology']]", ctx)
+    assert not _eval_rule_condition("sector in [__import__('os')]", ctx)
+    assert not _eval_rule_condition("sector in [ticker.lower()]", ctx)
+
+
+def test_custom_yaml_sector_rules_fire_on_real_sector_names():
+    from pathlib import Path
+
+    from augur.personas.base import MarketContext
+    from augur.persona_loader import _compute_factor
+
+    custom = Path(__file__).resolve().parents[1] / "personas" / "custom"
+    dayu = load_persona_yaml(custom / "da-yu.yaml")
+    fdef = dayu._factor_defs["narrative_timing"]
+    tech = _compute_factor(fdef, MarketContext(ticker="X", sector="Communication Services"))
+    other = _compute_factor(fdef, MarketContext(ticker="X", sector="Energy"))
+    assert tech == other + 1
+
+    thiel = load_persona_yaml(custom / "thiel.yaml")
+    fdef = thiel._factor_defs["monopoly_power"]
+    tech = _compute_factor(fdef, MarketContext(ticker="X", sector="Technology"))
+    other = _compute_factor(fdef, MarketContext(ticker="X", sector="Energy"))
+    assert tech == other + 1

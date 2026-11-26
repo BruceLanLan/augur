@@ -64,7 +64,7 @@ mcp_servers:
    - `augur_sentiment` - 社交/新闻情绪快照
    - `augur_workflow` - **可组合多步工作流**（fetch → analyze → consensus → committee → debate → sentiment）
    - `augur_list_personas` - 列出全部 18 位投资人
-   - `augur_configure` - 配置每位投资人使用的 LLM 模型
+   - `augur_configure` - v14 起弃用：Augur 的评分不调用模型，此设置无效（模型由 Hermes 自己决定）
    - `augur_create_persona` - 创建自定义 YAML 投资人
    - `augur_workspace_get` - 读取用户在 Dashboard 设置的终端布局/启用大师
    - `augur_workspace_set` - 代用户写入终端布局/启用大师配置

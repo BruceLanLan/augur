@@ -218,3 +218,36 @@ class TestTickerFormValidation:
             backtest_text,
         )
         assert m, "runBacktest() must validate ticker against a strict character set"
+
+
+# ============================================================
+# v14: risk metrics are not measured -> null + "not measured"
+# ============================================================
+class TestRiskMetricsNotMeasured:
+    def test_api_returns_null_risk_metrics(self):
+        from fastapi.testclient import TestClient
+
+        from dashboard.app import app
+
+        data = TestClient(app).get("/api/backtest/run?mode=demo").json()
+        m = data["metrics"]
+        for key in ("annualized_return", "max_drawdown", "sharpe_ratio"):
+            assert key in m and m[key] is None, key
+        assert isinstance(m["win_rate"], float)
+        assert set(m["not_measured"]) == {"annualized_return", "max_drawdown", "sharpe_ratio"}
+
+    def test_route_no_longer_derives_from_hit_rate(self):
+        src = (TEMPLATES_DIR.parent / "routes" / "backtest.py").read_text(encoding="utf-8")
+        assert "avg_gain" not in src and "avg_loss" not in src
+
+    def test_template_has_no_client_side_fallback_formula(self, backtest_text):
+        # The JS used to re-derive the same invented numbers when the API
+        # returned null, and to fill an empty timeline with Math.random().
+        assert "avgGain" not in backtest_text
+        assert "Math.random" not in backtest_text
+        assert "backtest-metric-not-measured" in backtest_text
+
+    def test_not_measured_label_in_all_locales(self):
+        i18n = (TEMPLATES_DIR.parent / "static" / "js" / "i18n.js").read_text(encoding="utf-8")
+        for label in ("未实测", "Not measured", "未計測", "미측정"):
+            assert f'"backtest-metric-not-measured": "{label}"' in i18n

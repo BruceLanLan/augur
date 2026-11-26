@@ -55,6 +55,10 @@ def _eval_rule_condition(condition: str, ctx: MarketContext) -> bool:
         ast.Constant,
         ast.Name,
         ast.Load,
+        # List/tuple literals for membership tests (``sector in ['A', 'B']``);
+        # their elements are vetted by the same walk below.
+        ast.List,
+        ast.Tuple,
         # Comparison operators
         ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE,
         ast.Is, ast.IsNot, ast.In, ast.NotIn,

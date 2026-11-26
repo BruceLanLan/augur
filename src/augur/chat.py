@@ -2,9 +2,12 @@
 """
 augur.chat - AI Natural Language Chat Engine
 
-Provides chat interactions with each agent persona using template-based
-responses. No external LLM API required - generates formatted responses
-using persona-specific prompt templates.
+Provides chat interactions with each agent persona. Works offline by
+default: replies come from persona-specific templates. When an
+OpenAI-compatible endpoint is configured (``OPENAI_API_KEY``, optional
+``OPENAI_BASE_URL`` / ``AUGUR_CHAT_MODEL``) and the ``openai`` SDK from the
+``[llm]`` extra is installed, ``augur.llm_client`` generates the reply in the
+persona's voice instead; any LLM error falls back to the templates.
 
 Architecture:
     - ChatEngine: Stateful engine that maintains conversation history
@@ -247,7 +250,7 @@ class ChatEngine:
             return None
 
     def _llm_reply(self, agent_id: str, agent_name: str, message: str) -> Optional[str]:
-        """Try to generate a reply via Claude. Returns None to signal fallback."""
+        """Try the optional OpenAI-compatible LLM backend. Returns None to signal fallback."""
         try:
             from augur.llm_client import is_llm_available, llm_persona_reply
             if not is_llm_available():
@@ -300,7 +303,7 @@ class ChatEngine:
         topic = _detect_topic(message)
         agent_name = self._get_agent_name(agent_id)
 
-        # Try the LLM backend first (real Claude reply in persona voice).
+        # Try the optional OpenAI-compatible LLM backend first (persona voice).
         # Falls back to templates when no API key / SDK / on error.
         source = "template"
         response_text = self._llm_reply(agent_id, agent_name, message)

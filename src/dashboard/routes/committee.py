@@ -21,6 +21,60 @@ from dashboard.routes.personas import _persona_meta
 router = APIRouter()
 
 
+
+def _abstained(resp) -> bool:
+    """True when a persona abstained because its rules do not apply (e.g. a fund)."""
+    return bool((getattr(resp, "metadata", None) or {}).get("not_applicable"))
+
+
+def committee_opinion(agent_id: str, resp) -> dict:
+    """One persona's committee card payload."""
+    return {
+        "agent_id": agent_id,
+        "agent_name": resp.agent_name,
+        "signal": resp.signal.value,
+        "score": round(resp.score, 1),
+        "confidence": round(resp.confidence, 2),
+        "key_findings": resp.key_findings[:2],
+        "risks": resp.risks[:1],
+        "not_applicable": _abstained(resp),
+    }
+
+
+def committee_verdict(responses: dict, consensus) -> tuple:
+    """(opinions, verdict) shared by POST /api/committee and /ws/committee.
+
+    Personas that abstained on a fund are listed last, flagged
+    ``not_applicable`` and left out of the vote. When the engine withheld
+    the consensus (too few applicable personas) the verdict says so instead
+    of reporting the neutral placeholder score as a real reading.
+    """
+    meta = consensus.metadata or {}
+    opinions = sorted(
+        (committee_opinion(aid, r) for aid, r in responses.items()),
+        key=lambda o: (o["not_applicable"], -o["score"]),
+    )
+    voting = [r for r in responses.values() if not _abstained(r)]
+    withheld = bool(meta.get("consensus_withheld"))
+    kelly = 0 if withheld else (meta.get("position_sizing", {}) or {}).get("position_pct", 0)
+    verdict = {
+        "signal": consensus.signal.value,
+        "score": round(consensus.score, 1),
+        "confidence": round(consensus.confidence, 2),
+        "kelly_pct": round(kelly, 1) if kelly else 0,
+        "vote": {
+            "bullish": sum(1 for r in voting if r.signal.value == "bullish"),
+            "neutral": sum(1 for r in voting if r.signal.value == "neutral"),
+            "bearish": sum(1 for r in voting if r.signal.value == "bearish"),
+            "abstained": len(responses) - len(voting),
+        },
+        "withheld": withheld,
+        "applicable_count": len(voting),
+        "abstained_count": len(responses) - len(voting),
+    }
+    return opinions, verdict
+
+
 class CompareBody(BaseModel):
     ticker: str
     agent_ids: List[str]
@@ -100,36 +154,14 @@ def api_committee(body: dict):
     responses = {aid: agent.analyze(ctx) for aid, agent in selected.items()}
     consensus = coord.get_consensus(responses, ticker=ticker, context=ctx)
 
-    opinions = [
-        {
-            "agent_id": aid,
-            "agent_name": r.agent_name,
-            "signal": r.signal.value,
-            "score": round(r.score, 1),
-            "confidence": round(r.confidence, 2),
-            "key_findings": r.key_findings[:2],
-            "risks": r.risks[:1],
-        }
-        for aid, r in sorted(responses.items(), key=lambda x: -x[1].score)
-    ]
-
-    bullish = sum(1 for r in responses.values() if r.signal.value == "bullish")
-    bearish = sum(1 for r in responses.values() if r.signal.value == "bearish")
-    neutral = sum(1 for r in responses.values() if r.signal.value == "neutral")
-    kelly = consensus.metadata.get("position_sizing", {}).get("position_pct", 0)
+    opinions, verdict = committee_verdict(responses, consensus)
 
     result = {
         "status": "ok",
         "ticker": ticker,
         "question": question,
         "opinions": opinions,
-        "verdict": {
-            "signal": consensus.signal.value,
-            "score": round(consensus.score, 1),
-            "confidence": round(consensus.confidence, 2),
-            "kelly_pct": round(kelly, 1) if kelly else 0,
-            "vote": {"bullish": bullish, "neutral": neutral, "bearish": bearish},
-        },
+        "verdict": verdict,
         "market_data": {
             "price": ctx.price,
             "pe": ctx.pe,

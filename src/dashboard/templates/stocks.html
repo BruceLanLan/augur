@@ -3,8 +3,25 @@
 {% block extra_head %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="/static/js/factor-map.js"></script>
+<script src="/static/js/etf-card.js?v={{ augur_version }}"></script>
 <style>
 #results { display:none; }
+.etf-card { margin-bottom: 16px; }
+.etf-card__grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 8px; }
+.etf-card__cell { display:flex; flex-direction:column; gap:2px; }
+.etf-card__label { font-size:0.7rem; color:var(--fg-3, var(--text-secondary)); text-transform:uppercase; letter-spacing:0.04em; }
+.etf-card__value { font:600 1rem/1.2 var(--font-mono); color:var(--fg-1, var(--text-primary)); }
+.etf-card__note, .etf-card__source { font-size:0.68rem; color:var(--fg-3, var(--text-secondary)); }
+.etf-card__inferred { color: var(--amber, #e6b84a); }
+.etf-card__head { display:flex; align-items:baseline; justify-content:space-between; gap:4px 12px; flex-wrap:wrap;
+  margin-bottom: 14px; padding-bottom: 9px; border-bottom: 1px solid var(--border); }
+.etf-card__head .sec-title { margin: 0; padding: 0; border: 0; }
+.etf-card__value--na { color: var(--fg-3, var(--text-secondary)); font-weight: 400; cursor: help; }
+/* Persona abstained on a fund: muted card, grey N/A badge */
+.sc.sc--na { opacity: 0.5; border-style: dashed; }
+.sc.sc--na .signal-badge { background: transparent; color: var(--fg-3, var(--text-muted)); border: 1px solid var(--border); }
+.vote.na { color: var(--fg-3, var(--text-muted)); }
+.debate-empty { color: var(--fg-3, var(--text-muted)); font-style: italic; list-style: none; }
 #results.show { display:block; animation: fadeInUp 0.5s ease forwards; }
 #history-chart-container { margin-bottom: 16px; }
 #history-chart-canvas { max-height: 200px; }
@@ -160,18 +177,18 @@
         <button type="button" class="adv-toggle" id="adv-toggle-btn" onclick="toggleAdvMetrics()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();toggleAdvMetrics()}" data-i18n="stocks-adv-toggle" aria-expanded="false" aria-controls="advMetrics">&#9654; 高级财务指标 (可选)</button>
         <div class="adv-metrics" id="advMetrics">
             <div class="metrics-grid mt-8">
-                <div><label>PE 市盈率</label><input id="inp-pe" type="number" min="0" step="0.1" class="form-input" placeholder="0"></div>
-                <div><label>PB 市净率</label><input id="inp-pb" type="number" min="0" step="0.1" class="form-input" placeholder="0"></div>
-                <div><label>毛利率 %</label><input id="inp-gm" type="number" min="0" max="100" step="0.1" class="form-input" placeholder="0"></div>
-                <div><label>营业利润率 %</label><input id="inp-om" type="number" min="-100" max="100" step="0.1" class="form-input" placeholder="0"></div>
+                <div><label for="inp-pe" data-i18n="stocks-adv-pe">PE 市盈率</label><input id="inp-pe" type="number" min="0" step="0.1" class="form-input" placeholder="0"></div>
+                <div><label for="inp-pb" data-i18n="stocks-adv-pb">PB 市净率</label><input id="inp-pb" type="number" min="0" step="0.1" class="form-input" placeholder="0"></div>
+                <div><label for="inp-gm" data-i18n="stocks-adv-gm">毛利率 %</label><input id="inp-gm" type="number" min="0" max="100" step="0.1" class="form-input" placeholder="0"></div>
+                <div><label for="inp-om" data-i18n="stocks-adv-om">营业利润率 %</label><input id="inp-om" type="number" min="-100" max="100" step="0.1" class="form-input" placeholder="0"></div>
                 <div><label>ROE %</label><input id="inp-roe" type="number" step="0.1" class="form-input" placeholder="0"></div>
-                <div><label>资产负债率 %</label><input id="inp-debt" type="number" min="0" max="100" step="0.1" class="form-input" placeholder="0"></div>
-                <div><label>营收增速 %</label><input id="inp-revg" type="number" step="0.1" class="form-input" placeholder="0"></div>
-                <div><label>净利润增速 %</label><input id="inp-epsg" type="number" step="0.1" class="form-input" placeholder="0"></div>
-                <div><label>自由现金流 (亿)</label><input id="inp-fcf" type="number" step="0.1" class="form-input" placeholder="0"></div>
-                <div><label>机构持股 %</label><input id="inp-inst" type="number" min="0" max="100" step="0.1" class="form-input" placeholder="0"></div>
-                <div><label>内部人持股 %</label><input id="inp-ins" type="number" min="0" max="100" step="0.1" class="form-input" placeholder="0"></div>
-                <div><label>流动比率</label><input id="inp-cr" type="number" min="0" step="0.01" class="form-input" placeholder="1.5"></div>
+                <div><label for="inp-debt" data-i18n="stocks-adv-debt">资产负债率 %</label><input id="inp-debt" type="number" min="0" max="100" step="0.1" class="form-input" placeholder="0"></div>
+                <div><label for="inp-revg" data-i18n="stocks-adv-revg">营收增速 %</label><input id="inp-revg" type="number" step="0.1" class="form-input" placeholder="0"></div>
+                <div><label for="inp-epsg" data-i18n="stocks-adv-epsg">净利润增速 %</label><input id="inp-epsg" type="number" step="0.1" class="form-input" placeholder="0"></div>
+                <div><label for="inp-fcf" data-i18n="stocks-adv-fcf">自由现金流 (亿)</label><input id="inp-fcf" type="number" step="0.1" class="form-input" placeholder="0"></div>
+                <div><label for="inp-inst" data-i18n="stocks-adv-inst">机构持股 %</label><input id="inp-inst" type="number" min="0" max="100" step="0.1" class="form-input" placeholder="0"></div>
+                <div><label for="inp-ins" data-i18n="stocks-adv-ins">内部人持股 %</label><input id="inp-ins" type="number" min="0" max="100" step="0.1" class="form-input" placeholder="0"></div>
+                <div><label for="inp-cr" data-i18n="stocks-adv-cr">流动比率</label><input id="inp-cr" type="number" min="0" step="0.01" class="form-input" placeholder="1.5"></div>
             </div>
         </div>
     </div>
@@ -219,6 +236,9 @@
         </div>
     </div>
 
+    <!-- ETF overview (funds only; filled by etf-card.js) -->
+    <div id="etf-card" style="display:none;"></div>
+
     <!-- ExecCard -->
     <div class="exec gilt-edge">
         <div class="exec-glow"></div>
@@ -241,6 +261,7 @@
             <div class="vote buy"><b id="vote-bull">0</b><span>BULLISH</span></div>
             <div class="vote neutral"><b id="vote-neu">0</b><span>NEUTRAL</span></div>
             <div class="vote sell"><b id="vote-bear">0</b><span>BEARISH</span></div>
+            <div class="vote na" id="vote-na-row" style="display:none"><b id="vote-na">0</b><span id="vote-na-label">N/A</span></div>
         </div>
         <div id="divergence-badge" style="display:none; margin-top:10px; padding:6px 12px; border-radius:6px; background:rgba(255,180,0,0.12); border:1px solid rgba(255,180,0,0.4); font-size:0.72rem; color:var(--amber, #e6b84a); text-align:center; letter-spacing:0.03em;">
             ⚠ <span id="divergence-label">Agent Divergence</span>
@@ -421,8 +442,10 @@ var AGENT_STYLE_MAP = {
     serenity: 'style-quant-neutral'
 };
 
-// Pre-fill ticker and optional persona from query string
-(function(){
+// Pre-fill ticker and optional persona from query string. Runs at
+// DOMContentLoaded so the deferred i18n.js has loaded and t() returns the
+// viewer's language (inline scripts run before deferred ones).
+function _initFromQuery(){
     var p = new URLSearchParams(window.location.search);
     var t = p.get('ticker');
     var persona = p.get('persona');
@@ -444,7 +467,9 @@ var AGENT_STYLE_MAP = {
     }
     if (t) { document.getElementById('inp-ticker').value = t; runAnalysis(); }
     _renderRecentTickers();
-})();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _initFromQuery);
+else _initFromQuery();
 
 function toggleAdvMetrics() {
     var panel = document.getElementById('advMetrics');
@@ -658,6 +683,19 @@ function renderAgentFactors(agent) {
     listEl.innerHTML = listHtml;
 }
 
+// Detail modal body for a master that abstained on a fund: no score,
+// factors or findings to show.
+function _showAbstainedDetail(overlay) {
+    document.getElementById('agd-meta').innerHTML = '<span style="color:var(--fg-3);font-weight:700;">' +
+        escapeHtml(_t('fund-abstained', 'N/A')) + '</span> &nbsp;|&nbsp; --/10';
+    ['agd-findings', 'agd-risks'].forEach(function(id) { var el = document.getElementById(id); if (el) el.innerHTML = ''; });
+    var fx = document.getElementById('agd-factors');
+    if (fx) fx.style.display = 'none';
+    document.getElementById('agd-reasoning').textContent = _t('fund-abstained-tip', 'Abstained: rules do not apply to funds');
+    overlay.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+}
+
 function showAgentDetail(agent) {
     var overlay = document.getElementById('agent-detail-overlay');
     if (!overlay) return;
@@ -665,6 +703,7 @@ function showAgentDetail(agent) {
     var sigLbl = signalLabel(agent.signal);
     document.getElementById('agd-avatar').src = '/static/images/avatars/' + agent.agent_id + '.png';
     document.getElementById('agd-name').textContent = agent.agent_name || agent.agent_id;
+    if (agent.metadata && agent.metadata.not_applicable) return _showAbstainedDetail(overlay);
     document.getElementById('agd-meta').innerHTML =
         '<span style="color:' + sigColor + ';font-weight:700;">' + sigLbl + '</span>' +
         ' &nbsp;|&nbsp; ' +
@@ -811,6 +850,33 @@ function toggleAllAgents(expand) {
     });
 }
 
+// Price in its trading currency: "$716.70" for USD, "HK$342.20" / "CN¥3.96"
+// otherwise (non-US prices are local, never converted to USD).
+function _fmtPrice(price, ccy) {
+    ccy = (ccy || 'USD').toUpperCase();
+    try {
+        return new Intl.NumberFormat('en-US', {style: 'currency', currency: ccy,
+            minimumFractionDigits: 2, maximumFractionDigits: price < 10 ? 3 : 2}).format(price);
+    } catch (e) {
+        return price.toFixed(2) + ' ' + ccy;
+    }
+}
+
+// True when the engine withheld the consensus (e.g. an ETF with < 3 applicable personas).
+function consensusWithheld(cons) {
+    return !!(cons && cons.metadata && cons.metadata.consensus_withheld);
+}
+
+// Localized one-line explanation for a withheld fund consensus. Built from
+// the counts rather than the engine's reasoning text, which is not localized.
+function _withheldMessage(ticker, cons) {
+    var meta = (cons && cons.metadata) || {};
+    var n = (meta.applicable_agents || []).length;
+    var k = (meta.abstained_agents || []).length;
+    return _t('fund-withheld-oracle', 'No consensus for {ticker}.')
+        .replace('{ticker}', ticker).replace('{n}', n).replace('{total}', n + k).replace('{k}', k);
+}
+
 function renderResults(data) {
     var cons = data.consensus;
     var agents = data.agents || [];
@@ -833,26 +899,42 @@ function renderResults(data) {
 
     // Header updates
     document.getElementById('an-ticker').textContent = ticker;
-    document.getElementById('an-name').textContent = data.market_data ? (data.market_data.name || ticker) : ticker;
-    document.getElementById('an-price').textContent = data.market_data && data.market_data.price ? '$' + data.market_data.price.toFixed(2) : '--';
+    var md = data.market_data || {};
+    var anName = md.company_name || md.name || '';
+    document.getElementById('an-name').textContent = (anName && anName.toUpperCase() !== ticker.toUpperCase()) ? anName : '';
+    document.getElementById('an-price').textContent = md.price ? _fmtPrice(md.price, md.currency) : '--';
+    if (typeof window.renderEtfCard === 'function') {
+        window.renderEtfCard(document.getElementById('etf-card'), data.etf_overview || null);
+    }
     
     // ExecCard updates
+    var withheld = consensusWithheld(cons);
     var score = cons.score || 0;
-    var pct = Math.round(score * 10);
+    var pct = withheld ? 0 : Math.round(score * 10);
     document.getElementById('exec-ring').style.setProperty('--pct', pct);
-    document.getElementById('exec-score').textContent = score.toFixed(1);
+    document.getElementById('exec-score').textContent = withheld ? '--' : score.toFixed(1);
     
     var sigEl = document.getElementById('exec-signal');
-    var sigClass = (cons.signal==='bullish')?'buy':(cons.signal==='bearish')?'sell':'neutral';
-    sigEl.className = 'verdict ' + sigClass;
-    sigEl.textContent = signalLabel(cons.signal);
+    if (withheld) {
+        // Funds with fewer than 3 applicable personas get no consensus signal.
+        sigEl.className = 'verdict neutral';
+        sigEl.textContent = _t('fund-withheld', 'WITHHELD');
+        sigEl.title = _withheldMessage(ticker, cons);
+        document.getElementById('exec-conf').textContent = '--';
+        document.getElementById('exec-kelly').textContent = 'n/a';
+        lastConsensusText = ticker + ': consensus withheld\n' + _withheldMessage(ticker, cons);
+    } else {
+        var sigClass = (cons.signal==='bullish')?'buy':(cons.signal==='bearish')?'sell':'neutral';
+        sigEl.className = 'verdict ' + sigClass;
+        sigEl.textContent = signalLabel(cons.signal);
     
-    document.getElementById('exec-conf').textContent = ((cons.confidence||0)*100).toFixed(0) + '%';
+        document.getElementById('exec-conf').textContent = ((cons.confidence||0)*100).toFixed(0) + '%';
     
-    var posPct = cons.metadata && cons.metadata.position_sizing
-        ? (cons.metadata.position_sizing.position_pct || 0).toFixed(1) + '%'
-        : '--';
-    document.getElementById('exec-kelly').textContent = posPct;
+        var posPct = cons.metadata && cons.metadata.position_sizing
+            ? (cons.metadata.position_sizing.position_pct || 0).toFixed(1) + '%'
+            : '--';
+        document.getElementById('exec-kelly').textContent = posPct;
+    }
     
     document.getElementById('exec-pe').textContent = data.market_data && data.market_data.pe ? data.market_data.pe.toFixed(1) : '--';
     
@@ -860,10 +942,18 @@ function renderResults(data) {
     var bull=0, neu=0, bear=0;
     agents.forEach(function(a) {
         var s = (a.signal||'').toLowerCase();
+        if (a.metadata && a.metadata.not_applicable) return;  // abstained on a fund
         if (s==='bullish') bull++;
         else if (s==='bearish') bear++;
         else if (s==='neutral') neu++;
     });
+    var naCount = agents.filter(function(a) { return a.metadata && a.metadata.not_applicable; }).length;
+    var naRow = document.getElementById('vote-na-row');
+    if (naRow) {
+        naRow.style.display = naCount ? '' : 'none';
+        document.getElementById('vote-na').textContent = naCount;
+        document.getElementById('vote-na-label').textContent = _t('fund-abstained', 'N/A');
+    }
     document.getElementById('vote-bull').textContent = bull;
     document.getElementById('vote-neu').textContent = neu;
     document.getElementById('vote-bear').textContent = bear;
@@ -881,28 +971,38 @@ function renderResults(data) {
     }
 
     // OracleSays
-    var oracleMsg = 'The council has spoken. <b style="color:var(--gilt-bright)">' + ticker + '</b> draws a <b style="color:var(--signal-' + (sigClass==='neutral'?'warn':sigClass) + ')">' + signalLabel(cons.signal) + '</b> omen — score ' + score.toFixed(1) + ', confidence ' + ((cons.confidence||0)*100).toFixed(0) + '%. The Kelly oracle counsels a <b style="color:var(--gilt-bright)">' + posPct + '</b> position. <br><br>' + escapeHtml(cons.reasoning || '');
+    var oracleMsg = withheld
+        ? escapeHtml(_withheldMessage(ticker, cons)).replace(escapeHtml(ticker), '<b style="color:var(--gilt-bright)">' + escapeHtml(ticker) + '</b>')
+        : 'The council has spoken. <b style="color:var(--gilt-bright)">' + ticker + '</b> draws a <b style="color:var(--signal-' + (sigClass==='neutral'?'warn':sigClass) + ')">' + signalLabel(cons.signal) + '</b> omen — score ' + score.toFixed(1) + ', confidence ' + ((cons.confidence||0)*100).toFixed(0) + '%. The Kelly oracle counsels a <b style="color:var(--gilt-bright)">' + posPct + '</b> position. <br><br>' + escapeHtml(cons.reasoning || '');
     document.getElementById('oracle-says').innerHTML = oracleMsg;
 
     // ScorecardGrid
     var scGrid = document.getElementById('sc-grid');
     scGrid.innerHTML = '';
-    var sortedAgents = agents.slice().sort(function(a,b) { return (b.score||0)-(a.score||0); });
+    // Personas that abstained on a fund sort last and show N/A instead of a score.
+    function _abstained(a) { return !!(a.metadata && a.metadata.not_applicable); }
+    var sortedAgents = agents.slice().sort(function(a,b) {
+        return (_abstained(a) - _abstained(b)) || ((b.score||0)-(a.score||0));
+    });
     sortedAgents.forEach(function(m) {
         var s = m.score || 0;
+        var abstained = _abstained(m);
         var cls = s >= 8 ? 'score-5' : s >= 6.5 ? 'score-4' : s >= 4.5 ? 'score-3' : s >= 2.5 ? 'score-2' : 'score-1';
         var scoreSz = s >= 8 ? '1.15rem' : s >= 6.5 ? '1.05rem' : '0.95rem';
         var sigCls = m.signal==='bullish'?'buy':m.signal==='bearish'?'sell':'neutral';
-        var sigLbl = signalLabel(m.signal);
+        var sigLbl = abstained ? 'N/A' : signalLabel(m.signal);
+        if (abstained) { cls = 'score-3'; scoreSz = '0.95rem'; sigLbl = _t('fund-abstained', 'N/A'); }
 
         var d = document.createElement('div');
-        d.className = 'sc';
+        d.className = abstained ? 'sc sc--na' : 'sc';
         d.style.cursor = 'pointer';
-        d.setAttribute('title', m.agent_name + ' — 点击查看详情');
+        d.setAttribute('title', m.agent_name + ' — ' + (abstained
+            ? _t('fund-abstained-tip', 'Abstained: rules do not apply to funds')
+            : _t('stocks-card-detail-tip', 'Click for details')));
         d.setAttribute('data-agent-id', m.agent_id);
         d.innerHTML = '<img src="/static/images/avatars/' + m.agent_id + '.png" class="avatar" width="34" height="34" alt="" onerror="this.src=\'/static/images/augur-owl-64.png\'"/>' +
             '<div class="sc-nm">' + escapeHtml(m.agent_name) + '</div>' +
-            '<div class="sc-score ' + cls + '" style="font-size:' + scoreSz + '">' + s.toFixed(1) + '</div>' +
+            '<div class="sc-score ' + cls + '" style="font-size:' + scoreSz + (abstained ? ';opacity:0.5' : '') + '">' + (abstained ? '--' : s.toFixed(1)) + '</div>' +
             '<span class="signal-badge ' + sigCls + '" style="font-size:0.56rem;padding:1px 7px">' + sigLbl + '</span>';
         (function(agent) {
             d.addEventListener('click', function() { showAgentDetail(agent); });
@@ -926,10 +1026,26 @@ function renderResults(data) {
         li.textContent = r;
         dBear.appendChild(li);
     });
+    [dBull, dBear].forEach(function(list) {
+        if (list.children.length) return;
+        var li = document.createElement('li');
+        li.className = 'debate-empty';
+        li.textContent = _t('stocks-debate-empty', 'None reported');
+        list.appendChild(li);
+    });
 
     // Render historical comparison (hidden div but kept functional)
     renderHistoryComparison(ticker);
-    loadHistoryChart(ticker);
+    if (withheld) {
+        // A withheld fund consensus is stored as a placeholder 5.0, so a
+        // score trend would plot fake HOLD readings. Skip it.
+        _historyRecords = [];
+        var hc = document.getElementById('history-chart-container');
+        if (hc) hc.style.display = 'none';
+        if (_historyChart) { _historyChart.destroy(); _historyChart = null; }
+    } else {
+        loadHistoryChart(ticker);
+    }
 
     // Auto-generate report if requested via URL param
     if (window._autoReport) {
@@ -1065,7 +1181,7 @@ function renderKeyMetricsPanel(data) {
     if (!data || !data.market_data) return;
     var md = data.market_data;
     var metrics = [];
-    if (md.price) metrics.push({label: 'Price', value: '$' + md.price.toFixed(2)});
+    if (md.price) metrics.push({label: 'Price', value: _fmtPrice(md.price, md.currency)});
     if (md.pe) metrics.push({label: 'PE', value: md.pe.toFixed(1)});
     if (md.pb) metrics.push({label: 'PB', value: md.pb.toFixed(2)});
     if (md.roe) metrics.push({label: 'ROE', value: (md.roe * 100).toFixed(1) + '%'});
@@ -1120,8 +1236,13 @@ function buildExecutiveSummary(md, data) {
         var cons = data.consensus;
         signal = signalLabel(cons.signal);
         score = (cons.score || 0).toFixed(1) + '/10';
+        if (consensusWithheld(cons)) {
+            signal = 'WITHHELD';
+            score = '--';
+        }
         var s = cons.score || 0;
-        if (s >= 8) grade = 'A+';
+        if (consensusWithheld(cons)) grade = '--';
+        else if (s >= 8) grade = 'A+';
         else if (s >= 7) grade = 'A';
         else if (s >= 6) grade = 'B+';
         else if (s >= 5) grade = 'B';
@@ -1168,11 +1289,21 @@ function buildExecutiveSummary(md, data) {
 
 function buildScoreCards(data) {
     if (!data || !data.agents || data.agents.length === 0) return '';
-    var agents = data.agents.slice().sort(function(a, b) { return (b.score || 0) - (a.score || 0); });
+    function na(a) { return !!(a.metadata && a.metadata.not_applicable); }
+    var agents = data.agents.slice().sort(function(a, b) { return (na(a) - na(b)) || ((b.score || 0) - (a.score || 0)); });
 
     var html = '<div class="report-section-label">&#x1F4CA; 18 Masters Score Board</div>';
     html += '<div class="report-scorecard-grid">';
     agents.forEach(function(agent) {
+        if (na(agent)) {
+            // Abstained on a fund: no score bar, just N/A
+            html += '<div class="report-scorecard" style="opacity:0.5" title="' + escapeHtml(_t('fund-abstained-tip', 'Abstained: rules do not apply to funds')) + '">';
+            html += '<div class="sc-name" title="' + escapeHtml(agent.agent_name) + '">' + escapeHtml(agent.agent_name) + '</div>';
+            html += '<div class="sc-score">--</div>';
+            html += '<span class="sc-signal">' + escapeHtml(_t('fund-abstained', 'N/A')) + '</span>';
+            html += '</div>';
+            return;
+        }
         var score = agent.score || 0;
         var scoreClass = score > 7 ? 'score-high' : (score >= 5 ? 'score-mid' : 'score-low');
         var signal = signalLabel(agent.signal);
@@ -1371,7 +1502,7 @@ function createScoreGauge(score, maxScore) {
 function renderReportScoreGauge(data) {
     var container = document.getElementById('report-score-gauge');
     if (!container) return;
-    if (!data || !data.consensus) { container.style.display = 'none'; return; }
+    if (!data || !data.consensus || consensusWithheld(data.consensus)) { container.style.display = 'none'; return; }
     var score = data.consensus.score || 0;
     var signal = data.consensus.signal || 'neutral';
     var confidence = data.consensus.confidence || 0;
@@ -1469,12 +1600,16 @@ document.addEventListener('augur:theme-change', function() {
     if (_historyChartTicker && _historyRecords.length) renderHistoryChart(_historyRecords);
 });
 
-function setHistoryRange(days) {
-    _historyRange = days;
+function _syncHistoryRangeButtons() {
     var btn30 = document.getElementById('chart-range-30');
     var btnAll = document.getElementById('chart-range-all');
-    if (btn30) btn30.style.opacity = days === 30 ? '1' : '0.5';
-    if (btnAll) btnAll.style.opacity = days === 0 ? '1' : '0.5';
+    if (btn30) btn30.style.opacity = _historyRange === 30 ? '1' : '0.5';
+    if (btnAll) btnAll.style.opacity = _historyRange === 0 ? '1' : '0.5';
+}
+
+function setHistoryRange(days) {
+    _historyRange = days;
+    _syncHistoryRangeButtons();
     if (_historyRecords.length) renderHistoryChart(_historyRecords);
 }
 
@@ -1587,7 +1722,9 @@ function renderHistoryChart(records) {
             }
         }]
     });
-    setHistoryRange(_historyRange);
+    // Only sync the buttons: calling setHistoryRange() here re-entered this
+    // function without end, so the chart never rendered (blank panel).
+    _syncHistoryRangeButtons();
 }
 
 function loadHistoryChart(ticker) {
@@ -1609,6 +1746,14 @@ function renderHistoryComparison(ticker) {
 
     var cached = augurCache.get();
     var items = cached.filter(function(c) { return c.ticker === ticker; });
+    // The table lists this browser's cached runs; the trend chart above uses
+    // server history and may show the panel on its own. Hide the table part
+    // when there is nothing local, rather than a header row plus "no history"
+    // under a chart full of history.
+    var tableWrap = document.getElementById('history-table');
+    tableWrap = tableWrap ? tableWrap.parentNode : null;
+    var scrollHint = panel.querySelector('.table-scroll-hint');
+    [tableWrap, scrollHint, emptyMsg].forEach(function(el) { if (el) el.style.display = items.length ? '' : 'none'; });
 
     if (!items.length) {
         panel.style.display = 'none';

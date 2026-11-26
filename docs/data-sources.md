@@ -600,3 +600,43 @@ export AUGUR_EDGAR_CONTACT_EMAIL=you@example.com
 augur earnings --backfill -t AAPL -t MSFT
 augur earnings --days 30
 ```
+
+## 十、ETF 数据、新浪净值接口与汇率（v14，核对 `src/`）
+
+### 识别
+
+`src/augur/datasources/fund_profile.py`：yfinance `quoteType` 为 `ETF` / `MUTUALFUND`，或 A 股代码 `.SS` 开头 51/56/58、`.SZ` 开头 15，即设 `MarketContext.asset_type = "etf"`。代码规则在 `data.py` 里对不报 `quoteType` 的数据源也执行一次。
+
+### `MarketContext.etf` 字段（键的定义见 `src/augur/etf.py`）
+
+| 键 | 含义 | yfinance 来源 |
+|---|---|---|
+| `aum_usd_bn` | 规模，十亿美元 | `info.totalAssets`（或 `netAssets`）× 汇率 |
+| `expense_ratio` | 年费率，小数（0.000945 = 0.0945%） | `info.netExpenseRatio`（或 `annualReportExpenseRatio`），百分数自动换成小数 |
+| `yield` | 分红率，小数 | `info.yield` |
+| `category` | 基金类别 | `info.category` 或 `funds_data.fund_overview` |
+| `nav` / `nav_date` / `nav_date_inferred` | 单位净值、净值日期、日期是否为推断 | `info.navPrice`（没有日期，取最近一根 K 线的前一个交易日，`nav_date_inferred=True`）；A 股见下 |
+| `premium_pct` | 溢价折价，百分数（+0.04 = +0.04%），用净值日期当天的收盘价计算 | — |
+| `top10_weight` / `hhi` | 前十大持仓合计权重、持仓 HHI | `funds_data.top_holdings` |
+| `sector_weights` / `asset_classes` | 行业与资产类别权重 | `funds_data.sector_weightings` / `asset_classes` |
+| `turnover` | 换手率 | `funds_data.fund_operations` |
+| `spread_pct` | 买卖价差占中间价的百分比 | `info.bid` / `info.ask` |
+| `dollar_volume` | 日均成交额（美元） | 平均成交量 × 价格 × 汇率 |
+| `portfolio_pe` / `portfolio_pb` | 成分股口径的 PE / PB | `info.trailingPE` / `priceToBook`（基金的 `ctx.pe` / `ctx.pb` 置 0） |
+| `source` | 数据来源 | `"yfinance"` |
+
+任何一项取不到都只是缺这个键，不会让整个概况失败。体检清单（`augur.etf.assess_etf`）的阈值：费率 > 0.50% 偏高、> 1.00% 很高；规模 < $5000 万有清盘风险；|溢价折价| > 1%；前十大 > 50%；价差 > 0.5%。缺数据的项列为"未检查"。基金不走 SEC EDGAR 覆盖层（基金报 N-PORT，不报 10-K）。
+
+### A 股 ETF 净值：新浪行情
+
+`src/augur/datasources/cn_fund_nav_provider.py`。yfinance 没有沪深 ETF 的净值，改用新浪的公开行情接口（无需 key，但要带 `Referer: https://finance.sina.com.cn`）：
+
+```
+GET https://hq.sinajs.cn/list=f_510300,sh510300
+```
+
+`f_<代码>` 返回名称、单位净值、累计净值、前一日净值、**净值日期**、基金规模；`sh` / `sz` 行情用于在 yfinance 缺那一天 K 线时补净值日期当天的收盘价。响应是 GBK 编码，超时 5 秒。这不是官方 API：任何失败（网络、HTTP 状态、格式变化）都返回空，ETF 概况就没有净值，不会报错中断。目前 A 股 ETF 只有净值和溢价折价，没有规模、费率、持仓和实时 IOPV。
+
+### 汇率
+
+`src/augur/datasources/yfinance_provider.py`：汇率取 yfinance `<CCY>USD=X` 最近 5 天里最后一个收盘价，成功结果在进程内缓存 6 小时，失败不缓存。市值、EV、规模按交易货币的汇率换算；FCF、营收、EBITDA、现金、负债按财报货币（`financialCurrency`）的汇率换算；价格保持交易货币。`GBp`、`ZAc`、`ILA` 这类以辅币报价的品种，金额先换成主币再换美元。任何一边拿不到汇率时**全部不换算**（不会出现一半美元一半本币），`fx_rate_usd` 为 0，并在 `ctx.data_warnings` 写明原因，输出里金额标本币。

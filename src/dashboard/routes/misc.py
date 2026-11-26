@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, PlainTextResponse, Response
 
+from augur import __version__
 from dashboard.deps import _APP_START_TIME, get_registry
 
 router = APIRouter()
@@ -76,7 +77,7 @@ async def api_health_extended():
         "datasources": datasources,
         "cache": cache,
         "uptime_seconds": round(uptime, 1),
-        "version": "7.8.3",
+        "version": __version__,
     }
 
 

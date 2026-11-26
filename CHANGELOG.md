@@ -2,6 +2,138 @@
 
 All notable changes to augur-agents are documented in this file.
 
+## [14.0.0] - 2026-11-26 ETF-native analysis, correctness fixes, honest LLM role
+
+### Added
+
+- ETF-native analysis. `augur fetch`, `augur consensus`, `augur analyze` and
+  `augur report` recognise funds (yfinance `quoteType` ETF / MUTUALFUND, or an
+  A-share code: `.SS` 51/56/58, `.SZ` 15) and show an ETF overview instead of
+  company fundamentals: AUM in USD, expense ratio, yield, category, NAV with
+  its date, premium/discount against the close on the NAV date, top-10
+  weight, bid/ask spread and look-through P/E. US/HK funds take NAV from
+  yfinance (undated, so the date is inferred as the session before the
+  latest bar and marked as inferred); A-share ETFs take unit NAV and its real
+  date from Sina's public quote endpoint.
+- ETF health checklist (`augur.etf.assess_etf`): expense ratio > 0.50% / >
+  1.00%, AUM < $50M (closure risk), |premium| > 1%, top-10 weight > 50%,
+  spread > 0.5%; items it could not check are listed as unchecked.
+- Fund abstention: personas whose rules read company financials return a
+  neutral "not applicable" result on a fund instead of scoring it. In 14.0
+  only Dalio applies (decided by a test that changes company fields on an
+  ETF context and checks which personas' scores move). With fewer than 3
+  applicable personas the consensus is **withheld**: no signal, confidence
+  0, no Kelly size, and fund analyses never write learning predictions.
+  `committee`, `workflow`, `report from-run`, `dossier`, `portfolio` and
+  the dashboard stock, home and committee pages show "WITHHELD" rather than
+  a neutral 5.0; persona cards on the stock page show N/A for abstainers.
+- Dashboard stock page: ETF overview card. MCP: `augur_analyze`,
+  `augur_consensus`, `augur_debate` and `augur_committee` accept
+  `asset_type`; `augur_fetch` is fund- and currency-aware.
+- `MarketContext` fields `asset_type`, `etf`, `financial_currency`,
+  `fx_rate_usd`, and `data_warnings` when FX conversion was not possible.
+- New dependency-free `augur.indicators` module (RSI, SMA, EMA, MACD).
+- `scripts/readme_smoke.py` uses the grouped command names and checks an
+  offline fake ETF through `augur fetch` and `augur consensus`.
+
+### Fixed
+
+- RSI used only the last 14 changes (Cutler's RSI). It now uses Wilder
+  smoothing seeded with the simple mean of the first 14 changes (matches
+  TA-Lib); a flat series returns 50 instead of 100. Thanks to `Mattbusel`
+  for the report and the two tests from PR #10, which are kept as written;
+  the fix is inline pure Python instead of a new dependency.
+  `scripts/data_fetcher.py` uses the same function.
+- Non-USD instruments: market cap and EV are converted to USD at the
+  trading-currency rate, FCF, revenue, EBITDA, cash and debt at the
+  financial-statement currency rate (yfinance `<CCY>USD=X`). Tencent
+  (0700.HK) read as a $3,097.6B company and now reads as about $397.5B.
+  Pence quotes (`GBp`, also `ZAc`, `ILA`) use the major unit for amounts.
+  If a rate is missing nothing is converted, `fx_rate_usd` is 0 and the
+  output labels amounts with the local currency. `augur valuation` compares
+  fair value with price in the same currency.
+- `--json` / `--format json` stdout is pure JSON; progress lines go to
+  stderr.
+- Dayu's volatility rule compared an annualised fraction with percent
+  thresholds, so it never fired and every stock got the low-volatility
+  bonus. The position-risk factor now changes by 0 / -1 / -2 / -3 / -4
+  versus v13 for 20-day volatility below 15% / 15-25% / 25-40% / 40-60% /
+  above 60% (the factor weighs 20% of Dayu's score).
+- Thiel and the consensus engine's sector weighting count Communication
+  Services and internet/software industries (GOOGL, META, Tencent) as tech.
+- A neutral consensus sizes the position at 0% (`analyze` used to show a
+  small position such as 0.6%; `portfolio` already gave 0).
+- The SEC EDGAR overlay now replaces the evidence items of the fields it
+  overwrites, so evidence cites the value personas actually read.
+- Dashboard fear/greed: VIX is mapped through anchors at 15 / 20 / 30 / 45
+  (75 / 50 / 25 / 0), so the long-run VIX of about 20 is neutral and VIX 28
+  reads as Fear (it read as Neutral before).
+- Dashboard version strings (health, OpenAPI, cache-busters, export footer)
+  come from `augur.__version__`.
+- The backtest page no longer derives return, drawdown and Sharpe from the
+  hit rate; they are reported as not measured (`null`).
+- Disagreement wording: "majority" counts all votes including neutral, and
+  "strong" needs at least 75%.
+- YAML persona rules accept list literals (`sector in [...]`), and
+  `da-yu.yaml` / `thiel.yaml` use the real sector names.
+- `src/skills/README.md` install paths point at `src/skills/`.
+- Dashboard committee page (`/api/committee`, `/ws/committee`) for funds:
+  shows WITHHELD with no score or Kelly size, abstained masters as N/A
+  cards left out of the vote, and the withheld reason (it showed NEUTRAL
+  5.0 with 18 neutral votes).
+- Dashboard stock page: the header shows the fund or company name and the
+  price in its trading currency (HK$, CN¥) instead of always `$`; the ETF
+  card shows NAV with its currency and mutes unknown cells; abstained
+  masters show N/A in the detail modal and the inline deep report; the
+  Deep Report button keeps the ETF profile and shows WITHHELD for funds
+  (it produced an "EQUITY" report with every ETF field unknown).
+- Dashboard stock page history trend chart never rendered (a recursion
+  between `renderHistoryChart()` and `setHistoryRange()`); it also skips
+  withheld fund records, whose stored score is a 5.0 placeholder.
+- Dashboard backtest page shows `--` instead of a red 0% win rate and
+  0.0000 IC when a window has no scored predictions.
+- Dashboard i18n: home stats, market board, sector names, advanced metric
+  labels and analysis progress text were Chinese in the English UI. The
+  onboarding banner and report footer no longer call the masters "AI"
+  (scoring is rule-based), and the parchment buttons are readable in the
+  dark theme.
+
+### Breaking
+
+- `--json` progress messages moved from stdout to stderr. Scripts that read
+  progress text from stdout need to read stderr.
+- `MarketContext.market_cap`, `fcf`, `revenue` and the other amounts mean
+  USD billions for non-USD instruments when FX is known.
+- Fund contexts have `pe` / `pb` = 0; the look-through values are in
+  `etf["portfolio_pe"]` / `etf["portfolio_pb"]`.
+- The `[llm]` extra no longer installs `anthropic` (nothing imported it).
+- MCP `augur_configure` is deprecated: it returns a note and writes
+  nothing. Augur's scoring never called a model.
+- The dashboard backtest API returns `null` for return, drawdown and
+  Sharpe.
+- The ETF overview block, health checklist, withheld note and data-source
+  footer printed by `augur fetch`, `consensus` and `analyze` (and the MCP
+  fetch / consensus text, and the `backtest` footer) are in English; they
+  were Chinese. Scripts that parse those strings need to match the new
+  labels. `--json` output, the `augur report` Markdown and the engine's
+  `etf_findings` are unchanged (still Chinese).
+
+### Deferred
+
+- ATR true range and recalibrated ATR thresholds (munger > 3%, dalio < 2 /
+  > 5); MACD seeding.
+- Backtest fidelity; `augur risk-review` rewording; `augur memo`.
+- Fund-aware rules for Marks, Soros and ARPS; ETF historical premium and
+  tracking error.
+- Clean-up tool for ETF learning records written before v14.
+- Remaining percent-vs-fraction rules in `da-yu.yaml` / `thiel.yaml`; YAML
+  personas shadowed by a built-in with the same id.
+- Other surfaces still print the withheld fund consensus as 5.0:
+  dashboard watchlist / portfolio / scanner / history / Signals page
+  (notifications and live feed), `augur cron` summaries, the chat bots and
+  built-in skill handlers.
+- `uv.lock` is stale (still records 10.16.2).
+
 ## [13.0.0] - 2026-10-29 earnings dates from SEC, Python 3.10, smaller public API
 
 ### Breaking

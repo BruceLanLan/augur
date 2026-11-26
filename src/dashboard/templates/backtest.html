@@ -506,10 +506,13 @@ function renderResults(data) {
 
     var ic = data.consensus_ic;
     var icEl = document.getElementById('bt-consensus-ic');
-    var icNum = (ic != null && !isNaN(ic)) ? Number(ic) : null;
-    icEl.textContent = icNum !== null ? icNum.toFixed(4) : 'N/A';
+    // No predictions in the window: an IC of 0 / win rate of 0% would read as
+    // a measured (bad) result, so show "--" in neutral colors instead.
+    var noPredictions = !data.total_records;
+    var icNum = (!noPredictions && ic != null && !isNaN(ic)) ? Number(ic) : null;
+    icEl.textContent = icNum !== null ? icNum.toFixed(4) : '--';
     icEl.style.color = icNum > 0 ? 'var(--signal-buy)' : icNum < 0 ? 'var(--signal-sell)' : 'var(--text-secondary)';
-    banner.style.borderLeftColor = icNum > 0 ? 'var(--signal-buy)' : 'var(--signal-sell)';
+    banner.style.borderLeftColor = icNum === null ? 'var(--border-color)' : icNum > 0 ? 'var(--signal-buy)' : 'var(--signal-sell)';
 
     document.getElementById('bt-result-ticker').textContent = data.ticker;
     document.getElementById('bt-total-records').textContent = data.total_records;
@@ -589,67 +592,44 @@ function renderMetrics(data) {
         winRate = totalHitRate / agents.length;
     }
 
-    if (annualizedReturn == null && winRate != null) {
-        var avgGain = 0.02;
-        var avgLoss = -0.015;
-        var dailyReturn = (winRate * avgGain + (1 - winRate) * avgLoss);
-        annualizedReturn = dailyReturn * 252;
+    // Return / drawdown / Sharpe are not measured by the IC backtester; the
+    // API returns null and the page says so instead of deriving them from the
+    // hit rate.
+    var NM_KEY = 'backtest-metric-not-measured';
+    function setMeasured(el, value, text, color) {
+        if (value == null) {
+            el.setAttribute('data-i18n', NM_KEY);
+            el.textContent = (typeof window.t === 'function') ? window.t(NM_KEY, '未实测 / not measured') : '未实测 / not measured';
+            el.style.color = 'var(--text-secondary)';
+            el.classList.add('backtest-metric-unmeasured');
+        } else {
+            el.removeAttribute('data-i18n');
+            el.classList.remove('backtest-metric-unmeasured');
+            el.textContent = text;
+            el.style.color = color;
+        }
     }
 
-    if (maxDrawdown == null) {
-        maxDrawdown = -((1 - (winRate || 0.5)) * 0.15 + 0.05);
-    }
+    setMeasured(document.getElementById('bt-annualized-return'), annualizedReturn,
+        annualizedReturn != null ? (annualizedReturn * 100).toFixed(1) + '%' : '',
+        annualizedReturn > 0 ? 'var(--signal-buy)' : 'var(--signal-sell)');
+    setMeasured(document.getElementById('bt-max-drawdown'), maxDrawdown,
+        maxDrawdown != null ? (maxDrawdown * 100).toFixed(1) + '%' : '',
+        'var(--signal-sell)');
+    setMeasured(document.getElementById('bt-sharpe-ratio'), sharpeRatio,
+        sharpeRatio != null ? sharpeRatio.toFixed(2) : '',
+        sharpeRatio > 1 ? 'var(--signal-buy)' : sharpeRatio > 0 ? 'var(--signal-neutral)' : 'var(--signal-sell)');
 
-    if (sharpeRatio == null && annualizedReturn != null) {
-        var vol = Math.abs(maxDrawdown || 0.1) * 1.5;
-        sharpeRatio = vol > 0 ? (annualizedReturn - 0.04) / vol : 0;
-    }
-
-    var arEl = document.getElementById('bt-annualized-return');
-    arEl.textContent = annualizedReturn != null ? (annualizedReturn * 100).toFixed(1) + '%' : '--';
-    arEl.style.color = annualizedReturn > 0 ? 'var(--signal-buy)' : 'var(--signal-sell)';
-
-    var mdEl = document.getElementById('bt-max-drawdown');
-    mdEl.textContent = maxDrawdown != null ? (maxDrawdown * 100).toFixed(1) + '%' : '--';
-    mdEl.style.color = 'var(--signal-sell)';
-
-    var srEl = document.getElementById('bt-sharpe-ratio');
-    srEl.textContent = sharpeRatio != null ? sharpeRatio.toFixed(2) : '--';
-    srEl.style.color = sharpeRatio > 1 ? 'var(--signal-buy)' : sharpeRatio > 0 ? 'var(--signal-neutral)' : 'var(--signal-sell)';
-
+    if (!data.total_records) winRate = null;  // nothing scored in this window
     var wrEl = document.getElementById('bt-win-rate');
     wrEl.textContent = winRate != null ? (winRate * 100).toFixed(1) + '%' : '--';
-    wrEl.style.color = winRate > 0.55 ? 'var(--signal-buy)' : winRate > 0.45 ? 'var(--signal-neutral)' : 'var(--signal-sell)';
+    wrEl.style.color = winRate == null ? 'var(--text-secondary)' : winRate > 0.55 ? 'var(--signal-buy)' : winRate > 0.45 ? 'var(--signal-neutral)' : 'var(--signal-sell)';
 }
 
 function renderTimeline(data) {
     var timeline = data.signals_timeline || [];
     var timelineEl = document.getElementById('bt-timeline');
     var tbody = document.getElementById('bt-timeline-body');
-
-    if (timeline.length === 0) {
-        var agents = data.agent_ics || [];
-        var days = data.days || 30;
-        var ticker = data.ticker || 'AAPL';
-        for (var i = 0; i < Math.min(agents.length, 5); i++) {
-            var a = agents[i];
-            for (var d = 0; d < Math.min(days, 10); d++) {
-                var date = new Date();
-                date.setDate(date.getDate() - (days - d));
-                var signal = a.hit_rate > 0.5 ? 'bullish' : 'bearish';
-                if (Math.random() > 0.7) signal = 'neutral';
-                timeline.push({
-                    date: date.toISOString().slice(0, 10),
-                    ticker: ticker,
-                    signal: signal,
-                    score: (Math.random() * 4 + 5).toFixed(1),
-                    agent_id: a.agent_id
-                });
-            }
-        }
-        timeline.sort(function(a, b) { return b.date.localeCompare(a.date); });
-        timeline = timeline.slice(0, 50);
-    }
 
     if (timeline.length > 0) {
         timelineEl.style.display = 'block';

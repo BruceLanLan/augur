@@ -261,7 +261,7 @@ class TestBacktestCliDefaults:
         assert result.exit_code == 0
         bt.run_backtest.assert_called_once()
         assert bt.run_backtest.call_args.kwargs.get("data_source") == "demo"
-        assert "演示数据" in result.output
+        assert "Data source: demo data" in result.output
 
     def test_live_failure_exits_nonzero_without_demo_fallback(self, runner):
         """The old behavior silently fell through to generate_sample_data()

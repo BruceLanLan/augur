@@ -371,12 +371,20 @@ class DisagreementMapBuilder:
 
     @staticmethod
     def _signal_agreement(n_bulls: int, n_bears: int, total: int) -> List[str]:
-        if n_bulls + n_bears == 0:
+        """Majority wording over ALL votes (neutral included).
+
+        A side is a "majority" only when it holds more than half of every vote
+        cast and outnumbers the other side more than 2:1; it is a "strong
+        majority" only at >= 75%, the same threshold that makes
+        ``consensus_strength`` "strong". Previously 4 bulls / 1 bear / 13
+        neutral read "strong majority bullish (4/18)" next to "Weak consensus".
+        """
+        if total <= 0:
             return []
-        if n_bulls > n_bears * 2:
-            return [f"Signals: strong majority bullish ({n_bulls}/{total})"]
-        if n_bears > n_bulls * 2:
-            return [f"Signals: strong majority bearish ({n_bears}/{total})"]
+        for side, n, other in (("bullish", n_bulls, n_bears), ("bearish", n_bears, n_bulls)):
+            if n * 2 > total and n > other * 2:
+                qual = "strong majority" if n / total >= 0.75 else "majority"
+                return [f"Signals: {qual} {side} ({n}/{total})"]
         return []
 
     # ------------------------------------------------------------------
@@ -424,6 +432,17 @@ def build_disagreement_from_bundle(bundle: Dict[str, Any], ticker: str, run_id: 
     from augur.run_tracker import extract_persona_results
 
     persona_outputs, _consensus = extract_persona_results(bundle)
+    # Personas that abstained on a fund hold no view to disagree about.
+    abstained = [aid for aid, p in persona_outputs.items() if p.get("abstained")]
+    persona_outputs = {aid: p for aid, p in persona_outputs.items() if not p.get("abstained")}
+    if abstained and len(persona_outputs) < 2:
+        result = DisagreementMap(ticker=ticker, run_id=run_id)
+        result.consensus_strength = "n/a"
+        result.summary = (
+            f"{len(persona_outputs)} applicable persona(s), {len(abstained)} abstained "
+            "(rules not applicable to funds): no disagreement to map."
+        )
+        return result
     evidence: List[Dict[str, Any]] = []
     for step in bundle.get("step_results", []):
         result = step.get("result") if isinstance(step, dict) else None
